@@ -25,7 +25,7 @@ object FileAckSource {
 
   private val lockedDirs : mutable.ListBuffer[String] = mutable.ListBuffer.empty
 
-  def lockDirectory(dir : String) : Boolean = lockedDirs.synchronized{
+  def lockDirectory(dir : String) : Boolean = lockedDirs.synchronized {
     if (!lockedDirs.contains(dir)) {
       lockedDirs += dir
       true
@@ -43,36 +43,36 @@ class FileAckSource(
   pollCfg : FilePollConfig
 )(implicit system : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
-  private val pollId : String =  s"${pollCfg.headerCfg.prefix}.FilePoller.${pollCfg.id}.source"
+  private val pollId : String = s"${pollCfg.headerCfg.prefix}.FilePoller.${pollCfg.id}.source"
   private val out : Outlet[FlowEnvelope] = Outlet(name = pollId)
   private val sdf = new SimpleDateFormat("yyyyMMdd-HHmmssSSS")
 
-  override def shape: SourceShape[FlowEnvelope] = SourceShape(out)
+  override def shape : SourceShape[FlowEnvelope] = SourceShape(out)
 
   private class FileAckContext(
     inflightId : String,
-    env: FlowEnvelope,
+    env : FlowEnvelope,
     val originalFile : File,
     val fileToProcess : File
   ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis())
 
   private class FileSourceLogic() extends AckSourceLogic[FileAckContext](out, shape) {
     /** The id to identify the instance in the log files */
-    override def id: String = pollId
+    override def id : String = pollId
 
     private var pendingFiles : mutable.ListBuffer[File] = ListBuffer.empty
 
     /** A logger that must be defined by concrete implementations */
-    override protected def log: Logger = Logger(pollId)
+    override protected def log : Logger = Logger(pollId)
 
     /** The id's of the available inflight slots */
-    override protected def inflightSlots(): List[String] =
+    override protected def inflightSlots() : List[String] =
       1.to(pollCfg.batchSize).map(i => s"FilePoller-${pollCfg.id}-$i").toList
 
     // Reset the polling interval
-    override protected def nextPoll(): Option[FiniteDuration] = if (pendingFiles.isEmpty) Some(pollCfg.interval) else None
+    override protected def nextPoll() : Option[FiniteDuration] = if (pendingFiles.isEmpty) Some(pollCfg.interval) else None
 
-    override protected def doPerformPoll(id: String, ackHandler: AcknowledgeHandler): Try[Option[FileAckContext]] = {
+    override protected def doPerformPoll(id : String, ackHandler : AcknowledgeHandler) : Try[Option[FileAckContext]] = {
 
       def createEnvelope(f : File) : Try[Option[FileAckContext]] = Try {
 
@@ -90,7 +90,7 @@ class FileAckSource(
 
             val msg : FlowMessage = if (pollCfg.asText) {
               val charSet : Charset = pollCfg.charSet match {
-                case None => Charset.defaultCharset()
+                case None    => Charset.defaultCharset()
                 case Some(s) => Charset.forName(s)
               }
 
@@ -101,7 +101,7 @@ class FileAckSource(
               FlowMessage(bytes)(pollCfg.header)
             }
 
-            val env : FlowEnvelope = FlowEnvelope(msg,envId)
+            val env : FlowEnvelope = FlowEnvelope(msg, envId)
               .withHeader(pollCfg.filenameProp, f.getName()).get
               .withHeader(pollCfg.filepathProp, f.getAbsolutePath()).get
               .withRequiresAcknowledge(true)
@@ -128,7 +128,7 @@ class FileAckSource(
       try {
         if (FileAckSource.lockDirectory(pollCfg.sourceDir)) {
           files() match {
-            case None => Success(None)
+            case None    => Success(None)
             case Some(f) => Success(createEnvelope(f).get)
           }
         } else {
@@ -139,13 +139,12 @@ class FileAckSource(
         case NonFatal(t) =>
           log.warn(t)(s"Error polling directory [${pollCfg.sourceDir}] for [$id]")
           Failure(t)
-      }
-      finally {
+      } finally {
         FileAckSource.releaseDirectory(pollCfg.sourceDir)
       }
     }
 
-    override protected def beforeAcknowledge(ackCtxt: FileAckContext): Unit = {
+    override protected def beforeAcknowledge(ackCtxt : FileAckContext) : Unit = {
       log.info(s"Successfully processed envelope [${ackCtxt.envelope.id}]")
       pollCfg.backup match {
         case None =>
@@ -174,14 +173,14 @@ class FileAckSource(
       }
     }
 
-    override protected def beforeDenied(ackCtxt: FileAckContext): Unit = {
+    override protected def beforeDenied(ackCtxt : FileAckContext) : Unit = {
       log.info(s"Restoring file [${ackCtxt.originalFile}] in [${ackCtxt.inflightId}]")
       FileHelper.renameFile(ackCtxt.fileToProcess, ackCtxt.originalFile)
     }
 
     /**
-      * The file poller can be locked by the existence of a lock file if specified.
-      */
+     * The file poller can be locked by the existence of a lock file if specified.
+     */
     private[this] def locked() : Boolean = pollCfg.lock match {
       case None => false
       case Some(l) =>
@@ -200,13 +199,13 @@ class FileAckSource(
     }
 
     /**
-      * Here we will poll for the next file to be processed by the file poller.
-      * If the directory is not locked by a lock file or another instance polling the
-      * same directory, we will scan the directory for the file to be processed and
-      * return the handle to the first file found.
-      *
-      * If the dir is locked or no file is found, we will return [[None]]
-      */
+     * Here we will poll for the next file to be processed by the file poller.
+     * If the directory is not locked by a lock file or another instance polling the
+     * same directory, we will scan the directory for the file to be processed and
+     * return the handle to the first file found.
+     *
+     * If the dir is locked or no file is found, we will return [[None]]
+     */
     protected def files() : Option[File] = {
       val srcDir = new File(pollCfg.sourceDir)
 
@@ -228,7 +227,7 @@ class FileAckSource(
 
           try {
             val filter : DirectoryStream.Filter[Path] = new DirectoryStream.Filter[Path] {
-              override def accept(entry: Path): Boolean = {
+              override def accept(entry : Path) : Boolean = {
                 entry.getParent().toFile().equals(srcDir) && pollCfg.pattern.forall(p => entry.toFile().getName().matches(p))
               }
             }
@@ -255,6 +254,6 @@ class FileAckSource(
     }
   }
 
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+  override def createLogic(inheritedAttributes : Attributes) : GraphStageLogic =
     new FileSourceLogic()
 }

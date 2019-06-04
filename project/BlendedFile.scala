@@ -21,11 +21,11 @@ object BlendedFile extends ProjectFactory {
       Dependencies.scalatest % "test"
     )
 
-    override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(
+    override def plugins : Seq[AutoPlugin] = super.plugins ++ Seq(
       FilterResources
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
         "blended" -> "DEBUG"
@@ -35,11 +35,11 @@ object BlendedFile extends ProjectFactory {
       )
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project,
       BlendedJmsUtils.project,
       BlendedStreams.project,
-      
+
       BlendedTestsupport.project % Test
     )
   }

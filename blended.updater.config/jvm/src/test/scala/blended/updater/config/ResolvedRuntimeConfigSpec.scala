@@ -6,8 +6,8 @@ import org.scalatest.{FreeSpecLike, Matchers}
 import scala.util.Success
 
 class ResolvedRuntimeConfigSpec
-    extends FreeSpecLike
-    with Matchers {
+  extends FreeSpecLike
+  with Matchers {
 
   "A Config with features references" - {
     val config = """

@@ -30,13 +30,13 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
   }
 
   val same = new FlowProcessor {
-    override val name: String = "identity"
-    override val f: IntegrationStep = env => Success(env)
+    override val name : String = "identity"
+    override val f : IntegrationStep = env => Success(env)
   }
 
   val faulty = new FlowProcessor {
-    override val name: String = "faulty"
-    override val f: IntegrationStep = env => Failure(new Exception("Boom"))
+    override val name : String = "faulty"
+    override val f : IntegrationStep = env => Failure(new Exception("Boom"))
   }
 
   "The FlowProcessor should" - {
@@ -62,7 +62,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
 
       Await.result(flow, 1.second) match {
         case r =>
-          r.size should be (1)
+          r.size should be(1)
           assert(r.last.exception.isDefined)
       }
 

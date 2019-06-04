@@ -31,7 +31,7 @@ object BlendedAkkaHttpApi extends ProjectFactory {
       defaultImports = false
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       embeddedJars := {
         (Compile / externalDependencyClasspath).value
           .map(_.data)

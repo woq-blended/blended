@@ -24,7 +24,7 @@ object BlendedSecuritySsl extends ProjectFactory {
       bundleActivator = s"${projectName}.internal.CertificateActivator"
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / javaOptions +=
         "-Djava.security.properties=" + ((Test / classDirectory).value / "container/security.properties").getAbsolutePath(),
 
@@ -37,7 +37,7 @@ object BlendedSecuritySsl extends ProjectFactory {
       }
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedUtilLogging.project,
       BlendedUtil.project,

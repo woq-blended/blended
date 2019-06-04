@@ -5,7 +5,7 @@ import com.typesafe.config.Config
 
 object UpdaterConfig {
 
-  val default: UpdaterConfig = {
+  val default : UpdaterConfig = {
     UpdaterConfig(
       artifactDownloaderPoolSize = 4,
       artifactCheckerPoolSize = 4,
@@ -19,7 +19,7 @@ object UpdaterConfig {
 
   }
 
-  def fromConfig(cfg: Config): UpdaterConfig = {
+  def fromConfig(cfg : Config) : UpdaterConfig = {
     UpdaterConfig(
       artifactDownloaderPoolSize = cfg.getInt("artifactDownloaderPoolSize", default.artifactDownloaderPoolSize),
       artifactCheckerPoolSize = cfg.getInt("artifactCheckerPoolSize", default.artifactCheckerPoolSize),
@@ -41,12 +41,12 @@ object UpdaterConfig {
  * @param serviceInfoLifetimeMSec The lifetime a serviceInfo message should be valid.
  */
 case class UpdaterConfig(
-  artifactDownloaderPoolSize: Int,
-  artifactCheckerPoolSize: Int,
-  unpackerPoolSize: Int,
-  autoStagingDelayMSec: Long,
-  autoStagingIntervalMSec: Long,
-  serviceInfoIntervalMSec: Long,
-  serviceInfoLifetimeMSec: Long,
-  mvnRepositories: List[String]
+  artifactDownloaderPoolSize : Int,
+  artifactCheckerPoolSize : Int,
+  unpackerPoolSize : Int,
+  autoStagingDelayMSec : Long,
+  autoStagingIntervalMSec : Long,
+  serviceInfoIntervalMSec : Long,
+  serviceInfoLifetimeMSec : Long,
+  mvnRepositories : List[String]
 )

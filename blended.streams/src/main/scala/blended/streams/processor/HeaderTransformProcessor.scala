@@ -34,38 +34,39 @@ case class HeaderTransformProcessor(
   idSvc : Option[ContainerIdentifierService] = None
 ) extends FlowProcessor {
 
-  override val f: IntegrationStep = { env =>
+  override val f : IntegrationStep = { env =>
 
     Try {
       log.debug(s"Processing rules [${rules.mkString(",")}]")
 
-      val newMsg = rules.foldLeft(env.flowMessage) { case (c, headerCfg) =>
+      val newMsg = rules.foldLeft(env.flowMessage) {
+        case (c, headerCfg) =>
 
-        headerCfg.expression match {
-          case None =>
-            c.removeHeader(headerCfg.name)
-          case Some(v) =>
-            val header = Option(idSvc match {
-              case None =>
-                v
-              case Some(s) =>
-                val props: Map[String, Any] = c.header.mapValues(_.value)
-                s.resolvePropertyString(
-                  v.toString(),
-                  props + ("envelope" -> env)
-                ).get
-            })
+          headerCfg.expression match {
+            case None =>
+              c.removeHeader(headerCfg.name)
+            case Some(v) =>
+              val header = Option(idSvc match {
+                case None =>
+                  v
+                case Some(s) =>
+                  val props : Map[String, Any] = c.header.mapValues(_.value)
+                  s.resolvePropertyString(
+                    v.toString(),
+                    props + ("envelope" -> env)
+                  ).get
+              })
 
-            // Header might be null if a referenced property does not exist
-            header match {
-              case None =>
-                log.warn(s"Header [${headerCfg.name}] resolved to [null]")
-                c
-              case Some(v) =>
-                log.debug(s"Processed Header [${headerCfg.name}, ${headerCfg.overwrite}] : [$v]")
-                c.withHeader(headerCfg.name, v, headerCfg.overwrite).get
-            }
-        }
+              // Header might be null if a referenced property does not exist
+              header match {
+                case None =>
+                  log.warn(s"Header [${headerCfg.name}] resolved to [null]")
+                  c
+                case Some(v) =>
+                  log.debug(s"Processed Header [${headerCfg.name}, ${headerCfg.overwrite}] : [$v]")
+                  c.withHeader(headerCfg.name, v, headerCfg.overwrite).get
+              }
+          }
       }
       log.debug(s"Header transformation complete [$name] : $newMsg")
 

@@ -15,7 +15,7 @@ trait ConnectionMonitorMBean {
 
   def getEvents() : Array[String]
 
-  def disconnect(reason: String) : Unit
-  def connect(now: Boolean) : Unit
+  def disconnect(reason : String) : Unit
+  def connect(now : Boolean) : Unit
 
 }

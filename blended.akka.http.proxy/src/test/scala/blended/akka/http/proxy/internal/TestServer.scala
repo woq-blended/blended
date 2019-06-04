@@ -14,15 +14,15 @@ object TestServer {
   private[this] val log = Logger[TestServer.type]
 
   def withServer(
-    port: Int,
-    route: Route
+    port : Int,
+    route : Route
   )(
-    f: => Unit
+    f : => Unit
   )(
     implicit
-    actorSystem: ActorSystem,
-    actorMaterializer: ActorMaterializer
-  ): Unit = {
+    actorSystem : ActorSystem,
+    actorMaterializer : ActorMaterializer
+  ) : Unit = {
 
     val serverFut = Http().bindAndHandle(route, "localhost", port)
     val server = Await.result(serverFut, 10.seconds)

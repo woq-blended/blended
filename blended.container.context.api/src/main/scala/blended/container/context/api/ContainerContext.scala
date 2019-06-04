@@ -22,17 +22,17 @@ trait ContainerContext {
 
   def getContainerDirectory() : String
   def getContainerConfigDirectory() : String
-  def getContainerLogDirectory(): String
+  def getContainerLogDirectory() : String
 
-  def getProfileDirectory(): String
-  def getProfileConfigDirectory(): String
+  def getProfileDirectory() : String
+  def getProfileConfigDirectory() : String
 
-  def getContainerHostname(): String
+  def getContainerHostname() : String
 
   def getContainerCryptoSupport() : ContainerCryptoSupport
 
   // application.conf + application_overlay.conf
-  def getContainerConfig(): Config
+  def getContainerConfig() : Config
 
   def getNextTransactionCounter() : Long = ContainerContext.nextTransactionCounter
 }

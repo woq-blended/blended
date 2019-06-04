@@ -29,10 +29,9 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
   System.setProperty("Country", "cc")
 
   private val log = Logger[HeaderProcessorSpec]
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator()
   )
 
@@ -65,7 +64,7 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
       ), None)
 
       r should have size 1
-      r.head.header[String]("foo") should be (Some("bar"))
+      r.head.header[String]("foo") should be(Some("bar"))
     }
 
     "perform the normal resolution of container context properties" in {
@@ -73,7 +72,7 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
       implicit val timeout = 3.seconds
       val idSvc = mandatoryService[ContainerIdentifierService](registry)(None)
 
-      idSvc.resolvePropertyString("$[[Country]]").get should be ("cc")
+      idSvc.resolvePropertyString("$[[Country]]").get should be("cc")
 
       val r = result(List(
         HeaderProcessorConfig("foo", Some("""$[[Country]]"""), true),
@@ -83,9 +82,9 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
 
       log.info(r.toString())
       r.head.flowMessage.header should have size (3)
-      r.head.header[String]("foo") should be (Some("cc"))
-      r.head.header[String]("foo2") should be (Some("cc"))
-      r.head.header[Int]("test") should be (Some(42))
+      r.head.header[String]("foo") should be(Some("cc"))
+      r.head.header[String]("foo2") should be(Some("cc"))
+      r.head.header[Int]("test") should be(Some(42))
     }
   }
 

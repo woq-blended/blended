@@ -8,7 +8,7 @@ class DummyLoginConfiguration extends Configuration {
 
   private[this] val options : Map[String, String] = Map.empty
 
-  override def getAppConfigurationEntry(name: String): Array[AppConfigurationEntry] = {
+  override def getAppConfigurationEntry(name : String) : Array[AppConfigurationEntry] = {
 
     val entry = new AppConfigurationEntry(classOf[DummyLoginModule].getName(), LoginModuleControlFlag.SUFFICIENT, options.asJava)
 

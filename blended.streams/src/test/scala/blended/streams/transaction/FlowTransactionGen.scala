@@ -22,7 +22,7 @@ object FlowTransactionGen {
 
   private val wlGen : Gen[Map[String, List[WorklistState]]] = Gen.nonEmptyMap(
     for {
-      key <- Gen.choose(1,maxKey)
+      key <- Gen.choose(1, maxKey)
       states <- Gen.nonEmptyListOf(wlStateGen)
     } yield (s"worklist-$key", states.distinct)
   )
@@ -43,10 +43,12 @@ object FlowTransactionGen {
     .map(b => ByteMsgProperty(b))
 
   private val floatGen : Gen[MsgProperty] = Gen.const(
-    FloatMsgProperty(Random.nextFloat()))
+    FloatMsgProperty(Random.nextFloat())
+  )
 
   private val doubleGen : Gen[MsgProperty] = Gen.const(
-    DoubleMsgProperty(Random.nextDouble()))
+    DoubleMsgProperty(Random.nextDouble())
+  )
 
   private val propGen : Gen[MsgProperty] = for {
     i <- intGen
@@ -63,7 +65,7 @@ object FlowTransactionGen {
     for {
       key <- Gen.choose(1, maxKey)
       prop <- propGen
-    } yield(s"prop-$key", prop)
+    } yield (s"prop-$key", prop)
   )
 
   def genTrans : Gen[FlowTransaction] = for {

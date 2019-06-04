@@ -25,7 +25,7 @@ object BlendedSecurityLoginRest extends ProjectFactory {
       bundleActivator = s"${projectName}.internal.RestLoginActivator"
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkkaHttp.project,
       BlendedSecurityAkkaHttp.project,
       BlendedUtilLogging.project,

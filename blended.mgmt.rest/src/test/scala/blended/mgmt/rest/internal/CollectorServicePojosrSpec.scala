@@ -32,9 +32,9 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper
   with TestFile {
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.akka.http" -> new BlendedAkkaHttpActivator(),
     "blended.security" -> new SecurityActivator(),
@@ -46,9 +46,9 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
   private[this] val log = Logger[this.type]
 
-  case class Server(serviceRegistry: BlendedPojoRegistry, dir: File)
+  case class Server(serviceRegistry : BlendedPojoRegistry, dir : File)
 
-  def withServer(f: Server => Unit): Unit = {
+  def withServer(f : Server => Unit) : Unit = {
     log.info(s"Server path: ${baseDir}")
 
     // cleanup potential left over data from previous runs
@@ -145,7 +145,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
     "ActivateProfile" - {
       val ci1 = "ci1_ActivateProfile"
       val ci2 = "ci2_ActivateProfile"
-      def url(containerId: String) = uri"${serverUrl}/container/${containerId}/update"
+      def url(containerId : String) = uri"${serverUrl}/container/${containerId}/update"
 
       val ap = ActivateProfile(
         id = UUID.randomUUID().toString(),

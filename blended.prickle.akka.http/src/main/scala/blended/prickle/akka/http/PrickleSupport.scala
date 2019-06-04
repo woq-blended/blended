@@ -20,11 +20,11 @@ trait PrickleSupport {
 
   val prickleMediaType = MediaTypes.`application/json`
 
-  implicit def toEntityMarshaller[T](implicit p: Pickler[T], config: PConfig[JsValue]): ToEntityMarshaller[T] = {
+  implicit def toEntityMarshaller[T](implicit p : Pickler[T], config : PConfig[JsValue]) : ToEntityMarshaller[T] = {
     //    Marshaller.stringMarshaller(prickleMediaType) {
     //    Marshaller.charArrayMarshaller(prickleMediaType).wrap(prickleMediaType) {
     Marshaller.StringMarshaller.wrap(prickleMediaType) {
-      in: T =>
+      in : T =>
         log.debug(s"About to pickle: ${in}")
         val pickled = Pickle.intoString(in)
         log.debug(s"pickled: ${pickled}")
@@ -32,9 +32,9 @@ trait PrickleSupport {
     }
   }
 
-  implicit def fromEntityUnmarshaller[T](implicit u: Unpickler[T], config: PConfig[JsValue]): FromEntityUnmarshaller[T] = {
+  implicit def fromEntityUnmarshaller[T](implicit u : Unpickler[T], config : PConfig[JsValue]) : FromEntityUnmarshaller[T] = {
     Unmarshaller.stringUnmarshaller.forContentTypes(ContentTypeRange(prickleMediaType.toContentType)).map {
-      jsonString: String =>
+      jsonString : String =>
         //    Unmarshaller.charArrayUnmarshaller.forContentTypes(ContentTypeRange(prickleMediaType.toContentType)).map {
         //      in: Array[Char] =>
         //        val jsonString = String.valueOf(in)

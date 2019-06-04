@@ -25,15 +25,15 @@ class TokenStoreSpec extends SimplePojoContainerSpec
   with Matchers
   with PojoSrTestHelper {
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.security" -> new SecurityActivator(),
     "blended.security.login" -> new LoginActivator()
   )
 
-  private def withTokenStore[T](f : TokenStore => T): T = {
+  private def withTokenStore[T](f : TokenStore => T) : T = {
     implicit val to = 3.seconds
     val store = mandatoryService[TokenStore](registry)(None)
     val result = f(store)
@@ -42,7 +42,7 @@ class TokenStoreSpec extends SimplePojoContainerSpec
     result
   }
 
-  def login(user: String, password : String) : Try[Subject] =  Try {
+  def login(user : String, password : String) : Try[Subject] = Try {
     val lc = new LoginContext("Test", new PasswordCallbackHandler(user, password.toCharArray()))
     lc.login()
     lc.getSubject()
@@ -53,7 +53,7 @@ class TokenStoreSpec extends SimplePojoContainerSpec
     "should start empty" in {
 
       withTokenStore { store =>
-        store.listTokens() should be (empty)
+        store.listTokens() should be(empty)
       }
     }
 
@@ -64,11 +64,11 @@ class TokenStoreSpec extends SimplePojoContainerSpec
         val token : Token = store.newToken(subj, None).get
 
         token.id should startWith("andreas")
-        token.expiresAt should be (0)
+        token.expiresAt should be(0)
 
-        token.permissions.granted.size should be (2)
-        token.permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
-        token.permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
+        token.permissions.granted.size should be(2)
+        token.permissions.granted.find(_.permissionClass == Some("admins")) should be(defined)
+        token.permissions.granted.find(_.permissionClass == Some("blended")) should be(defined)
 
         store.listTokens().size should be(1)
       }
@@ -81,15 +81,15 @@ class TokenStoreSpec extends SimplePojoContainerSpec
         val token = store.newToken(subj, None).get
 
         token.id should startWith("andreas")
-        token.expiresAt should be (0)
+        token.expiresAt should be(0)
 
         val token2 = store.getToken(token.id).get
 
         assert(token === token2)
 
-        token2.permissions.granted.size should be (2)
-        token2.permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
-        token2.permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
+        token2.permissions.granted.size should be(2)
+        token2.permissions.granted.find(_.permissionClass == Some("admins")) should be(defined)
+        token2.permissions.granted.find(_.permissionClass == Some("blended")) should be(defined)
 
         val token3 = store.removeToken(token.id).get
         assert(token === token3)

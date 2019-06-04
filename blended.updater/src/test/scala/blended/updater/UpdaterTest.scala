@@ -22,7 +22,7 @@ class UpdaterTest
   implicit val deletePolicy = DeleteNever
 
   val dummyProfileActivator = new ProfileActivator {
-    def apply(name: String, version: String, overlays: Set[OverlayRef]): Boolean = true
+    def apply(name : String, version : String, overlays : Set[OverlayRef]) : Boolean = true
   }
 
   override def afterAll {
@@ -71,7 +71,7 @@ class UpdaterTest
             val id = nextId()
             updater ! Updater.GetProfiles(id)
             expectMsgPF() {
-              case Updater.Result(`id`, profiles: Set[_]) if profiles.isEmpty => true
+              case Updater.Result(`id`, profiles : Set[_]) if profiles.isEmpty => true
             }
           }
         }
@@ -94,7 +94,7 @@ class UpdaterTest
             val id = nextId()
             updater ! Updater.GetProfiles(id)
             expectMsgPF() {
-              case Updater.Result(`id`, profiles: Set[_]) if profiles.isEmpty => true
+              case Updater.Result(`id`, profiles : Set[_]) if profiles.isEmpty => true
             }
           }
 
@@ -285,7 +285,7 @@ class UpdaterTest
             val checkId = nextId()
             updater ! Updater.GetProfiles(checkId)
             expectMsgPF() {
-              case Updater.Result(`checkId`, profiles: Set[_]) if profiles.size == 1 => true
+              case Updater.Result(`checkId`, profiles : Set[_]) if profiles.size == 1 => true
             }
           }
 
@@ -318,7 +318,7 @@ class UpdaterTest
             Updater.props(
               installBaseDir,
               new ProfileActivator {
-                def apply(name: String, version: String, overlays: Set[OverlayRef]): Boolean = {
+                def apply(name : String, version : String, overlays : Set[OverlayRef]) : Boolean = {
                   curNameVersion = Some(name -> version)
                   true
                 }
@@ -387,7 +387,7 @@ class UpdaterTest
               val queryId = nextId()
               updater ! Updater.GetProfiles(queryId)
               expectMsgPF(hint = s"Query id: $queryId") {
-                case Updater.Result(`queryId`, profiles: Set[_]) =>
+                case Updater.Result(`queryId`, profiles : Set[_]) =>
                   profiles.toList match {
                     case List(LocalProfile(LocalRuntimeConfig(`config`, _),
                       overlays, LocalProfile.Staged)) => true

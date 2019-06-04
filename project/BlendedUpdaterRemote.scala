@@ -29,7 +29,7 @@ object BlendedUpdaterRemote extends ProjectFactory {
       bundleActivator = s"${projectName}.internal.RemoteUpdaterActivator"
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtilLogging.project,
       BlendedPersistence.project,
       BlendedUpdaterConfigJvm.project,

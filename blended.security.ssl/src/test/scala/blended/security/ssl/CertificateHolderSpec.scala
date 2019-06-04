@@ -16,13 +16,13 @@ class CertificateHolderSpec extends LoggingFreeSpec
   with CertificateRequestBuilder
   with CertificateSigner {
 
-  private def createChain(length: Int) : Try[CertificateHolder] = {
+  private def createChain(length : Int) : Try[CertificateHolder] = {
 
-    def extendChain(c : CertificateHolder, l: Int) : Try[CertificateHolder] = {
+    def extendChain(c : CertificateHolder, l : Int) : Try[CertificateHolder] = {
       if (l == 0) {
         Success(c)
       } else {
-        extendChain(createHostCertificate(s"host${length - l}", c).get, l-1)
+        extendChain(createHostCertificate(s"host${length - l}", c).get, l - 1)
       }
     }
 
@@ -34,7 +34,7 @@ class CertificateHolderSpec extends LoggingFreeSpec
     "Refuse an empty chain" in {
 
       val p : KeyPair = kpg.generateKeyPair()
-      intercept[EmptyCertificateChainException]{
+      intercept[EmptyCertificateChainException] {
         CertificateHolder.create(p, List.empty).get
       }
     }
@@ -44,7 +44,7 @@ class CertificateHolderSpec extends LoggingFreeSpec
       val root : CertificateHolder = createRootCertificate().get
       val host : CertificateHolder = createHostCertificate("host", root).get
 
-      intercept[MissingRootCertificateException]{
+      intercept[MissingRootCertificateException] {
         CertificateHolder.create(host.publicKey, host.privateKey, host.chain.head :: Nil).get
       }
     }

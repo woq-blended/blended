@@ -12,13 +12,13 @@ object BlendedCamelContextFactory {
 
   def createContext(
     name : String = "blended-" + BlendedCamelContextFactory.count.incrementAndGet(),
-    withJmx: Boolean = true
+    withJmx : Boolean = true
   ) : CamelContext =
     (new BlendedCamelContextFactory with CamelContextPropertyProvider).createContext(name, withJmx)
 
   def createContext(
     name : String,
-    withJmx: Boolean,
+    withJmx : Boolean,
     idSvc : ContainerIdentifierService
   ) =
     new BlendedCamelContextFactory with IdServiceCamelContextPropertyProvider {
@@ -26,11 +26,11 @@ object BlendedCamelContextFactory {
     }.createContext(name, withJmx)
 }
 
-class BlendedCamelContextFactory { this: CamelContextPropertyProvider =>
+class BlendedCamelContextFactory { this : CamelContextPropertyProvider =>
 
   def createContext(
     name : String,
-    withJmx: Boolean
+    withJmx : Boolean
   ) : CamelContext = {
 
     val result = new DefaultCamelContext(new SimpleRegistry())
@@ -45,7 +45,7 @@ class BlendedCamelContextFactory { this: CamelContextPropertyProvider =>
       result.disableJMX()
     }
 
-    contextProperties.foreach{ case (k,v) => result.getProperties.put(k,v) }
+    contextProperties.foreach { case (k, v) => result.getProperties.put(k, v) }
     result
   }
 }

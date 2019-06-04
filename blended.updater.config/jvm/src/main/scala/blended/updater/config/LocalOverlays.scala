@@ -8,7 +8,7 @@ import scala.collection.immutable.Map
 import scala.util._
 
 import blended.util.logging.Logger
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.config.ConfigValueFactory
 
 /**
@@ -18,9 +18,9 @@ import com.typesafe.config.ConfigValueFactory
  * @param overlays   Alls involved overlay config.
  * @param profileDir The profile directory.
  */
-final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
+final case class LocalOverlays(overlays : Set[OverlayConfig], profileDir : File) {
 
-  def overlayRefs: Set[OverlayRef] = overlays.map(_.overlayRef).toSet
+  def overlayRefs : Set[OverlayRef] = overlays.map(_.overlayRef).toSet
 
   /**
    * Validate this set of overlays.
@@ -29,7 +29,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
    * @return A collection of validation errors, if any.
    *         If this is empty, the validation was successful.
    */
-  def validate(): List[String] = {
+  def validate() : List[String] = {
     val nameIssues = overlays.groupBy(_.name).collect {
       case (name, configs) if configs.size > 1 => s"More than one overlay with name '$name' detected"
     }.toList
@@ -54,14 +54,14 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
   /**
    * The location of the final applied set of overlays.
    */
-  def materializedDir: File = LocalOverlays.materializedDir(overlays.map(_.overlayRef), profileDir)
+  def materializedDir : File = LocalOverlays.materializedDir(overlays.map(_.overlayRef), profileDir)
 
   /**
    * Materializes the given local overlays.
    *
    * @return The `Success` with the materialized config files or `Failure` in case of any unrecoverable error.
    */
-  def materialize(): Try[immutable.Seq[File]] = Try {
+  def materialize() : Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
     OverlayConfigCompanion.aggregateGeneratedConfigs2(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
@@ -80,7 +80,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
   /**
    * The files that would be generated
    */
-  def materializedFiles(): Try[immutable.Seq[File]] = Try {
+  def materializedFiles() : Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
     OverlayConfigCompanion.aggregateGeneratedConfigs2(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
@@ -92,10 +92,10 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
     }
   }
 
-  def isMaterialized(): Boolean = {
+  def isMaterialized() : Boolean = {
     materializedFiles() match {
       case Success(files) => files.forall { f => f.exists() && f.isFile() }
-      case _ => false
+      case _              => false
     }
   }
 
@@ -106,7 +106,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
    *
    * @return The properties map.
    */
-  def properties: Map[String, String] = {
+  def properties : Map[String, String] = {
     overlays.toSeq.sorted.flatMap(o => o.properties).toMap
   }
 
@@ -116,7 +116,7 @@ final object LocalOverlays {
 
   private[this] lazy val log = Logger[LocalOverlays.type]
 
-  def materializedDir(overlays: Iterable[OverlayRef], profileDir: File): File = {
+  def materializedDir(overlays : Iterable[OverlayRef], profileDir : File) : File = {
     if (overlays.isEmpty) {
       profileDir
     } else {
@@ -125,7 +125,7 @@ final object LocalOverlays {
     }
   }
 
-  def preferredConfigFile(overlays: Iterable[OverlayRef], profileDir: File): File = {
+  def preferredConfigFile(overlays : Iterable[OverlayRef], profileDir : File) : File = {
     val overlayPart =
       if (overlays.isEmpty) "base"
       else overlays.toList.map(o => s"${o.name}-${o.version}").distinct.sorted.mkString("_")
@@ -133,7 +133,7 @@ final object LocalOverlays {
     new File(profileDir, s"overlays/${overlayPart}.conf")
   }
 
-  def read(config: Config, profileDir: File): Try[LocalOverlays] = Try {
+  def read(config : Config, profileDir : File) : Try[LocalOverlays] = Try {
     LocalOverlays(
       profileDir = profileDir,
       overlays = config.getObjectList("overlays").asScala.map { c =>
@@ -142,7 +142,7 @@ final object LocalOverlays {
     )
   }
 
-  def toConfig(localOverlays: LocalOverlays): Config = {
+  def toConfig(localOverlays : LocalOverlays) : Config = {
     val configs = localOverlays.overlays.toList.sorted.map { o =>
       val config = OverlayConfigCompanion.toConfig(o)
       config.root()
@@ -154,7 +154,7 @@ final object LocalOverlays {
   /**
    * Find all local overlays installed under the given `profileDir`.
    */
-  def findLocalOverlays(profileDir: File): List[LocalOverlays] = {
+  def findLocalOverlays(profileDir : File) : List[LocalOverlays] = {
     val overlaysDir = new File(profileDir, "overlays")
     val candidates = Option(overlaysDir.listFiles()).getOrElse(Array()).filter(f => f.isFile() && f.getName().endsWith(".conf"))
     log.debug(s"About to parse found files and find valid local overlays: ${candidates.mkString(", ")}")

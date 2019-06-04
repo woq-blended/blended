@@ -11,9 +11,9 @@ class ConfigPermissionManagerSpec extends AbstractLoginSpec {
 
   "The ConfigPermissionManager" - {
 
-    def assertPermissions(bp: BlendedPermissions, required : BlendedPermission*) : Unit = {
+    def assertPermissions(bp : BlendedPermissions, required : BlendedPermission*) : Unit = {
 
-      def permission(p: BlendedPermissions, permissionClass: String) : Option[BlendedPermission] =
+      def permission(p : BlendedPermissions, permissionClass : String) : Option[BlendedPermission] =
         p.granted.find(_.permissionClass == Some(permissionClass))
 
       required.foreach { r =>

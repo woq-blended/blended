@@ -3,7 +3,7 @@ package blended.mgmt.base.internal
 import blended.container.context.api.ContainerIdentifierService
 import blended.util.logging.Logger
 import domino.DominoActivator
-import javax.management.{ MBeanServer, ObjectName }
+import javax.management.{MBeanServer, ObjectName}
 
 class MgmtBaseActivator extends DominoActivator {
 

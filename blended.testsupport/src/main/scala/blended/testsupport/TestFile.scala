@@ -15,26 +15,26 @@ trait TestFile {
 
   private[this] val log = Logger[this.type]
 
-  def nextId(): String = UUID.randomUUID().toString()
+  def nextId() : String = UUID.randomUUID().toString()
 
-  def deleteAfter[T](files: File*)(f: => T)(implicit delete: DeletePolicy): T = {
+  def deleteAfter[T](files : File*)(f : => T)(implicit delete : DeletePolicy) : T = {
     var failure = false
     try {
       f
     } catch {
-      case e: Throwable =>
+      case e : Throwable =>
         failure = true
         throw e
     } finally {
       delete match {
-        case DeleteAlways => deleteRecursive(files: _*)
-        case DeleteWhenNoFailure if !failure => deleteRecursive(files: _*)
-        case _ =>
+        case DeleteAlways                    => deleteRecursive(files : _*)
+        case DeleteWhenNoFailure if !failure => deleteRecursive(files : _*)
+        case _                               =>
       }
     }
   }
 
-  def withTestFile[T](content: String, dir: File)(f: File => T)(implicit delete: DeletePolicy): T = {
+  def withTestFile[T](content : String, dir : File)(f : File => T)(implicit delete : DeletePolicy) : T = {
     val file = File.createTempFile("test", "", dir)
     if (!file.exists()) {
       throw new AssertionError("Just created file does not exist: " + file)
@@ -52,7 +52,7 @@ trait TestFile {
         try {
           fos.getFD().sync()
         } catch {
-          case e: SyncFailedException => // at least we tried
+          case e : SyncFailedException => // at least we tried
         }
         os.close()
       }
@@ -60,7 +60,7 @@ trait TestFile {
     }
   }
 
-  def withTestFile[T](content: String)(f: File => T)(implicit delete: DeletePolicy): T = {
+  def withTestFile[T](content : String)(f : File => T)(implicit delete : DeletePolicy) : T = {
 
     val file = File.createTempFile("test", "")
     if (!file.exists()) {
@@ -74,12 +74,11 @@ trait TestFile {
     }
   }
 
-  def writeFile(file: File, content: String): Unit = writeToFile(file, append = false, content)
+  def writeFile(file : File, content : String) : Unit = writeToFile(file, append = false, content)
 
-  def appendFile(file: File, content: String): Unit = writeToFile(file, append = true, content)
+  def appendFile(file : File, content : String) : Unit = writeToFile(file, append = true, content)
 
-
-  private[this] def writeToFile(file: File, append: Boolean, content: String): Unit = {
+  private[this] def writeToFile(file : File, append : Boolean, content : String) : Unit = {
     Option(file.getParentFile()) foreach { parent =>
       parent.mkdirs()
     }
@@ -93,41 +92,41 @@ trait TestFile {
       try {
         fos.getFD().sync()
       } catch {
-        case e: SyncFailedException => // at least we tried
+        case e : SyncFailedException => // at least we tried
       }
       os.close()
     }
   }
 
-  def withTestFiles[T](content1: String, content2: String)(f: (File, File) => T)(implicit delete: DeletePolicy): T =
+  def withTestFiles[T](content1 : String, content2 : String)(f : (File, File) => T)(implicit delete : DeletePolicy) : T =
     withTestFile(content1) { file1 =>
       withTestFile(content2) { file2 =>
         f(file1, file2)
       }
     }
 
-  def withTestFiles[T](content1: String, content2: String, content3: String)(f: (File, File, File) => T)(implicit delete: DeletePolicy): T =
+  def withTestFiles[T](content1 : String, content2 : String, content3 : String)(f : (File, File, File) => T)(implicit delete : DeletePolicy) : T =
     withTestFiles(content1, content2) { (file1, file2) =>
       withTestFile(content3) { file3 =>
         f(file1, file2, file3)
       }
     }
 
-  def withTestFiles[T](content1: String, content2: String, content3: String, content4: String)(f: (File, File, File, File) => T)(implicit delete: DeletePolicy): T =
+  def withTestFiles[T](content1 : String, content2 : String, content3 : String, content4 : String)(f : (File, File, File, File) => T)(implicit delete : DeletePolicy) : T =
     withTestFiles(content1, content2, content3) { (file1, file2, file3) =>
       withTestFile(content4) { file4 =>
         f(file1, file2, file3, file4)
       }
     }
 
-  def withTestFiles(content1: String, content2: String, content3: String, content4: String, content5: String)(f: (File, File, File, File, File) => Any)(implicit delete: DeletePolicy): Unit =
+  def withTestFiles(content1 : String, content2 : String, content3 : String, content4 : String, content5 : String)(f : (File, File, File, File, File) => Any)(implicit delete : DeletePolicy) : Unit =
     withTestFiles(content1, content2, content3, content4) { (file1, file2, file3, file4) =>
       withTestFile(content4) { file5 =>
         f(file1, file2, file3, file4, file5)
       }
     }
 
-  def withTestDir[T](tmpDir: File)(f: File => T)(implicit delete: DeletePolicy): T = {
+  def withTestDir[T](tmpDir : File)(f : File => T)(implicit delete : DeletePolicy) : T = {
     if (tmpDir != null && !tmpDir.exists()) tmpDir.mkdirs()
     val file = File.createTempFile("test", "", tmpDir)
     file.delete()
@@ -138,20 +137,20 @@ trait TestFile {
     }
   }
 
-  def withTestDir[T]()(f: File => T)(implicit delete: DeletePolicy): T = withTestDir(null)(f)(delete)
+  def withTestDir[T]()(f : File => T)(implicit delete : DeletePolicy) : T = withTestDir(null)(f)(delete)
 
-  def deleteRecursive(files: File*): Unit = files.foreach { file =>
+  def deleteRecursive(files : File*) : Unit = files.foreach { file =>
     if (file.isDirectory()) {
       file.listFiles() match {
-        case null =>
-        case files => deleteRecursive(files: _*)
+        case null  =>
+        case files => deleteRecursive(files : _*)
       }
     }
     file.delete()
   }
 
-  def listFilesRecursive(file: File): Seq[String] = {
-    def list(file: File, prefix: String): List[String] = {
+  def listFilesRecursive(file : File) : Seq[String] = {
+    def list(file : File, prefix : String) : List[String] = {
       file.listFiles() match {
         case null => Nil
         case files =>
@@ -165,8 +164,7 @@ trait TestFile {
     list(file, "").sorted
   }
 
-
-  def expectFiles(dir: File, exact: Boolean, files: String*): Unit = {
+  def expectFiles(dir : File, exact : Boolean, files : String*) : Unit = {
     val existing = listFilesRecursive(dir).toSet
     val expected = files.toSet
     val missing = expected.diff(existing)

@@ -7,7 +7,7 @@ import scala.util.Try
 
 object ArtifactCompanion {
 
-  def read(config: Config): Try[Artifact] = Try {
+  def read(config : Config) : Try[Artifact] = Try {
     Artifact(
       url = config.getString("url"),
       fileName = if (config.hasPath("fileName")) Option(config.getString("fileName")) else None,
@@ -15,7 +15,7 @@ object ArtifactCompanion {
     )
   }
 
-  def toConfig(resourceArchive: Artifact): Config = {
+  def toConfig(resourceArchive : Artifact) : Config = {
     val config = (
       Map("url" -> resourceArchive.url) ++
       resourceArchive.fileName.map(n => Map("fileName" -> n)).getOrElse(Map()) ++

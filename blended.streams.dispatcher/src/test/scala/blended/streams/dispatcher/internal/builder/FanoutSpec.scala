@@ -15,7 +15,7 @@ import scala.util.{Failure, Success, Try}
 class FanoutSpec extends DispatcherSpecSupport
   with Matchers {
 
-  override def loggerName: String = classOf[FanoutSpec].getName()
+  override def loggerName : String = classOf[FanoutSpec].getName()
 
   def performFanout(
     ctxt : DispatcherExecContext,
@@ -27,8 +27,7 @@ class FanoutSpec extends DispatcherSpecSupport
     val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
     fanout.funFanoutOutbound(envelope
       .withHeader(ctxt.bs.headerResourceType, resType, true).get
-      .withContextObject(ctxt.bs.rtConfigKey, resTypeCfg)
-    )
+      .withContextObject(ctxt.bs.rtConfigKey, resTypeCfg))
   }
 
   "The fanout subflow should" - {
@@ -43,11 +42,11 @@ class FanoutSpec extends DispatcherSpecSupport
         performFanout(ctxt, fanout, "FanOut", envelope) match {
           case Success(s) =>
             s should have size 2
-            assert(s.forall { case (outCfg, env) => env.id == envelope.id})
+            assert(s.forall { case (outCfg, env) => env.id == envelope.id })
             val outIds = s.map(_._2.header[String](ctxt.bs.headerConfig.headerBranch).get).distinct
             outIds should have size 2
-            outIds should contain ("default")
-            outIds should contain ("OtherApp")
+            outIds should contain("default")
+            outIds should contain("OtherApp")
           case Failure(t) => fail(t)
         }
       }
@@ -65,11 +64,11 @@ class FanoutSpec extends DispatcherSpecSupport
           performFanout(ctxt, fanout, resType, envelope) match {
             case Success(s) =>
               val wl = fanout.toWorklist(s)
-              wl.state should be (WorklistState.Started)
-              wl.worklist.id should be (envelope.id)
+              wl.state should be(WorklistState.Started)
+              wl.worklist.id should be(envelope.id)
               wl.worklist.items should have size (rtCfg.outbound.size)
             case Failure(t) =>
-              ctxt.bs.streamLogger.error(s"WorklistCreation failed for resource type [$resType]" )
+              ctxt.bs.streamLogger.error(s"WorklistCreation failed for resource type [$resType]")
               fail(t)
           }
         }
@@ -95,7 +94,7 @@ class FanoutSpec extends DispatcherSpecSupport
           val wlOut = b.add(wlColl.sink)
 
           fanoutGraph.out0 ~> envOut
-          fanoutGraph.out1 ~>  wlOut
+          fanoutGraph.out1 ~> wlOut
 
           SinkShape(fanoutGraph.in)
         }
@@ -120,17 +119,18 @@ class FanoutSpec extends DispatcherSpecSupport
           try {
             g.run()
 
-            val result = for{
+            val result = for {
               env <- envColl.result
               wl <- wlColl.result
-            } yield(env, wl)
+            } yield (env, wl)
 
-            result.map { case (envelopes, worklists) =>
-              ctxt.bs.streamLogger.info(s"Testing resourcetype [$resType]")
-              worklists should have size 1
-              envelopes should have size rtCfg.outbound.size
+            result.map {
+              case (envelopes, worklists) =>
+                ctxt.bs.streamLogger.info(s"Testing resourcetype [$resType]")
+                worklists should have size 1
+                envelopes should have size rtCfg.outbound.size
             }
-          } finally  {
+          } finally {
             system.stop(envColl.actor)
             system.stop(wlColl.actor)
           }

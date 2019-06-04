@@ -23,7 +23,7 @@ private[bridge] object BridgeControllerConfig {
   def create(
     cfg : Config,
     internalCf : IdAwareConnectionFactory,
-    idSvc: ContainerIdentifierService,
+    idSvc : ContainerIdentifierService,
     streamBuilderFactory : ActorSystem => Materializer => BridgeStreamConfig => BridgeStreamBuilder
   ) : BridgeControllerConfig = {
 
@@ -33,7 +33,7 @@ private[bridge] object BridgeControllerConfig {
       BridgeProviderConfig.create(idSvc, p).get
     }.toList
 
-    val inboundList : List[InboundConfig ]=
+    val inboundList : List[InboundConfig] =
       cfg.getConfigList("inbound", List.empty).map { i =>
         InboundConfig.create(idSvc, i).get
       }
@@ -41,9 +41,9 @@ private[bridge] object BridgeControllerConfig {
     val trackInbound : Boolean = cfg.getBoolean("trackInbound", true)
 
     providerList.filter(_.internal) match {
-      case Nil => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
+      case Nil      => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
       case _ :: Nil =>
-      case _ => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
+      case _        => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
     }
 
     val registry = new BridgeProviderRegistry(providerList)
@@ -72,24 +72,24 @@ private[bridge] case class BridgeControllerConfig(
   streamBuilderFactory : ActorSystem => Materializer => BridgeStreamConfig => BridgeStreamBuilder
 )
 
-object BridgeController{
+object BridgeController {
 
   case class AddConnectionFactory(cf : IdAwareConnectionFactory)
   case class RemoveConnectionFactory(cf : IdAwareConnectionFactory)
 
-  def props(ctrlCfg: BridgeControllerConfig)(implicit system : ActorSystem, materializer: Materializer) : Props =
+  def props(ctrlCfg : BridgeControllerConfig)(implicit system : ActorSystem, materializer : Materializer) : Props =
     Props(new BridgeController(ctrlCfg))
 
 }
 
-class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorSystem, materializer: Materializer) extends Actor {
+class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : ActorSystem, materializer : Materializer) extends Actor {
 
   private[this] val log = Logger[BridgeController]
 
   // This is the map of active streams
   private[this] var streams : Map[String, ActorRef] = Map.empty
 
-  private[this] def createInboundStream(in : InboundConfig, cf : IdAwareConnectionFactory, internal: Boolean) : Unit = {
+  private[this] def createInboundStream(in : InboundConfig, cf : IdAwareConnectionFactory, internal : Boolean) : Unit = {
 
     val toDest = if (internal) {
       JmsDestination.create(ctrlCfg.registry.internalProvider.get.inbound.asString).get
@@ -161,7 +161,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
     streams += (builder.streamCfg.name -> actor)
   }
 
-  override def receive: Receive = {
+  override def receive : Receive = {
     case AddConnectionFactory(cf) =>
 
       ctrlCfg.registry.internalProvider match {
@@ -185,10 +185,11 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
     case RemoveConnectionFactory(cf) =>
       log.info(s"Removing connection factory [${cf.vendor}:${cf.provider}]")
 
-      streams.filter{ case (key, _) => key.startsWith(cf.id) }.foreach { case (id, stream) =>
-        log.info(s"Stopping stream [$id]")
-        stream ! StreamController.Stop
-        streams -= id
+      streams.filter { case (key, _) => key.startsWith(cf.id) }.foreach {
+        case (id, stream) =>
+          log.info(s"Stopping stream [$id]")
+          stream ! StreamController.Stop
+          streams -= id
       }
-    }
+  }
 }

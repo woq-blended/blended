@@ -8,28 +8,28 @@ import scala.util.Try
  */
 trait Mapper {
 
-  def mapArtifact(a: Artifact): java.util.Map[String, AnyRef] =
+  def mapArtifact(a : Artifact) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "url" -> a.url,
       "fileName" -> a.fileName.orNull,
       "sha1Sum" -> a.sha1Sum.orNull
     ).asJava
 
-  def mapBundleConfig(b: BundleConfig): java.util.Map[String, AnyRef] =
+  def mapBundleConfig(b : BundleConfig) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "artifact" -> mapArtifact(b.artifact),
       "start" -> java.lang.Boolean.valueOf(b.start),
       "startLevel" -> b.startLevel.map(i => java.lang.Integer.valueOf(i)).orNull
     ).asJava
 
-  def mapFeatureRef(ref: FeatureRef): java.util.Map[String, AnyRef] =
+  def mapFeatureRef(ref : FeatureRef) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> ref.name,
       "version" -> ref.version,
       "url" -> ref.url.orNull
     ).asJava
 
-  def mapFeatureConfig(f: FeatureConfig): java.util.Map[String, AnyRef] =
+  def mapFeatureConfig(f : FeatureConfig) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> f.name,
       "version" -> f.version,
@@ -38,7 +38,7 @@ trait Mapper {
       "bundles" -> f.bundles.map { b => mapBundleConfig(b) }.asJava
     ).asJava
 
-  def mapRuntimeConfig(runtimeConfig: RuntimeConfig): java.util.Map[String, AnyRef] =
+  def mapRuntimeConfig(runtimeConfig : RuntimeConfig) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> runtimeConfig.name,
       "version" -> runtimeConfig.version,
@@ -53,13 +53,13 @@ trait Mapper {
       "resolvedFeatures" -> runtimeConfig.resolvedFeatures.map(f => mapFeatureConfig(f)).asJava
     ).asJava
 
-  def mapRemoteContainerState(s: RemoteContainerState): java.util.Map[String, AnyRef] =
+  def mapRemoteContainerState(s : RemoteContainerState) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "containerInfo" -> mapContainerInfo(s.containerInfo),
       "outstandingUpdateActions" -> s.outstandingUpdateActions.map(a => mapUpdateAction(a)).asJava
     ).asJava
 
-  def mapServiceInfo(si: ServiceInfo): java.util.Map[String, AnyRef] =
+  def mapServiceInfo(si : ServiceInfo) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> si.name,
       "serviceType" -> si.serviceType,
@@ -68,7 +68,7 @@ trait Mapper {
       "props" -> si.props.asJava
     ).asJava
 
-  def mapContainerInfo(ci: ContainerInfo): java.util.Map[String, AnyRef] =
+  def mapContainerInfo(ci : ContainerInfo) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "containerId" -> ci.containerId,
       "properties" -> ci.properties.asJava,
@@ -77,7 +77,7 @@ trait Mapper {
       "timestampMsec" -> java.lang.Long.valueOf(ci.timestampMsec)
     ).asJava
 
-  def mapUpdateAction(a: UpdateAction): java.util.Map[String, AnyRef] = a match {
+  def mapUpdateAction(a : UpdateAction) : java.util.Map[String, AnyRef] = a match {
     case AddRuntimeConfig(id, rc) =>
       Map(
         "kind" -> UpdateAction.KindAddRuntimeConfig,
@@ -87,7 +87,7 @@ trait Mapper {
     case AddOverlayConfig(id, oc) =>
       Map(
         "kind" -> UpdateAction.KindAddOverlayConfig,
-        "id" ->id,
+        "id" -> id,
         "overlay" -> mapOverlayConfig(oc)
       ).asJava
     case ActivateProfile(id, profileName, profileVersion, overlays) =>
@@ -108,7 +108,7 @@ trait Mapper {
       ).asJava
   }
 
-  def mapOverlayConfig(oc: OverlayConfig): java.util.Map[String, AnyRef] =
+  def mapOverlayConfig(oc : OverlayConfig) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> oc.name,
       "version" -> oc.version,
@@ -116,41 +116,40 @@ trait Mapper {
       "properties" -> oc.properties.asJava
     ).asJava
 
-  def mapGeneratedConfig(c: GeneratedConfig): java.util.Map[String, AnyRef] =
+  def mapGeneratedConfig(c : GeneratedConfig) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "configFile" -> c.configFile,
       "config" -> c.config
     ).asJava
 
-  def mapProfileGroup(p: ProfileGroup): java.util.Map[String, AnyRef] =
+  def mapProfileGroup(p : ProfileGroup) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> p.name,
       "version" -> p.version,
       "overlays" -> p.overlays.map(o => mapOverlaySet(o)).asJava
     ).asJava
 
-  def mapProfile(p: Profile): java.util.Map[String, AnyRef] =
+  def mapProfile(p : Profile) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> p.name,
       "version" -> p.version,
       "overlays" -> mapOverlaySet(p.overlaySet)
     ).asJava
 
-
-  def mapOverlaySet(o: OverlaySet): java.util.Map[String, AnyRef] =
+  def mapOverlaySet(o : OverlaySet) : java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "overlays" -> o.overlays.map(o => mapOverlayRef(o)).asJava,
       "state" -> o.state.state,
       "reason" -> o.reason.orNull
     ).asJava
 
-  def mapOverlayRef(o: OverlayRef) =
+  def mapOverlayRef(o : OverlayRef) =
     Map[String, AnyRef](
       "name" -> o.name,
       "version" -> o.version
     ).asJava
 
-  def unmapRemoteContainerState(map: AnyRef): Try[RemoteContainerState] = Try {
+  def unmapRemoteContainerState(map : AnyRef) : Try[RemoteContainerState] = Try {
     val m = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     RemoteContainerState(
       containerInfo = unmapContainerInfo(m("containerInfo")).get,
@@ -158,7 +157,7 @@ trait Mapper {
     )
   }
 
-  def unmapArtifact(map: AnyRef): Try[Artifact] = Try {
+  def unmapArtifact(map : AnyRef) : Try[Artifact] = Try {
     val m = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     Artifact(
       url = m("url").asInstanceOf[String],
@@ -167,7 +166,7 @@ trait Mapper {
     )
   }
 
-  def unmapUpdateAction(map: AnyRef): Try[UpdateAction] = Try {
+  def unmapUpdateAction(map : AnyRef) : Try[UpdateAction] = Try {
     val a = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     a("kind") match {
       case UpdateAction.KindAddRuntimeConfig =>
@@ -198,7 +197,7 @@ trait Mapper {
     }
   }
 
-  def unmapContainerInfo(map: AnyRef): Try[ContainerInfo] = Try {
+  def unmapContainerInfo(map : AnyRef) : Try[ContainerInfo] = Try {
     val ci = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     ContainerInfo(
       containerId = ci("containerId").asInstanceOf[String],
@@ -210,7 +209,7 @@ trait Mapper {
     )
   }
 
-  def unmapServiceInfo(map: AnyRef): Try[ServiceInfo] = Try {
+  def unmapServiceInfo(map : AnyRef) : Try[ServiceInfo] = Try {
     val si = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     ServiceInfo(
       name = si("name").asInstanceOf[String],
@@ -221,7 +220,7 @@ trait Mapper {
     )
   }
 
-  def unmapProfileGroup(map: AnyRef): Try[ProfileGroup] = Try {
+  def unmapProfileGroup(map : AnyRef) : Try[ProfileGroup] = Try {
     val p = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     ProfileGroup(
       name = p("name").asInstanceOf[String],
@@ -230,7 +229,7 @@ trait Mapper {
     )
   }
 
-  def unmapProfile(map: AnyRef): Try[Profile] = Try {
+  def unmapProfile(map : AnyRef) : Try[Profile] = Try {
     val p = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     Profile(
       name = p("name").asInstanceOf[String],
@@ -239,7 +238,7 @@ trait Mapper {
     )
   }
 
-  def unmapOverlayRef(map: AnyRef): Try[OverlayRef] = Try {
+  def unmapOverlayRef(map : AnyRef) : Try[OverlayRef] = Try {
     val or = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     OverlayRef(
       name = or("name").asInstanceOf[String],
@@ -247,7 +246,7 @@ trait Mapper {
     )
   }
 
-  def unmapOverlaySet(map: AnyRef): Try[OverlaySet] = Try {
+  def unmapOverlaySet(map : AnyRef) : Try[OverlaySet] = Try {
     val o = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     OverlaySet(
       overlays = o("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.map(o => unmapOverlayRef(o).get).toSet,
@@ -259,7 +258,7 @@ trait Mapper {
     )
   }
 
-  def unmapOverlayConfig(map: AnyRef): Try[OverlayConfig] = Try {
+  def unmapOverlayConfig(map : AnyRef) : Try[OverlayConfig] = Try {
     val oc = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     OverlayConfig(
       name = oc("name").asInstanceOf[String],
@@ -269,7 +268,7 @@ trait Mapper {
     )
   }
 
-  def unmapRuntimeConfig(map: AnyRef): Try[RuntimeConfig] = Try {
+  def unmapRuntimeConfig(map : AnyRef) : Try[RuntimeConfig] = Try {
     val rc = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     RuntimeConfig(
       name = rc("name").asInstanceOf[String],
@@ -286,7 +285,7 @@ trait Mapper {
     )
   }
 
-  def unmapGeneratedConfig(map: AnyRef): Try[GeneratedConfig] = Try {
+  def unmapGeneratedConfig(map : AnyRef) : Try[GeneratedConfig] = Try {
     val c = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     GeneratedConfig(
       configFile = c("configFile").asInstanceOf[String],
@@ -294,7 +293,7 @@ trait Mapper {
     )
   }
 
-  def unmapBundleConfig(map: AnyRef): Try[BundleConfig] = Try {
+  def unmapBundleConfig(map : AnyRef) : Try[BundleConfig] = Try {
     val bc = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     BundleConfig(
       artifact = unmapArtifact(bc("artifact")).get,
@@ -304,7 +303,7 @@ trait Mapper {
     )
   }
 
-  def unmapFeatureRef(map: AnyRef): Try[FeatureRef] = Try {
+  def unmapFeatureRef(map : AnyRef) : Try[FeatureRef] = Try {
     val f = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     FeatureRef(
       name = f("name").asInstanceOf[String],
@@ -313,7 +312,7 @@ trait Mapper {
     )
   }
 
-  def unmapFeatureConfig(map: AnyRef): Try[FeatureConfig] = Try {
+  def unmapFeatureConfig(map : AnyRef) : Try[FeatureConfig] = Try {
     val f = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     FeatureConfig(
       name = f("name").asInstanceOf[String],

@@ -20,12 +20,12 @@ import domino.DominoActivator
 import org.osgi.framework.ServiceRegistration
 
 case class UpdateEnv(
-  launchedProfileName: String,
-  launchedProfileVersion: String,
-  launchProfileLookupFile: Option[File],
-  profilesBaseDir: File,
-  launchedProfileDir: Option[File],
-  overlays: Option[List[OverlayRef]]
+  launchedProfileName : String,
+  launchedProfileVersion : String,
+  launchProfileLookupFile : Option[File],
+  profilesBaseDir : File,
+  launchedProfileDir : Option[File],
+  overlays : Option[List[OverlayRef]]
 )
 
 class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
@@ -62,7 +62,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
             )
           )
 
-          def registerCommands(srv: AnyRef, cmds: Seq[(String, String)]): ServiceRegistration[Object] = {
+          def registerCommands(srv : AnyRef, cmds : Seq[(String, String)]) : ServiceRegistration[Object] = {
             val (commands, descriptions) = cmds.unzip
             srv.providesService[Object](
               "osgi.command.scope" -> "blended.updater",
@@ -79,7 +79,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
     }
   }
 
-  private def readUpdateEnv(): Option[UpdateEnv] = try {
+  private def readUpdateEnv() : Option[UpdateEnv] = try {
     val props = blended.launcher.runtime.Branding.getProperties()
     println("Blended Launcher detected: " + props)
     val pName = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_NAME))
@@ -107,20 +107,20 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
       )
     )
   } catch {
-    case e: NoClassDefFoundError =>
+    case e : NoClassDefFoundError =>
       // could not load optional branding class
       None
-    case e: NoSuchElementException =>
+    case e : NoSuchElementException =>
       // could not found some required properties
       None
   }
 
-  private def profileActivator(updateEnv: UpdateEnv) = new ProfileActivator {
+  private def profileActivator(updateEnv : UpdateEnv) = new ProfileActivator {
     override def apply(
-      newName: String,
-      newVersion: String,
-      newOverlays: Set[OverlayRef]
-    ): Boolean = {
+      newName : String,
+      newVersion : String,
+      newOverlays : Set[OverlayRef]
+    ) : Boolean = {
       // TODO: Error reporting
       updateEnv match {
         case UpdateEnv(_, _, Some(lookupFile), _, _, _) =>

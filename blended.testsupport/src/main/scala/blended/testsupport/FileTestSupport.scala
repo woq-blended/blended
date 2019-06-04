@@ -11,25 +11,25 @@ import org.scalatest.Matchers
 import scala.io.Source
 import scala.util.control.NonFatal
 
-trait FileTestSupport extends  Matchers {
+trait FileTestSupport extends Matchers {
 
   private[FileTestSupport] val log : Logger = Logger[FileTestSupport]
 
   val duplicateFilter : FileFilter = new FileFilter {
-    override def accept(f: File): Boolean = f.isDirectory() || (f.isFile() && f.getName().contains("dup_"))
+    override def accept(f : File) : Boolean = f.isDirectory() || (f.isFile() && f.getName().contains("dup_"))
   }
 
   val acceptAllFilter : FileFilter = new FileFilter {
-    override def accept(pathname: File): Boolean = true
+    override def accept(pathname : File) : Boolean = true
   }
 
-  def multiply(c : ByteString, n: Int) : ByteString = n match {
-    case m if m > 1 => c ++ multiply(c, n-1)
+  def multiply(c : ByteString, n : Int) : ByteString = n match {
+    case m if m > 1  => c ++ multiply(c, n - 1)
     case m if m == 1 => c
-    case _ => ByteString("")
+    case _           => ByteString("")
   }
 
-  def zipCompress(content: ByteString) : ByteString = {
+  def zipCompress(content : ByteString) : ByteString = {
 
     val bos = new ByteArrayOutputStream()
     val zip = new ZipOutputStream(bos)
@@ -48,7 +48,7 @@ trait FileTestSupport extends  Matchers {
     ByteString(bos.toByteArray)
   }
 
-  def gzipCompress(content: ByteString) : ByteString = {
+  def gzipCompress(content : ByteString) : ByteString = {
 
     val bos = new ByteArrayOutputStream()
     val zip = new GZIPOutputStream(bos)
@@ -64,7 +64,7 @@ trait FileTestSupport extends  Matchers {
     ByteString(bos.toByteArray())
   }
 
-  def uncompress(content: Array[Byte]): Array[Byte] = {
+  def uncompress(content : Array[Byte]) : Array[Byte] = {
 
     val bis = new BufferedInputStream(new ByteArrayInputStream(content))
     val bos = new ByteArrayOutputStream()
@@ -84,7 +84,7 @@ trait FileTestSupport extends  Matchers {
 
     var count = zippedIs.read(buffer)
 
-    while(count >= 0) {
+    while (count >= 0) {
       if (count > 0) {
         bos.write(buffer, 0, count)
       }
@@ -105,7 +105,7 @@ trait FileTestSupport extends  Matchers {
       filter = (f : File) => f.getName().matches(pattern)
     )
 
-  def getFiles(dirName: String, filter: FileFilter, recursive : Boolean): List[File] = {
+  def getFiles(dirName : String, filter : FileFilter, recursive : Boolean) : List[File] = {
 
     val f : File = new File(dirName)
 
@@ -114,15 +114,16 @@ trait FileTestSupport extends  Matchers {
         List(f.getAbsoluteFile())
       } else {
         f.listFiles(filter).flatMap {
-          x => if (x.isFile) {
-            List(x.getAbsoluteFile())
-          } else {
-            if (recursive) {
-              getFiles(x.getAbsolutePath, filter, recursive)
+          x =>
+            if (x.isFile) {
+              List(x.getAbsoluteFile())
             } else {
-              List.empty
+              if (recursive) {
+                getFiles(x.getAbsolutePath, filter, recursive)
+              } else {
+                List.empty
+              }
             }
-          }
         }.toList
       }
     } else {
@@ -130,7 +131,7 @@ trait FileTestSupport extends  Matchers {
     }
   }
 
-  def verifyTargetFile (file: File, content : ByteString) : Boolean = {
+  def verifyTargetFile(file : File, content : ByteString) : Boolean = {
 
     val fileContent : ByteString = ByteString(Source.fromFile(file).mkString)
 
@@ -141,13 +142,13 @@ trait FileTestSupport extends  Matchers {
     }
   }
 
-  def cleanUpDirectory (dirName : String) : Unit = {
+  def cleanUpDirectory(dirName : String) : Unit = {
 
     log.info(s"Cleaning up directory [$dirName]")
     FileUtils.deleteDirectory(new File(dirName))
   }
 
-  def genFile(f: File, content : ByteString) : Unit = {
+  def genFile(f : File, content : ByteString) : Unit = {
     val os = new FileOutputStream(f)
     os.write(content.toArray)
     os.flush()

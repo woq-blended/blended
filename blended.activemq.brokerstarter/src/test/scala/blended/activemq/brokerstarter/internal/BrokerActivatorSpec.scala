@@ -18,10 +18,9 @@ class BrokerActivatorSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper
   with Matchers {
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
@@ -30,8 +29,8 @@ class BrokerActivatorSpec extends SimplePojoContainerSpec
 
     "start the configured brokers correctly" in {
       implicit val timeout = 10.seconds
-      waitOnService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=blended))")) should be (defined)
-      waitOnService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=broker2))")) should be (defined)
+      waitOnService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=blended))")) should be(defined)
+      waitOnService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=broker2))")) should be(defined)
     }
   }
 

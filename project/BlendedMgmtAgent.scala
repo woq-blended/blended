@@ -21,7 +21,7 @@ object BlendedMgmtAgent extends ProjectFactory {
       exportPackage = Seq()
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project,
       BlendedUpdaterConfigJvm.project,
       BlendedUtilLogging.project,

@@ -22,9 +22,9 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
   val todoOverlays = List.empty[OverlayConfig]
   val todoOverlayRefs = Set.empty[OverlayRef]
 
-  case class TestContext(remoteUpdater: RemoteUpdater, persitenceService: Option[PersistenceService] = None)
+  case class TestContext(remoteUpdater : RemoteUpdater, persitenceService : Option[PersistenceService] = None)
 
-  def withEmptyRemoteUpdate(transient: Boolean)(f: TestContext => Unit): Unit = {
+  def withEmptyRemoteUpdate(transient : Boolean)(f : TestContext => Unit) : Unit = {
     transient match {
       case true =>
         val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
@@ -39,9 +39,9 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
           val ds = JdbcConnectionPool.create(ds0)
 
-          val txMgr: PlatformTransactionManager = new DataSourceTransactionManager(ds)
+          val txMgr : PlatformTransactionManager = new DataSourceTransactionManager(ds)
 
-          val dao: PersistedClassDao = new PersistedClassDao(ds)
+          val dao : PersistedClassDao = new PersistedClassDao(ds)
           dao.init()
 
           val persistenceService = new PersistenceServiceJdbc(txMgr, dao)

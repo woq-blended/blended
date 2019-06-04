@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
 case class HostnameCNProvider(hostname : String) extends CommonNameProvider {
-  override def commonName(): Try[String] = Success(s"CN=$hostname")
+  override def commonName() : Try[String] = Success(s"CN=$hostname")
 }
 
 trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSigner =>
@@ -36,13 +36,13 @@ trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSig
     validDays = validDays
   )
 
-  val jks: String => JavaKeystore = fileName => new JavaKeystore(
+  val jks : String => JavaKeystore = fileName => new JavaKeystore(
     keystoreFile(fileName),
     "storepass".toCharArray,
     Some("storepass".toCharArray)
   )
 
-  def keystoreFile(name: String) : File = {
+  def keystoreFile(name : String) : File = {
     val f = new File(BlendedTestSupport.projectTestOutput, name)
     if (f.exists()) {
       f.delete()
@@ -56,7 +56,7 @@ trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSig
     new SelfSignedCertificateProvider(selfSignedCfg(cnProvider).copy(validDays = validDays)).refreshCertificate(None, cnProvider).get
   }
 
-  def createHostCertificate(hostName: String, issuedBy : CertificateHolder, validDays : Int = validDays) : Try[CertificateHolder] = Try {
+  def createHostCertificate(hostName : String, issuedBy : CertificateHolder, validDays : Int = validDays) : Try[CertificateHolder] = Try {
 
     issuedBy.privateKey match {
 
@@ -65,14 +65,14 @@ trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSig
 
         val pair : KeyPair = kpg.generateKeyPair()
 
-        val certReq: X509v3CertificateBuilder = hostCertificateRequest(
+        val certReq : X509v3CertificateBuilder = hostCertificateRequest(
           cnProvider = HostnameCNProvider(hostName),
           keyPair = pair,
           validDays = validDays,
           issuedBy = Some(issuedBy)
         ).get
 
-        val cert: X509Certificate = sign(certReq, sigAlg, k).get
+        val cert : X509Certificate = sign(certReq, sigAlg, k).get
         CertificateHolder.create(pair, cert :: issuedBy.chain).get
     }
   }

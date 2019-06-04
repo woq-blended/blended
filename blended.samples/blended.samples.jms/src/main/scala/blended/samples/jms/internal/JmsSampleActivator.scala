@@ -8,7 +8,7 @@ import blended.domino.TypesafeConfigWatching
 import blended.util.logging.Logger
 import domino.DominoActivator
 import javax.jms.ConnectionFactory
-import org.apache.camel.{ Exchange, Processor }
+import org.apache.camel.{Exchange, Processor}
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.jms.JmsComponent
 
@@ -25,20 +25,20 @@ class JmsSampleActivator extends DominoActivator with TypesafeConfigWatching {
     whenTypesafeConfigAvailable { (cfg, idSvc) =>
       val jmsSampleCfg = JmsSampleConfig(cfg)
 
-      whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)"){ cf =>
+      whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)") { cf =>
         whenServicePresent[ContainerIdentifierService] { idSvc =>
           val ctxt = BlendedCamelContextFactory.createContext(name = "JmsSampleContext", withJmx = true, idSvc = idSvc)
           ctxt.addComponent("activemq", JmsComponent.jmsComponent(cf))
 
           ctxt.addRoutes(new RouteBuilder() {
-            override def configure(): Unit = {
+            override def configure() : Unit = {
 
               if (jmsSampleCfg.producerInterval > 0) {
                 log.info(s"Creating producer with interval [${jmsSampleCfg.producerInterval}]ms for destination [${jmsSampleCfg.destination}]")
                 from(s"timer:sample?period=${jmsSampleCfg.producerInterval}")
                   .routeId("sampleProducer")
                   .process(new Processor() {
-                    override def process(exchange: Exchange): Unit = {
+                    override def process(exchange : Exchange) : Unit = {
                       exchange.setOut(exchange.getIn())
                       exchange.getOut().setHeader("SampleCounter", msgCounter.getAndIncrement().toString())
                     }

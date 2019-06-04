@@ -6,14 +6,14 @@ import scala.util.{Failure, Success}
 
 object BlendedEncryptor {
 
-  def main(args: Array[String]): Unit = run(args)
+  def main(args : Array[String]) : Unit = run(args)
 
   def run(args : Array[String]) : Unit = {
 
     val cmdLine = new CmdLine()
     val cp = new CmdlineParser(cmdLine)
     cp.setAboutLine("Standalone client to encrypt plain Strings to be included in the config files.")
-    cp.parse(args:_*)
+    cp.parse(args : _*)
 
     if (cmdLine.help || args.isEmpty) {
       cp.usage()
@@ -36,7 +36,7 @@ object BlendedEncryptor {
   private class CmdLine {
 
     @CmdOption(names = Array("--help", "-h"), description = "Show this help", isHelp = true)
-    var help: Boolean = false
+    var help : Boolean = false
 
     @CmdOption(
       names = Array("--secret", "-s"),

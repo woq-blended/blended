@@ -29,7 +29,7 @@ object BlendedContainerContextImpl extends ProjectFactory {
       importPackage = Seq("blended.launcher.runtime;resolution:=optional")
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedSecurityCrypto.project,
       BlendedContainerContextApi.project,
       BlendedUtilLogging.project,

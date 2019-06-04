@@ -15,7 +15,7 @@ import prickle.Pickle
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
-class MgmtWebSocketServer(system: ActorSystem, store: TokenStore) {
+class MgmtWebSocketServer(system : ActorSystem, store : TokenStore) {
 
   private[this] val log = Logger[MgmtWebSocketServer]
   private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
@@ -44,7 +44,7 @@ class MgmtWebSocketServer(system: ActorSystem, store: TokenStore) {
     }
   }
 
-  private[this] def dispatcherFlow(info: Token) : Flow[Message, Message, Any] = {
+  private[this] def dispatcherFlow(info : Token) : Flow[Message, Message, Any] = {
     Flow[Message]
       // We will only process TextMessage.Strict variants for now,
       // so we use a collect here
@@ -69,7 +69,7 @@ class MgmtWebSocketServer(system: ActorSystem, store: TokenStore) {
 
           case msg : String => TextMessage.Strict(msg)
 
-          case _ => TextMessage.Strict("")
+          case _            => TextMessage.Strict("")
         }
 
         case o =>
@@ -78,7 +78,7 @@ class MgmtWebSocketServer(system: ActorSystem, store: TokenStore) {
       .via(reportErrorsFlow)
   }
 
-  def reportErrorsFlow[T]: Flow[T, T, Any] =
+  def reportErrorsFlow[T] : Flow[T, T, Any] =
     Flow[T]
       .watchTermination()((_, f) => f.onComplete {
         case Failure(cause) =>

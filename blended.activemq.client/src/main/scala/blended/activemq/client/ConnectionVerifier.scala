@@ -9,11 +9,10 @@ trait ConnectionVerifierFactory {
 }
 
 trait ConnectionVerifier {
-  def verifyConnection(cf : IdAwareConnectionFactory)(implicit eCtxt: ExecutionContext) : Future[Boolean]
+  def verifyConnection(cf : IdAwareConnectionFactory)(implicit eCtxt : ExecutionContext) : Future[Boolean]
 }
 
 trait VerificationFailedHandler {
-  def verificationFailed(cf: IdAwareConnectionFactory) : Unit
+  def verificationFailed(cf : IdAwareConnectionFactory) : Unit
 }
-
 

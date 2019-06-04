@@ -32,26 +32,26 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     bs : DispatcherBuilderSupport
   )
 
-  def country: String = "cc"
-  def location: String = "09999"
+  def country : String = "cc"
+  def location : String = "09999"
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.jms.bridge" -> new BridgeActivator()
   )
 
-  def loggerName: String
+  def loggerName : String
 
   System.setProperty("AppCountry", country)
   System.setProperty("AppLocation", location)
 
-  def providerId(vendor: String, provider: String) : String =
+  def providerId(vendor : String, provider : String) : String =
     classOf[BridgeProviderConfig].getSimpleName() + s"($vendor:$provider)"
 
   def jmsConnectionFactory(sr : BlendedPojoRegistry, ctxt : DispatcherExecContext)(
-    vendor : String, provider : String, timeout: FiniteDuration
+    vendor : String, provider : String, timeout : FiniteDuration
   ) : Try[IdAwareConnectionFactory] = {
 
     implicit val to : FiniteDuration = timeout
@@ -68,7 +68,7 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
         case Success(c) => Some(c)
         case Failure(t) => None
       }
-    } while(con.isEmpty && System.currentTimeMillis() - started <= timeout.toMillis)
+    } while (con.isEmpty && System.currentTimeMillis() - started <= timeout.toMillis)
 
     con match {
       case Some(_) =>
@@ -101,8 +101,8 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     ).get
 
     val bs = new DispatcherBuilderSupport {
-      override def containerConfig: Config = idSvc.getContainerContext().getContainerConfig()
-      override val streamLogger: Logger = Logger(loggerName)
+      override def containerConfig : Config = idSvc.getContainerContext().getContainerConfig()
+      override val streamLogger : Logger = Logger(loggerName)
     }
 
     DispatcherExecContext(cfg = cfg, idSvc = idSvc, system = system, bs = bs)

@@ -22,8 +22,8 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
 
     whenTypesafeConfigAvailable { (config, idService) =>
 
-      def getString(path: String): Option[String] = {
-        val lookup :Option[String] = if (config.hasPath(path)) Some(config.getString(path)) else None
+      def getString(path : String) : Option[String] = {
+        val lookup : Option[String] = if (config.hasPath(path)) Some(config.getString(path)) else None
         lookup.map(v => idService.resolvePropertyString(v).map(_.toString()).get)
       }
 
@@ -55,7 +55,7 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
 
           val finalUrl = url + extraOptions.filter(!_.isEmpty()).map(";" + _).getOrElse("")
           log.debug(s"DB url: [${finalUrl}]")
-          
+
           val ds = new JdbcDataSource()
           ds.setURL(finalUrl)
           ds.setUser(user)

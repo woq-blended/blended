@@ -15,7 +15,7 @@ object BlendedMgmtBase extends ProjectFactory {
       bundleActivator = s"${projectName}.internal.MgmtBaseActivator"
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedContainerContextApi.project,
       BlendedUtil.project,

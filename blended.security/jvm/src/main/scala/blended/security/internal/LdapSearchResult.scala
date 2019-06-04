@@ -5,7 +5,7 @@ import javax.naming.directory.SearchResult
 
 import scala.collection.mutable.ListBuffer
 
-case class LdapSearchResult(private val sr: NamingEnumeration[SearchResult]) {
+case class LdapSearchResult(private val sr : NamingEnumeration[SearchResult]) {
 
   lazy val result : List[SearchResult] = {
     val r : ListBuffer[SearchResult] = ListBuffer.empty

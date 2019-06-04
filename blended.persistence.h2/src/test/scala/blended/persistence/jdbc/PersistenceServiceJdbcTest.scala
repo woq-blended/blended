@@ -21,7 +21,7 @@ class PersistenceServiceJdbcTest
   /**
    * Use this to run a test against a pre-initialized Persistence Service. The schema is created, but no data is present.
    */
-  def withTestPersistenceService(dir: Option[File] = None)(f: (PersistenceServiceJdbc, PlatformTransactionManager) => Unit): Unit = {
+  def withTestPersistenceService(dir : Option[File] = None)(f : (PersistenceServiceJdbc, PlatformTransactionManager) => Unit) : Unit = {
     DbFactory.withTestPersistenceService(dir, deletePolicy) { ctx =>
       f(ctx.persistenceService, ctx.txManager)
       //      f(DbFactory.WithTestPersistenceServiceContext.unapply(ctx).get)
@@ -167,30 +167,30 @@ class PersistenceServiceJdbcTest
         "containerId" -> "1",
         "outstandingActions" -> List(
           Map(
-          "kind" -> "AddRuntimeConfig",
-          "runtimeConfig" -> Map(
-            "resolvedFeatures" -> List().asJava,
-            "startLevel" -> 10,
-            "name" -> "rc",
-            "systemProperties" -> Map().asJava,
-            "bundles" -> List().asJava,
-            "frameworkProperties" -> Map().asJava,
-            "features" -> List().asJava,
-            "defaultStartLevel" -> 10,
-            "version" -> "1",
-            "properties" -> Map().asJava,
-            "resources" -> List().asJava
-          ).asJava
-        ).asJava,
+            "kind" -> "AddRuntimeConfig",
+            "runtimeConfig" -> Map(
+              "resolvedFeatures" -> List().asJava,
+              "startLevel" -> 10,
+              "name" -> "rc",
+              "systemProperties" -> Map().asJava,
+              "bundles" -> List().asJava,
+              "frameworkProperties" -> Map().asJava,
+              "features" -> List().asJava,
+              "defaultStartLevel" -> 10,
+              "version" -> "1",
+              "properties" -> Map().asJava,
+              "resources" -> List().asJava
+            ).asJava
+          ).asJava,
           Map(
-          "kind" -> "AddOverlayConfig",
-          "overlayConfig" -> Map(
-            "name" -> "oc",
-            "version" -> "1",
-            "generatedConfigs" -> List().asJava,
-            "properties" -> Map().asJava
+            "kind" -> "AddOverlayConfig",
+            "overlayConfig" -> Map(
+              "name" -> "oc",
+              "version" -> "1",
+              "generatedConfigs" -> List().asJava,
+              "properties" -> Map().asJava
+            ).asJava
           ).asJava
-        ).asJava
         ).asJava,
         "profiles" -> List().asJava,
         "syncTimeStamp" -> null

@@ -19,7 +19,7 @@ private object BlendedSecurityLoginApi extends ProjectFactory {
       importPackage = Seq("android.*;resolution:=optional")
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedAkka.project,
       BlendedSecurityJvm.project,

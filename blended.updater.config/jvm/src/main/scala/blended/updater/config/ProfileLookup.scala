@@ -21,12 +21,13 @@ import scala.util.Try
  * @see [[blended.updater.Updater]]
  */
 case class ProfileLookup(
-    profileName: String,
-    profileVersion: String,
-    profileBaseDir: File,
-    overlays: Set[OverlayRef]) {
+  profileName : String,
+  profileVersion : String,
+  profileBaseDir : File,
+  overlays : Set[OverlayRef]
+) {
 
-  override def toString(): String = s"${getClass.getSimpleName}(profileName=${profileName}, profileVersion=${profileVersion},profileBaseDir=${profileBaseDir},overlays=${overlays.mkString("[", ",", "]")})"
+  override def toString() : String = s"${getClass.getSimpleName}(profileName=${profileName}, profileVersion=${profileVersion},profileBaseDir=${profileBaseDir},overlays=${overlays.mkString("[", ",", "]")})"
 
   /**
    * The directory where the profile including it's overlays is installed.
@@ -34,7 +35,7 @@ case class ProfileLookup(
    *
    * @see [[OverlayConfigCompanion#materializedDir]]
    */
-  def materializedDir: File = {
+  def materializedDir : File = {
     val pureProfileDir = new File(profileBaseDir, s"${profileName}/${profileVersion}")
     // LocalOverlays.materializedDir(overlays, pureProfileDir)
     pureProfileDir
@@ -47,7 +48,7 @@ object ProfileLookup {
   /**
    * Try to read a [[ProfileLookup]] from a [[Config]].
    */
-  def read(config: Config): Try[ProfileLookup] = Try {
+  def read(config : Config) : Try[ProfileLookup] = Try {
     val profileName = config.getString("profile.name")
     val profileVersion = config.getString("profile.version")
     val profileBaseDir = new File(config.getString("profile.baseDir"))
@@ -56,7 +57,7 @@ object ProfileLookup {
         config.getStringList("profile.overlays").asScala.map { o =>
           o.split("[:]", 2) match {
             case Array(n, v) => OverlayRef(n, v)
-            case invalid => sys.error("Invalid overlay id: " + invalid)
+            case invalid     => sys.error("Invalid overlay id: " + invalid)
           }
         }
       else Nil
@@ -72,7 +73,7 @@ object ProfileLookup {
   /**
    * Create a [[Config]] from a [[ProfileLookup]].
    */
-  def toConfig(profileLookup: ProfileLookup): Config = {
+  def toConfig(profileLookup : ProfileLookup) : Config = {
     val config = Map(
       "profile.name" -> profileLookup.profileName,
       "profile.version" -> profileLookup.profileVersion,

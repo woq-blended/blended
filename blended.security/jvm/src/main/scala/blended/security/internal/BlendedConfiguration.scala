@@ -15,15 +15,15 @@ object BlendedConfiguration {
 }
 
 class BlendedConfiguration(
-  bundleName: String,
-  loginModuleClassName: String,
-  cfg: Config,
+  bundleName : String,
+  loginModuleClassName : String,
+  cfg : Config,
   idSvc : ContainerIdentifierService
 ) extends Configuration {
 
   import BlendedConfiguration._
 
-  override def getAppConfigurationEntry(name: String): Array[AppConfigurationEntry] = {
+  override def getAppConfigurationEntry(name : String) : Array[AppConfigurationEntry] = {
 
     val options : Map[String, Any] = Map(
       propBundle -> bundleName,

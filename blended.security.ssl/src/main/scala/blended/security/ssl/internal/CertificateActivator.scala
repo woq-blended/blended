@@ -14,7 +14,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
 
   private[this] val log = Logger[CertificateActivator]
 
-  private[this] def setupSelfSignedProvider(cfg: Config, idSvc: ContainerIdentifierService) : Unit = {
+  private[this] def setupSelfSignedProvider(cfg : Config, idSvc : ContainerIdentifierService) : Unit = {
     // Should we provide a CertifacteProvider with a self-signed certificate?
     cfg.getConfigOption("selfsigned") match {
       case Some(selfCfg) =>
@@ -28,10 +28,10 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
   }
 
   private[this] def setupCertificateManager(
-    mgrConfig: CertificateManagerConfig
+    mgrConfig : CertificateManagerConfig
   ) : Unit = {
 
-    def waitForProvider(providerNames: List[String], provider: Map[String, CertificateProvider]) : Unit = {
+    def waitForProvider(providerNames : List[String], provider : Map[String, CertificateProvider]) : Unit = {
       providerNames match {
         case Nil =>
           val mgr = new CertificateManagerImpl(bundleContext, capsuleContext, mgrConfig, provider)
@@ -41,7 +41,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
           log.info(s"Waiting for certificate provider [$head]")
           whenAdvancedServicePresent[CertificateProvider](s"(provider=$head)") { p =>
             log.info(s"Certificate provider [$head] available.")
-            waitForProvider(tail, provider + (head ->  p))
+            waitForProvider(tail, provider + (head -> p))
           }
       }
     }
@@ -66,7 +66,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
         info.providesService[blended.security.ssl.SslContextInfo]
 
         whenServicePresent[MBeanServer] { server =>
-          val objName: ObjectName = new ObjectName("blended:type=SslContext,name=server")
+          val objName : ObjectName = new ObjectName("blended:type=SslContext,name=server")
           server.registerMBean(info, objName)
 
           onStop {

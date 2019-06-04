@@ -16,12 +16,11 @@ class AkkaActivatorSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper
   with Matchers {
 
-
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     ("blended.akka" -> new BlendedAkkaActivator())
   )
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   "The Akka activator" - {
 

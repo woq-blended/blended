@@ -24,9 +24,9 @@ import com.typesafe.config.ConfigFactory
 
 trait CollectorService {
   // dependencies
-  deps: BlendedSecurityDirectives with PrickleSupport =>
+  deps : BlendedSecurityDirectives with PrickleSupport =>
 
-  val httpRoute: Route =
+  val httpRoute : Route =
     respondWithDefaultHeader(headers.`Access-Control-Allow-Origin`(headers.HttpOriginRange.*)) {
       collectorRoute ~
         infoRoute ~
@@ -40,38 +40,38 @@ trait CollectorService {
 
   private[this] lazy val log = Logger[CollectorService]
 
-  def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
+  def processContainerInfo(info : ContainerInfo) : ContainerRegistryResponseOK
 
-  def getCurrentState(): sci.Seq[RemoteContainerState]
+  def getCurrentState() : sci.Seq[RemoteContainerState]
 
   /** Register a runtime config into the management container. */
-  def registerRuntimeConfig(rc: RuntimeConfig): Unit
+  def registerRuntimeConfig(rc : RuntimeConfig) : Unit
 
   /** Register a overlay config into the management container. */
-  def registerOverlayConfig(oc: OverlayConfig): Unit
+  def registerOverlayConfig(oc : OverlayConfig) : Unit
 
   /** Get all registered runtime configs of the management container. */
-  def getRuntimeConfigs(): sci.Seq[RuntimeConfig]
+  def getRuntimeConfigs() : sci.Seq[RuntimeConfig]
 
   /** Get all registered overlay configs of the managament container. */
-  def getOverlayConfigs(): sci.Seq[OverlayConfig]
+  def getOverlayConfigs() : sci.Seq[OverlayConfig]
 
   /** Promote (stage) an update action to a container. */
-  def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit
+  def addUpdateAction(containerId : String, updateAction : UpdateAction) : Unit
 
-  def version: String
+  def version : String
 
   /**
    * Find [[OverlayRef]]s, that are not already known by the overlay registry.
    */
-  def findMissingOverlayRef(configs: Iterable[OverlayRef]): Option[OverlayRef] =
+  def findMissingOverlayRef(configs : Iterable[OverlayRef]) : Option[OverlayRef] =
     if (configs.isEmpty) None
     else {
       val ocs = getOverlayConfigs()
       configs.find(c => !ocs.exists(oc => oc.overlayRef == c))
     }
 
-  def versionRoute: Route = {
+  def versionRoute : Route = {
     path("version") {
       get {
         complete {
@@ -81,9 +81,9 @@ trait CollectorService {
     }
   }
 
-  def collectorRoute: Route = {
+  def collectorRoute : Route = {
 
-    implicit val timeout: Timeout = Timeout(1.second)
+    implicit val timeout : Timeout = Timeout(1.second)
 
     path("container") {
       post {
@@ -97,7 +97,7 @@ trait CollectorService {
     }
   }
 
-  def infoRoute: Route = {
+  def infoRoute : Route = {
     path("container") {
       get {
         complete {
@@ -110,7 +110,7 @@ trait CollectorService {
     }
   }
 
-  def runtimeConfigRoute: Route = {
+  def runtimeConfigRoute : Route = {
     path("runtimeConfig") {
       get {
         complete {
@@ -128,7 +128,7 @@ trait CollectorService {
     }
   }
 
-  def overlayConfigRoute: Route = {
+  def overlayConfigRoute : Route = {
     path("overlayConfig") {
       get {
         complete {
@@ -146,7 +146,7 @@ trait CollectorService {
     }
   }
 
-  def updateActionRoute: Route = {
+  def updateActionRoute : Route = {
     path("container" / Segment / "update") { containerId =>
       post {
         requirePermission("profile:update") {
@@ -159,7 +159,7 @@ trait CollectorService {
     }
   }
 
-  def rolloutProfileRoute: Route = {
+  def rolloutProfileRoute : Route = {
     path("rollout" / "profile") {
       post {
         requirePermission("rollout") {
@@ -228,7 +228,7 @@ trait CollectorService {
 
   }
 
-  def uploadDeploymentPackRoute: Route = {
+  def uploadDeploymentPackRoute : Route = {
     path("profile" / "upload" / "deploymentpack" / Segment) { repoId =>
       withSizeLimit(1024 * 1024 * 100) {
         post {
@@ -269,7 +269,7 @@ trait CollectorService {
    *
    * @return Tuple of profile name and version.
    */
-  def processDeploymentPack(repoId: String, zipFile: File): Try[(String, String)] = {
+  def processDeploymentPack(repoId : String, zipFile : File) : Try[(String, String)] = {
     log.debug(s"About to process deploymentpack as inputstream for repoId: ${repoId}")
 
     // create temp file to find a free name, than delete and create dir with that name
@@ -327,11 +327,11 @@ trait CollectorService {
     result
   }
 
-  def deleteRecursive(files: File*): Unit = files.foreach { file =>
+  def deleteRecursive(files : File*) : Unit = files.foreach { file =>
     if (file.isDirectory()) {
       file.listFiles() match {
-        case null =>
-        case files => deleteRecursive(files: _*)
+        case null  =>
+        case files => deleteRecursive(files : _*)
       }
     }
     file.delete()
@@ -340,6 +340,6 @@ trait CollectorService {
   /**
    * Install the file under path. If there is an collision, only reject the file if the sha1Sum does not compare equal.
    */
-  def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit]
+  def installBundle(repoId : String, path : String, file : File, sha1Sum : Option[String]) : Try[Unit]
 
 }

@@ -15,7 +15,7 @@ object BlendedPersistence extends ProjectFactory {
       Dependencies.slf4jLog4j12 % Test
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project,
       BlendedTestsupport.project % Test
     )

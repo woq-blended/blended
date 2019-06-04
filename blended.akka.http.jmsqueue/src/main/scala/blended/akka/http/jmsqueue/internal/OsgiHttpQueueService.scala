@@ -9,9 +9,9 @@ import scala.concurrent.ExecutionContext
 class OsgiHttpQueueService(
   override val qConfig : HttpQueueConfig,
   override val bundleContext : BundleContext,
-  override implicit val eCtxt: ExecutionContext
-) extends HttpQueueService  with ServiceConsuming {
-  override def withConnectionFactory[T](vendor: String, provider: String)(f: Option[ConnectionFactory] => T): T = {
+  override implicit val eCtxt : ExecutionContext
+) extends HttpQueueService with ServiceConsuming {
+  override def withConnectionFactory[T](vendor : String, provider : String)(f : Option[ConnectionFactory] => T) : T = {
     withAdvancedService[ConnectionFactory, T](s"(&(vendor=$vendor)(provider=$provider))") { f(_) }
   }
 }

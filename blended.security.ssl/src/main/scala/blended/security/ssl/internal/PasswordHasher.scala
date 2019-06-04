@@ -2,9 +2,9 @@ package blended.security.ssl.internal
 
 import java.security.MessageDigest
 
-class PasswordHasher(salt: String) {
+class PasswordHasher(salt : String) {
 
-  def password(raw: String) : String = {
+  def password(raw : String) : String = {
 
     val md = MessageDigest.getInstance("MD5")
     md.reset()

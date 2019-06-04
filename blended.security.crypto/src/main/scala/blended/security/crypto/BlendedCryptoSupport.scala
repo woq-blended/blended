@@ -22,12 +22,12 @@ object BlendedCryptoSupport {
       defaultPwd
     }
 
-    val secretFromFile : Array[Char] = (pwd + "*" + 16).substring(0,16).toCharArray()
+    val secretFromFile : Array[Char] = (pwd + "*" + 16).substring(0, 16).toCharArray()
 
     val secret : String = {
-      val salt : Array[Char] = ("V*YE6FPXW6#!g^hD" + "*" * 16).substring(0,16).toCharArray()
-      val mixed : String = secretFromFile.zip(salt).map { case (a,b) => a.toString + b.toString} mkString("")
-      mixed.substring(0,16)
+      val salt : Array[Char] = ("V*YE6FPXW6#!g^hD" + "*" * 16).substring(0, 16).toCharArray()
+      val mixed : String = secretFromFile.zip(salt).map { case (a, b) => a.toString + b.toString } mkString ("")
+      mixed.substring(0, 16)
     }
 
     new BlendedCryptoSupport(secret, "AES")
@@ -60,11 +60,11 @@ class BlendedCryptoSupport(secret : String, alg : String) extends ContainerCrypt
     } else if (s.length() == 1) {
       current :+ Integer.parseInt(s, radix).toByte
     } else {
-      string2byte(current :+ Integer.parseInt(s.substring(0,2), radix).toByte)(s.substring(2))
+      string2byte(current :+ Integer.parseInt(s.substring(0, 2), radix).toByte)(s.substring(2))
     }
   }
 
-  def encrypt(plain: String) : Try[String] = Try {
+  def encrypt(plain : String) : Try[String] = Try {
     cipher.init(Cipher.ENCRYPT_MODE, key)
     byte2String(cipher.doFinal(plain.getBytes()))
   }

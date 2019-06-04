@@ -16,24 +16,24 @@ import scala.concurrent.duration._
 object CamelMockActor {
 
   val counter : AtomicInteger = new AtomicInteger(0)
-  def apply(uri: String) = new CamelMockActor(uri, counter.incrementAndGet())
+  def apply(uri : String) = new CamelMockActor(uri, counter.incrementAndGet())
 }
 
-class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
+class CamelMockActor(uri : String, id : Int) extends Actor with ActorLogging {
 
   private[this] val camelContext = CamelExtension(context.system).context
   private[this] implicit val eCtxt = context.system.dispatcher
 
   case object Tick
 
-  override def preStart(): Unit = {
+  override def preStart() : Unit = {
     log.debug(s"Starting Camel Mock Actor for [$id, $uri]")
 
     val routeId = UUID.randomUUID().toString()
 
-    camelContext.addRoutes( new RouteBuilder() {
+    camelContext.addRoutes(new RouteBuilder() {
 
-      override def configure(): Unit = {
+      override def configure() : Unit = {
 
         val mockActor = self
 
@@ -42,12 +42,12 @@ class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
         from(uri)
           .id(routeId)
           .process(new Processor {
-          override def process(exchange: Exchange): Unit = {
-            val header = JMapWrapper(exchange.getIn().getHeaders()).filter { case (k,v) => Option(v).isDefined }.toMap
-            val msg = CamelMessage(exchange.getIn().getBody(), header)
-            mockActor ! msg
-          }
-        })
+            override def process(exchange : Exchange) : Unit = {
+              val header = JMapWrapper(exchange.getIn().getHeaders()).filter { case (k, v) => Option(v).isDefined }.toMap
+              val msg = CamelMessage(exchange.getIn().getBody(), header)
+              mockActor ! msg
+            }
+          })
 
         self ! Tick
         context.become(starting(routeId))
@@ -69,7 +69,7 @@ class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
       }
   }
 
-  def handleRquests(messages: List[CamelMessage]) : Receive = {
+  def handleRquests(messages : List[CamelMessage]) : Receive = {
     case GetReceivedMessages => sender ! ReceivedMessages(messages)
 
     case ca : CheckAssertions =>
@@ -79,13 +79,13 @@ class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
       val results = CheckResults(ca.assertions.toList.map { a => a.f(mockMessages) })
       errors(results) match {
         case e if e.isEmpty =>
-        case l => log.error(prettyPrint(l))
+        case l              => log.error(prettyPrint(l))
       }
       log.debug(s"Sending assertion results to caller : [$results]")
       requestor ! results
   }
 
-  def receiving(routeId : String)(messages: List[CamelMessage]) : Receive = {
+  def receiving(routeId : String)(messages : List[CamelMessage]) : Receive = {
     case msg : CamelMessage =>
       val newList = msg :: messages
 
@@ -106,10 +106,10 @@ class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
   private[this] def prettyPrint(errors : List[Throwable]) : String =
     errors match {
       case e if e.isEmpty => s"All assertions were satisfied for mock actor [$uri]"
-      case l => l.map(t => s"  ${t.getMessage}").mkString(s"\n${"-" * 80}\nGot Assertion errors for mock actor [$uri]:\n", "\n", s"\n${"-" * 80}")
+      case l              => l.map(t => s"  ${t.getMessage}").mkString(s"\n${"-" * 80}\nGot Assertion errors for mock actor [$uri]:\n", "\n", s"\n${"-" * 80}")
     }
 
   private[this] def errors(r : CheckResults) : List[Throwable] = r.results.filter(_.isFailure).map(_.failed.get)
 
-  override def toString: String = s"CamelMockActor[$id, $uri]"
+  override def toString : String = s"CamelMockActor[$id, $uri]"
 }

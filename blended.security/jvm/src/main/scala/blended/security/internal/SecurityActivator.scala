@@ -1,7 +1,7 @@
 package blended.security.internal
 
 import blended.domino.TypesafeConfigWatching
-import blended.security.{ BlendedPermissionManager, ConfigLoginModule, LDAPLoginModule }
+import blended.security.{BlendedPermissionManager, ConfigLoginModule, LDAPLoginModule}
 import blended.security.boot.BlendedLoginModule
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
@@ -14,16 +14,16 @@ class SecurityActivator extends DominoActivator with TypesafeConfigWatching {
 
   whenBundleActive {
 
-    whenTypesafeConfigAvailable{ (cfg, idSvc) =>
+    whenTypesafeConfigAvailable { (cfg, idSvc) =>
       val symName = bundleContext.getBundle().getSymbolicName()
       val module = cfg.getString("module", "simple")
 
       log.info(s"Initialising Blended Login Module with implementation [$module]")
 
       val loginModuleClassName = module match {
-        case "ldap" => classOf[LDAPLoginModule].getName()
+        case "ldap"   => classOf[LDAPLoginModule].getName()
         case "simple" => classOf[ConfigLoginModule].getName()
-        case o => throw new Exception(s"Unknown login module implementation : [$o]")
+        case o        => throw new Exception(s"Unknown login module implementation : [$o]")
       }
 
       if (!cfg.hasPath(module)) {

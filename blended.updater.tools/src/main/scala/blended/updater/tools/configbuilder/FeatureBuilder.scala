@@ -13,48 +13,50 @@ object FeatureBuilder {
   class CmdlineCommon {
     @CmdOption(names = Array("-h", "--help"), isHelp = true,
       description = "Show this help")
-    var help: Boolean = false
+    var help : Boolean = false
 
-    @CmdOption(names = Array("--debug"),
-      description = "Show debug information and stack traces")
-    var debug: Boolean = false
+    @CmdOption(
+      names = Array("--debug"),
+      description = "Show debug information and stack traces"
+    )
+    var debug : Boolean = false
 
   }
 
   class Cmdline {
 
     @CmdOption(names = Array("-w", "--work-dir"), args = Array("dir"))
-    def setOutputDir(outputDir: String) = this.outputDir = Option(outputDir)
-    var outputDir: Option[String] = None
+    def setOutputDir(outputDir : String) = this.outputDir = Option(outputDir)
+    var outputDir : Option[String] = None
 
     @CmdOption(names = Array("-m", "--maven-url", "--maven-dir"), args = Array("URL"), maxCount = -1)
-    def addMavenUrl(mavenDir: String) = this.mavenUrl ++= Seq(mavenDir)
-    var mavenUrl: Seq[String] = Seq()
+    def addMavenUrl(mavenDir : String) = this.mavenUrl ++= Seq(mavenDir)
+    var mavenUrl : Seq[String] = Seq()
 
     @CmdOption(names = Array("--maven-artifact"), args = Array("GAV", "file"), maxCount = -1)
-    def addMavenDir(gav: String, file: String) = this.mavenArtifacts ++= Seq(gav -> file)
-    var mavenArtifacts: Seq[(String, String)] = Seq()
+    def addMavenDir(gav : String, file : String) = this.mavenArtifacts ++= Seq(gav -> file)
+    var mavenArtifacts : Seq[(String, String)] = Seq()
 
     @CmdOption(names = Array("-d", "--download-missing"))
-    var downloadMissing: Boolean = false
+    var downloadMissing : Boolean = false
 
     @CmdOption(names = Array("-D", "--discard-invalid"))
-    var discardInvalid: Boolean = false
+    var discardInvalid : Boolean = false
 
     @CmdOption(names = Array("-u", "--update-checksums"))
-    var updateChecksums: Boolean = false
+    var updateChecksums : Boolean = false
 
     //    @CmdOption(names = Array("-c", "--check"))
     //    var check: Boolean = false
 
     @CmdOption(names = Array("-f", "--file"), args = Array("file"), description = "Feature file to read", minCount = 1)
-    var featureFiles: String = _
+    var featureFiles : String = _
 
     @CmdOption(names = Array("-o", "--output"), args = Array("file"), description = "Feature file to write")
-    def setOutputFile(file: String): Unit = outputFile = Option(file)
-    var outputFile: Option[String] = None
+    def setOutputFile(file : String) : Unit = outputFile = Option(file)
+    var outputFile : Option[String] = None
 
-    override def toString: String = getClass().getSimpleName +
+    override def toString : String = getClass().getSimpleName +
       "(outputDir=" + outputDir +
       ",mavenDir=" + mavenUrl +
       ",mavenArtifacts=" + mavenArtifacts +
@@ -65,23 +67,23 @@ object FeatureBuilder {
       ")"
   }
 
-  def main(args: Array[String]): Unit = {
+  def main(args : Array[String]) : Unit = {
     try {
       run(args)
       sys.exit(0)
     } catch {
-      case e: Throwable =>
+      case e : Throwable =>
         Console.err.println(s"An error occurred: ${e.getMessage()}")
         sys.exit(1)
     }
   }
 
-  def run(args: Array[String]): Unit = {
+  def run(args : Array[String]) : Unit = {
     val cmdlineCommon = new CmdlineCommon()
     val cmdline = new Cmdline()
 
     val cp = new CmdlineParser(cmdlineCommon, cmdline)
-    cp.parse(args: _*)
+    cp.parse(args : _*)
     if (cmdlineCommon.help) {
       cp.usage()
       return
@@ -92,7 +94,7 @@ object FeatureBuilder {
     run(cmdline, cmdlineCommon.debug)
   }
 
-  def run(cmdline: Cmdline, debug: Boolean): Unit = {
+  def run(cmdline : Cmdline, debug : Boolean) : Unit = {
     val workDir = new File(cmdline.outputDir.getOrElse("/tmp")).getAbsoluteFile()
 
     val file = new File(cmdline.featureFiles)

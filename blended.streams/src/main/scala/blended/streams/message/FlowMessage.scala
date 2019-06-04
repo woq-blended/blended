@@ -8,21 +8,21 @@ import scala.util.Try
 
 sealed trait MsgProperty {
   def value : Any
-  override def toString: String = value.toString
+  override def toString : String = value.toString
 }
 
-case class StringMsgProperty(override val value: String) extends MsgProperty {
-  override def toString: String = "\"" + super.toString + "\""
+case class StringMsgProperty(override val value : String) extends MsgProperty {
+  override def toString : String = "\"" + super.toString + "\""
 }
 
-case class UnitMsgProperty(override val value: Unit = ()) extends MsgProperty
-case class IntMsgProperty(override val value: Int) extends MsgProperty
-case class LongMsgProperty(override val value: Long) extends MsgProperty
+case class UnitMsgProperty(override val value : Unit = ()) extends MsgProperty
+case class IntMsgProperty(override val value : Int) extends MsgProperty
+case class LongMsgProperty(override val value : Long) extends MsgProperty
 case class BooleanMsgProperty(override val value : Boolean) extends MsgProperty
 case class ByteMsgProperty(override val value : Byte) extends MsgProperty
 case class ShortMsgProperty(override val value : Short) extends MsgProperty
-case class FloatMsgProperty(override val value: Float) extends MsgProperty
-case class DoubleMsgProperty(override val value: Double) extends MsgProperty
+case class FloatMsgProperty(override val value : Float) extends MsgProperty
+case class DoubleMsgProperty(override val value : Double) extends MsgProperty
 
 object MsgProperty {
 
@@ -41,46 +41,47 @@ object MsgProperty {
       case None => apply()
       case Some(o) =>
         o match {
-          case u : Unit => apply()
-          case s: String => apply(s)
-          case i: java.lang.Integer => apply(i)
-          case l: java.lang.Long => apply(l)
-          case b: java.lang.Boolean => apply(b)
-          case b: java.lang.Byte => apply(b)
-          case s: java.lang.Short => apply(s)
-          case f: java.lang.Float => apply(f)
-          case d: java.lang.Double => apply(d)
-          case _ => throw new IllegalArgumentException(s"Unsupported Msg Property type [${o.getClass().getName()}]")
+          case u : Unit              => apply()
+          case s : String            => apply(s)
+          case i : java.lang.Integer => apply(i)
+          case l : java.lang.Long    => apply(l)
+          case b : java.lang.Boolean => apply(b)
+          case b : java.lang.Byte    => apply(b)
+          case s : java.lang.Short   => apply(s)
+          case f : java.lang.Float   => apply(f)
+          case d : java.lang.Double  => apply(d)
+          case _                     => throw new IllegalArgumentException(s"Unsupported Msg Property type [${o.getClass().getName()}]")
         }
     }
   }
 
-  def unapply(p: MsgProperty): Any = p.value
+  def unapply(p : MsgProperty) : Any = p.value
 }
 
 object FlowMessage {
 
   type FlowMessageProps = Map[String, MsgProperty]
 
-  def props(m :(String, Any)*) : Try[FlowMessageProps] = Try {
-    m.map { case (k, v) =>
-      val p : MsgProperty = MsgProperty.lift(v).get
-      k -> p
+  def props(m : (String, Any)*) : Try[FlowMessageProps] = Try {
+    m.map {
+      case (k, v) =>
+        val p : MsgProperty = MsgProperty.lift(v).get
+        k -> p
     }.toMap
   }
 
   val noProps : FlowMessageProps = Map.empty[String, MsgProperty]
 
-  def apply(props: FlowMessageProps): FlowMessage = BaseFlowMessage(props)
-  def apply(content : String)(props : FlowMessageProps) : FlowMessage= TextFlowMessage(content, props)
-  def apply(content: ByteString)(props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
-  def apply(content: Array[Byte])(props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
+  def apply(props : FlowMessageProps) : FlowMessage = BaseFlowMessage(props)
+  def apply(content : String)(props : FlowMessageProps) : FlowMessage = TextFlowMessage(content, props)
+  def apply(content : ByteString)(props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
+  def apply(content : Array[Byte])(props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
 
 }
 
 import blended.streams.message.FlowMessage.FlowMessageProps
 
-sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
+sealed abstract class FlowMessage(msgHeader : FlowMessageProps) {
 
   def body() : Any
   def header : FlowMessageProps = msgHeader
@@ -90,25 +91,25 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
   def header[T](name : String)(implicit m : Manifest[T]) : Option[T] = {
 
     case class ByteMsgProperty(override val value : Byte) extends MsgProperty
-    case class FloatMsgProperty(override val value: Float) extends MsgProperty
-    case class DoubleMsgProperty(override val value: Double) extends MsgProperty
+    case class FloatMsgProperty(override val value : Float) extends MsgProperty
+    case class DoubleMsgProperty(override val value : Double) extends MsgProperty
 
-    def fromString[T](v : String)(implicit clazz: ClassTag[T]) : Option[T] = clazz.runtimeClass match {
-      case c if c == classOf[Short] => Some(v.toShort.asInstanceOf[T])
-      case c if c == classOf[Int] => Some(v.toInt.asInstanceOf[T])
-      case c if c == classOf[Long] => Some(v.toLong.asInstanceOf[T])
+    def fromString[T](v : String)(implicit clazz : ClassTag[T]) : Option[T] = clazz.runtimeClass match {
+      case c if c == classOf[Short]   => Some(v.toShort.asInstanceOf[T])
+      case c if c == classOf[Int]     => Some(v.toInt.asInstanceOf[T])
+      case c if c == classOf[Long]    => Some(v.toLong.asInstanceOf[T])
       case c if c == classOf[Boolean] => Some(v.toBoolean.asInstanceOf[T])
-      case c if c == classOf[Byte] => Some(v.toByte.asInstanceOf[T])
-      case c if c == classOf[Float] => Some(v.toFloat.asInstanceOf[T])
-      case c if c == classOf[Double] => Some(v.toDouble.asInstanceOf[T])
-      case c if c == classOf[Unit] => Some(().asInstanceOf[T])
-      case _ => None
+      case c if c == classOf[Byte]    => Some(v.toByte.asInstanceOf[T])
+      case c if c == classOf[Float]   => Some(v.toFloat.asInstanceOf[T])
+      case c if c == classOf[Double]  => Some(v.toDouble.asInstanceOf[T])
+      case c if c == classOf[Unit]    => Some(().asInstanceOf[T])
+      case _                          => None
     }
 
-    def classMatch(v : Any, clazz: Class[_]) : Boolean = {
+    def classMatch(v : Any, clazz : Class[_]) : Boolean = {
 
       val intClasses : Seq[Class[_]] = Seq(classOf[Integer], classOf[Int])
-      val longClasses  : Seq[Class[_]] = Seq(classOf[java.lang.Long], classOf[Long])
+      val longClasses : Seq[Class[_]] = Seq(classOf[java.lang.Long], classOf[Long])
       val shortClasses : Seq[Class[_]] = Seq(classOf[java.lang.Short], classOf[Short])
       val floatClasses : Seq[Class[_]] = Seq(classOf[java.lang.Float], classOf[Float])
       val doubleClasses : Seq[Class[_]] = Seq(classOf[java.lang.Double], classOf[Double])
@@ -156,24 +157,25 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
     }
   }
 
-  def headerWithDefault[T](name: String, default: T)(implicit m : Manifest[T]) : T = header[T](name) match {
+  def headerWithDefault[T](name : String, default : T)(implicit m : Manifest[T]) : T = header[T](name) match {
     case Some(v) => v
-    case None => default
+    case None    => default
   }
 
-  def removeHeader(keys: String*) : FlowMessage
+  def removeHeader(keys : String*) : FlowMessage
 
   def withHeaders(header : FlowMessageProps) : Try[FlowMessage] = Try {
-    header.foldLeft(this) { case (current, (key, prop)) =>
-      current.withHeader(key, prop.value).get
+    header.foldLeft(this) {
+      case (current, (key, prop)) =>
+        current.withHeader(key, prop.value).get
     }
   }
 
-  def withHeader(key : String, value: Any, overwrite: Boolean = true) : Try[FlowMessage]
+  def withHeader(key : String, value : Any, overwrite : Boolean = true) : Try[FlowMessage]
 
   protected def doRemoveHeader(keys : String*) : FlowMessageProps = header.filter(k => !keys.contains(k))
 
-  protected def newHeader(key : String, value: Any, overwrite: Boolean) : Try[FlowMessageProps] = Try {
+  protected def newHeader(key : String, value : Any, overwrite : Boolean) : Try[FlowMessageProps] = Try {
     if (overwrite) {
       header.filterKeys(_ != key) + (key -> MsgProperty.lift(value).get)
     } else {
@@ -185,51 +187,51 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
     }
   }
 
-  override def toString: String = s"${getClass().getSimpleName()}(content-size [${bodySize()}])($header)"
+  override def toString : String = s"${getClass().getSimpleName()}(content-size [${bodySize()}])($header)"
 }
 
-case class BaseFlowMessage(override val header: FlowMessageProps) extends FlowMessage(header) {
-  override def body(): Any = NotUsed
+case class BaseFlowMessage(override val header : FlowMessageProps) extends FlowMessage(header) {
+  override def body() : Any = NotUsed
 
-  override def bodySize(): Int = 0
+  override def bodySize() : Int = 0
 
-  override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
+  override def withHeader(key : String, value : Any, overwrite : Boolean = true) : Try[FlowMessage] = Try {
     copy(header = newHeader(key, value, overwrite).get)
   }
 
-  override def removeHeader(keys: String*): FlowMessage = copy(header = doRemoveHeader(keys:_*))
+  override def removeHeader(keys : String*) : FlowMessage = copy(header = doRemoveHeader(keys : _*))
 }
 
 object BinaryFlowMessage {
 
-  def apply(bytes: Array[Byte], msgHeader : FlowMessageProps) : BinaryFlowMessage = BinaryFlowMessage(ByteString(bytes), msgHeader)
+  def apply(bytes : Array[Byte], msgHeader : FlowMessageProps) : BinaryFlowMessage = BinaryFlowMessage(ByteString(bytes), msgHeader)
 
   //TODO: Initialize from Byte Stream
 }
 
-case class BinaryFlowMessage(content : ByteString, override val header: FlowMessageProps) extends FlowMessage(header) {
-  override def body(): Any = content
+case class BinaryFlowMessage(content : ByteString, override val header : FlowMessageProps) extends FlowMessage(header) {
+  override def body() : Any = content
 
   def getBytes() : ByteString = content
 
-  override def bodySize(): Int = content.size
+  override def bodySize() : Int = content.size
 
-  override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
+  override def withHeader(key : String, value : Any, overwrite : Boolean = true) : Try[FlowMessage] = Try {
     copy(header = newHeader(key, value, overwrite).get)
   }
 
-  override def removeHeader(keys: String*): FlowMessage = copy(header = doRemoveHeader(keys:_*))
+  override def removeHeader(keys : String*) : FlowMessage = copy(header = doRemoveHeader(keys : _*))
 }
 
-case class TextFlowMessage(content : String, override val header: FlowMessageProps) extends FlowMessage(header) {
-  override def body(): Any = content
-  def getText(): String = content
+case class TextFlowMessage(content : String, override val header : FlowMessageProps) extends FlowMessage(header) {
+  override def body() : Any = content
+  def getText() : String = content
 
-  override def bodySize(): Int = content.length()
+  override def bodySize() : Int = content.length()
 
-  override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
+  override def withHeader(key : String, value : Any, overwrite : Boolean = true) : Try[FlowMessage] = Try {
     copy(header = newHeader(key, value, overwrite).get)
   }
 
-  override def removeHeader(keys: String*): FlowMessage = copy(header = doRemoveHeader(keys:_*))
+  override def removeHeader(keys : String*) : FlowMessage = copy(header = doRemoveHeader(keys : _*))
 }

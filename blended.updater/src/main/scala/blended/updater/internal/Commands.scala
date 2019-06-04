@@ -23,7 +23,7 @@ import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 
-class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSystem: ActorSystem) {
+class Commands(updater : ActorRef, env : Option[UpdateEnv])(implicit val actorSystem : ActorSystem) {
 
   private[this] val log = Logger[Commands]
 
@@ -38,7 +38,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
     "activateProfile" -> "Activate a profile"
   )
 
-  def showProfiles(): AnyRef = {
+  def showProfiles() : AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
     val activeProfile = env.map(env => ProfileId(env.launchedProfileName, env.launchedProfileVersion, env.overlays.getOrElse(Set.empty).toSet))
     log.debug(s"acitive profile: ${activeProfile}")
@@ -50,18 +50,19 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
     s"${profiles.size} profiles:\n${
       profiles.map {
-        case p: LocalProfile =>
+        case p : LocalProfile =>
           val activePart = if (activeProfile.exists(_ == p.profileId)) " (active)" else ""
           p.profileId + ": " + p.state + activePart
       }.mkString("\n")
     }"
   }
 
-  def showRuntimeConfigs(): AnyRef = {
+  def showRuntimeConfigs() : AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
     val configs = Await.result(
       ask(updater, Updater.GetRuntimeConfigs(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
-      timeout.duration).result
+      timeout.duration
+    ).result
 
     s"${configs.size} runtime configs:\n${
       configs.toList.map {
@@ -70,18 +71,19 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
     }"
   }
 
-  def showOverlays(): AnyRef = {
+  def showOverlays() : AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
     val configs = Await.result(
       ask(updater, Updater.GetOverlays(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
-      timeout.duration).result
+      timeout.duration
+    ).result
 
     s"${configs.size} overlay configs:\n${configs.mkString("\n")}"
   }
 
-  def registerProfile(file: File): AnyRef = registerRuntimeConfig(file)
+  def registerProfile(file : File) : AnyRef = registerRuntimeConfig(file)
 
-  def registerRuntimeConfig(file: File): AnyRef = {
+  def registerRuntimeConfig(file : File) : AnyRef = {
     val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
     val runtimeConfig = RuntimeConfigCompanion.read(config).get
     println("About to add: " + runtimeConfig)
@@ -89,7 +91,8 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
     implicit val timeout = Timeout(5, SECONDS)
     val reqId = UUID.randomUUID().toString()
     Await.result(
-      ask(updater, Updater.AddRuntimeConfig(reqId, runtimeConfig)), timeout.duration) match {
+      ask(updater, Updater.AddRuntimeConfig(reqId, runtimeConfig)), timeout.duration
+    ) match {
         case OperationSucceeded(`reqId`) =>
           "Added: " + runtimeConfig
         case OperationFailed(`reqId`, error) =>
@@ -99,7 +102,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
       }
   }
 
-  def registerOverlay(file: File): AnyRef = {
+  def registerOverlay(file : File) : AnyRef = {
     val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
     val overlayConfig = OverlayConfigCompanion.read(config).get
     println("About to add: " + overlayConfig)
@@ -107,7 +110,8 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
     implicit val timeout = Timeout(5, SECONDS)
     val reqId = UUID.randomUUID().toString()
     Await.result(
-      ask(updater, Updater.AddOverlayConfig(reqId, overlayConfig)), timeout.duration) match {
+      ask(updater, Updater.AddOverlayConfig(reqId, overlayConfig)), timeout.duration
+    ) match {
         case OperationSucceeded(`reqId`) =>
           "Added: " + overlayConfig
         case OperationFailed(`reqId`, error) =>
@@ -117,7 +121,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
       }
   }
 
-  def parseOverlays(overlayNameVersion: Seq[String]): List[OverlayRef] = {
+  def parseOverlays(overlayNameVersion : Seq[String]) : List[OverlayRef] = {
     if (overlayNameVersion.size % 2 != 0) {
       sys.error(s"Missing version for overlay ${overlayNameVersion.last}")
     }
@@ -125,7 +129,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
   }
 
   @varargs
-  def stageProfile(rcName: String, rcVersion: String, overlayNameVersion: String*): AnyRef = {
+  def stageProfile(rcName : String, rcVersion : String, overlayNameVersion : String*) : AnyRef = {
     val overlays = parseOverlays(overlayNameVersion)
     val overlaysAsString =
       if (overlays.isEmpty) ""
@@ -136,7 +140,8 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
     implicit val timeout = Timeout(1, HOURS)
     val reqId = UUID.randomUUID().toString()
     Await.result(
-      ask(updater, Updater.StageProfile(reqId, rcName, rcVersion, overlays.toSet)), timeout.duration) match {
+      ask(updater, Updater.StageProfile(reqId, rcName, rcVersion, overlays.toSet)), timeout.duration
+    ) match {
         case OperationSucceeded(`reqId`) =>
           "Staged: " + asString
         case OperationFailed(`reqId`, reason) =>
@@ -147,7 +152,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
   }
 
   @varargs
-  def activateProfile(name: String, version: String, overlayNameVersion: String*): AnyRef = {
+  def activateProfile(name : String, version : String, overlayNameVersion : String*) : AnyRef = {
     val overlays = parseOverlays(overlayNameVersion)
     val overlaysAsString =
       if (overlays.isEmpty) ""
@@ -160,7 +165,8 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
         implicit val timeout = Timeout(5, MINUTES)
         val reqId = UUID.randomUUID().toString()
         Await.result(
-          ask(updater, Updater.ActivateProfile(reqId, name, version, overlays.toSet)), timeout.duration) match {
+          ask(updater, Updater.ActivateProfile(reqId, name, version, overlays.toSet)), timeout.duration
+        ) match {
             case OperationSucceeded(`reqId`) =>
               "Activated: " + asString
             case OperationFailed(`reqId`, reason) =>

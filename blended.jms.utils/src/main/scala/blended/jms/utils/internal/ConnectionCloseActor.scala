@@ -7,16 +7,16 @@ import scala.util.{Failure, Success}
 import scala.concurrent.duration._
 
 object ConnectionCloseActor {
-  def props(holder: ConnectionHolder, retryInterval : FiniteDuration = 5.seconds) : Props =
+  def props(holder : ConnectionHolder, retryInterval : FiniteDuration = 5.seconds) : Props =
     Props(new ConnectionCloseActor(holder, retryInterval))
 }
 
 /**
-  * This Actor will execute and monitor a single close operation on a given JMS connection
-  * and then stop itself.
-  * @param holder
-  */
-class ConnectionCloseActor(holder: ConnectionHolder, retryInterval: FiniteDuration) extends Actor with ActorLogging {
+ * This Actor will execute and monitor a single close operation on a given JMS connection
+ * and then stop itself.
+ * @param holder
+ */
+class ConnectionCloseActor(holder : ConnectionHolder, retryInterval : FiniteDuration) extends Actor with ActorLogging {
 
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
 
@@ -33,7 +33,7 @@ class ConnectionCloseActor(holder: ConnectionHolder, retryInterval: FiniteDurati
     }
   }
 
-  override def receive: Receive = {
+  override def receive : Receive = {
 
     case Disconnect(t) =>
       // Just schedule a timeout message in case the Future takes too long
@@ -41,7 +41,7 @@ class ConnectionCloseActor(holder: ConnectionHolder, retryInterval: FiniteDurati
       doClose()
   }
 
-  def waiting(caller: ActorRef, timer: Cancellable) : Receive = {
+  def waiting(caller : ActorRef, timer : Cancellable) : Receive = {
 
     case Tick =>
       doClose()

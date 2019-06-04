@@ -19,8 +19,8 @@ class TestFileTest extends FreeSpec with TestFile {
     }
 
     {
-      def testDelete(deleteWhenFailure: Boolean, deleteWhenNoFailure: Boolean)(implicit deletePolicy: DeletePolicy) = {
-        def delete(d: Boolean) = if (d) "delete" else "not delete"
+      def testDelete(deleteWhenFailure : Boolean, deleteWhenNoFailure : Boolean)(implicit deletePolicy : DeletePolicy) = {
+        def delete(d : Boolean) = if (d) "delete" else "not delete"
         s"should ${delete(deleteWhenNoFailure)} when no failure" in {
           val f = withTestFile("content") { file =>
             assert(file.exists())
@@ -33,7 +33,7 @@ class TestFileTest extends FreeSpec with TestFile {
           }
         }
         s"should ${delete(deleteWhenFailure)} when failure" in {
-          var f: File = null
+          var f : File = null
           intercept[Exception] {
             withTestFile("content") { file =>
               assert(file.exists())

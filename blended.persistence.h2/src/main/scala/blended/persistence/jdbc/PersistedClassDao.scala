@@ -15,7 +15,7 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.{MapSqlParameterSource, NamedParameterJdbcTemplate}
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
-class PersistedClassDao(dataSource: DataSource) {
+class PersistedClassDao(dataSource : DataSource) {
 
   private[this] val log = Logger[PersistedClassDao]
 
@@ -24,8 +24,8 @@ class PersistedClassDao(dataSource: DataSource) {
   object PC {
     val Table = "PersistedClass"
 
-    val Id: String = "id"
-    val Name: String = "name"
+    val Id : String = "id"
+    val Name : String = "name"
   }
 
   object PF {
@@ -42,7 +42,7 @@ class PersistedClassDao(dataSource: DataSource) {
 
   }
 
-  def persist(persistedClass: PersistedClass): PersistedClass = {
+  def persist(persistedClass : PersistedClass) : PersistedClass = {
     log.trace(s"About to persist class [${persistedClass.name}:${persistedClass.id}] with ${persistedClass.fields.size} fields")
 
     // persist the holder class
@@ -86,7 +86,7 @@ class PersistedClassDao(dataSource: DataSource) {
     persistedClass.copy(id = Some(persistedClassId))
   }
 
-  def delete(pClass: String, id: Long): Unit = {
+  def delete(pClass : String, id : Long) : Unit = {
     // The schema defines a cascade delete, this we only need to delete the aggregate root
     val sql = s"delete from ${PC.Table} where ${PC.Id} = :id and ${PC.Name} = :name"
     val paramSource = new MapSqlParameterSource()
@@ -101,7 +101,7 @@ class PersistedClassDao(dataSource: DataSource) {
    * @throws SQLException
    * @throws LiquibaseException
    */
-  def init(): Try[Unit] = Try {
+  def init() : Try[Unit] = Try {
     val changelogName = "blended/persistence/jdbc/PersistedClassDao-changelog.xml"
     log.debug("Loading database changelog from: " + changelogName)
     val jdbcConnection = new JdbcConnection(dataSource.getConnection())
@@ -119,7 +119,7 @@ class PersistedClassDao(dataSource: DataSource) {
     }
   }
 
-  def fieldRowMapper(prefix: String = ""): RowMapper[(Long, PersistedField)] = { (rs, nr) =>
+  def fieldRowMapper(prefix : String = "") : RowMapper[(Long, PersistedField)] = { (rs, nr) =>
 
     val holderId = rs.getLong(prefix + PF.HolderId)
 
@@ -137,7 +137,7 @@ class PersistedClassDao(dataSource: DataSource) {
     holderId -> PersistedField(fieldId, baseFieldId, name, valueLong, valueDouble, valueString, typeName)
   }
 
-  def findAll(pClass: String): sci.Seq[PersistedClass] = {
+  def findAll(pClass : String) : sci.Seq[PersistedClass] = {
     val pfCols = Seq(
       PF.HolderId, PF.FieldId, PF.BaseFieldId,
       PF.Name, PF.ValueLong, PF.ValueDouble, PF.ValueString,
@@ -153,7 +153,7 @@ class PersistedClassDao(dataSource: DataSource) {
     inferPersistedClassesFromFields(pClass, allFields.asScala)
   }
 
-  def inferPersistedClassesFromFields(pClass: String, fields: Seq[(Long, PersistedField)]): sci.Seq[PersistedClass] = {
+  def inferPersistedClassesFromFields(pClass : String, fields : Seq[(Long, PersistedField)]) : sci.Seq[PersistedClass] = {
     val byId = fields.foldLeft(Map[Long, List[PersistedField]]()) { (map, rs) =>
       val id = rs._1
       val field = rs._2
@@ -163,19 +163,19 @@ class PersistedClassDao(dataSource: DataSource) {
     byId.toList.map { case (id, fields) => PersistedClass(id = Some(id), name = pClass, fields = fields.reverse) }
   }
 
-  def createByExampleQuery(pClass: String, selectCols: Seq[String], fields: Seq[PersistedField]): (String, MapSqlParameterSource) = {
+  def createByExampleQuery(pClass : String, selectCols : Seq[String], fields : Seq[PersistedField]) : (String, MapSqlParameterSource) = {
     val mainField = "field"
     val cls = "cls"
 
     // 3 mutable parts, we build up a query, after all
-    var queryFields: List[String] = mainField :: Nil
-    var queryCriterias: List[String] = Nil
+    var queryFields : List[String] = mainField :: Nil
+    var queryCriterias : List[String] = Nil
     val queryParams = new MapSqlParameterSource()
 
     queryCriterias ::= s"${mainField}.${PF.HolderId} = ${cls}.${PC.Id} and ${cls}.${PC.Name} = :clsName"
     queryParams.addValue("clsName", pClass)
 
-    def _fName(id: Long): String = s"f${id}"
+    def _fName(id : Long) : String = s"f${id}"
 
     fields.foreach { field =>
       val fName = _fName(field.fieldId)
@@ -252,7 +252,7 @@ class PersistedClassDao(dataSource: DataSource) {
     sql -> queryParams
   }
 
-  def findByFields(pClass: String, fields: Seq[PersistedField]): sci.Seq[PersistedClass] = {
+  def findByFields(pClass : String, fields : Seq[PersistedField]) : sci.Seq[PersistedClass] = {
     val pfCols = Seq(
       PF.HolderId, PF.FieldId, PF.BaseFieldId,
       PF.Name, PF.ValueLong, PF.ValueDouble, PF.ValueString,
@@ -268,7 +268,7 @@ class PersistedClassDao(dataSource: DataSource) {
     inferPersistedClassesFromFields(pClass, allFields.asScala)
   }
 
-  def deleteByFields(pClass: String, fields: Seq[PersistedField]): Long = {
+  def deleteByFields(pClass : String, fields : Seq[PersistedField]) : Long = {
     val cols = Seq(PF.HolderId)
     val (sql, queryParams) = createByExampleQuery(pClass, cols, fields)
     val classIds = jdbcTemplate.queryForList(sql, queryParams, classOf[java.lang.Long]).asScala.toList.distinct

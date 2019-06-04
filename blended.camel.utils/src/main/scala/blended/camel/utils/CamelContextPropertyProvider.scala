@@ -13,7 +13,7 @@ trait IdServiceCamelContextPropertyProvider extends CamelContextPropertyProvider
 
   val PROPERTIES_KEY = "blended.camel.context.properties"
 
-  override def contextProperties : Map[String,String] = {
+  override def contextProperties : Map[String, String] = {
     val cfg = idService.containerContext.getContainerConfig()
 
     if (cfg.hasPath(PROPERTIES_KEY)) {
@@ -27,5 +27,4 @@ trait IdServiceCamelContextPropertyProvider extends CamelContextPropertyProvider
     }
   }
 }
-
 

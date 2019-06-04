@@ -18,9 +18,9 @@ class TransactionDestinationResolver(
   eventDestName : String
 ) extends FlowHeaderConfigAware with JmsEnvelopeHeader {
 
-  override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
+  override def sendParameter(session : Session, env : FlowEnvelope) : Try[JmsSendParameter] = Try {
 
-    val transShard : String = env.header[String](headerConfig.headerTransShard).map{ s => s".$s" }.getOrElse("")
+    val transShard : String = env.header[String](headerConfig.headerTransShard).map { s => s".$s" }.getOrElse("")
     val dest : JmsDestination = JmsDestination.create(eventDestName + transShard).get
 
     log.debug(s"Transaction destination for [${env.id}] is [$dest]")
@@ -42,22 +42,22 @@ class TransactionWiretap(
   inbound : Boolean,
   trackSource : String,
   log : Logger
-)(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
+)(implicit system : ActorSystem, materializer : Materializer) extends JmsStreamSupport {
 
   private[transaction] val createTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
-    def startTransaction(env: FlowEnvelope) : FlowTransactionEvent = {
+    def startTransaction(env : FlowEnvelope) : FlowTransactionEvent = {
       FlowTransactionStarted(env.id, env.flowMessage.header)
     }
 
-    def updateTransaction(env: FlowEnvelope) : FlowTransactionEvent = {
+    def updateTransaction(env : FlowEnvelope) : FlowTransactionEvent = {
 
       env.exception match {
         case None =>
           val branch = env.header[String](headerCfg.headerBranch).getOrElse("default")
           FlowTransactionUpdate(env.id, env.flowMessage.header, WorklistState.Completed, branch)
 
-        case Some(e) => FlowTransactionFailed(env.id, env.flowMessage.header,  Some(e.getMessage()))
+        case Some(e) => FlowTransactionFailed(env.id, env.flowMessage.header, Some(e.getMessage()))
       }
     }
 
@@ -119,10 +119,10 @@ class TransactionWiretap(
       val zip = b.add(Zip[FlowEnvelope, FlowEnvelope]())
 
       val select = b.add(
-        Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope]{ pair =>
+        Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope] { pair =>
 
           pair._1.exception match {
-            case None => pair._2.clearException()
+            case None    => pair._2.clearException()
             case Some(e) => pair._2.withException(e)
           }
         }

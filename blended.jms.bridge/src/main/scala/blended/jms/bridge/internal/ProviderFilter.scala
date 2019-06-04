@@ -6,12 +6,12 @@ import blended.util.logging.Logger
 import scala.reflect.ClassTag
 
 object ProviderFilter {
-  def apply(vendor: String): ProviderFilter = apply(vendor, None)
-  def apply(vendor: String, provider: String) : ProviderFilter = apply(vendor, Some(provider))
-  def apply(vendor: String, provider: Option[String]): ProviderFilter = new ProviderFilter(vendor, provider)
+  def apply(vendor : String) : ProviderFilter = apply(vendor, None)
+  def apply(vendor : String, provider : String) : ProviderFilter = apply(vendor, Some(provider))
+  def apply(vendor : String, provider : Option[String]) : ProviderFilter = new ProviderFilter(vendor, provider)
 }
 
-class ProviderFilter(vendor: String, provider: Option[String]) {
+class ProviderFilter(vendor : String, provider : Option[String]) {
 
   private[this] val log = Logger[ProviderFilter]
 
@@ -21,11 +21,11 @@ class ProviderFilter(vendor: String, provider: Option[String]) {
       // we need the vendor to match
       case (p.vendor, s) => s match {
         // The provider to search for is not specified => match
-        case None => true
+        case None             => true
         // The provider to search for matches exactly => match
         case Some(p.provider) => true
         // if the provider to search for is a regex => matches if the regex matches
-        case Some(pattern) => p.provider.matches(pattern)
+        case Some(pattern)    => p.provider.matches(pattern)
       }
 
       // If the vendor does not match, nothing matches
@@ -36,10 +36,10 @@ class ProviderFilter(vendor: String, provider: Option[String]) {
     result
   }
 
-  def listProviderFilter[T <: ProviderAware](l : List[T], vendor: String, provider: Option[String])(implicit classTag: ClassTag[T]) : List[T] =
+  def listProviderFilter[T <: ProviderAware](l : List[T], vendor : String, provider : Option[String])(implicit classTag : ClassTag[T]) : List[T] =
     l.filter(matches)
 
-  def singleProviderFilter[T <: ProviderAware](l: List[T], vendor: String, provider: String)(implicit evidence : ClassTag[T]) : Option[T] = {
+  def singleProviderFilter[T <: ProviderAware](l : List[T], vendor : String, provider : String)(implicit evidence : ClassTag[T]) : Option[T] = {
 
     l.filter(matches) match {
       case Nil =>

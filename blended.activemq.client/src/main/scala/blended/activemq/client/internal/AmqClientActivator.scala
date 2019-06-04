@@ -38,32 +38,33 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching {
       whenAdvancedServicePresent[ConnectionVerifierFactory](s"(name=$verifierName)") { verifierFactory =>
         whenAdvancedServicePresent[VerificationFailedHandler](s"(name=$failedHandlerName)") { failedHandler =>
 
-          val cfg: Config = osgiCfg.config
-          implicit val system: ActorSystem = osgiCfg.system
+          val cfg : Config = osgiCfg.config
+          implicit val system : ActorSystem = osgiCfg.system
 
           // TODO: Include connection verifier
-          val cfgMap: Map[String, Config] = cfg.getConfigMap("connections", Map.empty)
+          val cfgMap : Map[String, Config] = cfg.getConfigMap("connections", Map.empty)
           log.info(s"Verifying ActiveMQ client connection(s) : [${cfgMap.values.mkString(",")}]")
 
-          cfgMap.foreach { case (key, config) =>
-            val connectionCfg: ConnectionConfig = BlendedJMSConnectionConfig.fromConfig(
-              stringResolver = osgiCfg.idSvc.resolvePropertyString
-            )(
-              vendor = "activemq",
-              provider = key,
-              cfg = config
-            ).copy(
-              cfClassName = Some(classOf[ActiveMQConnectionFactory].getName())
-            )
+          cfgMap.foreach {
+            case (key, config) =>
+              val connectionCfg : ConnectionConfig = BlendedJMSConnectionConfig.fromConfig(
+                stringResolver = osgiCfg.idSvc.resolvePropertyString
+              )(
+                vendor = "activemq",
+                provider = key,
+                cfg = config
+              ).copy(
+                cfClassName = Some(classOf[ActiveMQConnectionFactory].getName())
+              )
 
-            val cf: IdAwareConnectionFactory = new BlendedSingleConnectionFactory(
-              connectionCfg, Some(osgiCfg.bundleContext)
-            )
+              val cf : IdAwareConnectionFactory = new BlendedSingleConnectionFactory(
+                connectionCfg, Some(osgiCfg.bundleContext)
+              )
 
-            val verified : Future[Boolean] = verifierFactory.createConnectionVerifier().verifyConnection(cf)
+              val verified : Future[Boolean] = verifierFactory.createConnectionVerifier().verifyConnection(cf)
 
-            verified.onComplete {
-              case Success(b) => if (b) {
+              verified.onComplete {
+                case Success(b) => if (b) {
                   log.info(s"Connection [${cf.vendor}:${cf.provider}] verified and ready to use.")
                   cf.providesService[ConnectionFactory, IdAwareConnectionFactory](
                     "vendor" -> connectionCfg.vendor,
@@ -73,9 +74,9 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching {
                   log.warn(s"Failed to verify connection [${cf.vendor}:${cf.provider}]...invoking failed handler")
                   failedHandler.verificationFailed(cf)
                 }
-              case Failure(t) =>
-                s"Unable to verify connection [${cf.vendor}:${cf.provider}]. This connection will not be active"
-            }
+                case Failure(t) =>
+                  s"Unable to verify connection [${cf.vendor}:${cf.provider}]. This connection will not be active"
+              }
           }
         }
       }

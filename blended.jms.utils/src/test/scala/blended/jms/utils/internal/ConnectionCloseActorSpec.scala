@@ -29,7 +29,7 @@ class ConnectionCloseActorSpec extends TestKit(ActorSystem("CloseActorSpec"))
       val timeout = 50.millis
 
       val holder = new DummyHolder(() => new DummyConnection() {
-        override def close(): Unit = {
+        override def close() : Unit = {
           Thread.sleep((timeout * 2).toMillis)
           super.close()
         }
@@ -48,7 +48,7 @@ class ConnectionCloseActorSpec extends TestKit(ActorSystem("CloseActorSpec"))
       val timeout = 50.millis
 
       val holder = new DummyHolder(() => new DummyConnection()) {
-        override def close(): Try[Unit] = Try {
+        override def close() : Try[Unit] = Try {
           closeCount += 1
           throw new JMSException("boom")
         }

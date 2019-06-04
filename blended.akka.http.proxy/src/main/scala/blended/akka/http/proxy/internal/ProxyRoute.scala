@@ -4,10 +4,10 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.{ ConnectionContext, Http }
+import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.{ Host, Location }
-import akka.http.scaladsl.server.{ RequestContext, Route }
+import akka.http.scaladsl.model.headers.{Host, Location}
+import akka.http.scaladsl.server.{RequestContext, Route}
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import blended.util.logging.Logger
@@ -17,17 +17,17 @@ trait ProxyRoute {
 
   private[this] val log = Logger[ProxyRoute]
 
-  protected def proxyConfig: ProxyTarget
+  protected def proxyConfig : ProxyTarget
 
-  protected def actorSystem: ActorSystem
+  protected def actorSystem : ActorSystem
 
-  protected def sslContext: Option[SSLContext]
+  protected def sslContext : Option[SSLContext]
 
-  def proxyRoute: Route = _proxyRoute
+  def proxyRoute : Route = _proxyRoute
 
   private[this] type HttpClient = HttpRequest ⇒ Future[HttpResponse]
 
-  private[this] lazy val _proxyRoute: Route =
+  private[this] lazy val _proxyRoute : Route =
     pathEndOrSingleSlash {
       handle("")
     } ~
@@ -35,7 +35,7 @@ trait ProxyRoute {
         handle(requestPath)
       }
 
-  def handle(requestPath: String): Route = {
+  def handle(requestPath : String) : Route = {
 
     implicit val _actorSystem = actorSystem
     implicit val materializer = ActorMaterializer()
@@ -46,15 +46,15 @@ trait ProxyRoute {
       entity = s"The proxy request did not responded after ${proxyConfig.timeout} seconds"
     )
 
-    withRequestTimeout(proxyConfig.timeout.seconds, request => timeoutResponse) { ctx: RequestContext =>
+    withRequestTimeout(proxyConfig.timeout.seconds, request => timeoutResponse) { ctx : RequestContext =>
 
-      val simpleClient: HttpRequest => Future[HttpResponse] = sslContext match {
+      val simpleClient : HttpRequest => Future[HttpResponse] = sslContext match {
         case Some(sslCtx) =>
           // Use the explicit SSL Context for connections
-          Http().singleRequest(_: HttpRequest, connectionContext = ConnectionContext.https(sslContext = sslCtx))
+          Http().singleRequest(_ : HttpRequest, connectionContext = ConnectionContext.https(sslContext = sslCtx))
         case None =>
           // Use default SSL Context for connections
-          Http().singleRequest(_: HttpRequest)
+          Http().singleRequest(_ : HttpRequest)
       }
 
       val request = ctx.request
@@ -76,17 +76,17 @@ trait ProxyRoute {
       val proxyReq = HttpRequest(method = request.method, uri = uri, entity = request.entity).withHeaders(headers)
       log.debug(s"Final http request [${proxyReq}]")
 
-      def handleResponse(request: HttpRequest, redirectCount: Int, config: ProxyTarget): Future[HttpResponse] = simpleClient(request).flatMap { response =>
+      def handleResponse(request : HttpRequest, redirectCount : Int, config : ProxyTarget) : Future[HttpResponse] = simpleClient(request).flatMap { response =>
         response.status match {
 
-          case e: StatusCodes.ServerError =>
+          case e : StatusCodes.ServerError =>
             //            response.discardEntityBytes()
             // consume entity (for log)
             val re = response.entity
             log.warn(s"503 Bad Gateway. The upstream (proxied) server returned with error [${e}] and response entity [${re}]")
             Future.successful(HttpResponse(StatusCodes.BadGateway))
 
-          case r: StatusCodes.Redirection if redirectCount > 0 && Seq(301, 302, 307, 308).contains(r.intValue) =>
+          case r : StatusCodes.Redirection if redirectCount > 0 && Seq(301, 302, 307, 308).contains(r.intValue) =>
 
             val newUri = response.header[Location].get.uri
             val newRedirectCount = redirectCount - 1
@@ -103,7 +103,7 @@ trait ProxyRoute {
               case RedirectHeaderPolicy.Redirect_Replace =>
                 log.debug("Replacing request headers with headers from redirect address")
                 val oldHeaders = request.headers
-                oldHeaders.foreach{ h => request.removeHeader(h.name())}
+                oldHeaders.foreach { h => request.removeHeader(h.name()) }
                 request.withHeaders(response.headers)
             }
 

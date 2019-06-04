@@ -13,7 +13,7 @@ class PersistedClassDaoTest extends LoggingFreeSpec {
 
   "createByExampleQuery" - {
 
-    val ds: DataSource = TestProxy.proxy(classOf[DataSource])
+    val ds : DataSource = TestProxy.proxy(classOf[DataSource])
     val dao = new PersistedClassDao(ds)
 
     "find by top-level id" in {

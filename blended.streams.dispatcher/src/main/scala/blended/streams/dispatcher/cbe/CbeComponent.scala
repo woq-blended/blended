@@ -1,14 +1,14 @@
 package blended.streams.dispatcher.cbe
 
 case class CbeComponent(
-  application      : String,
-  component        : String,
-  location         : String,
-  locationType     : String,
-  subComponent     : String,
-  threadId         : String,
-  componentType    : String,
-  instanceId       : Int
+  application : String,
+  component : String,
+  location : String,
+  locationType : String,
+  subComponent : String,
+  threadId : String,
+  componentType : String,
+  instanceId : Int
 ) {
 
   val element : String =

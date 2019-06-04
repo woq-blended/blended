@@ -28,15 +28,15 @@ class DispatcherActivator extends DominoActivator
             log.info(s"Initializing Dispatcher with internal connection factory [${internalProvider.id}]")
 
             val bs = new DispatcherBuilderSupport {
-              override def containerConfig: Config = cfg.idSvc.containerContext.getContainerConfig()
+              override def containerConfig : Config = cfg.idSvc.containerContext.getContainerConfig()
 
-              override val streamLogger: Logger = Logger(headerConfig.prefix + ".dispatcher")
+              override val streamLogger : Logger = Logger(headerConfig.prefix + ".dispatcher")
             }
 
             whenAdvancedServicePresent[IdAwareConnectionFactory](internalProvider.osgiBrokerFilter) { cf =>
 
-              implicit val system: ActorSystem = cfg.system
-              implicit val materializer: Materializer = ActorMaterializer()
+              implicit val system : ActorSystem = cfg.system
+              implicit val materializer : Materializer = ActorMaterializer()
 
               val routerCfg = ResourceTypeRouterConfig.create(
                 idSvc = cfg.idSvc,
@@ -61,7 +61,7 @@ class DispatcherActivator extends DominoActivator
               }
             }
           } catch {
-            case t: Throwable =>
+            case t : Throwable =>
               log.warn(t)("Failed to start dispatcher")
           }
         }

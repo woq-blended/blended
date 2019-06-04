@@ -8,7 +8,7 @@ import domino.DominoActivator
 class ScepActivator extends DominoActivator with TypesafeConfigWatching {
 
   whenBundleActive {
-    whenTypesafeConfigAvailable{ (cfg, idSvc) =>
+    whenTypesafeConfigAvailable { (cfg, idSvc) =>
 
       val scepUrl = cfg.getStringOption("scepUrl")
 

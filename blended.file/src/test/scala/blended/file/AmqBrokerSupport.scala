@@ -19,7 +19,7 @@ trait AmqBrokerSupport {
     cf = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false&jms.prefetchPolicy.queuePrefetch=10")
   )
 
-  def startBroker()(implicit system: ActorSystem) : BrokerService = {
+  def startBroker()(implicit system : ActorSystem) : BrokerService = {
     val b = new BrokerService()
     b.setBrokerName(brokerName)
     b.setPersistent(false)
@@ -34,7 +34,7 @@ trait AmqBrokerSupport {
     b
   }
 
-  def stopBroker(broker: Option[BrokerService]) : Unit = {
+  def stopBroker(broker : Option[BrokerService]) : Unit = {
     broker.foreach { b =>
       b.stop()
       b.waitUntilStopped()

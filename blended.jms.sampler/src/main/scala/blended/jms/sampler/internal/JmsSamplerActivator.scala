@@ -10,7 +10,7 @@ import domino.DominoActivator
 class JmsSamplerActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
-    whenActorSystemAvailable{ cfg =>
+    whenActorSystemAvailable { cfg =>
       whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)") {
         cf =>
           val sampler = new JmsSampler(cfg, cf)

@@ -27,45 +27,45 @@ class FlowTransactionManagerSpec extends SimplePojoContainerSpec
   with BeforeAndAfterAll
   with PojoSrTestHelper {
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.persistence.h2" -> new H2Activator()
   )
 
   private val log = Logger[FlowTransactionManagerSpec]
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   private implicit val timeout = 5.seconds
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
 
   private val pSvc : PersistenceService = mandatoryService[PersistenceService](registry)(None)
 
-  private val mgr : ActorRef  = system.actorOf(FlowTransactionManager.props(pSvc))
+  private val mgr : ActorRef = system.actorOf(FlowTransactionManager.props(pSvc))
 
-  private def transaction(mgr : ActorRef, id : String)(implicit timeout: Timeout) : Future[FlowTransaction] = {
+  private def transaction(mgr : ActorRef, id : String)(implicit timeout : Timeout) : Future[FlowTransaction] = {
     log.debug(s"Getting transaction state [$id] from [${mgr.path}]")
     (mgr ? FlowTransactionActor.TransactionState(id)).mapTo[FlowTransaction]
   }
 
-  private def singleTest(event : FlowTransactionEvent)(f : List[FlowTransaction] => Unit): Unit = {
+  private def singleTest(event : FlowTransactionEvent)(f : List[FlowTransaction] => Unit) : Unit = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
-    val coll = Collector[FlowTransaction]("trans")( _ => {} )
+    val coll = Collector[FlowTransaction]("trans")(_ => {})
     mgr.tell(event, coll.actor)
 
-    akka.pattern.after(2.seconds, system.scheduler)( Future {
+    akka.pattern.after(2.seconds, system.scheduler)(Future {
       coll.actor ! CollectingActor.Completed
     })
 
-    val result = coll.result.map{ l => f(l) }
+    val result = coll.result.map { l => f(l) }
 
     Await.result(result, 3.seconds)
     system.stop(coll.actor)
   }
 
-  override protected def afterAll(): Unit = Await.result(system.terminate(), 3.seconds)
+  override protected def afterAll() : Unit = Await.result(system.terminate(), 3.seconds)
 
   "The transaction manager should" - {
 
@@ -76,8 +76,8 @@ class FlowTransactionManagerSpec extends SimplePojoContainerSpec
       singleTest(FlowTransaction.startEvent(Some(env))) { l =>
         l should have size 1
         val t = l.head
-        t.tid should be (env.id)
-        t.creationProps.get("foo") should be (Some(MsgProperty("bar")))
+        t.tid should be(env.id)
+        t.creationProps.get("foo") should be(Some(MsgProperty("bar")))
       }
     }
 
@@ -87,10 +87,10 @@ class FlowTransactionManagerSpec extends SimplePojoContainerSpec
 
       val env = FlowEnvelope(FlowMessage.noProps).withHeader("foo", "bar").get
 
-      singleTest(FlowTransaction.startEvent(Some(env))){ l =>
+      singleTest(FlowTransaction.startEvent(Some(env))) { l =>
         l should have size 1
-        l.head.tid should be (env.id)
-        l.head.creationProps.get("foo") should be (Some(MsgProperty("bar")))
+        l.head.tid should be(env.id)
+        l.head.creationProps.get("foo") should be(Some(MsgProperty("bar")))
       }
 
       system.stop(mgr)
@@ -98,8 +98,8 @@ class FlowTransactionManagerSpec extends SimplePojoContainerSpec
       val mgr2 = system.actorOf(FlowTransactionManager.props(pSvc))
       val t2 = Await.result(transaction(mgr2, env.id), 3.seconds)
 
-      t2.tid should be (env.id)
-      t2.creationProps.get("foo") should be (Some(MsgProperty("bar")))
+      t2.tid should be(env.id)
+      t2.creationProps.get("foo") should be(Some(MsgProperty("bar")))
 
       system.stop(mgr2)
     }

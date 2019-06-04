@@ -15,11 +15,11 @@ import domino.DominoActivator
 import org.apache.felix.connect.launch.{ClasspathScanner, PojoServiceRegistryFactory}
 
 /**
-  *
-  * @param salt
-  * @param baseDir0 The base dir, used for the internal blended container configuration (etc, log)
-  */
-class CertRefresher(salt: String, baseDir0: File = new File(".")) {
+ *
+ * @param salt
+ * @param baseDir0 The base dir, used for the internal blended container configuration (etc, log)
+ */
+class CertRefresher(salt : String, baseDir0 : File = new File(".")) {
 
   private[this] val log = Logger[CertRefresher]
 
@@ -61,7 +61,7 @@ class CertRefresher(salt: String, baseDir0: File = new File(".")) {
         val ctCtxt = new ScepAppContainerContext(baseDir)
         // This needs to be a fixed uuid as some tests might be for restarts and require the same id
         val idService = new ContainerIdentifierServiceImpl(ctCtxt) {
-          override lazy val uuid: String = salt
+          override lazy val uuid : String = salt
         }
         idService.providesService[ContainerIdentifierService]
         log.debug(s"Provided idService: ${idService}")
@@ -72,11 +72,11 @@ class CertRefresher(salt: String, baseDir0: File = new File(".")) {
     registry
   }
 
-  def stop(): Unit = {
+  def stop() : Unit = {
     registry.getBundleContext().getBundle().stop(0)
   }
 
-  def checkCert(): Future[MemoryKeystore] = {
+  def checkCert() : Future[MemoryKeystore] = {
 
     val promise = Promise[MemoryKeystore]()
 

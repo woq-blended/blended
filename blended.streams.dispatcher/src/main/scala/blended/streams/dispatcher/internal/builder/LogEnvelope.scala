@@ -14,10 +14,9 @@ import scala.util.{Failure, Success, Try}
 /*-------------------------------------------------------------------------------------------------*/
 object LogEnvelope {
 
-  def apply(dispatcherCfg: ResourceTypeRouterConfig, stepName : String, level: LogLevel)(implicit bs: DispatcherBuilderSupport) :
-    Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
+  def apply(dispatcherCfg : ResourceTypeRouterConfig, stepName : String, level : LogLevel)(implicit bs : DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
 
-    FlowProcessor.fromFunction( stepName, bs.streamLogger) { env =>
+    FlowProcessor.fromFunction(stepName, bs.streamLogger) { env =>
 
       Try {
 
@@ -44,6 +43,4 @@ object LogEnvelope {
       }
     }
 }
-
-
 

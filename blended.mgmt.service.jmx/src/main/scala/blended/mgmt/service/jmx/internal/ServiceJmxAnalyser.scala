@@ -4,22 +4,22 @@ import scala.collection.JavaConverters._
 
 import blended.updater.config.ServiceInfo
 import blended.util.logging.Logger
-import javax.management.{ Attribute, MBeanServer, ObjectInstance, ObjectName }
-import javax.management.openmbean.{ CompositeData, CompositeDataSupport }
+import javax.management.{Attribute, MBeanServer, ObjectInstance, ObjectName}
+import javax.management.openmbean.{CompositeData, CompositeDataSupport}
 
-class ServiceJmxAnalyser(server: MBeanServer, config: ServiceJmxConfig) {
+class ServiceJmxAnalyser(server : MBeanServer, config : ServiceJmxConfig) {
 
   private val log = Logger[ServiceJmxAnalyser]
 
-  def createFilter(svcConfig : SingleServiceConfig, template: ServiceTypeTemplate) : ObjectName = {
+  def createFilter(svcConfig : SingleServiceConfig, template : ServiceTypeTemplate) : ObjectName = {
 
-    val templateAttrs = template.query.foldLeft(""){ case (s, (k,v)) => s + k + "=" + v + "," }
-    val attr = svcConfig.query.foldLeft(templateAttrs){ case (s, (k,v)) => s + k + "=" + v + ","}
+    val templateAttrs = template.query.foldLeft("") { case (s, (k, v)) => s + k + "=" + v + "," }
+    val attr = svcConfig.query.foldLeft(templateAttrs) { case (s, (k, v)) => s + k + "=" + v + "," }
 
     new ObjectName(template.domain + ":" + attr + "*")
   }
 
-  def instances(svcConfig: SingleServiceConfig) : List[(ObjectInstance, SingleServiceConfig, ServiceTypeTemplate)] = {
+  def instances(svcConfig : SingleServiceConfig) : List[(ObjectInstance, SingleServiceConfig, ServiceTypeTemplate)] = {
 
     (config.templates.get(svcConfig.svcType)) match {
 
@@ -33,23 +33,23 @@ class ServiceJmxAnalyser(server: MBeanServer, config: ServiceJmxConfig) {
     }
   }
 
-  def serviceInfo(instance: ObjectInstance, svcConfig: SingleServiceConfig, template: ServiceTypeTemplate) : ServiceInfo = {
+  def serviceInfo(instance : ObjectInstance, svcConfig : SingleServiceConfig, template : ServiceTypeTemplate) : ServiceInfo = {
 
-    def transformOne(name: List[String], value: Object) : List[(String, String)] = value match {
+    def transformOne(name : List[String], value : Object) : List[(String, String)] = value match {
       case cd if cd.isInstanceOf[CompositeDataSupport] => {
         val data = cd.asInstanceOf[CompositeDataSupport]
         data.getCompositeType().keySet().asScala.map { k =>
           data.get(k) match {
             case innerCd if innerCd.isInstanceOf[CompositeData] => transformOne(name ::: List(k), innerCd)
-            case v => List( (name.mkString(".") + "." + k, v.toString()) )
+            case v => List((name.mkString(".") + "." + k, v.toString()))
           }
         }.toList.flatten
       }
-      case a => List( (name.mkString("."), a.toString() ) )
+      case a => List((name.mkString("."), a.toString()))
     }
 
-    def transformAll(name: List[String], attrs: List[Attribute]) : List[(String, String)] = attrs match {
-      case ( head :: tail ) =>
+    def transformAll(name : List[String], attrs : List[Attribute]) : List[(String, String)] = attrs match {
+      case (head :: tail) =>
         val newName = name ::: List(head.getName())
         transformOne(newName, head.getValue) ::: transformAll(name, tail)
       case Nil => List.empty
@@ -78,8 +78,8 @@ class ServiceJmxAnalyser(server: MBeanServer, config: ServiceJmxConfig) {
 
     val start = System.currentTimeMillis()
 
-    val objectInstances  =
-      config.services.map{ case (_, svcConfig) => instances(svcConfig) }.toList.flatten
+    val objectInstances =
+      config.services.map { case (_, svcConfig) => instances(svcConfig) }.toList.flatten
 
     val result = objectInstances.map { case (i, s, t) => serviceInfo(i, s, t) }
 

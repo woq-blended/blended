@@ -17,12 +17,12 @@ class JavaKeystore(
   keypass : Option[Array[Char]]
 ) {
 
-  def keystore: File = store
+  def keystore : File = store
 
   private val log : Logger = Logger[JavaKeystore]
 
   private[ssl] val storetype : String = keypass match {
-    case None => KeyStore.getDefaultType()
+    case None    => KeyStore.getDefaultType()
     case Some(_) => "PKCS12"
   }
 
@@ -33,16 +33,17 @@ class JavaKeystore(
 
     val ks : KeyStore = loadKeyStoreFromFile().get
 
-    ms.certificates.filter(_._2.changed).foreach { case (alias, cert) =>
-      keypass match {
-        case None =>
-          ks.setCertificateEntry(alias, cert.chain.last)
-        case Some(pwd) =>
-          cert.privateKey match {
-            case None => throw new Exception(s"Certificate for [${cert.subjectPrincipal}] is missing the private key")
-            case Some(k) => ks.setKeyEntry(alias, k, pwd, cert.chain.toArray)
-          }
-      }
+    ms.certificates.filter(_._2.changed).foreach {
+      case (alias, cert) =>
+        keypass match {
+          case None =>
+            ks.setCertificateEntry(alias, cert.chain.last)
+          case Some(pwd) =>
+            cert.privateKey match {
+              case None    => throw new Exception(s"Certificate for [${cert.subjectPrincipal}] is missing the private key")
+              case Some(k) => ks.setKeyEntry(alias, k, pwd, cert.chain.toArray)
+            }
+        }
     }
 
     saveKeyStoreToFile(ks).get
@@ -70,7 +71,7 @@ class JavaKeystore(
     ks
   }
 
-  private[ssl] def saveKeyStoreToFile(ks: KeyStore): Try[KeyStore] = Try {
+  private[ssl] def saveKeyStoreToFile(ks : KeyStore) : Try[KeyStore] = Try {
     val fos = new FileOutputStream(keystore)
     try {
       val certCount = ks.aliases().asScala.size
@@ -86,7 +87,7 @@ class JavaKeystore(
 
   // Extract a single certificate from the underlying keystore
   // If a keypass is set, we will also extract the private key of the certificate
-  private[ssl] def extractCertificate(ks: KeyStore, alias: String): Try[CertificateHolder] = Try {
+  private[ssl] def extractCertificate(ks : KeyStore, alias : String) : Try[CertificateHolder] = Try {
 
     val chain : List[X509Certificate] = Option(ks.getCertificateChain(alias)) match {
       case None => Option(ks.getCertificate(alias)) match {
@@ -105,7 +106,7 @@ class JavaKeystore(
     CertificateHolder.create(publicKey = pubKey, privateKey = privKey, chain = chain).get
   }
 
-  private[ssl] def memoryKeystore(ks: KeyStore): Try[MemoryKeystore] = Try {
+  private[ssl] def memoryKeystore(ks : KeyStore) : Try[MemoryKeystore] = Try {
 
     val certs : Map[String, CertificateHolder] = ks.aliases().asScala.map { alias =>
       (alias, extractCertificate(ks, alias).get)

@@ -16,8 +16,8 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
   )
 
   val holder = new DummyHolder(() => new DummyConnection()) {
-    override val vendor: String = cfg.vendor
-    override val provider: String = cfg.provider
+    override val vendor : String = cfg.vendor
+    override val provider : String = cfg.provider
   }
 
   "The Connection State Manager" - {
@@ -42,7 +42,7 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       csm ! CheckConnection(false)
       probe.fishForMessage(3.seconds) {
         case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
-        case _ => false
+        case _                           => false
       }
       assert(holder.getConnection().isDefined)
     }
@@ -56,13 +56,13 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       csm ! CheckConnection(false)
       probe.fishForMessage(3.seconds) {
         case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
-        case _ => false
+        case _                           => false
       }
 
       csm ! Disconnect(1.second)
       probe.fishForMessage(3.seconds) {
         case sc : ConnectionStateChanged => sc.state.status == ConnectionState.DISCONNECTED
-        case _ => false
+        case _                           => false
       }
       assert(holder.getConnection().isEmpty)
     }
@@ -82,24 +82,23 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       csm ! CheckConnection(false)
       probe.fishForMessage(3.seconds) {
         case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
-        case _ => false
+        case _                           => false
       }
 
       (1.to(cfg.pingTolerance)).foreach { _ => csm ! PingFailed(new Exception("Boom")) }
       probe.fishForMessage(3.seconds) {
         case sc : ConnectionStateChanged => sc.state.status == ConnectionState.DISCONNECTED
-        case _ => false
+        case _                           => false
       }
       assert(csm.underlyingActor.currentState.lastDisconnect.isDefined)
       assert(holder.getConnection().isEmpty)
 
       probe.fishForMessage(5.seconds) {
         case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
-        case _ => false
+        case _                           => false
       }
       assert(holder.getConnection().isDefined)
     }
 
-    
   }
 }

@@ -4,6 +4,6 @@ import javax.security.auth.Subject
 
 trait BlendedPermissionManager {
 
-  def permissions(subject: Subject) : BlendedPermissions
+  def permissions(subject : Subject) : BlendedPermissions
 
 }

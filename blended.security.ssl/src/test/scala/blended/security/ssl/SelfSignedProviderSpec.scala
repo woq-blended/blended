@@ -19,14 +19,14 @@ class SelfSignedProviderSpec extends LoggingFreeSpec
 
     "create a self signed certificate with the hostname populated signed with it's own key" in {
 
-      forAll(Gen.alphaNumStr){ n =>
+      forAll(Gen.alphaNumStr) { n =>
         whenever(n.trim().nonEmpty) {
 
           val holder = createRootCertificate(cn = n).get
           val cert : X509Certificate = holder.chain.head
 
-          cert.getSerialNumber() should be (new BigInteger("1"))
-          cert.getIssuerDN().toString should be (cert.getSubjectX500Principal().toString)
+          cert.getSerialNumber() should be(new BigInteger("1"))
+          cert.getIssuerDN().toString should be(cert.getSubjectX500Principal().toString)
           holder.chain should have size 1
         }
       }
@@ -46,12 +46,12 @@ class SelfSignedProviderSpec extends LoggingFreeSpec
       val c1 : X509Certificate = cert.chain.head
       val c2 : X509Certificate = certNew.chain.head
 
-      c1.getIssuerDN() should be (c1.getSubjectDN())
-      c1.getSerialNumber() should be (new BigInteger("1"))
+      c1.getIssuerDN() should be(c1.getSubjectDN())
+      c1.getSerialNumber() should be(new BigInteger("1"))
       cert.chain should have size 1
 
-      c2.getIssuerDN() should be (c2.getSubjectDN())
-      c2.getSerialNumber() should be (new BigInteger("2"))
+      c2.getIssuerDN() should be(c2.getSubjectDN())
+      c2.getSerialNumber() should be(new BigInteger("2"))
       certNew.chain should have size 1
 
       c1.getPublicKey() should equal(c2.getPublicKey())

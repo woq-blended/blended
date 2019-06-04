@@ -21,7 +21,7 @@ object BlendedSamplesJms extends ProjectFactory {
       exportPackage = Seq()
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedCamelUtils.project
     )

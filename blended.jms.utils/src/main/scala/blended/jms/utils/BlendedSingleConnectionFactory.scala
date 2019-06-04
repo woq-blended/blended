@@ -21,7 +21,7 @@ trait IdAwareConnectionFactory extends ConnectionFactory with ProviderAware {
 class BlendedSingleConnectionFactory(
   config : ConnectionConfig,
   bundleContext : Option[BundleContext]
-)(implicit system: ActorSystem) extends IdAwareConnectionFactory {
+)(implicit system : ActorSystem) extends IdAwareConnectionFactory {
 
   override val vendor : String = config.vendor
   override val provider : String = config.provider
@@ -84,16 +84,16 @@ class BlendedSingleConnectionFactory(
   actor.foreach { a => a ! CheckConnection(false) }
 
   @throws[JMSException]
-  override def createConnection(): Connection = {
+  override def createConnection() : Connection = {
 
     if (cfEnabled) {
       try {
         holder.getConnection() match {
           case Some(c) => c
-          case None => throw new Exception(s"Error connecting to [$id].")
+          case None    => throw new Exception(s"Error connecting to [$id].")
         }
       } catch {
-        case e: Exception =>
+        case e : Exception =>
           val msg = s"Error getting Connection Factory [${e.getMessage()}]"
           log.error(msg)
           val jmsEx = new JMSException(msg)
@@ -105,21 +105,21 @@ class BlendedSingleConnectionFactory(
     }
   }
 
-  override def createConnection(user: String, password: String): Connection = {
+  override def createConnection(user : String, password : String) : Connection = {
     log.warn(s"BlendedSingleConnectionFactory.createConnection() for [$id]called with username and password, which is not supported.\nFalling back to default username and password.")
     createConnection()
   }
 }
 
-object SimpleIdAwareConnectionFactory{
+object SimpleIdAwareConnectionFactory {
 
   def apply(
     vendor : String,
-    provider: String,
+    provider : String,
     clientId : String,
-    cf: ConnectionFactory,
+    cf : ConnectionFactory,
     minReconnect : FiniteDuration = 5.minutes
-  )(implicit system: ActorSystem) : IdAwareConnectionFactory = {
+  )(implicit system : ActorSystem) : IdAwareConnectionFactory = {
     val cfg : ConnectionConfig = BlendedJMSConnectionConfig.defaultConfig.copy(
       vendor = vendor,
       provider = provider,
@@ -135,10 +135,10 @@ object SimpleIdAwareConnectionFactory{
 class SimpleIdAwareConnectionFactory(
   cfg : ConnectionConfig,
   cf : ConnectionFactory,
-  bundleContext: Option[BundleContext]
-)(implicit system: ActorSystem) extends BlendedSingleConnectionFactory(
+  bundleContext : Option[BundleContext]
+)(implicit system : ActorSystem) extends BlendedSingleConnectionFactory(
   cfg, bundleContext
 ) {
-  override def toString: String = s"${getClass().getSimpleName()}($vendor:$provider:$clientId)"
-  override protected def createHolder(cfg: ConnectionConfig) : ConnectionHolder = new FactoryConfigHolder(cfg, cf)
+  override def toString : String = s"${getClass().getSimpleName()}($vendor:$provider:$clientId)"
+  override protected def createHolder(cfg : ConnectionConfig) : ConnectionHolder = new FactoryConfigHolder(cfg, cf)
 }

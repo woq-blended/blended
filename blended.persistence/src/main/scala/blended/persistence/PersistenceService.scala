@@ -1,11 +1,11 @@
 package blended.persistence
 
-import java.{ util => ju }
+import java.{util => ju}
 
 /**
  * Service to persist JSON-like data structures.
  * To avoid bindings to any kind of JSON library, the supported data structure is kept as Java Map.
-
+ *
  * The supported value types are:
  * - `null`
  * - [[java.lang.Boolean]]
@@ -19,12 +19,12 @@ import java.{ util => ju }
  */
 trait PersistenceService {
 
-  def persist(pClass: String, data: ju.Map[String, _ <: Any]): ju.Map[String, _ <: Any]
+  def persist(pClass : String, data : ju.Map[String, _ <: Any]) : ju.Map[String, _ <: Any]
 
-  def findAll(pClass: String): Seq[ju.Map[String, _ <: Any]]
+  def findAll(pClass : String) : Seq[ju.Map[String, _ <: Any]]
 
-  def findByExample(pClass: String, data: ju.Map[String, _ <: Any]): Seq[ju.Map[String, _ <: Any]]
+  def findByExample(pClass : String, data : ju.Map[String, _ <: Any]) : Seq[ju.Map[String, _ <: Any]]
 
-  def deleteByExample(pClass: String, data: ju.Map[String, _ <: Any]): Long
+  def deleteByExample(pClass : String, data : ju.Map[String, _ <: Any]) : Long
 
 }

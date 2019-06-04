@@ -19,7 +19,7 @@ class LDAPLoginModule extends AbstractLoginModule {
 
   private[this] val log = Logger[LDAPLoginModule]
 
-  override protected val moduleName: String = "ldap"
+  override protected val moduleName : String = "ldap"
 
   // convenience to extract the LDAP Config object
   lazy val ldapCfg : LDAPLoginConfig = idSvc match {
@@ -51,7 +51,7 @@ class LDAPLoginModule extends AbstractLoginModule {
   }
 
   @throws[LoginException]
-  override def doLogin(): Boolean = {
+  override def doLogin() : Boolean = {
 
     // First of all we will obtain the directory context
 
@@ -69,9 +69,9 @@ class LDAPLoginModule extends AbstractLoginModule {
     true
   }
 
-  override protected def postCommit(): Unit = dirContext.get.close()
-  override protected def postAbort(): Unit = dirContext.get.close()
-  override protected def postLogout(): Unit = dirContext.get.close()
+  override protected def postCommit() : Unit = dirContext.get.close()
+  override protected def postAbort() : Unit = dirContext.get.close()
+  override protected def postLogout() : Unit = dirContext.get.close()
 
   @throws[LoginException]
   private[this] def validateUser() : String = {
@@ -109,11 +109,11 @@ class LDAPLoginModule extends AbstractLoginModule {
         throw new LoginException(t.getMessage())
     } finally {
       ldapCfg.systemUser match {
-        case None => dirContext.get.removeFromEnvironment(Context.SECURITY_PRINCIPAL)
+        case None    => dirContext.get.removeFromEnvironment(Context.SECURITY_PRINCIPAL)
         case Some(u) => dirContext.get.addToEnvironment(Context.SECURITY_PRINCIPAL, u)
       }
       ldapCfg.systemPassword match {
-        case None => dirContext.get.removeFromEnvironment(Context.SECURITY_CREDENTIALS)
+        case None    => dirContext.get.removeFromEnvironment(Context.SECURITY_CREDENTIALS)
         case Some(p) => dirContext.get.addToEnvironment(Context.SECURITY_CREDENTIALS, p)
       }
     }
@@ -136,13 +136,13 @@ class LDAPLoginModule extends AbstractLoginModule {
 
   // convenience method to encode a filter string
   private[this] def doRFC2254Encoding(inputString : String) : String = inputString match {
-    case s if s.isEmpty() => ""
+    case s if s.isEmpty()        => ""
     case s if s.startsWith("\\") => "\\5c" + doRFC2254Encoding(s.substring(1))
-    case s if s.startsWith("*") => "\\2a" + doRFC2254Encoding(s.substring(1))
-    case s if s.startsWith("(") => "\\28" + doRFC2254Encoding(s.substring(1))
-    case s if s.startsWith(")") => "\\29" + doRFC2254Encoding(s.substring(1))
+    case s if s.startsWith("*")  => "\\2a" + doRFC2254Encoding(s.substring(1))
+    case s if s.startsWith("(")  => "\\28" + doRFC2254Encoding(s.substring(1))
+    case s if s.startsWith(")")  => "\\29" + doRFC2254Encoding(s.substring(1))
     case s if s.startsWith("\0") => "\\00" + doRFC2254Encoding(s.substring(1))
-    case s => s.substring(0,1) + doRFC2254Encoding(s.substring(1))
+    case s                       => s.substring(0, 1) + doRFC2254Encoding(s.substring(1))
   }
 
 }

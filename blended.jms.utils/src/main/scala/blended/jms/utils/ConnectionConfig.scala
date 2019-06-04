@@ -14,7 +14,7 @@ trait ConnectionConfig {
   val pingTimeout : FiniteDuration
   val retryInterval : FiniteDuration
   val minReconnect : FiniteDuration
-  val maxReconnectTimeout: Option[FiniteDuration]
+  val maxReconnectTimeout : Option[FiniteDuration]
   val clientId : String
   val defaultUser : Option[String]
   val defaultPassword : Option[String]
@@ -23,7 +23,7 @@ trait ConnectionConfig {
   val useJndi : Boolean
   val jndiName : Option[String] = None
   val cfEnabled : Option[ConnectionConfig => Boolean]
-  val cfClassName: Option[String]
+  val cfClassName : Option[String]
   val ctxtClassName : Option[String]
   val jmsClassloader : Option[ClassLoader]
 }

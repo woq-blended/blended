@@ -14,9 +14,9 @@ import org.springframework.transaction.support.SimpleTransactionStatus
 class DummyPlatformTransactionManager extends PlatformTransactionManager {
 
   private[this] val log = Logger[DummyPlatformTransactionManager]
-  private[this] var inTx: TransactionDefinition = _
+  private[this] var inTx : TransactionDefinition = _
 
-  def commit(ts: TransactionStatus): Unit = {
+  def commit(ts : TransactionStatus) : Unit = {
     if (inTx == null) {
       throw new IllegalTransactionStateException("No in-flight transaction")
     }
@@ -24,7 +24,7 @@ class DummyPlatformTransactionManager extends PlatformTransactionManager {
     inTx = null
   }
 
-  def rollback(ts: TransactionStatus): Unit = {
+  def rollback(ts : TransactionStatus) : Unit = {
     if (inTx == null) {
       throw new IllegalTransactionStateException("No in-flight transaction")
     }
@@ -32,7 +32,7 @@ class DummyPlatformTransactionManager extends PlatformTransactionManager {
     inTx = null
   }
 
-  def getTransaction(td: TransactionDefinition): TransactionStatus = {
+  def getTransaction(td : TransactionDefinition) : TransactionStatus = {
     if (inTx != null) {
       log.warn("There is already a test transaction running: " + inTx)
     }

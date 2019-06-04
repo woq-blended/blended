@@ -7,13 +7,13 @@ import scala.util.Try
 
 object ResolvedRuntimeConfigCompanion {
 
-  def fromConfig(config: Config): Try[ResolvedRuntimeConfig] = Try {
+  def fromConfig(config : Config) : Try[ResolvedRuntimeConfig] = Try {
     ResolvedRuntimeConfig(
       runtimeConfig = RuntimeConfigCompanion.read(config.getObject("runtimeConfig").toConfig()).get
     )
   }
 
-  def toConfig(resolvedRuntimeConfig: ResolvedRuntimeConfig): Config = {
+  def toConfig(resolvedRuntimeConfig : ResolvedRuntimeConfig) : Config = {
     val config = Map(
       "runtimeConfig" -> RuntimeConfigCompanion.toConfig(resolvedRuntimeConfig.runtimeConfig).root().unwrapped()
     ).asJava

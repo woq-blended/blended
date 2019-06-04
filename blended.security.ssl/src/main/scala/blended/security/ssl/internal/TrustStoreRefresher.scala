@@ -21,19 +21,19 @@ class TrustStoreRefresher(ms : MemoryKeystore) {
       Option(System.getProperty(propTrustStore)),
       Option(System.getProperty(propTrustStorePwd))
     ) match {
-      case (Some(store), Some(pwd)) =>
-        val f = new File(store)
-        log.info(s"Reading trust store certificates from [${f.getAbsolutePath()}]")
-        val jks = new JavaKeystore(new File(store), pwd.toCharArray(), None)
+        case (Some(store), Some(pwd)) =>
+          val f = new File(store)
+          log.info(s"Reading trust store certificates from [${f.getAbsolutePath()}]")
+          val jks = new JavaKeystore(new File(store), pwd.toCharArray(), None)
 
-        val updated : MemoryKeystore = updateRoots(jks.loadKeyStore().get, ms).get
-        Some(jks.saveKeyStore(updated).get)
+          val updated : MemoryKeystore = updateRoots(jks.loadKeyStore().get, ms).get
+          Some(jks.saveKeyStore(updated).get)
 
-      case _ => None
-    }
+        case _ => None
+      }
   }
 
-  private def updateRoot(trusted: MemoryKeystore, cert: CertificateHolder) : Try[MemoryKeystore] = Try {
+  private def updateRoot(trusted : MemoryKeystore, cert : CertificateHolder) : Try[MemoryKeystore] = Try {
 
     val root : X509Certificate = cert.chain.last
     val rootCn : X500Principal = root.getSubjectX500Principal()
@@ -56,7 +56,7 @@ class TrustStoreRefresher(ms : MemoryKeystore) {
     }
   }
 
-  private def updateRoots(trusted : MemoryKeystore, keystore: MemoryKeystore) : Try[MemoryKeystore] = Try {
-    keystore.certificates.foldLeft(trusted){ case (s, (alias, c)) => updateRoot(s, c).get }
+  private def updateRoots(trusted : MemoryKeystore, keystore : MemoryKeystore) : Try[MemoryKeystore] = Try {
+    keystore.certificates.foldLeft(trusted) { case (s, (alias, c)) => updateRoot(s, c).get }
   }
 }

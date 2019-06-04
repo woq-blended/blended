@@ -97,7 +97,7 @@ class SemaphoreActorSpec extends TestKit(ActorSystem("semaphore"))
       system.stop(probe1.ref)
       probe3.expectMsg(SemaphoreActor.Acquired)
 
-      sem.underlyingActor.pending should be (empty)
+      sem.underlyingActor.pending should be(empty)
     }
   }
 }

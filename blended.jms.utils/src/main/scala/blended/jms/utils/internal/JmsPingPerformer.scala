@@ -15,12 +15,12 @@ import scala.util.Try
 import scala.util.control.NonFatal
 
 private[internal] case class PingInfo(
-  cfg: ConnectionConfig,
+  cfg : ConnectionConfig,
   started : Long,
   pingId : String,
   session : Option[Session],
   producer : Option[MessageProducer],
-  consumer: Option[MessageConsumer],
+  consumer : Option[MessageConsumer],
   exception : Option[Throwable]
 )
 
@@ -29,9 +29,9 @@ private[internal] trait PingOperations { this : JMSSupport =>
 
   private val log = Logger[PingOperations]
 
-  def closeJmsResources(info: PingInfo)(implicit eCtxt: ExecutionContext) : Future[PingInfo] = Future {
+  def closeJmsResources(info : PingInfo)(implicit eCtxt : ExecutionContext) : Future[PingInfo] = Future {
 
-    info.consumer.foreach{ c =>
+    info.consumer.foreach { c =>
       // We can ignore the exception as closing the session should also close all consumers and producers
       try {
         c.close()
@@ -51,7 +51,7 @@ private[internal] trait PingOperations { this : JMSSupport =>
     }
 
     try {
-      info.session.foreach{ i =>
+      info.session.foreach { i =>
         log.info(s"Closing JMS session for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
         i.close()
         log.debug(s"JMS session closed for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
@@ -64,16 +64,16 @@ private[internal] trait PingOperations { this : JMSSupport =>
     }
   }
 
-  def createSession(con: Connection) : Try[Session] =
-    Try {con.createSession(false, Session.AUTO_ACKNOWLEDGE) }
+  def createSession(con : Connection) : Try[Session] =
+    Try { con.createSession(false, Session.AUTO_ACKNOWLEDGE) }
 
-  def createConsumer(s: Session, dest: String, selector: String) : Try[MessageConsumer] =
+  def createConsumer(s : Session, dest : String, selector : String) : Try[MessageConsumer] =
     Try { s.createConsumer(destination(s, dest), selector) }
 
-  def createProducer(s: Session, dest: String) : Try[MessageProducer] =
+  def createProducer(s : Session, dest : String) : Try[MessageProducer] =
     Try { s.createProducer(destination(s, dest)) }
 
-  def initialisePing(con: Connection, config: ConnectionConfig, pingId: String)(implicit eCtxt: ExecutionContext) : Future[PingInfo] = Future {
+  def initialisePing(con : Connection, config : ConnectionConfig, pingId : String)(implicit eCtxt : ExecutionContext) : Future[PingInfo] = Future {
 
     val timeOutMillis = config.pingTimeout.toMillis
 
@@ -130,7 +130,7 @@ private[internal] trait PingOperations { this : JMSSupport =>
     }
   }
 
-  def probePing(info : PingInfo)(implicit eCtxt: ExecutionContext) : Future[PingResult] = Future {
+  def probePing(info : PingInfo)(implicit eCtxt : ExecutionContext) : Future[PingResult] = Future {
 
     log.debug(s"Probing ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
 
@@ -147,10 +147,9 @@ private[internal] trait PingOperations { this : JMSSupport =>
                 val msg = s"Received ping id [$id] for [${info.cfg.vendor}:${info.cfg.provider}] did not match expected is [$info.pingId]"
                 log.debug(msg)
                 PingFailed(new Exception(msg))
-              }
-              else
+              } else
                 log.debug(s"Ping successful for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
-                PingSuccess(info.pingId)
+              PingSuccess(info.pingId)
           }
         } catch {
           case NonFatal(e) => PingFailed(e)
@@ -164,11 +163,11 @@ private[internal] class DefaultPingOperations extends PingOperations with JMSSup
 object JmsPingPerformer {
   protected val counter : AtomicLong = new AtomicLong(0)
 
-  def props(config: ConnectionConfig, con: Connection, operations : PingOperations) : Props =
+  def props(config : ConnectionConfig, con : Connection, operations : PingOperations) : Props =
     Props(new JmsPingPerformer(config, con, operations))
 }
 
-class JmsPingPerformer(config: ConnectionConfig, con: Connection, operations: PingOperations)
+class JmsPingPerformer(config : ConnectionConfig, con : Connection, operations : PingOperations)
   extends Actor with ActorLogging {
 
   implicit val eCtxt : ExecutionContext = context.system.dispatcher
@@ -181,7 +180,7 @@ class JmsPingPerformer(config: ConnectionConfig, con: Connection, operations: Pi
   case object Tick
   case object Timeout
 
-  private[this] def respond(response: PingResult, pingActor: ActorRef) : Unit = {
+  private[this] def respond(response : PingResult, pingActor : ActorRef) : Unit = {
     if (!responded) {
       responded = true
       log.info(s"Ping for [${config.vendor}:${config.provider}] with id [$pingId] yielded [$response].")
@@ -192,7 +191,7 @@ class JmsPingPerformer(config: ConnectionConfig, con: Connection, operations: Pi
     }
   }
 
-  override def receive: Receive = {
+  override def receive : Receive = {
     case ExecutePing(pingActor, id) =>
       pingId = s"$id-$pingId"
       log.info(s"Executing ping [$pingId] for connection factory [${config.vendor}:${config.provider}]")
@@ -201,7 +200,7 @@ class JmsPingPerformer(config: ConnectionConfig, con: Connection, operations: Pi
       operations.initialisePing(con, config, pingId).pipeTo(self)
   }
 
-  def initializing(pingActor: ActorRef) : Receive = {
+  def initializing(pingActor : ActorRef) : Receive = {
     case info : PingInfo =>
       log.debug(s"Received [$info]")
 
@@ -238,13 +237,13 @@ class JmsPingPerformer(config: ConnectionConfig, con: Connection, operations: Pi
       }
   }
 
-  def timeoutHandler(pingActor: ActorRef) : Receive = {
+  def timeoutHandler(pingActor : ActorRef) : Receive = {
     case Timeout =>
       timer = None
       respond(PingTimeout, pingActor)
   }
 
-  override def postStop(): Unit = {
+  override def postStop() : Unit = {
     pingInfo.foreach(operations.closeJmsResources)
   }
 }

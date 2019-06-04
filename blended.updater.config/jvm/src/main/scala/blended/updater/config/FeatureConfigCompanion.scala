@@ -6,11 +6,13 @@ import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConv
 import scala.util.Try
 
 object FeatureConfigCompanion {
-  def apply(name: String,
-    version: String,
-    url: String = null,
-    bundles: List[BundleConfig] = null,
-    features: List[FeatureRef] = null): FeatureConfig = {
+  def apply(
+    name : String,
+    version : String,
+    url : String = null,
+    bundles : List[BundleConfig] = null,
+    features : List[FeatureRef] = null
+  ) : FeatureConfig = {
     FeatureConfig(
       name = name,
       version = version,
@@ -20,7 +22,7 @@ object FeatureConfigCompanion {
     )
   }
 
-  def read(config: Config): Try[FeatureConfig] = Try {
+  def read(config : Config) : Try[FeatureConfig] = Try {
     FeatureConfig(
       name = config.getString("name"),
       version = config.getString("version"),
@@ -36,7 +38,7 @@ object FeatureConfigCompanion {
         } else Nil
     )
   }
-  def toConfig(featureConfig: FeatureConfig): Config = {
+  def toConfig(featureConfig : FeatureConfig) : Config = {
     val config = (Map(
       "name" -> featureConfig.name,
       "version" -> featureConfig.version
@@ -49,8 +51,7 @@ object FeatureConfigCompanion {
       {
         if (featureConfig.bundles.isEmpty) Map()
         else Map("bundles" -> featureConfig.bundles.map(BundleConfigCompanion.toConfig).map(_.root().unwrapped()).asJava)
-      }
-    ).asJava
+      }).asJava
     ConfigFactory.parseMap(config)
   }
 }

@@ -21,7 +21,7 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper
   with Matchers {
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "failing").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "failing").getAbsolutePath()
 
   var failed : List[String] = List.empty
 
@@ -29,14 +29,14 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
 
     private val failFactory : ConnectionVerifierFactory = new ConnectionVerifierFactory {
 
-      override def createConnectionVerifier(): ConnectionVerifier = new ConnectionVerifier {
-        override def verifyConnection(cf: IdAwareConnectionFactory)(implicit eCtxt: ExecutionContext): Future[Boolean] = Future { false }
+      override def createConnectionVerifier() : ConnectionVerifier = new ConnectionVerifier {
+        override def verifyConnection(cf : IdAwareConnectionFactory)(implicit eCtxt : ExecutionContext) : Future[Boolean] = Future { false }
       }
 
     }
 
     private val failHandler : VerificationFailedHandler = new VerificationFailedHandler {
-      override def verificationFailed(cf: IdAwareConnectionFactory): Unit = {
+      override def verificationFailed(cf : IdAwareConnectionFactory) : Unit = {
         failed = (s"${cf.vendor}:${cf.provider}") :: failed
       }
     }
@@ -47,7 +47,7 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
     }
   }
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "failing" -> new FailingActivator,
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.client" -> new AmqClientActivator()
@@ -62,7 +62,7 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
       intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn1))")))
       intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn2))")))
 
-      failed should have size(2)
+      failed should have size (2)
     }
   }
 }

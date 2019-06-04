@@ -13,19 +13,18 @@ private object BlendedUpdaterConfigCross {
   private[this] val builder = sbtcrossproject
     .CrossProject("blendedUpdaterConfig", file("blended.updater.config"))(JVMPlatform, JSPlatform)
 
-  val project: CrossProject = builder
+  val project : CrossProject = builder
     .crossType(CrossType.Full)
     .build()
 }
-
 
 object BlendedUpdaterConfigJs extends ProjectFactory {
   object config extends ProjectConfig with CommonSettings with PublishConfig {
     override val projectName = "blended.updater.config"
 
-    override def createProject(): Project = BlendedUpdaterConfigCross.project.js
+    override def createProject() : Project = BlendedUpdaterConfigCross.project.js
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       name := projectName,
       moduleName := projectName,
       libraryDependencies ++= Seq(
@@ -37,7 +36,7 @@ object BlendedUpdaterConfigJs extends ProjectFactory {
       coverageEnabled := false
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedSecurityJs.project
     )
   }
@@ -45,7 +44,7 @@ object BlendedUpdaterConfigJs extends ProjectFactory {
 
 object BlendedUpdaterConfigJvm extends ProjectFactory {
   object config extends ProjectSettings {
-    override def createProject(): Project = BlendedUpdaterConfigCross.project.jvm
+    override def createProject() : Project = BlendedUpdaterConfigCross.project.jvm
 
     override val projectName = "blended.updater.config"
     override val description = "Configurations for Updater and Launcher"
@@ -69,14 +68,14 @@ object BlendedUpdaterConfigJvm extends ProjectFactory {
       )
     )
 
-    override def dependsOn: scala.Seq[_root_.sbt.ClasspathDep[_root_.sbt.ProjectReference]] = Seq(
+    override def dependsOn : scala.Seq[_root_.sbt.ClasspathDep[_root_.sbt.ProjectReference]] = Seq(
       BlendedUtilLogging.project,
       BlendedSecurityJvm.project,
 
       BlendedTestsupport.project % Test
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       name := "blendedUpdaterConfigJvm",
       moduleName := "blended.updater.config"
     )

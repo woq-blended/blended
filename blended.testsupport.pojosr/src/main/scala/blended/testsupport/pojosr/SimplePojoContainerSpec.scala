@@ -5,25 +5,25 @@ import org.scalatest.{BeforeAndAfterAll, TestSuite}
 
 abstract class SimplePojoContainerSpec
   extends TestSuite
-  with BeforeAndAfterAll { this: PojoSrTestHelper =>
+  with BeforeAndAfterAll { this : PojoSrTestHelper =>
 
   /**
    * Factory for bundles.
    * A `Seq` of bundle name and activator class.
    */
-  def bundles: Seq[(String, BundleActivator)]
+  def bundles : Seq[(String, BundleActivator)]
 
   /**
-    * Specify, which properties are mandatory for the simulated container.
-    */
-  def mandatoryPropertyNames: List[String] = List.empty
+   * Specify, which properties are mandatory for the simulated container.
+   */
+  def mandatoryPropertyNames : List[String] = List.empty
 
   /**
-    * If required, inject additional system properties when firing up the container.
-    */
+   * If required, inject additional system properties when firing up the container.
+   */
   def systemProperties : Map[String, String] = Map.empty
 
-  override protected def afterAll(): Unit = {
+  override protected def afterAll() : Unit = {
     _registry.foreach { r =>
       stopRegistry(r)
     }
@@ -32,9 +32,9 @@ abstract class SimplePojoContainerSpec
     super.afterAll()
   }
 
-  private[this] var _registry: Option[BlendedPojoRegistry] = None
+  private[this] var _registry : Option[BlendedPojoRegistry] = None
 
-  def registry: BlendedPojoRegistry = {
+  def registry : BlendedPojoRegistry = {
     _registry.getOrElse {
       _registry = Some(
         bundles.foldLeft(createSimpleBlendedContainer(mandatoryPropertyNames, systemProperties).get) {

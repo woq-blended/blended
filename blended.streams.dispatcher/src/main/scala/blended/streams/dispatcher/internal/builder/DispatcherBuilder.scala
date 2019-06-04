@@ -17,30 +17,30 @@ import blended.util.logging.Logger
 class MismatchedEnvelopeException(id : String)
   extends Exception(s"Worklist event [$id] couldn't find the corresponding envelope")
 
-class MissingResourceType(msg: FlowMessage)
+class MissingResourceType(msg : FlowMessage)
   extends Exception(s"Missing ResourceType in [$msg] ")
 
-class IllegalResourceType(msg : FlowMessage, rt: String)
+class IllegalResourceType(msg : FlowMessage, rt : String)
   extends Exception(s"Illegal ResourceType [$rt] in [$msg]")
 
-class MissingOutboundRouting(rt: String)
+class MissingOutboundRouting(rt : String)
   extends Exception(s"At least one Outbound route must be configured for ResourceType [$rt]")
 
-class MissingContextObject(key: String, clazz: String)
+class MissingContextObject(key : String, clazz : String)
   extends Exception(s"Missing context object [$key], expected type [$clazz]")
 
-class JmsDestinationMissing(env: FlowEnvelope, outboundId : String)
+class JmsDestinationMissing(env : FlowEnvelope, outboundId : String)
   extends Exception(s"Unable to resolve JMS Destination for [${env.id}] in [$outboundId]")
 
 case class DispatcherBuilder(
   idSvc : ContainerIdentifierService,
-  dispatcherCfg: ResourceTypeRouterConfig,
+  dispatcherCfg : ResourceTypeRouterConfig,
   sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
 )(implicit val bs : DispatcherBuilderSupport) extends JmsEnvelopeHeader {
 
   private[this] val logger = Logger[DispatcherBuilder]
 
-  def core(): Graph[FanOutShape3[FlowEnvelope, FlowEnvelope, WorklistEvent, FlowEnvelope], NotUsed] = {
+  def core() : Graph[FanOutShape3[FlowEnvelope, FlowEnvelope, WorklistEvent, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit builder =>
 
@@ -69,7 +69,7 @@ case class DispatcherBuilder(
         processInbound.in,
         errorSplitter.out0, // Normal outcome
         processFanout.out1, // WorklistStarted event
-        errorSplitter.out1  // Outcome with Exception
+        errorSplitter.out1 // Outcome with Exception
       )
     }
   }
@@ -81,18 +81,17 @@ case class DispatcherBuilder(
   // If after the oubound flow the envelope is marked with an exception,
   // We will generate a worklist failed event, otherwise we will generate
   // a Worklist completed event with the in bound envelope.
-  def outbound()
-    : Graph[FanOutShape2[FlowEnvelope, WorklistEvent, FlowEnvelope], NotUsed] = {
+  def outbound() : Graph[FanOutShape2[FlowEnvelope, WorklistEvent, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
 
       val outbound = b.add(sendFlow)
 
-      val toWorklist = b.add(Flow.fromFunction[FlowEnvelope, Either[FlowEnvelope, WorklistEvent]]{ env =>
+      val toWorklist = b.add(Flow.fromFunction[FlowEnvelope, Either[FlowEnvelope, WorklistEvent]] { env =>
         try {
           val worklist = bs.worklist(env).get
           val event : WorklistEvent = env.exception match {
-            case None => WorklistStepCompleted(worklist = worklist, state = WorklistState.Completed)
+            case None    => WorklistStepCompleted(worklist = worklist, state = WorklistState.Completed)
             case Some(_) => WorklistStepCompleted(worklist = worklist, state = WorklistState.Failed)
           }
 
@@ -110,13 +109,13 @@ case class DispatcherBuilder(
 
       new FanOutShape2(
         outbound.in,
-        transformError.out1,// A WorklistEvent signalling either Completed or Failed
+        transformError.out1, // A WorklistEvent signalling either Completed or Failed
         transformError.out0 // An exceptional outcome while creating the worklist
       )
     }
   }
 
-  private[builder] def eventEnvelopes (worklistEvent: WorklistEvent) : Seq[FlowEnvelope] = {
+  private[builder] def eventEnvelopes(worklistEvent : WorklistEvent) : Seq[FlowEnvelope] = {
     worklistEvent.worklist.items match {
       // Should not happen
       case Seq() =>
@@ -137,14 +136,13 @@ case class DispatcherBuilder(
   private[builder] def branchIds(envelopes : Seq[FlowEnvelope]) : Seq[String] =
     envelopes.map(_.header[String](bs.headerConfig.headerBranch)).filter(_.isDefined).map(_.get)
 
-
-  private[builder] def transactionUpdate(event: WorklistEvent) : (WorklistEvent, Option[FlowTransactionEvent]) = {
+  private[builder] def transactionUpdate(event : WorklistEvent) : (WorklistEvent, Option[FlowTransactionEvent]) = {
 
     val props : FlowMessageProps = event.worklist.items match {
       case Seq() => FlowMessage.noProps
       case h :: _ => h match {
         case flowItem : FlowWorklistItem => flowItem.env.flowMessage.header
-        case _ => FlowMessage.noProps
+        case _                           => FlowMessage.noProps
       }
     }
 
@@ -155,7 +153,7 @@ case class DispatcherBuilder(
           transactionId = started.worklist.id,
           properties = props,
           updatedState = WorklistState.Started,
-          branchIds = branchIds(eventEnvelopes(event)):_*
+          branchIds = branchIds(eventEnvelopes(event)) : _*
         ))
       // Worklist Termination does nothing for completed worklists,
       // for failed worklists it produces a Transaction failed update
@@ -165,15 +163,15 @@ case class DispatcherBuilder(
             .filter { _.header[Boolean](bs.headerAutoComplete).getOrElse(true) }
             .filter { env =>
               (env.header[String](bs.headerBridgeVendor), env.header[String](bs.headerBridgeProvider)) match {
-                case (Some(v), Some(p)) => dispatcherCfg.providerRegistry.jmsProvider(v,p).exists(_.internal)
-                case (_,_) => false
+                case (Some(v), Some(p)) => dispatcherCfg.providerRegistry.jmsProvider(v, p).exists(_.internal)
+                case (_, _)             => false
               }
             }
 
           if (envelopes.isEmpty) {
             None
           } else {
-            Some(FlowTransactionUpdate(term.worklist.id, props, WorklistState.Completed, branchIds(envelopes):_*))
+            Some(FlowTransactionUpdate(term.worklist.id, props, WorklistState.Completed, branchIds(envelopes) : _*))
           }
         } else {
           Some(FlowTransactionFailed(event.worklist.id, props, term.reason.map(_.getMessage())))
@@ -186,7 +184,7 @@ case class DispatcherBuilder(
     (event, transEvent)
   }
 
-  private[builder] def acknowledge(event : WorklistEvent): FlowEnvelope = {
+  private[builder] def acknowledge(event : WorklistEvent) : FlowEnvelope = {
 
     eventEnvelopes(event) match {
       case Seq() =>
@@ -220,16 +218,15 @@ case class DispatcherBuilder(
       val processTrans = b.add(Flow[(WorklistEvent, Option[FlowTransactionEvent])]
         .map(_._2).named("selectTrans")
         .filter(_.isDefined).named("hasUpdate")
-        .map(_.get).named("getTrans")
-      )
+        .map(_.get).named("getTrans"))
 
       // For completed worklist we will acknowledge the envelope and capture exceptions
       val processWorklist = b.add(
         Flow[(WorklistEvent, Option[FlowTransactionEvent])]
-        .map(_._1)
-        .filter(_.state == WorklistState.Completed)
-        .map(acknowledge)
-        .filter(_.exception.isDefined)
+          .map(_._1)
+          .filter(_.state == WorklistState.Completed)
+          .map(acknowledge)
+          .filter(_.exception.isDefined)
       )
 
       wlManager ~> processEvent ~> branches

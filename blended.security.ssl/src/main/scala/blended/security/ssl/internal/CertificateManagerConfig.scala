@@ -9,7 +9,7 @@ import scala.util.Try
 
 object KeystoreConfig {
 
-  def fromConfig(cfg: Config, hasher : PasswordHasher) : KeystoreConfig = {
+  def fromConfig(cfg : Config, hasher : PasswordHasher) : KeystoreConfig = {
     val keyStore = cfg.getString("keyStore", System.getProperty("javax.net.ssl.keyStore"))
     val storePass = cfg.getString("storePass", System.getProperty("javax.net.ssl.keyStorePassword"))
     val keyPass = cfg.getString("keyPass", System.getProperty("javax.net.ssl.keyPassword"))
@@ -23,9 +23,9 @@ object KeystoreConfig {
 }
 
 case class KeystoreConfig(
-  keyStore: String,
-  storePass: String,
-  keyPass: String
+  keyStore : String,
+  storePass : String,
+  keyPass : String
 )
 
 /**
@@ -43,9 +43,9 @@ case class CertificateManagerConfig(
   maintainTruststore : Boolean,
   keystoreCfg : Option[KeystoreConfig],
   providerList : List[String],
-  certConfigs: List[CertificateConfig],
-  refresherConfig: Option[RefresherConfig],
-  skipInitialCheck: Boolean,
+  certConfigs : List[CertificateConfig],
+  refresherConfig : Option[RefresherConfig],
+  skipInitialCheck : Boolean,
   validCypherSuites : List[String]
 )
 
@@ -55,7 +55,7 @@ object CertificateManagerConfig {
    * Read a [[CertificateManagerConfig]] from a typesafe [[Config]],
    * using the given [[PasswordHasher]] to hash the passwords (`keyPass` and `storePass`).
    */
-  def fromConfig(cfg: Config, hasher: PasswordHasher, idSvc: ContainerIdentifierService): CertificateManagerConfig = {
+  def fromConfig(cfg : Config, hasher : PasswordHasher, idSvc : ContainerIdentifierService) : CertificateManagerConfig = {
 
     val clientOnly : Boolean = cfg.getBoolean("clientOnly", false)
 
@@ -94,17 +94,17 @@ object CertificateManagerConfig {
 }
 
 case class CertificateConfig(
-  provider: String,
-  alias: String,
-  minValidDays: Int,
-  cnProvider: CommonNameProvider
+  provider : String,
+  alias : String,
+  minValidDays : Int,
+  cnProvider : CommonNameProvider
 )
 
 object CertificateConfig {
 
   val defaultMinValidDays = 10
 
-  def fromConfig(alias: String, cfg: Config, idSvc: ContainerIdentifierService): CertificateConfig = {
+  def fromConfig(alias : String, cfg : Config, idSvc : ContainerIdentifierService) : CertificateConfig = {
     val provider = cfg.getString("provider", "default")
     val minValidDays = cfg.getInt("minValidDays", defaultMinValidDays)
 
@@ -113,28 +113,28 @@ object CertificateConfig {
 }
 
 case class RefresherConfig(
-  minValidDays: Int,
-  hourOfDay: Int,
-  minuteOfDay: Int,
-  onRefreshAction: RefresherConfig.Action
+  minValidDays : Int,
+  hourOfDay : Int,
+  minuteOfDay : Int,
+  onRefreshAction : RefresherConfig.Action
 )
 
 object RefresherConfig {
 
   sealed trait Action
   object Action {
-    def fromString(action: String): Try[Action] = Try {
+    def fromString(action : String) : Try[Action] = Try {
       action match {
         case "refresh" => Refresh
         case "restart" => Restart
-        case _ => sys.error("Unsupported action name: " + action)
+        case _         => sys.error("Unsupported action name: " + action)
       }
     }
   }
   case object Refresh extends Action
   case object Restart extends Action
 
-  def fromConfig(config: Config): Try[RefresherConfig] = Try {
+  def fromConfig(config : Config) : Try[RefresherConfig] = Try {
     RefresherConfig(
       minValidDays = config.getInt("minValidDays", CertificateConfig.defaultMinValidDays),
       hourOfDay = config.getInt("hour", 0),

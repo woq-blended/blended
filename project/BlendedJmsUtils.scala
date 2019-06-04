@@ -20,7 +20,7 @@ object BlendedJmsUtils extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedMgmtBase.project,
       BlendedContainerContextApi.project,

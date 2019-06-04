@@ -9,7 +9,7 @@ class MgmtWSActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
-      whenServicePresent[TokenStore]{ store =>
+      whenServicePresent[TokenStore] { store =>
         val wss = new MgmtWebSocketServer(cfg.system, store)
         SimpleHttpContext("mgmtws", wss.route).providesService[HttpContext]
       }

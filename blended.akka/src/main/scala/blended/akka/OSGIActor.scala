@@ -11,7 +11,7 @@ import org.osgi.framework.BundleContext
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
-abstract class OSGIActor(actorConfig: OSGIActorConfig)
+abstract class OSGIActor(actorConfig : OSGIActorConfig)
   extends Actor
   with ActorLogging
   with ServiceConsuming
@@ -20,10 +20,10 @@ abstract class OSGIActor(actorConfig: OSGIActorConfig)
   private[this] implicit val timeout : Timeout = new Timeout(500.millis)
   private[this] implicit val ec : ExecutionContext = context.dispatcher
 
-  override protected def capsuleContext: CapsuleContext = new SimpleDynamicCapsuleContext()
+  override protected def capsuleContext : CapsuleContext = new SimpleDynamicCapsuleContext()
 
-  override protected def bundleContext: BundleContext = actorConfig.bundleContext
-  
+  override protected def bundleContext : BundleContext = actorConfig.bundleContext
+
   def bundleActor(bundleName : String) : Future[ActorRef] = {
     log debug s"Trying to resolve bundle actor [$bundleName]"
     context.actorSelection(s"/user/$bundleName").resolveOne().fallbackTo(Future(context.system.deadLetters))
@@ -33,5 +33,5 @@ abstract class OSGIActor(actorConfig: OSGIActorConfig)
   protected def bundleActorConfig : Config =
     context.system.settings.config.withValue(bundleSymbolicName, actorConfig.config.root())
 
-  val bundleSymbolicName: String = actorConfig.bundleContext.getBundle().getSymbolicName()
+  val bundleSymbolicName : String = actorConfig.bundleContext.getBundle().getSymbolicName()
 }

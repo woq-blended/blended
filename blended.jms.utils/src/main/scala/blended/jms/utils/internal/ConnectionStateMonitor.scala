@@ -9,14 +9,14 @@ import org.osgi.framework.BundleContext
 import scala.concurrent.duration._
 
 object ConnectionStateMonitor {
-  def props(bc : Option[BundleContext], monitorBean: Option[ConnectionMonitor]) : Props = Props(new ConnectionStateMonitor(bc, monitorBean))
+  def props(bc : Option[BundleContext], monitorBean : Option[ConnectionMonitor]) : Props = Props(new ConnectionStateMonitor(bc, monitorBean))
 }
 
-class ConnectionStateMonitor(val bc: Option[BundleContext], val monitorBean: Option[ConnectionMonitor])
+class ConnectionStateMonitor(val bc : Option[BundleContext], val monitorBean : Option[ConnectionMonitor])
   extends Actor with ActorLogging with ServiceConsuming {
 
-  override protected def bundleContext: BundleContext = bc match {
-    case None => throw new Exception("Bundle Context is not defined in this context")
+  override protected def bundleContext : BundleContext = bc match {
+    case None       => throw new Exception("Bundle Context is not defined in this context")
     case Some(ctxt) => ctxt
   }
 
@@ -24,12 +24,12 @@ class ConnectionStateMonitor(val bc: Option[BundleContext], val monitorBean: Opt
 
   case object Tick
 
-  override def preStart(): Unit = {
+  override def preStart() : Unit = {
     super.preStart()
     context.system.scheduler.schedule(10.millis, 10.seconds, self, Tick)
   }
 
-  override def receive: Receive = LoggingReceive {
+  override def receive : Receive = LoggingReceive {
     case ConnectionStateChanged(state) => monitorBean match {
       case Some(mb) =>
         val oldState = mb.getState()
@@ -52,15 +52,17 @@ class ConnectionStateMonitor(val bc: Option[BundleContext], val monitorBean: Opt
     }
   }
 
-  private[this] def restartContainer(msg: String) : Unit = {
+  private[this] def restartContainer(msg : String) : Unit = {
     log.warning(msg)
 
-    withService[FrameworkService, Unit] { _ match {
-      case None =>
-        log.warning("Could not find FrameworkServive to restart Container. Restarting through Framework Bundle ...")
-        bundleContext.getBundle(0).update()
-      case Some(s) => s.restartContainer(msg, true)
-    }}
+    withService[FrameworkService, Unit] {
+      _ match {
+        case None =>
+          log.warning("Could not find FrameworkServive to restart Container. Restarting through Framework Bundle ...")
+          bundleContext.getBundle(0).update()
+        case Some(s) => s.restartContainer(msg, true)
+      }
+    }
   }
 
 }

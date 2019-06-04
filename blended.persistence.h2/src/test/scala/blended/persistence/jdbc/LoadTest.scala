@@ -25,17 +25,17 @@ class LoadTest
 
     import blended.updater.config.TestData._
 
-    def testMapping[T: ClassTag](
-      map: T => ju.Map[String, AnyRef],
-      unmap: AnyRef => Try[T]
-    )(implicit arb: Arbitrary[T]): Unit = {
+    def testMapping[T : ClassTag](
+      map : T => ju.Map[String, AnyRef],
+      unmap : AnyRef => Try[T]
+    )(implicit arb : Arbitrary[T]) : Unit = {
       val className = classTag[T].runtimeClass.getSimpleName
       className in logException {
         withTestPersistenceService() { ctx =>
           val startTime = System.currentTimeMillis()
           val count = new AtomicInteger()
           try {
-            forAll { d: T =>
+            forAll { d : T =>
               count.incrementAndGet()
               val uuid = UUID.randomUUID().toString()
               val idCol = "TEST@ID@"

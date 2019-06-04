@@ -8,7 +8,7 @@ import org.eclipse.jetty.osgi.boot.JettyBootstrapActivator
 
 object JettyActivator {
 
-  var sslContext: Option[SSLContext] = None
+  var sslContext : Option[SSLContext] = None
 
 }
 
@@ -17,7 +17,7 @@ class JettyActivator extends DominoActivator {
   private val connectorName : ObjectName = new ObjectName("org.eclipse.jetty", "type", "connector")
 
   whenBundleActive {
-    whenServicePresent[MBeanServer]{ mbeanServer =>
+    whenServicePresent[MBeanServer] { mbeanServer =>
       whenAdvancedServicePresent[SSLContext]("(type=server)") { sslCtxt =>
 
         JettyActivator.sslContext = Some(sslCtxt)

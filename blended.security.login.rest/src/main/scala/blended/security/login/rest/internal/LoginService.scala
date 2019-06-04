@@ -18,9 +18,9 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 class LoginService(
-  tokenstore: TokenStore,
+  tokenstore : TokenStore,
   override val mgr : BlendedPermissionManager
-)(implicit eCtxt: ExecutionContext) extends JAASSecurityDirectives {
+)(implicit eCtxt : ExecutionContext) extends JAASSecurityDirectives {
 
   private[this] val log = LoggerFactory.getLogger(classOf[LoginService])
 
@@ -30,7 +30,7 @@ class LoginService(
       if (s.length <= 64) {
         s :: current
       } else {
-        lines(s.substring(64))( s.substring(0,64) :: current)
+        lines(s.substring(64))(s.substring(0, 64) :: current)
       }
     }
 
@@ -45,7 +45,7 @@ class LoginService(
     pemLines.mkString("\n")
   }
 
-  def route: Route = loginRoute ~ logoutRoute ~ publicKeyRoute
+  def route : Route = loginRoute ~ logoutRoute ~ publicKeyRoute
 
   private[this] val loginRoute = {
 
@@ -59,26 +59,26 @@ class LoginService(
     pathSingleSlash {
       options {
         complete(
-          HttpResponse(StatusCodes.OK).withHeaders(header:_*)
+          HttpResponse(StatusCodes.OK).withHeaders(header : _*)
         )
       } ~
-      get {
-        log.warn("Login must be executed with a HTTP Post")
-        complete(HttpResponse(StatusCodes.Forbidden).withHeaders(header:_*))
-      } ~
-      post {
-        // TODO: Make timeout for token expiry configurable
-        authenticated { subj : Subject =>
-          complete(tokenstore.newToken(subj, Some(1.minute)) match {
-            case Failure(e) =>
-              log.error(s"Could not create token : [${e.getMessage()}]")
-              HttpResponse(StatusCodes.BadRequest).withHeaders(header:_*)
-            case Success(t) =>
-              log.info(s"User [${t.user}] logged in successfully, token-id is [${t.id}]")
-              HttpResponse(StatusCodes.OK, entity = t.webToken).withHeaders(header:_*)
-          })
+        get {
+          log.warn("Login must be executed with a HTTP Post")
+          complete(HttpResponse(StatusCodes.Forbidden).withHeaders(header : _*))
+        } ~
+        post {
+          // TODO: Make timeout for token expiry configurable
+          authenticated { subj : Subject =>
+            complete(tokenstore.newToken(subj, Some(1.minute)) match {
+              case Failure(e) =>
+                log.error(s"Could not create token : [${e.getMessage()}]")
+                HttpResponse(StatusCodes.BadRequest).withHeaders(header : _*)
+              case Success(t) =>
+                log.info(s"User [${t.user}] logged in successfully, token-id is [${t.id}]")
+                HttpResponse(StatusCodes.OK, entity = t.webToken).withHeaders(header : _*)
+            })
+          }
         }
-      }
     }
   }
 

@@ -15,34 +15,34 @@ class FlowMessageSpec extends LoggingFreeSpec
 
     "Instantiate from a String" in {
       val msg : FlowMessage = FlowMessage("Hallo Andreas")(FlowMessage.noProps)
-      msg should be (TextFlowMessage("Hallo Andreas", FlowMessage.noProps))
+      msg should be(TextFlowMessage("Hallo Andreas", FlowMessage.noProps))
     }
 
     "Instantiate with properties only" in {
       val msg : FlowMessage = FlowMessage(FlowMessage.props("foo" -> "bar").get)
-      msg should be (BaseFlowMessage(FlowMessage.props("foo" -> "bar").get))
+      msg should be(BaseFlowMessage(FlowMessage.props("foo" -> "bar").get))
     }
 
     "Instantiate from a byte Array" in {
 
       val b = "Hallo Blended!".getBytes()
       val msg : FlowMessage = FlowMessage(b)(FlowMessage.noProps)
-      msg should be (BinaryFlowMessage(b, FlowMessage.noProps))
+      msg should be(BinaryFlowMessage(b, FlowMessage.noProps))
     }
 
     "Allow to set and overwrite a property" in {
       val props : FlowMessageProps = FlowMessage.props("foo" -> "bar").get
       val msg : FlowMessage = FlowMessage("text")(props)
 
-      msg.withHeader("newProp", "test") should be (
+      msg.withHeader("newProp", "test") should be(
         Success(TextFlowMessage("text", FlowMessage.props("foo" -> "bar", "newProp" -> "test").get))
       )
 
-      msg.withHeader("foo", "newBar") should be (
+      msg.withHeader("foo", "newBar") should be(
         Success(TextFlowMessage("text", FlowMessage.props("foo" -> "newBar").get))
       )
 
-      msg.withHeader("foo", "noBar", overwrite = false) should be (Success(msg))
+      msg.withHeader("foo", "noBar", overwrite = false) should be(Success(msg))
     }
 
     "Support all property types correctly" in {
@@ -50,14 +50,14 @@ class FlowMessageSpec extends LoggingFreeSpec
       val unitName : String = "unit"
       val unitProps : FlowMessageProps = FlowMessage.props(unitName -> null).get
       val unitMsg : FlowMessage = FlowMessage(unitProps)
-      unitMsg.header[Unit](unitName) should be (Some(()))
+      unitMsg.header[Unit](unitName) should be(Some(()))
 
-      forAll { (n : Int, propName : String)  =>
+      forAll { (n : Int, propName : String) =>
         whenever(propName.nonEmpty) {
           val props : FlowMessageProps = FlowMessage.props(propName -> n).get
           val msg = FlowMessage(props)
-          msg.header[Int](propName) should be (Some(n))
-          msg.header[Integer](propName) should be (Some(n))
+          msg.header[Int](propName) should be(Some(n))
+          msg.header[Integer](propName) should be(Some(n))
         }
       }
 
@@ -65,8 +65,8 @@ class FlowMessageSpec extends LoggingFreeSpec
         whenever(propName.nonEmpty) {
           val props : FlowMessageProps = FlowMessage.props(propName -> n).get
           val msg = FlowMessage(props)
-          msg.header[Long](propName) should be (Some(n))
-          msg.header[java.lang.Long](propName) should be (Some(n))
+          msg.header[Long](propName) should be(Some(n))
+          msg.header[java.lang.Long](propName) should be(Some(n))
         }
       }
 
@@ -74,8 +74,8 @@ class FlowMessageSpec extends LoggingFreeSpec
         whenever(propName.nonEmpty) {
           val props : FlowMessageProps = FlowMessage.props(propName -> n).get
           val msg = FlowMessage(props)
-          msg.header[Short](propName) should be (Some(n))
-          msg.header[java.lang.Short](propName) should be (Some(n))
+          msg.header[Short](propName) should be(Some(n))
+          msg.header[java.lang.Short](propName) should be(Some(n))
         }
       }
 
@@ -83,8 +83,8 @@ class FlowMessageSpec extends LoggingFreeSpec
         whenever(propName.nonEmpty) {
           val props : FlowMessageProps = FlowMessage.props(propName -> n).get
           val msg = FlowMessage(props)
-          msg.header[Float](propName) should be (Some(n))
-          msg.header[java.lang.Float](propName) should be (Some(n))
+          msg.header[Float](propName) should be(Some(n))
+          msg.header[java.lang.Float](propName) should be(Some(n))
         }
       }
 
@@ -92,8 +92,8 @@ class FlowMessageSpec extends LoggingFreeSpec
         whenever(propName.nonEmpty) {
           val props : FlowMessageProps = FlowMessage.props(propName -> n).get
           val msg = FlowMessage(props)
-          msg.header[Double](propName) should be (Some(n))
-          msg.header[java.lang.Double](propName) should be (Some(n))
+          msg.header[Double](propName) should be(Some(n))
+          msg.header[java.lang.Double](propName) should be(Some(n))
         }
       }
 
@@ -101,8 +101,8 @@ class FlowMessageSpec extends LoggingFreeSpec
         whenever(propName.nonEmpty) {
           val props : FlowMessageProps = FlowMessage.props(propName -> n).get
           val msg = FlowMessage(props)
-          msg.header[Boolean](propName) should be (Some(n))
-          msg.header[java.lang.Boolean](propName) should be (Some(n))
+          msg.header[Boolean](propName) should be(Some(n))
+          msg.header[java.lang.Boolean](propName) should be(Some(n))
         }
       }
 
@@ -110,8 +110,8 @@ class FlowMessageSpec extends LoggingFreeSpec
         whenever(propName.nonEmpty) {
           val props : FlowMessageProps = FlowMessage.props(propName -> n).get
           val msg = FlowMessage(props)
-          msg.header[Byte](propName) should be (Some(n))
-          msg.header[java.lang.Byte](propName) should be (Some(n))
+          msg.header[Byte](propName) should be(Some(n))
+          msg.header[java.lang.Byte](propName) should be(Some(n))
         }
       }
 
@@ -119,8 +119,8 @@ class FlowMessageSpec extends LoggingFreeSpec
         whenever(propName.nonEmpty) {
           val props : FlowMessageProps = FlowMessage.props(propName -> n).get
           val msg = FlowMessage(props)
-          msg.header[String](propName) should be (Some(n))
-          msg.header[java.lang.String](propName) should be (Some(n))
+          msg.header[String](propName) should be(Some(n))
+          msg.header[java.lang.String](propName) should be(Some(n))
         }
       }
 

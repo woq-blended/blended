@@ -13,8 +13,8 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 
   def settings : JmsProducerSettings
   def correlationId(env : FlowEnvelope) : Option[String]
-  def sendParameter(session: Session, env: FlowEnvelope) : Try[JmsSendParameter]
-  def replyTo(session : Session, env: FlowEnvelope) : Try[Option[Destination]]
+  def sendParameter(session : Session, env : FlowEnvelope) : Try[JmsSendParameter]
+  def replyTo(session : Session, env : FlowEnvelope) : Try[Option[Destination]]
 
   def createJmsMessage(session : Session, env : FlowEnvelope) : Try[Message] = Try {
 
@@ -37,11 +37,11 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
     flowMsg.header.filter {
       case (k, v) => !k.startsWith("JMS")
     }.foreach {
-      case (k,v) =>
+      case (k, v) =>
         val propName = k.replaceAll("\\" + dot, dot_repl).replaceAll(hyphen, hyphen_repl)
         v match {
           case u : UnitMsgProperty => msg.setObjectProperty(propName, null)
-          case o => msg.setObjectProperty(propName, o.value)
+          case o                   => msg.setObjectProperty(propName, o.value)
         }
     }
 
@@ -57,28 +57,28 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 }
 
 trait FlowHeaderConfigAware extends JmsDestinationResolver {
-  this: JmsEnvelopeHeader =>
+  this : JmsEnvelopeHeader =>
 
   val log : Logger = Logger(getClass().getName())
 
-  def headerConfig: FlowHeaderConfig = settings.headerCfg
+  def headerConfig : FlowHeaderConfig = settings.headerCfg
 
-  override def correlationId(env: FlowEnvelope): Option[String] = {
+  override def correlationId(env : FlowEnvelope) : Option[String] = {
     env.header[String](corrIdHeader(headerConfig.prefix)) match {
       case None => env.header[String]("JMSCorrelationID")
-      case x => x
+      case x    => x
     }
   }
 
-  override def replyTo(session: Session, env: FlowEnvelope): Try[Option[Destination]] = Try {
+  override def replyTo(session : Session, env : FlowEnvelope) : Try[Option[Destination]] = Try {
     env.header[String](replyToHeader(headerConfig.prefix)) match {
-      case None => None
+      case None    => None
       case Some(d) => Some(JmsDestination.create(d).map(dest => dest.create(session)).get)
     }
   }
 
   // Get the destination from the message
-  val destination: FlowMessage => Try[JmsDestination] = { flowMsg =>
+  val destination : FlowMessage => Try[JmsDestination] = { flowMsg =>
     Try {
 
       val id : String = flowMsg.header[String](headerConfig.headerTransId).getOrElse("UNKNOWN")
@@ -103,46 +103,46 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
     }
   }
 
-  val priority: FlowMessage => Int = { flowMsg =>
+  val priority : FlowMessage => Int = { flowMsg =>
     flowMsg.header[Int](priorityHeader(headerConfig.prefix)) match {
       case Some(p) => p
-      case None => settings.priority
+      case None    => settings.priority
     }
   }
 
-  val timeToLive: FlowMessage => Option[FiniteDuration] = { flowMsg =>
+  val timeToLive : FlowMessage => Option[FiniteDuration] = { flowMsg =>
     flowMsg.header[Long](expireHeader(headerConfig.prefix)) match {
       case Some(l) => Some((Math.max(1L, l - System.currentTimeMillis())).millis)
-      case None => settings.timeToLive
+      case None    => settings.timeToLive
     }
   }
 
-  val deliveryMode: FlowMessage => JmsDeliveryMode = { flowMsg =>
+  val deliveryMode : FlowMessage => JmsDeliveryMode = { flowMsg =>
     flowMsg.header[String](deliveryModeHeader(headerConfig.prefix)) match {
       case Some(s) => JmsDeliveryMode.create(s).get
-      case None => settings.deliveryMode
+      case None    => settings.deliveryMode
     }
   }
 }
 
 class SettingsDestinationResolver(
-  override val settings: JmsProducerSettings
+  override val settings : JmsProducerSettings
 )
   extends JmsDestinationResolver
   with JmsEnvelopeHeader {
 
-  override def correlationId(env: FlowEnvelope): Option[String] =
+  override def correlationId(env : FlowEnvelope) : Option[String] =
     env.header[String]("JMSCorrelationID")
 
-  override def replyTo(session: Session, env: FlowEnvelope): Try[Option[Destination]] = Success(None)
+  override def replyTo(session : Session, env : FlowEnvelope) : Try[Option[Destination]] = Success(None)
 
-  override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
+  override def sendParameter(session : Session, env : FlowEnvelope) : Try[JmsSendParameter] = Try {
 
     val msg : Message = createJmsMessage(session, env).get
     // Get the destination
     val dest : JmsDestination = settings.jmsDestination match {
       case Some(d) => d
-      case None => throw new JMSException(s"Could not resolve JMS destination for [$env]")
+      case None    => throw new JMSException(s"Could not resolve JMS destination for [$env]")
     }
 
     JmsSendParameter(
@@ -156,12 +156,12 @@ class SettingsDestinationResolver(
 }
 
 class MessageDestinationResolver(
-  override val settings: JmsProducerSettings
+  override val settings : JmsProducerSettings
 )
   extends FlowHeaderConfigAware
   with JmsEnvelopeHeader {
 
-  override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
+  override def sendParameter(session : Session, env : FlowEnvelope) : Try[JmsSendParameter] = Try {
 
     val flowMsg = env.flowMessage
     val msg = createJmsMessage(session, env).get

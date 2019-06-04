@@ -16,12 +16,12 @@ object RedirectHeaderPolicy extends Enumeration {
 }
 
 case class ProxyConfig(
-  context: String,
-  paths: Seq[ProxyTarget]
+  context : String,
+  paths : Seq[ProxyTarget]
 )
 
 object ProxyConfig {
-  def parse(cfg: Config): Try[ProxyConfig] = Try {
+  def parse(cfg : Config) : Try[ProxyConfig] = Try {
     ProxyConfig(
       cfg.getString("context"),
       cfg.getConfigMap("paths", Map()).toList.map {
@@ -46,16 +46,16 @@ object ProxyConfig {
 }
 
 case class ProxyTarget(
-  path: String,
-  uri: String,
-  timeout: Int,
-  redirectCount: Int = 0,
+  path : String,
+  uri : String,
+  timeout : Int,
+  redirectCount : Int = 0,
   redirectHeaderPolicy : RedirectHeaderPolicy = RedirectHeaderPolicy.Client_Only
 ) {
 
-  def isHttps: Boolean = uri.substring(0, 5).equalsIgnoreCase("https")
+  def isHttps : Boolean = uri.substring(0, 5).equalsIgnoreCase("https")
 
-  override def toString(): String = getClass().getSimpleName() +
+  override def toString() : String = getClass().getSimpleName() +
     "(path=" + path +
     ",uri=" + uri +
     ",timeout=" + timeout +
@@ -63,5 +63,4 @@ case class ProxyTarget(
     ",redirectHeaderPolicy=" + redirectHeaderPolicy.toString() +
     ")"
 }
-
 

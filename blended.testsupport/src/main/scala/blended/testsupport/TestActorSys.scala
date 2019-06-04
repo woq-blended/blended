@@ -20,8 +20,7 @@ class TestActorSys(name : String, f : TestKit => Unit)
   try {
     system.log.info("Start TestKit[{}]", system.name)
     f(this)
-  }
-  finally {
+  } finally {
     system.log.info("Shutting down TestKit[{}]", system.name)
     Await.result(system.terminate(), 10.seconds)
   }

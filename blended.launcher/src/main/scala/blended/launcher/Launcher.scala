@@ -1,24 +1,24 @@
 package blended.launcher
 
-import java.io.{ File, FileOutputStream, PrintWriter, StringWriter }
+import java.io.{File, FileOutputStream, PrintWriter, StringWriter}
 import java.net.URLClassLoader
-import java.nio.file.{ Files, Paths }
-import java.util.{ Hashtable, Properties, ServiceLoader, UUID }
+import java.nio.file.{Files, Paths}
+import java.util.{Hashtable, Properties, ServiceLoader, UUID}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 import blended.launcher.config.LauncherConfig
 import blended.launcher.internal.ARM
 import blended.updater.config._
 import blended.util.logging.Logger
-import com.typesafe.config.{ ConfigFactory, ConfigParseOptions }
-import de.tototec.cmdoption.{ CmdlineParser, CmdlineParserException }
-import org.osgi.framework.{ Bundle, Constants, FrameworkEvent, FrameworkListener }
-import org.osgi.framework.launch.{ Framework, FrameworkFactory }
-import org.osgi.framework.startlevel.{ BundleStartLevel, FrameworkStartLevel }
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+import de.tototec.cmdoption.{CmdlineParser, CmdlineParserException}
+import org.osgi.framework.{Bundle, Constants, FrameworkEvent, FrameworkListener}
+import org.osgi.framework.launch.{Framework, FrameworkFactory}
+import org.osgi.framework.startlevel.{BundleStartLevel, FrameworkStartLevel}
 import org.osgi.framework.wiring.FrameworkWiring
 
 object Launcher {
@@ -31,23 +31,23 @@ object Launcher {
   private val containerIdFile : String = "blended.container.context.id"
   private val extraStartBundle : String = "blended.laucher.startbundles"
 
-  case class InstalledBundle(jarBundle: LauncherConfig.BundleConfig, bundle: Bundle)
+  case class InstalledBundle(jarBundle : LauncherConfig.BundleConfig, bundle : Bundle)
 
   /**
    * Entry point of the launcher application.
    *
    * This methods will explicitly exit the VM!
    */
-  def main(args: Array[String]): Unit = {
+  def main(args : Array[String]) : Unit = {
     try {
       run(args)
     } catch {
-      case t: LauncherException =>
+      case t : LauncherException =>
         log.debug(t)(s"Caught a LauncherException. Exiting with error code: ${t.errorCode} and message: ${t.getMessage()}")
         if (!t.getMessage().isEmpty())
           Console.err.println(s"${t.getMessage()}")
         sys.exit(t.errorCode)
-      case t: Throwable =>
+      case t : Throwable =>
         log.error(t)("Caught an exception. Exiting with error code: 1")
         Console.err.println(s"Error: ${t.getMessage()}")
         sys.exit(1)
@@ -55,19 +55,19 @@ object Launcher {
     sys.exit(0)
   }
 
-  private[this] def reportError(msg: String): Unit = {
+  private[this] def reportError(msg : String) : Unit = {
     log.error(msg)
     Console.err.println(msg)
     sys.error(msg)
   }
 
-  private[this] def parseArgs(args: Array[String]): Try[Cmdline] = Try {
+  private[this] def parseArgs(args : Array[String]) : Try[Cmdline] = Try {
     val cmdline = new Cmdline()
     val cp = new CmdlineParser(cmdline)
     try {
-      cp.parse(args: _*)
+      cp.parse(args : _*)
     } catch {
-      case e: CmdlineParserException =>
+      case e : CmdlineParserException =>
         reportError(s"${e.getMessage()}\nRun launcher --help for help.")
     }
 
@@ -80,7 +80,7 @@ object Launcher {
     cmdline
   }
 
-  private[this] def containerId(f: File, createContainerID: Boolean, onlyIfMissing: Boolean): Try[String] = {
+  private[this] def containerId(f : File, createContainerID : Boolean, onlyIfMissing : Boolean) : Try[String] = {
 
     val idFile = new File(containerConfigDirectory, containerIdFile)
 
@@ -101,7 +101,7 @@ object Launcher {
 
     if (generateId) {
       log.info("Creating new container id")
-      val uuid: CharSequence = UUID.randomUUID().toString.toCharArray
+      val uuid : CharSequence = UUID.randomUUID().toString.toCharArray
       Files.write(idFile.toPath, Seq(uuid).asJava)
     }
 
@@ -111,7 +111,7 @@ object Launcher {
     }
   }
 
-  private[this] def createAndPrepareLaunch(configs: Configs, createContainerId: Boolean, onlyIfMissing: Boolean): Launcher = {
+  private[this] def createAndPrepareLaunch(configs : Configs, createContainerId : Boolean, onlyIfMissing : Boolean) : Launcher = {
 
     val launcher = new Launcher(configs.launcherConfig)
 
@@ -159,17 +159,17 @@ object Launcher {
    *
    * @throws LauncherException
    */
-  def run(args: Array[String]): Unit = {
+  def run(args : Array[String]) : Unit = {
     val cmdline = parseArgs(args).get
     val handleFrameworkRestart = cmdline.handleFrameworkRestart
     var firstStart = true
-    var retVal: Int = 0
+    var retVal : Int = 0
 
     do {
       val configs = try {
         readConfigs(cmdline)
       } catch {
-        case e: Throwable =>
+        case e : Throwable =>
           log.error(e)("Could not read configs")
           throw e
       }
@@ -187,7 +187,7 @@ object Launcher {
             }
             retVal = 0
           } catch {
-            case e: Throwable =>
+            case e : Throwable =>
               log.error(e)(s"Could not write system properties file: ${propFile}")
               retVal = 1
           }
@@ -202,19 +202,19 @@ object Launcher {
     if (retVal != 0) throw new LauncherException("", errorCode = retVal)
   }
 
-  case class Configs(launcherConfig: LauncherConfig, profileConfig: Option[LocalRuntimeConfig] = None)
+  case class Configs(launcherConfig : LauncherConfig, profileConfig : Option[LocalRuntimeConfig] = None)
 
   /**
    * Parse the command line and wrap the result into a [[Configs]] object.
    */
-  def readConfigs(cmdline: Cmdline): Configs = {
+  def readConfigs(cmdline : Cmdline) : Configs = {
     cmdline.configFile match {
       case Some(configFile) =>
         log.info(s"About to read configFile: [${configFile}]")
         val config = ConfigFactory.parseFile(new File(configFile), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
         Configs(LauncherConfig.read(config))
       case None =>
-        val profileLookup: Option[ProfileLookup] = cmdline.profileLookup.map { pl =>
+        val profileLookup : Option[ProfileLookup] = cmdline.profileLookup.map { pl =>
           log.info(s"About to read profile lookup file: [$pl]")
           val c = ConfigFactory.parseFile(new File(pl), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
           ProfileLookup.read(c).map { pl =>
@@ -222,7 +222,7 @@ object Launcher {
           }.get
         }
 
-        val profile: String = profileLookup match {
+        val profile : String = profileLookup match {
           case Some(pl) =>
             pl.materializedDir.getPath()
           case None =>
@@ -285,11 +285,11 @@ object Launcher {
     }
   }
 
-  def apply(configFile: File): Launcher = new Launcher(LauncherConfig.read(configFile))
+  def apply(configFile : File) : Launcher = new Launcher(LauncherConfig.read(configFile))
 
-  class RunningFramework(val framework: Framework) {
+  class RunningFramework(val framework : Framework) {
 
-    def awaitFrameworkStop(framwork: Framework): Int = {
+    def awaitFrameworkStop(framwork : Framework) : Int = {
       val event = framework.waitForStop(0)
       event.getType match {
         case FrameworkEvent.ERROR =>
@@ -308,7 +308,7 @@ object Launcher {
     }
 
     val shutdownHook : Thread = new Thread("framework-shutdown-hook") {
-      override def run(): Unit = {
+      override def run() : Unit = {
         log.info("Catched kill signal: stopping framework")
         framework.stop()
         awaitFrameworkStop(framework)
@@ -318,7 +318,7 @@ object Launcher {
 
     Runtime.getRuntime.addShutdownHook(shutdownHook)
 
-    def waitForStop(): Int = {
+    def waitForStop() : Int = {
       try {
         awaitFrameworkStop(framework)
       } catch {
@@ -336,7 +336,7 @@ object Launcher {
 
 }
 
-class Launcher private (config: LauncherConfig) {
+class Launcher private (config : LauncherConfig) {
 
   import Launcher._
 
@@ -345,7 +345,7 @@ class Launcher private (config: LauncherConfig) {
   /**
    * Validate this Launcher's configuration and return the issues if any found.
    */
-  def validate(): Seq[String] = {
+  def validate() : Seq[String] = {
     val files = ("Framework JAR", config.frameworkJar) ::
       config.bundles.toList.map(b => "Bundle JAR" -> b.location)
 
@@ -368,7 +368,7 @@ class Launcher private (config: LauncherConfig) {
   /**
    * Run an (embedded) OSGiFramework based of this Launcher's configuration.
    */
-  def start(cmdLine: Cmdline): Try[Framework] = Try {
+  def start(cmdLine : Cmdline) : Try[Framework] = Try {
     log.info(s"Starting OSGi framework based on config: ${config}");
 
     // Try to locate and load the OSGi framework factory
@@ -427,13 +427,13 @@ class Launcher private (config: LauncherConfig) {
     }
     log.info(s"${osgiBundles.size} bundles installed")
 
-    def isFragment(b: InstalledBundle) = b.bundle.getHeaders.get(Constants.FRAGMENT_HOST) != null
+    def isFragment(b : InstalledBundle) = b.bundle.getHeaders.get(Constants.FRAGMENT_HOST) != null
 
     // Iterate over start levels and activate bundles in the correct order
     1.to(config.startLevel).map { startLevel =>
       log.info(s"------ Entering start level [$startLevel] ------")
       frameworkStartLevel.setStartLevel(startLevel, new FrameworkListener() {
-        override def frameworkEvent(event: FrameworkEvent): Unit = {
+        override def frameworkEvent(event : FrameworkEvent) : Unit = {
           log.debug(s"Active start level [${startLevel}] reached")
         }
       })
@@ -442,7 +442,7 @@ class Launcher private (config: LauncherConfig) {
       // bundle symbolic name is set in the Systemproperty blended.laucher.startbundles
 
       val extraStartBundles : List[String] = Option(System.getProperty(Launcher.extraStartBundle)) match {
-        case None => List.empty
+        case None    => List.empty
         case Some(s) => s.split(",").toList
       }
 
@@ -518,7 +518,7 @@ class Launcher private (config: LauncherConfig) {
   /**
    * Run an (embedded) OSGiFramework based of this Launcher's configuration.
    */
-  def run(cmdLine: Cmdline): Int = {
+  def run(cmdLine : Cmdline) : Int = {
     start(cmdLine) match {
       case Success(framework) =>
         val handle = new RunningFramework(framework)

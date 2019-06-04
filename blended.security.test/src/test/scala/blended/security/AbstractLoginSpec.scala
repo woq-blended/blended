@@ -15,11 +15,11 @@ abstract class AbstractLoginSpec extends SimplePojoContainerSpec
   with Matchers
   with PojoSrTestHelper {
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.security" -> new SecurityActivator()
   )
 
-  def login(user: String, password : String) : Try[Subject] =  Try {
+  def login(user : String, password : String) : Try[Subject] = Try {
     val lc = new LoginContext("Test", new PasswordCallbackHandler(user, password.toCharArray()))
     lc.login()
     lc.getSubject()

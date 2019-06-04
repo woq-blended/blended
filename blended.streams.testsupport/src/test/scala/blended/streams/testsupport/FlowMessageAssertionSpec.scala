@@ -16,7 +16,7 @@ class FlowMessageAssertionSpec extends LoggingFreeSpec
 
       FlowMessageAssertion.checkAssertions(env)(
         ExpectedBodies(Some("Hello Blended!"))
-      ) should be (empty)
+      ) should be(empty)
 
       FlowMessageAssertion.checkAssertions(env)(
         ExpectedBodies(Some("foo"))
@@ -32,13 +32,12 @@ class FlowMessageAssertionSpec extends LoggingFreeSpec
 
       FlowMessageAssertion.checkAssertions(env)(
         ExpectedBodies(Some(ByteString("Hello Blended!")))
-      ) should be (empty)
+      ) should be(empty)
 
       FlowMessageAssertion.checkAssertions(env)(
         ExpectedBodies(Some("foo"))
       ) should have size 1
     }
   }
-
 
 }

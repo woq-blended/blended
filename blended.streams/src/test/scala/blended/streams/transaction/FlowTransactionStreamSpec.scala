@@ -30,9 +30,9 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
 
   System.setProperty("testName", "stream")
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.persistence.h2" -> new H2Activator()
   )
@@ -83,17 +83,17 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
             .toMat(Sink.ignore)(Keep.left)
             .run()
 
-          akka.pattern.after(1.second, system.scheduler)(Future {transColl.actor ! CollectingActor.Completed })
+          akka.pattern.after(1.second, system.scheduler)(Future { transColl.actor ! CollectingActor.Completed })
           Await.result(transColl.result.map(t => f(t)), 3.seconds)
         } finally {
           system.stop(transColl.actor)
         }
       }
 
-      singleTest(FlowTransaction.startEvent()){ t =>
+      singleTest(FlowTransaction.startEvent()) { t =>
         t should have size 1
-        t.head.worklist should be (empty)
-        t.head.state should be (FlowTransactionState.Started)
+        t.head.worklist should be(empty)
+        t.head.state should be(FlowTransactionState.Started)
       }
     }
   }

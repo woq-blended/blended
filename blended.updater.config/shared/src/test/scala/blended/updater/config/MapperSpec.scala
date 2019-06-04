@@ -16,9 +16,9 @@ class MapperSpec extends FreeSpec with PropertyChecks {
     import Mapper._
     import TestData._
 
-    def testMapping[T: ClassTag](map: T => ju.Map[String, AnyRef], unmap: AnyRef => Try[T])(implicit arb: Arbitrary[T]): Unit = {
+    def testMapping[T : ClassTag](map : T => ju.Map[String, AnyRef], unmap : AnyRef => Try[T])(implicit arb : Arbitrary[T]) : Unit = {
       classTag[T].runtimeClass.getSimpleName in {
-        forAll { d: T =>
+        forAll { d : T =>
           assert(unmap(map(d)) === Success(d))
         }
       }

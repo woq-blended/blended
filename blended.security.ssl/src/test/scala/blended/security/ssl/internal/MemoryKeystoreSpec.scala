@@ -72,15 +72,15 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
       newMs.certificates should have size 1
       newMs.certificates.keys should contain("cert")
 
-      newMs.changedAliases should be (List("cert"))
+      newMs.changedAliases should be(List("cert"))
     }
 
     "should not update the certificates if the required provider can't be found (empty store)" in {
       val ms : MemoryKeystore = new MemoryKeystore(Map.empty)
       val newMs = ms.refreshCertificates(List(certCfg), Map.empty).get
 
-      newMs.certificates should be (empty)
-      newMs.changedAliases should be (empty)
+      newMs.certificates should be(empty)
+      newMs.changedAliases should be(empty)
     }
 
     "should not update the certificates if the required provider can't be found (non-empty store)" in {
@@ -92,9 +92,9 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
       val newMs = ms.refreshCertificates(List(certCfg), Map.empty).get
 
       newMs.certificates should have size 1
-      newMs.changedAliases should be (empty)
+      newMs.changedAliases should be(empty)
 
-      newMs.certificates.values.head.chain.head.getSerialNumber should be (BigInteger.ONE)
+      newMs.certificates.values.head.chain.head.getSerialNumber should be(BigInteger.ONE)
     }
 
     "should update the certificates that are about to expire" in {
@@ -113,18 +113,18 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
 
       val newMs = ms.refreshCertificates(certCfgs, Map("selfsigned" -> provider)).get
 
-      newMs.certificates should have size(2)
-      newMs.changedAliases should be (List("timingOut"))
+      newMs.certificates should have size (2)
+      newMs.changedAliases should be(List("timingOut"))
 
-      newMs.certificates.get("stillValid").get.chain.head.getSerialNumber should be (BigInteger.ONE)
-      newMs.certificates.get("timingOut").get.chain.head.getSerialNumber should be (new BigInteger("2"))
+      newMs.certificates.get("stillValid").get.chain.head.getSerialNumber should be(BigInteger.ONE)
+      newMs.certificates.get("timingOut").get.chain.head.getSerialNumber should be(new BigInteger("2"))
     }
 
     "should not update the keystore if the refresh has failed" in {
 
       val provider : CertificateProvider = new SelfSignedCertificateProvider(selfSignedCfg(cnProvider)) {
 
-        override def refreshCertificate(existing: Option[CertificateHolder], cnProvider: CommonNameProvider): Try[CertificateHolder] =
+        override def refreshCertificate(existing : Option[CertificateHolder], cnProvider : CommonNameProvider) : Try[CertificateHolder] =
           Failure(new Exception("Boom"))
       }
 
@@ -140,11 +140,11 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
 
       val newMs = ms.refreshCertificates(certCfgs, Map("selfsigned" -> provider)).get
 
-      newMs.certificates should have size(2)
-      newMs.changedAliases should be (List.empty)
+      newMs.certificates should have size (2)
+      newMs.changedAliases should be(List.empty)
 
-      newMs.certificates.get("stillValid").get.chain.head.getSerialNumber should be (BigInteger.ONE)
-      newMs.certificates.get("timingOut").get.chain.head.getSerialNumber should be (BigInteger.ONE)
+      newMs.certificates.get("stillValid").get.chain.head.getSerialNumber should be(BigInteger.ONE)
+      newMs.certificates.get("timingOut").get.chain.head.getSerialNumber should be(BigInteger.ONE)
     }
 
     "should allow to look up a certificate by the subjectPrincipal" in {
@@ -157,8 +157,8 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
       val notFound : Option[CertificateHolder] = ms.findByPrincipal(new X500Principal("CN=foo"))
       val cert : Option[CertificateHolder] = ms.findByPrincipal(new X500Principal("CN=cert1"))
 
-      notFound should be (empty)
-      cert should be (defined)
+      notFound should be(empty)
+      cert should be(defined)
 
       assert(cert.forall { ch =>
         ch.publicKey.equals(c1.publicKey)

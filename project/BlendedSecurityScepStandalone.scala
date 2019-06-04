@@ -12,8 +12,8 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
 
   private[this] val libDir = "libs"
 
-  implicit class ImplicitModuleId(moduleId: ModuleID) {
-    def pure: ModuleID = moduleId.withExclusions(Vector(InclExclRule()))
+  implicit class ImplicitModuleId(moduleId : ModuleID) {
+    def pure : ModuleID = moduleId.withExclusions(Vector(InclExclRule()))
   }
 
   object config extends ProjectSettings {
@@ -38,17 +38,17 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
       Dependencies.logbackCore,
       Dependencies.logbackClassic,
       Dependencies.jclOverSlf4j,
- 
+
       Dependencies.scalatest % Test,
       Dependencies.scalatest % Test
     )
 
-    override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(
+    override def plugins : Seq[AutoPlugin] = super.plugins ++ Seq(
       UniversalPlugin,
       UniversalDeployPlugin
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
 
       Test / testlogDefaultLevel := "debug",
 
@@ -56,7 +56,7 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
       Test / dependencyClasspath := {
         (Test / dependencyClasspathAsJars).value
       },
-      
+
       Universal / mappings ++= (Compile / dependencyClasspathAsJars).value
         .filter(_.data.isFile())
         .map(_.data)
@@ -67,7 +67,7 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
 
       Compile / packageOptions += {
 
-        val appClasspath: Seq[String] = (Compile / dependencyClasspathAsJars).value
+        val appClasspath : Seq[String] = (Compile / dependencyClasspathAsJars).value
           .filter(_.data.isFile())
           .map(af => s"$libDir/${af.data.getName()}")
 
@@ -84,7 +84,7 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
         Keys.publish := Keys.publish.dependsOn(Universal / Keys.publish).value
       )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedSecurityScep.project,
       BlendedSecuritySsl.project,
       BlendedContainerContextImpl.project,

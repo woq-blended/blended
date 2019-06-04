@@ -22,9 +22,9 @@ class LDAPLoginSpec extends SimplePojoContainerSpec
   private[this] val pwd = "mysecret"
   private[this] val log = Logger[LDAPLoginSpec]
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.security" -> new SecurityActivator()
   )
 

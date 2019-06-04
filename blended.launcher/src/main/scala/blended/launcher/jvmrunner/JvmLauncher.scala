@@ -19,7 +19,7 @@ object JvmLauncher {
 
   private[this] lazy val launcher = new JvmLauncher()
 
-  def main(args: Array[String]): Unit = {
+  def main(args : Array[String]) : Unit = {
     try {
       val exitVal = launcher.run(args)
       sys.exit(exitVal)
@@ -30,16 +30,16 @@ object JvmLauncher {
 }
 
 /**
-  * A small Java wrapper responsiblefor controlling the actual Container JVM.
-  */
+ * A small Java wrapper responsiblefor controlling the actual Container JVM.
+ */
 class JvmLauncher() {
 
   private[this] lazy val log = Logger[JvmLauncher]
 
-  private[this] var runningProcess: Option[RunningProcess] = None
+  private[this] var runningProcess : Option[RunningProcess] = None
 
   private[this] val shutdownHook = new Thread("jvm-launcher-shutdown-hook") {
-    override def run(): Unit = {
+    override def run() : Unit = {
       log.info("Caught shutdown. Stopping process")
       runningProcess foreach { p =>
         p.stop()
@@ -48,7 +48,7 @@ class JvmLauncher() {
   }
   Runtime.getRuntime.addShutdownHook(shutdownHook)
 
-  def run(args: Array[String]): Int = {
+  def run(args : Array[String]) : Int = {
     val config = checkConfig(parse(args)).get
     log.debug("JvmLauncherConfig = " + config)
     config.action match {
@@ -74,7 +74,7 @@ class JvmLauncher() {
                     try {
                       Thread.sleep(delay * 1000)
                     } catch {
-                      case e: InterruptedException =>
+                      case e : InterruptedException =>
                         log.debug("Delay interrupted!")
                     }
                   case _ =>
@@ -98,7 +98,7 @@ class JvmLauncher() {
               log.info("-" * 80)
               log.info("Starting container in write properties mode")
               log.info("-" * 80)
-              val sysProps: Map[String, String] = {
+              val sysProps : Map[String, String] = {
                 val sysPropsFile = File.createTempFile("jvmlauncher", ".properties")
                 val p = startJava(
                   classpath = config.classpath,
@@ -119,7 +119,7 @@ class JvmLauncher() {
                     props.load(inStream)
                   }
                 }.recover {
-                  case e: Throwable => log.error(e)("Could not read properties file")
+                  case e : Throwable => log.error(e)("Could not read properties file")
                 }
                 sysPropsFile.delete()
                 props.asScala.toList.toMap
@@ -171,13 +171,13 @@ class JvmLauncher() {
   }
 
   case class JvmLauncherConfig(
-    classpath: Seq[File] = Seq(),
-    otherArgs: Seq[String] = Seq(),
-    action: Option[String] = None,
-    jvmOpts: Seq[String] = Seq(),
-    interactive: Boolean = true,
+    classpath : Seq[File] = Seq(),
+    otherArgs : Seq[String] = Seq(),
+    action : Option[String] = None,
+    jvmOpts : Seq[String] = Seq(),
+    interactive : Boolean = true,
     shutdownTimeout : FiniteDuration = 5.seconds,
-    restartDelaySec: Option[Int] = None
+    restartDelaySec : Option[Int] = None
   ) {
 
     private[this] lazy val prettyPrint : String =
@@ -189,11 +189,11 @@ class JvmLauncher() {
          |${otherArgs.mkString("  ", "\n  ", "")}
          |)""".stripMargin
 
-    override def toString(): String = prettyPrint
+    override def toString() : String = prettyPrint
   }
 
   @tailrec
-  final def parse(args: Seq[String], initialConfig: JvmLauncherConfig = JvmLauncherConfig()): JvmLauncherConfig = {
+  final def parse(args : Seq[String], initialConfig : JvmLauncherConfig = JvmLauncherConfig()) : JvmLauncherConfig = {
 
     args match {
       case Seq() =>
@@ -214,7 +214,7 @@ class JvmLauncher() {
       case Seq(jvmOpt, rest @ _*) if jvmOpt.startsWith("-jvmOpt=") =>
         val opt = jvmOpt.substring("-jvmOpt=".length).trim()
         parse(rest, initialConfig.copy(jvmOpts = initialConfig.jvmOpts ++ Seq(opt).filter(!_.isEmpty)))
-      case Seq(interactive, rest @_*) if interactive.startsWith("-interactive") =>
+      case Seq(interactive, rest @ _*) if interactive.startsWith("-interactive") =>
         val iAct = interactive.substring("-interactive=".length).toBoolean
         parse(rest, initialConfig.copy(interactive = iAct))
       case Seq(maxShutdown, rest @ _*) if maxShutdown.startsWith("-maxShutdown") =>
@@ -225,7 +225,7 @@ class JvmLauncher() {
     }
   }
 
-  private def checkConfig(config: JvmLauncherConfig): Try[JvmLauncherConfig] = Try {
+  private def checkConfig(config : JvmLauncherConfig) : Try[JvmLauncherConfig] = Try {
     if (config.action.isEmpty) {
       sys.error("Missing arguments for action: start|stop")
     }
@@ -236,28 +236,29 @@ class JvmLauncher() {
     config
   }
 
-  private def startJava(classpath: Seq[File],
-    jvmOpts: Array[String],
-    arguments: Array[String],
-    interactive: Boolean = false,
-    errorsIntoOutput: Boolean = true,
-    directory: File = new File("."),
+  private def startJava(
+    classpath : Seq[File],
+    jvmOpts : Array[String],
+    arguments : Array[String],
+    interactive : Boolean = false,
+    errorsIntoOutput : Boolean = true,
+    directory : File = new File("."),
     shutdownTimeout : FiniteDuration
-  ): RunningProcess = {
+  ) : RunningProcess = {
 
     log.debug("About to run Java process")
 
     // lookup java by JAVA_HOME env variable
     val java = Option(System.getenv("JAVA_HOME")) match {
       case Some(javaHome) => s"$javaHome/bin/java"
-      case None => "java"
+      case None           => "java"
     }
 
     log.debug("Using java executable: " + java)
 
     val cpArgs = Option(classpath) match {
       case None | Some(Seq()) => Array[String]()
-      case Some(cp) => Array("-cp", pathAsArg(classpath))
+      case Some(cp)           => Array("-cp", pathAsArg(classpath))
     }
     log.debug("Using classpath args: " + cpArgs.mkString(" "))
 
@@ -266,7 +267,7 @@ class JvmLauncher() {
 
     log.debug(s"Using JVM arguments [${arguments.mkString("\n")}]")
 
-    val pb = new ProcessBuilder(command: _*)
+    val pb = new ProcessBuilder(command : _*)
     log.debug("Run command: " + command.mkString(" "))
     pb.environment().putAll(sys.env.asJava)
     pb.directory(directory)
@@ -279,6 +280,6 @@ class JvmLauncher() {
   /**
    * Converts a Seq of files into a string containing the absolute file paths concatenated with the platform specific path separator (":" on Unix, ";" on Windows).
    */
-  def pathAsArg(paths: Seq[File]): String = paths.map(p => p.getPath).mkString(File.pathSeparator)
+  def pathAsArg(paths : Seq[File]) : String = paths.map(p => p.getPath).mkString(File.pathSeparator)
 
 }

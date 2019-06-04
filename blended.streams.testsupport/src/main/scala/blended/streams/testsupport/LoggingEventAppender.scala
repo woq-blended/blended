@@ -7,7 +7,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.{Appender, AppenderBase}
 import org.slf4j.LoggerFactory
 
-class LoggingEventAppender[T](loggerName : String)(implicit system: ActorSystem, materializer: Materializer) {
+class LoggingEventAppender[T](loggerName : String)(implicit system : ActorSystem, materializer : Materializer) {
 
   val root = LoggerFactory.getLogger(loggerName).asInstanceOf[ch.qos.logback.classic.Logger]
 
@@ -16,12 +16,12 @@ class LoggingEventAppender[T](loggerName : String)(implicit system: ActorSystem,
   private var killSwitch : Option[KillSwitch] = None
 
   private class ActorLoggingAppender(actor : ActorRef) extends AppenderBase[ILoggingEvent] {
-    override def append(eventObject: ILoggingEvent): Unit = actor ! eventObject
+    override def append(eventObject : ILoggingEvent) : Unit = actor ! eventObject
   }
 
-  def attachAndStart(sink: Sink[ILoggingEvent, T]): T = {
+  def attachAndStart(sink : Sink[ILoggingEvent, T]) : T = {
 
-    val ((actor, ks), result) =  Source.actorRef[ILoggingEvent](bufferSize, OverflowStrategy.fail)
+    val ((actor, ks), result) = Source.actorRef[ILoggingEvent](bufferSize, OverflowStrategy.fail)
       .viaMat(KillSwitches.single)(Keep.both)
       .toMat(sink)(Keep.both)
       .run()
@@ -36,8 +36,8 @@ class LoggingEventAppender[T](loggerName : String)(implicit system: ActorSystem,
     result
   }
 
-  def stop(): Unit = {
-    appender.foreach{ a =>
+  def stop() : Unit = {
+    appender.foreach { a =>
       root.detachAppender(a)
       a.stop()
     }

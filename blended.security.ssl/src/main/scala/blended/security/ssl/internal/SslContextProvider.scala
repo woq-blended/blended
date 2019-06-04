@@ -21,21 +21,20 @@ class SslContextProvider {
     Option(System.getProperty(propTrustStore)),
     Option(System.getProperty(propTrustStorePwd))
   ) match {
-    case (Some(trustStore), Some(trustStorePassword)) =>
-      log.debug("Configuring trust store from System Properties")
+      case (Some(trustStore), Some(trustStorePassword)) =>
+        log.debug("Configuring trust store from System Properties")
 
-      val tks = KeyStore.getInstance(KeyStore.getDefaultType)
-      tks.load(new FileInputStream(trustStore), trustStorePassword.toCharArray)
+        val tks = KeyStore.getInstance(KeyStore.getDefaultType)
+        tks.load(new FileInputStream(trustStore), trustStorePassword.toCharArray)
 
-      val tmf: TrustManagerFactory = TrustManagerFactory.getInstance("SunX509")
-      tmf.init(tks)
+        val tmf : TrustManagerFactory = TrustManagerFactory.getInstance("SunX509")
+        tmf.init(tks)
 
-      tmf.getTrustManagers
-    case (_, _) =>
-      log.debug("Using default JVM trust manager")
-      null
-  }
-
+        tmf.getTrustManagers
+      case (_, _) =>
+        log.debug("Using default JVM trust manager")
+        null
+    }
 
   def serverContext(keystore : KeyStore, keyPass : Array[Char]) : SSLContext = {
 

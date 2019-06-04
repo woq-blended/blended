@@ -30,7 +30,7 @@ class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
     ).asJava
   ))
 
-  override protected def afterAll(): Unit = Await.result(system.terminate(), 3.seconds)
+  override protected def afterAll() : Unit = Await.result(system.terminate(), 3.seconds)
 
   "A FlowTransactionEvent" - {
 
@@ -46,41 +46,41 @@ class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
 
       val startedTrans = envelope2event(cfg)(event2envelope(cfg)(started)).get
 
-      startedTrans.transactionId should be (started.transactionId)
-      startedTrans.state should be (started.state)
-      started.asInstanceOf[FlowTransactionStarted].properties should be (started.properties)
+      startedTrans.transactionId should be(started.transactionId)
+      startedTrans.state should be(started.state)
+      started.asInstanceOf[FlowTransactionStarted].properties should be(started.properties)
     }
 
     "can be transformed into a FlowEnvelope and vice versa (completed)" in {
 
-      val completed  = FlowTransactionCompleted("completed", FlowMessage.noProps)
+      val completed = FlowTransactionCompleted("completed", FlowMessage.noProps)
 
       val completedTrans = envelope2event(cfg)(event2envelope(cfg)(completed)).get
 
-      completedTrans.transactionId should be (completed.transactionId)
-      completedTrans.state should be (completed.state)
+      completedTrans.transactionId should be(completed.transactionId)
+      completedTrans.state should be(completed.state)
     }
 
     "can be transformed into a FlowEnvelope and vice versa (failed)" in {
 
-      val failed  = FlowTransactionFailed("failed", FlowMessage.noProps, Some("This did not work"))
+      val failed = FlowTransactionFailed("failed", FlowMessage.noProps, Some("This did not work"))
 
       val failedTrans = envelope2event(cfg)(event2envelope(cfg)(failed)).get
 
-      failedTrans.transactionId should be (failed.transactionId)
-      failedTrans.state should be (failed.state)
-      failedTrans.asInstanceOf[FlowTransactionFailed].reason should be (failed.reason)
+      failedTrans.transactionId should be(failed.transactionId)
+      failedTrans.state should be(failed.state)
+      failedTrans.asInstanceOf[FlowTransactionFailed].reason should be(failed.reason)
     }
 
     "can be transformed into a FlowEnvelope and vice versa (update)" in {
 
-      def singleTest(updated: FlowTransactionUpdate) : Unit = {
+      def singleTest(updated : FlowTransactionUpdate) : Unit = {
         val updatedTrans = envelope2event(cfg)(event2envelope(cfg)(updated)).get
 
-        updatedTrans.transactionId should be (updated.transactionId)
-        updatedTrans.state should be (updated.state)
-        updatedTrans.asInstanceOf[FlowTransactionUpdate].updatedState should be (updated.updatedState)
-        updatedTrans.asInstanceOf[FlowTransactionUpdate].branchIds should be (updated.branchIds)
+        updatedTrans.transactionId should be(updated.transactionId)
+        updatedTrans.state should be(updated.state)
+        updatedTrans.asInstanceOf[FlowTransactionUpdate].updatedState should be(updated.updatedState)
+        updatedTrans.asInstanceOf[FlowTransactionUpdate].branchIds should be(updated.branchIds)
       }
 
       singleTest(FlowTransactionUpdate("updated", FlowMessage.noProps, WorklistState.Started, "branch-1", "branch-2"))
@@ -103,7 +103,7 @@ class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
 
       val back = serializer.fromBinary(bytes)
 
-      back should be (xx)
+      back should be(xx)
 
     }
   }

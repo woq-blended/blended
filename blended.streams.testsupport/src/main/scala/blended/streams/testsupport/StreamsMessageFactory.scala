@@ -18,14 +18,14 @@ class StreamsMessageFactory(fileName : String) {
   private val log = Logger[StreamsMessageFactory]
   private val dbf = DocumentBuilderFactory.newInstance
 
-  def createMessage(binary: Boolean) : Try[FlowMessage] = Try {
+  def createMessage(binary : Boolean) : Try[FlowMessage] = Try {
 
     log.debug(s"Creating message from file [$fileName]")
     val doc = readMessageFile().get
     val header = readHeader(doc).get
 
     readBody(doc, binary).get match {
-      case None => FlowMessage(header)
+      case None           => FlowMessage(header)
       case Some(Left(bs)) => FlowMessage(bs)(header)
       case Some(Right(t)) => FlowMessage(t)(header)
     }
@@ -47,7 +47,7 @@ class StreamsMessageFactory(fileName : String) {
     }
   }
 
-  private def readHeader(doc: Document): Try[FlowMessageProps] = Try {
+  private def readHeader(doc : Document) : Try[FlowMessageProps] = Try {
 
     val headerList = doc.getElementsByTagName("headerProperty")
     val headers : Seq[Element] = 0.to(headerList.getLength - 1).map(i => headerList.item(i).asInstanceOf[Element])
@@ -64,7 +64,7 @@ class StreamsMessageFactory(fileName : String) {
     }.toMap
   }
 
-  private def readBody(doc: Document, binary: Boolean): Try[Option[Either[ByteString, String]]] = Try {
+  private def readBody(doc : Document, binary : Boolean) : Try[Option[Either[ByteString, String]]] = Try {
 
     val textElements = doc.getElementsByTagName("text")
 
@@ -74,8 +74,7 @@ class StreamsMessageFactory(fileName : String) {
       if (binary) {
         log.debug(s"Read message body as byte Array of length[${decoded.length}]")
         Some(Left(ByteString(decoded)))
-      }
-      else {
+      } else {
         val text = new String(decoded, "UTF-8")
         log.debug(s"Read message body as String of length[${text.length}]")
         Some(Right(text))

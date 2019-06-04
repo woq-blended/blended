@@ -8,15 +8,16 @@ import javax.net.ssl.SSLContext
 
 class BrokerActivator
   extends DominoActivator
-  with ActorSystemWatching  {
+  with ActorSystemWatching {
 
   private[this] val log = Logger[BrokerActivator]
 
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
 
-      val brokerConfigs = osgiCfg.config.getConfigMap("broker", Map.empty).map { case (brokerName, cfg) =>
-        (brokerName -> BrokerConfig.create(brokerName, osgiCfg.idSvc, cfg).get)
+      val brokerConfigs = osgiCfg.config.getConfigMap("broker", Map.empty).map {
+        case (brokerName, cfg) =>
+          (brokerName -> BrokerConfig.create(brokerName, osgiCfg.idSvc, cfg).get)
       }
 
       val withSsl = brokerConfigs.values.exists(_.withSsl)

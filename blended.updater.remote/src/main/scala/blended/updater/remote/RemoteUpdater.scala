@@ -4,9 +4,9 @@ import blended.updater.config._
 import blended.util.logging.Logger
 
 class RemoteUpdater(
-  runtimeConfigPersistor: RuntimeConfigPersistor,
-  containerStatePersistor: ContainerStatePersistor,
-  overlayConfigPersistor: OverlayConfigPersistor
+  runtimeConfigPersistor : RuntimeConfigPersistor,
+  containerStatePersistor : ContainerStatePersistor,
+  overlayConfigPersistor : OverlayConfigPersistor
 ) {
 
   private[this] val log = Logger[RemoteUpdater]
@@ -14,7 +14,7 @@ class RemoteUpdater(
   type ContainerId = String
 
   // TODO: review: isn't this redundant with updateContainerState method?
-  def addAction(containerId: ContainerId, action: UpdateAction): Unit = {
+  def addAction(containerId : ContainerId, action : UpdateAction) : Unit = {
     // Logic:
     // - find previous state
     // - add new actions
@@ -38,7 +38,7 @@ class RemoteUpdater(
     containerStatePersistor.updateContainerState(newState)
   }
 
-  def updateContainerState(containerInfo: ContainerInfo): ContainerState = {
+  def updateContainerState(containerInfo : ContainerInfo) : ContainerState = {
     // Logic:
     // - find previous state and extract it's profiles
     // - analyze outstanding actions (filter those with missing dependencies or those known as applied)
@@ -93,21 +93,21 @@ class RemoteUpdater(
     newState
   }
 
-  def getContainerState(containerId: ContainerId): Option[ContainerState] =
+  def getContainerState(containerId : ContainerId) : Option[ContainerState] =
     containerStatePersistor.findContainerState(containerId)
 
-  def getContainerActions(containerId: ContainerId): List[UpdateAction] =
+  def getContainerActions(containerId : ContainerId) : List[UpdateAction] =
     getContainerState(containerId).map(_.outstandingActions).getOrElse(List.empty)
 
-  def getContainerIds(): List[ContainerId] = containerStatePersistor.findAllContainerStates().map(_.containerId)
+  def getContainerIds() : List[ContainerId] = containerStatePersistor.findAllContainerStates().map(_.containerId)
 
-  def registerRuntimeConfig(runtimeConfig: RuntimeConfig): Unit = runtimeConfigPersistor.persistRuntimeConfig(runtimeConfig)
+  def registerRuntimeConfig(runtimeConfig : RuntimeConfig) : Unit = runtimeConfigPersistor.persistRuntimeConfig(runtimeConfig)
 
-  def getRuntimeConfigs(): List[RuntimeConfig] = runtimeConfigPersistor.findRuntimeConfigs()
+  def getRuntimeConfigs() : List[RuntimeConfig] = runtimeConfigPersistor.findRuntimeConfigs()
 
-  def getOverlayConfigs(): List[OverlayConfig] = overlayConfigPersistor.findOverlayConfigs()
+  def getOverlayConfigs() : List[OverlayConfig] = overlayConfigPersistor.findOverlayConfigs()
 
-  def registerOverlayConfig(overlayConfig: OverlayConfig): Unit = overlayConfigPersistor.persistOverlayConfig(overlayConfig)
+  def registerOverlayConfig(overlayConfig : OverlayConfig) : Unit = overlayConfigPersistor.persistOverlayConfig(overlayConfig)
 
 }
 

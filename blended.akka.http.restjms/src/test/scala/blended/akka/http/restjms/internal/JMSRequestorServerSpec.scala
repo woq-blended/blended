@@ -31,12 +31,12 @@ class JMSRequestorServerSpec extends TestKit(ActorSystem("jmsRequestor"))
 
   val svc = new SimpleRestJmsService(restJmsConfig.operations, camelContext, materializer, system.dispatcher)
 
-  override protected def beforeAll(): Unit = {
+  override protected def beforeAll() : Unit = {
     val binding = Http().bindAndHandle(svc.httpRoute, "localhost", port)
     svrBinding = Some(Await.result(binding, 10.seconds))
   }
 
-  override protected def afterAll(): Unit = svrBinding.foreach(_.unbind().flatMap(_ => system.terminate()))
+  override protected def afterAll() : Unit = svrBinding.foreach(_.unbind().flatMap(_ => system.terminate()))
 
   "The Jms Requestor should" - {
 

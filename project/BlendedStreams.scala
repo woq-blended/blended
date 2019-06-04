@@ -39,7 +39,7 @@ object BlendedStreams extends ProjectFactory {
       )
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
         "App" -> "DEBUG",
@@ -48,7 +48,7 @@ object BlendedStreams extends ProjectFactory {
       )
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtilLogging.project,
       BlendedUtilLogging.project,
       BlendedJmsUtils.project,

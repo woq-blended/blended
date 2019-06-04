@@ -5,11 +5,11 @@ import java.util.Date
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import blended.camel.utils.BlendedCamelContextFactory
-import blended.jms.utils.{ AmqBrokerSupport, BlendedJMSConnectionConfig, BlendedSingleConnectionFactory, Reconnect }
+import blended.jms.utils.{AmqBrokerSupport, BlendedJMSConnectionConfig, BlendedSingleConnectionFactory, Reconnect}
 import blended.util.logging.Logger
-import javax.jms.{ ExceptionListener, JMSException }
+import javax.jms.{ExceptionListener, JMSException}
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.camel.{ Exchange, Processor }
+import org.apache.camel.{Exchange, Processor}
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.jms.JmsComponent
 import org.apache.camel.impl.SimpleRegistry
@@ -19,7 +19,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
   with FreeSpecLike
   with AmqBrokerSupport {
 
-  override lazy val brokerName: String = "shutdown"
+  override lazy val brokerName : String = "shutdown"
 
   val log = Logger[CamelShutdownSpec]
 
@@ -36,8 +36,8 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
         jmxEnabled = false,
         cfClassName = Some(classOf[ActiveMQConnectionFactory].getName),
         jmsClassloader = Some(getClass().getClassLoader()),
-        cfEnabled = Some( _ => true),
-        properties = Map( "brokerURL" -> amqCf().getBrokerURL())
+        cfEnabled = Some(_ => true),
+        properties = Map("brokerURL" -> amqCf().getBrokerURL())
       )
 
       val cf = new BlendedSingleConnectionFactory(cfg, None)
@@ -47,9 +47,9 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
         def getJmsCause(current : Throwable) : Option[JMSException] = current match {
           case jmse : JMSException => Some(jmse)
           case o => Option(o) match {
-            case None => None
+            case None                                  => None
             case Some(same) if same == same.getCause() => None
-            case Some(e) => getJmsCause(e.getCause())
+            case Some(e)                               => getJmsCause(e.getCause())
           }
         }
 
@@ -63,7 +63,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
       }
 
       val exceptionListener = new ExceptionListener {
-        override def onException(exception: JMSException): Unit = exceptionHandler(exception)
+        override def onException(exception : JMSException) : Unit = exceptionHandler(exception)
       }
 
       val camelCtxt = BlendedCamelContextFactory.createContext("CamelShutdown", false)
@@ -72,7 +72,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
 
       val consumerSettings = "acknowledgementModeName=CLIENT_ACKNOWLEDGE&cacheLevelName=CACHE_NONE&exceptionListener=#el&receiveTimeout=300000"
       camelCtxt.addRoutes(new RouteBuilder() {
-        override def configure(): Unit = {
+        override def configure() : Unit = {
 
           onException(classOf[Exception]).to("jms:error")
 
@@ -81,7 +81,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
 
             from(s"scheduler://foo$i?delay=100")
               .process(new Processor {
-                override def process(exchange: Exchange): Unit = {
+                override def process(exchange : Exchange) : Unit = {
                   exchange.getOut().setBody(new Date().toString())
                 }
               })
@@ -102,14 +102,14 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
       val start = System.currentTimeMillis()
 
       new Thread(new Runnable {
-        override def run(): Unit = {
+        override def run() : Unit = {
           camelCtxt.removeRoute("R16")
         }
 
       }).start()
 
       new Thread(new Runnable {
-        override def run(): Unit = {
+        override def run() : Unit = {
           Logger("CamelStopper").info("Stopping Camel Context ...")
           camelCtxt.stop()
         }
@@ -117,7 +117,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
 
       var stopped = false
 
-      while(!stopped && System.currentTimeMillis() - start < 30000) {
+      while (!stopped && System.currentTimeMillis() - start < 30000) {
         stopped = camelCtxt.getStatus().isStopped()
         if (!stopped) {
           log.info("Waiting for Camel Context to stop properly")

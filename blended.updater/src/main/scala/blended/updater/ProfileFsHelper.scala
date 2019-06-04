@@ -20,7 +20,7 @@ class ProfileFsHelper {
 
   private[this] val log = Logger[ProfileFsHelper]
 
-  def scanForOverlayConfigs(overlayBaseDir: File): List[OverlayConfig] = {
+  def scanForOverlayConfigs(overlayBaseDir : File) : List[OverlayConfig] = {
     log.debug(s"Scanning for overlays configs in: ${overlayBaseDir}")
 
     val confFiles = Option(overlayBaseDir.listFiles).getOrElse(Array()).
@@ -43,7 +43,7 @@ class ProfileFsHelper {
     configs
   }
 
-  def scanForRuntimeConfigs(installBaseDir: File): List[LocalRuntimeConfig] = {
+  def scanForRuntimeConfigs(installBaseDir : File) : List[LocalRuntimeConfig] = {
     log.debug(s"Scanning for runtime configs in ${installBaseDir}")
 
     val configFiles = Option(installBaseDir.listFiles).getOrElse(Array()).toList.
@@ -86,7 +86,7 @@ class ProfileFsHelper {
     runtimeConfigs
   }
 
-  def scanForProfiles(installBaseDir: File, runtimeConfigs: Option[List[LocalRuntimeConfig]] = None): List[LocalProfile] = {
+  def scanForProfiles(installBaseDir : File, runtimeConfigs : Option[List[LocalRuntimeConfig]] = None) : List[LocalProfile] = {
     log.debug(s"Scanning for profiles in: ${installBaseDir}")
 
     val rcs = runtimeConfigs.getOrElse(scanForRuntimeConfigs(installBaseDir)).toList
@@ -103,8 +103,8 @@ class ProfileFsHelper {
 
     log.debug(s"Runtime configs (with issues): ${runtimeConfigsWithIssues}")
 
-    def profileState(issues: List[String]): LocalProfile.ProfileState = issues match {
-      case Seq() => LocalProfile.Staged
+    def profileState(issues : List[String]) : LocalProfile.ProfileState = issues match {
+      case Seq()  => LocalProfile.Staged
       case issues => LocalProfile.Pending(issues)
     }
 

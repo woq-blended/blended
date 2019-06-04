@@ -19,7 +19,7 @@ case class JmsAcknowledgeHandler(
   log : Logger
 ) extends AcknowledgeHandler {
 
-  override def deny(): Try[Unit] = Try {
+  override def deny() : Try[Unit] = Try {
     log.trace(s"Scheduling denial for envelope [$id] in [${session.sessionId}].")
     session.deny(jmsMessage)
   }
@@ -69,18 +69,18 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
 
     val prefix = headerConfig.prefix
 
-    val props: Map[String, MsgProperty] = {
+    val props : Map[String, MsgProperty] = {
 
       val dest = JmsDestination.asString(JmsDestination.create(msg.getJMSDestination()).get)
       val delMode = new JmsDeliveryMode(msg.getJMSDeliveryMode()).asString
 
       val srcVendor : String = Option(msg.getStringProperty(srcVendorHeader(prefix))) match {
-        case None => settings.connectionFactory.vendor
+        case None    => settings.connectionFactory.vendor
         case Some(s) => s
       }
 
       val srcProvider : String = Option(msg.getStringProperty(srcProviderHeader(prefix))) match {
-        case None => settings.connectionFactory.provider
+        case None    => settings.connectionFactory.provider
         case Some(s) => s
       }
 
@@ -95,11 +95,12 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
 
       val expireHeaderMap : Map[String, MsgProperty] = msg.getJMSExpiration() match {
         case 0L => Map.empty
-        case v => Map(expireHeader(prefix) -> MsgProperty.lift(v).get)
+        case v  => Map(expireHeader(prefix) -> MsgProperty.lift(v).get)
       }
 
       val corrIdMap : Map[String, MsgProperty] =
-        Option(msg.getJMSCorrelationID()).map { s => Map(
+        Option(msg.getJMSCorrelationID()).map { s =>
+          Map(
             corrIdHeader(prefix) -> MsgProperty(s),
             "JMSCorrelationID" -> MsgProperty(s)
           )
@@ -115,7 +116,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
       }.toMap
 
       val replyToMap : Map[String, MsgProperty] =
-        Option(msg.getJMSReplyTo()).map( d => replyToHeader(prefix) -> lift(JmsDestination.create(d).get.asString).get).toMap
+        Option(msg.getJMSReplyTo()).map(d => replyToHeader(prefix) -> lift(JmsDestination.create(d).get.asString).get).toMap
 
       props ++ headers ++ expireHeaderMap ++ corrIdMap ++ replyToMap
     }
@@ -136,8 +137,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
     flowMessge
   }
 
-
-  val envelope2jms : (JmsProducerSettings, Session, FlowEnvelope) => Try[JmsSendParameter] = (settings, session, flowEnv) =>  Try {
+  val envelope2jms : (JmsProducerSettings, Session, FlowEnvelope) => Try[JmsSendParameter] = (settings, session, flowEnv) => Try {
 
     settings.destinationResolver(settings).sendParameter(session, flowEnv).get
 

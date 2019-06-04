@@ -19,13 +19,13 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
   private[this] val log = Logger[BridgeActivator]
 
-  private[this] def getProperty(context: ServiceWatcherContext[IdAwareConnectionFactory], name : String) : Option[String] = {
+  private[this] def getProperty(context : ServiceWatcherContext[IdAwareConnectionFactory], name : String) : Option[String] = {
     Option(context.ref.getProperty(name)) match {
-      case None => None
+      case None    => None
       case Some(o) => Some(o.toString())
     }
   }
-  private[this] def identifyCf(context: ServiceWatcherContext[IdAwareConnectionFactory]) : Try[(String, String)] = Try {
+  private[this] def identifyCf(context : ServiceWatcherContext[IdAwareConnectionFactory]) : Try[(String, String)] = Try {
     (getProperty(context, "vendor"), getProperty(context, "provider")) match {
       case (Some(v), Some(p)) => (v, p)
       case (v, p) =>
@@ -36,22 +36,22 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
   // We maintain the streamBuilder factory as a function here, so that unit tests can override
   // the factory with stream builders throwing particular exceptions
-  protected def streamBuilderFactory(system : ActorSystem)(materializer: Materializer)(cfg : BridgeStreamConfig) : BridgeStreamBuilder =
+  protected def streamBuilderFactory(system : ActorSystem)(materializer : Materializer)(cfg : BridgeStreamConfig) : BridgeStreamBuilder =
     new BridgeStreamBuilder(cfg)(system, materializer)
 
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
 
       val providerList = osgiCfg.config.getConfigList("provider").asScala.map { p =>
-          BridgeProviderConfig.create(osgiCfg.idSvc, p).get
-        }.toList
+        BridgeProviderConfig.create(osgiCfg.idSvc, p).get
+      }.toList
 
       log.info(s"Starting jms bridge with providers [${providerList.map(_.toString()).mkString(",")}]")
 
       val (internalVendor, internalProvider) = providerList.filter(_.internal) match {
-        case Nil => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
+        case Nil      => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
         case h :: Nil => (h.vendor, h.provider)
-        case h :: _ => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
+        case h :: _   => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
       }
 
       val registry = new BridgeProviderRegistry(providerList)

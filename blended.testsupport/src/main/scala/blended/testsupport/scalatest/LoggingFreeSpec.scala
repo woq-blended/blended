@@ -25,21 +25,21 @@ import org.scalatest.Status
  */
 trait LoggingFreeSpecLike extends FreeSpecLike {
 
-  abstract protected override def runTest(testName: String, args: Args): Status = {
-    val log: Logger = Logger[this.type]
+  abstract protected override def runTest(testName : String, args : Args) : Status = {
+    val log : Logger = Logger[this.type]
     log.info(s"Starting test case: ${testName}")
     var reported = false
     try {
       val status = super.runTest(testName, args)
-      log.info(s"${if (status.succeeds()) "Finished" else "Failed"} test case: ${testName}\n" + ("-" *80))
+      log.info(s"${if (status.succeeds()) "Finished" else "Failed"} test case: ${testName}\n" + ("-" * 80))
       reported = true
       status
     } finally {
-      if (!reported) log.info(s"Finished test case: ${testName}\n" + ("-" *80))
+      if (!reported) log.info(s"Finished test case: ${testName}\n" + ("-" * 80))
     }
   }
 
-  def logException[T](f: => T): T = try {
+  def logException[T](f : => T) : T = try {
     f
   } catch {
     case NonFatal(e) =>

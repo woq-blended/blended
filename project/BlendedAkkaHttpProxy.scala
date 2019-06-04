@@ -22,7 +22,7 @@ object BlendedAkkaHttpProxy extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedContainerContextApi.project,
       BlendedAkka.project,

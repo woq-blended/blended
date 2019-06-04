@@ -18,10 +18,10 @@ class PrickleSupportSpec extends FreeSpec with ScalatestRouteTest with PrickleSu
 
   private[this] val log = Logger[PrickleSupportSpec]
 
-  case class Foo(bar: String, baz: Long)
+  case class Foo(bar : String, baz : Long)
 
-  implicit val prickleConfig: PConfig[JsValue] = JsConfig(areSharedObjectsSupported = false)
-  implicit val fooPickler: Pickler[Foo] = Pickler.materializePickler[Foo]
+  implicit val prickleConfig : PConfig[JsValue] = JsConfig(areSharedObjectsSupported = false)
+  implicit val fooPickler : Pickler[Foo] = Pickler.materializePickler[Foo]
 
   val testRoute = get {
     complete(Foo("Hi", 42L))

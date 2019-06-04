@@ -18,13 +18,13 @@ class TransactionPersistorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
   with PojoSrTestHelper
-  with PropertyChecks  {
+  with PropertyChecks {
 
   System.setProperty("testName", "persistor")
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.persistence.h2" -> new H2Activator()
   )
 
@@ -43,11 +43,11 @@ class TransactionPersistorSpec extends SimplePojoContainerSpec
 
         val t2 = persistor.restoreTransaction(t.id).get
 
-        t2.id should be (t.id)
-        t2.state should be (t.state)
+        t2.id should be(t.id)
+        t2.state should be(t.state)
 
-        t2.worklist should be  (t.worklist)
-        t2.creationProps should be (t.creationProps)
+        t2.worklist should be(t.worklist)
+        t2.creationProps should be(t.creationProps)
       }
 
     }

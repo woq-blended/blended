@@ -15,7 +15,7 @@ import scala.util.control.NonFatal
 
 object RuntimeConfigCompanion {
 
-  def read(config: Config): Try[RuntimeConfig] = Try {
+  def read(config : Config) : Try[RuntimeConfig] = Try {
 
     val getProperties : String => Map[String, String] =
       key => ConfigPropertyMapConverter.getKeyAsPropertyMap(config, key, Some(() => Map.empty))
@@ -53,8 +53,7 @@ object RuntimeConfigCompanion {
     )
   }
 
-
-  def toConfig(runtimeConfig: RuntimeConfig): Config = {
+  def toConfig(runtimeConfig : RuntimeConfig) : Config = {
 
     val propCfg : Map[String, String] => ConfigValue = m => ConfigPropertyMapConverter.propertyMapToConfigValue(m)
 
@@ -75,7 +74,7 @@ object RuntimeConfigCompanion {
     ConfigFactory.parseMap(config).resolve()
   }
 
-  def bytesToString(digest: Array[Byte]): String = {
+  def bytesToString(digest : Array[Byte]) : String = {
     import java.lang.StringBuilder
     val result = new StringBuilder(32);
     val f = new Formatter(result)
@@ -83,7 +82,7 @@ object RuntimeConfigCompanion {
     result.toString
   }
 
-  def digestFile(file: File): Option[String] = {
+  def digestFile(file : File) : Option[String] = {
     if (!file.exists()) None else {
       val sha1Stream = new DigestInputStream(new BufferedInputStream(new FileInputStream(file)), MessageDigest.getInstance("SHA"))
       try {
@@ -97,7 +96,7 @@ object RuntimeConfigCompanion {
     }
   }
 
-  def download(url: String, file: File): Try[File] =
+  def download(url : String, file : File) : Try[File] =
     Try {
       val parentDir = file.getAbsoluteFile().getParentFile() match {
         case null =>
@@ -153,18 +152,18 @@ object RuntimeConfigCompanion {
 
     }
 
-  def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
+  def bundlesBaseDir(baseDir : File) : File = new File(baseDir, "bundles")
 
-  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
+  def bundleLocation(bundle : BundleConfig, baseDir : File) : File =
     new File(RuntimeConfigCompanion.bundlesBaseDir(baseDir), bundle.jarName.getOrElse(RuntimeConfig.resolveFileName(bundle.url).get))
 
-  def bundleLocation(artifact: Artifact, baseDir: File): File =
+  def bundleLocation(artifact : Artifact, baseDir : File) : File =
     new File(RuntimeConfigCompanion.bundlesBaseDir(baseDir), artifact.fileName.getOrElse(RuntimeConfig.resolveFileName(artifact.url).get))
 
-  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
+  def resourceArchiveLocation(resourceArchive : Artifact, baseDir : File) : File =
     new File(baseDir, s"resources/${resourceArchive.fileName.getOrElse(RuntimeConfig.resolveFileName(resourceArchive.url).get)}")
 
-  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File, mvnBaseUrl: Option[String]): File = {
+  def resourceArchiveTouchFileLocation(resourceArchive : Artifact, baseDir : File, mvnBaseUrl : Option[String]) : File = {
     val resFile = resourceArchiveLocation(resourceArchive, baseDir)
     new File(resFile.getParentFile(), s".${resFile.getName()}")
   }

@@ -24,7 +24,7 @@ object BlendedSecurityLoginImpl extends ProjectFactory {
       exportPackage = Seq()
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       embeddedJars := {
         (Compile / externalDependencyClasspath).value.map(_.data).filter { f =>
           f.getName.startsWith("bcprov") || f.getName().startsWith("jjwt")
@@ -32,7 +32,7 @@ object BlendedSecurityLoginImpl extends ProjectFactory {
       }
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedSecurityLoginApi.project,
 
       BlendedTestsupport.project.project % Test,

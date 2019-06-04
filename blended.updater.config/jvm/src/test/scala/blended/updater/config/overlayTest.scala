@@ -6,11 +6,11 @@ import scala.collection.JavaConverters._
 import scala.util.Success
 
 import blended.testsupport.TestFile
-import blended.testsupport.TestFile.{ DeletePolicy, DeleteWhenNoFailure }
+import blended.testsupport.TestFile.{DeletePolicy, DeleteWhenNoFailure}
 import blended.updater.config.util.ConfigPropertyMapConverter
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.{FreeSpec, Matchers}
 import org.scalatest.Args
 import org.scalatest.Status
 
@@ -18,13 +18,13 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
 
   private[this] val log = Logger[OverlaysTest]
 
-  override def runTest(testName: String, args: Args): Status = {
+  override def runTest(testName : String, args : Args) : Status = {
     log.info("START runTest " + testName)
     try super.runTest(testName, args)
     finally log.info("FINISHED runTest " + testName)
   }
 
-  implicit val deletePolicy: DeletePolicy = DeleteWhenNoFailure
+  implicit val deletePolicy : DeletePolicy = DeleteWhenNoFailure
 
   "Serialization of OverlayConfig" - {
     "deserializes a config file" in {

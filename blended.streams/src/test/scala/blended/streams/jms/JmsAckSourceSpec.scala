@@ -66,7 +66,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
     FlowEnvelope().withHeader("msgNo", i).get
   }
 
-  override protected def afterAll(): Unit = {
+  override protected def afterAll() : Unit = {
     broker.stop()
     broker.waitUntilStopped()
     system.terminate()
@@ -98,7 +98,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       name = "test",
       settings = cSettings,
       minMessageDelay = minMessageDelay
-    ).via(Flow.fromFunction{env =>
+    ).via(Flow.fromFunction { env =>
       env.acknowledge()
       env
     })
@@ -118,21 +118,21 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       sendMessages(
         pSettings,
         log,
-        envelopes(msgCount):_*
+        envelopes(msgCount) : _*
       ) match {
-        case Success(s) =>
-          val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
-            name = "ackConsumer",
-            source = msgConsumer,
-            timeout = 5.seconds
-          )(e => e.acknowledge())
+          case Success(s) =>
+            val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
+              name = "ackConsumer",
+              source = msgConsumer,
+              timeout = 5.seconds
+            )(e => e.acknowledge())
 
-          val result = Await.result(coll.result, 6.seconds).map{ env => env.header[Int]("msgNo").get }
-          result should have size (msgCount)
+            val result = Await.result(coll.result, 6.seconds).map { env => env.header[Int]("msgNo").get }
+            result should have size (msgCount)
 
-          s.shutdown()
-        case Failure(t) => fail(t)
-      }
+            s.shutdown()
+          case Failure(t) => fail(t)
+        }
     }
 
     "Do not consume messages before the minimum message delay is reached" in {
@@ -149,31 +149,31 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       sendMessages(
         pSettings,
         log,
-        envelopes(msgCount):_*
+        envelopes(msgCount) : _*
       ) match {
-        case Success(s) =>
-          val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
-            name = "delayedConsumer",
-            source = msgConsumer,
-            timeout = minDelay - 1.seconds
-          )(e => e.acknowledge())
+          case Success(s) =>
+            val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
+              name = "delayedConsumer",
+              source = msgConsumer,
+              timeout = minDelay - 1.seconds
+            )(e => e.acknowledge())
 
-          val result : List[Int] = Await.result(coll.result, minDelay + 1.second).map{ env => env.header[Int]("msgNo").get }
-          result should be (empty)
+            val result : List[Int] = Await.result(coll.result, minDelay + 1.second).map { env => env.header[Int]("msgNo").get }
+            result should be(empty)
 
-          s.shutdown()
+            s.shutdown()
 
-          val coll2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
-            name = "delayedConsumer2",
-            source = msgConsumer,
-            timeout = minDelay + 500.millis
-          )(e => e.acknowledge())
+            val coll2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
+              name = "delayedConsumer2",
+              source = msgConsumer,
+              timeout = minDelay + 500.millis
+            )(e => e.acknowledge())
 
-          val result2 : List[Int] = Await.result(coll2.result, minDelay + 1.seconds).map{ env => env.header[Int]("msgNo").get }
-          result2 should have size(msgCount)
+            val result2 : List[Int] = Await.result(coll2.result, minDelay + 1.seconds).map { env => env.header[Int]("msgNo").get }
+            result2 should have size (msgCount)
 
-        case Failure(t) => fail(t)
-      }
+          case Failure(t) => fail(t)
+        }
     }
   }
 

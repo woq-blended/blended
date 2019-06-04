@@ -21,13 +21,13 @@ class JmsStreamsupportSpec extends TestKit(ActorSystem("JmsStreamSupport"))
       val env : FlowEnvelope = FlowEnvelope(FlowMessage("Hello Blended")(FlowMessage.noProps))
 
       val flow : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-        Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
+        Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
           env.withException(new Exception("Boom"))
         }
 
       processMessages(flow, env) match {
         case Success(s) => fail("Expected a failure")
-        case Failure(t) => t.getMessage() should be ("Boom")
+        case Failure(t) => t.getMessage() should be("Boom")
       }
     }
 
@@ -36,7 +36,7 @@ class JmsStreamsupportSpec extends TestKit(ActorSystem("JmsStreamSupport"))
       val env : FlowEnvelope = FlowEnvelope(FlowMessage("Hello Blended")(FlowMessage.noProps))
 
       val flow : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-        Flow.fromFunction[FlowEnvelope, FlowEnvelope]{env => env}
+        Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
 
       processMessages(flow, env) match {
         case Success(s) => s.shutdown()

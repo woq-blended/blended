@@ -6,25 +6,25 @@ import scala.io.Source
 import scala.util.Try
 
 case class LocalRuntimeConfig(
-  resolvedRuntimeConfig: ResolvedRuntimeConfig,
-  baseDir: File
+  resolvedRuntimeConfig : ResolvedRuntimeConfig,
+  baseDir : File
 ) {
 
   def runtimeConfig = resolvedRuntimeConfig.runtimeConfig
 
-  def bundleLocation(bundle: BundleConfig): File = RuntimeConfigCompanion.bundleLocation(bundle, baseDir)
+  def bundleLocation(bundle : BundleConfig) : File = RuntimeConfigCompanion.bundleLocation(bundle, baseDir)
 
-  def bundleLocation(artifact: Artifact): File = RuntimeConfigCompanion.bundleLocation(artifact, baseDir)
+  def bundleLocation(artifact : Artifact) : File = RuntimeConfigCompanion.bundleLocation(artifact, baseDir)
 
-  val profileFileLocation: File = new File(baseDir, "profile.conf")
+  val profileFileLocation : File = new File(baseDir, "profile.conf")
 
-  def resourceArchiveLocation(resourceArchive: Artifact): File =
+  def resourceArchiveLocation(resourceArchive : Artifact) : File =
     RuntimeConfigCompanion.resourceArchiveLocation(resourceArchive, baseDir)
 
-  def resourceArchiveTouchFileLocation(resourceArchive: Artifact): File =
+  def resourceArchiveTouchFileLocation(resourceArchive : Artifact) : File =
     RuntimeConfigCompanion.resourceArchiveTouchFileLocation(resourceArchive, baseDir, runtimeConfig.mvnBaseUrl)
 
-  def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: Option[String]): Try[File] = Try {
+  def createResourceArchiveTouchFile(resourceArchive : Artifact, resourceArchiveChecksum : Option[String]) : Try[File] = Try {
     val file = resourceArchiveTouchFileLocation(resourceArchive)
     Option(file.getParentFile()).foreach { parent =>
       parent.mkdirs()
@@ -39,15 +39,15 @@ case class LocalRuntimeConfig(
   }
 
   def validate(
-    includeResourceArchives: Boolean,
-    explodedResourceArchives: Boolean
-  ): Seq[String] = {
+    includeResourceArchives : Boolean,
+    explodedResourceArchives : Boolean
+  ) : Seq[String] = {
 
     val artifacts = resolvedRuntimeConfig.allBundles.map(b => bundleLocation(b) -> b.artifact) ++
       (if (includeResourceArchives) runtimeConfig.resources.map(r => resourceArchiveLocation(r) -> r) else Seq())
 
     val artifactIssues = {
-      var checkedFiles: Map[File, String] = Map()
+      var checkedFiles : Map[File, String] = Map()
       artifacts.par.flatMap {
         case (file, artifact) =>
           val issue = if (!file.exists()) {

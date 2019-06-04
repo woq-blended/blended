@@ -33,14 +33,14 @@ class LoginServiceSpec extends SimplePojoContainerSpec
 
   private implicit val timeout : FiniteDuration = 3.seconds
 
-  override def baseDir: String =
+  override def baseDir : String =
     new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
-    "blended.akka"                -> new BlendedAkkaActivator(),
-    "blended.akka.http"           -> new BlendedAkkaHttpActivator(),
-    "blended.security"            -> new SecurityActivator(),
-    "blended.security.login"      -> new LoginActivator(),
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.akka.http" -> new BlendedAkkaHttpActivator(),
+    "blended.security" -> new SecurityActivator(),
+    "blended.security.login" -> new LoginActivator(),
     "blended.security.login.rest" -> new RestLoginActivator()
   )
 
@@ -61,7 +61,7 @@ class LoginServiceSpec extends SimplePojoContainerSpec
     implicit val materializer = ActorMaterializer()
     implicit val backend = AkkaHttpBackend()
 
-    val request  = sttp.get(uri"http://localhost:9995/login/key")
+    val request = sttp.get(uri"http://localhost:9995/login/key")
     val response = request.send()
 
     val r = Await.result(response, 3.seconds)
@@ -73,8 +73,8 @@ class LoginServiceSpec extends SimplePojoContainerSpec
       .replaceAll("\n", "")
 
     val bytes = new BASE64Decoder().decodeBuffer(rawString)
-    val x509  = new X509EncodedKeySpec(bytes)
-    val kf    = KeyFactory.getInstance("RSA")
+    val x509 = new X509EncodedKeySpec(bytes)
+    val kf = KeyFactory.getInstance("RSA")
     kf.generatePublic(x509)
   }
 
@@ -90,30 +90,30 @@ class LoginServiceSpec extends SimplePojoContainerSpec
       withLoginService(
         sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "foo")
       ) { r =>
-        r.code should be(StatusCodes.Unauthorized)
-      }
+          r.code should be(StatusCodes.Unauthorized)
+        }
     }
 
     "Respond with Ok if called with correct credentials" in {
 
-      val key: PublicKey = serverKey.get
+      val key : PublicKey = serverKey.get
 
       withLoginService(
         sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
       ) { r =>
-        r.code should be(StatusCodes.Ok)
+          r.code should be(StatusCodes.Ok)
 
-        val token = Token(r.body.right.get, key).get
+          val token = Token(r.body.right.get, key).get
 
-        token.permissions.granted.size should be(2)
-        token.permissions.granted.find(_.permissionClass == Some("admins")) should be(defined)
-        token.permissions.granted.find(_.permissionClass == Some("blended")) should be(defined)
-      }
+          token.permissions.granted.size should be(2)
+          token.permissions.granted.find(_.permissionClass == Some("admins")) should be(defined)
+          token.permissions.granted.find(_.permissionClass == Some("blended")) should be(defined)
+        }
     }
 
     "Allow a user to login twice" in {
 
-      val key: PublicKey = serverKey.get
+      val key : PublicKey = serverKey.get
       val request = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
 
       withLoginService(request) { r1 =>

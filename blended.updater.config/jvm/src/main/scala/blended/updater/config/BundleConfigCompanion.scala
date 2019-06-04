@@ -1,13 +1,13 @@
 package blended.updater.config
 
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.util.Try
 
 object BundleConfigCompanion {
 
-  def read(config: Config): Try[BundleConfig] = Try {
+  def read(config : Config) : Try[BundleConfig] = Try {
 
     BundleConfig(
       artifact = if (config.hasPath("artifact")) {
@@ -26,7 +26,7 @@ object BundleConfigCompanion {
     )
   }
 
-  def toConfig(bundleConfig: BundleConfig): Config = {
+  def toConfig(bundleConfig : BundleConfig) : Config = {
     val config = (
       Map("url" -> bundleConfig.url) ++
       (if (bundleConfig.start) Map("start" -> bundleConfig.start) else Map()) ++

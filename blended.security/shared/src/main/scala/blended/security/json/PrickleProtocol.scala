@@ -6,7 +6,7 @@ import prickle.{JsConfig, PConfig, Pickler, Unpickler}
 
 object PrickleProtocol {
 
-  implicit val prickleConfig: PConfig[JsValue] = JsConfig(areSharedObjectsSupported = false)
+  implicit val prickleConfig : PConfig[JsValue] = JsConfig(areSharedObjectsSupported = false)
 
   implicit val permissionPickler : Pickler[BlendedPermission] = Pickler.materializePickler[BlendedPermission]
   implicit val permissionUnpickler : Unpickler[BlendedPermission] = Unpickler.materializeUnpickler[BlendedPermission]

@@ -10,22 +10,24 @@ object ServiceJmxConfig {
   val templatesPath = "templates"
   val servicesPath = "services"
 
-  private def readTemplates(cfg: ConfigObject) : Map[String, ServiceTypeTemplate] = {
-    cfg.unwrapped().asScala.map { case (key, value) =>
-      ( key, ServiceTypeTemplate(key, cfg.toConfig().getObject(key).toConfig()) )
+  private def readTemplates(cfg : ConfigObject) : Map[String, ServiceTypeTemplate] = {
+    cfg.unwrapped().asScala.map {
+      case (key, value) =>
+        (key, ServiceTypeTemplate(key, cfg.toConfig().getObject(key).toConfig()))
     }.toMap
   }
 
-  private def readServices(cfg: ConfigObject) : Map[String, SingleServiceConfig] = {
-    cfg.unwrapped().asScala.map { case (key, value) =>
-      ( key, SingleServiceConfig(key, cfg.toConfig().getObject(key).toConfig()) )
+  private def readServices(cfg : ConfigObject) : Map[String, SingleServiceConfig] = {
+    cfg.unwrapped().asScala.map {
+      case (key, value) =>
+        (key, SingleServiceConfig(key, cfg.toConfig().getObject(key).toConfig()))
     }.toMap
   }
 
-  def getStringMap(cfg: ConfigObject) : Map[String, String] =
+  def getStringMap(cfg : ConfigObject) : Map[String, String] =
     cfg.unwrapped().asScala.map { case (key, value) => (key, cfg.toConfig().getString(key)) }.toMap
 
-  def apply(cfg: Config) : ServiceJmxConfig = new ServiceJmxConfig(
+  def apply(cfg : Config) : ServiceJmxConfig = new ServiceJmxConfig(
 
     interval = if (cfg.hasPath(intervalPath)) cfg.getInt(intervalPath) else 5,
 
@@ -38,7 +40,7 @@ object ServiceJmxConfig {
 case class ServiceJmxConfig(
   interval : Int,
   templates : Map[String, ServiceTypeTemplate],
-  services : Map [String, SingleServiceConfig]
+  services : Map[String, SingleServiceConfig]
 )
 
 object ServiceTypeTemplate {
@@ -46,7 +48,7 @@ object ServiceTypeTemplate {
   val queryPath = "query"
   val attributesPath = "attributes"
 
-  def apply(svcName: String, cfg: Config) : ServiceTypeTemplate = new ServiceTypeTemplate(
+  def apply(svcName : String, cfg : Config) : ServiceTypeTemplate = new ServiceTypeTemplate(
     name = svcName,
     domain = cfg.getString("domain"),
     query = if (cfg.hasPath(queryPath)) ServiceJmxConfig.getStringMap(cfg.getObject(queryPath)) else Map.empty,
@@ -67,7 +69,7 @@ case object SingleServiceConfig {
   val svcTypePath = "serviceType"
   val attributesPath = "attributes"
 
-  def apply(svcName: String, cfg: Config) : SingleServiceConfig = new SingleServiceConfig(
+  def apply(svcName : String, cfg : Config) : SingleServiceConfig = new SingleServiceConfig(
     name = svcName,
     svcType = cfg.getString(svcTypePath),
     query = if (cfg.hasPath(queryPath)) ServiceJmxConfig.getStringMap(cfg.getObject(queryPath)) else Map.empty,

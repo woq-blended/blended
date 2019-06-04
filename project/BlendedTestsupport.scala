@@ -19,7 +19,7 @@ object BlendedTestsupport extends ProjectFactory {
       Dependencies.junit
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtil.project,
       BlendedUtilLogging.project,
       BlendedSecurityBoot.project

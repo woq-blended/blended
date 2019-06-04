@@ -9,10 +9,10 @@ trait BlendedSecurityDirectives {
 
   val authenticated : AuthenticationDirective[Subject]
 
-  def requirePermission(permission: String) : Directive0 =
+  def requirePermission(permission : String) : Directive0 =
     requirePermission(BlendedPermission(Some(permission)))
 
-  def requirePermission(permission: BlendedPermission): Directive0
+  def requirePermission(permission : BlendedPermission) : Directive0
 
-  def requireGroup(group: String) : Directive0
+  def requireGroup(group : String) : Directive0
 }

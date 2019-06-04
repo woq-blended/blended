@@ -39,7 +39,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
     newIntervalMillis.toLong.millis
   }
 
-  def starting(streamCfg :StreamControllerConfig, interval : FiniteDuration) : Receive = {
+  def starting(streamCfg : StreamControllerConfig, interval : FiniteDuration) : Receive = {
     case StreamController.Stop =>
       context.stop(self)
 
@@ -59,7 +59,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
   }
 
   def running(
-    streamCfg : StreamControllerConfig, killSwitch: KillSwitch, interval : FiniteDuration, startedAt : Long
+    streamCfg : StreamControllerConfig, killSwitch : KillSwitch, interval : FiniteDuration, startedAt : Long
   ) : Receive = {
     case StreamController.Stop =>
       killSwitch.shutdown()
@@ -96,7 +96,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
     case StreamController.StreamTerminated(_) => context.stop(self)
   }
 
-  def startStream(): (Mat, KillSwitch, Future[Done]) = {
+  def startStream() : (Mat, KillSwitch, Future[Done]) = {
     val ((m, s), d) = source()
       .viaMat(KillSwitches.single)(Keep.both)
       .watchTermination()(Keep.both)
@@ -106,5 +106,5 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
     (m, s, d)
   }
 
-  def source() : Source[T,Mat]
+  def source() : Source[T, Mat]
 }

@@ -15,30 +15,30 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 /**
-  * The JmsAckSourceStage realizes an inbound Stream of FlowMessages consumed from
-  * a given JMS destination. The messages can be consumed using an arbitrary sink
-  * of FlowMessages. The sink must acknowledge or deny the message eventually. If
-  * the message is not acknowledged with a given time frame, the message will be
-  * denied and eventually redelivered.
-  *
-  * A JMS session will only consume one message at a time, the next message will
-  * be consumed only after the previous message of that session has been denied
-  * or acknowledged. The messages that are waiting for acknowldgement are maintained
-  * within a map of (session-id / inflight messages).
-  *
-  * Any exception while consuming a message within a session will cause that session
-  * to close, so that any inflight messages for that session will be redelivered. A
-  * new session will be created automatically for any sessions that have been closed
-  * with such an exception.
-  *
-  * One of the use cases is a retry pattern. In that pattern the message must remain
-  * in the underlying destination for a minimum amount of time (i.e. 5 seconds).
-  * The message receive loop will check the JMSTimestamp against the System.currentTimeMillis
-  * to check wether a message can be passed downstream already.
-  **/
+ * The JmsAckSourceStage realizes an inbound Stream of FlowMessages consumed from
+ * a given JMS destination. The messages can be consumed using an arbitrary sink
+ * of FlowMessages. The sink must acknowledge or deny the message eventually. If
+ * the message is not acknowledged with a given time frame, the message will be
+ * denied and eventually redelivered.
+ *
+ * A JMS session will only consume one message at a time, the next message will
+ * be consumed only after the previous message of that session has been denied
+ * or acknowledged. The messages that are waiting for acknowldgement are maintained
+ * within a map of (session-id / inflight messages).
+ *
+ * Any exception while consuming a message within a session will cause that session
+ * to close, so that any inflight messages for that session will be redelivered. A
+ * new session will be created automatically for any sessions that have been closed
+ * with such an exception.
+ *
+ * One of the use cases is a retry pattern. In that pattern the message must remain
+ * in the underlying destination for a minimum amount of time (i.e. 5 seconds).
+ * The message receive loop will check the JMSTimestamp against the System.currentTimeMillis
+ * to check wether a message can be passed downstream already.
+ */
 final class JmsAckSourceStage(
   name : String,
-  settings: JMSConsumerSettings,
+  settings : JMSConsumerSettings,
   minMessageDelay : Option[FiniteDuration] = None
 )(implicit system : ActorSystem)
   extends GraphStage[SourceShape[FlowEnvelope]] {
@@ -51,10 +51,10 @@ final class JmsAckSourceStage(
 
   private val out = Outlet[FlowEnvelope](s"JmsAckSource($name.out)")
 
-  override def shape: SourceShape[FlowEnvelope] = SourceShape[FlowEnvelope](out)
+  override def shape : SourceShape[FlowEnvelope] = SourceShape[FlowEnvelope](out)
 
   // TODO: Refactor to clean up code
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
+  override def createLogic(inheritedAttributes : Attributes) : GraphStageLogic = {
 
     val logic : GraphStageLogic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes) {
 
@@ -62,17 +62,17 @@ final class JmsAckSourceStage(
       private[this] var consumer : Map[String, MessageConsumer] = Map.empty
       private[this] var nextPoll : Option[Long] = None
 
-      private[this] def addInflight(s : String, env: FlowEnvelope) : Unit = {
+      private[this] def addInflight(s : String, env : FlowEnvelope) : Unit = {
         inflight = inflight + (s -> env)
         settings.log.debug(s"Inflight message count of [$id] count is [${inflight.size}]")
       }
 
       private[this] def removeInflight(s : String) : Unit = {
-        inflight = inflight.filterKeys(_!= s)
+        inflight = inflight.filterKeys(_ != s)
         settings.log.debug(s"Inflight message count of [$id] count is [${inflight.size}]")
       }
 
-      private[this] def addConsumer(s: String, c : MessageConsumer) : Unit = {
+      private[this] def addConsumer(s : String, c : MessageConsumer) : Unit = {
         consumer = consumer + (s -> c)
         settings.log.debug(s"Consumer count of [$id] is [${consumer.size}]")
       }
@@ -91,7 +91,7 @@ final class JmsAckSourceStage(
         }
       }
 
-      override protected def afterSessionClose(session: JmsAckSession): Unit = removeConsumer(session.sessionId)
+      override protected def afterSessionClose(session : JmsAckSession) : Unit = removeConsumer(session.sessionId)
 
       // This is to actually perform the acknowledement if one is pending
       private val acknowledge : FlowEnvelope => JmsAcknowledgeHandler => Try[Unit] = env => handler => Try {
@@ -107,7 +107,7 @@ final class JmsAckSourceStage(
               removeInflight(sessionId)
               poll(sessionId)
             } catch {
-              case t: Throwable =>
+              case t : Throwable =>
                 settings.log.error(t)(s"Failed to acknowledge message [${env.id}] for session [$sessionId]")
                 closeSession(handler.session)
             }
@@ -126,7 +126,7 @@ final class JmsAckSourceStage(
         }
       }
 
-      private[this] def ackQueued(s : String): Unit = {
+      private[this] def ackQueued(s : String) : Unit = {
         inflight.get(s).foreach { env =>
           ackHandler(env).foreach { handler =>
             acknowledge(env)(handler).get
@@ -136,7 +136,7 @@ final class JmsAckSourceStage(
 
       private[this] def poll(sid : String) : Unit = {
 
-        def receive(sid: String) : (Option[Message], FiniteDuration) = {
+        def receive(sid : String) : (Option[Message], FiniteDuration) = {
 
           (jmsSessions.get(sid), consumer.get(sid)) match {
             case (Some(session), Some(c)) =>
@@ -180,48 +180,48 @@ final class JmsAckSourceStage(
         (jmsSessions.get(sid), consumer.get(sid)) match {
           case (Some(session), Some(c)) =>
 
-          try {
-            receive(sid) match {
-              case (Some(message), _) =>
-                val flowMessage : FlowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
+            try {
+              receive(sid) match {
+                case (Some(message), _) =>
+                  val flowMessage : FlowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
 
-                val envelopeId: String = flowMessage.header[String](headerConfig.headerTransId) match {
-                  case None =>
-                    val newId = UUID.randomUUID().toString()
-                    settings.log.trace(s"Created new envelope id [$newId]")
-                    newId
-                  case Some(s) =>
-                    settings.log.trace(s"Reusing transaction id [$s] as envelope id")
-                    s
-                }
+                  val envelopeId : String = flowMessage.header[String](headerConfig.headerTransId) match {
+                    case None =>
+                      val newId = UUID.randomUUID().toString()
+                      settings.log.trace(s"Created new envelope id [$newId]")
+                      newId
+                    case Some(s) =>
+                      settings.log.trace(s"Reusing transaction id [$s] as envelope id")
+                      s
+                  }
 
-                settings.log.info(s"Message received [$envelopeId][${settings.jmsDestination.map(_.asString)}][${session.sessionId}] : $flowMessage")
+                  settings.log.info(s"Message received [$envelopeId][${settings.jmsDestination.map(_.asString)}][${session.sessionId}] : $flowMessage")
 
-                val handler = JmsAcknowledgeHandler(
-                  id = envelopeId,
-                  jmsMessage = message,
-                  session = session,
-                  log = settings.log
-                )
+                  val handler = JmsAcknowledgeHandler(
+                    id = envelopeId,
+                    jmsMessage = message,
+                    session = session,
+                    log = settings.log
+                  )
 
-                val envelope = FlowEnvelope(flowMessage, envelopeId)
-                  .withHeader(headerConfig.headerTransId, envelopeId).get
-                  .withRequiresAcknowledge(true)
-                  .withAckHandler(Some(handler))
+                  val envelope = FlowEnvelope(flowMessage, envelopeId)
+                    .withHeader(headerConfig.headerTransId, envelopeId).get
+                    .withRequiresAcknowledge(true)
+                    .withAckHandler(Some(handler))
 
-                session.resetAck()
-                addInflight(session.sessionId, envelope)
-                handleMessage.invoke(envelope)
-                ackQueued(sid)
-              case (None, nextPoll) =>
-                settings.log.trace(s"No message available for [${session.sessionId}]")
-                scheduleOnce(Poll(sid), nextPoll)
+                  session.resetAck()
+                  addInflight(session.sessionId, envelope)
+                  handleMessage.invoke(envelope)
+                  ackQueued(sid)
+                case (None, nextPoll) =>
+                  settings.log.trace(s"No message available for [${session.sessionId}]")
+                  scheduleOnce(Poll(sid), nextPoll)
+              }
+            } catch {
+              case e : JMSException =>
+                settings.log.warn(s"Error receiving message : [${e.getMessage()}]")
+                closeSession(session)
             }
-          } catch {
-            case e: JMSException =>
-              settings.log.warn(s"Error receiving message : [${e.getMessage()}]")
-              closeSession(session)
-          }
 
           case (_, _) =>
             settings.log.trace(s"Session or consumer not available in [$sid]")
@@ -229,7 +229,7 @@ final class JmsAckSourceStage(
         }
       }
 
-      override protected def createSession(connection: Connection): Try[JmsAckSession] = {
+      override protected def createSession(connection : Connection) : Try[JmsAckSession] = {
 
         try {
           jmsSettings.jmsDestination match {
@@ -254,7 +254,7 @@ final class JmsAckSourceStage(
         }
       }
 
-      override protected def handleTimer: PartialFunction[Any, Unit] = super.handleTimer orElse {
+      override protected def handleTimer : PartialFunction[Any, Unit] = super.handleTimer orElse {
         case Ack(s) =>
           ackQueued(s)
 
@@ -277,14 +277,14 @@ final class JmsAckSourceStage(
 
       private val dest : JmsDestination = jmsSettings.jmsDestination match {
         case Some(d) => d
-        case None => throw new Exception("Destination must be set for Consumer")
+        case None    => throw new Exception("Destination must be set for Consumer")
       }
 
-      protected def pushMessage(msg: FlowEnvelope): Unit = {
+      protected def pushMessage(msg : FlowEnvelope) : Unit = {
         push(out, msg)
       }
 
-      private[this] def createConsumer(session: JmsAckSession) : Unit = {
+      private[this] def createConsumer(session : JmsAckSession) : Unit = {
         settings.log.debug(s"Creating message consumer for session [${session.sessionId}], destination [$dest] and selector [${settings.selector}]")
         session.createConsumer(settings.selector) match {
 
@@ -298,10 +298,10 @@ final class JmsAckSourceStage(
         }
       }
 
-      override protected def onSessionOpened(jmsSession: JmsAckSession): Unit =
+      override protected def onSessionOpened(jmsSession : JmsAckSession) : Unit =
 
         jmsSession match {
-          case session: JmsAckSession =>
+          case session : JmsAckSession =>
             createConsumer(session)
           case _ =>
             throw new IllegalArgumentException(

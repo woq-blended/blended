@@ -13,13 +13,13 @@ import scala.util.control.NonFatal
 
 // Common logic for the Source Stages with Auto Acknowledge and Client Acknowledge
 abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
-  settings: T,
-  inheritedAttributes: Attributes,
+  settings : T,
+  inheritedAttributes : Attributes,
   shape : Shape
 ) extends TimerGraphStageLogic(shape)
   with JmsConnector[S] {
 
-  override protected def jmsSettings: T = settings
+  override protected def jmsSettings : T = settings
 
   // Is the Source currently stopping ?
   private[jms] val stopping = new AtomicBoolean(false)
@@ -39,13 +39,13 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   }
 
   // async callback, so that downstream flow elements can signal an error
-  private[jms] val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
+  private[jms] val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable] { t =>
     settings.log.error(t)(s"Failing stage [$id] : [${t.getMessage()}]")
     failStage(t)
   }
 
   // Start the configured sessions
-  override def preStart(): Unit = {
+  override def preStart() : Unit = {
     settings.log.info(s"Starting JMS Stage [$id] with [$jmsSettings]")
 
     materializer match {
@@ -60,7 +60,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
 
   // Asynchronously close all sessions created on behalf of this Source stage
   // TODO: For the special case of using a BlendedSingleConnectionFactory, handle the ExceptionListener correctly
-  private[jms] def stopSessions(): Unit =
+  private[jms] def stopSessions() : Unit =
     if (stopping.compareAndSet(false, true)) {
       val closeSessionFutures = jmsSessions.values.map { s =>
         val f = s.closeSessionAsync()(system)
@@ -70,7 +70,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
       Future
         .sequence(closeSessionFutures)
         .onComplete { _ =>
-          Option(jmsConnection).map{ jc =>
+          Option(jmsConnection).map { jc =>
             jc.onComplete {
               case Success(connection) =>
                 try {
@@ -91,7 +91,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
         }
     }
 
-  private[jms] def abortSessions(ex: Throwable): Unit =
+  private[jms] def abortSessions(ex : Throwable) : Unit =
     if (stopping.compareAndSet(false, true)) {
       val abortSessionFutures = jmsSessions.values.map { s =>
         val f = s.abortSessionAsync()
@@ -115,11 +115,11 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
 
   // We expose the killswitch, so that the stage can be closed externally
   private[jms] def killSwitch = new KillSwitch {
-    override def shutdown(): Unit = stopSessions()
-    override def abort(ex: Throwable): Unit = abortSessions(ex)
+    override def shutdown() : Unit = stopSessions()
+    override def abort(ex : Throwable) : Unit = abortSessions(ex)
   }
 
-  override def postStop(): Unit = {
+  override def postStop() : Unit = {
     stopSessions()
   }
 }

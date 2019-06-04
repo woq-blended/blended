@@ -60,7 +60,7 @@ class FileArtifactRepoSpec extends FreeSpec with TestFile with Matchers {
   }
 
   "A writable artifact repo" - {
-    
+
     "should upload a file without checksum" in {
       withTestDir() { dir =>
         val path = "p1/p2/f1"
@@ -74,7 +74,7 @@ class FileArtifactRepoSpec extends FreeSpec with TestFile with Matchers {
         repo.findFile(path) should be(Some(new File(dir, path)))
       }
     }
-    
+
     "should fail when uploading a file twice without checksum" in {
       withTestDir() { dir =>
         val path = "p1/p2/f1"
@@ -96,7 +96,7 @@ class FileArtifactRepoSpec extends FreeSpec with TestFile with Matchers {
         }
       }
     }
-    
+
     "should accept a second upload of the same file, when the checksum matches" in {
       pending
     }

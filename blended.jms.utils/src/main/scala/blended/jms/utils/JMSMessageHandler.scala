@@ -4,5 +4,5 @@ import javax.jms.Message
 
 trait JMSMessageHandler {
 
-  def handleMessage(msg: Message) : Option[Throwable]
+  def handleMessage(msg : Message) : Option[Throwable]
 }

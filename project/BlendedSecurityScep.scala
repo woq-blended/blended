@@ -5,7 +5,7 @@ import blended.sbt.Dependencies
 import phoenix.ProjectFactory
 
 object BlendedSecurityScep extends ProjectFactory {
-  private[this] val embeddedPrefixes: Seq[String] = Seq(
+  private[this] val embeddedPrefixes : Seq[String] = Seq(
     "bcprov", "bcpkix", "commons-io", "commons-lang", "commons-codec", "jcip-annotations",
     "jscep"
   )
@@ -32,14 +32,14 @@ object BlendedSecurityScep extends ProjectFactory {
       bundleActivator = s"${projectName}.internal.ScepActivator"
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       embeddedJars := (Compile / externalDependencyClasspath).value
         .map(af => af.data)
         .filter { f => embeddedPrefixes.exists(p => f.getName().startsWith(p)) }
 
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedSecuritySsl.project,
       BlendedUtilLogging.project

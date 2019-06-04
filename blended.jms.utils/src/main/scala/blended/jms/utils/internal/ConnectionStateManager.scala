@@ -15,14 +15,14 @@ import scala.concurrent.duration._
 object ConnectionStateManager {
 
   def props(
-    config: ConnectionConfig,
-    monitor: ActorRef,
-    holder: ConnectionHolder
+    config : ConnectionConfig,
+    monitor : ActorRef,
+    holder : ConnectionHolder
   ) : Props =
     Props(new ConnectionStateManager(config, monitor, holder))
 }
 
-class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder: ConnectionHolder)
+class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, holder : ConnectionHolder)
   extends Actor with ActorLogging {
 
   type StateReceive = ConnectionState => Receive
@@ -56,22 +56,22 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   val controller = context.actorOf(JmsConnectionController.props(holder))
 
   // If something causes an unexpected restart, we want to know
-  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
+  override def preRestart(reason : Throwable, message : Option[Any]) : Unit = {
     log.error(s"Error encountered in Connection State Manager [$provider] : [${reason.getMessage}], restarting ...")
     super.preRestart(reason, message)
   }
 
   // We clean up our JMS connections
-  override def postStop(): Unit = {
+  override def postStop() : Unit = {
     log.info(s"Stopping Connection State Manager for provider [$provider].")
     disconnect(currentState)
     super.postStop()
   }
 
   // The initial state is disconnected
-  override def receive: Actor.Receive = Actor.emptyBehavior
+  override def receive : Actor.Receive = Actor.emptyBehavior
 
-  override def preStart(): Unit = {
+  override def preStart() : Unit = {
     super.preStart()
     switchState(disconnected(), currentState)
     context.system.eventStream.subscribe(self, classOf[ConnectionCommand])
@@ -79,7 +79,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   }
 
   // ---- State: Disconnected
-  def disconnected()(state: ConnectionState) : Receive = LoggingReceive {
+  def disconnected()(state : ConnectionState) : Receive = LoggingReceive {
 
     // Upon a CheckConnection message we will kick off initiating and monitoring the connection
     case cc : CheckConnection =>
@@ -88,7 +88,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   }
 
   // ---- State: Connected
-  def connected()(state: ConnectionState) : Receive = {
+  def connected()(state : ConnectionState) : Receive = {
 
     // we simply eat up the CloseTimeOut messages that might still be going for previous
     // connect attempts
@@ -97,7 +97,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
     // If we are already connected we simply try to ping the underlying connection
     case cc : CheckConnection =>
       pingTimer = None
-      conn.foreach( ping )
+      conn.foreach(ping)
 
     case d @ Disconnect(_) => disconnect(state)
 
@@ -128,7 +128,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   }
 
   // ---- State: Connecting
-  def connecting()(state: ConnectionState) : Receive = {
+  def connecting()(state : ConnectionState) : Receive = {
 
     case cc : CheckConnection =>
       pingTimer = None
@@ -162,7 +162,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   }
 
   // State: Closing
-  def closing()(state: ConnectionState) : Receive = {
+  def closing()(state : ConnectionState) : Receive = {
 
     case cc : CheckConnection =>
       pingTimer = None
@@ -207,18 +207,18 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   // helper methods
 
   // A convenience method to let us know which state we are switching to
-  private[this] def switchState(rec: StateReceive, newState: ConnectionState) : Unit = {
+  private[this] def switchState(rec : StateReceive, newState : ConnectionState) : Unit = {
 
     val nextState = publishEvents(newState, s"Connection State Manager [$vendor:$provider] switching to state [${newState.status}]")
     currentReceive = rec
     currentState = nextState
     monitor ! ConnectionStateChanged(nextState)
-    context.become(LoggingReceive (
+    context.become(LoggingReceive(
       rec(nextState)
         .orElse(jmxOperations(nextState))
         .orElse(handleReconnectRequest(nextState))
-        .orElse(unhandled))
-    )
+        .orElse(unhandled)
+    ))
   }
 
   // A convenience method to capture unhandled messages
@@ -227,7 +227,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   }
 
   // We simply stay in the same state and maintain the list of events
-  def publishEvents(s : ConnectionState, msg: String*) : ConnectionState = {
+  def publishEvents(s : ConnectionState, msg : String*) : ConnectionState = {
 
     msg.foreach(m => log.info(m))
     val tsMsg = msg.map { m => df.format(new Date()) + " " + m }
@@ -245,10 +245,10 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   // in the config has passed.
   // If not, we will try to connect immediately.
 
-  private[this] def initConnection(s: ConnectionState, now : Boolean) : Unit = {
+  private[this] def initConnection(s : ConnectionState, now : Boolean) : Unit = {
 
     val remaining : Double = s.lastDisconnect match {
-      case None => 0
+      case None    => 0
       case Some(l) => config.minReconnect.toMillis - (System.currentTimeMillis() - l.getTime())
     }
 
@@ -278,7 +278,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
     }
   }
 
-  private[this] def connect(state: ConnectionState) : ConnectionState = {
+  private[this] def connect(state : ConnectionState) : ConnectionState = {
 
     var events : List[String] = List(s"Creating connection to JMS provider [$vendor:$provider]")
 
@@ -299,13 +299,13 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
 
     // push the events into the newState in reverse order and set
     // the new state name
-    publishEvents(newState, events.reverse.toArray:_*).copy(
+    publishEvents(newState, events.reverse.toArray : _*).copy(
       status = CONNECTING,
       lastConnectAttempt = Some(lastConnectAttempt)
     )
   }
 
-  private[this] def checkRestartForFailedReconnect(s: ConnectionState, e: Throwable): Boolean = {
+  private[this] def checkRestartForFailedReconnect(s : ConnectionState, e : Throwable) : Boolean = {
 
     var result = false
 
@@ -314,7 +314,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
     if (config.maxReconnectTimeout.isDefined && s.firstReconnectAttempt.isDefined) {
       s.firstReconnectAttempt.foreach { t =>
 
-        val restart : Boolean = config.maxReconnectTimeout.exists{ to =>
+        val restart : Boolean = config.maxReconnectTimeout.exists { to =>
           (System.currentTimeMillis() - t.getTime()).millis > to
         }
 
@@ -346,7 +346,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   // A reconnect is only schedule if we have reached the maximumPingTolerance for the connection
   // Otherwise we schedule a connection check for the retry schedule, which is usually much shorter
   // than the normal connection check
-  private[this] def checkReconnect(s: ConnectionState) : Unit = {
+  private[this] def checkReconnect(s : ConnectionState) : Unit = {
     log.debug(s"Checking reconnect for provider [$vendor:$provider] state [$s] against tolerance [${config.pingTolerance}]")
     if (s.failedPings == config.pingTolerance) {
       reconnect(
@@ -358,13 +358,13 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
     }
   }
 
-  private[this] def reconnect(s: ConnectionState) : Unit = {
+  private[this] def reconnect(s : ConnectionState) : Unit = {
     disconnect(s)
     log.info(s"Restarting connection for [$vendor:$provider] in [${config.minReconnect}]")
     checkConnection(config.minReconnect + 1.seconds)
   }
 
-  private[this] def ping(c: Connection) : Unit = {
+  private[this] def ping(c : Connection) : Unit = {
 
     if (config.pingEnabled) {
       pinger match {

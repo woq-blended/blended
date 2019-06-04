@@ -32,7 +32,7 @@ object BlendedUpdater extends ProjectFactory {
       )
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUpdaterConfigJvm.project,
       BlendedLauncher.project,
       BlendedMgmtBase.project,

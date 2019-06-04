@@ -3,19 +3,19 @@ package blended.samples.jms.internal
 import com.typesafe.config.Config
 
 object JmsSampleConfig {
-  def apply(cfg: Config) : JmsSampleConfig = new JmsSampleConfig(
+  def apply(cfg : Config) : JmsSampleConfig = new JmsSampleConfig(
     destination = cfg.hasPath("destination") match {
-      case true => cfg.getString("destination")
+      case true  => cfg.getString("destination")
       case false => "topic:jmsSample"
     },
 
     producerInterval = cfg.hasPath("producerInterval") match {
-      case true => cfg.getLong("producerInterval")
+      case true  => cfg.getLong("producerInterval")
       case false => 0l
     },
 
     consumeSelector = cfg.hasPath("consumeSelector") match {
-      case true => Some(cfg.getString("consumeSelector"))
+      case true  => Some(cfg.getString("consumeSelector"))
       case false => None
     }
   )

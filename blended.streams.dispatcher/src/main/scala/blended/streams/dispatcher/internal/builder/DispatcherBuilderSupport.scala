@@ -30,29 +30,29 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
   val rtConfigKey : String = classOf[ResourceTypeConfig].getSimpleName
   val outboundCfgKey : String = classOf[OutboundRouteConfig].getSimpleName
 
-  val headerResourceType         = "ResourceType"
+  val headerResourceType = "ResourceType"
 
-  def headerBridgeVendor         : String = header("BridgeVendor")
-  def headerBridgeProvider       : String = header("BridgeProvider")
-  def headerBridgeDest           : String = destHeader(headerConfig.prefix)
+  def headerBridgeVendor : String = header("BridgeVendor")
+  def headerBridgeProvider : String = header("BridgeProvider")
+  def headerBridgeDest : String = destHeader(headerConfig.prefix)
 
-  def headerCbeEnabled           : String = header("CbeEnabled")
+  def headerCbeEnabled : String = header("CbeEnabled")
 
-  def headerEventVendor          : String = header("EventVendor")
-  def headerEventProvider        : String = header("EventProvider")
-  def headerEventDest            : String = header("EventDestination")
-  def headerAutoComplete         : String = header("AutoCompleteStep")
+  def headerEventVendor : String = header("EventVendor")
+  def headerEventProvider : String = header("EventProvider")
+  def headerEventDest : String = header("EventDestination")
+  def headerAutoComplete : String = header("AutoCompleteStep")
 
-  def headerTimeToLive           : String = header("TimeToLive")
+  def headerTimeToLive : String = header("TimeToLive")
 
   /**
-  * Access a typed object in the given envelope and the given key. If an object
-  * for the key with the propert type is present, the given function will be applied
-  * and the result of the function will be returned.
-  * If the object is not present in the envelope or has the wrong type, an exception
-  * will be returned.
-  */
-  def withContextObject[T,R](key : String, env: FlowEnvelope)(f : T => Try[R])(implicit classTag: ClassTag[T]) : Either[FlowEnvelope, R] = {
+   * Access a typed object in the given envelope and the given key. If an object
+   * for the key with the propert type is present, the given function will be applied
+   * and the result of the function will be returned.
+   * If the object is not present in the envelope or has the wrong type, an exception
+   * will be returned.
+   */
+  def withContextObject[T, R](key : String, env : FlowEnvelope)(f : T => Try[R])(implicit classTag : ClassTag[T]) : Either[FlowEnvelope, R] = {
 
     env.getFromContext[T](key).get match {
 
@@ -76,7 +76,7 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
    * the envelope. This is a special case where the result of the given function is also
    * a FlowEnvelope, so that wrapping the result in an Either[...] is not required.
    */
-  def withContextObject[T](key : String, env: FlowEnvelope)(f : T => FlowEnvelope)(implicit classTag: ClassTag[T]) : FlowEnvelope = {
+  def withContextObject[T](key : String, env : FlowEnvelope)(f : T => FlowEnvelope)(implicit classTag : ClassTag[T]) : FlowEnvelope = {
 
     env.getFromContext[T](key).get match {
 
@@ -90,7 +90,7 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
     }
   }
 
-  def worklistItem(env: FlowEnvelope) : Try[WorklistItem] = Try {
+  def worklistItem(env : FlowEnvelope) : Try[WorklistItem] = Try {
     val id = env.header[String](headerCfg.headerBranch).get
     FlowWorklistItem(env, id)
   }

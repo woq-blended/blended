@@ -5,10 +5,10 @@ import blended.util.config.Implicits._
 
 class ConfigLoginModule() extends AbstractLoginModule {
 
-  override protected val moduleName: String = "simple"
+  override protected val moduleName : String = "simple"
 
   @throws[LoginException]
-  override protected def doLogin(): Boolean = {
+  override protected def doLogin() : Boolean = {
 
     val (user, pwd) = extractCredentials()
 
@@ -24,7 +24,7 @@ class ConfigLoginModule() extends AbstractLoginModule {
     true
   }
 
-  override protected def getGroups(user: String): List[String] = {
+  override protected def getGroups(user : String) : List[String] = {
     loginConfig.getConfig(user).getStringList("groups", List.empty)
   }
 }

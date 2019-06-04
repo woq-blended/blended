@@ -26,7 +26,7 @@ object BlendedPrickle extends ProjectFactory {
       )
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       OsgiKeys.embeddedJars := {
         (Compile / externalDependencyClasspath).value.map(_.data)
           .filter { f =>

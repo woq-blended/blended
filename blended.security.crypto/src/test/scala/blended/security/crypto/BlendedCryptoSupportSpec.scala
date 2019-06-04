@@ -18,14 +18,14 @@ class BlendedCryptoSupportSpec extends LoggingFreeSpec
 
     "encrypt and decrypt a given String" in {
 
-      forAll{ s : String =>
+      forAll { s : String =>
         whenever(s.nonEmpty) {
           val encrypted = cs.encrypt(s).get
 
           log.info(s"Encrypted [$s] to [$encrypted]")
 
           encrypted should not be (s)
-          cs.decrypt(encrypted).get should be (s)
+          cs.decrypt(encrypted).get should be(s)
         }
       }
     }

@@ -16,9 +16,9 @@ class DispatcherDestinationResolver(
   bs : DispatcherBuilderSupport
 ) extends FlowHeaderConfigAware with JmsEnvelopeHeader {
 
-  override def headerConfig: FlowHeaderConfig = bs.headerConfig
+  override def headerConfig : FlowHeaderConfig = bs.headerConfig
 
-  override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
+  override def sendParameter(session : Session, env : FlowEnvelope) : Try[JmsSendParameter] = Try {
 
     val internal = registry.internalProvider.get
 

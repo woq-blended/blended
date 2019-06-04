@@ -8,11 +8,11 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
 object ServiceJmxCollector {
-  def props(cfg: OSGIActorConfig, svcConfig: ServiceJmxConfig, server : MBeanServer) =
+  def props(cfg : OSGIActorConfig, svcConfig : ServiceJmxConfig, server : MBeanServer) =
     Props(new ServiceJmxCollector(cfg, svcConfig, server))
 }
 
-class ServiceJmxCollector(cfg: OSGIActorConfig, svcConfig : ServiceJmxConfig, server: MBeanServer) extends OSGIActor(cfg) {
+class ServiceJmxCollector(cfg : OSGIActorConfig, svcConfig : ServiceJmxConfig, server : MBeanServer) extends OSGIActor(cfg) {
 
   case object Tick
 
@@ -20,12 +20,12 @@ class ServiceJmxCollector(cfg: OSGIActorConfig, svcConfig : ServiceJmxConfig, se
 
   val analyser = new ServiceJmxAnalyser(server, svcConfig)
 
-  override def preStart(): Unit = {
+  override def preStart() : Unit = {
     super.preStart()
     self ! Tick
   }
 
-  override def receive: Receive = {
+  override def receive : Receive = {
     case Tick =>
       log.debug("Refreshing Service Information from JMX")
       analyser.analyse().foreach(info => cfg.system.eventStream.publish(info))

@@ -28,7 +28,7 @@ trait CertificateRequestBuilder {
 
     val principal : X500Principal = new X500Principal(cnProvider.commonName().get)
     val signer : X500Principal = issuedBy match {
-      case None => principal
+      case None    => principal
       case Some(c) => c.chain.head.getSubjectX500Principal()
     }
 
@@ -43,7 +43,7 @@ trait CertificateRequestBuilder {
     )
 
     if (cnProvider.alternativeNames().get.nonEmpty) {
-      val altNames : Array[GeneralName] = cnProvider.alternativeNames().get.map { n=>
+      val altNames : Array[GeneralName] = cnProvider.alternativeNames().get.map { n =>
         log.debug(s"Adding alternative dns name [$n] to certificate.")
         new GeneralName(GeneralName.dNSName, n)
       }.toArray

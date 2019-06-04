@@ -20,7 +20,7 @@ import blended.mgmt.repo.WritableArtifactRepo
 import blended.updater.config.util.StreamCopy
 import blended.util.logging.Logger
 
-class FileArtifactRepo(override val repoId: String, baseDir: File)
+class FileArtifactRepo(override val repoId : String, baseDir : File)
   extends ArtifactRepo
   with WritableArtifactRepo {
 
@@ -31,7 +31,7 @@ class FileArtifactRepo(override val repoId: String, baseDir: File)
   /**
    * Only continue when the given `path` is valid.
    */
-  def withCheckedFilePath[T](path: String)(f: File => T): Try[T] = Try {
+  def withCheckedFilePath[T](path : String)(f : File => T) : Try[T] = Try {
     val base = baseDir.toURI().normalize()
     val toCheck = new File(baseDir, path).toURI().normalize()
     if (!toCheck.getPath().startsWith(base.getPath())) sys.error("invalid path given")
@@ -40,7 +40,7 @@ class FileArtifactRepo(override val repoId: String, baseDir: File)
     new File(toCheck)
   }.map(f)
 
-  def findFile(path: String): Option[File] = {
+  def findFile(path : String) : Option[File] = {
     withCheckedFilePath(path) { file =>
       if (file.exists() && file.isFile()) Option(file) else None
     }.getOrElse(None)
@@ -50,7 +50,7 @@ class FileArtifactRepo(override val repoId: String, baseDir: File)
    * Try to find a file under the given path.
    * @return The checksum of the found file or [[None]] if the file was not found.
    */
-  def findFileSha1Checksum(path: String): Option[String] = {
+  def findFileSha1Checksum(path : String) : Option[String] = {
     findFile(path) flatMap { file =>
       val sha1Stream = new DigestInputStream(new BufferedInputStream(new FileInputStream(file)), MessageDigest.getInstance("SHA"))
       try {
@@ -64,18 +64,18 @@ class FileArtifactRepo(override val repoId: String, baseDir: File)
     }
   }
 
-  override def toString(): String = getClass().getSimpleName() +
+  override def toString() : String = getClass().getSimpleName() +
     "(repoId=" + repoId +
     ",baseDir=" + baseDir +
     ")"
 
-  def listFiles(path: String): Iterator[String] = {
+  def listFiles(path : String) : Iterator[String] = {
     val base = baseDir.toURI().normalize()
     withCheckedFilePath(path) { file =>
       if (!file.exists()) Iterator.empty else {
         val fs = file.toPath().getFileSystem()
 
-        def getFiles(dir: Path): Iterator[Path] = {
+        def getFiles(dir : Path) : Iterator[Path] = {
           val files = Files.newDirectoryStream(dir).iterator().asScala
           files.flatMap { f =>
             val isDir = Files.isDirectory(f)
@@ -92,7 +92,7 @@ class FileArtifactRepo(override val repoId: String, baseDir: File)
     }.getOrElse(Iterator.empty)
   }
 
-  override def uploadFile(path: String, fileContent: InputStream, sha1Sum: Option[String]): Try[Unit] =
+  override def uploadFile(path : String, fileContent : InputStream, sha1Sum : Option[String]) : Try[Unit] =
     withCheckedFilePath(path) { file =>
       if (file.exists()) {
         // file already exists
@@ -134,7 +134,7 @@ class FileArtifactRepo(override val repoId: String, baseDir: File)
 
 object FileArtifactRepo {
 
-  def bytesToString(digest: Array[Byte]): String = {
+  def bytesToString(digest : Array[Byte]) : String = {
     import java.lang.StringBuilder
     val result = new StringBuilder(32)
     val f = new Formatter(result)
@@ -142,6 +142,6 @@ object FileArtifactRepo {
     result.toString()
   }
 
-  class ArtifactCollisionException(msg: String) extends RuntimeException(msg)
+  class ArtifactCollisionException(msg : String) extends RuntimeException(msg)
 
 }

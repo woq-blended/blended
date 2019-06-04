@@ -18,7 +18,7 @@ object BlendedHawtioLogin extends ProjectFactory {
       )
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedSecurityBoot.project
     )
   }

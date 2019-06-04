@@ -32,7 +32,7 @@ class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatc
 
         val sslContextFilter = "(type=client)"
 
-        def register(route: ProxyRoute): Unit = {
+        def register(route : ProxyRoute) : Unit = {
           log.debug(s"Registering proxy route [${proxyConfig}] at [$context/${proxyConfig.path}]")
           SimpleHttpContext(s"$context/${proxyConfig.path}", route.proxyRoute).providesService[HttpContext]
           onStop {

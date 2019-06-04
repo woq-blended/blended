@@ -20,7 +20,7 @@ object JmsDestination {
       case 2 => name(0) match {
         case QUEUETAG => JmsQueue(name(1))
         case TOPICTAG => JmsTopic(name(1))
-        case _ => throw new JMSException(s"String representation of JmsDestination must start with either [$QUEUETAG:] or [$TOPICTAG:]")
+        case _        => throw new JMSException(s"String representation of JmsDestination must start with either [$QUEUETAG:] or [$TOPICTAG:]")
       }
       case 3 =>
         if (name(0) == TOPICTAG) {
@@ -37,33 +37,33 @@ object JmsDestination {
     jmsDest match {
       case t : Topic => JmsTopic(t.getTopicName())
       case q : Queue => JmsQueue(q.getQueueName())
-      case _ => throw new IllegalArgumentException(s"Unknown destination type [${jmsDest.getClass().getName()}]")
+      case _         => throw new IllegalArgumentException(s"Unknown destination type [${jmsDest.getClass().getName()}]")
     }
   }
 
-  def asString(jmsDest: JmsDestination) : String = {
+  def asString(jmsDest : JmsDestination) : String = {
     jmsDest match {
-      case q : JmsQueue => q.name
-      case t : JmsTopic => s"${TOPICTAG}${destSeparator}${t.name}"
+      case q : JmsQueue         => q.name
+      case t : JmsTopic         => s"${TOPICTAG}${destSeparator}${t.name}"
       case dt : JmsDurableTopic => s"${TOPICTAG}${destSeparator}:${dt.subscriberName}${destSeparator}${dt.name}"
     }
   }
 }
 
-sealed trait  JmsDestination {
+sealed trait JmsDestination {
   val name : String
   val create : Session => Destination
   val asString : String = JmsDestination.asString(this)
 }
 
 final case class JmsTopic(override val name : String) extends JmsDestination {
-  override val create: Session => Destination = session => session.createTopic(name)
+  override val create : Session => Destination = session => session.createTopic(name)
 }
 
 final case class JmsDurableTopic(override val name : String, subscriberName : String) extends JmsDestination {
-  override val create: Session => Destination = session => session.createTopic(name)
+  override val create : Session => Destination = session => session.createTopic(name)
 }
 
 final case class JmsQueue(override val name : String) extends JmsDestination {
-  override val create: Session => Destination = session => session.createQueue(name)
+  override val create : Session => Destination = session => session.createQueue(name)
 }

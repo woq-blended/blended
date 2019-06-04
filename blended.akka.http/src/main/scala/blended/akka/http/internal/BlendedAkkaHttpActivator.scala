@@ -1,6 +1,6 @@
 package blended.akka.http.internal
 
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 import akka.http.scaladsl.ConnectionContext
 import akka.http.scaladsl.Http
@@ -53,15 +53,16 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
 
       log.debug("Listening for SSLContext registrations of type=server...")
       whenAdvancedServicePresent[SSLContext]("(type=server)") { sslContext =>
-        
+
         log.info(s"Detected an server SSLContext. Starting HTTPS server at [$httpsHost:$httpsPort]")
-        
+
         val https = ConnectionContext.https(sslContext)
         val httpsBindingFuture = Http().bindAndHandle(
           handler = dynamicRoutes.dynamicRoute,
           interface = httpsHost,
           port = httpsPort,
-          connectionContext = https)
+          connectionContext = https
+        )
 
         httpsBindingFuture.onComplete {
           case Success(b) =>

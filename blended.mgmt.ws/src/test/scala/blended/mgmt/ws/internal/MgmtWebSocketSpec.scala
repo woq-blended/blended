@@ -47,9 +47,9 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
 
   private implicit val timeout : FiniteDuration = 3.seconds
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.akka.http" -> new BlendedAkkaHttpActivator(),
     "blended.security" -> new SecurityActivator(),
@@ -62,7 +62,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
   )
 
   // A convenience method to initialize a web sockets client
-  private[this] def wsFlow(token: String)(implicit system: ActorSystem) =
+  private[this] def wsFlow(token : String)(implicit system : ActorSystem) =
     Http().webSocketClientFlow(WebSocketRequest(s"ws://localhost:9995/mgmtws/?token=$token"))
 
   // Just a source that stays open, so that actual traffic can happen
@@ -77,7 +77,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
     f(system)(materializer)
   }
 
-  private[this] def serverKey()(implicit system: ActorSystem, materializer: Materializer) : Try[PublicKey] = Try {
+  private[this] def serverKey()(implicit system : ActorSystem, materializer : Materializer) : Try[PublicKey] = Try {
 
     implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
 
@@ -85,7 +85,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
     val response = request.send()
 
     val r = Await.result(response, 3.seconds)
-    r.code should be (StatusCodes.Ok)
+    r.code should be(StatusCodes.Ok)
 
     val rawString = r.body.right.get
       .replace("-----BEGIN PUBLIC KEY-----\n", "")
@@ -98,7 +98,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
     kf.generatePublic(x509)
   }
 
-  private[this] def login(user: String, password: String)(implicit system: ActorSystem, materializer: Materializer) : Try[Token] = {
+  private[this] def login(user : String, password : String)(implicit system : ActorSystem, materializer : Materializer) : Try[Token] = {
 
     implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
 
@@ -108,11 +108,11 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
     val response = request.send()
     val r = Await.result(response, 3.seconds)
 
-    r.code should be (StatusCodes.Ok)
+    r.code should be(StatusCodes.Ok)
     Token(r.body.right.get, key)
   }
 
-  private[this] def ctInfo(id: String, country: String) : ContainerInfo = ContainerInfo(
+  private[this] def ctInfo(id : String, country : String) : ContainerInfo = ContainerInfo(
     containerId = id,
     properties = Map("country" -> country),
     List.empty,
@@ -130,10 +130,10 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
     } yield ctInfo("id" + i, c)
   }
 
-  private def countryContainer(country: String) : Seq[ContainerInfo] =
+  private def countryContainer(country : String) : Seq[ContainerInfo] =
     containers.filter(_.properties.get("country").contains(country))
 
-  private[this] def postContainer()(implicit system: ActorSystem, materializer: Materializer) : Try[Unit] = Try {
+  private[this] def postContainer()(implicit system : ActorSystem, materializer : Materializer) : Try[Unit] = Try {
 
     implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
 
@@ -152,7 +152,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
     }.toList
   }
 
-  def wsConnect(user: String, password: String)(implicit system : ActorSystem, materializer: Materializer) : (KillSwitch, CompletionStage[java.util.List[Message]]) = {
+  def wsConnect(user : String, password : String)(implicit system : ActorSystem, materializer : Materializer) : (KillSwitch, CompletionStage[java.util.List[Message]]) = {
     val token = login(user, password).get
 
     // We need to set up a kill switch, so that the client can be closed
@@ -185,7 +185,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
 
         // if no token is given in the parameters, a 404 is returned
         val connected = Await.result(resp, 3.seconds)
-        connected.response.status should be (AkkaStatusCodes.NotFound)
+        connected.response.status should be(AkkaStatusCodes.NotFound)
       }
     }
 
@@ -202,7 +202,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
           .run()
 
         val connected = Await.result(resp, 3.seconds)
-        connected.response.status should be (AkkaStatusCodes.Unauthorized)
+        connected.response.status should be(AkkaStatusCodes.Unauthorized)
       }
     }
 
@@ -223,7 +223,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
 
         // We are expecting a Switch Protocol result when the WS client is connected
         val connected = Await.result(resp, 3.seconds)
-        connected.response.status should be (AkkaStatusCodes.SwitchingProtocols)
+        connected.response.status should be(AkkaStatusCodes.SwitchingProtocols)
       }
     }
 

@@ -12,14 +12,14 @@ import blended.mgmt.mock.MockObjects
 import blended.util.logging.Logger
 import de.tototec.cmdoption.CmdlineParser
 
-class MgmtMockClients(config: Config) {
+class MgmtMockClients(config : Config) {
 
   private[this] val log = Logger[MgmtMockClients]
   private[this] val rnd = new Random()
 
   implicit val system = ActorSystem("MgmtMockClients")
 
-  def start(): Unit = {
+  def start() : Unit = {
     log.debug(s"About to start with config: ${config}")
 
     val containerInfos = MockObjects.createContainer(config.clientCount)
@@ -38,7 +38,7 @@ class MgmtMockClients(config: Config) {
     }
   }
 
-  def stop(): Unit = {
+  def stop() : Unit = {
     log.debug("About to stop")
     Await.ready(system.terminate(), Duration(10, TimeUnit.SECONDS))
   }
@@ -47,10 +47,10 @@ class MgmtMockClients(config: Config) {
 
 object MgmtMockClients {
 
-  def main(args: Array[String]): Unit = {
+  def main(args : Array[String]) : Unit = {
     val cf = new Config.Factory()
     val cp = new CmdlineParser(cf)
-    cp.parse(args: _*)
+    cp.parse(args : _*)
 
     if (cf.showHelp) {
       cp.usage()
@@ -63,7 +63,7 @@ object MgmtMockClients {
     app.start()
 
     Runtime.getRuntime().addShutdownHook(new Thread("shutdown-hook-app") {
-      override def run(): Unit = {
+      override def run() : Unit = {
         app.stop()
       }
     })
@@ -71,8 +71,4 @@ object MgmtMockClients {
   }
 
 }
-
-
-
-
 

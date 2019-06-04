@@ -38,10 +38,10 @@ class InboundConfigSpec extends LoggingFreeSpec
 
       val inbound = InboundConfig.create(idSvc, cfg).get
 
-      inbound.name should be ("test")
-      inbound.from should be (JmsQueue("inQueue"))
-      inbound.provider should be (empty)
-      inbound.listener should be (4)
+      inbound.name should be("test")
+      inbound.from should be(JmsQueue("inQueue"))
+      inbound.provider should be(empty)
+      inbound.listener should be(4)
     }
 
     "initialize from a config with placeholders correctly" in {
@@ -62,10 +62,10 @@ class InboundConfigSpec extends LoggingFreeSpec
 
       val inbound = InboundConfig.create(idSvc, cfg).get
 
-      inbound.name should be ("test")
-      inbound.from should be (JmsDurableTopic("de.09999.data.in", "de09999"))
-      inbound.provider should be (Some("de_topic"))
-      inbound.listener should be (4)
+      inbound.name should be("test")
+      inbound.from should be(JmsDurableTopic("de.09999.data.in", "de09999"))
+      inbound.provider should be(Some("de_topic"))
+      inbound.listener should be(4)
     }
 
     "initialize with optional headers correctly" in {
@@ -88,7 +88,7 @@ class InboundConfigSpec extends LoggingFreeSpec
       val inbound = InboundConfig.create(idSvc, cfg).get
 
       inbound.header should have size 1
-      inbound.header.head should be (HeaderProcessorConfig("ResourceType", Some("Test"), true))
+      inbound.header.head should be(HeaderProcessorConfig("ResourceType", Some("Test"), true))
     }
   }
 }

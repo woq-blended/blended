@@ -6,11 +6,10 @@ import blended.util.logging.Logger
 
 import scala.concurrent.duration._
 
-private[jvmrunner]
-class RunningProcess(
-  process: Process,
-  errorsIntoOutput: Boolean,
-  interactive: Boolean,
+private[jvmrunner] class RunningProcess(
+  process : Process,
+  errorsIntoOutput : Boolean,
+  interactive : Boolean,
   shutdownTimeout : FiniteDuration
 ) {
 
@@ -41,8 +40,8 @@ class RunningProcess(
           }
         }
       } catch {
-        case e: IOException => // ignore
-        case e: InterruptedException => // this is ok
+        case e : IOException          => // ignore
+        case e : InterruptedException => // this is ok
       }
     }
   }
@@ -54,7 +53,7 @@ class RunningProcess(
     log.info("Container is started without console read thread ...")
   }
 
-  def waitFor(): Int = {
+  def waitFor() : Int = {
     try {
       process.waitFor
     } finally {
@@ -70,14 +69,14 @@ class RunningProcess(
     val now : Long = System.currentTimeMillis()
     val end : Long = now + t.toMillis
 
-    while(process.isAlive() && System.currentTimeMillis() <= end) {
+    while (process.isAlive() && System.currentTimeMillis() <= end) {
       Thread.sleep(sleepInterval.toMillis)
     }
 
     process.isAlive()
   }
 
-  def stop(): Int = {
+  def stop() : Int = {
 
     log.info("Stopping container JVM ...")
     if (interactive) {
@@ -98,10 +97,10 @@ class RunningProcess(
   }
 
   /**
-    * Starts a new thread which copies an InputStream into an Output stream. Does not close the streams.
-    */
+   * Starts a new thread which copies an InputStream into an Output stream. Does not close the streams.
+   */
 
-  private def asyncCopy(in: InputStream, out: OutputStream, immediately: Boolean = false): Thread =
+  private def asyncCopy(in : InputStream, out : OutputStream, immediately : Boolean = false) : Thread =
     new Thread("StreamCopyThread") {
       setDaemon(true)
 
@@ -109,8 +108,8 @@ class RunningProcess(
         try {
           copy(in, out, immediately)
         } catch {
-          case e: IOException => // ignore
-          case e: InterruptedException => // ok
+          case e : IOException          => // ignore
+          case e : InterruptedException => // ok
         }
         out.flush()
       }
@@ -119,9 +118,9 @@ class RunningProcess(
     }
 
   /**
-    * Copies an InputStream into an OutputStream. Does not close the streams.
-    */
-  private def copy(in: InputStream, out: OutputStream, immediately: Boolean = false): Unit = {
+   * Copies an InputStream into an OutputStream. Does not close the streams.
+   */
+  private def copy(in : InputStream, out : OutputStream, immediately : Boolean = false) : Unit = {
     if (immediately) {
       while (true) {
         if (in.available > 0) {

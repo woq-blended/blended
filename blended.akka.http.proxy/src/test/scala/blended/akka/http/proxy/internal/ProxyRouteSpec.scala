@@ -19,7 +19,7 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 
   val localPort = 9999
 
-  implicit val routeTestTimeout: RouteTestTimeout = RouteTestTimeout(30.seconds)
+  implicit val routeTestTimeout : RouteTestTimeout = RouteTestTimeout(30.seconds)
 
   s"Test against embedded temporary localhost server on port $localPort" - {
     val testRoute = get {
@@ -45,11 +45,11 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
           "Delayed response"
         }
       } ~ { ctx => // ctx =>
-      log.debug("Rejecting: " + ctx)
-      reject(ctx)
-    }
+        log.debug("Rejecting: " + ctx)
+        reject(ctx)
+      }
 
-    def localtest(redirectCount: Int = 0)(f: Route => Unit): Unit = {
+    def localtest(redirectCount : Int = 0)(f : Route => Unit) : Unit = {
       TestServer.withServer(localPort, testRoute) {
         val proxyRoute = new ProxyRoute {
           override val actorSystem = system
@@ -130,13 +130,13 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 
   "Live Proxy Tests (requires internet access)" - {
 
-    def ping(host: String, port: Int) = {
+    def ping(host : String, port : Int) = {
       val socket = new Socket()
       try {
         socket.connect(new InetSocketAddress(host, port), 500)
         true
       } catch {
-        case e: IOException =>
+        case e : IOException =>
           false
       } finally {
         socket.close()

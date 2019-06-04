@@ -31,7 +31,7 @@ class JolokiaClientSpec extends WordSpec
 
       val result : JolokiaSearchResult = good.search(MBeanSearchDef(
         jmxDomain = "java.lang",
-        searchProperties = Map( "type" -> "Memory" )
+        searchProperties = Map("type" -> "Memory")
       )).get
 
       assert(result.mbeanNames.nonEmpty)
@@ -49,13 +49,13 @@ class JolokiaClientSpec extends WordSpec
         parameters = List("true", "true")
       )).get
 
-      assert(result.objectName == "java.lang:type=Threading" )
-      assert(result.operationName == "dumpAllThreads" )
+      assert(result.objectName == "java.lang:type=Threading")
+      assert(result.operationName == "dumpAllThreads")
     }
-    
+
     "Respond with a failure if the rest call fails" in {
 
-      intercept[Exception]{
+      intercept[Exception] {
         bad.version.get
       }
     }

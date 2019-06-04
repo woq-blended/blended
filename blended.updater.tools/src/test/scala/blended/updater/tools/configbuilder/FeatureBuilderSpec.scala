@@ -9,7 +9,7 @@ class FeatureBuilderSpec extends FreeSpec {
     val cp = new CmdlineParser(new FeatureBuilder.Cmdline(), new FeatureBuilder.CmdlineCommon)
     cp.validate()
   }
-  
+
   "--help should succeed" in {
     FeatureBuilder.run(Array("--help"))
   }

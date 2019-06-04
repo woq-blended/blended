@@ -11,23 +11,23 @@ import org.apache.felix.connect.{BlendedPojoBundle, PojoSR, Revision}
 import org.osgi.framework.{Bundle, BundleActivator, Version}
 import scala.collection.JavaConverters._
 
-class BlendedPojoRegistry(config: Map[String, Any]) extends PojoSR(config.asJava) {
+class BlendedPojoRegistry(config : Map[String, Any]) extends PojoSR(config.asJava) {
 
   import org.osgi.framework.Constants._
 
   def startBundle(
-    symbolicName: String,
-    activator: BundleActivator
-  ): Long = {
+    symbolicName : String,
+    activator : BundleActivator
+  ) : Long = {
 
     val url = s"file://$symbolicName"
 
     val revision = new Revision {
-      override def getLastModified: Long = System.currentTimeMillis()
+      override def getLastModified : Long = System.currentTimeMillis()
 
-      override def getEntries: util.Enumeration[String] = Collections.emptyEnumeration()
+      override def getEntries : util.Enumeration[String] = Collections.emptyEnumeration()
 
-      override def getEntry(entryName: String): URL =
+      override def getEntry(entryName : String) : URL =
         getClass().getClassLoader().getResource(entryName)
     }
 
@@ -63,13 +63,13 @@ class BlendedPojoRegistry(config: Map[String, Any]) extends PojoSR(config.asJava
     id
   }
 
-  def serviceRegistry(): ServiceRegistry = {
+  def serviceRegistry() : ServiceRegistry = {
     val field = classOf[PojoSR].getDeclaredField("m_registry")
     field.setAccessible(true)
     field.get(this).asInstanceOf[ServiceRegistry]
   }
 
-  private[this] def getField[T](name: String): T = {
+  private[this] def getField[T](name : String) : T = {
     val field = classOf[PojoSR].getDeclaredField(name)
     field.setAccessible(true)
     field.get(this).asInstanceOf[T]

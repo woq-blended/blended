@@ -1,8 +1,8 @@
 package blended.akka.http.jmsqueue.internal
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future, blocking }
-import scala.util.{ Failure, Success, Try }
+import scala.concurrent.{ExecutionContext, Future, blocking}
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 import akka.http.scaladsl.model._
@@ -16,18 +16,18 @@ trait HttpQueueService {
 
   implicit val eCtxt : ExecutionContext
   val qConfig : HttpQueueConfig
-  def withConnectionFactory[T](vendor: String, provider: String)(f: Option[ConnectionFactory] => T) : T
+  def withConnectionFactory[T](vendor : String, provider : String)(f : Option[ConnectionFactory] => T) : T
 
   private[this] val log = Logger[HttpQueueService]
 
-  private case class ReceiveResult (vendor : String, provider: String, queue: String, msg: Try[Option[Message]])
+  private case class ReceiveResult(vendor : String, provider : String, queue : String, msg : Try[Option[Message]])
 
   private[this] def propsToHeaders(m : Message) : List[HttpHeader] = m.getPropertyNames().asScala.map { key =>
     val realKey = key.toString()
     RawHeader(realKey, m.getObjectProperty(realKey).toString())
   }.toList
 
-  private[this] def messageToResponse(result: ReceiveResult) : HttpResponse = {
+  private[this] def messageToResponse(result : ReceiveResult) : HttpResponse = {
 
     val response = result.msg match {
       case Failure(_) =>
@@ -65,7 +65,7 @@ trait HttpQueueService {
   }
 
   private[this] def performReceive(
-    vendor: String,
+    vendor : String,
     provider : String,
     queue : String
   ) : ConnectionFactory => ReceiveResult = { cf =>
@@ -118,7 +118,7 @@ trait HttpQueueService {
     }
   }
 
-  private[this] def receive(vendor: String, provider: String, queue: String) : HttpResponse = {
+  private[this] def receive(vendor : String, provider : String, queue : String) : HttpResponse = {
 
     withConnectionFactory[HttpResponse](vendor, provider) { ocf : Option[ConnectionFactory] =>
       ocf match {
@@ -127,7 +127,7 @@ trait HttpQueueService {
           log.warn(msg)
           messageToResponse(ReceiveResult(vendor, provider, queue, Failure(new Exception(msg))))
         case Some(cf) =>
-          messageToResponse(performReceive(vendor,provider,queue)(cf))
+          messageToResponse(performReceive(vendor, provider, queue)(cf))
       }
     }
   }
@@ -140,11 +140,11 @@ trait HttpQueueService {
 
           path match {
             case qPath :: queue :: Nil =>
-              qConfig.httpQueues.find{ case ( (v, p), c) => c.path == qPath } match {
+              qConfig.httpQueues.find { case ((v, p), c) => c.path == qPath } match {
                 case None =>
                   log.warn(s"No queues configured for path [$qPath].")
                   complete(StatusCodes.Unauthorized)
-                case Some(((v,p),c)) =>
+                case Some(((v, p), c)) =>
                   if (c.queueNames.contains(queue)) {
                     complete(receive(v, p, queue))
                   } else {
@@ -161,5 +161,4 @@ trait HttpQueueService {
     }
   }
 }
-
 

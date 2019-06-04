@@ -14,7 +14,7 @@ object BlendedCamelUtils extends ProjectFactory {
       Dependencies.slf4j
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project
     )
   }

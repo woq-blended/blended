@@ -24,7 +24,7 @@ class TrustStoreRefresherSpec extends LoggingFreeSpec
 
       val trustStore : Option[MemoryKeystore] = new TrustStoreRefresher(ms).refreshTruststore().get
 
-      trustStore should be (empty)
+      trustStore should be(empty)
     }
 
     "update the truststore with all missing root certificates from a given key store" in {
@@ -36,11 +36,11 @@ class TrustStoreRefresherSpec extends LoggingFreeSpec
       System.setProperty(SslContextProvider.propTrustStore, f.getAbsolutePath())
 
       val trustStore : Option[MemoryKeystore] = new TrustStoreRefresher(ms).refreshTruststore().get
-      trustStore should be (defined)
-      trustStore.get.certificates should have size(1)
+      trustStore should be(defined)
+      trustStore.get.certificates should have size (1)
 
       val updated : MemoryKeystore = new JavaKeystore(f, pwd.toCharArray(), None).loadKeyStore().get
-      updated.certificates should have size(1)
+      updated.certificates should have size (1)
     }
 
     "do not update the truststore if all root certificates from a given keystore already exist" in {
@@ -54,11 +54,11 @@ class TrustStoreRefresherSpec extends LoggingFreeSpec
       System.setProperty(SslContextProvider.propTrustStore, f.getAbsolutePath())
 
       val trustStore : Option[MemoryKeystore] = new TrustStoreRefresher(ms).refreshTruststore().get
-      trustStore should be (defined)
-      trustStore.get.certificates should have size(1)
+      trustStore should be(defined)
+      trustStore.get.certificates should have size (1)
 
       val updated : MemoryKeystore = new JavaKeystore(f, pwd.toCharArray(), None).loadKeyStore().get
-      updated.certificates should have size(1)
+      updated.certificates should have size (1)
     }
   }
 

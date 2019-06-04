@@ -44,25 +44,25 @@ object StreamController {
 
   case object Start
   case object Stop
-  case class Abort(t: Throwable)
+  case class Abort(t : Throwable)
   case class StreamTerminated(exception : Option[Throwable])
 
-  def props[T, Mat](src : Source[T, Mat], streamCfg : StreamControllerConfig)(implicit system : ActorSystem, materializer: Materializer) : Props =
+  def props[T, Mat](src : Source[T, Mat], streamCfg : StreamControllerConfig)(implicit system : ActorSystem, materializer : Materializer) : Props =
     Props(new AbstractStreamController[T, Mat](streamCfg) {
-      override def source(): Source[T, Mat] = src
+      override def source() : Source[T, Mat] = src
     })
 }
 
-abstract class AbstractStreamController[T, Mat](streamCfg: StreamControllerConfig)(implicit system : ActorSystem, materializer: Materializer)
+abstract class AbstractStreamController[T, Mat](streamCfg : StreamControllerConfig)(implicit system : ActorSystem, materializer : Materializer)
   extends Actor
   with StreamControllerSupport[T, Mat] {
 
   private[this] val log = Logger(getClass().getName())
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
 
-  override def preStart(): Unit = self ! StreamController.Start
+  override def preStart() : Unit = self ! StreamController.Start
 
-  override def receive: Receive = starting(streamCfg, streamCfg.minDelay)
+  override def receive : Receive = starting(streamCfg, streamCfg.minDelay)
 
-  override def toString: String = s"${getClass().getSimpleName()}($streamCfg)"
+  override def toString : String = s"${getClass().getSimpleName()}($streamCfg)"
 }

@@ -1,9 +1,9 @@
 package blended.mgmt.agent.internal
 
-import scala.util.{ Failure, Try }
+import scala.util.{Failure, Try}
 
 import akka.actor.Props
-import blended.akka.{ OSGIActor, OSGIActorConfig }
+import blended.akka.{OSGIActor, OSGIActorConfig}
 import blended.updater.config.ContainerInfo
 import blended.util.logging.Logger
 
@@ -26,13 +26,13 @@ import blended.util.logging.Logger
  * The target URL of the management container is configured with the `registryUrl` config entry.
  *
  */
-class OsgiMgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with MgmtReporter {
+class OsgiMgmtReporter(cfg : OSGIActorConfig) extends OSGIActor(cfg) with MgmtReporter {
 
   import MgmtReporter._
 
   private[this] val log = Logger[OsgiMgmtReporter]
 
-  val config: Try[MgmtReporterConfig] = MgmtReporterConfig.fromConfig(cfg.config) match {
+  val config : Try[MgmtReporterConfig] = MgmtReporterConfig.fromConfig(cfg.config) match {
     case f @ Failure(e) =>
       log.warn(e)("Incomplete management reporter config. Disabled connection to management server.")
       f
@@ -43,12 +43,12 @@ class OsgiMgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with MgmtRep
 
   private[this] val idSvc = cfg.idSvc
 
-  protected def createContainerInfo: ContainerInfo =
+  protected def createContainerInfo : ContainerInfo =
     ContainerInfo(idSvc.uuid, idSvc.properties, serviceInfos.values.toList, profileInfo.profiles, System.currentTimeMillis(), Nil)
 
 }
 
 object OsgiMgmtReporter {
 
-  def props(cfg: OSGIActorConfig): Props = Props(new OsgiMgmtReporter(cfg))
+  def props(cfg : OSGIActorConfig) : Props = Props(new OsgiMgmtReporter(cfg))
 }

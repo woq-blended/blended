@@ -35,7 +35,7 @@ class HttpQueueServiceSpec extends FreeSpec
 
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
 
-  override protected def afterAll(): Unit = {
+  override protected def afterAll() : Unit = {
     stopBroker(broker)
   }
 
@@ -45,36 +45,36 @@ class HttpQueueServiceSpec extends FreeSpec
   private val queues : List[String] = List("Queue1", "Queue2")
 
   private val route : Route = new HttpQueueService {
-    override implicit val eCtxt: ExecutionContext = system.dispatcher
-    override val qConfig: HttpQueueConfig = qCfg
+    override implicit val eCtxt : ExecutionContext = system.dispatcher
+    override val qConfig : HttpQueueConfig = qCfg
 
-    override def withConnectionFactory[T](vendor: String, provider: String)(f: Option[ConnectionFactory] => T): T = f(Some(cf))
+    override def withConnectionFactory[T](vendor : String, provider : String)(f : Option[ConnectionFactory] => T) : T = f(Some(cf))
   }.httpRoute
 
   "The Http Queue Service should" - {
 
     "respond with a bad request if the url does not match [provider/queue]" in {
       Get("/foo") ~> route ~> check {
-        response.status should be (StatusCodes.BadRequest)
+        response.status should be(StatusCodes.BadRequest)
       }
     }
 
     "respond with Unauthorised if the requested Queue is not configured" in {
       Get("/cc_queue/bar") ~> route ~> check {
-        response.status should be (StatusCodes.Unauthorized)
+        response.status should be(StatusCodes.Unauthorized)
       }
     }
 
     "respond with Unauthorised if the JMS provider is unknown or doesn't have any queues configured" in {
       Get("/foo/bar") ~> route ~> check {
-        response.status should be (StatusCodes.Unauthorized)
+        response.status should be(StatusCodes.Unauthorized)
       }
     }
 
     "respond with an empty response if no msg is available" in {
-      queues.foreach{ q =>
+      queues.foreach { q =>
         Get(s"/activemq/$q") ~> route ~> check {
-          response.status should be (StatusCodes.NoContent)
+          response.status should be(StatusCodes.NoContent)
         }
       }
     }
@@ -95,16 +95,16 @@ class HttpQueueServiceSpec extends FreeSpec
 
       Get(s"/activemq/Queue1") ~> route ~> check {
         val r = response
-        r.status should be (StatusCodes.OK)
-        r.entity.contentType should be (ContentTypes.`text/plain(UTF-8)`)
+        r.status should be(StatusCodes.OK)
+        r.entity.contentType should be(ContentTypes.`text/plain(UTF-8)`)
 
         val g = r.entity.dataBytes
           .toMat(Sink.seq)(Keep.right)
 
         val vf = r.entity.dataBytes.toMat(Sink.seq[ByteString])(Keep.right).run()
 
-        val v : ByteString = Await.result(vf, 1.second).foldLeft(ByteString("")){ case (c, e) => c.concat(e) }
-        v should be (ByteString(msg))
+        val v : ByteString = Await.result(vf, 1.second).foldLeft(ByteString("")) { case (c, e) => c.concat(e) }
+        v should be(ByteString(msg))
       }
     }
 
@@ -123,14 +123,14 @@ class HttpQueueServiceSpec extends FreeSpec
 
       Get(s"/activemq/Queue1") ~> route ~> check {
         val r = response
-        r.status should be (StatusCodes.OK)
-        r.entity.contentType should be (ContentTypes.`application/octet-stream`)
+        r.status should be(StatusCodes.OK)
+        r.entity.contentType should be(ContentTypes.`application/octet-stream`)
 
         val g = r.entity.dataBytes.toMat(Sink.seq)(Keep.right)
         val vf = g.run()
 
-        val v : ByteString = Await.result(vf, 1.second).foldLeft(ByteString("")){ case (c, e) => c.concat(e) }
-        v should be (ByteString(msg))
+        val v : ByteString = Await.result(vf, 1.second).foldLeft(ByteString("")) { case (c, e) => c.concat(e) }
+        v should be(ByteString(msg))
 
       }
     }

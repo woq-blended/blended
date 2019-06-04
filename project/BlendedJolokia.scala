@@ -24,7 +24,7 @@ object BlendedJolokia extends ProjectFactory {
       )
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / Keys.javaOptions += {
         val jarFile = Keys.dependencyClasspathAsJars.in(Test).value
           .map(_.data).find(f => f.getName().startsWith("jolokia-jvm-")).get
@@ -33,7 +33,7 @@ object BlendedJolokia extends ProjectFactory {
       }
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project,
       BlendedTestsupport.project % Test
     )

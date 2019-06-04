@@ -14,7 +14,7 @@ trait ConfigConverter {
 
   private[this] val log = Logger[ConfigConverter]
 
-  def runtimeConfigToLauncherConfig(resolvedRuntimeConfig: ResolvedRuntimeConfig, profileDir: String): LauncherConfig = {
+  def runtimeConfigToLauncherConfig(resolvedRuntimeConfig : ResolvedRuntimeConfig, profileDir : String) : LauncherConfig = {
     import blended.launcher.config.LauncherConfig._
 
     val bundlePrefix = s"${profileDir}/bundles"
@@ -26,7 +26,8 @@ trait ConfigConverter {
         BundleConfig(
           location = s"${bundlePrefix}/${bc.jarName.getOrElse(runtimeConfig.resolveFileName(bc.url).get)}",
           start = bc.start,
-          startLevel = bc.startLevel.getOrElse(runtimeConfig.defaultStartLevel))
+          startLevel = bc.startLevel.getOrElse(runtimeConfig.defaultStartLevel)
+        )
       }.
       distinct
 
@@ -46,7 +47,7 @@ trait ConfigConverter {
     )
   }
 
-  def launcherConfigToRuntimeConfig(launcherConfig: LauncherConfig, missingPlaceholder: String): RuntimeConfig = {
+  def launcherConfigToRuntimeConfig(launcherConfig : LauncherConfig, missingPlaceholder : String) : RuntimeConfig = {
     import RuntimeConfigCompanion._
 
     RuntimeConfig(

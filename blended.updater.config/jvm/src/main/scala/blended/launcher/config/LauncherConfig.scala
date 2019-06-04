@@ -8,13 +8,14 @@ import scala.collection.JavaConverters._
 import blended.updater.config.util.ConfigPropertyMapConverter
 
 case class LauncherConfig(
-    frameworkJar: String,
-    systemProperties: Map[String, String],
-    frameworkProperties: Map[String, String],
-    startLevel: Int,
-    defaultStartLevel: Int,
-    bundles: Seq[LauncherConfig.BundleConfig],
-    branding: Map[String, String]) {
+  frameworkJar : String,
+  systemProperties : Map[String, String],
+  frameworkProperties : Map[String, String],
+  startLevel : Int,
+  defaultStartLevel : Int,
+  bundles : Seq[LauncherConfig.BundleConfig],
+  branding : Map[String, String]
+) {
 
   override def toString = s"${getClass().getSimpleName()}(frameworkJar=${frameworkJar},systemProperties=${systemProperties}" +
     s",frameworkProperties=${frameworkProperties},startLevel=${startLevel},defaultStartLevel=${defaultStartLevel}" +
@@ -23,11 +24,11 @@ case class LauncherConfig(
 
 object LauncherConfig {
 
-  case class BundleConfig(location: String, start: Boolean = false, startLevel: Int) {
+  case class BundleConfig(location : String, start : Boolean = false, startLevel : Int) {
 
     private[this] lazy val prettyPrint = s"${getClass.getSimpleName}(location=$location, autoStart=$start, startLevel=$startLevel)"
 
-    override def toString: String = prettyPrint
+    override def toString : String = prettyPrint
   }
 
   private[this] val ConfigPrefix = "blended.launcher.Launcher"
@@ -36,7 +37,7 @@ object LauncherConfig {
    * Read and validate the given config object.
    * @return A valid [LauncherConfig] read from the given config.
    */
-  def read(config: Config): LauncherConfig = {
+  def read(config : Config) : LauncherConfig = {
 
     val optionals = ConfigFactory.parseResources(getClass(), "LauncherConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     val reference = ConfigFactory.parseResources(getClass(), "LauncherConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
@@ -66,12 +67,12 @@ object LauncherConfig {
    * Read and validate the given file.
    * @return A valid [LauncherConfig].
    */
-  def read(file: File): LauncherConfig = {
+  def read(file : File) : LauncherConfig = {
     val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).getConfig(ConfigPrefix).resolve()
     read(config)
   }
 
-  def toConfig(launcherConfig: LauncherConfig): Config = {
+  def toConfig(launcherConfig : LauncherConfig) : Config = {
     val config = Map(
       "frameworkBundle" -> launcherConfig.frameworkJar,
       "systemProperties" -> ConfigPropertyMapConverter.propertyMapToConfigValue(launcherConfig.systemProperties),

@@ -23,7 +23,7 @@ class JAASSecurityDirectivesSpec
     "with an security manager" - {
 
       val secDirectives = new JAASSecurityDirectives {
-        override val mgr: BlendedPermissionManager = new GroupPermissionManager()
+        override val mgr : BlendedPermissionManager = new GroupPermissionManager()
       }
 
       import secDirectives._
@@ -72,7 +72,7 @@ class JAASSecurityDirectivesSpec
 
   }
 
-  override protected def beforeAll(): Unit = {
+  override protected def beforeAll() : Unit = {
     super.beforeAll()
     Configuration.setConfiguration(new DummyLoginConfiguration())
   }

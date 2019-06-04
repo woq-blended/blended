@@ -8,9 +8,9 @@ import scala.io.Source
 import scala.util.Success
 
 class RuntimeConfigTest
-    extends FreeSpecLike
-    with Matchers
-    with TestFile {
+  extends FreeSpecLike
+  with Matchers
+  with TestFile {
 
   implicit val deletePolicy = TestFile.DeleteWhenNoFailure
 

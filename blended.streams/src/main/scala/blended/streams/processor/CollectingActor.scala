@@ -9,7 +9,7 @@ import scala.concurrent.{Future, Promise}
 import scala.reflect.ClassTag
 import scala.util.Success
 
-object  Collector {
+object Collector {
 
   def apply[T](name : String)(collected : T => Unit)(implicit system : ActorSystem, clazz : ClassTag[T]) : Collector[T] = {
     val p = Promise[List[T]]
@@ -18,7 +18,7 @@ object  Collector {
   }
 }
 
-case class Collector[T] (
+case class Collector[T](
   name : String,
   result : Future[List[T]],
   sink : Sink[T, _],
@@ -30,14 +30,14 @@ object CollectingActor {
   object GetMessages
 
   def props[T](
-    name: String, promise : Promise[List[T]]
+    name : String, promise : Promise[List[T]]
   )(collected : T => Unit)(implicit clazz : ClassTag[T]) : Props =
     Props(new CollectingActor[T](name, promise)(collected))
 }
 
 class CollectingActor[T](
-  name: String,
-  promise: Promise[List[T]]
+  name : String,
+  promise : Promise[List[T]]
 )(
   collected : T => Unit
 )(implicit clazz : ClassTag[T]) extends Actor {
@@ -45,7 +45,7 @@ class CollectingActor[T](
   private val log = Logger(getClass().getName())
   private val messages = mutable.Buffer.empty[T]
 
-  override def receive: Receive = {
+  override def receive : Receive = {
 
     case CollectingActor.GetMessages =>
       sender() ! messages.toList

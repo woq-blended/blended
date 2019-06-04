@@ -25,7 +25,7 @@ object BlendedMgmtWs extends ProjectFactory {
       exportPackage = Seq()
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project,
       BlendedAkkaHttp.project,
       BlendedSecurityLoginApi.project,

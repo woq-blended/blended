@@ -96,7 +96,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
       val json = Pickle.intoString(action)
 
-      val action2: ActivateProfile = Unpickle[ActivateProfile].fromString(json).get
+      val action2 : ActivateProfile = Unpickle[ActivateProfile].fromString(json).get
       action2.isInstanceOf[ActivateProfile] should be(true)
       action2.isInstanceOf[UpdateAction] should be(true)
 
@@ -113,10 +113,10 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       val overlay = OverlayRef("myOverlay", "1.0")
       val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
 
-      val json = Pickle.intoString(action: UpdateAction)
+      val json = Pickle.intoString(action : UpdateAction)
       log.info("json: " + json)
 
-      val action2: UpdateAction = Unpickle[UpdateAction].fromString(json).get
+      val action2 : UpdateAction = Unpickle[UpdateAction].fromString(json).get
       action2.isInstanceOf[ActivateProfile] should be(true)
       action2.isInstanceOf[UpdateAction] should be(true)
 
@@ -215,12 +215,13 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
     import TestData._
 
-    def testMapping[T: ClassTag](implicit
-      arb: Arbitrary[T],
-      u: Unpickler[T],
-      p: Pickler[T]): Unit = {
+    def testMapping[T : ClassTag](implicit
+      arb : Arbitrary[T],
+      u : Unpickler[T],
+      p : Pickler[T]
+    ) : Unit = {
       classTag[T].runtimeClass.getSimpleName in logException {
-        forAll { d: T =>
+        forAll { d : T =>
           val backAndForth = Unpickle[T].fromString(Pickle.intoString(d))
           // log.info(s"data: [${backAndForth}]")
           assert(backAndForth === Success(d))
@@ -248,7 +249,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     // testMapping(mapRemoteContainerState, unmapRemoteContainerState)
   }
 
-  def logException[T](f: => T): T = try {
+  def logException[T](f : => T) : T = try {
     f
   } catch {
     case NonFatal(e) =>

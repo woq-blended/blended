@@ -11,42 +11,42 @@ class DummyConnection extends Connection {
   var clientId : String = "clientId"
   var el : ExceptionListener = _
 
-  override def createSession(b: Boolean, i: Int): Session = ???
+  override def createSession(b : Boolean, i : Int) : Session = ???
 
   override def getClientID() : String = clientId
 
-  override def setClientID(s: String): Unit = clientId = s
+  override def setClientID(s : String) : Unit = clientId = s
 
-  override def getMetaData: ConnectionMetaData = ???
+  override def getMetaData : ConnectionMetaData = ???
 
-  override def getExceptionListener: ExceptionListener = el
+  override def getExceptionListener : ExceptionListener = el
 
-  override def setExceptionListener(exceptionListener: ExceptionListener): Unit = el = exceptionListener
+  override def setExceptionListener(exceptionListener : ExceptionListener) : Unit = el = exceptionListener
 
-  override def start(): Unit = {}
+  override def start() : Unit = {}
 
-  override def stop(): Unit = {}
+  override def stop() : Unit = {}
 
-  override def close(): Unit = {}
+  override def close() : Unit = {}
 
-  override def createConnectionConsumer(destination: Destination, s: String, serverSessionPool: ServerSessionPool, i: Int): ConnectionConsumer = ???
+  override def createConnectionConsumer(destination : Destination, s : String, serverSessionPool : ServerSessionPool, i : Int) : ConnectionConsumer = ???
 
-  override def createDurableConnectionConsumer(topic: Topic, s: String, s1: String, serverSessionPool: ServerSessionPool, i: Int): ConnectionConsumer = ???
+  override def createDurableConnectionConsumer(topic : Topic, s : String, s1 : String, serverSessionPool : ServerSessionPool, i : Int) : ConnectionConsumer = ???
 }
 
-class DummyHolder(f : () => Connection)(implicit system: ActorSystem)
+class DummyHolder(f : () => Connection)(implicit system : ActorSystem)
   extends ConnectionHolder(BlendedJMSConnectionConfig.defaultConfig) {
 
-  override val vendor: String = "dummy"
-  override val provider: String = "dummy"
+  override val vendor : String = "dummy"
+  override val provider : String = "dummy"
 
-  override def getConnectionFactory(): ConnectionFactory = ???
+  override def getConnectionFactory() : ConnectionFactory = ???
 
   private[this] var conn : Option[BlendedJMSConnection] = None
 
-  override def getConnection(): Option[BlendedJMSConnection] = conn
+  override def getConnection() : Option[BlendedJMSConnection] = conn
 
-  override def connect(): Connection = conn match {
+  override def connect() : Connection = conn match {
     case Some(c) => c
     case None =>
       val c = new BlendedJMSConnection(f())
@@ -54,8 +54,8 @@ class DummyHolder(f : () => Connection)(implicit system: ActorSystem)
       c
   }
 
-  override def close(): Try[Unit] = Try {
-    conn.foreach{ c => c.connection.close() }
+  override def close() : Try[Unit] = Try {
+    conn.foreach { c => c.connection.close() }
     conn = None
   }
 }

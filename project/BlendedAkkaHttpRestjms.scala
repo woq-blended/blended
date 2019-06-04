@@ -27,7 +27,7 @@ object BlendedAkkaHttpRestjms extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedCamelUtils.project,
       BlendedDomino.project,
       BlendedContainerContextApi.project,

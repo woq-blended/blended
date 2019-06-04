@@ -14,7 +14,7 @@ import javax.naming.{Context, InitialContext}
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
-abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: ActorSystem) {
+abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : ActorSystem) {
 
   val vendor : String = config.vendor
   val provider : String = config.provider
@@ -44,7 +44,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: Acto
             val cf : ConnectionFactory = getConnectionFactory()
 
             val c = config.defaultUser match {
-              case None => cf.createConnection()
+              case None       => cf.createConnection()
               case Some(user) => cf.createConnection(user, config.defaultPassword.getOrElse(null))
             }
 
@@ -52,7 +52,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: Acto
               c.setClientID(config.clientId)
 
               c.setExceptionListener(new ExceptionListener {
-                override def onException(e: JMSException): Unit = {
+                override def onException(e : JMSException) : Unit = {
                   log.warn(s"Exception encountered in connection for provider [$vendor:$provider] : ${e.getMessage()}")
                   system.eventStream.publish(Reconnect(vendor, provider, Some(e)))
                 }
@@ -107,7 +107,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: Acto
 
 class JndiConnectionHolder(
   config : ConnectionConfig
-)(implicit system: ActorSystem) extends ConnectionHolder(config) {
+)(implicit system : ActorSystem) extends ConnectionHolder(config) {
 
   private[this] val log : Logger = Logger[JndiConnectionHolder]
 
@@ -115,10 +115,11 @@ class JndiConnectionHolder(
     val envMap = new util.Hashtable[String, Object]()
 
     val cfgMap : Map[String, String] =
-      config.properties ++ (config.ctxtClassName.map( c => (Context.INITIAL_CONTEXT_FACTORY -> c) ).toMap)
+      config.properties ++ (config.ctxtClassName.map(c => (Context.INITIAL_CONTEXT_FACTORY -> c)).toMap)
 
-    cfgMap.foreach { case (k,v) =>
-      envMap.put(k,v)
+    cfgMap.foreach {
+      case (k, v) =>
+        envMap.put(k, v)
     }
 
     log.info(s"Initial context properties [${cfgMap.mkString(", ")}]")
@@ -126,7 +127,7 @@ class JndiConnectionHolder(
     envMap
   }
 
-  override def getConnectionFactory(): ConnectionFactory = {
+  override def getConnectionFactory() : ConnectionFactory = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
@@ -135,7 +136,7 @@ class JndiConnectionHolder(
     try {
 
       val (name, contextFactoryClass) = (config.jndiName, config.ctxtClassName) match {
-        case (Some(n), Some(c)) => (n,c)
+        case (Some(n), Some(c)) => (n, c)
         case (_, _) =>
           throw new JMSException(s"Context Factory class and JNDI name have to be defined for JNDI lookup [$vendor:$provider].")
       }
@@ -154,7 +155,7 @@ class JndiConnectionHolder(
         val ex : JMSException = new JMSException("Could not lookup ConnectionFactory")
         throw ex
     } finally {
-      context.foreach{ c =>
+      context.foreach { c =>
         log.info(s"Closing Initial Context Factory [${config.ctxtClassName}] : [${config.jndiName}]")
         c.close()
       }
@@ -164,12 +165,12 @@ class JndiConnectionHolder(
 }
 
 class ReflectionConfigHolder(
-  config: ConnectionConfig
-)(implicit system: ActorSystem) extends ConnectionHolder(config) {
+  config : ConnectionConfig
+)(implicit system : ActorSystem) extends ConnectionHolder(config) {
 
   private[this] val log : Logger = Logger[ReflectionConfigHolder]
 
-  override def getConnectionFactory(): ConnectionFactory = {
+  override def getConnectionFactory() : ConnectionFactory = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
@@ -184,9 +185,10 @@ class ReflectionConfigHolder(
           Thread.currentThread().getContextClassLoader().loadClass(c).newInstance().asInstanceOf[ConnectionFactory]
       }
 
-      config.properties.foreach { case (k, v) =>
-        log.info(s"Setting property [$k] for connection factory [$vendor:$provider] to [$v].")
-        ReflectionHelper.setProperty(cf, v, k)
+      config.properties.foreach {
+        case (k, v) =>
+          log.info(s"Setting property [$k] for connection factory [$vendor:$provider] to [$v].")
+          ReflectionHelper.setProperty(cf, v, k)
       }
 
       cf
@@ -202,8 +204,8 @@ class ReflectionConfigHolder(
 }
 
 class FactoryConfigHolder(
-  config: ConnectionConfig,
+  config : ConnectionConfig,
   cf : ConnectionFactory
-)(implicit system: ActorSystem) extends ConnectionHolder(config) {
-  override def getConnectionFactory(): ConnectionFactory = cf
+)(implicit system : ActorSystem) extends ConnectionHolder(config) {
+  override def getConnectionFactory() : ConnectionFactory = cf
 }

@@ -24,7 +24,7 @@ trait AmqBrokerSupport {
     Some(b)
   }
 
-  def stopBroker(broker: Option[BrokerService]) : Unit = {
+  def stopBroker(broker : Option[BrokerService]) : Unit = {
     broker.foreach { b =>
       b.stop()
       b.waitUntilStopped()

@@ -4,20 +4,20 @@ import java.io.File
 
 import scala.util.Try
 
-import blended.updater.config.{ ConfigWriter, OverlayConfig, OverlayConfigCompanion }
+import blended.updater.config.{ConfigWriter, OverlayConfig, OverlayConfigCompanion}
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 
-class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPersistor {
+class FileSystemOverlayConfigPersistor(storageDir : File) extends OverlayConfigPersistor {
 
   private[this] val log = Logger[FileSystemOverlayConfigPersistor]
 
-  private[this] var overlayConfigs: Map[File, OverlayConfig] = Map()
-  private[this] var initalized: Boolean = false
+  private[this] var overlayConfigs : Map[File, OverlayConfig] = Map()
+  private[this] var initalized : Boolean = false
 
-  def overlayConfigFileName(oc: OverlayConfig): String = s"${oc.name}-${oc.version}.conf"
+  def overlayConfigFileName(oc : OverlayConfig) : String = s"${oc.name}-${oc.version}.conf"
 
-  def initialize(): Unit = {
+  def initialize() : Unit = {
     log.debug(s"About to initialize overlay config persistor for storageDir: ${storageDir}")
     overlayConfigs = if (!storageDir.exists()) {
       Map()
@@ -37,7 +37,7 @@ class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPe
     initalized = true
   }
 
-  override def persistOverlayConfig(overlayConfig: OverlayConfig): Unit = {
+  override def persistOverlayConfig(overlayConfig : OverlayConfig) : Unit = {
     if (!initalized) initialize()
     val configFile = new File(storageDir, overlayConfigFileName(overlayConfig))
     if (configFile.exists()) {
@@ -55,7 +55,7 @@ class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPe
     overlayConfigs += configFile -> overlayConfig
   }
 
-  override def findOverlayConfigs(): List[OverlayConfig] = {
+  override def findOverlayConfigs() : List[OverlayConfig] = {
     if (!initalized) initialize()
     overlayConfigs.values.toList
   }

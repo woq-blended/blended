@@ -19,7 +19,7 @@ import com.typesafe.config.Config
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
 
-class InvalidBridgeConfigurationException(msg: String) extends Exception(msg)
+class InvalidBridgeConfigurationException(msg : String) extends Exception(msg)
 
 object TrackTransaction extends Enumeration {
   type TrackTransaction = Value
@@ -66,7 +66,7 @@ case class BridgeStreamConfig(
 
 class BridgeStreamBuilder(
   cfg : BridgeStreamConfig
-)(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
+)(implicit system : ActorSystem, materializer : Materializer) extends JmsStreamSupport {
 
   // So that we find the stream in the logs
   protected val inId = s"${cfg.fromCf.vendor}:${cfg.fromCf.provider}:${cfg.fromDest.asString}"
@@ -131,7 +131,7 @@ class BridgeStreamBuilder(
       // with the same event id will end up in the same transaction destination.
       Option(System.getProperty("blended.streams.transactionShard")) match {
         case None => result
-        case Some(shard) => result.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
+        case Some(shard) => result.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
           env.withHeader(cfg.headerCfg.headerTransShard, shard, false).get
         })
       }
@@ -160,7 +160,6 @@ class BridgeStreamBuilder(
   protected def jmsSend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
     jmsProducer(name = streamId + "-sink", settings = toSettings(cfg.toCf)(cfg.toDest), autoAck = false)
   }
-
 
   // The producer to send the current envelope to the retry queue in case of an error
   // We only forward the envelope to the retry Queue if the retry destination is set
@@ -201,7 +200,7 @@ class BridgeStreamBuilder(
 
     val doTrack : Boolean = cfg.trackTransaction match {
       case TrackTransaction.Off => false
-      case TrackTransaction.On => true
+      case TrackTransaction.On  => true
       case TrackTransaction.FromMessage =>
         bridgeLogger.trace(s"Getting tracking mode from message property [${cfg.headerCfg.headerTrack}]")
         val msgTrack = env.header[Boolean](cfg.headerCfg.headerTrack)
@@ -226,14 +225,14 @@ class BridgeStreamBuilder(
   // JMS transaction endpoint
   protected def transactionFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
-    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b=>
+    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
 
       import GraphDSL.Implicits._
 
       val doLog = b.add(logEnvelope("Before Tracking"))
 
       // First we decide wether we need to track the transaction
-      val doTrack= b.add(trackFilter)
+      val doTrack = b.add(trackFilter)
       doLog.out ~> doTrack.in
 
       // The actual send of the transaction

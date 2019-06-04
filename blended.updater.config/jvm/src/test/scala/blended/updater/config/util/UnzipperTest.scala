@@ -33,7 +33,7 @@ class UnzipperTest extends FreeSpec
       withTestDir() { dir =>
         val blacklist = List("dir1", "file1.txt")
 
-        val fileSelector = { fileName: String => !blacklist.exists(b => fileName == b || fileName.startsWith(b + "/")) }
+        val fileSelector = { fileName : String => !blacklist.exists(b => fileName == b || fileName.startsWith(b + "/")) }
         assert(fileSelector("dir2") === true)
         assert(fileSelector("dir1") === false)
         assert(fileSelector("dir1/file1") === false)
@@ -46,7 +46,7 @@ class UnzipperTest extends FreeSpec
       withTestDir() { dir =>
         val blacklist = List("dir1/dir1a")
 
-        val fileSelector = { fileName: String => !blacklist.exists(b => fileName == b || fileName.startsWith(b + "/")) }
+        val fileSelector = { fileName : String => !blacklist.exists(b => fileName == b || fileName.startsWith(b + "/")) }
 
         val files = Unzipper.unzip(testZip, dir, Nil, Some(fileSelector), None)
         expectFiles(dir, true, "dir1", "dir1/file2a.txt", "dir2", "file1.txt")

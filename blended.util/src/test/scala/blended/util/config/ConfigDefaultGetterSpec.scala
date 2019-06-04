@@ -30,7 +30,7 @@ class ConfigDefaultGetterSpec extends FreeSpec with ConfigDefaultGetter {
   var count = 0
   def nextCount : Int = { count += 1; count }
 
-  def checkGetter[T](typeName: String, existing: T, default: T, f: (Config, T) => T): Unit = {
+  def checkGetter[T](typeName : String, existing : T, default : T, f : (Config, T) => T) : Unit = {
     require(existing != default, "The test case makes only sense, if existing and default value are not the same")
     s"$nextCount. Implicit get$typeName with default should" - {
       "return the present value" in {
@@ -48,6 +48,6 @@ class ConfigDefaultGetterSpec extends FreeSpec with ConfigDefaultGetter {
   checkGetter[Boolean]("Boolean", true, false, (c, d) => c.getBoolean("boolean1", d))
   checkGetter[Boolean]("Boolean", false, true, (c, d) => c.getBoolean("boolean2", d))
   checkGetter[List[String]]("StringList", List("val4-1", "val4-2"), List("default"), (c, d) => c.getStringList("key2.key4", d))
-  checkGetter[Map[String, String]]("StringMap", Map("prop1" -> "val1", "prop2" -> "val2"), Map("foo" -> "bar"),  (c, d) => c.getStringMap("map", d))
-  
+  checkGetter[Map[String, String]]("StringMap", Map("prop1" -> "val1", "prop2" -> "val2"), Map("foo" -> "bar"), (c, d) => c.getStringMap("map", d))
+
 }

@@ -12,7 +12,7 @@ object BlendedDomino extends ProjectFactory {
       Dependencies.domino
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtilLogging.project,
       BlendedContainerContextApi.project
     )

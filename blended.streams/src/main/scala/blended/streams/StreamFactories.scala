@@ -18,7 +18,7 @@ object StreamFactories {
     name : String,
     source : Source[T, NotUsed],
     timeout : FiniteDuration
-  )(collected : T => Unit)(implicit system : ActorSystem, materializer: Materializer, clazz : ClassTag[T]) : Collector[T] = {
+  )(collected : T => Unit)(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : Collector[T] = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
     val stopped = new AtomicBoolean(false)
@@ -36,7 +36,7 @@ object StreamFactories {
       case _ => stopped.set(true)
     }
 
-    akka.pattern.after(timeout, system.scheduler){
+    akka.pattern.after(timeout, system.scheduler) {
       if (!stopped.get()) {
         killswitch.shutdown()
       }
@@ -46,7 +46,7 @@ object StreamFactories {
     collector
   }
 
-  def keepAliveSource[T](bufferSize : Int)(implicit system: ActorSystem, materializer: Materializer) : Source[T, (ActorRef, KillSwitch)] = {
+  def keepAliveSource[T](bufferSize : Int)(implicit system : ActorSystem, materializer : Materializer) : Source[T, (ActorRef, KillSwitch)] = {
 
     Source
       .actorRef[T](bufferSize, OverflowStrategy.fail)

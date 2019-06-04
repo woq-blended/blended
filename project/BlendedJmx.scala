@@ -16,7 +16,7 @@ object BlendedJmx extends ProjectFactory {
       exportPackage = Seq()
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedTestsupport.project % Test,
       BlendedTestsupportPojosr.project % Test
     )

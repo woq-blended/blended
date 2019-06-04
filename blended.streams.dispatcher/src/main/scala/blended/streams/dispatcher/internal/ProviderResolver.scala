@@ -24,7 +24,7 @@ object ProviderResolver {
           idSvc.resolvePropertyString(v).map(_.toString()).get,
           idSvc.resolvePropertyString(p).map(_.toString()).get
         ).get)
-      case (_,_) =>
+      case (_, _) =>
         None
     }
   }
@@ -35,7 +35,7 @@ object ProviderResolver {
     provider : String
   ) : Try[BridgeProviderConfig] = Try {
     registry.jmsProvider(vendor, provider) match {
-      case None => throw new Exception(s"Event provider [$vendor:$provider] is not configured in provider registry.")
+      case None    => throw new Exception(s"Event provider [$vendor:$provider] is not configured in provider registry.")
       case Some(p) => p
     }
   }

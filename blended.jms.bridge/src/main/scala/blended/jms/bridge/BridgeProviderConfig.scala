@@ -10,7 +10,7 @@ import scala.util.Try
 case class BridgeProviderConfig(
   vendor : String,
   provider : String,
-  internal: Boolean,
+  internal : Boolean,
   inbound : JmsDestination,
   outbound : JmsDestination,
   retry : Option[JmsDestination],
@@ -20,7 +20,7 @@ case class BridgeProviderConfig(
   cbes : JmsDestination
 ) extends ProviderAware {
 
-  override def toString: String =
+  override def toString : String =
     s"${getClass().getSimpleName()}(vendor=$vendor, provider=$provider, internal=$internal, errors=$errors, transactions=$transactions cbe=$cbes)"
 
   def osgiBrokerFilter : String = s"(&(vendor=$vendor)(provider=$provider))"
@@ -29,9 +29,9 @@ case class BridgeProviderConfig(
 
 object BridgeProviderConfig {
 
-  def create(idSvc: ContainerIdentifierService, cfg: Config) : Try[BridgeProviderConfig] = Try {
+  def create(idSvc : ContainerIdentifierService, cfg : Config) : Try[BridgeProviderConfig] = Try {
 
-    def resolve(value: String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
+    def resolve(value : String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
 
     val vendor = resolve(cfg.getString("vendor"))
     val provider = resolve(cfg.getString("provider"))

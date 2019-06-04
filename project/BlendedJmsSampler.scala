@@ -16,7 +16,7 @@ object BlendedJmsSampler extends ProjectFactory {
       bundleActivator = s"${projectName}.internal.JmsSamplerActivator"
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedAkka.project,
       BlendedUtil.project

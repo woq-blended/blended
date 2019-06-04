@@ -7,7 +7,7 @@ import blended.akka.OSGIActorConfig
 import blended.util.logging.Logger
 import javax.jms.ConnectionFactory
 
-case class JmsSampler(cfg: OSGIActorConfig, cf: ConnectionFactory) extends JmsSamplerMBean {
+case class JmsSampler(cfg : OSGIActorConfig, cf : ConnectionFactory) extends JmsSamplerMBean {
 
   private[this] var encoding = "UTF-8"
   private[this] var destinationName : String = ""
@@ -16,13 +16,13 @@ case class JmsSampler(cfg: OSGIActorConfig, cf: ConnectionFactory) extends JmsSa
 
   private[this] val log = Logger[JmsSampler]
 
-  override def getEncoding(): String = encoding
+  override def getEncoding() : String = encoding
 
-  override def setEncoding(newEncoding: String): Unit = encoding = newEncoding
+  override def setEncoding(newEncoding : String) : Unit = encoding = newEncoding
 
-  override def getDestinationName(): String = destinationName
+  override def getDestinationName() : String = destinationName
 
-  override def setDestinationName(newName : String): Unit = {
+  override def setDestinationName(newName : String) : Unit = {
     if (isSampling()) {
       throw new Exception(s"Sampler is currently active on topic [$destinationName]. You have to stop it first.")
     } else {
@@ -32,9 +32,9 @@ case class JmsSampler(cfg: OSGIActorConfig, cf: ConnectionFactory) extends JmsSa
 
   def setSampling(s : Boolean) : Unit = sampling.set(s)
 
-  override def isSampling(): Boolean = sampling.get()
+  override def isSampling() : Boolean = sampling.get()
 
-  override def startSampling(): Unit = if (!isSampling()) {
+  override def startSampling() : Unit = if (!isSampling()) {
 
     if (destinationName.length() > 0) {
       log.info(s"Starting topic sampler for destination [${destinationName}]")
@@ -42,7 +42,7 @@ case class JmsSampler(cfg: OSGIActorConfig, cf: ConnectionFactory) extends JmsSa
     }
   }
 
-  override def stopSampling(): Unit = if (isSampling()) {
+  override def stopSampling() : Unit = if (isSampling()) {
     log.info(s"Stopping topic sampler for destination [$destinationName]")
     worker.foreach(_ ! StopSampling)
     worker = None

@@ -19,15 +19,15 @@ import scala.util.Try
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 
 case class PingExecute(
-  count: Long,
-  con: Connection,
-  cfg: BlendedJMSConnectionConfig,
-  operations: PingOperations = new DefaultPingOperations()
+  count : Long,
+  con : Connection,
+  cfg : BlendedJMSConnectionConfig,
+  operations : PingOperations = new DefaultPingOperations()
 )
 
 class PingExecutor extends Actor {
-  override def receive: Receive = {
-    case exec: PingExecute =>
+  override def receive : Receive = {
+    case exec : PingExecute =>
       val actor = context.actorOf(JmsPingPerformer.props(
         exec.cfg, exec.con, exec.operations
       ))
@@ -38,9 +38,9 @@ class PingExecutor extends Actor {
       context.become(executing(sender()))
   }
 
-  def executing(requestor: ActorRef): Receive = {
+  def executing(requestor : ActorRef) : Receive = {
     case Terminated(_) => context.stop(self)
-    case m => requestor ! m
+    case m             => requestor ! m
   }
 }
 
@@ -52,39 +52,39 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
   private[this] val counter = new AtomicLong(0)
   private[this] implicit val materializer = ActorMaterializer()
 
-  val pingQueue: String
-  val pingTopic: String
+  val pingQueue : String
+  val pingTopic : String
 
-  val cfg: BlendedJMSConnectionConfig
-  var con: Option[Connection]
+  val cfg : BlendedJMSConnectionConfig
+  var con : Option[Connection]
 
-  protected val bulkCount: Int = 40000
+  protected val bulkCount : Int = 40000
   protected val bulkTimeout : FiniteDuration = Math.max(1, bulkCount / 20000).minutes
 
-  private[this] implicit val eCtxt: ExecutionContext = system.dispatcher
+  private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
 
-  private[this] def execPing(exec: PingExecute)(implicit to: Timeout): Future[PingResult] = {
+  private[this] def execPing(exec : PingExecute)(implicit to : Timeout) : Future[PingResult] = {
     (system.actorOf(Props[PingExecutor]) ? exec).mapTo[PingResult]
   }
 
-  private[this] val pingSuccess: PartialFunction[Any, Boolean] = {
+  private[this] val pingSuccess : PartialFunction[Any, Boolean] = {
     case PingSuccess(_) => true
-    case _ => false
+    case _              => false
   }
 
-  private[this] val pingFailed: PartialFunction[Any, Boolean] = {
+  private[this] val pingFailed : PartialFunction[Any, Boolean] = {
     case PingFailed(_) => true
-    case _ => false
+    case _             => false
   }
 
   private[this] val failingInit = new DefaultPingOperations() {
-    override def createProducer(s: Session, dest: String): Try[MessageProducer] = Try {
+    override def createProducer(s : Session, dest : String) : Try[MessageProducer] = Try {
       throw new Exception("failing")
     }
   }
 
   private[this] val timingOut = new DefaultPingOperations() {
-    override def createProducer(s: Session, dest: String): Try[MessageProducer] = {
+    override def createProducer(s : Session, dest : String) : Try[MessageProducer] = {
       Thread.sleep(100)
       super.createProducer(s, dest)
     }
@@ -92,12 +92,12 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
 
   private[this] val failingProbe = new DefaultPingOperations() {
 
-    override def probePing(info: PingInfo)(implicit eCtxt: ExecutionContext): Future[PingResult] = Future {
+    override def probePing(info : PingInfo)(implicit eCtxt : ExecutionContext) : Future[PingResult] = Future {
       PingFailed(new Exception("Failed"))
     }
   }
 
-  private[this] def threadCount(): Int = ManagementFactory.getThreadMXBean().getThreadCount
+  private[this] def threadCount() : Int = ManagementFactory.getThreadMXBean().getThreadCount
 
   "The JMSPingPerformer should " - {
 
@@ -150,7 +150,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
 
     "does not leak threads on successful pings" in {
 
-      val src = Source(1.to(bulkCount)).map { i: Int =>
+      val src = Source(1.to(bulkCount)).map { i : Int =>
         execPing(PingExecute(
           count = counter.incrementAndGet(),
           con = con.get,
@@ -169,25 +169,25 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
 
       pending
       // TODO: Review
-//      val src = Source(1.to(bulkCount)).map { i: Int =>
-//        execPing(PingExecute(
-//          count = counter.incrementAndGet(),
-//          con = con.get,
-//          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 50.millis),
-//          operations = timingOut
-//        ))(10.seconds)
-//      }
-//
-//      val result = src.mapAsync(10)(i => i).runFold(true)((c, i) => c && i == PingTimeout)
-//
-//      assert(Await.result(result, bulkTimeout * 2))
-//      Thread.sleep(10000)
-//      assert(threadCount() <= 100)
+      //      val src = Source(1.to(bulkCount)).map { i: Int =>
+      //        execPing(PingExecute(
+      //          count = counter.incrementAndGet(),
+      //          con = con.get,
+      //          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 50.millis),
+      //          operations = timingOut
+      //        ))(10.seconds)
+      //      }
+      //
+      //      val result = src.mapAsync(10)(i => i).runFold(true)((c, i) => c && i == PingTimeout)
+      //
+      //      assert(Await.result(result, bulkTimeout * 2))
+      //      Thread.sleep(10000)
+      //      assert(threadCount() <= 100)
     }
 
     "does not leak threads on failed ping probes" in {
 
-      val src = Source(1.to(bulkCount)).map { i: Int =>
+      val src = Source(1.to(bulkCount)).map { i : Int =>
         execPing(PingExecute(
           count = counter.incrementAndGet(),
           con = con.get,
@@ -196,9 +196,9 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
         ))(3.seconds)
       }
 
-      val result: Future[(Int, Int)] = src.mapAsync(10)(i => i).runFold((0, 0)) {
-        case ((otherCount, failedCount), i: PingFailed) => (otherCount, failedCount + 1)
-        case ((otherCount, failedCount), i) => (otherCount + 1, failedCount)
+      val result : Future[(Int, Int)] = src.mapAsync(10)(i => i).runFold((0, 0)) {
+        case ((otherCount, failedCount), i : PingFailed) => (otherCount, failedCount + 1)
+        case ((otherCount, failedCount), i)              => (otherCount + 1, failedCount)
       }
 
       assert(Await.result(result, bulkTimeout) === (0, bulkCount))

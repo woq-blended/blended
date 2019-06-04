@@ -15,7 +15,7 @@ trait DbFactory extends TestFile {
 
   private[this] val log = Logger[DbFactory.type]
 
-  def createDataSource(dir: File, name: String): HikariDataSource = {
+  def createDataSource(dir : File, name : String) : HikariDataSource = {
     new File(dir, name).mkdirs()
     val url = "jdbc:h2:" + dir.getAbsolutePath() + "/" + name
     log.debug(s"Using database url: ${url}")
@@ -26,7 +26,7 @@ trait DbFactory extends TestFile {
     dataSource
   }
 
-  def withDataSource[T](dir: File, name: String)(f: DataSource => T): T = {
+  def withDataSource[T](dir : File, name : String)(f : DataSource => T) : T = {
     val dataSource = createDataSource(dir, "db")
     try {
       f(dataSource)
@@ -35,19 +35,19 @@ trait DbFactory extends TestFile {
     }
   }
 
-  case class WithTestPersistenceServiceContext(persistenceService: PersistenceServiceJdbc, txManager: PlatformTransactionManager)
+  case class WithTestPersistenceServiceContext(persistenceService : PersistenceServiceJdbc, txManager : PlatformTransactionManager)
 
   /**
    * Use this to run a test against a pre-initialized Persistence Service. The schema is created, but no data is present.
    */
   def withTestPersistenceService(
-    dir: Option[File] = None,
-    deletePolicy: TestFile.DeletePolicy = TestFile.DeleteWhenNoFailure
+    dir : Option[File] = None,
+    deletePolicy : TestFile.DeletePolicy = TestFile.DeleteWhenNoFailure
   )(
-    f: WithTestPersistenceServiceContext => Unit
-  ): Unit = {
+    f : WithTestPersistenceServiceContext => Unit
+  ) : Unit = {
 
-    def worker(dir: File): Unit = {
+    def worker(dir : File) : Unit = {
       DbFactory.withDataSource(dir, "db") { dataSource =>
         val dao = new PersistedClassDao(dataSource)
         val txMgr = new DummyPlatformTransactionManager()

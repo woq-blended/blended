@@ -14,46 +14,46 @@ import scala.util.control.NonFatal
 
 case class FileDropCommand(
   id : String,
-  content: ByteString,
-  directory: String,
-  fileName: String,
-  compressed: Boolean,
-  append: Boolean,
-  timestamp: Long,
-  properties: Map[String, Any]
+  content : ByteString,
+  directory : String,
+  fileName : String,
+  compressed : Boolean,
+  append : Boolean,
+  timestamp : Long,
+  properties : Map[String, Any]
 ) {
 
-  override def equals(obj: scala.Any): Boolean = obj match {
+  override def equals(obj : scala.Any) : Boolean = obj match {
     case cmd : FileDropCommand =>
       content.sameElements(cmd.content) &&
-      directory.equals(cmd.directory) &&
-      fileName.equals(cmd.fileName) &&
-      compressed == cmd.compressed &&
-      append == cmd.append &&
-      timestamp == cmd.timestamp &&
-      properties.equals(cmd.properties)
+        directory.equals(cmd.directory) &&
+        fileName.equals(cmd.fileName) &&
+        compressed == cmd.compressed &&
+        append == cmd.append &&
+        timestamp == cmd.timestamp &&
+        properties.equals(cmd.properties)
     case _ => false
   }
 
-  override def toString: String = {
+  override def toString : String = {
 
     val ts = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS").format(new Date(timestamp))
     s"FileDropCommand[$id](dir = [$directory], fileName = [$fileName], compressed = $compressed, append = $append, timestamp = [$ts], content-size = ${content.length}), " +
-    s"properties=${properties.mkString("[", ",", "]")}"
+      s"properties=${properties.mkString("[", ",", "]")}"
   }
 }
 
 object FileDropResult {
-  def result(cmd: FileDropCommand, error: Option[Throwable]): FileDropResult = new FileDropResult(
+  def result(cmd : FileDropCommand, error : Option[Throwable]) : FileDropResult = new FileDropResult(
     cmd.copy(content = ByteString("")), error
   )
 }
 
-case class FileDropResult(cmd: FileDropCommand, error: Option[Throwable])
+case class FileDropResult(cmd : FileDropCommand, error : Option[Throwable])
 
 class FileDropActor extends Actor with ActorLogging {
 
-  def checkDirectory(dir: File) : Boolean = {
+  def checkDirectory(dir : File) : Boolean = {
 
     if (!dir.exists()) {
       log.debug(s"Creating directory [${dir.getAbsolutePath}]")
@@ -63,7 +63,7 @@ class FileDropActor extends Actor with ActorLogging {
     dir.exists() && dir.isDirectory && dir.canWrite
   }
 
-  def finalFile(cmd: FileDropCommand) : File = {
+  def finalFile(cmd : FileDropCommand) : File = {
 
     val file = new File(cmd.directory, cmd.fileName)
 
@@ -71,7 +71,7 @@ class FileDropActor extends Actor with ActorLogging {
       if (file.exists()) {
         // In case we need to generate a new file name
         new File(cmd.directory, cmd.fileName.lastIndexOf('.') match {
-          case -1 => s"dup_${System.currentTimeMillis()}_${cmd.fileName}"
+          case -1  => s"dup_${System.currentTimeMillis()}_${cmd.fileName}"
           case pos => s"${cmd.fileName.substring(0, pos)}.dup_${System.currentTimeMillis()}${cmd.fileName.substring(pos)}"
         })
       } else {
@@ -85,7 +85,7 @@ class FileDropActor extends Actor with ActorLogging {
   }
 
   // A temp file is only created when we need to append to an existing file.
-  def tmpFile(cmd: FileDropCommand) : Option[File] = {
+  def tmpFile(cmd : FileDropCommand) : Option[File] = {
     if (cmd.append) {
       val file = finalFile(cmd)
       if (file.exists()) {
@@ -103,10 +103,10 @@ class FileDropActor extends Actor with ActorLogging {
   }
 
   // The outfile is the file that will temporarily hold the final content
-  def outFile(cmd: FileDropCommand) : File =
+  def outFile(cmd : FileDropCommand) : File =
     new File(cmd.directory, s"${cmd.fileName}.${cmd.timestamp}.out")
 
-  def prepareOutputStream(cmd: FileDropCommand, tmpFile: Option[File]) : OutputStream = {
+  def prepareOutputStream(cmd : FileDropCommand, tmpFile : Option[File]) : OutputStream = {
 
     val of = outFile(cmd)
 
@@ -141,13 +141,13 @@ class FileDropActor extends Actor with ActorLogging {
     }
   }
 
-  private[this] def respond(requestor: ActorRef, cmd: FileDropCommand, t : Option[Throwable] = None) : Unit = {
+  private[this] def respond(requestor : ActorRef, cmd : FileDropCommand, t : Option[Throwable] = None) : Unit = {
 
     val fdr = FileDropResult.result(cmd, t)
     requestor ! fdr
   }
 
-  override def receive: Receive = {
+  override def receive : Receive = {
 
     case cmd : FileDropCommand =>
 
@@ -181,7 +181,7 @@ class FileDropActor extends Actor with ActorLogging {
 
               val ff = finalFile(cmd)
               outFile(cmd).renameTo(ff)
-              tf.foreach{ f => f.delete() }
+              tf.foreach { f => f.delete() }
 
               log.info(s"Successfully executed [$cmd] and created file [${ff.getAbsolutePath}]")
               respond(requestor, cmd)
@@ -189,7 +189,6 @@ class FileDropActor extends Actor with ActorLogging {
             case None =>
               throw new Exception(s"InputStream for command [$cmd] not resolved.")
           }
-
 
         } catch {
           case NonFatal(t) =>

@@ -9,11 +9,11 @@ import scala.util.{Failure, Success, Try}
 
 abstract class JmsSession {
 
-  def connection: Connection
+  def connection : Connection
 
-  def session: Session
+  def session : Session
 
-  def closeSessionAsync()(system: ActorSystem): Future[Unit] = {
+  def closeSessionAsync()(system : ActorSystem) : Future[Unit] = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
@@ -24,54 +24,56 @@ abstract class JmsSession {
       case Failure(t) => p.failure(t)
     }
 
-    akka.pattern.after(1.seconds, system.scheduler){ Future {
-      if (!p.isCompleted) {
-        p.failure(new Exception(s"Session close for [$sessionId] has timed out"))
+    akka.pattern.after(1.seconds, system.scheduler) {
+      Future {
+        if (!p.isCompleted) {
+          p.failure(new Exception(s"Session close for [$sessionId] has timed out"))
+        }
       }
-    }}
+    }
 
     p.future
   }
 
-  def closeSession(): Unit = {
+  def closeSession() : Unit = {
     session.close()
   }
 
-  def abortSessionAsync()(implicit ec: ExecutionContext): Future[Unit] = Future { abortSession() }
+  def abortSessionAsync()(implicit ec : ExecutionContext) : Future[Unit] = Future { abortSession() }
 
-  def abortSession(): Unit = closeSession()
+  def abortSession() : Unit = closeSession()
 
   def sessionId : String
 }
 
 case class JmsProducerSession(
-  connection: Connection,
-  session: Session,
+  connection : Connection,
+  session : Session,
   override val sessionId : String,
-  jmsDestination: Option[JmsDestination]
+  jmsDestination : Option[JmsDestination]
 ) extends JmsSession
 
 class JmsConsumerSession(
-  val connection: Connection,
-  val session: Session,
+  val connection : Connection,
+  val session : Session,
   override val sessionId : String,
-  val jmsDestination: JmsDestination
+  val jmsDestination : JmsDestination
 ) extends JmsSession {
 
   def createConsumer(
-    selector: Option[String]
-  )(implicit ec: ExecutionContext): Try[MessageConsumer] = Try {
+    selector : Option[String]
+  )(implicit ec : ExecutionContext) : Try[MessageConsumer] = Try {
     (selector, jmsDestination) match {
-      case (None, t: JmsDurableTopic) =>
+      case (None, t : JmsDurableTopic) =>
         session.createDurableSubscriber(t.create(session).asInstanceOf[Topic], t.subscriberName)
 
-      case (Some(expr), t: JmsDurableTopic) =>
+      case (Some(expr), t : JmsDurableTopic) =>
         session.createDurableSubscriber(t.create(session).asInstanceOf[Topic], t.subscriberName, expr, false)
 
-      case (None, t: JmsTopic) =>
+      case (None, t : JmsTopic) =>
         session.createConsumer(t.create(session))
 
-      case (Some(expr), t: JmsTopic) =>
+      case (Some(expr), t : JmsTopic) =>
         session.createConsumer(t.create(session), expr, false)
 
       case (Some(expr), q) =>
@@ -89,14 +91,14 @@ object JmsAckState extends Enumeration {
 }
 
 class JmsAckSession(
-  override val connection: Connection,
-  override val session: Session,
+  override val connection : Connection,
+  override val session : Session,
   override val sessionId : String,
-  override val jmsDestination: JmsDestination,
+  override val jmsDestination : JmsDestination,
   val ackTimeout : FiniteDuration = 1.second
 ) extends JmsConsumerSession(connection, session, sessionId, jmsDestination) {
 
-  var ackState : JmsAckState.JmsAckState  = JmsAckState.Pending
+  var ackState : JmsAckState.JmsAckState = JmsAckState.Pending
 
   def resetAck() : Unit = synchronized {
     ackState = JmsAckState.Pending
@@ -107,7 +109,7 @@ class JmsAckSession(
 
   }
 
-  def ack(message: Message): Unit = synchronized {
+  def ack(message : Message) : Unit = synchronized {
     ackState = JmsAckState.Acknowledged
   }
 }

@@ -9,23 +9,23 @@ import blended.akka.OSGIActorConfig
 
 object JMSSampleControlActor {
 
-  def props(cfg: OSGIActorConfig, cf: ConnectionFactory, sampler: JmsSampler) =
+  def props(cfg : OSGIActorConfig, cf : ConnectionFactory, sampler : JmsSampler) =
     Props(new JMSSampleControlActor(cfg, cf, sampler))
 }
 
-class JMSSampleControlActor(cfg: OSGIActorConfig, cf: ConnectionFactory, sampler: JmsSampler) extends Actor with ActorLogging {
+class JMSSampleControlActor(cfg : OSGIActorConfig, cf : ConnectionFactory, sampler : JmsSampler) extends Actor with ActorLogging {
 
-  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {
+  override def supervisorStrategy : SupervisorStrategy = OneForOneStrategy() {
     case e : Exception =>
       log.warning(s"Topic Sampler terminated with exception [${e.getMessage}]")
       Stop
   }
 
-  override def preStart(): Unit = self ! Init
+  override def preStart() : Unit = self ! Init
 
   case object Init
 
-  override def receive: Receive = {
+  override def receive : Receive = {
     case Init =>
 
       val dir : File = {
@@ -46,7 +46,7 @@ class JMSSampleControlActor(cfg: OSGIActorConfig, cf: ConnectionFactory, sampler
       log.debug(s"Topic sampler [${destName}] started")
   }
 
-  def sampling(sampleActor: ActorRef, destName: String) : Receive ={
+  def sampling(sampleActor : ActorRef, destName : String) : Receive = {
     case StopSampling => sampleActor ! StopSampling
     case Terminated(_) =>
       log.debug(s"Topic sampler [${sampler}] terminated")

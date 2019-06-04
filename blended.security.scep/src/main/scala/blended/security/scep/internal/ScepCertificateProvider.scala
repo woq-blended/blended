@@ -24,13 +24,13 @@ import scala.util.Try
 
 case class ScepConfig(
   url : String,
-  profile: Option[String],
+  profile : Option[String],
   keyLength : Int,
   csrSignAlgorithm : String,
   scepChallenge : String
 )
 
-class ScepCertificateProvider(cfg: ScepConfig)
+class ScepCertificateProvider(cfg : ScepConfig)
   extends CertificateRequestBuilder
   with CertificateProvider {
 
@@ -44,12 +44,11 @@ class ScepCertificateProvider(cfg: ScepConfig)
   }
 
   private[this] lazy val caps : Capabilities = cfg.profile match {
-    case None => scepClient.getCaCapabilities()
+    case None    => scepClient.getCaCapabilities()
     case Some(p) => scepClient.getCaCapabilities(p)
   }
 
-
-  override def rootCertificates(): Try[Option[MemoryKeystore]] = Try {
+  override def rootCertificates() : Try[Option[MemoryKeystore]] = Try {
     val certs : List[Certificate] =
       scepClient.getCaCertificate().getCertificates(null).asScala.toList
 
@@ -58,7 +57,7 @@ class ScepCertificateProvider(cfg: ScepConfig)
     Some(ms)
   }
 
-  override def refreshCertificate(existing: Option[CertificateHolder], cnProvider: CommonNameProvider): Try[CertificateHolder] = {
+  override def refreshCertificate(existing : Option[CertificateHolder], cnProvider : CommonNameProvider) : Try[CertificateHolder] = {
     log.info(s"Trying to refresh the server certificate via SCEP from [${cfg.url}]")
     existing match {
       case None =>
@@ -70,7 +69,7 @@ class ScepCertificateProvider(cfg: ScepConfig)
     }
   }
 
-  private[this] def selfSignedCertificate(cnProvider: CommonNameProvider) : Try[CertificateHolder] = {
+  private[this] def selfSignedCertificate(cnProvider : CommonNameProvider) : Try[CertificateHolder] = {
 
     val selfSignedConfig = SelfSignedConfig(
       commonNameProvider = cnProvider,
@@ -94,8 +93,8 @@ class ScepCertificateProvider(cfg: ScepConfig)
 
   private[this] def enroll(
     inCert : Option[CertificateHolder],
-    cnProvider: CommonNameProvider
-  ): Try[CertificateHolder] = Try {
+    cnProvider : CommonNameProvider
+  ) : Try[CertificateHolder] = Try {
 
     val selfSigned = selfSignedCertificate(cnProvider).get
 
@@ -110,12 +109,11 @@ class ScepCertificateProvider(cfg: ScepConfig)
 
     val privKey = reqCert.privateKey.get
 
-
     val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cnProvider.commonName().get), reqCert.publicKey)
     csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString(cfg.scepChallenge))
 
     if (cnProvider.alternativeNames().get.nonEmpty) {
-      val altNames : Array[GeneralName] = cnProvider.alternativeNames().get.map { n=>
+      val altNames : Array[GeneralName] = cnProvider.alternativeNames().get.map { n =>
         log.info(s"Adding alternative dns name [$n] to SCEP certificate request.")
         new GeneralName(GeneralName.dNSName, n)
       }.toArray
@@ -136,7 +134,7 @@ class ScepCertificateProvider(cfg: ScepConfig)
     val response = scepClient.enrol(reqCert.chain.head, privKey, csr)
 
     // TODO: Active wait is baaaad
-    while(response.isPending()) {
+    while (response.isPending()) {
       log.info(s"Waiting for PKI response from [${cfg.url}]")
       Thread.sleep(1000)
     }
@@ -147,7 +145,7 @@ class ScepCertificateProvider(cfg: ScepConfig)
       sys.error(info.toString)
     } else {
       val store = response.getCertStore()
-      val certs: List[Certificate] = store.getCertificates(null).asScala.toList
+      val certs : List[Certificate] = store.getCertificates(null).asScala.toList
 
       log.info(s"Retrieved [${certs.length}] certificates from [${cfg.url}].")
 

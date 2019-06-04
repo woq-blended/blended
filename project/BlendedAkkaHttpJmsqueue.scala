@@ -24,7 +24,7 @@ object BlendedAkkaHttpJmsqueue extends ProjectFactory {
       Dependencies.activeMqKahadbStore % Test
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedContainerContextApi.project,
       BlendedAkka.project,

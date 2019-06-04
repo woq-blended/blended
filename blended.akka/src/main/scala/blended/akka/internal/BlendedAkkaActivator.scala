@@ -36,4 +36,4 @@ class BlendedAkkaActivator extends DominoActivator {
     }
   }
 }
-  
+

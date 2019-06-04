@@ -15,7 +15,7 @@ import scala.util.{Failure, Try}
 
 abstract class AbstractTokenStore(
   mgr : BlendedPermissionManager,
-  tokenHandler: TokenHandler
+  tokenHandler : TokenHandler
 ) extends TokenStore {
 
   private[this] val tokenId : AtomicLong = new AtomicLong(0)
@@ -28,10 +28,10 @@ abstract class AbstractTokenStore(
   }
 
   /**
-    * @inheritdoc
-    */
+   * @inheritdoc
+   */
   @throws[LoginException]
-  override def newToken(subj: Subject, ttl: Option[FiniteDuration] = None)(implicit eCtxt : ExecutionContext) : Try[Token] = {
+  override def newToken(subj : Subject, ttl : Option[FiniteDuration] = None)(implicit eCtxt : ExecutionContext) : Try[Token] = {
 
     subj.getPrincipals(classOf[UserPrincipal]).asScala.toSeq match {
       case Seq() =>
@@ -43,5 +43,5 @@ abstract class AbstractTokenStore(
     }
   }
 
-  override def publicKey(): PublicKey = tokenHandler.publicKey()
+  override def publicKey() : PublicKey = tokenHandler.publicKey()
 }

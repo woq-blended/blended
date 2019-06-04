@@ -1,6 +1,6 @@
 package blended.persistence.jdbc
 
-import java.{ util => ju }
+import java.{util => ju}
 
 import blended.persistence.PersistenceService
 import blended.util.logging.Logger
@@ -14,8 +14,8 @@ import org.springframework.transaction.support.TransactionTemplate
  *
  */
 class PersistenceServiceJdbc(
-  txManager: PlatformTransactionManager,
-  dao: PersistedClassDao
+  txManager : PlatformTransactionManager,
+  dao : PersistedClassDao
 )
   extends PersistenceService {
 
@@ -28,7 +28,7 @@ class PersistenceServiceJdbc(
     t
   }
 
-  override def deleteByExample(pClass: String, data: ju.Map[String, _ <: Any]): Long = {
+  override def deleteByExample(pClass : String, data : ju.Map[String, _ <: Any]) : Long = {
     log.trace(s"About to delete by example pClass: ${pClass}, data: ${data}")
     val fields = PersistedField.extractFieldsWithoutDataId(data)
     txTemplate.execute { ts =>
@@ -36,14 +36,14 @@ class PersistenceServiceJdbc(
     }
   }
 
-  override def findAll(pClass: String): Seq[ju.Map[String, _ <: Any]] = {
+  override def findAll(pClass : String) : Seq[ju.Map[String, _ <: Any]] = {
     val classes = txTemplateRo.execute { ts =>
       dao.findAll(pClass)
     }
     classes.map(pc => PersistedField.toJuMap(pc.fields))
   }
 
-  override def findByExample(pClass: String, data: ju.Map[String, _ <: Any]): Seq[ju.Map[String, _ <: Any]] = {
+  override def findByExample(pClass : String, data : ju.Map[String, _ <: Any]) : Seq[ju.Map[String, _ <: Any]] = {
     val fields = PersistedField.extractFieldsWithoutDataId(data)
     val classes = txTemplateRo.execute { ts =>
       dao.findByFields(pClass, fields)
@@ -51,7 +51,7 @@ class PersistenceServiceJdbc(
     classes.map(pc => PersistedField.toJuMap(pc.fields))
   }
 
-  override def persist(pClass: String, data: ju.Map[String, _ <: Any]): ju.Map[String, _ <: Any] = {
+  override def persist(pClass : String, data : ju.Map[String, _ <: Any]) : ju.Map[String, _ <: Any] = {
     // TODO check if data already contains id
 
     log.trace(s"About to persist class [${pClass}] with data [${data}]")

@@ -1,12 +1,12 @@
 package blended.updater.remote
 
-import blended.updater.config.{ Mapper => BaseMapper }
+import blended.updater.config.{Mapper => BaseMapper}
 import scala.collection.JavaConverters._
 import scala.util.Try
 
 trait Mapper extends BaseMapper {
 
-  def mapContainerState(containerState: ContainerState): java.util.Map[String, AnyRef] = {
+  def mapContainerState(containerState : ContainerState) : java.util.Map[String, AnyRef] = {
     Map[String, AnyRef](
       "containerId" -> containerState.containerId,
       "outstandingActions" -> containerState.outstandingActions.map(a => mapUpdateAction(a)).asJava,
@@ -15,7 +15,7 @@ trait Mapper extends BaseMapper {
     ).asJava
   }
 
-  def unmapContainerState(map: AnyRef): Try[ContainerState] = Try {
+  def unmapContainerState(map : AnyRef) : Try[ContainerState] = Try {
     val p = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     ContainerState(
       containerId = p("containerId").asInstanceOf[String],

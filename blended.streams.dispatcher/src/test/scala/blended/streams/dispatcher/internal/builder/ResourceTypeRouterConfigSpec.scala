@@ -6,7 +6,7 @@ import org.scalatest.Matchers
 class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
   with Matchers {
 
-  override def loggerName: String = classOf[ResourceTypeRouterConfigSpec].getName()
+  override def loggerName : String = classOf[ResourceTypeRouterConfigSpec].getName()
 
   private val amqId = providerId("activemq", "activemq")
   private val sonicId = providerId("sonic75", "central")
@@ -19,9 +19,9 @@ class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
       withDispatcherConfig { ctxt =>
         val cfg = ctxt.cfg
 
-        cfg.defaultProvider.id should be (amqId)
-        cfg.eventProvider.id should be (sonicId)
-        cfg.eventProvider.inbound should be (JmsQueue("bridge.data.in"))
+        cfg.defaultProvider.id should be(amqId)
+        cfg.eventProvider.id should be(sonicId)
+        cfg.eventProvider.inbound should be(JmsQueue("bridge.data.in"))
         cfg.applicationLogHeader should have size 3
       }
     }
@@ -84,11 +84,11 @@ class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
         other should have size 1
         other.foreach { out =>
           val ohCfg = other.head.outboundHeader.head
-          ohCfg.timeToLive should be (14400000)
-          ohCfg.bridgeDestination should be (Some("OtherAppToQueue"))
-          ohCfg.applicationLogHeader should have size(2)
-          ohCfg.applicationLogHeader should contain ("keymetric1")
-          ohCfg.applicationLogHeader should contain ("keymetric3")
+          ohCfg.timeToLive should be(14400000)
+          ohCfg.bridgeDestination should be(Some("OtherAppToQueue"))
+          ohCfg.applicationLogHeader should have size (2)
+          ohCfg.applicationLogHeader should contain("keymetric1")
+          ohCfg.applicationLogHeader should contain("keymetric3")
         }
       }
     }

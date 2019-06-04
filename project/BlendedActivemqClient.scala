@@ -19,7 +19,7 @@ object BlendedActivemqClient extends ProjectFactory {
       exportPackage = Seq(projectName)
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedUtil.project,
       BlendedUtilLogging.project,

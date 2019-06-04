@@ -18,7 +18,7 @@ class ArtifactDownloaderTest
   with BeforeAndAfterAll
   with TestFile {
 
-  implicit val deletePolicy: DeletePolicy = DeleteWhenNoFailure
+  implicit val deletePolicy : DeletePolicy = DeleteWhenNoFailure
 
   override def afterAll {
     TestKit.shutdownActorSystem(system)

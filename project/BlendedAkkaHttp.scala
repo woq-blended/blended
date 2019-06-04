@@ -27,7 +27,7 @@ object BlendedAkkaHttp extends ProjectFactory {
       bundleActivator = s"${projectName}.internal.BlendedAkkaHttpActivator"
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedContainerContextApi.project,
       BlendedDomino.project,
       BlendedUtil.project,

@@ -17,36 +17,36 @@ trait Logger extends Serializable {
 
   def name : String
 
-  def isErrorEnabled: Boolean = false
-  def isWarnEnabled: Boolean = false
-  def isInfoEnabled: Boolean = false
-  def isDebugEnabled: Boolean = false
-  def isTraceEnabled: Boolean = false
+  def isErrorEnabled : Boolean = false
+  def isWarnEnabled : Boolean = false
+  def isInfoEnabled : Boolean = false
+  def isDebugEnabled : Boolean = false
+  def isTraceEnabled : Boolean = false
 
-  def error(msg: => String): Unit = {}
-  def warn(msg: => String): Unit = {}
-  def info(msg: => String): Unit = {}
-  def debug(msg: => String): Unit = {}
-  def trace(msg: => String): Unit = {}
+  def error(msg : => String) : Unit = {}
+  def warn(msg : => String) : Unit = {}
+  def info(msg : => String) : Unit = {}
+  def debug(msg : => String) : Unit = {}
+  def trace(msg : => String) : Unit = {}
 
-  def error(e: Throwable)(msg: => String): Unit = {}
-  def warn(e: Throwable)(msg: => String): Unit = {}
-  def info(e: Throwable)(msg: => String): Unit = {}
-  def debug(e: Throwable)(msg: => String): Unit = {}
-  def trace(e: Throwable)(msg: => String): Unit = {}
+  def error(e : Throwable)(msg : => String) : Unit = {}
+  def warn(e : Throwable)(msg : => String) : Unit = {}
+  def info(e : Throwable)(msg : => String) : Unit = {}
+  def debug(e : Throwable)(msg : => String) : Unit = {}
+  def trace(e : Throwable)(msg : => String) : Unit = {}
 
-  def log(level: LogLevel, msg: => String) : Unit = level match {
+  def log(level : LogLevel, msg : => String) : Unit = level match {
     case LogLevel.Error => error(msg)
-    case LogLevel.Warn => warn(msg)
-    case LogLevel.Info => info(msg)
+    case LogLevel.Warn  => warn(msg)
+    case LogLevel.Info  => info(msg)
     case LogLevel.Debug => debug(msg)
     case LogLevel.Trace => trace(msg)
   }
 
-  def log(t: Throwable)(level: LogLevel, msg: => String) : Unit = level match {
+  def log(t : Throwable)(level : LogLevel, msg : => String) : Unit = level match {
     case LogLevel.Error => error(t)(msg)
-    case LogLevel.Warn => warn(t)(msg)
-    case LogLevel.Info => info(t)(msg)
+    case LogLevel.Warn  => warn(t)(msg)
+    case LogLevel.Info  => info(t)(msg)
     case LogLevel.Debug => debug(t)(msg)
     case LogLevel.Trace => trace(t)(msg)
   }
@@ -62,7 +62,7 @@ object Logger {
   /**
    * Create a Logger instance by deriving the logger name from the fully qualified class name.
    */
-  def apply[T: ClassTag]: Logger = {
+  def apply[T : ClassTag] : Logger = {
     val name = scala.reflect.classTag[T].runtimeClass.getName
     apply(name)
   }
@@ -70,17 +70,17 @@ object Logger {
   /**
    * Create a Logger instance with the given name.
    */
-  def apply(name: String): Logger = {
+  def apply(name : String) : Logger = {
     try {
       // we expect class loading errors if no slf4j is present
       new LoggerSlf4j(slf4j.LoggerFactory.getLogger(name))
     } catch {
-      case _: NoClassDefFoundError | _: ClassNotFoundException =>
+      case _ : NoClassDefFoundError | _ : ClassNotFoundException =>
         try {
           // fall back to jul
           new LoggerJul(jul.Logger.getLogger(name))
         } catch {
-          case _: NoClassDefFoundError | _: ClassNotFoundException =>
+          case _ : NoClassDefFoundError | _ : ClassNotFoundException =>
             new LoggerNoOp(name)
         }
     }

@@ -24,17 +24,17 @@ object ScepClientApp {
   private[this] val log = Logger[ScepClientApp.type]
 
   /**
-    * Entry point of the scep client app.
-    * The app logic is done by [[run()]] which throws an [[ExitAppException]] to signal the exit code.
-    * This will stop the running VM with [[java.lang.System#exit]]
-    */
-  def main(args: Array[String]): Unit = {
+   * Entry point of the scep client app.
+   * The app logic is done by [[run()]] which throws an [[ExitAppException]] to signal the exit code.
+   * This will stop the running VM with [[java.lang.System#exit]]
+   */
+  def main(args : Array[String]) : Unit = {
     try {
       run(args)
       // default to 0
       // throw new ExitAppException(0)
     } catch {
-      case e: ExitAppException =>
+      case e : ExitAppException =>
         e.errMsg.foreach { m =>
           Console.err.println(m)
         }
@@ -47,20 +47,20 @@ object ScepClientApp {
   }
 
   /**
-    * Run the scep client app.
-    *
-    * @param args
-    * @throws ExitAppException The signal the exit code of the application
-    */
-  def run(args: Array[String]): Unit = {
+   * Run the scep client app.
+   *
+   * @param args
+   * @throws ExitAppException The signal the exit code of the application
+   */
+  def run(args : Array[String]) : Unit = {
     val cmdline = new Cmdline()
     val cp = new CmdlineParser(cmdline)
     cp.setProgramName("java -jar scep-client.jar")
     cp.setAboutLine("Standalone SCEP client, which can create and update Java key stores from a remote SCEP server.")
     try {
-      cp.parse(args: _*)
+      cp.parse(args : _*)
     } catch {
-      case e: CmdlineParserException => throw new ExitAppException(2, Option(e.getLocalizedMessage()), e)
+      case e : CmdlineParserException => throw new ExitAppException(2, Option(e.getLocalizedMessage()), e)
     }
 
     if (cmdline.help || args.isEmpty) {
@@ -86,12 +86,13 @@ object ScepClientApp {
       refreshCert(
         salt,
         timeout = Duration(cmdline.timeout, TimeUnit.SECONDS),
-        baseDir = new File(cmdline.baseDir.getOrElse(".")).getAbsoluteFile())
+        baseDir = new File(cmdline.baseDir.getOrElse(".")).getAbsoluteFile()
+      )
     }
 
   }
 
-  def readInfoFile(infoFileName: String): Unit = {
+  def readInfoFile(infoFileName : String) : Unit = {
     val file = new File(infoFileName).getAbsoluteFile()
     if (!file.exists() || !file.isFile()) {
       throw new RuntimeException(s"File does not exists: ${file}")
@@ -102,19 +103,19 @@ object ScepClientApp {
     val readObject = parser.readObject()
     log.debug(s"Parsed object [${readObject}]")
     readObject match {
-      case encKeyPair: PEMEncryptedKeyPair =>
+      case encKeyPair : PEMEncryptedKeyPair =>
         log.debug(s"Got an encrypted key pair - need a password to decrypt")
-      case keyPair: PEMKeyPair =>
+      case keyPair : PEMKeyPair =>
         log.debug(s"Got an (unencrypted) key pair - no password needed")
-      case cert: X509CertificateHolder =>
+      case cert : X509CertificateHolder =>
         log.debug(s"Got an certificate holder. subject [${cert.getSubject()}], version [${cert.getVersionNumber()}], extensions [${cert.getExtensions()}]")
-      case csr: PKCS10CertificationRequest =>
+      case csr : PKCS10CertificationRequest =>
         log.debug(s"Got a CSR. subject [${csr.getSubject()}], " +
           s"attributes [${csr.getAttributes().map(a => s"Attribute(type [${a.getAttrType()}], values [${a.getAttrValues}])").mkString(", ")}]")
     }
   }
 
-  def readCsrFile(csrFile: String): Unit = {
+  def readCsrFile(csrFile : String) : Unit = {
     val file = new File(csrFile).getAbsoluteFile()
     if (!file.exists() || !file.isFile()) {
       throw new RuntimeException(s"File does not exists: ${file}")
@@ -126,7 +127,7 @@ object ScepClientApp {
     log.debug(s"Parsed object [${readObject}]")
     readObject match {
 
-      case csr: PKCS10CertificationRequest =>
+      case csr : PKCS10CertificationRequest =>
         val subjectPublicKeyInfo = csr.getSubjectPublicKeyInfo()
         val details = Seq(
           "subject" -> csr.getSubject(),
@@ -149,7 +150,7 @@ object ScepClientApp {
     }
   }
 
-  def refreshCert(salt: String, timeout: Duration, baseDir: File): Unit = {
+  def refreshCert(salt : String, timeout : Duration, baseDir : File) : Unit = {
     implicit val executionContext = scala.concurrent.ExecutionContext.global
     val refresher = new CertRefresher(salt, baseDir)
     val checking = refresher.checkCert()
@@ -173,7 +174,7 @@ object ScepClientApp {
           )
       }
     } catch {
-      case e: TimeoutException =>
+      case e : TimeoutException =>
         refresher.stop()
         throw new ExitAppException(
           exitCode = 1,

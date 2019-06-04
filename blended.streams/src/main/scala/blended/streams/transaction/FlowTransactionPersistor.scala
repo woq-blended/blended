@@ -17,7 +17,6 @@ class TransactionNotFoundException(id : String)
 class TransactionIdNotUnique(id : String)
   extends Exception(s"Transaction [$id] is not unique in persistence store")
 
-
 class FlowTransactionPersistor(pSvc : PersistenceService) {
 
   private val creationPrefix = "create."
@@ -31,12 +30,14 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
 
   private def storeProps(t : FlowTransaction) : ju.Map[String, _ <: Any] = {
 
-    val cProps : Map[String, _ <: Any] = t.creationProps.map { case (k,v) =>
-      creationPrefix + k -> v.value
+    val cProps : Map[String, _ <: Any] = t.creationProps.map {
+      case (k, v) =>
+        creationPrefix + k -> v.value
     }
 
-    val wlProps : Map[String, _ <: Any] = t.worklist.map { case (k,states) =>
-      worklistPrefix + k -> states.map(_.toString).mkString(",")
+    val wlProps : Map[String, _ <: Any] = t.worklist.map {
+      case (k, states) =>
+        worklistPrefix + k -> states.map(_.toString).mkString(",")
     }
 
     val stateProps : Map[String, _ <: Any] = Map(
@@ -47,9 +48,9 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
     (cProps ++ wlProps ++ stateProps).asJava
   }
 
-  private def transaction(storeProps: Map[String, _ <: Any]) : Try[FlowTransaction] = Try {
+  private def transaction(storeProps : Map[String, _ <: Any]) : Try[FlowTransaction] = Try {
 
-    def property[T](propName : String, props: Map[String, _ <: Any]) : Try[T] = Try {
+    def property[T](propName : String, props : Map[String, _ <: Any]) : Try[T] = Try {
       props.get(propName).map(_.asInstanceOf[T]).get
     }
 
@@ -59,18 +60,20 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
     }
 
     val creationProps : Map[String, MsgProperty] =
-      storeProps.filterKeys(_.startsWith(creationPrefix)).map{ case (k,v) =>
-        k.substring(creationPrefix.length) -> MsgProperty.lift(v).get
+      storeProps.filterKeys(_.startsWith(creationPrefix)).map {
+        case (k, v) =>
+          k.substring(creationPrefix.length) -> MsgProperty.lift(v).get
       }.toMap
 
     val worklist : Map[String, List[WorklistState]] = {
       val wlProps = storeProps.filterKeys(_.startsWith(worklistPrefix))
 
-      wlProps.map { case (k,v) =>
-        val states : List[WorklistState] =
-          v.toString.split(",").map(s => WorklistState.withName(s)).toList
+      wlProps.map {
+        case (k, v) =>
+          val states : List[WorklistState] =
+            v.toString.split(",").map(s => WorklistState.withName(s)).toList
 
-        k.substring(worklistPrefix.length) -> states
+          k.substring(worklistPrefix.length) -> states
       }
     }
 
@@ -92,9 +95,9 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
   def restoreTransaction(id : String) : Try[FlowTransaction] = Try {
 
     pSvc.findByExample(pClass, Map(idField -> id).asJava) match {
-      case Seq() => throw new TransactionNotFoundException(id)
+      case Seq()      => throw new TransactionNotFoundException(id)
       case h :: Seq() => transaction(h.asScala.toMap).get
-      case _ => throw new TransactionIdNotUnique(id)
+      case _          => throw new TransactionIdNotUnique(id)
     }
   }
 }

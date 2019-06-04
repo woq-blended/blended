@@ -61,7 +61,7 @@ object DispatcherInbound {
     val decideCbe = FlowProcessor.fromFunction("decideCbe", bs.streamLogger) { env =>
 
       Try {
-        bs.withContextObject[ResourceTypeConfig](bs.rtConfigKey, env){ rtCfg : ResourceTypeConfig =>
+        bs.withContextObject[ResourceTypeConfig](bs.rtConfigKey, env) { rtCfg : ResourceTypeConfig =>
 
           if (rtCfg.withCBE) {
             val newMsg = env.flowMessage

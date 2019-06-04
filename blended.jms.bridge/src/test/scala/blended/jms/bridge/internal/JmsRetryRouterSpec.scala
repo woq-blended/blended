@@ -56,7 +56,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
     }
 
     "throw a RetryTimeoutException if the max retry timeout is reached" in {
-      val  timeout : Long = 100
+      val timeout : Long = 100
 
       val router : JmsRetryRouter = new JmsRetryRouter(
         name = "spec",
@@ -98,7 +98,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val env1 : FlowEnvelope = router.validate(router.header(env).get).get
       val env2 : FlowEnvelope = router.validate(router.header(env1).get).get
 
-      env2.header[Int](headerCfg.headerRetryCount) should be (Some(2))
+      env2.header[Int](headerCfg.headerRetryCount) should be(Some(2))
     }
 
     "maintain the first retry timestamp in normal operations" in {
@@ -114,8 +114,8 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val env1 : FlowEnvelope = router.validate(router.header(env).get).get
       val env2 : FlowEnvelope = router.validate(router.header(env1).get).get
 
-      env2.header[Long](headerCfg.headerFirstRetry) should be (defined)
-      env2.header[Long](headerCfg.headerFirstRetry) should be (env1.header[Long](headerCfg.headerFirstRetry))
+      env2.header[Long](headerCfg.headerFirstRetry) should be(defined)
+      env2.header[Long](headerCfg.headerFirstRetry) should be(env1.header[Long](headerCfg.headerFirstRetry))
     }
   }
 }

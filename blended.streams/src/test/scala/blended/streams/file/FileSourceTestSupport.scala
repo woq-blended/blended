@@ -15,7 +15,7 @@ trait FileSourceTestSupport {
     f
   }
 
-  def genFile(f: File) : Unit = {
+  def genFile(f : File) : Unit = {
     val os = new FileOutputStream(f)
     os.write("Hallo Andreas".getBytes())
     os.flush()

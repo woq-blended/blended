@@ -13,7 +13,7 @@ trait JMSSupport {
   val TOPICTAG = "topic:"
   val QUEUETAG = "queue:"
 
-  def withSession(f: (Session => Unit))(con: Connection, transacted: Boolean = false, mode: Int = Session.AUTO_ACKNOWLEDGE) : Option[Throwable] = {
+  def withSession(f : (Session => Unit))(con : Connection, transacted : Boolean = false, mode : Int = Session.AUTO_ACKNOWLEDGE) : Option[Throwable] = {
 
     var session : Option[Session] = None
 
@@ -30,7 +30,7 @@ trait JMSSupport {
     }
   }
 
-  def withConnection(f: (Connection => Unit))(cf: ConnectionFactory) : Option[Throwable] = {
+  def withConnection(f : (Connection => Unit))(cf : ConnectionFactory) : Option[Throwable] = {
 
     var connection : Option[Connection] = None
 
@@ -49,7 +49,7 @@ trait JMSSupport {
     }
   }
 
-  def destination(session: Session, destName: String) : Destination = {
+  def destination(session : Session, destName : String) : Destination = {
     if (destName.startsWith(TOPICTAG))
       session.createTopic(destName.substring(TOPICTAG.length))
     else if (destName.startsWith(QUEUETAG))
@@ -60,9 +60,9 @@ trait JMSSupport {
 
   def receiveMessage(
     cf : ConnectionFactory,
-    destName: String,
-    msgHandler: JMSMessageHandler,
-    errorHandler: JMSErrorHandler,
+    destName : String,
+    msgHandler : JMSMessageHandler,
+    errorHandler : JMSErrorHandler,
     maxMessages : Int = 0,
     receiveTimeout : Long = 50,
     subscriptionName : Option[String] = None
@@ -103,7 +103,7 @@ trait JMSSupport {
               msgCount += 1
               val id = m.getJMSMessageID
               log.trace(s"Handling received message [$id] from [$destName]")
-              msgHandler.handleMessage(m)  match {
+              msgHandler.handleMessage(m) match {
                 case Some(t) =>
                   log.warn(s"Error handling message [$id] from [$destName]")
                   if (errorHandler.handleError(m, t)) m.acknowledge()
@@ -111,20 +111,20 @@ trait JMSSupport {
                   log.trace(s"Successfully handled message [$id] from [$destName]")
                   m.acknowledge()
               }
-            }
-        } while(msg.isDefined && (maxMessages <=0 || msgCount < maxMessages))
+          }
+        } while (msg.isDefined && (maxMessages <= 0 || msgCount < maxMessages))
 
         consumer.close()
-      } (con = conn, transacted = false, mode = Session.CLIENT_ACKNOWLEDGE)
-    } (cf)
+      }(con = conn, transacted = false, mode = Session.CLIENT_ACKNOWLEDGE)
+    }(cf)
   }
 
   def sendMessage[T](
-    cf: ConnectionFactory,
-    destName: String,
-    content: T,
-    msgFactory: JMSMessageFactory[T],
-    deliveryMode: Int = DeliveryMode.NON_PERSISTENT,
+    cf : ConnectionFactory,
+    destName : String,
+    content : T,
+    msgFactory : JMSMessageFactory[T],
+    deliveryMode : Int = DeliveryMode.NON_PERSISTENT,
     priority : Int = 4,
     ttl : Long = 0
   ) : Option[Throwable] = {
@@ -143,7 +143,7 @@ trait JMSSupport {
             log.error(s"Error sending message to [$destName] : [${t.getMessage}]")
             Some(t)
         }
-      } (conn)
-    } (cf)
+      }(conn)
+    }(cf)
   }
 }

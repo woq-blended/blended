@@ -10,15 +10,15 @@ import scala.collection.JavaConverters._
 
 class BlendedPojoBundle(
   activator : BundleActivator,
-  registry: ServiceRegistry,
-  dispatcher: EventDispatcher,
-  bundles: java.util.Map[java.lang.Long, Bundle],
-  location: String,
-  id: Long,
-  symbolicName: String,
-  version: Version,
-  revision: Revision,
-  headers: java.util.Map[String, String],
+  registry : ServiceRegistry,
+  dispatcher : EventDispatcher,
+  bundles : java.util.Map[java.lang.Long, Bundle],
+  location : String,
+  id : Long,
+  symbolicName : String,
+  version : Version,
+  revision : Revision,
+  headers : java.util.Map[String, String],
   config : util.HashMap[String, Object]
 ) extends PojoSRBundle(
   registry,
@@ -36,7 +36,7 @@ class BlendedPojoBundle(
 ) {
 
   @throws[BundleException]
-  override def start(): Unit = {
+  override def start() : Unit = {
 
     if (m_state != Bundle.RESOLVED) {
       if (m_state == Bundle.ACTIVE) return
@@ -65,8 +65,7 @@ class BlendedPojoBundle(
 
     m_state match {
       case Bundle.ACTIVE =>
-        try
-        {
+        try {
           m_state = Bundle.STOPPING
           dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STOPPING, this))
           activator.stop(m_context)
@@ -82,7 +81,7 @@ class BlendedPojoBundle(
 
       case Bundle.RESOLVED =>
 
-      case _ => throw new BundleException("Bundle is in wrong state for stop")
+      case _               => throw new BundleException("Bundle is in wrong state for stop")
     }
   }
 }

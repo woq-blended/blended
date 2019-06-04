@@ -16,8 +16,9 @@ trait MemoryStash { this : Actor =>
   def unstash() : Unit = {
     val r = requests.reverse.toList
     requests.clear()
-    r.foreach { case (requestor, msg) =>
-      self.tell(msg, requestor)
+    r.foreach {
+      case (requestor, msg) =>
+        self.tell(msg, requestor)
     }
     requests.clear()
   }

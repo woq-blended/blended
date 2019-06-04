@@ -21,7 +21,7 @@ private object BlendedSecurityAkkaHttp extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project,
       BlendedSecurityJvm.project,
       BlendedUtilLogging.project,

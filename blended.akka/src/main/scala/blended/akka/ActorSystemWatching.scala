@@ -1,6 +1,6 @@
 package blended.akka
 
-import akka.actor.{ ActorRef, Props }
+import akka.actor.{ActorRef, Props}
 import blended.akka.internal.ActorSystemCapsule
 import domino.DominoImplicits
 import domino.capsule.CapsuleContext
@@ -14,19 +14,19 @@ trait ActorSystemWatching extends DominoImplicits {
   private[this] val log = Logger[ActorSystemWatching]
 
   /** Dependency */
-  protected def capsuleContext: CapsuleContext
+  protected def capsuleContext : CapsuleContext
 
   /** Dependency */
-  protected def bundleContext: BundleContext
+  protected def bundleContext : BundleContext
 
-  def whenActorSystemAvailable(f: OSGIActorConfig => Unit): Unit = {
+  def whenActorSystemAvailable(f : OSGIActorConfig => Unit) : Unit = {
     val m = new ActorSystemCapsule(capsuleContext, f, bundleContext)
     capsuleContext.addCapsule(m)
   }
 
-  def setupBundleActor(cfg: OSGIActorConfig, props: Props): ActorRef = setupBundleActor(cfg.system, props)
+  def setupBundleActor(cfg : OSGIActorConfig, props : Props) : ActorRef = setupBundleActor(cfg.system, props)
 
-  def setupBundleActor(system: ActorSystem, props: Props): ActorRef = {
+  def setupBundleActor(system : ActorSystem, props : Props) : ActorRef = {
     val actorName = bundleContext.getBundle().getSymbolicName()
     log.debug(s"About to create bundle actor for bundle: ${actorName}")
     val actorRef = system.actorOf(props, actorName)

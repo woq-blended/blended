@@ -18,10 +18,10 @@ object BuildHelper {
     f.delete()
   }
 
-  def resolveModuleFile(mid : ModuleID, targetPath: File) : Vector[File] = {
+  def resolveModuleFile(mid : ModuleID, targetPath : File) : Vector[File] = {
 
     resolver.retrieve(mid, None, targetPath, log) match {
-      case Left(w) => throw w.resolveException
+      case Left(w)      => throw w.resolveException
       case Right(files) => files
     }
   }

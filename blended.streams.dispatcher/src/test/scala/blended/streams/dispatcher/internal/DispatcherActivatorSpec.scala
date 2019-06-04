@@ -37,10 +37,10 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
   implicit val timeout : FiniteDuration = 5.seconds
 
-  override def loggerName: String = classOf[DispatcherActivatorSpec].getName()
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def loggerName : String = classOf[DispatcherActivatorSpec].getName()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator(),
     "blended.jms.bridge" -> new BridgeActivator(),
@@ -61,7 +61,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
   private def getResults(cf : IdAwareConnectionFactory, dest : JmsDestination*) : Seq[List[FlowEnvelope]] = {
 
-    val collectors = dest.map{ d =>
+    val collectors = dest.map { d =>
       receiveMessages(
         headerCfg = ctxt.bs.headerConfig, cf = cf, dest = d, Logger(loggerName)
       )
@@ -75,7 +75,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     "process inbound messages with a wrong ResourceType" in {
 
       val logSink = Flow[ILoggingEvent]
-        .filter{ event =>
+        .filter { event =>
           event.getLevel() == Level.INFO
         }
         .toMat(Sink.seq[ILoggingEvent])(Keep.right)
@@ -108,7 +108,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
       // TODO: Reconstruct FlowTransaction from String ??
       assert(logEvents.size >= 4)
-      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") || e.getMessage().startsWith("Message received")})
+      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") || e.getMessage().startsWith("Message received") })
       assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Started}]")) >= 1)
       assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Failed}]")) >= 1)
 
@@ -121,7 +121,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     "process inbound messages with a correct ResourceType" in {
 
       val logSink = Flow[ILoggingEvent]
-        .filter{ event =>
+        .filter { event =>
           event.getLevel() == Level.INFO
         }
         .toMat(Sink.seq[ILoggingEvent])(Keep.right)
@@ -154,7 +154,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
       // TODO: Reconstruct FlowTransaction from String ??
       assert(logEvents.size >= 4)
-      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") || e.getMessage().startsWith("Message received")})
+      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") || e.getMessage().startsWith("Message received") })
       assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Started}]")) >= 1)
       assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Completed}]")) >= 1)
 

@@ -8,7 +8,7 @@ class MvnUrlTest extends FreeSpec {
 
   "toUrl" - {
 
-    def ok(mvn: MvnGav, url: String) = {
+    def ok(mvn : MvnGav, url : String) = {
       s"should process ${mvn}" in {
         assert(mvn.toUrl("") === url)
         assert(mvn.toUrl("http://org.example/repo1") === s"http://org.example/repo1/${url}")
@@ -27,13 +27,13 @@ class MvnUrlTest extends FreeSpec {
   }
 
   "parse" - {
-    def ok(gav: String, mvn: MvnGav) = {
+    def ok(gav : String, mvn : MvnGav) = {
       s"should parse ${gav} to ${mvn}" in {
         assert(MvnGav.parse(gav) === Success(mvn))
       }
     }
 
-    def notOk(gav: String) = {
+    def notOk(gav : String) = {
       s"should not parse ${gav}" in {
         assert(MvnGav.parse(gav).isInstanceOf[Failure[_]])
       }

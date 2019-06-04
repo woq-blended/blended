@@ -31,7 +31,8 @@ class EquinoxFrameworkTest extends LoggingFreeSpec
         |  org.osgi.framework.storage.clean = onFirstInit
         |}
         |bundles = []
-        |""").stripMargin
+        |"""
+        ).stripMargin
 
         withTestFile(launcherConfig) { configFile =>
           Launcher.run(Array(

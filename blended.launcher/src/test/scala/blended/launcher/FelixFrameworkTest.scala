@@ -28,7 +28,8 @@ class FelixFrameworkTest extends FreeSpec with TestFile {
         |  org.osgi.framework.storage.clean = onFirstInit
         |}
         |bundles = []
-        |""").stripMargin
+        |"""
+        ).stripMargin
 
         withTestFile(launcherConfig) { configFile =>
           Launcher.run(Array(

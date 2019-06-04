@@ -38,13 +38,13 @@ class CbeTransactionEventSpec extends LoggingFreeSpec
 
     val xmlSupport = new XMLSupport(xml)
     xmlSupport.validate("cbe_1.0.1_kl.xsd")
-    xmlSupport.applyXPath("//*[local-name() = 'sourceComponentId']/@component") should be (component.component)
-    xmlSupport.applyXPath("//*[local-name() = 'sourceComponentId']/@subComponent") should be (component.subComponent)
-    xmlSupport.applyXPath("//*[local-name() = 'sourceComponentId']/@instanceId") should be (component.instanceId.toString)
-    xmlSupport.applyXPath("//*[local-name() = 'children' and ./@name = 'TRANSACTION_STATUS']/*/text()") should be (event.state.get.toString)
-    xmlSupport.applyXPath("//*[local-name() = 'children' and ./@name = 'TRANSACTION_ID']/*/text()") should be (event.id)
-    xmlSupport.applyXPath("//*[local-name() = 'extendedDataElements' and ./@name = 'Application']/*/text()") should be ("SIB-2.0")
-    xmlSupport.applyXPath("//*[local-name() = 'extendedDataElements' and ./@name = 'Module']/*/text()") should be (component.subComponent)
+    xmlSupport.applyXPath("//*[local-name() = 'sourceComponentId']/@component") should be(component.component)
+    xmlSupport.applyXPath("//*[local-name() = 'sourceComponentId']/@subComponent") should be(component.subComponent)
+    xmlSupport.applyXPath("//*[local-name() = 'sourceComponentId']/@instanceId") should be(component.instanceId.toString)
+    xmlSupport.applyXPath("//*[local-name() = 'children' and ./@name = 'TRANSACTION_STATUS']/*/text()") should be(event.state.get.toString)
+    xmlSupport.applyXPath("//*[local-name() = 'children' and ./@name = 'TRANSACTION_ID']/*/text()") should be(event.id)
+    xmlSupport.applyXPath("//*[local-name() = 'extendedDataElements' and ./@name = 'Application']/*/text()") should be("SIB-2.0")
+    xmlSupport.applyXPath("//*[local-name() = 'extendedDataElements' and ./@name = 'Module']/*/text()") should be(component.subComponent)
 
     xmlSupport
   }
@@ -54,14 +54,14 @@ class CbeTransactionEventSpec extends LoggingFreeSpec
     "be representable as a CBE XML" in {
 
       val event = CbeTransactionEvent(
-        id           = "myId",
-        severity     = EventSeverity.Information,
-        component    = comp,
-        state        = Some(FlowTransactionState.Started),
-        properties   = headers,
+        id = "myId",
+        severity = EventSeverity.Information,
+        component = comp,
+        state = Some(FlowTransactionState.Started),
+        properties = headers,
         closeProcess = false,
-        timeout      = 1.second,
-        timestamp    = new Date()
+        timeout = 1.second,
+        timestamp = new Date()
       )
 
       val xml = event.asCBE()
@@ -70,20 +70,20 @@ class CbeTransactionEventSpec extends LoggingFreeSpec
 
     "populate ModuleLast if the process is to be closed" in {
       val event = CbeTransactionEvent(
-        id           = "myId",
-        severity     = EventSeverity.Information,
-        component    = comp,
-        state        = Some(FlowTransactionState.Started),
-        properties   = headers,
+        id = "myId",
+        severity = EventSeverity.Information,
+        component = comp,
+        state = Some(FlowTransactionState.Started),
+        properties = headers,
         closeProcess = true,
-        timeout      = 1.second,
-        timestamp    = new Date()
+        timeout = 1.second,
+        timestamp = new Date()
       )
 
       val xml = event.asCBE()
 
       val xmlSupport = validateCBE(event, xml)
-      xmlSupport.applyXPath("//*[local-name() = 'extendedDataElements' and ./@name = 'ModuleLast']/*/text()") should be (comp.subComponent)
+      xmlSupport.applyXPath("//*[local-name() = 'extendedDataElements' and ./@name = 'ModuleLast']/*/text()") should be(comp.subComponent)
     }
   }
 }

@@ -8,7 +8,7 @@ object RestJMSConfig {
 
   val operationsPath = "operations"
 
-  def fromConfig(cfg: Config) : RestJMSConfig = {
+  def fromConfig(cfg : Config) : RestJMSConfig = {
 
     val operations : Map[String, JmsOperationConfig] = cfg.hasPath(operationsPath) match {
       case false => Map.empty
@@ -28,7 +28,7 @@ case class RestJMSConfig(
 )
 
 object JmsOperationConfig {
-  def apply(cfg: Config) : JmsOperationConfig = {
+  def apply(cfg : Config) : JmsOperationConfig = {
 
     val destinationPath = "destination"
     val headerPath = "header"
@@ -39,16 +39,16 @@ object JmsOperationConfig {
     val isSoapPath = "isSoap"
     val encodingPath = "encoding"
 
-    new JmsOperationConfig (
+    new JmsOperationConfig(
       destination = cfg.getString(destinationPath),
 
       timeout = cfg.hasPath(timeoutPath) match {
-        case true => cfg.getLong(timeoutPath)
+        case true  => cfg.getLong(timeoutPath)
         case false => 1000L
       },
 
       receivetimeout = cfg.hasPath(receivetimeoutPath) match {
-        case true => cfg.getLong(receivetimeoutPath)
+        case true  => cfg.getLong(receivetimeoutPath)
         case false => 250L
       },
 
@@ -63,7 +63,7 @@ object JmsOperationConfig {
 
       contentTypes = cfg.hasPath(cTypePath) match {
         case false => None
-        case true => Some(cfg.getStringList(cTypePath).asScala.toList)
+        case true  => Some(cfg.getStringList(cTypePath).asScala.toList)
       },
 
       isSoap = cfg.hasPath(isSoapPath) && cfg.getBoolean(isSoapPath),
@@ -81,7 +81,7 @@ case class JmsOperationConfig(
   receivetimeout : Long,
 
   // Timeout in Milliseconds for the operation
-  timeout: Long,
+  timeout : Long,
 
   // These are the headers that will be sent via JMS for the operation
   header : Map[String, String],

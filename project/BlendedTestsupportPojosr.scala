@@ -14,7 +14,7 @@ object BlendedTestsupportPojosr extends ProjectFactory {
       Dependencies.orgOsgi
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtilLogging.project,
       BlendedContainerContextImpl.project,
       BlendedDomino.project

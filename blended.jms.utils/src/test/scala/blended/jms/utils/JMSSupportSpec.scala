@@ -28,7 +28,7 @@ class JMSSupportSpec extends FreeSpec
 
   implicit val timeout : Timeout = 3.seconds
 
-  override val camelContext: CamelContext = {
+  override val camelContext : CamelContext = {
     val ctxt = CamelExtension(system).context
     ctxt.addComponent("jms", JmsComponent.jmsComponent(amqCf))
     ctxt
@@ -36,13 +36,13 @@ class JMSSupportSpec extends FreeSpec
 
   var broker : Option[BrokerService] = None
 
-  private def sendMessage(destName: String) : Unit = {
+  private def sendMessage(destName : String) : Unit = {
     sendMessage(
       cf = amqCf,
       destName = destName,
       content = (),
       msgFactory = new JMSMessageFactory[Unit] {
-        override def createMessage(session: Session, content: Unit) : TextMessage = {
+        override def createMessage(session : Session, content : Unit) : TextMessage = {
           session.createTextMessage("Hello AMQ")
         }
       },
@@ -50,7 +50,7 @@ class JMSSupportSpec extends FreeSpec
     )
   }
 
-  private def checkMessage(destName: String, assertions: MockAssertion*) : Unit = {
+  private def checkMessage(destName : String, assertions : MockAssertion*) : Unit = {
 
     val probe = TestProbe()
     val mock = system.actorOf(Props(CamelMockActor("jms:" + destName)))
@@ -59,8 +59,8 @@ class JMSSupportSpec extends FreeSpec
     probe.receiveOne(timeout.duration)
     mock ! StopReceive
 
-    val errors = MockAssertion.checkAssertions(mock, assertions:_*)
-    errors should be (empty)
+    val errors = MockAssertion.checkAssertions(mock, assertions : _*)
+    errors should be(empty)
 
   }
 
@@ -82,7 +82,7 @@ class JMSSupportSpec extends FreeSpec
         cf = amqCf,
         destName = "test",
         msgHandler = new JMSMessageHandler {
-          override def handleMessage(msg: Message): Option[Throwable] = {
+          override def handleMessage(msg : Message) : Option[Throwable] = {
             count.incrementAndGet()
             None
           }
@@ -91,7 +91,7 @@ class JMSSupportSpec extends FreeSpec
         subscriptionName = None
       )
 
-      count.get() should be (1)
+      count.get() should be(1)
 
       checkMessage("test", ExpectedMessageCount(0))
     }
@@ -104,7 +104,7 @@ class JMSSupportSpec extends FreeSpec
         cf = amqCf,
         destName = "test",
         msgHandler = new JMSMessageHandler {
-          override def handleMessage(msg: Message): Option[Throwable] = {
+          override def handleMessage(msg : Message) : Option[Throwable] = {
             Some(new Exception("test failure"))
           }
         },
@@ -134,7 +134,8 @@ class JMSSupportSpec extends FreeSpec
 
       receiver.start()
 
-      checkMessage("test2",
+      checkMessage(
+        "test2",
         ExpectedMessageCount(1),
         ExpectedHeaders(Map("foo" -> "bar"))
       )
@@ -148,7 +149,7 @@ class JMSSupportSpec extends FreeSpec
     broker = startBroker()
   }
 
-  override protected def afterAll(): Unit = {
+  override protected def afterAll() : Unit = {
     stopBroker(broker)
   }
 }

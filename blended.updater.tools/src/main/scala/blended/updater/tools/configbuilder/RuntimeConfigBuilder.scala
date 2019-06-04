@@ -16,23 +16,23 @@ object RuntimeConfigBuilder {
 
   class CmdOptions {
     @CmdOption(names = Array("-h", "--help"), isHelp = true)
-    var help: Boolean = false
+    var help : Boolean = false
 
     @CmdOption(names = Array("-d", "--download-missing"))
-    var downloadMissing: Boolean = false
+    var downloadMissing : Boolean = false
 
     @CmdOption(names = Array("-u", "--update-checksums"))
-    var updateChecksums: Boolean = false
+    var updateChecksums : Boolean = false
 
     @CmdOption(names = Array("-c", "--check"))
-    var check: Boolean = false
+    var check : Boolean = false
 
     @CmdOption(names = Array("-f"), args = Array("configfile"), description = "Read the configuration from file {0}")
-    var configFile: String = ""
+    var configFile : String = ""
 
     @CmdOption(names = Array("-o"), args = Array("outfile"), description = "Write the updated config file to {0}",
       conflictsWith = Array("-i"))
-    var outFile: String = ""
+    var outFile : String = ""
 
     @CmdOption(
       names = Array("-i", "--in-place"),
@@ -40,91 +40,90 @@ object RuntimeConfigBuilder {
       requires = Array("-f"),
       conflictsWith = Array("-o")
     )
-    var inPlace: Boolean = false
+    var inPlace : Boolean = false
 
     @CmdOption(names = Array("-r", "--feature-repo"), args = Array("featurefile"),
       description = "Lookup additional feature configuration(s) from file {0}",
       maxCount = -1)
-    def addFeatureRepo(repo: String): Unit = featureRepos ++= Seq(repo)
+    def addFeatureRepo(repo : String) : Unit = featureRepos ++= Seq(repo)
 
-    var featureRepos: Seq[String] = Seq()
+    var featureRepos : Seq[String] = Seq()
 
     @CmdOption(names = Array("-m", "--maven-url"), args = Array("url"), maxCount = -1)
-    def addMavenUrl(mavenUrl: String) = this.mavenUrls ++= Seq(mavenUrl)
+    def addMavenUrl(mavenUrl : String) = this.mavenUrls ++= Seq(mavenUrl)
 
-    var mavenUrls: Seq[String] = Seq()
+    var mavenUrls : Seq[String] = Seq()
 
     @CmdOption(names = Array("--debug"))
-    var debug: Boolean = false
+    var debug : Boolean = false
 
     @CmdOption(names = Array("--maven-artifact"), args = Array("GAV", "file"), maxCount = -1,
       description = "Gives explicit (already downloaded) file locations for Maven GAVs")
-    def addMavenDir(gav: String, file: String) = this.mavenArtifacts ++= Seq(gav -> file)
-    var mavenArtifacts: Seq[(String, String)] = Seq()
+    def addMavenDir(gav : String, file : String) = this.mavenArtifacts ++= Seq(gav -> file)
+    var mavenArtifacts : Seq[(String, String)] = Seq()
 
     @CmdOption(names = Array("--explode-resources"), description = "Explode resources (unpack and update touch-files)")
-    var explodeResources: Boolean = false
+    var explodeResources : Boolean = false
 
     @CmdOption(names = Array("--add-overlay-file"), args = Array("file"), maxCount = -1,
       description = "Add the given overlay config file to the final profile")
-    def addOverlayFile(file: String) = this.overlayFiles :+= file
-    var overlayFiles: Seq[String] = Seq()
+    def addOverlayFile(file : String) = this.overlayFiles :+= file
+    var overlayFiles : Seq[String] = Seq()
 
     @CmdOption(names = Array("--write-overlays-config"), description = "Write a specific overlays config (or base if no overlays were given)")
-    var writeOverlaysConfig: Boolean = false
+    var writeOverlaysConfig : Boolean = false
 
     @CmdOption(names = Array("--create-launch-config"), args = Array("file"),
       description = "Creates the given launcher config file, honoring the given overlays")
-    var createLaunchConfigFile: String = _
+    var createLaunchConfigFile : String = _
 
     @CmdOption(names = Array("--profile-base-dir"), args = Array("dir"),
       description = "Set the profile base directory to be written via --update-launcher-conf")
-    var profileBaseDir: String = "${BLENDED_HOME}/profiles"
+    var profileBaseDir : String = "${BLENDED_HOME}/profiles"
 
     @CmdOption(names = Array("--env-var"), args = Array("key", "value"), maxCount = -1,
-      description = "Add an additional environment variable as a fallback for resolving the config."
-    )
-    def addEnvVar(key: String, value: String) = this.envVars ++= Seq(key -> value)
+      description = "Add an additional environment variable as a fallback for resolving the config.")
+    def addEnvVar(key : String, value : String) = this.envVars ++= Seq(key -> value)
     var envVars : Seq[(String, String)] = Seq()
   }
 
-  def main(args: Array[String]): Unit = {
+  def main(args : Array[String]) : Unit = {
     try {
       run(args)
       sys.exit(0)
     } catch {
-      case e: Throwable =>
+      case e : Throwable =>
         Console.err.println(s"An error occurred: ${e.getMessage()}")
         sys.exit(1)
     }
   }
 
   /**
-    * Same as [[RuntimeConfigBuilder#main]], but does not call `sys.exit` but throws an exception in case of non-success.
-    * @param args
-    */
-  def run(args: Array[String]): Unit = {
+   * Same as [[RuntimeConfigBuilder#main]], but does not call `sys.exit` but throws an exception in case of non-success.
+   * @param args
+   */
+  def run(args : Array[String]) : Unit = {
     run(args = args, debugLog = None)
   }
 
   def run(
-    args: Array[String],
-    debugLog: Option[String => Unit] = None,
-    infoLog: String => Unit = Console.out.println,
-    errorLog: String => Unit = Console.err.println
-  ): Unit = {
+    args : Array[String],
+    debugLog : Option[String => Unit] = None,
+    infoLog : String => Unit = Console.out.println,
+    errorLog : String => Unit = Console.err.println
+  ) : Unit = {
 
     val options = new CmdOptions()
 
     val cp = new CmdlineParser(options)
-    cp.parse(args: _*)
+    cp.parse(args : _*)
     if (options.help) {
       cp.usage()
       return
     }
 
     //    val debug = options.debug
-    val debug: String => Unit = debugLog match {
+    val debug : String => Unit = debugLog match {
       case Some(debugLog) => debugLog
       case None =>
         if (options.debug) msg => Console.err.println(msg)
@@ -182,7 +181,7 @@ object RuntimeConfigBuilder {
     lazy val mvnUrls = resolved.runtimeConfig.properties.get(RuntimeConfig.Properties.MVN_REPO).toSeq ++ options.mavenUrls
     debug(s"Maven URLs: $mvnUrls")
 
-    def downloadUrls(b: Artifact): Seq[String] = {
+    def downloadUrls(b : Artifact) : Seq[String] = {
       val directUrl = MvnGavSupport.downloadUrls(mvnGavs, b, options.debug)
       directUrl.map(Seq(_)).getOrElse(mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(b.url, Option(baseUrl)).toOption).to[Seq])
     }
@@ -221,9 +220,9 @@ object RuntimeConfigBuilder {
     }
 
     val newRuntimeConfig = if (options.updateChecksums) {
-      var checkedFiles: Map[File, String] = Map()
+      var checkedFiles : Map[File, String] = Map()
 
-      def checkAndUpdate(file: File, r: Artifact): Artifact = {
+      def checkAndUpdate(file : File, r : Artifact) : Artifact = {
         checkedFiles.get(file).orElse(RuntimeConfigCompanion.digestFile(file)).map { checksum =>
           checkedFiles += file -> checksum
           if (r.sha1Sum != Option(checksum)) {
@@ -233,13 +232,13 @@ object RuntimeConfigBuilder {
         }.getOrElse(r)
       }
 
-      def checkAndUpdateResource(a: Artifact): Artifact =
+      def checkAndUpdateResource(a : Artifact) : Artifact =
         checkAndUpdate(localRuntimeConfig.resourceArchiveLocation(a), a)
 
-      def checkAndUpdateBundle(b: BundleConfig): BundleConfig =
+      def checkAndUpdateBundle(b : BundleConfig) : BundleConfig =
         b.copy(artifact = checkAndUpdate(localRuntimeConfig.bundleLocation(b), b.artifact))
 
-      def checkAndUpdateFeatures(f: FeatureConfig): FeatureConfig =
+      def checkAndUpdateFeatures(f : FeatureConfig) : FeatureConfig =
         f.copy(bundles = f.bundles.map(checkAndUpdateBundle))
 
       ResolvedRuntimeConfig(
@@ -257,10 +256,10 @@ object RuntimeConfigBuilder {
         if (!resourceFile.exists()) sys.error("Could not unpack missing resource file: " + resourceFile)
         val blacklist = List("profile.conf", "bundles", "resources", "overlays")
         Unzipper.unzip(resourceFile, localRuntimeConfig.baseDir, Nil,
-          fileSelector = Some { fileName: String => !blacklist.exists(fileName == _) },
+          fileSelector = Some { fileName : String => !blacklist.exists(fileName == _) },
           placeholderReplacer = None) match {
             case Failure(e) => throw new RuntimeException("Could not update resource file: " + resourceFile, e)
-            case _ =>
+            case _          =>
           }
         localRuntimeConfig.createResourceArchiveTouchFile(r, r.sha1Sum) match {
           case Failure(e) =>

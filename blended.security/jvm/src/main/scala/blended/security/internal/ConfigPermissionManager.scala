@@ -8,7 +8,7 @@ import javax.security.auth.Subject
 import scala.collection.JavaConverters._
 import scala.collection.{immutable => sci}
 
-class ConfigPermissionManager(obj: ConfigObject) extends BlendedPermissionManager {
+class ConfigPermissionManager(obj : ConfigObject) extends BlendedPermissionManager {
 
   val permissions : Map[String, BlendedPermissions] = obj.keySet().asScala.toList.map { jaasGrp =>
     val cfgPermissions : BlendedPermissions =
@@ -16,7 +16,7 @@ class ConfigPermissionManager(obj: ConfigObject) extends BlendedPermissionManage
     (jaasGrp, cfgPermissions)
   }.toMap
 
-  override def permissions(subject: Subject): BlendedPermissions = {
+  override def permissions(subject : Subject) : BlendedPermissions = {
     val groups = subject.getPrincipals(classOf[GroupPrincipal]).asScala.toSeq.map(_.getName()).filter { g =>
       permissions.isDefinedAt(g)
     }
@@ -25,7 +25,7 @@ class ConfigPermissionManager(obj: ConfigObject) extends BlendedPermissionManage
     BlendedPermissions(allPermissions).merged
   }
 
-  private[this] def permission(config: Config) : BlendedPermission = {
+  private[this] def permission(config : Config) : BlendedPermission = {
     val clazz = config.getString("permissionClass")
     val props : Map[String, sci.Seq[String]] = if (config.hasPath("properties")) {
       config.getObject("properties").keySet().asScala.map { k =>

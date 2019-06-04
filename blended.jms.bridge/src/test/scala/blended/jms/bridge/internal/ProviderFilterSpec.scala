@@ -7,7 +7,7 @@ class ProviderFilterSpec extends LoggingFreeSpec {
 
   case class Dummy(
     vendor : String,
-    provider: String
+    provider : String
   ) extends ProviderAware
 
   "The Providerfilter should" - {

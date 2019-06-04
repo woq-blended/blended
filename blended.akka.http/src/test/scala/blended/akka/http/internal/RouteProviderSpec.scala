@@ -16,7 +16,7 @@ class RouteProviderSpec
   with ScalatestRouteTest
   with PojoSrTestHelper {
 
-  override def baseDir: String = new File(System.getProperty(BlendedTestSupport.projectTestOutput)).getAbsolutePath()
+  override def baseDir : String = new File(System.getProperty(BlendedTestSupport.projectTestOutput)).getAbsolutePath()
 
   val routeProvider = new RouteProvider()
   val route = routeProvider.dynamicRoute
@@ -41,110 +41,114 @@ class RouteProviderSpec
   "Inside a dynamic (OSGi) environment, the RouteProvider should" - {
 
     "handle comming and going HttpContext registrations" in {
-      withPojoServiceRegistry { sr => Try {
+      withPojoServiceRegistry { sr =>
+        Try {
 
-        val serviceBundle = new DominoActivator() {
-          whenBundleActive {
-            routeProvider.dynamicAdapt(capsuleContext, bundleContext)
-          }
-        }
-
-        val routeBundle = new DominoActivator() {
-          whenBundleActive {
-            import akka.http.scaladsl.server.Directives._
-            val route = pathEnd {
-              get {
-                complete("HELLO")
-              }
+          val serviceBundle = new DominoActivator() {
+            whenBundleActive {
+              routeProvider.dynamicAdapt(capsuleContext, bundleContext)
             }
-            SimpleHttpContext("demo", route).providesService[HttpContext]
-          }
-        }
-
-        val bundleContext = sr.getBundleContext()
-
-        try {
-
-          serviceBundle.start(bundleContext)
-
-          // precondition
-          Get("/demo") ~> route ~> check {
-            assert(handled === false)
           }
 
-          routeBundle.start(bundleContext)
-
-          Get("/demo") ~> route ~> check {
-            assert(responseAs[String] === "HELLO")
+          val routeBundle = new DominoActivator() {
+            whenBundleActive {
+              import akka.http.scaladsl.server.Directives._
+              val route = pathEnd {
+                get {
+                  complete("HELLO")
+                }
+              }
+              SimpleHttpContext("demo", route).providesService[HttpContext]
+            }
           }
 
-          routeBundle.stop(bundleContext)
+          val bundleContext = sr.getBundleContext()
 
-          // postcondition
-          Get("/demo") ~> route ~> check {
-            assert(handled === false)
+          try {
+
+            serviceBundle.start(bundleContext)
+
+            // precondition
+            Get("/demo") ~> route ~> check {
+              assert(handled === false)
+            }
+
+            routeBundle.start(bundleContext)
+
+            Get("/demo") ~> route ~> check {
+              assert(responseAs[String] === "HELLO")
+            }
+
+            routeBundle.stop(bundleContext)
+
+            // postcondition
+            Get("/demo") ~> route ~> check {
+              assert(handled === false)
+            }
+
+          } finally {
+            // cleanup
+            Try { serviceBundle.stop(bundleContext) }
+            Try { routeBundle.stop(bundleContext) }
           }
-
-        } finally {
-          // cleanup
-          Try { serviceBundle.stop(bundleContext) }
-          Try { routeBundle.stop(bundleContext) }
         }
       }
-    }}
+    }
 
     "handle HttpContext registrations with prefixes containing slashes" in {
-      withPojoServiceRegistry { sr => Try {
+      withPojoServiceRegistry { sr =>
+        Try {
 
-        val serviceBundle = new DominoActivator() {
-          whenBundleActive {
-            routeProvider.dynamicAdapt(capsuleContext, bundleContext)
-          }
-        }
-
-        val routeBundle = new DominoActivator() {
-          whenBundleActive {
-            import akka.http.scaladsl.server.Directives._
-            val route = pathEnd {
-              get {
-                complete("HELLO")
-              }
+          val serviceBundle = new DominoActivator() {
+            whenBundleActive {
+              routeProvider.dynamicAdapt(capsuleContext, bundleContext)
             }
-            SimpleHttpContext("test/demo", route).providesService[HttpContext]
-          }
-        }
-
-        val bundleContext = sr.getBundleContext()
-
-        try {
-
-          serviceBundle.start(bundleContext)
-
-          // precondition
-          Get("/test/demo") ~> route ~> check {
-            assert(handled === false)
           }
 
-          routeBundle.start(bundleContext)
-
-          Get("/test/demo") ~> route ~> check {
-            assert(responseAs[String] === "HELLO")
+          val routeBundle = new DominoActivator() {
+            whenBundleActive {
+              import akka.http.scaladsl.server.Directives._
+              val route = pathEnd {
+                get {
+                  complete("HELLO")
+                }
+              }
+              SimpleHttpContext("test/demo", route).providesService[HttpContext]
+            }
           }
 
-          routeBundle.stop(bundleContext)
+          val bundleContext = sr.getBundleContext()
 
-          // postcondition
-          Get("/test/demo") ~> route ~> check {
-            assert(handled === false)
+          try {
+
+            serviceBundle.start(bundleContext)
+
+            // precondition
+            Get("/test/demo") ~> route ~> check {
+              assert(handled === false)
+            }
+
+            routeBundle.start(bundleContext)
+
+            Get("/test/demo") ~> route ~> check {
+              assert(responseAs[String] === "HELLO")
+            }
+
+            routeBundle.stop(bundleContext)
+
+            // postcondition
+            Get("/test/demo") ~> route ~> check {
+              assert(handled === false)
+            }
+
+          } finally {
+            // cleanup
+            Try { serviceBundle.stop(bundleContext) }
+            Try { routeBundle.stop(bundleContext) }
           }
-
-        } finally {
-          // cleanup
-          Try { serviceBundle.stop(bundleContext) }
-          Try { routeBundle.stop(bundleContext) }
         }
       }
-    }}
+    }
 
   }
 

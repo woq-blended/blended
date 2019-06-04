@@ -27,16 +27,15 @@ object DispatcherOutbound {
     provider : Option[String]
   ) : Try[BridgeProviderConfig] = Try {
     (vendor, provider) match {
-      case (Some(v), Some(p)) => registry.jmsProvider(v,p) match {
-        case None => throw new Exception(s"Could not resolve provider [$vendor:$provider]")
+      case (Some(v), Some(p)) => registry.jmsProvider(v, p) match {
+        case None    => throw new Exception(s"Could not resolve provider [$vendor:$provider]")
         case Some(r) => r
       }
-      case (_,_) => throw new Exception(s"Could not resolve provider [$vendor:$provider]")
+      case (_, _) => throw new Exception(s"Could not resolve provider [$vendor:$provider]")
     }
   }
 
-  val resolveDest : ContainerIdentifierService => DispatcherBuilderSupport => FlowEnvelope => Try[JmsDestination] = {
-    idSvc => bs => env => Try {
+  val resolveDest : ContainerIdentifierService => DispatcherBuilderSupport => FlowEnvelope => Try[JmsDestination] = { idSvc => bs => env => Try {
 
     env.getFromContext[Option[String]](bs.bridgeDestinationKey).get match {
       case None => throw new Exception(s"Failed to resolve context object [${bs.bridgeDestinationKey}]")
@@ -50,16 +49,17 @@ object DispatcherOutbound {
           ).map(_.toString()).get
 
           JmsDestination.create(name).get
-          
+
       }
     }
-  }}
+  }
+  }
 
   private[builder] def outboundRouting(
     dispatcherCfg : ResourceTypeRouterConfig,
     idSvc : ContainerIdentifierService,
     bs : DispatcherBuilderSupport
-  )(env: FlowEnvelope) : Try[DispatcherTarget] = Try {
+  )(env : FlowEnvelope) : Try[DispatcherTarget] = Try {
 
     val dest : JmsDestination = resolveDest(idSvc)(bs)(env).get
 
@@ -67,7 +67,7 @@ object DispatcherOutbound {
       case JmsFlowSupport.replyToQueueName =>
         val replyToHeader : String = JmsFlowSupport.replyToHeader(bs.headerConfig.prefix)
         env.header[String](replyToHeader) match {
-          case None => throw new Exception(s"Header [$replyToHeader] must be set for replyTo dispatcher flow")
+          case None    => throw new Exception(s"Header [$replyToHeader] must be set for replyTo dispatcher flow")
           case Some(s) => JmsDestination.create(s).get
         }
 
@@ -78,19 +78,19 @@ object DispatcherOutbound {
       // For the replyto destination we have to respond to the src provider
       case JmsFlowSupport.replyToQueueName =>
 
-        val v : Option[String] = env.header[String](bs.srcVendorHeader(bs.headerConfig.prefix)).map{ s =>
+        val v : Option[String] = env.header[String](bs.srcVendorHeader(bs.headerConfig.prefix)).map { s =>
           idSvc.resolvePropertyString(s).map(_.toString()).get
         }
 
-        val p : Option[String] = env.header[String](bs.srcProviderHeader(bs.headerConfig.prefix)).map{ s =>
+        val p : Option[String] = env.header[String](bs.srcProviderHeader(bs.headerConfig.prefix)).map { s =>
           idSvc.resolvePropertyString(s).map(_.toString()).get
         }
 
-        resolveProvider(dispatcherCfg.providerRegistry,v,p).get
+        resolveProvider(dispatcherCfg.providerRegistry, v, p).get
 
       case _ =>
         env.getFromContext[BridgeProviderConfig](bs.bridgeProviderKey).get match {
-          case None => throw new Exception(s"Failed to resolve context object [${bs.bridgeProviderKey}]")
+          case None    => throw new Exception(s"Failed to resolve context object [${bs.bridgeProviderKey}]")
           case Some(p) => p
         }
     }
@@ -103,20 +103,21 @@ object DispatcherOutbound {
     result
   }
 
-  def apply(dispatcherCfg: ResourceTypeRouterConfig, idSvc : ContainerIdentifierService)(implicit bs : DispatcherBuilderSupport)
-    : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+  def apply(dispatcherCfg : ResourceTypeRouterConfig, idSvc : ContainerIdentifierService)(implicit bs : DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
     /*-------------------------------------------------------------------------------------------------*/
-    val routingDecider = FlowProcessor.fromFunction("routingDecider", bs.streamLogger) { env => Try {
+    val routingDecider = FlowProcessor.fromFunction("routingDecider", bs.streamLogger) { env =>
+      Try {
 
-      val routing = outboundRouting(dispatcherCfg, idSvc, bs)(env).get
+        val routing = outboundRouting(dispatcherCfg, idSvc, bs)(env).get
 
-      env
-        .withHeader(bs.headerBridgeVendor, routing.vendor).get
-        .withHeader(bs.headerBridgeProvider, routing.provider).get
-        .withHeader(bs.headerBridgeDest, routing.dest.asString).get
-        .withHeader(bs.headerConfig.headerTrack, true).get
-    }}
+        env
+          .withHeader(bs.headerBridgeVendor, routing.vendor).get
+          .withHeader(bs.headerBridgeProvider, routing.provider).get
+          .withHeader(bs.headerBridgeDest, routing.dest.asString).get
+          .withHeader(bs.headerConfig.headerTrack, true).get
+      }
+    }
 
     Flow.fromGraph(routingDecider)
   }

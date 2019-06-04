@@ -8,26 +8,26 @@ import blended.security.login.api.Token
 import blended.updater.config.UpdateContainerInfo
 
 sealed trait DispatcherEvent
-case class NewClient(clientInfo: ClientInfo) extends DispatcherEvent
-case class ClientClosed(info: Token) extends DispatcherEvent
-case class ReceivedMessage(msg: String) extends DispatcherEvent
-case class NewData(data: Any) extends DispatcherEvent
+case class NewClient(clientInfo : ClientInfo) extends DispatcherEvent
+case class ClientClosed(info : Token) extends DispatcherEvent
+case class ReceivedMessage(msg : String) extends DispatcherEvent
+case class NewData(data : Any) extends DispatcherEvent
 
 private[ws] case class ClientInfo(
   id : String,
-  token: Token,
+  token : Token,
   clientActor : ActorRef
 )
 
 trait Dispatcher {
-  def newClient(info: Token) : Flow[String, DispatcherEvent, Any]
+  def newClient(info : Token) : Flow[String, DispatcherEvent, Any]
 }
 
 object Dispatcher {
-  def create(system: ActorSystem): Dispatcher = {
+  def create(system : ActorSystem) : Dispatcher = {
     val dispatcherActor = system.actorOf(Props[DispatcherActor])
 
-    info: Token => {
+    info : Token => {
       val in = Flow[String]
         .map(s => ReceivedMessage(s))
         .to(Sink.actorRef[DispatcherEvent](dispatcherActor, ClientClosed(info)))
@@ -45,28 +45,28 @@ object Dispatcher {
 
   class DispatcherActor extends Actor with ActorLogging {
 
-    override def receive: Receive = Actor.emptyBehavior
+    override def receive : Receive = Actor.emptyBehavior
 
-    override def preStart(): Unit = {
+    override def preStart() : Unit = {
       context.system.eventStream.subscribe(self, classOf[UpdateContainerInfo])
       context.become(dispatching(Map.empty))
     }
 
-    override def postStop(): Unit = {
+    override def postStop() : Unit = {
       context.system.eventStream.unsubscribe(self)
     }
 
-    private def dispatch(e: DispatcherEvent)(clients: Map[String, ClientInfo]) : Unit = {
+    private def dispatch(e : DispatcherEvent)(clients : Map[String, ClientInfo]) : Unit = {
 
       // If we have to dispatch some data, we make sure, the client has the permission to see it
       val filteredClients = clients.values.filter { c =>
         e match {
           case NewData(obj) => obj match {
             case g : GrantableObject => c.token.permissions.allows(g.permission)
-            case _ => true
+            case _                   => true
           }
           case ReceivedMessage(_) => true
-          case _ => false
+          case _                  => false
         }
       }
 
@@ -77,7 +77,7 @@ object Dispatcher {
       filteredClients.foreach(_.clientActor ! e)
     }
 
-    private def dispatching(clients: Map[String, ClientInfo]): Receive = {
+    private def dispatching(clients : Map[String, ClientInfo]) : Receive = {
       case m : ReceivedMessage =>
         dispatch(m)(clients)
 

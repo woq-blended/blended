@@ -1,6 +1,6 @@
 package blended.security
 
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.{FreeSpec, Matchers}
 
 class BlendedPermissionSpec extends FreeSpec
   with Matchers {
@@ -33,15 +33,13 @@ class BlendedPermissionSpec extends FreeSpec
 
     "match if all of the specified properties match the controlled object" in {
 
-
-
       val p1 = BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> countries))
 
       assert(countries.forall { c =>
         p1.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List(c))))
       })
 
-      assert(noCountries.forall{ c =>
+      assert(noCountries.forall { c =>
         !p1.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List(c))))
       })
 
@@ -69,8 +67,8 @@ class BlendedPermissionSpec extends FreeSpec
       val p1 = BlendedPermission(permissionClass = Some("test"))
       val p2 = BlendedPermission(permissionClass = None)
 
-      p1.merge(p2).permissionClass should be (empty)
-      p2.merge(p1).permissionClass should be (empty)
+      p1.merge(p2).permissionClass should be(empty)
+      p2.merge(p1).permissionClass should be(empty)
     }
 
     "a merge with unmatched permissionClasses should have an empty permission class" in {
@@ -78,16 +76,16 @@ class BlendedPermissionSpec extends FreeSpec
       val p1 = BlendedPermission(permissionClass = Some("foo"))
       val p2 = BlendedPermission(permissionClass = Some("bar"))
 
-      p1.merge(p2).permissionClass should be (empty)
-      p2.merge(p1).permissionClass should be (empty)
+      p1.merge(p2).permissionClass should be(empty)
+      p2.merge(p1).permissionClass should be(empty)
     }
 
     "a merge of 2 permission with a property only set in one should not restrict on that property" in {
       val p1 = BlendedPermission(permissionClass = Some("foo"), properties = Map("country" -> countries))
       val p2 = BlendedPermission(permissionClass = Some("bar"))
 
-      p1.merge(p2).properties.get("country") should be (empty)
-      p2.merge(p1).properties.get("country") should be (empty)
+      p1.merge(p2).properties.get("country") should be(empty)
+      p2.merge(p1).properties.get("country") should be(empty)
     }
 
     "a merge of 2 permissions with restrictions on the same property should combine the restrictions" in {
@@ -95,7 +93,7 @@ class BlendedPermissionSpec extends FreeSpec
       val p2 = BlendedPermission(permissionClass = Some("foo"), properties = Map("country" -> List("de", "cz")))
 
       val values = p1.merge(p2).properties.getOrElse("country", Seq.empty)
-      values.size should be (3)
+      values.size should be(3)
       values should contain only ("de", "bg", "cz")
     }
   }

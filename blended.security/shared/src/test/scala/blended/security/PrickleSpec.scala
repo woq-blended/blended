@@ -2,7 +2,7 @@ package blended.security
 
 import blended.security.json.PrickleProtocol._
 import org.scalatest.FreeSpec
-import prickle.{ Pickle, Unpickle }
+import prickle.{Pickle, Unpickle}
 
 class PrickleSpec extends FreeSpec {
 

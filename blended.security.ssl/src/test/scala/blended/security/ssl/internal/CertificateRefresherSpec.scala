@@ -9,19 +9,19 @@ import org.scalatest.FreeSpec
 
 class CertificateRefresherSpec extends FreeSpec with PojoSrTestHelper {
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput).getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput).getAbsolutePath()
 
-  def newDate(year : Int, month: Int, day : Int, hour : Int = 0, minute: Int = 0) : Date = {
+  def newDate(year : Int, month : Int, day : Int, hour : Int = 0, minute : Int = 0) : Date = {
     val cal : GregorianCalendar = new GregorianCalendar(year, month, day, hour, minute, 0)
     cal.set(Calendar.MILLISECOND, 0)
     cal.getTime()
   }
 
-  implicit class RichDate(date: Date) {
-    def <(other: Date): Boolean = date.before(other)
-    def <=(other: Date): Boolean = !date.after(other)
-    def >(other: Date): Boolean = date.after(other)
-    def >=(other: Date): Boolean = !date.before(other)
+  implicit class RichDate(date : Date) {
+    def <(other : Date) : Boolean = date.before(other)
+    def <=(other : Date) : Boolean = !date.after(other)
+    def >(other : Date) : Boolean = date.after(other)
+    def >=(other : Date) : Boolean = !date.before(other)
   }
 
   "Automatic certificate refresher" - {
@@ -31,7 +31,8 @@ class CertificateRefresherSpec extends FreeSpec with PojoSrTestHelper {
         minValidDays = 10,
         hourOfDay = 1,
         minuteOfDay = 30,
-        onRefreshAction = RefresherConfig.Refresh)
+        onRefreshAction = RefresherConfig.Refresh
+      )
 
       "cert end + threshold is in future" in {
         val now = newDate(100, 5, 1)

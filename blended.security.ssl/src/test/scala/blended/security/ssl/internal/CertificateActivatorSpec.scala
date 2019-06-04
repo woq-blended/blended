@@ -17,9 +17,9 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper
   with Matchers {
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.security.ssl" -> new CertificateActivator()
   )
 
@@ -43,7 +43,7 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
       )
 
       val mks = jks.loadKeyStore().get
-      mks.certificates.keys.toList.sorted should be (List("default", "logical"))
+      mks.certificates.keys.toList.sorted should be(List("default", "logical"))
     }
 
     "Only support selected CypherSuites and protocols" in {
@@ -54,7 +54,7 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
       val invalid = sslInfo.getInvalidCypherSuites()
       log.info(s"Invalid CypherSuites [${invalid.size}] : [\n${invalid.mkString("\n")}\n]")
 
-      invalid should be (empty)
+      invalid should be(empty)
     }
   }
 

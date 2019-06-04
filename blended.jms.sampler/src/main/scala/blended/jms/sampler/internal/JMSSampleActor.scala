@@ -12,20 +12,20 @@ import blended.util.FileHelper
 
 case object StartSampling
 case object StopSampling
-case class MsgReceived(m: Message)
+case class MsgReceived(m : Message)
 
 object JMSSampleActor {
 
-  def props(dir: File, cfg: OSGIActorConfig, cf: ConnectionFactory, destName: String, encoding: String) : Props =
+  def props(dir : File, cfg : OSGIActorConfig, cf : ConnectionFactory, destName : String, encoding : String) : Props =
     Props(new JMSSampleActor(dir, cfg, cf, destName, encoding))
 }
 
-class JMSSampleActor(dir: File, cfg: OSGIActorConfig, cf: ConnectionFactory, destName: String, encoding: String) extends Actor with ActorLogging {
+class JMSSampleActor(dir : File, cfg : OSGIActorConfig, cf : ConnectionFactory, destName : String, encoding : String) extends Actor with ActorLogging {
 
   private[this] val count = new AtomicLong(0)
   private[this] val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
 
-  override def receive: Receive = {
+  override def receive : Receive = {
 
     case StartSampling =>
       val con = cf.createConnection()
@@ -45,7 +45,7 @@ class JMSSampleActor(dir: File, cfg: OSGIActorConfig, cf: ConnectionFactory, des
     case MsgReceived(_) => // do nothing
   }
 
-  def sampling(con: Connection, session: Session, cons: MessageConsumer) : Receive = {
+  def sampling(con : Connection, session : Session, cons : MessageConsumer) : Receive = {
 
     case MsgReceived(msg) =>
       log.debug(s"Processing message from topic [$destName]")
@@ -54,12 +54,12 @@ class JMSSampleActor(dir: File, cfg: OSGIActorConfig, cf: ConnectionFactory, des
       context.become(busy(con, session, cons).orElse(lifeCycle(con, session, cons)))
   }
 
-  def busy(con: Connection, session: Session, cons: MessageConsumer) : Receive = {
+  def busy(con : Connection, session : Session, cons : MessageConsumer) : Receive = {
     case MsgReceived(_) => log.debug(s"Ignoring message from topic [$destName]")
-    case Terminated(_) => context.become(sampling(con, session, cons).orElse(lifeCycle(con,session,cons)))
+    case Terminated(_)  => context.become(sampling(con, session, cons).orElse(lifeCycle(con, session, cons)))
   }
 
-  def lifeCycle(con: Connection, session: Session, cons: MessageConsumer) : Receive = {
+  def lifeCycle(con : Connection, session : Session, cons : MessageConsumer) : Receive = {
     case StartSampling => // do nothing
     case StopSampling =>
       log.debug(s"Stopping topic sampler for topic [$destName]")
@@ -69,18 +69,18 @@ class JMSSampleActor(dir: File, cfg: OSGIActorConfig, cf: ConnectionFactory, des
       context.stop(self)
   }
 
-  private class SampleListener(sampler: ActorRef) extends MessageListener {
-    override def onMessage(message: Message): Unit = sampler ! MsgReceived(message)
+  private class SampleListener(sampler : ActorRef) extends MessageListener {
+    override def onMessage(message : Message) : Unit = sampler ! MsgReceived(message)
   }
 
   object MsgWriteActor {
-    def props(dir: File, msg: Message) : Props = Props(new MsgWriteActor(dir, msg))
+    def props(dir : File, msg : Message) : Props = Props(new MsgWriteActor(dir, msg))
   }
-  class MsgWriteActor(dir: File, msg : Message) extends Actor with ActorLogging {
+  class MsgWriteActor(dir : File, msg : Message) extends Actor with ActorLogging {
 
     case object WriteMsg
 
-    def writeMsg(bytes: Array[Byte]) : Unit = {
+    def writeMsg(bytes : Array[Byte]) : Unit = {
       try {
         val fileName = s"$destName-${df.format(new Date())}-${count.incrementAndGet()}"
         val file = new File(dir, fileName)
@@ -89,33 +89,34 @@ class JMSSampleActor(dir: File, cfg: OSGIActorConfig, cf: ConnectionFactory, des
       }
     }
 
-    override def preStart(): Unit = self ! WriteMsg
+    override def preStart() : Unit = self ! WriteMsg
 
-    override def receive: Receive = {
-      case WriteMsg => msg match {
-        case bMsg : BytesMessage =>
-          val bytes = new Array[Byte](8192)
-          val bos = new ByteArrayOutputStream()
+    override def receive : Receive = {
+      case WriteMsg =>
+        msg match {
+          case bMsg : BytesMessage =>
+            val bytes = new Array[Byte](8192)
+            val bos = new ByteArrayOutputStream()
 
-          var bCnt = 0
+            var bCnt = 0
 
-          do {
-            bCnt = bMsg.readBytes(bytes)
-            if (bCnt > 0) bos.write(bytes,0,bCnt)
-          } while(bCnt > 0)
+            do {
+              bCnt = bMsg.readBytes(bytes)
+              if (bCnt > 0) bos.write(bytes, 0, bCnt)
+            } while (bCnt > 0)
 
-          bos.flush()
-          bos.close()
+            bos.flush()
+            bos.close()
 
-          writeMsg(bos.toByteArray())
+            writeMsg(bos.toByteArray())
 
-        case tMsg : TextMessage =>
-          writeMsg(tMsg.getText().getBytes(encoding))
+          case tMsg : TextMessage =>
+            writeMsg(tMsg.getText().getBytes(encoding))
 
-        case m : Message => log.info(s"Sampler does not process messages of type [${m.getClass().getSimpleName()}]")
-      }
+          case m : Message => log.info(s"Sampler does not process messages of type [${m.getClass().getSimpleName()}]")
+        }
 
-      context.stop(self)
+        context.stop(self)
     }
   }
 }

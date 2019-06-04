@@ -21,7 +21,7 @@ case class DispatcherFanout(
   /*-------------------------------------------------------------------------------------------------*/
   private[builder] val funFanoutOutbound : FlowEnvelope => Try[Seq[(OutboundRouteConfig, FlowEnvelope)]] = { env =>
 
-    bs.withContextObject[ResourceTypeConfig, Seq[(OutboundRouteConfig, FlowEnvelope)]](bs.rtConfigKey, env) { rtCfg: ResourceTypeConfig =>
+    bs.withContextObject[ResourceTypeConfig, Seq[(OutboundRouteConfig, FlowEnvelope)]](bs.rtConfigKey, env) { rtCfg : ResourceTypeConfig =>
       Try {
         rtCfg.outbound.map { ob =>
           val obEnv =
@@ -61,7 +61,7 @@ case class DispatcherFanout(
             if (use) {
               bs.streamLogger.info(s)
             } else {
-              bs.streamLogger.info("Not " + s )
+              bs.streamLogger.info("Not " + s)
             }
             use
         }
@@ -70,41 +70,43 @@ case class DispatcherFanout(
 
     Try {
 
-      outCfg.outboundHeader.filter(b => useHeaderBlock(b).get).foldLeft(env) { case (current, oh) =>
-        var newEnv : FlowEnvelope = current
-          .withHeader(bs.headerConfig.headerMaxRetries, oh.maxRetries).get
-          .withHeader(bs.headerAutoComplete, oh.autoComplete).get
+      outCfg.outboundHeader.filter(b => useHeaderBlock(b).get).foldLeft(env) {
+        case (current, oh) =>
+          var newEnv : FlowEnvelope = current
+            .withHeader(bs.headerConfig.headerMaxRetries, oh.maxRetries).get
+            .withHeader(bs.headerAutoComplete, oh.autoComplete).get
 
-        if (oh.timeToLive >= 0L) {
-          newEnv = newEnv.withHeader(bs.headerTimeToLive, oh.timeToLive).get
-        } else {
-          newEnv = newEnv.removeHeader(bs.headerTimeToLive)
-        }
+          if (oh.timeToLive >= 0L) {
+            newEnv = newEnv.withHeader(bs.headerTimeToLive, oh.timeToLive).get
+          } else {
+            newEnv = newEnv.removeHeader(bs.headerTimeToLive)
+          }
 
-        newEnv = newEnv
-          .withHeader(deliveryModeHeader(bs.headerConfig.prefix), oh.deliveryMode).get
+          newEnv = newEnv
+            .withHeader(deliveryModeHeader(bs.headerConfig.prefix), oh.deliveryMode).get
 
-        oh.header.foreach { case (header, value) =>
-          val resolved = idSvc.resolvePropertyString(value, env.flowMessage.header.mapValues(_.value)).get
-          bs.streamLogger.trace(s"[${newEnv.id}]:[${outCfg.id}] - resolved property [$header] to [$resolved]")
-          newEnv = newEnv.withHeader(header, resolved).get
-        }
+          oh.header.foreach {
+            case (header, value) =>
+              val resolved = idSvc.resolvePropertyString(value, env.flowMessage.header.mapValues(_.value)).get
+              bs.streamLogger.trace(s"[${newEnv.id}]:[${outCfg.id}] - resolved property [$header] to [$resolved]")
+              newEnv = newEnv.withHeader(header, resolved).get
+          }
 
-        newEnv = if (oh.clearBody) {
-          newEnv.copy(flowMessage = BaseFlowMessage(newEnv.flowMessage.header))
-        } else {
+          newEnv = if (oh.clearBody) {
+            newEnv.copy(flowMessage = BaseFlowMessage(newEnv.flowMessage.header))
+          } else {
+            newEnv
+          }
+
           newEnv
-        }
-
-        newEnv
-          .withContextObject(bs.appHeaderKey, oh.applicationLogHeader)
-          .withContextObject(bs.bridgeProviderKey, oh.bridgeProviderConfig)
-          .withContextObject(bs.bridgeDestinationKey, oh.bridgeDestination)
+            .withContextObject(bs.appHeaderKey, oh.applicationLogHeader)
+            .withContextObject(bs.bridgeProviderKey, oh.bridgeProviderConfig)
+            .withContextObject(bs.bridgeDestinationKey, oh.bridgeDestination)
       }
     }
   }
 
-  private[builder] val toWorklist : Seq[(OutboundRouteConfig, FlowEnvelope)] => WorklistEvent =  envelopes => {
+  private[builder] val toWorklist : Seq[(OutboundRouteConfig, FlowEnvelope)] => WorklistEvent = envelopes => {
 
     val timeout = envelopes.head._2.getFromContext[ResourceTypeConfig](bs.rtConfigKey) match {
       case Success(c) => c.map(_.timeout).getOrElse(10.seconds)
@@ -112,7 +114,7 @@ case class DispatcherFanout(
     }
 
     val wl = WorklistStarted(
-      worklist = bs.worklist(envelopes.map(_._2):_*).get,
+      worklist = bs.worklist(envelopes.map(_._2) : _*).get,
       timeout = timeout
     )
 
@@ -141,7 +143,7 @@ case class DispatcherFanout(
       val merge = builder.add(Merge[FlowEnvelope](2))
 
       fanout ~> errorFilter ~> withError ~> merge
-                errorFilter ~> noError ~> createWorklist.in
+      errorFilter ~> noError ~> createWorklist.in
 
       createWorklist.out(0) ~> envelopes ~> mapDestination ~> merge
       createWorklist.out(1) ~> worklist

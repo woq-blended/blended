@@ -15,11 +15,11 @@ object BlendedUpdaterTools extends ProjectFactory {
 
     override def bundle = super.bundle.copy(
       privatePackage = super.bundle.privatePackage ++ Seq(
-      s"${projectName}.configbuilder"
-    )
+        s"${projectName}.configbuilder"
+      )
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUpdaterConfigJvm.project
     )
   }

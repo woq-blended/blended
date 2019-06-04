@@ -4,7 +4,7 @@ object ExtendedDataElements {
 
   def apply(props : Map[String, String]) : String = {
 
-    props.map{ case (k,v) => ExtendedDataElement(k,v).element }.mkString
+    props.map { case (k, v) => ExtendedDataElement(k, v).element }.mkString
   }
 }
 

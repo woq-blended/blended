@@ -13,8 +13,7 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 import scala.beans.BeanProperty
 
 class ContainerIdentifierServiceImpl(
-  @BeanProperty
-  override val containerContext: ContainerContext
+  @BeanProperty override val containerContext : ContainerContext
 ) extends ContainerIdentifierService {
 
   private[this] val log = Logger[ContainerIdentifierServiceImpl]
@@ -32,11 +31,11 @@ class ContainerIdentifierServiceImpl(
   }
 
   @BeanProperty
-  override val properties : Map[String,String] = {
+  override val properties : Map[String, String] = {
 
     val mandatoryPropNames : Seq[String] = Option(System.getProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS)) match {
       case Some(s) => if (s.trim().isEmpty) Seq.empty else s.trim().split(",").toSeq
-      case None => Seq.empty
+      case None    => Seq.empty
     }
 
     val cfgFile = new File(containerContext.getProfileConfigDirectory(), "blended.container.context.conf")
@@ -47,7 +46,8 @@ class ContainerIdentifierServiceImpl(
     }.get
 
     val unresolved : Map[String, String] = cfg.entrySet().asScala.map { entry =>
-      (entry.getKey, cfg.getString(entry.getKey)) }.toMap
+      (entry.getKey, cfg.getString(entry.getKey))
+    }.toMap
 
     val missingPropNames = mandatoryPropNames.filter(p => unresolved.get(p).isEmpty)
 
@@ -56,7 +56,7 @@ class ContainerIdentifierServiceImpl(
       throw new RuntimeException(msg)
     }
 
-    val resolve : Map[String, Try[String]] = unresolved.map{ case (k,v) => (k, resolvePropertyString(v).map(_.toString())) }
+    val resolve : Map[String, Try[String]] = unresolved.map { case (k, v) => (k, resolvePropertyString(v).map(_.toString())) }
 
     val resolveErrors = resolve.filter(_._2.isFailure)
 
@@ -65,10 +65,10 @@ class ContainerIdentifierServiceImpl(
       throw new RuntimeException(msg)
     }
 
-    resolve.map{ case (k: String, v: Try[String]) => k -> v.get }
+    resolve.map { case (k : String, v : Try[String]) => k -> v.get }
   }
 
-  def resolvePropertyString(value: String, additionalProps: Map[String, Any]) : Try[AnyRef] = Try {
+  def resolvePropertyString(value : String, additionalProps : Map[String, Any]) : Try[AnyRef] = Try {
     val r = ContainerPropertyResolver.resolve(this, value, additionalProps)
     r
   }

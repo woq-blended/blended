@@ -10,22 +10,22 @@ import javax.security.auth.x500.X500Principal
 import scala.util.Try
 
 /**
-  * A simple case class to hold a certificate chain in memory. A certificate chain
-  * in this class is always sorted, so that the ultimate root certificate is at the
-  * end of the chain and the certificate is always at the head of the chain.
-  *
-  * The keys always belong to the certificate at the head of the chain. The private
-  * key is optional - In that case the certificate can not be used as a server side
-  * certificate.
-  *
-  * The constructor is private, so that instances of the class can only be created
-  * with the factory method(s) in the companion object. These methods will create the
-  * sorted chain verify the signatures of each certificate within the chain.
-  */
-case class CertificateHolder (
+ * A simple case class to hold a certificate chain in memory. A certificate chain
+ * in this class is always sorted, so that the ultimate root certificate is at the
+ * end of the chain and the certificate is always at the head of the chain.
+ *
+ * The keys always belong to the certificate at the head of the chain. The private
+ * key is optional - In that case the certificate can not be used as a server side
+ * certificate.
+ *
+ * The constructor is private, so that instances of the class can only be created
+ * with the factory method(s) in the companion object. These methods will create the
+ * sorted chain verify the signatures of each certificate within the chain.
+ */
+case class CertificateHolder(
   publicKey : PublicKey,
   privateKey : Option[PrivateKey],
-  chain: List[X509Certificate],
+  chain : List[X509Certificate],
   changed : Boolean = false
 ) {
 
@@ -35,13 +35,13 @@ case class CertificateHolder (
   val keyPair : Option[KeyPair] = privateKey.map(pk => new KeyPair(publicKey, pk))
 
   // A simple String representation of the certificate chain
-  override def toString: String = chain.map { c=>
+  override def toString : String = chain.map { c =>
     X509CertificateInfo(c).toString
   }.mkString("\n", "\n", "")
 
   // A complete dump of the certificate chain as a String
   def dump : String = {
-    chain.map { c => c.toString() }.mkString("\n" + "*" * 30 , "\n\n--- Signed by ---\n\n", "*" * 30)
+    chain.map { c => c.toString() }.mkString("\n" + "*" * 30, "\n\n--- Signed by ---\n\n", "*" * 30)
   }
 
   lazy val keypairValid : Option[Boolean] = privateKey.map { pk =>
@@ -68,16 +68,16 @@ object CertificateHolder {
     changed = false
   )
 
-  def create(publicKey: PublicKey, chain : List[Certificate]) : Try[CertificateHolder] =
+  def create(publicKey : PublicKey, chain : List[Certificate]) : Try[CertificateHolder] =
     create(publicKey, None, chain)
 
-  def create(keyPair : KeyPair, chain: List[Certificate]) : Try[CertificateHolder] =
+  def create(keyPair : KeyPair, chain : List[Certificate]) : Try[CertificateHolder] =
     create(keyPair.getPublic(), Some(keyPair.getPrivate()), chain)
 
   def create(chain : List[Certificate]) : Try[CertificateHolder] = Try {
 
     val x509Chain : List[X509Certificate] = chain.map(_.asInstanceOf[X509Certificate])
-    x509Chain.find{ c => c.getSubjectDN().equals(c.getIssuerDN()) } match {
+    x509Chain.find { c => c.getSubjectDN().equals(c.getIssuerDN()) } match {
       case None =>
         throw new MissingRootCertificateException
       case Some(root) =>
@@ -91,9 +91,9 @@ object CertificateHolder {
     }
   }
 
-  def create(publicKey : PublicKey, privateKey: Option[PrivateKey], chain : List[Certificate]) : Try[CertificateHolder] = Try {
+  def create(publicKey : PublicKey, privateKey : Option[PrivateKey], chain : List[Certificate]) : Try[CertificateHolder] = Try {
 
-    val sortedChain: List[X509Certificate] = {
+    val sortedChain : List[X509Certificate] = {
 
       chain.map(_.asInstanceOf[X509Certificate]) match {
         // chain must not be empty
@@ -120,12 +120,12 @@ object CertificateHolder {
 
   // A test that yields true if and only if the certificate is not self signed AND was signed by
   // the given principal
-  private def signedBy(issuer: Principal): (X509Certificate => Boolean) = c =>
+  private def signedBy(issuer : Principal) : (X509Certificate => Boolean) = c =>
     !c.getIssuerDN().equals(c.getSubjectDN()) && c.getIssuerDN().equals(issuer)
 
   // Helper function to sort the certificates of a given chain so that any certificate in the chain is
   // signed by it's successor. This implies that the root certificate is always the last element in the list
-  private def sort(remaining: List[X509Certificate])(sorted: List[X509Certificate]): Try[List[X509Certificate]] = Try {
+  private def sort(remaining : List[X509Certificate])(sorted : List[X509Certificate]) : Try[List[X509Certificate]] = Try {
     remaining match {
       // We have visited and sorted all certificates
       case Nil => sorted

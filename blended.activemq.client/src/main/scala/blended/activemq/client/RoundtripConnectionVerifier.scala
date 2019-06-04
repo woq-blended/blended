@@ -31,8 +31,8 @@ class RoundtripConnectionVerifier(
   private val log : Logger = Logger[RoundtripConnectionVerifier]
   private val verified : Promise[Boolean] = Promise[Boolean]()
 
-  override def verifyConnection(cf: IdAwareConnectionFactory)(implicit eCtxt: ExecutionContext): Future[Boolean] = {
-    after[Unit](10.millis, system. scheduler) {
+  override def verifyConnection(cf : IdAwareConnectionFactory)(implicit eCtxt : ExecutionContext) : Future[Boolean] = {
+    after[Unit](10.millis, system.scheduler) {
       Future {
         probe(cf)
       }
@@ -41,7 +41,7 @@ class RoundtripConnectionVerifier(
     verified.future
   }
 
-  private def probe(cf: IdAwareConnectionFactory) : Unit = {
+  private def probe(cf : IdAwareConnectionFactory) : Unit = {
 
     implicit val materializer : Materializer = ActorMaterializer()
     implicit val eCtxt : ExecutionContext = system.dispatcher
@@ -100,11 +100,11 @@ class RoundtripConnectionVerifier(
     }
   }
 
-  private def scheduleRetry(cf: IdAwareConnectionFactory) : Unit = {
+  private def scheduleRetry(cf : IdAwareConnectionFactory) : Unit = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
-    after[Unit](retryInterval, system.scheduler){
+    after[Unit](retryInterval, system.scheduler) {
       Future { probe(cf) }
     }
   }

@@ -29,7 +29,7 @@ object BlendedMgmtRest extends ProjectFactory {
       exportPackage = Seq()
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtilLogging.project,
       BlendedAkkaHttp.project,
       BlendedUpdaterRemote.project,

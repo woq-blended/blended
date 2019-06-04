@@ -12,9 +12,9 @@ import scala.util.Try
 
 object InboundConfig {
 
-  def create(idSvc : ContainerIdentifierService, cfg: Config): Try[InboundConfig] = Try {
+  def create(idSvc : ContainerIdentifierService, cfg : Config) : Try[InboundConfig] = Try {
 
-    def resolve(value: String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
+    def resolve(value : String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
 
     val name = resolve(cfg.getString("name"))
     val vendor = resolve(cfg.getString("vendor"))
@@ -22,9 +22,9 @@ object InboundConfig {
 
     val inDest = JmsDestination.create(resolve(cfg.getString("from"))).get match {
       case q : JmsQueue => q
-      case t : JmsTopic => cfg.getStringOption("subscriberName") match  {
+      case t : JmsTopic => cfg.getStringOption("subscriberName") match {
         case Some(sn) => JmsDurableTopic(t.name, sn)
-        case None => t
+        case None     => t
       }
       case t : JmsDurableTopic => t
     }
@@ -36,7 +36,7 @@ object InboundConfig {
 
     val listener = cfg.getInt("listener", 2)
 
-    val header : List[HeaderProcessorConfig] = cfg.getConfigList("header", List.empty).map{ cfg =>
+    val header : List[HeaderProcessorConfig] = cfg.getConfigList("header", List.empty).map { cfg =>
       HeaderProcessorConfig.create(cfg)
     }
 
@@ -57,7 +57,7 @@ object InboundConfig {
   }
 }
 
-case class InboundConfig (
+case class InboundConfig(
   name : String,
   vendor : String,
   provider : Option[String],

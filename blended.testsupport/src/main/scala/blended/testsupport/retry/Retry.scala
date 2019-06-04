@@ -23,14 +23,14 @@ object Retry {
    * @return The Future containing the result of `op` or the last failure.
    */
   def retry[T](
-    delay: FiniteDuration,
-    retries: Int,
-    onRetry: (Int, Throwable) => Unit = (n, e) => Logger[Retry.type].debug(e)(s"Retrying after failed execution (${n} retries left)")
+    delay : FiniteDuration,
+    retries : Int,
+    onRetry : (Int, Throwable) => Unit = (n, e) => Logger[Retry.type].debug(e)(s"Retrying after failed execution (${n} retries left)")
   )(
-    op: => T
-  )(implicit ec: ExecutionContext, s: Scheduler): Future[T] =
+    op : => T
+  )(implicit ec : ExecutionContext, s : Scheduler) : Future[T] =
     Future { op } recoverWith {
-      case e: Throwable if retries > 0 => akka.pattern.after(delay, s)({
+      case e : Throwable if retries > 0 => akka.pattern.after(delay, s)({
         onRetry(retries - 1, e)
         retry(delay, retries - 1, onRetry)(op)(ec, s)
       })
@@ -50,13 +50,13 @@ object Retry {
    * @return The result of `op` or throws an exception.
    */
   def unsafeRetry[T](
-    delay: FiniteDuration,
-    retries: Int,
-    onRetry: (Int, Throwable) => Unit = (n, e) => Logger[Retry.type].debug(e)(s"Retrying after failed execution (${n} retries left)"),
-    finalDelay: Option[FiniteDuration] = None
+    delay : FiniteDuration,
+    retries : Int,
+    onRetry : (Int, Throwable) => Unit = (n, e) => Logger[Retry.type].debug(e)(s"Retrying after failed execution (${n} retries left)"),
+    finalDelay : Option[FiniteDuration] = None
   )(
-    op: => T
-  )(implicit ec: ExecutionContext, s: Scheduler): T = {
+    op : => T
+  )(implicit ec : ExecutionContext, s : Scheduler) : T = {
     val res = retry(delay, retries, onRetry)(op)(ec, s)
     Await.result(res, finalDelay.getOrElse(delay * retries + 2.seconds))
   }

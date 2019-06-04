@@ -9,12 +9,12 @@ import scala.concurrent.duration._
 
 import scala.util.{Failure, Success, Try}
 
-case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
+case class MemoryKeystore(certificates : Map[String, CertificateHolder]) {
 
   private[this] val log : Logger = Logger[MemoryKeystore]
   private[this] val millisPerDay : Long = 1.day.toMillis
 
-  val changedAliases : List[String] = certificates.filter { case (k,v) => v.changed }.keys.toList
+  val changedAliases : List[String] = certificates.filter { case (k, v) => v.changed }.keys.toList
 
   // The in memory keystore is consistent if and only if all certificates have a private key defined
   // or none of it does have a private key defined.
@@ -22,7 +22,7 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
     certificates.values.forall(_.privateKey.isDefined) || certificates.values.forall(_.privateKey.isEmpty)
   }
 
-  def update(alias: String, cert : CertificateHolder) : Try[MemoryKeystore] = Try {
+  def update(alias : String, cert : CertificateHolder) : Try[MemoryKeystore] = Try {
 
     log.info(s"Updating memory keystore [alias=$alias]")
     val result : MemoryKeystore =
@@ -39,20 +39,20 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
   def findByPrincipal(principal : X500Principal) : Option[CertificateHolder] = {
     certificates.values.find { ch =>
       ch.subjectPrincipal.isDefined &&
-      ch.subjectPrincipal.forall(_.equals(principal))
+        ch.subjectPrincipal.forall(_.equals(principal))
     }
   }
 
-  def nextCertificateTimeout(): Try[Date] = Try {
+  def nextCertificateTimeout() : Try[Date] = Try {
     certificates match {
       case e if e.isEmpty => new Date()
-      case m => m.values.map(_.chain.head.getNotAfter).min
+      case m              => m.values.map(_.chain.head.getNotAfter).min
     }
   }
 
   private[this] def refreshCertificate(
-    certCfg: CertificateConfig,
-    providerMap: Map[String, CertificateProvider],
+    certCfg : CertificateConfig,
+    providerMap : Map[String, CertificateProvider],
     oldCert : Option[CertificateHolder]
   ) : Try[MemoryKeystore] = Try {
     providerMap.get(certCfg.provider) match {
@@ -67,9 +67,9 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
   }
 
   private[ssl] def changed(
-    certConfigs: List[CertificateConfig],
-    providerMap: Map[String, CertificateProvider]
-  ): Try[MemoryKeystore] = Try {
+    certConfigs : List[CertificateConfig],
+    providerMap : Map[String, CertificateProvider]
+  ) : Try[MemoryKeystore] = Try {
 
     certConfigs match {
       // No further certificate configs to check, returning result
@@ -117,9 +117,9 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
   }
 
   def refreshCertificates(
-    certCfgs: List[CertificateConfig],
-    providerMap: Map[String, CertificateProvider]
-  ): Try[MemoryKeystore] = {
+    certCfgs : List[CertificateConfig],
+    providerMap : Map[String, CertificateProvider]
+  ) : Try[MemoryKeystore] = {
 
     val result = changed(certCfgs, providerMap)
     // detect failure

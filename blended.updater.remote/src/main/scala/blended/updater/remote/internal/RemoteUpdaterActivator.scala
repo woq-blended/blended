@@ -54,12 +54,12 @@ class RemoteUpdaterActivator
 
         }
       } catch {
-        case e: ConfigException =>
+        case e : ConfigException =>
           val msg = "Invalid or missing bundle configuration. Cannot initialize RemoteUpdater."
           log.error(e)(msg)
       }
 
-      def registerCommands(srv: AnyRef, cmds: Seq[(String, String)]): ServiceRegistration[Object] = {
+      def registerCommands(srv : AnyRef, cmds : Seq[(String, String)]) : ServiceRegistration[Object] = {
         val (commands, descriptions) = cmds.unzip
         log.debug(s"About to register OSGi console commands: ${commands}")
         srv.providesService[Object](

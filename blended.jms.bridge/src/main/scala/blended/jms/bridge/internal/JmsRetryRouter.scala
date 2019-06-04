@@ -53,7 +53,7 @@ class JmsRetryRouter(
 
     val mandatoryHeader : String => Long = h =>
       env.header[Long](h) match {
-        case None => throw new MissingHeaderException(h)
+        case None    => throw new MissingHeaderException(h)
         case Some(l) => l
       }
 

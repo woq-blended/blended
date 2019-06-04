@@ -14,7 +14,7 @@ import scala.collection.JavaConverters._
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
   private val CONFIG_DIR = "etc"
-  private val SECRET_FILE_PATH  : String = "blended.security.secretFile"
+  private val SECRET_FILE_PATH : String = "blended.security.secretFile"
 
 }
 
@@ -27,20 +27,20 @@ class ContainerContextImpl() extends ContainerContext {
   override def getContainerDirectory() : String =
     new File(System.getProperty("blended.home")).getAbsolutePath
 
-  override def getContainerHostname(): String = {
+  override def getContainerHostname() : String = {
     try {
       val localMachine = java.net.InetAddress.getLocalHost()
       localMachine.getCanonicalHostName()
     } catch {
-      case uhe: java.net.UnknownHostException => "UNKNOWN"
+      case uhe : java.net.UnknownHostException => "UNKNOWN"
     }
   }
 
-  override def getContainerLogDirectory(): String = containerLogDir
+  override def getContainerLogDirectory() : String = containerLogDir
 
-  override def getProfileDirectory(): String = profileDir
+  override def getProfileDirectory() : String = profileDir
 
-  val brandingProperties: Map[String, String] = {
+  val brandingProperties : Map[String, String] = {
     val props = (try {
       import blended.launcher.runtime.Branding
       // it is possible, that this optional class is not available at runtime,
@@ -48,7 +48,7 @@ class ContainerContextImpl() extends ContainerContext {
       log.debug("About to read launcher branding properies")
       Option(Branding.getProperties())
     } catch {
-      case e: NoClassDefFoundError => None
+      case e : NoClassDefFoundError => None
     }) getOrElse {
       log.warn("Could not read launcher branding properies")
       new Properties()
@@ -56,7 +56,7 @@ class ContainerContextImpl() extends ContainerContext {
     props.entrySet().asScala.map(e => e.getKey().toString() -> e.getValue().toString()).toMap
   }
 
-  private[this] lazy val profileDir: String = {
+  private[this] lazy val profileDir : String = {
 
     val profileHome =
       brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) orElse {
@@ -84,7 +84,7 @@ class ContainerContextImpl() extends ContainerContext {
     absDir
   }
 
-  private[this] lazy val containerLogDir: String = {
+  private[this] lazy val containerLogDir : String = {
     val f = new File(getContainerDirectory() + "/log")
     f.getAbsolutePath()
   }
@@ -103,12 +103,12 @@ class ContainerContextImpl() extends ContainerContext {
     )
   }
 
-  override def getContainerCryptoSupport(): ContainerCryptoSupport = cryptoSupport
+  override def getContainerCryptoSupport() : ContainerCryptoSupport = cryptoSupport
 
-  override def getContainerConfigDirectory(): String =
+  override def getContainerConfigDirectory() : String =
     new File(getContainerDirectory(), CONFIG_DIR).getAbsolutePath
 
-  override def getProfileConfigDirectory(): String = new File(getProfileDirectory(), CONFIG_DIR).getAbsolutePath
+  override def getProfileConfigDirectory() : String = new File(getProfileDirectory(), CONFIG_DIR).getAbsolutePath
 
   private[this] lazy val ctConfig : Config = {
     val sysProps = ConfigFactory.systemProperties()
@@ -146,14 +146,14 @@ class ContainerContextImpl() extends ContainerContext {
 
     val config = overlayConfig match {
       case Some(oc) => ConfigFactory.parseFile(oc, ConfigParseOptions.defaults().setAllowMissing(false))
-      case _ => ConfigFactory.empty()
+      case _        => ConfigFactory.empty()
     }
     config.withFallback(ConfigFactory.parseFile(
       new File(getProfileConfigDirectory(), "application.conf"), ConfigParseOptions.defaults().setAllowMissing(false)
     ))
-    .withFallback(sysProps)
-    .withFallback(envProps)
-    .resolve()
+      .withFallback(sysProps)
+      .withFallback(envProps)
+      .resolve()
   }
 
   override def getContainerConfig() : Config = ctConfig

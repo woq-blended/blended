@@ -12,22 +12,23 @@ import domino.service_watching.ServiceWatching
 import org.osgi.framework.BundleContext
 
 class ActorSystemCapsule(
-  cCtxt: CapsuleContext,
-  f: OSGIActorConfig => Unit,
-  bCtxt: BundleContext) extends Capsule
-    with TypesafeConfigWatching
-    with ServiceWatching
-    with DominoImplicits {
+  cCtxt : CapsuleContext,
+  f : OSGIActorConfig => Unit,
+  bCtxt : BundleContext
+) extends Capsule
+  with TypesafeConfigWatching
+  with ServiceWatching
+  with DominoImplicits {
 
   private[this] val log = Logger[ActorSystemCapsule]
 
-  var optCapsuleScope: Option[CapsuleScope] = None
+  var optCapsuleScope : Option[CapsuleScope] = None
 
-  override protected def capsuleContext: CapsuleContext = cCtxt
+  override protected def capsuleContext : CapsuleContext = cCtxt
 
-  override protected def bundleContext: BundleContext = bCtxt
+  override protected def bundleContext : BundleContext = bCtxt
 
-  override def start(): Unit = {
+  override def start() : Unit = {
     whenServicePresent[ActorSystem] { system =>
       whenTypesafeConfigAvailable { (cfg, idSvc) =>
         if (optCapsuleScope.isEmpty) {
@@ -45,7 +46,7 @@ class ActorSystemCapsule(
 
   }
 
-  override def stop(): Unit = {
+  override def stop() : Unit = {
     log.debug(s"About to stop: ${this}")
     optCapsuleScope.foreach(_.stop())
     optCapsuleScope = None
@@ -53,6 +54,6 @@ class ActorSystemCapsule(
 
   log.debug(s"Constructed: ${this}")
 
-  override def toString(): String = getClass().getSimpleName() + "(cCtx=" + cCtxt + ",bCtxt=" + bCtxt + ")"
+  override def toString() : String = getClass().getSimpleName() + "(cCtx=" + cCtxt + ",bCtxt=" + bCtxt + ")"
 
 }

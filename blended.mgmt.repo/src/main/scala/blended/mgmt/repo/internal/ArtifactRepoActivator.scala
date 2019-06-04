@@ -38,7 +38,7 @@ class ArtifactRepoActivator() extends DominoActivator with TypesafeConfigWatchin
         )
 
       } catch {
-        case e: ConfigException =>
+        case e : ConfigException =>
           log.warn(e)("Missing or invalid configuration. Cannot provide file base artifact repository. See error message for details.")
       }
 

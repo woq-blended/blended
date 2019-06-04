@@ -9,13 +9,13 @@ import blended.updater.config.Mapper
 import blended.updater.config.RemoteContainerState
 import blended.util.logging.Logger
 
-class RemoteContainerStatePersistor(persistenceService: PersistenceService) {
+class RemoteContainerStatePersistor(persistenceService : PersistenceService) {
 
   import RemoteContainerStatePersistor._
 
   private[this] val log = Logger[RemoteContainerStatePersistor]
 
-  def findAll(): List[RemoteContainerState] = {
+  def findAll() : List[RemoteContainerState] = {
     val result = persistenceService.findAll(pClass)
     log.debug(s"loaded ${result.size} entries from db")
     result.toList.flatMap { s =>
@@ -28,7 +28,7 @@ class RemoteContainerStatePersistor(persistenceService: PersistenceService) {
     }
   }
 
-  def updateState(state: RemoteContainerState): Unit = {
+  def updateState(state : RemoteContainerState) : Unit = {
     log.debug(s"About to persist remote container state: ${state}")
     val deleteCount = persistenceService.deleteByExample(pClass, Map(
       "containerInfo" -> Map(

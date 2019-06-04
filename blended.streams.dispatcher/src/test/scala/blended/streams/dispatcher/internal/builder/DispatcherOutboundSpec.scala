@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext
 class DispatcherOutboundSpec extends DispatcherSpecSupport
   with Matchers {
 
-  override def loggerName: String = classOf[DispatcherOutboundSpec].getName()
+  override def loggerName : String = classOf[DispatcherOutboundSpec].getName()
 
   private def runnableOutbound(
     ctxt : DispatcherExecContext,
@@ -49,10 +49,10 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
       }
     }
 
-    (outColl, errColl,  source.to(sinkGraph))
+    (outColl, errColl, source.to(sinkGraph))
   }
 
-  def testOutbound(expectedState: WorklistState, send: Flow[FlowEnvelope, FlowEnvelope, NotUsed]) : Unit = {
+  def testOutbound(expectedState : WorklistState, send : Flow[FlowEnvelope, FlowEnvelope, NotUsed]) : Unit = {
     withDispatcherConfig { ctxt =>
 
       implicit val system : ActorSystem = ctxt.system
@@ -71,14 +71,15 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
           evt <- outColl.result
         } yield (err, evt)
 
-        result.map { case (error, events) =>
-          error should be (empty)
-          events should have size 1
+        result.map {
+          case (error, events) =>
+            error should be(empty)
+            events should have size 1
 
-          val event = events.head
-          event.worklist.items should have size 1
-          event.worklist.id should be (envelope.id)
-          event.state should be (expectedState)
+            val event = events.head
+            event.worklist.items should have size 1
+            event.worklist.id should be(envelope.id)
+            event.state should be(expectedState)
         }
       } finally {
         system.stop(outColl.actor)
@@ -90,12 +91,12 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
   "The outbound flow of the dispatcher should" - {
 
     "produce a worklist completed event for successfull completions of the outbound flow" in {
-      val good = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env}
+      val good = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
       testOutbound(WorklistState.Completed, good)
     }
 
     "produce a worklist failed event after unsuccessfull completions of the outbound flow" in {
-      val bad = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env.withException(new Exception("Boom !")) }
+      val bad = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env.withException(new Exception("Boom !")) }
       testOutbound(WorklistState.Failed, bad)
     }
   }
@@ -142,7 +143,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
           bs = ctxt.bs
         )(env).get
 
-        routing should be (DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
+        routing should be(DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
       }
     }
 
@@ -167,7 +168,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
           bs = ctxt.bs
         )(env).get
 
-        routing should be (DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
+        routing should be(DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
       }
     }
 
@@ -190,7 +191,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
           bs = ctxt.bs
         )(env).get
 
-        routing should be (DispatcherTarget(provider.vendor, provider.provider, JmsDestination.create("centralDest").get))
+        routing should be(DispatcherTarget(provider.vendor, provider.provider, JmsDestination.create("centralDest").get))
       }
     }
   }

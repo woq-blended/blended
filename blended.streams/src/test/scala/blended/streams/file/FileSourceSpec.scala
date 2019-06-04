@@ -32,9 +32,9 @@ class FileSourceSpec extends SimplePojoContainerSpec
   with FileTestSupport
   with FileSourceTestSupport {
 
-  override def baseDir: String = s"${BlendedTestSupport.projectTestOutput}/container"
+  override def baseDir : String = s"${BlendedTestSupport.projectTestOutput}/container"
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator()
   )
 
@@ -45,21 +45,22 @@ class FileSourceSpec extends SimplePojoContainerSpec
   private implicit val materializer : Materializer = ActorMaterializer()
   private val log : Logger = Logger[FileSourceSpec]
 
-
-  private def testWithLock(srcDir : File, lockFile : File, pollCfg : FilePollConfig): Unit = {
+  private def testWithLock(srcDir : File, lockFile : File, pollCfg : FilePollConfig) : Unit = {
 
     case class FilePolled(env : FlowEnvelope)
 
     def pollFiles(t : FiniteDuration) : List[FlowEnvelope] = {
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg))
-          .via(FlowProcessor.fromFunction("event", log){ env => Try {
-            system.eventStream.publish(FilePolled(env))
-            env
-          }})
+          .via(FlowProcessor.fromFunction("event", log) { env =>
+            Try {
+              system.eventStream.publish(FilePolled(env))
+              env
+            }
+          })
           .via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t){ _ => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t) { _ => }
       Await.result(collector.result, t + 100.millis)
     }
 
@@ -86,7 +87,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
 
     "perform a regular file poll from a given directory" in {
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/simplePoll" )
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/simplePoll")
       prepareDirectory(pollCfg.sourceDir)
 
       val testFile : File = new File(pollCfg.sourceDir, "test.txt")
@@ -95,19 +96,19 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout) { env => }
 
       val result : List[FlowEnvelope] = Await.result(collector.result, timeout + 100.millis)
 
       result should have size 1
 
       val env = result.head
-      env.header[String]("BlendedFileName") should be (Some(testFile.getName()))
-      env.header[String]("BlendedFilePath") should be (Some(testFile.getAbsolutePath()))
+      env.header[String]("BlendedFileName") should be(Some(testFile.getName()))
+      env.header[String]("BlendedFilePath") should be(Some(testFile.getAbsolutePath()))
 
-      env.id should endWith (testFile.getName())
+      env.id should endWith(testFile.getName())
 
-      getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)
+      getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be(empty)
     }
 
     "perform a regular file poll from a given directory(bulk)" in {
@@ -115,39 +116,41 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val numMsg : Int = 5000
       val t : FiniteDuration = 5.seconds
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/bulkPoll" )
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/bulkPoll")
       prepareDirectory(pollCfg.sourceDir)
-      1.to(numMsg).foreach{ i => genFile(new File(pollCfg.sourceDir, s"test_$i.txt")) }
+      1.to(numMsg).foreach { i => genFile(new File(pollCfg.sourceDir, s"test_$i.txt")) }
 
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t){ _ => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t) { _ => }
 
       val result : List[FlowEnvelope] = Await.result(collector.result, t + 100.millis)
 
       result should have size numMsg
 
-      getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)
+      getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be(empty)
     }
 
     "restore the original file if the envelope was denied" in {
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/restore" )
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/restore")
       prepareDirectory(pollCfg.sourceDir)
       genFile(new File(pollCfg.sourceDir, "test.txt"))
 
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg))
-          .via(FlowProcessor.fromFunction("simplePoll.fail", log){ _ => Try {
-            throw new Exception("boom")
-          }})
+          .via(FlowProcessor.fromFunction("simplePoll.fail", log) { _ =>
+            Try {
+              throw new Exception("boom")
+            }
+          })
           .via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ _ => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout) { _ => }
       Await.result(collector.result, timeout + 100.millis)
 
-      getFiles(pollCfg.sourceDir, pattern = ".*", recursive = false).map(_.getName()) should be (List("test.txt"))
+      getFiles(pollCfg.sourceDir, pattern = ".*", recursive = false).map(_.getName()) should be(List("test.txt"))
     }
 
     "create a backup file if the backup directory is configured" in {
@@ -162,7 +165,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ _ => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout) { _ => }
       Await.result(collector.result, timeout + 100.millis)
 
       getFiles(pollCfg.backup.get, pattern = ".*", recursive = false).map(_.getName()) should have size 1
@@ -198,16 +201,16 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val t : FiniteDuration = 5.seconds
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc)
-        .copy(sourceDir = BlendedTestSupport.projectTestOutput + "/parallel" )
+        .copy(sourceDir = BlendedTestSupport.projectTestOutput + "/parallel")
 
       prepareDirectory(pollCfg.sourceDir)
-      1.to(numMsg).foreach{ i => genFile(new File(pollCfg.sourceDir, s"test_$i.txt")) }
+      1.to(numMsg).foreach { i => genFile(new File(pollCfg.sourceDir, s"test_$i.txt")) }
 
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).async.via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector1 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel1", src, 200.millis){ _ => }
-      val collector2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel2", src, t){ _ => }
+      val collector1 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel1", src, 200.millis) { _ => }
+      val collector2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel2", src, t) { _ => }
 
       val result1 : List[FlowEnvelope] = Await.result(collector1.result, 300.millis)
       val result2 : List[FlowEnvelope] = Await.result(collector2.result, t + 100.millis)
@@ -217,7 +220,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
 
       assert(result1.size + result2.size >= numMsg)
 
-      getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)
+      getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be(empty)
     }
   }
 }

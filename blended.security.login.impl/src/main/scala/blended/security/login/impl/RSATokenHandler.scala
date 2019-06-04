@@ -19,7 +19,7 @@ import scala.util.Try
 
 object RSATokenHandler {
 
-  def apply(): RSATokenHandler = {
+  def apply() : RSATokenHandler = {
 
     val keygen = KeyPairGenerator.getInstance("RSA")
     keygen.initialize(2048)
@@ -32,10 +32,10 @@ object RSATokenHandler {
 
 class RSATokenHandler(keyPair : KeyPair) extends TokenHandler {
 
-  override def createToken(id: String, subj: Subject, expire : Option[FiniteDuration], permissions: BlendedPermissions): Try[Token] = Try {
+  override def createToken(id : String, subj : Subject, expire : Option[FiniteDuration], permissions : BlendedPermissions) : Try[Token] = Try {
 
     val date : Date = new Date()
-    val expiresAt : Option[Date] = expire.map{ d => new Date(date.getTime + d.toMillis) }
+    val expiresAt : Option[Date] = expire.map { d => new Date(date.getTime + d.toMillis) }
 
     val claims = new DefaultClaims()
       .setId(id)
@@ -43,7 +43,7 @@ class RSATokenHandler(keyPair : KeyPair) extends TokenHandler {
       .setIssuedAt(date)
 
     val user : UserPrincipal = subj.getPrincipals(classOf[UserPrincipal]).asScala.toList match {
-      case Nil => throw new Exception("Subject is missing the User Principal")
+      case Nil    => throw new Exception("Subject is missing the User Principal")
       case h :: _ => h
     }
 
@@ -70,5 +70,5 @@ class RSATokenHandler(keyPair : KeyPair) extends TokenHandler {
     )
   }
 
-  override def publicKey(): PublicKey = keyPair.getPublic()
+  override def publicKey() : PublicKey = keyPair.getPublic()
 }

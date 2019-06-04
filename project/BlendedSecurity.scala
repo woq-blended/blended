@@ -13,7 +13,7 @@ private object BlendedSecurityCross {
   private[this] val builder = sbtcrossproject
     .CrossProject("blendedSecurity", file("blended.security"))(JVMPlatform, JSPlatform)
 
-  val project: CrossProject = builder
+  val project : CrossProject = builder
     .crossType(CrossType.Full)
     .build()
 }
@@ -21,8 +21,8 @@ private object BlendedSecurityCross {
 object BlendedSecurityJs extends ProjectFactory {
   object config extends ProjectConfig with CommonSettings with PublishConfig {
     override val projectName = "blended.security"
-    override def createProject(): Project = BlendedSecurityCross.project.js
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def createProject() : Project = BlendedSecurityCross.project.js
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       name := projectName,
       moduleName := projectName,
       libraryDependencies ++= Seq(
@@ -54,14 +54,14 @@ object BlendedSecurityJvm extends ProjectFactory {
       )
     )
 
-    override def createProject(): Project = BlendedSecurityCross.project.jvm
+    override def createProject() : Project = BlendedSecurityCross.project.jvm
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       name := "blendedSecurityJvm",
       moduleName := "blended.security"
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtilLogging.project,
       BlendedDomino.project,
       BlendedUtil.project,

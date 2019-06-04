@@ -2,7 +2,7 @@ package blended.updater.config
 
 import java.io._
 
-import com.typesafe.config.{ Config, ConfigFactory, ConfigRenderOptions }
+import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions}
 import blended.util.logging.Logger
 
 /**
@@ -12,7 +12,7 @@ trait ConfigWriter {
 
   private[this] val log = Logger[ConfigWriter]
 
-  def write(config: Config, file: File, path: Option[String]): Unit = {
+  def write(config : Config, file : File, path : Option[String]) : Unit = {
     file.getParentFile() match {
       case null =>
       case parent =>
@@ -27,7 +27,7 @@ trait ConfigWriter {
     }
   }
 
-  def write(config: Config, os: OutputStream, path: Option[String]): Unit = {
+  def write(config : Config, os : OutputStream, path : Option[String]) : Unit = {
     val ps = new PrintStream(new BufferedOutputStream(os))
     val cnf = path.map { p =>
       ConfigFactory.empty().withValue(p, config.root())
@@ -40,4 +40,4 @@ trait ConfigWriter {
 
 }
 
-object ConfigWriter extends ConfigWriter 
+object ConfigWriter extends ConfigWriter

@@ -7,7 +7,7 @@ import java.io.File
 
 object MvnGavSupport {
 
-  def downloadUrls(mvnGavs: Seq[(MvnGav, String)], artifact: Artifact, debug: Boolean): Option[String] = {
+  def downloadUrls(mvnGavs : Seq[(MvnGav, String)], artifact : Artifact, debug : Boolean) : Option[String] = {
     // lookup in GAV
     val mvnGav = MvnGav.parse(artifact.url.substring(RuntimeConfig.MvnPrefix.length()))
     val directUrl = mvnGavs.find {

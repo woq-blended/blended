@@ -15,7 +15,7 @@ object ContainerPropertyResolver {
 
   private case class ExtractedElement(
     prefix : String,
-    pattern: String,
+    pattern : String,
     postfix : String,
     modifier : String = ""
   )
@@ -32,7 +32,7 @@ object ContainerPropertyResolver {
 
   private[this] val startDelim : String => Pattern = { s =>
     val buf : StringBuffer = new StringBuffer()
-    buf.append("(\\$\\" + s + ")")               // Match a modifier if any
+    buf.append("(\\$\\" + s + ")") // Match a modifier if any
     buf.append("([^\\" + s + "]*)(\\" + s + ")") // capture the modifier name as match group
     Pattern.compile(buf.toString)
   }
@@ -47,7 +47,7 @@ object ContainerPropertyResolver {
 
   private[this] val elCache : mutable.Map[String, Expression] = mutable.Map.empty
 
-  private[this] def parseExpression(exp: String) : Try[Expression] = Try {
+  private[this] def parseExpression(exp : String) : Try[Expression] = Try {
 
     elCache.get(exp) match {
       case Some(e) => e
@@ -58,7 +58,7 @@ object ContainerPropertyResolver {
     }
   }
 
-  private[this] def lastIndexOfPattern(current: Int, next: Int, s : String, p : Pattern) : Int = {
+  private[this] def lastIndexOfPattern(current : Int, next : Int, s : String, p : Pattern) : Int = {
 
     val m : Matcher = p.matcher(s)
 
@@ -70,9 +70,9 @@ object ContainerPropertyResolver {
   }
 
   private[this] def extractVariableElement(
-    line: String,
-    startDelim: Pattern,
-    endDelim: String
+    line : String,
+    startDelim : Pattern,
+    endDelim : String
   ) : ExtractedElement = {
 
     val idx : Int = lastIndexOfPattern(-1, -1, line, startDelim)
@@ -109,28 +109,31 @@ object ContainerPropertyResolver {
 
     "capitalize" -> { case (s : String, _ : String) => s.capitalize },
 
-    "right" -> { case (s: String, param: String) =>
-      val n = param.toInt
-      if (n >= s.length) s else s.takeRight(n)
+    "right" -> {
+      case (s : String, param : String) =>
+        val n = param.toInt
+        if (n >= s.length) s else s.takeRight(n)
     },
 
-    "left" -> { case (s: String, param : String) =>
-      val n = param.toInt
-      if (n >= s.length) s else s.take(n)
+    "left" -> {
+      case (s : String, param : String) =>
+        val n = param.toInt
+        if (n >= s.length) s else s.take(n)
     },
 
-    "replace" -> { case (s: String, param: String) =>
-      val replace = param.split(":")
-      if (replace.length != 2) {
-        s
-      } else {
-        s.replaceAll(replace(0), replace(1))
-      }
+    "replace" -> {
+      case (s : String, param : String) =>
+        val replace = param.split(":")
+        if (replace.length != 2) {
+          s
+        } else {
+          s.replaceAll(replace(0), replace(1))
+        }
     }
   )
 
-  private[this] def resolver(idSvc: ContainerIdentifierService) : Map[String, Resolver] = Map(
-    ContainerIdentifierService.containerId -> ( _ => idSvc.uuid )
+  private[this] def resolver(idSvc : ContainerIdentifierService) : Map[String, Resolver] = Map(
+    ContainerIdentifierService.containerId -> (_ => idSvc.uuid)
   )
 
   private[this] def extractModifier(s : String) : Option[(Modifier, String)] = {
@@ -139,7 +142,7 @@ object ContainerPropertyResolver {
     modifiers.get(modName).map { m => (m, params) }
   }
 
-  private[this] def processRule(idSvc: ContainerIdentifierService, rule: String, additionalProps: Map[String, Any]) : String = {
+  private[this] def processRule(idSvc : ContainerIdentifierService, rule : String, additionalProps : Map[String, Any]) : String = {
 
     log.trace(s"Processing rule [$rule]")
 
@@ -174,28 +177,29 @@ object ContainerPropertyResolver {
             )
           )
         ) match {
-          case Some(s) => s.toString()
-          case None =>
-            resolver(idSvc).get(ruleName) match {
-              case Some(r) => r(ruleName)
-              case None => throw new PropertyResolverException(s"Unable to resolve property [$rule]")
-            }
-        }
+            case Some(s) => s.toString()
+            case None =>
+              resolver(idSvc).get(ruleName) match {
+                case Some(r) => r(ruleName)
+                case None    => throw new PropertyResolverException(s"Unable to resolve property [$rule]")
+              }
+          }
     }
 
     // Then we apply the collected modifiers left to right to the resolved value
-    result = mods.foldLeft[String](result)((a,b) => b._1(a, b._2))
+    result = mods.foldLeft[String](result)((a, b) => b._1(a, b._2))
 
     result
   }
-  
 
-  def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
+  def resolve(idSvc : ContainerIdentifierService, line : String, additionalProps : Map[String, Any] = Map.empty) : AnyRef = {
     // First we check if we have replacements in "Blended Style"
 
-    /** TODO: Map the modifier to installable services
+    /**
+     * TODO: Map the modifier to installable services
      * delayed : do not evaluate the inner expression any further
-     * encrypted : resolve an encrypted value */
+     * encrypted : resolve an encrypted value
+     */
     if (lastIndexOfPattern(-1, -1, line, resolveStartDelim) != -1) {
       val e = extractVariableElement(line, resolveStartDelim, resolveEndDelim)
       e.modifier match {
@@ -229,7 +233,7 @@ object ContainerPropertyResolver {
 
   // TODO : Should this be Option[AnyRef] ??
   private[impl] def evaluate(
-    idSvc: ContainerIdentifierService, line: String, additionalProps : Map[String, Any] = Map.empty
+    idSvc : ContainerIdentifierService, line : String, additionalProps : Map[String, Any] = Map.empty
   ) : AnyRef = {
 
     val context = new StandardEvaluationContext()
@@ -238,8 +242,9 @@ object ContainerPropertyResolver {
     }
     context.setRootObject(idSvc)
 
-    additionalProps.foreach { case (k,v) =>
-      context.setVariable(k,v)
+    additionalProps.foreach {
+      case (k, v) =>
+        context.setVariable(k, v)
     }
     context.setVariable("idSvc", idSvc)
 

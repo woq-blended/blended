@@ -14,8 +14,7 @@ object FlowProcessor {
 
   type IntegrationStep = FlowEnvelope => Try[FlowEnvelope]
 
-  def transform[T](name: String, log: Logger)(f : FlowEnvelope => Try[T])(implicit clazz : ClassTag[T])
-    : Graph[FlowShape[FlowEnvelope, Either[FlowEnvelope, T]], NotUsed] = {
+  def transform[T](name : String, log : Logger)(f : FlowEnvelope => Try[T])(implicit clazz : ClassTag[T]) : Graph[FlowShape[FlowEnvelope, Either[FlowEnvelope, T]], NotUsed] = {
 
     Flow.fromFunction[FlowEnvelope, Either[FlowEnvelope, T]] { env =>
       env.exception match {
@@ -33,13 +32,13 @@ object FlowProcessor {
         case Some(t) =>
           log.debug(s"Not executing function [${env.id}]:[$name] as envelope has exception [${env.exception.map(_.getMessage()).getOrElse("")}].")
           Left(env)
-        }
-      }.named(name)
+      }
+    }.named(name)
   }
 
-  def fromFunction(name: String, log: Logger)(f: IntegrationStep) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+  def fromFunction(name : String, log : Logger)(f : IntegrationStep) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
-    Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env: FlowEnvelope =>
+    Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env : FlowEnvelope =>
 
       env.exception match {
         case None =>
@@ -69,13 +68,13 @@ object FlowProcessor {
     env
   }
 
-  def splitEither[L,R]() : Graph[FanOutShape2[Either[L,R], L, R], NotUsed] = {
+  def splitEither[L, R]() : Graph[FanOutShape2[Either[L, R], L, R], NotUsed] = {
     GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val branches = b.add(Broadcast[Either[L,R]](2))
-      val isLeft = b.add(Flow[Either[L,R]].filter(_.isLeft).map(_.left.get))
-      val isRight = b.add(Flow[Either[L,R]].filter(_.isRight).map(_.right.get))
+      val branches = b.add(Broadcast[Either[L, R]](2))
+      val isLeft = b.add(Flow[Either[L, R]].filter(_.isLeft).map(_.left.get))
+      val isRight = b.add(Flow[Either[L, R]].filter(_.isRight).map(_.right.get))
 
       branches ~> isLeft
       branches ~> isRight
@@ -91,7 +90,7 @@ object FlowProcessor {
 
       val branches = b.add(Broadcast[T](2))
       val isTrue = b.add(Flow[T].filter(p))
-      val isFalse  = b.add(Flow[T].filterNot(p))
+      val isFalse = b.add(Flow[T].filterNot(p))
 
       branches ~> isTrue
       branches ~> isFalse
@@ -105,7 +104,7 @@ trait FlowProcessor {
   val name : String
   val f : FlowProcessor.IntegrationStep
 
-  def flow(log: Logger) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
+  def flow(log : Logger) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
     FlowProcessor.fromFunction(
       name, log
     )(f).named(name)

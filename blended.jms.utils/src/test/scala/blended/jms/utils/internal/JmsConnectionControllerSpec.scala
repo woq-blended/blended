@@ -17,9 +17,9 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
   private[this] val idCnt = new AtomicInteger(0)
 
-  def testId(): String = "testId-" + idCnt.incrementAndGet()
+  def testId() : String = "testId-" + idCnt.incrementAndGet()
 
-  def dummyResolver: String => Try[String] = { s => Success(s) }
+  def dummyResolver : String => Try[String] = { s => Success(s) }
 
   "The JMS Connection Controller" - {
 
@@ -48,8 +48,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
       val holder = new DummyHolder(() => {
         throw new JMSException("boom")
-      }
-      )
+      })
 
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
@@ -83,12 +82,11 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
       val timeout = 100.millis
       val holder = new DummyHolder(() => new DummyConnection() {
-        override def close(): Unit = {
+        override def close() : Unit = {
           Thread.sleep(timeout.toMillis * 2)
           super.close()
         }
-      }
-      )
+      })
 
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
@@ -107,11 +105,10 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
       val timeout = 50.millis
 
       val holder = new DummyHolder(() => new DummyConnection() {
-        override def close(): Unit = {
+        override def close() : Unit = {
           throw new JMSException("boom")
         }
-      }
-      )
+      })
 
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 

@@ -26,22 +26,22 @@ object JmsConnector {
   }
 }
 
-trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
+trait JmsConnector[S <: JmsSession] { this : TimerGraphStageLogic =>
 
   private case object RecreateSessions
 
   implicit protected var ec : ExecutionContext = _
   implicit protected var system : ActorSystem = _
 
-  @volatile protected var jmsConnection: Future[Connection] = _
+  @volatile protected var jmsConnection : Future[Connection] = _
 
   protected var jmsSessions : Map[String, S] = Map.empty
 
-  protected def jmsSettings: JmsSettings
+  protected def jmsSettings : JmsSettings
 
-  protected def onSessionOpened(jmsSession: S): Unit
+  protected def onSessionOpened(jmsSession : S) : Unit
 
-  private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
+  private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable] { t =>
     jmsSettings.log.error(s"Failing stage [$id] with [${t.getMessage()}")
     failStage(t)
   }
@@ -49,14 +49,14 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
   // Just to identify the Source stage in log statements
   protected val id : String = {
     val result : String = jmsSettings.connectionFactory match {
-      case idAware: IdAwareConnectionFactory => idAware.id
-      case cf => cf.toString()
+      case idAware : IdAwareConnectionFactory => idAware.id
+      case cf                                 => cf.toString()
     }
 
     s"${JmsConnector.idCounter.incrementAndGet()} -- $result"
   }
 
-  private val onSession: AsyncCallback[S] = getAsyncCallback[S] { session =>
+  private val onSession : AsyncCallback[S] = getAsyncCallback[S] { session =>
     jmsSettings.log.debug(s"Session of type [${session.getClass().getSimpleName()}] with id [${session.sessionId}] has been created.")
     jmsSessions += (session.sessionId -> session)
     onSessionOpened(session)
@@ -80,15 +80,15 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
       cancelTimer(RecreateSessions)
   }
 
-  override protected def onTimer(timerKey: Any): Unit = handleTimer(timerKey)
+  override protected def onTimer(timerKey : Any) : Unit = handleTimer(timerKey)
 
   protected def nextSessionId() : String = s"$id-${JmsConnector.nextSessionId}"
 
-  protected def createSession(connection: Connection): Try[S]
+  protected def createSession(connection : Connection) : Try[S]
 
   protected def afterSessionClose(session : S) : Unit = {}
 
-  protected[this] def closeSession(session: S) : Unit = {
+  protected[this] def closeSession(session : S) : Unit = {
 
     jmsSettings.log.debug(s"Closing session [${session.sessionId}]")
 
@@ -97,9 +97,9 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
         jmsSessions -= session.sessionId
         onSessionClosed.invoke(session)
       case Failure(t) =>
-        jmsSettings.log.error(s"Error closing session with id [${session.sessionId}] : [${t.getMessage() }]")
+        jmsSettings.log.error(s"Error closing session with id [${session.sessionId}] : [${t.getMessage()}]")
         handleError.invoke(t)
-      }
+    }
   }
 
   sealed trait ConnectionStatus
@@ -107,7 +107,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
   case object Connected extends ConnectionStatus
   case object TimedOut extends ConnectionStatus
 
-  protected def initSessionAsync(): Unit = {
+  protected def initSessionAsync() : Unit = {
 
     openSessions().onComplete {
       case Success(allSessions) =>
@@ -122,7 +122,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
     }
   }
 
-  def openSessions(): Future[Seq[S]] =
+  def openSessions() : Future[Seq[S]] =
 
     openConnection(startConnection = true).flatMap { connection =>
 
@@ -132,14 +132,14 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
         for (_ <- 0 until toBeCreated) yield Future {
           createSession(connection) match {
             case Success(s) => Some(s)
-            case _ => None
+            case _          => None
           }
         }
 
-    Future.sequence(sessionFutures).map(_.flatten)
-  }
+      Future.sequence(sessionFutures).map(_.flatten)
+    }
 
-  private def openConnection(startConnection: Boolean) : Future[Connection] = {
+  private def openConnection(startConnection : Boolean) : Future[Connection] = {
 
     val factory = jmsSettings.connectionFactory
     val connectionRef = new AtomicReference[Option[Connection]](None)
@@ -197,17 +197,17 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
   }
 
   private[jms] def openConnection(
-    startConnection: Boolean,
-    onConnectionFailure: JMSException => Unit
-  ): Future[Connection] = {
+    startConnection : Boolean,
+    onConnectionFailure : JMSException => Unit
+  ) : Future[Connection] = {
 
     jmsConnection = openConnection(startConnection).map { connection =>
       connection.setExceptionListener(new ExceptionListener {
-        override def onException(ex: JMSException) = {
+        override def onException(ex : JMSException) = {
           try {
             connection.close() // best effort closing the connection.
           } catch {
-            case _: Throwable =>
+            case _ : Throwable =>
           }
           jmsSessions = Map.empty
 

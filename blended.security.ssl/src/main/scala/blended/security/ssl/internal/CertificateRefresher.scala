@@ -12,7 +12,7 @@ import blended.util.logging.Logger
 
 object CertificateRefresher {
 
-  def nextRefreshScheduleTime(validEnd: Date, refresherConfig: RefresherConfig, now: Option[Date] = None): Date = {
+  def nextRefreshScheduleTime(validEnd : Date, refresherConfig : RefresherConfig, now : Option[Date] = None) : Date = {
     // calc next schedule date
     val cal = new GregorianCalendar()
     cal.clear()
@@ -40,29 +40,29 @@ object CertificateRefresher {
 }
 
 class CertificateRefresher(
-  override val bundleContext: BundleContext,
-  certMgr: CertificateManagerImpl,
-  cfg: RefresherConfig,
-  scope: CapsuleScope
+  override val bundleContext : BundleContext,
+  certMgr : CertificateManagerImpl,
+  cfg : RefresherConfig,
+  scope : CapsuleScope
 ) extends Capsule with ServiceConsuming {
 
   private[this] val log = Logger[CertificateRefresher]
 
-  private[this ]val timerName = "refresh-certificate"
+  private[this] val timerName = "refresh-certificate"
   private[this] val timer = new Timer(timerName, true)
 
-  override def start(): Unit = scheduleRefresh(cfg)
+  override def start() : Unit = scheduleRefresh(cfg)
 
-  override def stop(): Unit = {
+  override def stop() : Unit = {
     log.debug(s"Cancelling timer [$timerName]")
     timer.cancel()
   }
 
   /**
-    * Schedule the next refresh attempt for the given certificate.
-    * If the Domino capsule stops, this timer will also be cancelled.
-    */
-  def scheduleRefresh(refresherConfig: RefresherConfig): Unit = {
+   * Schedule the next refresh attempt for the given certificate.
+   * If the Domino capsule stops, this timer will also be cancelled.
+   */
+  def scheduleRefresh(refresherConfig : RefresherConfig) : Unit = {
 
     certMgr.nextCertificateTimeout().get.foreach { timeOut =>
       val nextScheduleTime = CertificateRefresher.nextRefreshScheduleTime(timeOut, refresherConfig)
@@ -73,11 +73,11 @@ class CertificateRefresher(
   }
 
   /**
-    * This task tries to refresh a certificate.
-    * If positive, depending on config, the new certificate is re-published as SslContextProvider or the whole OSGi container will be restarted.
-    */
-  class RefreshTask(certMgr: CertificateManagerImpl, refresherConfig: RefresherConfig) extends TimerTask {
-    override def run(): Unit = {
+   * This task tries to refresh a certificate.
+   * If positive, depending on config, the new certificate is re-published as SslContextProvider or the whole OSGi container will be restarted.
+   */
+  class RefreshTask(certMgr : CertificateManagerImpl, refresherConfig : RefresherConfig) extends TimerTask {
+    override def run() : Unit = {
       log.debug(s"About to start refresh timer task. Trying to update certificate(s)")
       // request new cert
       certMgr.checkCertificates() match {
@@ -86,7 +86,7 @@ class CertificateRefresher(
           scheduleRefresh(refresherConfig)
 
         case Success(None) =>
-          // do nothing
+        // do nothing
 
         case Success(Some(newKs)) =>
           if (newKs.changedAliases.isEmpty) {

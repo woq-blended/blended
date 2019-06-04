@@ -29,7 +29,7 @@ class FileDropStageSpec extends LoggingFreeSpec
 
   private val headerCfg = FlowHeaderConfig(prefix = "App")
 
-  val prepareDropper : FileDropConfig => String => FileDropConfig =  cfg => subDir => {
+  val prepareDropper : FileDropConfig => String => FileDropConfig = cfg => subDir => {
     val dir = cfg.defaultDir + "/" + subDir
     cleanUpDirectory(dir)
     cfg.copy(defaultDir = dir)
@@ -47,10 +47,9 @@ class FileDropStageSpec extends LoggingFreeSpec
 
   private val dropActor : ActorRef = system.actorOf(Props[FileDropActor])
 
+  def dropFlow(cfg : FileDropConfig, bufferSize : Int) : ((ActorRef, KillSwitch), Future[Seq[FileDropResult]]) = {
 
-  def dropFlow(cfg: FileDropConfig, bufferSize : Int): ((ActorRef, KillSwitch), Future[Seq[FileDropResult]]) = {
-
-    val dropper: Flow[FlowEnvelope, FileDropResult, _] = Flow.fromGraph(new FileDropStage(name = "spec", config = cfg, headerCfg = headerCfg, dropActor = dropActor,  log = log))
+    val dropper : Flow[FlowEnvelope, FileDropResult, _] = Flow.fromGraph(new FileDropStage(name = "spec", config = cfg, headerCfg = headerCfg, dropActor = dropActor, log = log))
 
     Source.actorRef[FlowEnvelope](bufferSize, OverflowStrategy.fail)
       .viaMat(dropper)(Keep.left)
@@ -59,12 +58,12 @@ class FileDropStageSpec extends LoggingFreeSpec
       .run()
   }
 
-  def dropFiles(cfg: FileDropConfig, msgs: FlowEnvelope*) : Seq[FileDropResult] = {
+  def dropFiles(cfg : FileDropConfig, msgs : FlowEnvelope*) : Seq[FileDropResult] = {
 
     val ((actor, switch), results) = dropFlow(cfg, msgs.size)
     msgs.foreach(actor ! _)
 
-    akka.pattern.after(to, system.scheduler){ Future( switch.shutdown() )}
+    akka.pattern.after(to, system.scheduler) { Future(switch.shutdown()) }
     Await.result(results, to + 500.millis)
   }
 
@@ -83,7 +82,7 @@ class FileDropStageSpec extends LoggingFreeSpec
         ).get))
       }
 
-      val results : Seq[FileDropResult] = dropFiles(cfg, envelopes:_*)
+      val results : Seq[FileDropResult] = dropFiles(cfg, envelopes : _*)
       results should have size msgCount
 
       assert(results.forall(_.error.isEmpty))

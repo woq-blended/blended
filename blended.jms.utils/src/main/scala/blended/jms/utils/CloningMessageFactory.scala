@@ -3,13 +3,13 @@ package blended.jms.utils
 import scala.collection.JavaConverters._
 
 import blended.util.logging.Logger
-import javax.jms.{ BytesMessage, Message, Session, TextMessage }
+import javax.jms.{BytesMessage, Message, Session, TextMessage}
 
 object CloningMessageFactory extends JMSMessageFactory[Message] {
 
   private[this] val log = Logger("blended.jms.utils.CloningMessageFactory")
 
-  override def createMessage(session: Session, content: Message): Message = {
+  override def createMessage(session : Session, content : Message) : Message = {
 
     val result = content match {
       case tMsg : TextMessage =>
@@ -32,7 +32,7 @@ object CloningMessageFactory extends JMSMessageFactory[Message] {
         session.createMessage()
     }
 
-    content.getPropertyNames.asScala.filter{ name =>
+    content.getPropertyNames.asScala.filter { name =>
       name == "JMSCorrelationID" || !name.toString.startsWith("JMS")
     }.foreach { name =>
       result.setObjectProperty(name.toString, content.getObjectProperty(name.toString))

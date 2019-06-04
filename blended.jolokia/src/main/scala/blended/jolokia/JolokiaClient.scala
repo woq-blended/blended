@@ -10,8 +10,8 @@ import scala.util._
 
 case class JolokiaAddress(
   jolokiaUrl : String = "http://127.0.0.1:7777/jolokia",
-  user: Option[String] = None,
-  password: Option[String] = None
+  user : Option[String] = None,
+  password : Option[String] = None
 )
 
 class JolokiaClient(address : JolokiaAddress) {
@@ -28,12 +28,12 @@ class JolokiaClient(address : JolokiaAddress) {
     performGet(op)(JolokiaSearchResult(_))
   }
 
-  def read(name: String) : Try[JolokiaReadResult] = {
+  def read(name : String) : Try[JolokiaReadResult] = {
     val op : String = "read/" + URI.create(name.replaceAll("\"", "%22")).toString
     performGet(op)(v => JolokiaReadResult(name, v))
   }
 
-  def exec(execDef: OperationExecDef) : Try[JolokiaExecResult] = {
+  def exec(execDef : OperationExecDef) : Try[JolokiaExecResult] = {
     val op : String = s"exec/${execDef.pattern}"
     performGet(op)(JolokiaExecResult(_))
   }
@@ -45,7 +45,7 @@ class JolokiaClient(address : JolokiaAddress) {
 
     val request = (address.user, address.password) match {
       case (Some(u), Some(p)) => sttp.get(uri).auth.basic(u, p)
-      case (_,_) => sttp.get(uri).header("X-Blended", "jolokia")
+      case (_, _)             => sttp.get(uri).header("X-Blended", "jolokia")
     }
 
     log.debug(s"Executing Jolokia Request [$request]")

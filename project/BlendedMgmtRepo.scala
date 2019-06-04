@@ -25,7 +25,7 @@ object BlendedMgmtRepo extends ProjectFactory {
       )
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedUpdaterConfigJvm.project,
       BlendedUtilLogging.project,

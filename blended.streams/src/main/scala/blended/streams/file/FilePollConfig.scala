@@ -11,21 +11,21 @@ import scala.concurrent.duration._
 
 object FilePollConfig {
 
-  val PATH_ID             = "id"
-  val PATH_INTERVAL       = "interval"
-  val PATH_SOURCEDIR      = "sourceDirectory"
-  val PATH_PATTERN        = "pattern"
-  val PATH_BACKUP         = "backup"
-  val PATH_LOCK           = "lock"
-  val PATH_ASTEXT         = "asText"
-  val PATH_TMP_EXT        = "extension"
-  val PATH_OP_TIMEOUT     = "operationTimeout"
+  val PATH_ID = "id"
+  val PATH_INTERVAL = "interval"
+  val PATH_SOURCEDIR = "sourceDirectory"
+  val PATH_PATTERN = "pattern"
+  val PATH_BACKUP = "backup"
+  val PATH_LOCK = "lock"
+  val PATH_ASTEXT = "asText"
+  val PATH_TMP_EXT = "extension"
+  val PATH_OP_TIMEOUT = "operationTimeout"
   val PATH_HANDLE_TIMEOUT = "handleTimeout"
-  val PATH_FILENAME_PROP  = "filenameProperty"
-  val PATH_FILEPATH_PROP  = "filepathProperty"
-  val PATH_BATCHSIZE      = "batchSize"
-  val PATH_CHARSET        = "charset"
-  val PATH_HEADER         = "header"
+  val PATH_FILENAME_PROP = "filenameProperty"
+  val PATH_FILEPATH_PROP = "filepathProperty"
+  val PATH_BATCHSIZE = "batchSize"
+  val PATH_CHARSET = "charset"
+  val PATH_HEADER = "header"
 
   val DEFAULT_BATCH_SIZE : Int = 10
 
@@ -43,14 +43,14 @@ object FilePollConfig {
     apply(cfg, FlowHeaderConfig.create(idSvc), props)
   }
 
-  def apply(cfg: Config, headerCfg : FlowHeaderConfig, header : FlowMessage.FlowMessageProps = Map.empty): FilePollConfig = {
+  def apply(cfg : Config, headerCfg : FlowHeaderConfig, header : FlowMessage.FlowMessageProps = Map.empty) : FilePollConfig = {
 
     new FilePollConfig(
       id = cfg.getString(PATH_ID),
       headerCfg = headerCfg,
       interval = cfg.getDuration(PATH_INTERVAL, 1.second),
       sourceDir = cfg.getString(PATH_SOURCEDIR),
-      pattern= cfg.getStringOption(PATH_PATTERN),
+      pattern = cfg.getStringOption(PATH_PATTERN),
       lock = cfg.getStringOption(PATH_LOCK),
       backup = cfg.getStringOption(PATH_BACKUP),
       charSet = cfg.getStringOption(PATH_CHARSET),
@@ -72,9 +72,9 @@ case class FilePollConfig(
   interval : FiniteDuration,
   sourceDir : String,
   pattern : Option[String],
-  lock: Option[String],
+  lock : Option[String],
   backup : Option[String],
-  asText: Boolean,
+  asText : Boolean,
   charSet : Option[String],
   operationTimeout : FiniteDuration,
   handleTimeout : FiniteDuration,

@@ -22,7 +22,7 @@ import scala.util.control.NonFatal
 object BrokerControlSupervisor {
 
   def props(
-    cfg: OSGIActorConfig,
+    cfg : OSGIActorConfig,
     sslContext : Option[SSLContext],
     broker : List[BrokerConfig]
   ) : Props = Props(new BrokerControlSupervisor(
@@ -32,7 +32,7 @@ object BrokerControlSupervisor {
 
 class BrokerControlSupervisor(
   cfg : OSGIActorConfig,
-  sslContext: Option[SSLContext],
+  sslContext : Option[SSLContext],
   broker : List[BrokerConfig]
 ) extends Actor {
 
@@ -41,11 +41,11 @@ class BrokerControlSupervisor(
   private case object Start
   private case object Stop
 
-  override def preStart(): Unit = {
+  override def preStart() : Unit = {
     self ! Start
   }
 
-  override def receive: Receive = {
+  override def receive : Receive = {
     case Start =>
 
       log.info(s"Starting ${getClass().getSimpleName()} with [${broker.mkString(",")}]")
@@ -80,7 +80,7 @@ object BrokerControlActor {
   ) : Props = Props(new BrokerControlActor(brokerCfg, cfg, sslCtxt))
 }
 
-class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt: Option[SSLContext])
+class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtxt : Option[SSLContext])
   extends Actor {
 
   private[this] val log = Logger[BrokerControlActor]
@@ -88,7 +88,7 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
   private[this] var svcReg : Option[ServiceRegistration[_]] = None
   private[this] val uuid = UUID.randomUUID().toString()
 
-  override def toString: String = s"BrokerControlActor(${brokerCfg})"
+  override def toString : String = s"BrokerControlActor(${brokerCfg})"
 
   private[this] def startBroker() : Unit = {
 
@@ -108,7 +108,7 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
       val b = brokerFactory.createBroker(new URI(uri))
       broker = Some(b)
 
-      sslCtxt.foreach{ ctxt =>
+      sslCtxt.foreach { ctxt =>
         val amqSslContext = new org.apache.activemq.broker.SslContext()
         amqSslContext.setSSLContext(ctxt)
         b.setSslContext(amqSslContext)
@@ -134,13 +134,13 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
     }
   }
 
-  private[this] def registerService(brokerCfg : BrokerConfig): Unit = {
+  private[this] def registerService(brokerCfg : BrokerConfig) : Unit = {
     if (svcReg.isEmpty) {
       new Object with ServiceProviding {
 
-        override protected def capsuleContext: CapsuleContext = new SimpleDynamicCapsuleContext()
+        override protected def capsuleContext : CapsuleContext = new SimpleDynamicCapsuleContext()
 
-        override protected def bundleContext: BundleContext = cfg.bundleContext
+        override protected def bundleContext : BundleContext = cfg.bundleContext
 
         val url = s"vm://${brokerCfg.brokerName}?create=false"
 
@@ -184,26 +184,26 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
     svcReg = None
   }
 
-  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
+  override def preRestart(reason : Throwable, message : Option[Any]) : Unit = {
     log.error(reason)(s"Error starting Active MQ broker [${brokerCfg.brokerName}]")
     super.preRestart(reason, message)
   }
 
-  override def postStop(): Unit = broker.foreach{ b =>
+  override def postStop() : Unit = broker.foreach { b =>
     b.stop()
     b.waitUntilStopped()
   }
 
   private val jvmId = ManagementFactory.getRuntimeMXBean().getName()
 
-  override def receive : Receive =  {
+  override def receive : Receive = {
     case BrokerControlActor.StartBroker =>
       log.trace(s"Received StartBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
       if (broker.isEmpty) { startBroker() }
     case started : BrokerControlActor.BrokerStarted =>
       log.trace(s"Received BrokerStarted Event for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
       if (started.uuid == uuid) {
-        broker.foreach{ _ => registerService(brokerCfg) }
+        broker.foreach { _ => registerService(brokerCfg) }
       }
     case BrokerControlActor.StopBroker =>
       log.trace(s"Received StopBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")

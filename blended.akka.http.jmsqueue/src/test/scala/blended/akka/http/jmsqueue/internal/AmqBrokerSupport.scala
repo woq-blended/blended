@@ -10,7 +10,7 @@ trait AmqBrokerSupport {
 
   lazy val brokerName : String = "blended"
 
-  def amqCf()(implicit system: ActorSystem): IdAwareConnectionFactory = {
+  def amqCf()(implicit system : ActorSystem) : IdAwareConnectionFactory = {
     SimpleIdAwareConnectionFactory(
       vendor = "activemq",
       provider = "activemq",
@@ -35,7 +35,7 @@ trait AmqBrokerSupport {
     b
   }
 
-  def stopBroker(broker: BrokerService) : Unit = {
+  def stopBroker(broker : BrokerService) : Unit = {
     broker.stop()
     broker.waitUntilStopped()
   }

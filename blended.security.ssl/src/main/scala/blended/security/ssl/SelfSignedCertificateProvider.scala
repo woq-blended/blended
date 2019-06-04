@@ -9,26 +9,26 @@ import org.bouncycastle.cert.X509v3CertificateBuilder
 
 import scala.util.Try
 
-class SelfSignedCertificateProvider(cfg: SelfSignedConfig)
+class SelfSignedCertificateProvider(cfg : SelfSignedConfig)
   extends CertificateProvider
   with CertificateRequestBuilder
   with CertificateSigner {
 
   private[this] val log = Logger[SelfSignedCertificateProvider]
 
-  private def generateKeyPair(): KeyPair = {
+  private def generateKeyPair() : KeyPair = {
     val kpg = KeyPairGenerator.getInstance("RSA")
     kpg.initialize(cfg.keyStrength, new SecureRandom())
     kpg.genKeyPair()
   }
 
-  override def refreshCertificate(existing: Option[CertificateHolder], cnProvider : CommonNameProvider): Try[CertificateHolder] = Try {
+  override def refreshCertificate(existing : Option[CertificateHolder], cnProvider : CommonNameProvider) : Try[CertificateHolder] = Try {
 
     val oldCert = existing.map(_.chain.head)
 
     val requesterKeypair : KeyPair = existing match {
       case Some(c) => c.privateKey match {
-        case None => throw new NoPrivateKeyException("Existing certificate must have a private key to update")
+        case None     => throw new NoPrivateKeyException("Existing certificate must have a private key to update")
         case Some(pk) => new KeyPair(c.publicKey, pk)
       }
       case None => generateKeyPair()
@@ -36,7 +36,7 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig)
 
     val serial = oldCert match {
       case Some(c) => c.getSerialNumber().add(BigInteger.ONE)
-      case None => BigInteger.ONE
+      case None    => BigInteger.ONE
     }
 
     val certBuilder : X509v3CertificateBuilder = hostCertificateRequest(

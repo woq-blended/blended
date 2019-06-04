@@ -17,8 +17,7 @@ object PojoSrTestHelper {
   val OnlyOnePojoSrAtATime = new Object()
 }
 
-class MandatoryServiceUnavailable(clazz : Class[_], filter : Option[String]) extends
-  Exception(s"Service of type [${clazz.getName()}] with filter [$filter] not available.")
+class MandatoryServiceUnavailable(clazz : Class[_], filter : Option[String]) extends Exception(s"Service of type [${clazz.getName()}] with filter [$filter] not available.")
 
 trait PojoSrTestHelper {
 
@@ -44,8 +43,8 @@ trait PojoSrTestHelper {
   }
 
   def idSvcActivator(
-    mandatoryProperties: Option[String] = None
-  ): BundleActivator = {
+    mandatoryProperties : Option[String] = None
+  ) : BundleActivator = {
     new DominoActivator {
 
       mandatoryProperties.foreach(s =>
@@ -55,13 +54,13 @@ trait PojoSrTestHelper {
         val ctCtxt = new MockContainerContext(baseDir)
         // This needs to be a fixed uuid as some tests might be for restarts and require the same id
         new ContainerIdentifierServiceImpl(ctCtxt) {
-          override lazy val uuid: String = pojoUuid
+          override lazy val uuid : String = pojoUuid
         }.providesService[ContainerIdentifierService]
       }
     }
   }
 
-  def withPojoServiceRegistry[T](f: BlendedPojoRegistry => Try[T]) : Try[T] = Try {
+  def withPojoServiceRegistry[T](f : BlendedPojoRegistry => Try[T]) : Try[T] = Try {
 
     val registry = createRegistry().get
     val result = f(registry).get
@@ -75,11 +74,11 @@ trait PojoSrTestHelper {
   def createSimpleBlendedContainer(
     mandatoryProperties : List[String] = List.empty,
     sysProperties : Map[String, String] = Map.empty
-  ): Try[BlendedPojoRegistry] = Try {
+  ) : Try[BlendedPojoRegistry] = Try {
     System.setProperty("BLENDED_HOME", baseDir)
     System.setProperty("blended.home", baseDir)
     System.setProperty("blended.container.home", baseDir)
-    sysProperties.foreach { case (k,v) => System.setProperty(k, v) }
+    sysProperties.foreach { case (k, v) => System.setProperty(k, v) }
     startBundle(createRegistry().get)(
       classOf[ContainerIdentifierServiceImpl].getPackage().getName(), idSvcActivator(Some(mandatoryProperties.mkString(",")))
     ).get._2
@@ -101,7 +100,7 @@ trait PojoSrTestHelper {
     }
   }
 
-  def stopRegistry(sr: BlendedPojoRegistry): Unit = {
+  def stopRegistry(sr : BlendedPojoRegistry) : Unit = {
     // TODO: review: TR thinks, we don't need to sort here
     val bundles = sr.getBundleContext().getBundles().map { b => b.getBundleId() }.sorted.reverse
     bundles.foreach { id =>
@@ -114,8 +113,8 @@ trait PojoSrTestHelper {
   }
 
   def withSimpleBlendedContainer[T](
-    mandatoryProperties: List[String] = List.empty
-  )(f: BlendedPojoRegistry => T): Try[T] = Try {
+    mandatoryProperties : List[String] = List.empty
+  )(f : BlendedPojoRegistry => T) : Try[T] = Try {
 
     val registry = createRegistry().get
     val result = f(registry)
@@ -124,20 +123,21 @@ trait PojoSrTestHelper {
     result
   }
 
-  private[this] def deleteRecursive(files: File*): Unit = files.map { file =>
-    if (file.isDirectory) deleteRecursive(file.listFiles: _*)
+  private[this] def deleteRecursive(files : File*) : Unit = files.map { file =>
+    if (file.isDirectory) deleteRecursive(file.listFiles : _*)
     file.delete match {
       case false if file.exists =>
         throw new RuntimeException(
-          s"Could not delete ${if (file.isDirectory) "dir" else "file"}: ${file}")
+          s"Could not delete ${if (file.isDirectory) "dir" else "file"}: ${file}"
+        )
       case _ =>
     }
   }
 
-  def withStartedBundle[T](sr: BlendedPojoRegistry)(
-    symbolicName: String,
-    activator: BundleActivator
-  )(f: BlendedPojoRegistry => Try[T]): Try[T] = Try {
+  def withStartedBundle[T](sr : BlendedPojoRegistry)(
+    symbolicName : String,
+    activator : BundleActivator
+  )(f : BlendedPojoRegistry => Try[T]) : Try[T] = Try {
 
     val (bundleId, registry) = startBundle(sr)(symbolicName, activator).get
     val result = f(registry).get
@@ -146,18 +146,14 @@ trait PojoSrTestHelper {
     result
   }
 
-  def serviceReferences[T]
-    (sr: BlendedPojoRegistry)
-    (filter : Option[String] = None)
-    (implicit clazz: ClassTag[T]) : Array[ServiceReference[T]] =
+  def serviceReferences[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T]) : Array[ServiceReference[T]] =
 
-      Option(sr.getServiceReferences(
-        clazz.runtimeClass.getName(),
-        filter.getOrElse(s"(objectClass=${clazz.runtimeClass.getName()})")
-      )
-  ).getOrElse(Array.empty).map(_.asInstanceOf[ServiceReference[T]])
+    Option(sr.getServiceReferences(
+      clazz.runtimeClass.getName(),
+      filter.getOrElse(s"(objectClass=${clazz.runtimeClass.getName()})")
+    )).getOrElse(Array.empty).map(_.asInstanceOf[ServiceReference[T]])
 
-  def waitOnService[T](sr: BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz: ClassTag[T], timeout : FiniteDuration) : Option[T] = {
+  def waitOnService[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout : FiniteDuration) : Option[T] = {
     var result : Option[T] = None
     val start = System.currentTimeMillis()
 
@@ -168,15 +164,15 @@ trait PojoSrTestHelper {
     result
   }
 
-  def mandatoryService[T](sr: BlendedPojoRegistry)(filter: Option[String] = None)(implicit clazz : ClassTag[T], timeout: FiniteDuration) : T = {
+  def mandatoryService[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout : FiniteDuration) : T = {
     waitOnService[T](sr)(filter) match {
       case Some(s) => s
-      case None => throw new MandatoryServiceUnavailable(clazz.runtimeClass, filter)
+      case None    => throw new MandatoryServiceUnavailable(clazz.runtimeClass, filter)
     }
   }
-  
+
   // Ensure the specified service is gone from the registry
-  def ensureServiceMissing[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout: FiniteDuration) : Try[Unit] = Try {
+  def ensureServiceMissing[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout : FiniteDuration) : Try[Unit] = Try {
 
     var result : Option[T] = None
     val start = System.currentTimeMillis()
@@ -191,9 +187,9 @@ trait PojoSrTestHelper {
     }
   }
 
-  def withStartedBundles[T](sr: BlendedPojoRegistry)(
-      bundles: Seq[(String, BundleActivator)]
-  )(f: BlendedPojoRegistry => Try[T]): Try[T] = {
+  def withStartedBundles[T](sr : BlendedPojoRegistry)(
+    bundles : Seq[(String, BundleActivator)]
+  )(f : BlendedPojoRegistry => Try[T]) : Try[T] = {
 
     bundles match {
       case Seq() => f(sr)

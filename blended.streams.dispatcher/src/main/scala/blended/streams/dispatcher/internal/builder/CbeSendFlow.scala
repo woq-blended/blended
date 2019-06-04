@@ -16,9 +16,9 @@ import scala.util.Try
 class CbeSendFlow(
   headerConfig : FlowHeaderConfig,
   dispatcherCfg : ResourceTypeRouterConfig,
-  internalCf: IdAwareConnectionFactory,
-  log: Logger
-)(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport with JmsEnvelopeHeader {
+  internalCf : IdAwareConnectionFactory,
+  log : Logger
+)(implicit system : ActorSystem, bs : DispatcherBuilderSupport) extends JmsStreamSupport with JmsEnvelopeHeader {
 
   private implicit val materializer : Materializer = ActorMaterializer()
   private val config = dispatcherCfg.providerRegistry.mandatoryProvider(internalCf.vendor, internalCf.provider)
@@ -43,16 +43,16 @@ class CbeSendFlow(
     val prepareCbe = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
 
       val v = env.header[String](bs.headerEventVendor) match {
-        case None => dispatcherCfg.eventProvider.vendor
+        case None    => dispatcherCfg.eventProvider.vendor
         case Some(s) => s
       }
 
       val p = env.header[String](bs.headerEventProvider) match {
-        case None => dispatcherCfg.eventProvider.provider
+        case None    => dispatcherCfg.eventProvider.provider
         case Some(s) => s
       }
 
-      val provider = dispatcherCfg.providerRegistry.jmsProvider(v,p).get
+      val provider = dispatcherCfg.providerRegistry.jmsProvider(v, p).get
 
       val result = env
         .withHeader(bs.headerBridgeVendor, v).get

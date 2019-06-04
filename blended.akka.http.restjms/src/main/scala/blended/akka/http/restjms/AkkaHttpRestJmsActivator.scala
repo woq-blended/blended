@@ -14,7 +14,7 @@ import org.apache.camel.component.jms.JmsComponent
 class AkkaHttpRestJmsActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
-    whenActorSystemAvailable {cfg =>
+    whenActorSystemAvailable { cfg =>
 
       val vendor = cfg.config.getString("vendor")
       val provider = cfg.config.getString("provider")

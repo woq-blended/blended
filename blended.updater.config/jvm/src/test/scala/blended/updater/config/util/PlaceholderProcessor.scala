@@ -13,14 +13,14 @@ import java.io.LineNumberReader
 import java.io.InputStreamReader
 import java.util.regex.Matcher
 
-class PlaceholderProcessor(props: Map[String, String], openSeq: String, closeSeq: String, escapeChar: Char = '\\', failOnMissing: Boolean) {
+class PlaceholderProcessor(props : Map[String, String], openSeq : String, closeSeq : String, escapeChar : Char = '\\', failOnMissing : Boolean) {
 
   private[this] val pattern2 = Pattern.compile(s"^\\Q${openSeq}\\E(.*?)\\Q${closeSeq}\\E")
 
-  def process(in: InputStream, out: OutputStream): Try[Unit] = Try {
+  def process(in : InputStream, out : OutputStream) : Try[Unit] = Try {
     val is = new LineNumberReader(new InputStreamReader(in))
     val ps = new PrintStream(new BufferedOutputStream(out))
-    var line: String = null
+    var line : String = null
     try {
       Iterator.continually(is.readLine()).takeWhile(_ != null).map { line =>
         process(line).get
@@ -33,7 +33,7 @@ class PlaceholderProcessor(props: Map[String, String], openSeq: String, closeSeq
     }
   }
 
-  def process(in: File, out: File): Try[File] = Try {
+  def process(in : File, out : File) : Try[File] = Try {
     val ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(out)))
     try {
       Source.fromFile(in).getLines().map { line =>
@@ -48,10 +48,10 @@ class PlaceholderProcessor(props: Map[String, String], openSeq: String, closeSeq
     out
   }
 
-  def process(in: String): Try[String] = Try {
+  def process(in : String) : Try[String] = Try {
     val sb = new StringBuffer()
     var escaped = false
-    var toProcess: String = in
+    var toProcess : String = in
 
     while (!toProcess.isEmpty()) {
       val head = toProcess.head

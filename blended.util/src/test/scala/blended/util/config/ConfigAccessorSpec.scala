@@ -21,14 +21,14 @@ class ConfigAccessorSpec extends FreeSpec with ConfigAccessor {
     val config = ConfigFactory.parseString(configTxt)
 
     val pathsConfigs = configConfigMap(config, "paths")
-    
+
     assert(pathsConfigs.isDefined)
     assert(pathsConfigs.get.keySet === Set("heise", "google"))
-    
+
     val heise = pathsConfigs.get("heise")
-    
+
     assert(heise.hasPath("uri"))
     assert(heise.hasPath("timeout"))
   }
-  
+
 }

@@ -15,7 +15,7 @@ object BlendedMgmtMock extends ProjectFactory {
       Dependencies.logbackCore
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedMgmtBase.project,
       BlendedMgmtAgent.project,
       BlendedUtilLogging.project

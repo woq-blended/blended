@@ -13,27 +13,27 @@ class ServiceJmxConfigSpec extends FreeSpec
   "The Collector Config" - {
     "should instantiate from HOCON" in {
 
-      collectorCfg.interval should be (3)
+      collectorCfg.interval should be(3)
 
-      collectorCfg.templates should have size(1)
+      collectorCfg.templates should have size (1)
 
-      collectorCfg.templates should contain key("jmsQueue")
+      collectorCfg.templates should contain key ("jmsQueue")
 
       val jmsQueueCfg = collectorCfg.templates.get("jmsQueue").get
 
-      jmsQueueCfg.name should be ("jmsQueue")
-      jmsQueueCfg.domain should be ("org.apache.activemq")
+      jmsQueueCfg.name should be("jmsQueue")
+      jmsQueueCfg.domain should be("org.apache.activemq")
       jmsQueueCfg.attributes should be(List("EnqueueCount", "DequeueCount", "QueueSize", "InFlightCount"))
-      jmsQueueCfg.query should be (Map("type" -> "Broker",  "destinationType" -> "Queue", "brokerName" -> "blended"))
+      jmsQueueCfg.query should be(Map("type" -> "Broker", "destinationType" -> "Queue", "brokerName" -> "blended"))
 
-      collectorCfg.services should have size(1)
-      collectorCfg.services should contain key("SampleIn")
+      collectorCfg.services should have size (1)
+      collectorCfg.services should contain key ("SampleIn")
 
       val svcConfig = collectorCfg.services.get("SampleIn").get
 
-      svcConfig.name should be ("SampleIn")
-      svcConfig.svcType should be ("jmsQueue")
-      svcConfig.query should be (Map("destinationName" -> "SampleIn"))
+      svcConfig.name should be("SampleIn")
+      svcConfig.svcType should be("jmsQueue")
+      svcConfig.query should be(Map("destinationName" -> "SampleIn"))
     }
   }
 

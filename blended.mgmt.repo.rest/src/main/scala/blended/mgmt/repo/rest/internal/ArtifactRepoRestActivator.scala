@@ -22,7 +22,7 @@ class ArtifactRepoRestActivator
     whenServicePresent[BlendedPermissionManager] { mgr =>
 
       val repoRoutes = new ArtifactRepoRoutesImpl(mgr)
-      
+
       onStop {
         repoRoutes.clearRepos()
       }

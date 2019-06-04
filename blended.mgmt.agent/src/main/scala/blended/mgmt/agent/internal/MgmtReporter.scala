@@ -47,32 +47,32 @@ trait MgmtReporter extends Actor with PrickleSupport {
 
   ////////////////////
   // ABSTRACT
-  protected val config: Try[MgmtReporterConfig]
+  protected val config : Try[MgmtReporterConfig]
   //
-  protected def createContainerInfo: ContainerInfo
+  protected def createContainerInfo : ContainerInfo
   ////////////////////
 
   ////////////////////
   // MUTABLE
-  private[this] var _ticker: Option[Cancellable] = None
-  private[this] var _serviceInfos: Map[String, ServiceInfo] = Map()
-  private[this] var _lastProfileInfo: ProfileInfo = ProfileInfo(0L, Nil)
-  private[this] var _appliedUpdateActionIds: List[String] = List()
+  private[this] var _ticker : Option[Cancellable] = None
+  private[this] var _serviceInfos : Map[String, ServiceInfo] = Map()
+  private[this] var _lastProfileInfo : ProfileInfo = ProfileInfo(0L, Nil)
+  private[this] var _appliedUpdateActionIds : List[String] = List()
   ////////////////////
 
   private[this] lazy val log = Logger[MgmtReporter]
 
   implicit private[this] lazy val eCtxt = context.system.dispatcher
-  implicit private[this] lazy val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
+  implicit private[this] lazy val materializer : ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 
-  protected def serviceInfos: Map[String, ServiceInfo] = _serviceInfos
+  protected def serviceInfos : Map[String, ServiceInfo] = _serviceInfos
 
-  protected def profileInfo: ProfileInfo = _lastProfileInfo
+  protected def profileInfo : ProfileInfo = _lastProfileInfo
 
   //  protected def appliedUpdateActionIds = _appliedUpdateActionIds
   //  protected def clearAppliedUpdateActions(ids: List[String]) = _appliedUpdateActionIds = _appliedUpdateActionIds.filter(ids.contains)
 
-  override def preStart(): Unit = {
+  override def preStart() : Unit = {
     super.preStart()
 
     config foreach { config =>
@@ -89,7 +89,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
     context.system.eventStream.subscribe(context.self, classOf[UpdateActionApplied])
   }
 
-  override def postStop(): Unit = {
+  override def postStop() : Unit = {
     context.system.eventStream.unsubscribe(context.self)
 
     _ticker.foreach(_.cancel())
@@ -98,7 +98,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
     super.postStop()
   }
 
-  def receive: Receive = LoggingReceive {
+  def receive : Receive = LoggingReceive {
 
     case Tick =>
       config.foreach { config =>
@@ -128,7 +128,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
         responseFuture.pipeTo(self)
       }
 
-    case (response @ HttpResponse(status, headers, entity, protocol), appliedUpdateActionIds: List[String]) =>
+    case (response @ HttpResponse(status, headers, entity, protocol), appliedUpdateActionIds : List[String]) =>
       status match {
         case StatusCodes.OK =>
           // As the server accepted also the list of applied update action IDs
@@ -149,7 +149,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
       log.debug(s"Reported [${id}] to management node")
       if (!actions.isEmpty) {
         log.info(s"Received ${actions.size} update actions from management node: ${actions}")
-        actions.foreach { action: UpdateAction =>
+        actions.foreach { action : UpdateAction =>
           log.debug(s"Publishing event to event stream: ${action}")
           context.system.eventStream.publish(action)
         }
@@ -178,7 +178,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
 object MgmtReporter {
 
   object MgmtReporterConfig {
-    def fromConfig(config: Config): Try[MgmtReporterConfig] = Try {
+    def fromConfig(config : Config) : Try[MgmtReporterConfig] = Try {
       MgmtReporterConfig(
         registryUrl = config.getString("registryUrl"),
         updateIntervalMsec = if (config.hasPath("updateIntervalMsec")) config.getLong("updateIntervalMsec") else 0,
@@ -188,12 +188,12 @@ object MgmtReporter {
   }
 
   case class MgmtReporterConfig(
-    registryUrl: String,
-    updateIntervalMsec: Long,
-    initialUpdateDelayMsec: Long
+    registryUrl : String,
+    updateIntervalMsec : Long,
+    initialUpdateDelayMsec : Long
   ) {
 
-    override def toString(): String = s"${getClass().getSimpleName()}(registryUrl=${registryUrl},updateInetervalMsec=${updateIntervalMsec},initialUpdateDelayMsec=${initialUpdateDelayMsec})"
+    override def toString() : String = s"${getClass().getSimpleName()}(registryUrl=${registryUrl},updateInetervalMsec=${updateIntervalMsec},initialUpdateDelayMsec=${initialUpdateDelayMsec})"
   }
 
   case object Tick

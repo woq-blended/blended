@@ -12,14 +12,14 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 object JmsConnectionController {
-  def props(holder: ConnectionHolder) = Props(new JmsConnectionController(holder))
+  def props(holder : ConnectionHolder) = Props(new JmsConnectionController(holder))
 }
 
-class JmsConnectionController(holder: ConnectionHolder) extends Actor with ActorLogging {
+class JmsConnectionController(holder : ConnectionHolder) extends Actor with ActorLogging {
 
   private[this] implicit val eCtxt = context.system.dispatcher
 
-  override def receive: Receive = disconnected
+  override def receive : Receive = disconnected
 
   def disconnected : Receive = LoggingReceive {
     case Connect(t, id) =>
@@ -53,5 +53,5 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
       }
   }
 
-  override def toString: String = "JMSConnectionController(" + holder.toString() + ")"
+  override def toString : String = "JMSConnectionController(" + holder.toString() + ")"
 }

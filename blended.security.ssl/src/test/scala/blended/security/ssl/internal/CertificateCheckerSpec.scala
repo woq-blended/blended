@@ -30,8 +30,8 @@ class CertificateCheckerSpec extends LoggingFreeSpec
 
       val checkResults : Seq[CertificateCheckResult] = validator.checkCertificates(newMs).filter(r => !r.infoOnly)
 
-      checkResults should have size(1)
-      checkResults.head.alias should be ("host2")
+      checkResults should have size (1)
+      checkResults.head.alias should be("host2")
 
     }
   }

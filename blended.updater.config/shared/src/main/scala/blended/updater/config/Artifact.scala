@@ -4,21 +4,21 @@ package blended.updater.config
  * A downloadable resource file with optional checksum.
  */
 case class Artifact(
-  url: String,
-  fileName: Option[String],
-  sha1Sum: Option[String]
+  url : String,
+  fileName : Option[String],
+  sha1Sum : Option[String]
 ) {
 
-  override def toString(): String = s"${getClass().getSimpleName()}(url=${url},fileName=${fileName},sha1Sum=${sha1Sum})"
+  override def toString() : String = s"${getClass().getSimpleName()}(url=${url},fileName=${fileName},sha1Sum=${sha1Sum})"
 
 }
 
 object Artifact extends ((String, Option[String], Option[String]) => Artifact) {
   def apply(
-    url: String,
-    fileName: String = null,
-    sha1Sum: String = null
-  ): Artifact = {
+    url : String,
+    fileName : String = null,
+    sha1Sum : String = None
+  ) : Artifact = {
     Artifact(
       url = url,
       fileName = Option(fileName),

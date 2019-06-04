@@ -6,7 +6,7 @@ abstract class PropertyProvider {
 
   private[this] val log = Logger[PropertyProvider]
 
-  def doProvide(key: String) : Option[String] = {
+  def doProvide(key : String) : Option[String] = {
     provide(key) match {
       case None => None
       case Some(s) =>
@@ -15,6 +15,6 @@ abstract class PropertyProvider {
     }
   }
 
-  def provide(key: String): Option[String]
-  
+  def provide(key : String) : Option[String]
+
 }

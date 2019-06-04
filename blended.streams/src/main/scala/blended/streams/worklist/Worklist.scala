@@ -19,83 +19,83 @@ object WorklistState extends Enumeration {
 }
 
 trait WorklistItem {
-  def id: String
+  def id : String
 }
 
-case class FlowWorklistItem(env: FlowEnvelope, outboundId: String) extends WorklistItem {
-  override def id: String = env.id + ":" + outboundId
+case class FlowWorklistItem(env : FlowEnvelope, outboundId : String) extends WorklistItem {
+  override def id : String = env.id + ":" + outboundId
 }
 
 case class Worklist(
-  id: String = UUID.randomUUID().toString(),
-  items: Seq[WorklistItem]
+  id : String = UUID.randomUUID().toString(),
+  items : Seq[WorklistItem]
 )
 
 sealed trait WorklistEvent {
-  def worklist: Worklist
+  def worklist : Worklist
   def state : WorklistState
 }
 
-final case class WorklistStarted(worklist: Worklist, timeout: FiniteDuration = 100.millis, state : WorklistState = WorklistState.Started) extends WorklistEvent
-final case class WorklistStepCompleted(worklist: Worklist, state: WorklistState = WorklistState.Completed) extends WorklistEvent
-final case class WorklistTerminated(worklist: Worklist, state: WorklistState, reason: Option[Throwable]) extends WorklistEvent
+final case class WorklistStarted(worklist : Worklist, timeout : FiniteDuration = 100.millis, state : WorklistState = WorklistState.Started) extends WorklistEvent
+final case class WorklistStepCompleted(worklist : Worklist, state : WorklistState = WorklistState.Completed) extends WorklistEvent
+final case class WorklistTerminated(worklist : Worklist, state : WorklistState, reason : Option[Throwable]) extends WorklistEvent
 
 object WorklistManager {
 
-  def flow(name: String, log : Logger): Flow[WorklistEvent, WorklistEvent, NotUsed] =
+  def flow(name : String, log : Logger) : Flow[WorklistEvent, WorklistEvent, NotUsed] =
     Flow.fromGraph(new WorklistGraphStage(name, log))
 
-  private class WorklistGraphStage(name: String, log : Logger) extends GraphStage[FlowShape[WorklistEvent, WorklistEvent]] {
+  private class WorklistGraphStage(name : String, log : Logger) extends GraphStage[FlowShape[WorklistEvent, WorklistEvent]] {
 
     private val in = Inlet[WorklistEvent](s"$name.in")
     private val out = Outlet[WorklistEvent](s"$name.out")
 
-    override def shape: FlowShape[WorklistEvent, WorklistEvent] = FlowShape(in, out)
+    override def shape : FlowShape[WorklistEvent, WorklistEvent] = FlowShape(in, out)
 
     private object CurrentItemState {
-      def apply(item: WorklistItem): CurrentItemState = CurrentItemState(item, WorklistState.Started, System.currentTimeMillis())
+      def apply(item : WorklistItem) : CurrentItemState = CurrentItemState(item, WorklistState.Started, System.currentTimeMillis())
     }
 
     private case class CurrentItemState(
-      item: WorklistItem,
-      state: WorklistState,
-      created: Long
+      item : WorklistItem,
+      state : WorklistState,
+      created : Long
     )
 
     private object CurrentWorklistState {
       def apply(
-        started: WorklistStarted
-      ): CurrentWorklistState = new CurrentWorklistState(
+        started : WorklistStarted
+      ) : CurrentWorklistState = new CurrentWorklistState(
         started.worklist.id,
-        mutable.Map(started.worklist.items.map(i => i.id -> CurrentItemState(i)): _*),
+        mutable.Map(started.worklist.items.map(i => i.id -> CurrentItemState(i)) : _*),
         timeout = started.timeout
       )
     }
 
     private case class CurrentWorklistState(
-      id: String,
-      items: mutable.Map[String, CurrentItemState],
-      timeout: FiniteDuration
+      id : String,
+      items : mutable.Map[String, CurrentItemState],
+      timeout : FiniteDuration
     )
 
     private object Tick
 
     /* -----------------------------------------------------------------------------------------*/
-    override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new TimerGraphStageLogic(shape) {
+    override def createLogic(inheritedAttributes : Attributes) : GraphStageLogic = new TimerGraphStageLogic(shape) {
 
-      private val activeWorklists: mutable.Map[String, CurrentWorklistState] = mutable.Map.empty
-      private val outEvents: mutable.Queue[WorklistEvent] = mutable.Queue.empty
+      private val activeWorklists : mutable.Map[String, CurrentWorklistState] = mutable.Map.empty
+      private val outEvents : mutable.Queue[WorklistEvent] = mutable.Queue.empty
 
-      override def preStart(): Unit = {
+      override def preStart() : Unit = {
         schedulePeriodically(Tick, 100.millis)
         pull(in)
       }
 
-      override def postStop(): Unit = {
+      override def postStop() : Unit = {
         cancelTimer(Tick)
       }
 
-      override protected def onTimer(timerKey: Any): Unit = {
+      override protected def onTimer(timerKey : Any) : Unit = {
 
         timerKey match {
           case Tick =>
@@ -117,7 +117,7 @@ object WorklistManager {
         }
       }
 
-      private def pushEvent(event: WorklistEvent): Unit = {
+      private def pushEvent(event : WorklistEvent) : Unit = {
         if (outEvents.isEmpty && isAvailable(out)) {
           push(out, event)
         } else {
@@ -125,7 +125,7 @@ object WorklistManager {
         }
       }
 
-      private def startWorklist(event: WorklistStarted): Unit = {
+      private def startWorklist(event : WorklistStarted) : Unit = {
         activeWorklists.get(event.worklist.id) match {
           case None =>
             log.debug(s"Starting Worklist [${event.worklist.id}]")
@@ -136,7 +136,7 @@ object WorklistManager {
         }
       }
 
-      def sendEvent(wl: CurrentWorklistState, state: WorklistState): Unit = {
+      def sendEvent(wl : CurrentWorklistState, state : WorklistState) : Unit = {
         // Todo : Set fail reason
         val event = WorklistTerminated(
           worklist = Worklist(id = wl.id, wl.items.values.map(_.item).toSeq),
@@ -148,9 +148,9 @@ object WorklistManager {
         log.debug(s"Sent WorklistEvent [$event], [${activeWorklists.size}] remaining worklists ")
       }
 
-      private def checkWorklist(wl: CurrentWorklistState): Unit = {
+      private def checkWorklist(wl : CurrentWorklistState) : Unit = {
 
-        val existsByState: WorklistState => Boolean = state => wl.items.exists(i => i._2.state == state)
+        val existsByState : WorklistState => Boolean = state => wl.items.exists(i => i._2.state == state)
 
         // First we check for timeouts
         existsByState(WorklistState.TimeOut) match {
@@ -174,7 +174,7 @@ object WorklistManager {
         }
       }
 
-      private def processSteps(event: WorklistStepCompleted): Unit = {
+      private def processSteps(event : WorklistStepCompleted) : Unit = {
         activeWorklists.get(event.worklist.id) match {
           case None =>
             log.trace(s"Worklist [${event.worklist.id}] is not active, ignoring event [$event]")
@@ -184,21 +184,21 @@ object WorklistManager {
               log.trace(s"Unexpected state [${event.state}] in process complete event [$event]")
             } else {
 
-              val filter: String => Boolean = id => awl.items.isDefinedAt(id)
+              val filter : String => Boolean = id => awl.items.isDefinedAt(id)
 
               val missingEventIds = event.worklist.items.map(_.id).filterNot(filter)
               if (missingEventIds.nonEmpty) {
                 log.warn(s"Event references untracked item ids [${missingEventIds.mkString(",")}] for [$event]")
               }
 
-              val newEvents : Map[String, CurrentItemState] = event.worklist.items.filter(i => filter(i.id)).map{ i =>
+              val newEvents : Map[String, CurrentItemState] = event.worklist.items.filter(i => filter(i.id)).map { i =>
                 val s = awl.items.get(i.id).get
                 val newItem = s.copy(item = i, state = event.state)
                 (newItem.item.id -> newItem)
               }.toMap
 
               val newAwl = awl.copy(
-                items = awl.items.filter { case (k,_) => !newEvents.contains(k) } ++ newEvents
+                items = awl.items.filter { case (k, _) => !newEvents.contains(k) } ++ newEvents
               )
 
               activeWorklists.put(event.worklist.id, newAwl)
@@ -207,36 +207,36 @@ object WorklistManager {
         }
       }
 
-      private def terminateWorklist(event: WorklistTerminated): Unit = {
+      private def terminateWorklist(event : WorklistTerminated) : Unit = {
         activeWorklists.get(event.worklist.id) match {
-          case None =>
+          case None      =>
           case Some(awl) => sendEvent(awl, event.state)
         }
       }
 
       setHandler(
         in, new InHandler {
-          override def onPush(): Unit = {
-            val event = grab(in)
+        override def onPush() : Unit = {
+          val event = grab(in)
 
-            event match {
-              case s: WorklistStarted => startWorklist(s)
-              case s: WorklistStepCompleted => processSteps(s)
-              case s: WorklistTerminated => terminateWorklist(s)
-            }
-
-            pull(in)
+          event match {
+            case s : WorklistStarted       => startWorklist(s)
+            case s : WorklistStepCompleted => processSteps(s)
+            case s : WorklistTerminated    => terminateWorklist(s)
           }
+
+          pull(in)
         }
+      }
       )
 
       setHandler(
         out, new OutHandler {
-          // If we have any pending events, push then down stream
-          override def onPull(): Unit = if (outEvents.nonEmpty) {
-            push(out, outEvents.dequeue())
-          }
+        // If we have any pending events, push then down stream
+        override def onPull() : Unit = if (outEvents.nonEmpty) {
+          push(out, outEvents.dequeue())
         }
+      }
       )
 
     }

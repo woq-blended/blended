@@ -19,7 +19,7 @@ object BlendedStreamsTestsupport extends ProjectFactory {
       Dependencies.logbackClassic
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtilLogging.project,
       BlendedStreams.project,
       BlendedTestsupport.project

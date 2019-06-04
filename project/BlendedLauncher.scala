@@ -38,13 +38,13 @@ object BlendedLauncher extends ProjectFactory {
       )
     )
 
-    override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(
+    override def plugins : Seq[AutoPlugin] = super.plugins ++ Seq(
       UniversalPlugin,
       UniversalDeployPlugin,
       FilterResources
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Compile / filterSources := Seq(baseDirectory.value / "src" / "runner" / "resources"),
       Compile / filterTargetDir := target.value / "runner",
       Compile / filterRegex := "[@]([^\\n]+?)[@]",
@@ -62,7 +62,7 @@ object BlendedLauncher extends ProjectFactory {
         "logback.version" -> Dependencies.logbackClassic.revision
       ),
       Test / resourceGenerators += Def.task {
-        val frameworks: Seq[ModuleID] = Seq(
+        val frameworks : Seq[ModuleID] = Seq(
           "org.apache.felix" % "org.apache.felix.framework" % "5.0.0",
           "org.apache.felix" % "org.apache.felix.framework" % "5.6.10",
 
@@ -118,7 +118,7 @@ object BlendedLauncher extends ProjectFactory {
         packagedArtifacts ++= (Universal / packagedArtifacts).value
       )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtilLogging.project,
       BlendedUpdaterConfigJvm.project,
       BlendedSecurityCrypto.project,

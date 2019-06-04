@@ -35,7 +35,7 @@ object BlendedPersistenceH2 extends ProjectFactory {
       )
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedPersistence.project,
       BlendedUtilLogging.project,
       BlendedUtil.project,

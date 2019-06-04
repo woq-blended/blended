@@ -5,21 +5,21 @@ import scala.collection.JavaConverters._
 import java.util.regex.Pattern
 
 /**
-  * Represents one field in a persisted data set.
-  */
+ * Represents one field in a persisted data set.
+ */
 case class PersistedField(
-                           fieldId: Long = 0,
-                           baseFieldId: Option[Long] = None,
-                           name: String,
-                           valueLong: Option[Long] = None,
-                           valueDouble: Option[Double] = None,
-                           valueString: Option[String] = None,
-                           typeName: TypeName
-                         ) {
+  fieldId : Long = 0,
+  baseFieldId : Option[Long] = None,
+  name : String,
+  valueLong : Option[Long] = None,
+  valueDouble : Option[Double] = None,
+  valueString : Option[String] = None,
+  typeName : TypeName
+) {
 
   val indexedPattern = Pattern.compile("^([\\d]+)$")
 
-  lazy val index: Option[Long] = {
+  lazy val index : Option[Long] = {
     val matcher = indexedPattern.matcher(name)
     if (matcher.matches()) {
       Some(matcher.group(1).toLong)
@@ -32,22 +32,22 @@ object PersistedField {
 
   val maxStringLength = 200
 
-  def extractFieldsWithoutDataId(data: ju.Map[String, _ <: Any]): Seq[PersistedField] = {
+  def extractFieldsWithoutDataId(data : ju.Map[String, _ <: Any]) : Seq[PersistedField] = {
 
     object nextId {
-      private[this] var _nextId: Long = 0L
+      private[this] var _nextId : Long = 0L
 
-      def apply(): Long = {
+      def apply() : Long = {
         _nextId += 1; _nextId
       }
     }
 
-    def extractValue(key: String, value: Any, parent: Option[PersistedField] = None): Seq[PersistedField] = {
+    def extractValue(key : String, value : Any, parent : Option[PersistedField] = None) : Seq[PersistedField] = {
       val baseFieldId = parent.map(_.fieldId)
       value match {
         case null =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, typeName = TypeName.Null))
-        case value: String =>
+        case value : String =>
           if (value.size <= maxStringLength) {
             Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueString = Some(value), typeName = TypeName.String))
           } else {
@@ -57,21 +57,21 @@ object PersistedField {
                 extractValue(i.toString(), v, Some(newBase))
             }
           }
-        case value: Boolean =>
+        case value : Boolean =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(if (value) 1 else 0), typeName = TypeName.Boolean))
-        case value: Long =>
+        case value : Long =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(value), typeName = TypeName.Long))
-        case value: Int =>
+        case value : Int =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(value), typeName = TypeName.Int))
-        case value: Short =>
+        case value : Short =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(value), typeName = TypeName.Short))
-        case value: Byte =>
+        case value : Byte =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(value), typeName = TypeName.Byte))
-        case value: Double =>
+        case value : Double =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueDouble = Some(value), typeName = TypeName.Double))
-        case value: Float =>
+        case value : Float =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueDouble = Some(value), typeName = TypeName.Float))
-        case value: ju.Map[_, _] =>
+        case value : ju.Map[_, _] =>
           val newBase = if (key == "" && parent.isEmpty) {
             // Root map
             None
@@ -81,7 +81,7 @@ object PersistedField {
           newBase.toSeq ++ value.entrySet().asScala.toList.flatMap { entry =>
             extractValue(entry.getKey().asInstanceOf[String], entry.getValue(), parent = newBase)
           }
-        case value: ju.Collection[_] =>
+        case value : ju.Collection[_] =>
           val newBase = PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, typeName = TypeName.Array)
           Seq(newBase) ++ value.asScala.zipWithIndex.flatMap {
             case (v, i) =>
@@ -94,19 +94,19 @@ object PersistedField {
     extractValue(key = "", value = data)
   }
 
-  def toJuMap(persistedFields: Seq[PersistedField]): ju.Map[String, _ <: AnyRef] = {
+  def toJuMap(persistedFields : Seq[PersistedField]) : ju.Map[String, _ <: AnyRef] = {
 
-    def fieldExtract(field: PersistedField, others: Seq[PersistedField]): AnyRef = {
+    def fieldExtract(field : PersistedField, others : Seq[PersistedField]) : AnyRef = {
       field.typeName match {
-        case TypeName.Null => null
+        case TypeName.Null    => null
         case TypeName.Boolean => jl.Boolean.valueOf(field.valueLong.map(_ != 0).get)
-        case TypeName.Byte => jl.Byte.valueOf(field.valueLong.map(_.toByte).get)
-        case TypeName.Short => jl.Short.valueOf(field.valueLong.map(_.toShort).get)
-        case TypeName.Int => jl.Integer.valueOf(field.valueLong.map(_.toInt).get)
-        case TypeName.Long => jl.Long.valueOf(field.valueLong.get)
-        case TypeName.String => field.valueString.get
-        case TypeName.Double => jl.Double.valueOf(field.valueDouble.get)
-        case TypeName.Float => jl.Float.valueOf(field.valueDouble.map(_.toFloat).get)
+        case TypeName.Byte    => jl.Byte.valueOf(field.valueLong.map(_.toByte).get)
+        case TypeName.Short   => jl.Short.valueOf(field.valueLong.map(_.toShort).get)
+        case TypeName.Int     => jl.Integer.valueOf(field.valueLong.map(_.toInt).get)
+        case TypeName.Long    => jl.Long.valueOf(field.valueLong.get)
+        case TypeName.String  => field.valueString.get
+        case TypeName.Double  => jl.Double.valueOf(field.valueDouble.get)
+        case TypeName.Float   => jl.Float.valueOf(field.valueDouble.map(_.toFloat).get)
         case TypeName.Array =>
           val (col, colOther) = others.partition(_.baseFieldId == Some(field.fieldId))
           val collection = new ju.LinkedList[AnyRef]()
@@ -121,7 +121,7 @@ object PersistedField {
       }
     }
 
-    def internMap(fields: Seq[PersistedField], parentId: Option[Long]): ju.Map[String, _ <: AnyRef] = {
+    def internMap(fields : Seq[PersistedField], parentId : Option[Long]) : ju.Map[String, _ <: AnyRef] = {
       val (root, other) = fields.partition(_.baseFieldId == parentId)
       val map = new ju.LinkedHashMap[String, AnyRef]()
       root.foreach { field =>

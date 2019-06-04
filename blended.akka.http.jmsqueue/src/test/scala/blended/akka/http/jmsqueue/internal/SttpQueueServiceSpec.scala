@@ -42,9 +42,9 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
 
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator(),
     "blended.akka.http" -> new BlendedAkkaHttpActivator(),
@@ -63,28 +63,28 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/foo")))
       val response = request.send()
 
-      response.code should be (StatusCodes.BadRequest)
+      response.code should be(StatusCodes.BadRequest)
     }
 
     "respond with Unauthorised if the requested Queue is not configured" in {
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/activemq/bar")))
       val response = request.send()
 
-      response.code should be (StatusCodes.Unauthorized)
+      response.code should be(StatusCodes.Unauthorized)
     }
 
     "respond with Unauthorised if the JMS provider is unknown or doesn't have any queues configured" in {
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/sonic/foo")))
       val response = request.send()
 
-      response.code should be (StatusCodes.Unauthorized)
+      response.code should be(StatusCodes.Unauthorized)
     }
 
     "respond with an empty response if no msg is available" in {
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
 
-      response.code should be (StatusCodes.NoContent)
+      response.code should be(StatusCodes.NoContent)
     }
 
     "respond with a text response if the queue contains a text message" in {
@@ -104,9 +104,9 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
 
-      response.code should be (StatusCodes.Ok)
-      response.body should be (Right("Hello Blended"))
-      response.contentType should be (defined)
+      response.code should be(StatusCodes.Ok)
+      response.body should be(Right("Hello Blended"))
+      response.contentType should be(defined)
       assert(response.contentType.forall(_.startsWith("text/plain")))
     }
 
@@ -127,9 +127,9 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
 
-      response.code should be (StatusCodes.Ok)
-      response.body should be (Right("Hello Blended"))
-      response.contentType should be (defined)
+      response.code should be(StatusCodes.Ok)
+      response.body should be(Right("Hello Blended"))
+      response.contentType should be(defined)
       assert(response.contentType.forall(_.startsWith("application/octet-stream")))
     }
   }

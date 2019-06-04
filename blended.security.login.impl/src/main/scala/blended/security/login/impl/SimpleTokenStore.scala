@@ -13,9 +13,9 @@ import scala.util.{Failure, Success, Try}
 
 object TokenStoreMessages {
 
-  case class GetToken(id: String)
-  case class RemoveToken(id: String)
-  case class StoreToken(t :Token)
+  case class GetToken(id : String)
+  case class RemoveToken(id : String)
+  case class StoreToken(t : Token)
   case object ListTokens
   case object RemoveAllTokens
 }
@@ -26,7 +26,7 @@ class MemoryTokenStore extends Actor {
 
   private[this] val tokens : mutable.Map[String, Token] = mutable.Map.empty
 
-  override def receive: Receive = {
+  override def receive : Receive = {
     case GetToken(id) =>
       sender() ! tokens.get(id)
 
@@ -42,16 +42,16 @@ class MemoryTokenStore extends Actor {
         r ! Success(t)
       }
 
-    case ListTokens => sender() ! tokens.values.toSeq
+    case ListTokens      => sender() ! tokens.values.toSeq
 
     case RemoveAllTokens => tokens.clear()
   }
 }
 
 class SimpleTokenStore(
-  mgr: BlendedPermissionManager,
-  tokenHandler: TokenHandler,
-  system: ActorSystem
+  mgr : BlendedPermissionManager,
+  tokenHandler : TokenHandler,
+  system : ActorSystem
 ) extends AbstractTokenStore(mgr, tokenHandler) {
 
   import TokenStoreMessages._
@@ -60,32 +60,31 @@ class SimpleTokenStore(
   private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
   private[this] val storeActor = system.actorOf(Props[MemoryTokenStore])
   /**
-    * @inheritdoc
-    */
-  override def getToken(user: String): Option[Token] = {
+   * @inheritdoc
+   */
+  override def getToken(user : String) : Option[Token] = {
     Await.result((storeActor ? GetToken(user)).mapTo[Option[Token]], 3.seconds)
   }
 
   /**
-    * @inheritdoc
-    */
-  override def removeToken(user: String): Option[Token] = {
+   * @inheritdoc
+   */
+  override def removeToken(user : String) : Option[Token] = {
     Await.result((storeActor ? RemoveToken(user)).mapTo[Option[Token]], 3.seconds)
   }
 
-
-  override def removeAllTokens(): Unit = storeActor ! RemoveAllTokens
+  override def removeAllTokens() : Unit = storeActor ! RemoveAllTokens
 
   /**
-    * @inheritdoc
-    */
-  override def storeToken(token: Token): Try[Token] = {
+   * @inheritdoc
+   */
+  override def storeToken(token : Token) : Try[Token] = {
     Await.result((storeActor ? StoreToken(token)).mapTo[Try[Token]], 3.seconds)
   }
 
-  override def listTokens(): Seq[Token] = {
+  override def listTokens() : Seq[Token] = {
     Await.result((storeActor ? ListTokens).mapTo[Seq[Token]], 3.seconds)
   }
 
-  override def verifyToken(token: String): Try[Token] =  Token(token, publicKey())
+  override def verifyToken(token : String) : Try[Token] = Token(token, publicKey())
 }

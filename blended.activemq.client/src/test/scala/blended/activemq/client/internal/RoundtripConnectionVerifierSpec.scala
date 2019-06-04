@@ -41,7 +41,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
     cf = new ActiveMQConnectionFactory("vm://roundtrip?create=false")
   )
 
-  override protected def afterAll(): Unit = {
+  override protected def afterAll() : Unit = {
     broker.stop()
     broker.waitUntilStopped()
 

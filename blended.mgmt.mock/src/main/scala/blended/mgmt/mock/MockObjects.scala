@@ -13,27 +13,27 @@ object MockObjects {
 
   private[this] val log = Logger("blended.mgmt.mock.MockObjects")
 
-  private[this] lazy val countries: List[String] = List("de", "cz", "bg", "ro")
-  private[this] lazy val osTypes: List[String] = List("Lnx", "Windows")
-  private[this] lazy val connectIds: List[String] = List("A", "B")
+  private[this] lazy val countries : List[String] = List("de", "cz", "bg", "ro")
+  private[this] lazy val osTypes : List[String] = List("Lnx", "Windows")
+  private[this] lazy val connectIds : List[String] = List("A", "B")
 
   private[this] lazy val serviceCount = new AtomicInteger(0)
   private[this] lazy val containerCount = new AtomicInteger(0)
 
   private[this] lazy val rnd = new Random()
 
-  private[this] def pickOne[T](l: List[T]): T = l(rnd.nextInt(l.size))
+  private[this] def pickOne[T](l : List[T]) : T = l(rnd.nextInt(l.size))
 
-  private[this] def containerProps(ctNum: Integer) = Map(
+  private[this] def containerProps(ctNum : Integer) = Map(
     "sib.country" -> pickOne(countries),
     "sib.location" -> new DecimalFormat("00000").format(ctNum),
     "sib.connectId" -> pickOne(connectIds)
   )
 
-  private[this] def sizedProperties(namePrefix: String = "prop", numProps: Int) =
+  private[this] def sizedProperties(namePrefix : String = "prop", numProps : Int) =
     1.to(numProps).map(i => (s"$namePrefix-$i", s"value$i")).toMap
 
-  private[this] def serviceInfo(numProps: Int = 10) : ServiceInfo = ServiceInfo(
+  private[this] def serviceInfo(numProps : Int = 10) : ServiceInfo = ServiceInfo(
     name = s"service-${serviceCount.incrementAndGet()}",
     serviceType = s"type-${rnd.nextInt(3) + 1}",
     timestampMsec = System.currentTimeMillis(),
@@ -41,7 +41,7 @@ object MockObjects {
     props = sizedProperties(namePrefix = "property", numProps = rnd.nextInt(10) + 1)
   )
 
-  private[this] def serviceSeq(numServices: Int): List[ServiceInfo] =
+  private[this] def serviceSeq(numServices : Int) : List[ServiceInfo] =
     1.to(numServices).map(i => serviceInfo()).toList
 
   val noOverlays = OverlaySet(
@@ -68,13 +68,13 @@ object MockObjects {
     reason = Some("Incorrect artifact checksums")
   )
 
-  lazy val validProfiles: List[Profile] = List(
+  lazy val validProfiles : List[Profile] = List(
     ProfileGroup(name = "blended-demo", "1.0", List(noOverlays)),
     ProfileGroup(name = "blended-simple", "1.0", List(noOverlays, someOverlays, invalid)),
     ProfileGroup(name = "blended-simple", "1.1", List(noOverlays, someOverlays, invalid))
   ).flatMap(_.toSingle)
 
-  def createContainer(numContainers: Integer) : List[ContainerInfo] = 1.to(numContainers).map { i =>
+  def createContainer(numContainers : Integer) : List[ContainerInfo] = 1.to(numContainers).map { i =>
 
     val serviceSeqs = 1.to(3).map { i =>
       serviceSeq(rnd.nextInt(5) + 1)

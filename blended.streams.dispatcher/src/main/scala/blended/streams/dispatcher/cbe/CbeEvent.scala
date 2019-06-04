@@ -13,17 +13,17 @@ import scala.concurrent.duration._
 object CbeEvent {
 
   def apply(
-    id           : String,
-    component    : CbeComponent,
-    state        : FlowTransactionState.FlowTransactionState,
-    properties   : Map[String, Object],
+    id : String,
+    component : CbeComponent,
+    state : FlowTransactionState.FlowTransactionState,
+    properties : Map[String, Object],
     closeProcess : Boolean,
-    timeout      : Long
+    timeout : Long
   ) : CbeTransactionEvent = {
 
     val sev = state match {
       case Failed => EventSeverity.Critical
-      case _ => EventSeverity.Information
+      case _      => EventSeverity.Information
     }
 
     new CbeTransactionEvent(
@@ -40,16 +40,16 @@ object CbeEvent {
 }
 
 case class CbeTransactionEvent(
-  id           : String,
-  severity     : EventSeverity,
-  component    : CbeComponent,
-  state        : Option[FlowTransactionState.FlowTransactionState],
-  properties   : Map[String, Object],
-  timestamp    : Date,
+  id : String,
+  severity : EventSeverity,
+  component : CbeComponent,
+  state : Option[FlowTransactionState.FlowTransactionState],
+  properties : Map[String, Object],
+  timestamp : Date,
   closeProcess : Boolean,
-  timeout      : FiniteDuration,
-  msg          : Option[String] = None,
-  situation    : String = "STATUS"
+  timeout : FiniteDuration,
+  msg : Option[String] = None,
+  situation : String = "STATUS"
 ) {
 
   def asCBE() : String = {
@@ -60,12 +60,12 @@ case class CbeTransactionEvent(
     val intSeverity : Int = severity
 
     val cbeMsg = msg match {
-      case None => s"Transaction [$id] state [${state.getOrElse("n/a")}]"
+      case None    => s"Transaction [$id] state [${state.getOrElse("n/a")}]"
       case Some(s) => s
     }
 
     val dataElements = ExtendedDataElements(
-      properties.filterKeys(!ignoreHeader.contains(_)).map{ case (k,v) => (k, v.toString)}
+      properties.filterKeys(!ignoreHeader.contains(_)).map { case (k, v) => (k, v.toString) }
     )
 
     val application = ExtendedDataElements(Map(
@@ -95,8 +95,7 @@ case class CbeTransactionEvent(
           |    </children>#end
           |
           """.stripMargin
-      else ""
-        ) + "  </extendedDataElements>"
+      else "") + "  </extendedDataElements>"
     }.getOrElse("")
 
     s"""<?xml version="1.0" encoding="UTF-8"?>

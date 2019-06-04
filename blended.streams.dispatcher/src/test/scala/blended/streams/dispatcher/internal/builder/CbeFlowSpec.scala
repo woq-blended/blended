@@ -25,9 +25,9 @@ class CbeFlowSpec extends DispatcherSpecSupport
   with JmsStreamSupport {
 
   private implicit val timeout = 3.seconds
-  override def loggerName: String = "outbound"
+  override def loggerName : String = "outbound"
 
-  override def bundles: Seq[(String, BundleActivator)] = super.bundles ++ Seq(
+  override def bundles : Seq[(String, BundleActivator)] = super.bundles ++ Seq(
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
@@ -52,13 +52,12 @@ class CbeFlowSpec extends DispatcherSpecSupport
     new CbeSendFlow(
       headerConfig = ctxt.bs.headerConfig,
       dispatcherCfg = ctxt.cfg,
-      internalCf =cf,
+      internalCf = cf,
       log = Logger("spec.cbesend")
     ).build()
   }
 
-  def sendTransactions(ctxt: DispatcherExecContext, cf : IdAwareConnectionFactory)(envelopes: FlowEnvelope*)
-    (implicit system : ActorSystem, materializer : Materializer, eCtxt: ExecutionContext) : KillSwitch = {
+  def sendTransactions(ctxt : DispatcherExecContext, cf : IdAwareConnectionFactory)(envelopes : FlowEnvelope*)(implicit system : ActorSystem, materializer : Materializer, eCtxt : ExecutionContext) : KillSwitch = {
 
     val (actor, switch) = Source.actorRef(envelopes.size, OverflowStrategy.fail)
       .viaMat(KillSwitches.single)(Keep.both)
@@ -71,7 +70,7 @@ class CbeFlowSpec extends DispatcherSpecSupport
     switch
   }
 
-  def receiveCbes: Collector[FlowEnvelope] = receiveMessages(
+  def receiveCbes : Collector[FlowEnvelope] = receiveMessages(
     headerCfg = ctxt.bs.headerConfig,
     cf = cf,
     dest = JmsQueue("cbeOut"),
@@ -91,8 +90,8 @@ class CbeFlowSpec extends DispatcherSpecSupport
       cbes should have size 1
 
       val t = FlowTransaction.envelope2Transaction(ctxt.bs.headerConfig)(cbes.head)
-      t.state should be (started.state)
-      t.tid should be (started.transactionId)
+      t.state should be(started.state)
+      t.tid should be(started.transactionId)
 
       switch.shutdown()
     }

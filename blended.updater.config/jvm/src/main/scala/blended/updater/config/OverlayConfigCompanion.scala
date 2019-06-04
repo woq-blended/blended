@@ -1,10 +1,10 @@
 package blended.updater.config
 
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
-import scala.util.{ Left, Right, Try }
+import scala.util.{Left, Right, Try}
 import blended.updater.config.util.ConfigPropertyMapConverter
 
 /**
@@ -18,16 +18,16 @@ final object OverlayConfigCompanion {
     val JVM_STACK_SIZE = "blended.launcher.jvm.ss"
   }
 
-  def findCollisions(generatedConfigs: Seq[GeneratedConfig]): Seq[String] = {
+  def findCollisions(generatedConfigs : Seq[GeneratedConfig]) : Seq[String] = {
     aggregateGeneratedConfigs(generatedConfigs) match {
       case Left(issues) => issues
-      case _ => Nil
+      case _            => Nil
     }
   }
 
-  private def aggregateGeneratedConfigs(generatedConfigs: Iterable[GeneratedConfig]): Either[Seq[String], Map[String, Map[String, Object]]] = {
+  private def aggregateGeneratedConfigs(generatedConfigs : Iterable[GeneratedConfig]) : Either[Seq[String], Map[String, Map[String, Object]]] = {
     // seen configurations per target file
-    var fileToConfig: Map[String, Map[String, Object]] = Map()
+    var fileToConfig : Map[String, Map[String, Object]] = Map()
     val issues = generatedConfigs.flatMap { gc =>
       val newConfig = GeneratedConfigCompanion.config(gc).root().unwrapped().asScala.toMap
       fileToConfig.get(gc.configFile) match {
@@ -45,7 +45,7 @@ final object OverlayConfigCompanion {
     if (issues.isEmpty) Right(fileToConfig) else Left(issues.toList)
   }
 
-  def aggregateGeneratedConfigs2(generatedConfigs: Iterable[GeneratedConfig]): Either[Seq[String], Map[String, Config]] = {
+  def aggregateGeneratedConfigs2(generatedConfigs : Iterable[GeneratedConfig]) : Either[Seq[String], Map[String, Config]] = {
     aggregateGeneratedConfigs(generatedConfigs) match {
       case Left(issues) =>
         // issue pass through
@@ -67,7 +67,7 @@ final object OverlayConfigCompanion {
     }
   }
 
-  def read(config: Config): Try[OverlayConfig] = Try {
+  def read(config : Config) : Try[OverlayConfig] = Try {
 
     OverlayConfig(
       name = config.getString("name"),
@@ -84,7 +84,7 @@ final object OverlayConfigCompanion {
     )
   }
 
-  def toConfig(overlayConfig: OverlayConfig): Config = {
+  def toConfig(overlayConfig : OverlayConfig) : Config = {
     val config = Map(
       "name" -> overlayConfig.name,
       "version" -> overlayConfig.version,

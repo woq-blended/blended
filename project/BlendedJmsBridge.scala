@@ -25,16 +25,16 @@ object BlendedJmsBridge extends ProjectFactory {
       bundleActivator = s"${projectName}.internal.BridgeActivator"
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / testlogLogPackages ++= Map(
         "" +
-        "App" -> "DEBUG",
+          "App" -> "DEBUG",
         "blended" -> "DEBUG",
         "spec" -> "DEBUG"
       )
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtil.project,
       BlendedUtilLogging.project,
       BlendedJmsUtils.project,

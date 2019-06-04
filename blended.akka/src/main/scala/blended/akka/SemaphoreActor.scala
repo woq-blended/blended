@@ -22,7 +22,7 @@ class SemaphoreActor extends Actor {
   // the pending acquire messages
   private[akka] var pending : List[Acquire] = List.empty
 
-  override def receive: Receive = open
+  override def receive : Receive = open
 
   private[akka] def logPending() : Unit = {
     log.trace(s"Semaphore has [${pending.size}] actors waiting")
@@ -41,7 +41,7 @@ class SemaphoreActor extends Actor {
       context.unwatch(a)
       pending match {
         case Nil => context.become(open)
-        case l => acquire(l.last)
+        case l   => acquire(l.last)
       }
     } else {
       pending = pending.filter(_.actor != a)
@@ -70,7 +70,7 @@ class SemaphoreActor extends Actor {
         a.actor ! Waiting
       }
 
-    case r : Release => release(lockedBy, r.actor)
+    case r : Release   => release(lockedBy, r.actor)
     case Terminated(a) => release(lockedBy, a)
   }
 }

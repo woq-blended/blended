@@ -1,10 +1,10 @@
 package blended.mgmt.base.internal
 
-import java.io.{ File, FileInputStream, FileOutputStream, FilenameFilter }
+import java.io.{File, FileInputStream, FileOutputStream, FilenameFilter}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.zip.{ ZipEntry, ZipOutputStream }
+import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import scala.util.control.NonFatal
 
@@ -14,15 +14,15 @@ import blended.util.logging.Logger
 import org.osgi.framework.BundleContext
 
 /**
- * Note: The fact that this class has the same name as it's trait is required by the MBean spec. 
+ * Note: The fact that this class has the same name as it's trait is required by the MBean spec.
  */
-class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext)
+class FrameworkService(bundleContext : BundleContext, ctContext : ContainerContext)
   extends FrameworkServiceMBean {
 
   private[this] val log = Logger[FrameworkService]
   private[this] val restarting : AtomicBoolean = new AtomicBoolean(false)
 
-  override def restartContainer(reason: String, saveLogs: Boolean): Unit = {
+  override def restartContainer(reason : String, saveLogs : Boolean) : Unit = {
 
     val cfg = ctContext.getContainerConfig()
     val saveLogsPath = "blended.saveLogsOnRestart"
@@ -58,7 +58,7 @@ class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext
     }
   }
 
-  private[this] def createLogArchive(timestamp: String) : Unit = {
+  private[this] def createLogArchive(timestamp : String) : Unit = {
 
     val archiveName = s"restart-${timestamp}.zip"
 
@@ -66,7 +66,7 @@ class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext
     log.info(s"Creating log archive from directory [${logDir.getAbsolutePath()}]")
 
     val logFiles = logDir.list(new FilenameFilter {
-      override def accept(dir: File, name: String): Boolean = {
+      override def accept(dir : File, name : String) : Boolean = {
         val f = new File(dir, name)
         f.isFile() && !name.startsWith("restart")
       }
@@ -78,7 +78,7 @@ class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext
 
       logFiles.foreach { logFile =>
         out.putNextEntry(new ZipEntry(logFile))
-        val in = new FileInputStream(new File(logDir,logFile))
+        val in = new FileInputStream(new File(logDir, logFile))
         StreamCopySupport.copyStream(in, out)
         in.close()
         out.closeEntry()

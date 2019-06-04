@@ -25,9 +25,9 @@ case class RoundtripHelper(
   inbound : (IdAwareConnectionFactory, JmsDestination),
   testMsgs : Seq[FlowEnvelope] = Seq.empty,
   timeout : FiniteDuration = 10.seconds,
-  headerConfig: FlowHeaderConfig = FlowHeaderConfig(prefix = "SIB"),
+  headerConfig : FlowHeaderConfig = FlowHeaderConfig(prefix = "SIB"),
   outcome : Seq[ExpectedOutcome] = Seq.empty
-)(implicit system: ActorSystem) extends JmsStreamSupport {
+)(implicit system : ActorSystem) extends JmsStreamSupport {
 
   val outcomeId : ExpectedOutcome => String = oc => oc.cf.id + "." + oc.dest.asString
 
@@ -35,9 +35,9 @@ case class RoundtripHelper(
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private implicit val to : FiniteDuration = timeout
 
-  def withTestMsgs(env: FlowEnvelope*): RoundtripHelper = copy(testMsgs = testMsgs ++ env)
-  def withTimeout(to : FiniteDuration): RoundtripHelper = copy(timeout = to)
-  def withHeaderConfig(cfg: FlowHeaderConfig): RoundtripHelper = copy(headerConfig = cfg)
+  def withTestMsgs(env : FlowEnvelope*) : RoundtripHelper = copy(testMsgs = testMsgs ++ env)
+  def withTimeout(to : FiniteDuration) : RoundtripHelper = copy(timeout = to)
+  def withHeaderConfig(cfg : FlowHeaderConfig) : RoundtripHelper = copy(headerConfig = cfg)
   def withOutcome(o : ExpectedOutcome*) : RoundtripHelper = copy(outcome = outcome ++ o)
 
   val log : Logger = Logger(classOf[RoundtripHelper].getName() + "." + name)
@@ -49,27 +49,28 @@ case class RoundtripHelper(
 
     val collectors : Map[String, Collector[FlowEnvelope]] = {
       outcome.map { o =>
-        val k : String  = outcomeId(o)
+        val k : String = outcomeId(o)
         val c = receiveMessages(headerConfig, o.cf, o.dest, log)
         k -> c
       }
     }.toMap
 
-    val pSettings: JmsProducerSettings = JmsProducerSettings(
+    val pSettings : JmsProducerSettings = JmsProducerSettings(
       log = log,
       headerCfg = headerConfig,
       connectionFactory = inbound._1,
       jmsDestination = Some(inbound._2)
     )
     // Send the inbound messages
-    sendMessages(pSettings, log, testMsgs:_*)
+    sendMessages(pSettings, log, testMsgs : _*)
 
     // Wait for all outcomes
 
     val mappedResults : Future[Map[String, List[FlowEnvelope]]] = {
 
-      val seq : Seq[Future[(String, List[FlowEnvelope])]] = collectors.map { case (k,v) =>
-        v.result.map { r => (k, r)}
+      val seq : Seq[Future[(String, List[FlowEnvelope])]] = collectors.map {
+        case (k, v) =>
+          v.result.map { r => (k, r) }
       }.toSeq
 
       Future.sequence(seq).map(_.toMap)
@@ -77,9 +78,10 @@ case class RoundtripHelper(
 
     val results : Map[String, List[FlowEnvelope]] = Await.result(mappedResults, timeout + 1.second)
 
-    val msgs : Map[String, Seq[String]] = results.map { case (k,v) =>
-      val oc : ExpectedOutcome = outcome.find(o => outcomeId(o).equals(k)).get
-      k -> FlowMessageAssertion.checkAssertions(v:_*)(oc.assertion:_*)
+    val msgs : Map[String, Seq[String]] = results.map {
+      case (k, v) =>
+        val oc : ExpectedOutcome = outcome.find(o => outcomeId(o).equals(k)).get
+        k -> FlowMessageAssertion.checkAssertions(v : _*)(oc.assertion : _*)
     }
 
     log.info(s"Finishing test case [$name]")

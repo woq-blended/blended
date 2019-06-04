@@ -7,7 +7,7 @@ import blended.util.config.Implicits._
 object LDAPLoginConfig {
 
   // TODO: Review passing of ContainerIdentifierService
-  def fromConfig(cfg: Config, idSvc: ContainerIdentifierService) : LDAPLoginConfig = {
+  def fromConfig(cfg : Config, idSvc : ContainerIdentifierService) : LDAPLoginConfig = {
 
     val resolve : String => String = s =>
       idSvc.resolvePropertyString(s).map(_.toString).get
@@ -26,15 +26,15 @@ object LDAPLoginConfig {
   }
 }
 
-case class LDAPLoginConfig (
+case class LDAPLoginConfig(
   url : String,
   systemUser : Option[String],
-  systemPassword: Option[String],
+  systemPassword : Option[String],
   userBase : String,
   userSearch : String,
   groupBase : String,
   groupSearch : String,
   groupAttribute : String,
-  expandSearch: Option[String]
+  expandSearch : Option[String]
 )
 

@@ -36,7 +36,7 @@ class FileDropSpec extends LoggingFreeSpec
     dropTimeout = to
   )
 
-  val prepareDropper : FileDropConfig => String => FileDropConfig =  cfg => subDir => {
+  val prepareDropper : FileDropConfig => String => FileDropConfig = cfg => subDir => {
     val dir = cfg.defaultDir + "/" + subDir
     cleanUpDirectory(dir)
     cfg.copy(defaultDir = dir)
@@ -54,7 +54,7 @@ class FileDropSpec extends LoggingFreeSpec
 
     val dropper : EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
 
-    val envelopes : Seq[FlowEnvelope] = 1.to(count).map{ i =>
+    val envelopes : Seq[FlowEnvelope] = 1.to(count).map { i =>
       FlowEnvelope(
         FlowMessage(s"Hello Blended ($i)")(FlowMessage.props(
           dropCfg.fileHeader -> s"test-$i.txt"
@@ -66,11 +66,11 @@ class FileDropSpec extends LoggingFreeSpec
       dropFile(dropper, cfg, env).get
     }
 
-    results should have size(count)
+    results should have size (count)
     assert(results.forall(_.error.isEmpty))
 
     1.to(count).foreach { i =>
-      verifyTargetFile(new File(cfg.defaultDir, s"test-$i.txt"), ByteString(s"Hello Blended ($i)")) should be (true)
+      verifyTargetFile(new File(cfg.defaultDir, s"test-$i.txt"), ByteString(s"Hello Blended ($i)")) should be(true)
     }
   }
 
@@ -82,12 +82,12 @@ class FileDropSpec extends LoggingFreeSpec
 
     "create a duplicate file if the file already exists in the target directory (without append)" in {
 
-      val cfg: FileDropConfig = prepareDropper(dropCfg)("overwrite")
-      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+      val cfg : FileDropConfig = prepareDropper(dropCfg)("overwrite")
+      val dropper : EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
 
-      val content: ByteString = ByteString("Hello Blended")
+      val content : ByteString = ByteString("Hello Blended")
 
-      val env: FlowEnvelope = FlowEnvelope(
+      val env : FlowEnvelope = FlowEnvelope(
         FlowMessage(content)(FlowMessage.props(
           cfg.fileHeader -> "test.txt"
         ).get)
@@ -107,14 +107,14 @@ class FileDropSpec extends LoggingFreeSpec
 
     "append the content to the existing file if the append header is set to true" in {
 
-      val cfg: FileDropConfig = prepareDropper(dropCfg)("append")
-      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
-      val content: ByteString = ByteString("Hello Blended" * 10000)
-      val zipContent: ByteString = zipCompress(content)
+      val cfg : FileDropConfig = prepareDropper(dropCfg)("append")
+      val dropper : EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+      val content : ByteString = ByteString("Hello Blended" * 10000)
+      val zipContent : ByteString = zipCompress(content)
 
-      val n: Int = 50
+      val n : Int = 50
 
-      val env: FlowEnvelope = FlowEnvelope(FlowMessage(zipContent)(FlowMessage.props(
+      val env : FlowEnvelope = FlowEnvelope(FlowMessage(zipContent)(FlowMessage.props(
         cfg.fileHeader -> "header.txt",
         cfg.compressHeader -> true,
         cfg.appendHeader -> true
@@ -130,33 +130,33 @@ class FileDropSpec extends LoggingFreeSpec
         dropFile(dropper, cfg, env)
       }
 
-      val err: FileDropResult = dropFile(dropper, cfg, env2).get
+      val err : FileDropResult = dropFile(dropper, cfg, env2).get
       err.error should be(defined)
 
       val files = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
       files should have size 1
 
-      val expected: ByteString = multiply(content, n)
+      val expected : ByteString = multiply(content, n)
       files.forall { f => verifyTargetFile(f, expected) } should be(true)
     }
 
     "extract the (ZIP) compressed content if the compress header is set" in {
 
-      val cfg: FileDropConfig = prepareDropper(dropCfg)("zipped")
-      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
-      val content: ByteString = ByteString("Hello Blended")
-      val zipContent: ByteString = zipCompress(content)
+      val cfg : FileDropConfig = prepareDropper(dropCfg)("zipped")
+      val dropper : EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+      val content : ByteString = ByteString("Hello Blended")
+      val zipContent : ByteString = zipCompress(content)
 
-      val env: FlowEnvelope = FlowEnvelope(FlowMessage(zipContent)(FlowMessage.props(
+      val env : FlowEnvelope = FlowEnvelope(FlowMessage(zipContent)(FlowMessage.props(
         cfg.fileHeader -> "header.txt",
         cfg.compressHeader -> "true",
         cfg.appendHeader -> "true"
       ).get))
 
-      val r: FileDropResult = dropFile(dropper, cfg, env).get
+      val r : FileDropResult = dropFile(dropper, cfg, env).get
       r.error should be(empty)
 
-      val files: List[File] = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
+      val files : List[File] = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
       files should have size 1
 
       files.forall { f => verifyTargetFile(f, content) } should be(true)
@@ -164,21 +164,21 @@ class FileDropSpec extends LoggingFreeSpec
 
     "extract the (GZIP) compressed content if the compress header is set" in {
 
-      val cfg: FileDropConfig = prepareDropper(dropCfg)("gzipped")
-      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
-      val content: ByteString = ByteString("Hello Blended")
-      val zipContent: ByteString = gzipCompress(content)
+      val cfg : FileDropConfig = prepareDropper(dropCfg)("gzipped")
+      val dropper : EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+      val content : ByteString = ByteString("Hello Blended")
+      val zipContent : ByteString = gzipCompress(content)
 
-      val env: FlowEnvelope = FlowEnvelope(FlowMessage(zipContent)(FlowMessage.props(
+      val env : FlowEnvelope = FlowEnvelope(FlowMessage(zipContent)(FlowMessage.props(
         cfg.fileHeader -> "header.txt",
         cfg.compressHeader -> true,
         cfg.appendHeader -> true
       ).get))
 
-      val r: FileDropResult = dropFile(dropper, cfg, env).get
+      val r : FileDropResult = dropFile(dropper, cfg, env).get
       r.error should be(empty)
 
-      val files: List[File] = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
+      val files : List[File] = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
       files should have size 1
 
       files.forall { f => verifyTargetFile(f, content) } should be(true)

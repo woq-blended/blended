@@ -37,9 +37,9 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
   with JmsStreamSupport
   with FileSourceTestSupport {
 
-  override def baseDir: String = s"${BlendedTestSupport.projectTestOutput}/container"
+  override def baseDir : String = s"${BlendedTestSupport.projectTestOutput}/container"
 
-  override def bundles: Seq[(String, BundleActivator)] = Seq(
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator()
   )
 
@@ -107,10 +107,12 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     )
 
     Source.fromGraph(new JmsAckSourceStage(name, settings, minMessageDelay = None))
-      .via(FlowProcessor.fromFunction("publish", log){ env => Try {
-        system.eventStream.publish(EnvelopeReceived(env))
-        env
-      }})
+      .via(FlowProcessor.fromFunction("publish", log) { env =>
+        Try {
+          system.eventStream.publish(EnvelopeReceived(env))
+          env
+        }
+      })
       .via(new AckProcessor(name + ".ack").flow)
   }
 
