@@ -42,7 +42,7 @@ final case class FlowEnvelope private[message] (
   ackHandler : Option[AcknowledgeHandler] = None,
   @BeanProperty
   id : String = UUID.randomUUID().toString(),
-  flowContext : Map[String, Any] = Map.empty,
+  flowContext : Map[String, Any] = Map.empty
 ) {
 
   override def toString: String = {

@@ -55,7 +55,7 @@ class FlowTransactionStream(
       clearPreviousException = true
     )
 
-    jmsProducer("logToJms", settings, false)
+    jmsProducer(name = "logToJms", settings, autoAck = false)
   }
 
   // run the inbound transaction update through the transaction manager

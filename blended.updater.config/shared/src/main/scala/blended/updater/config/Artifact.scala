@@ -17,7 +17,7 @@ object Artifact extends ((String, Option[String], Option[String]) => Artifact) {
   def apply(
     url : String,
     fileName : String = null,
-    sha1Sum : String = None
+    sha1Sum : String = null
   ) : Artifact = {
     Artifact(
       url = url,
