@@ -4,8 +4,8 @@ import blended.updater.config.OverlayConfig
 
 trait OverlayConfigPersistor {
 
-  def persistOverlayConfig(overlayConfig: OverlayConfig): Unit
+  def persistOverlayConfig(overlayConfig : OverlayConfig) : Unit
 
-  def findOverlayConfigs(): List[OverlayConfig]
+  def findOverlayConfigs() : List[OverlayConfig]
 
 }

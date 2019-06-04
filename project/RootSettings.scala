@@ -11,15 +11,15 @@ object RootSettings {
     jbakeMode := System.getenv().getOrDefault("JBAKE_MODE", "build"),
     jbakeInputDir := (blendedDocs / baseDirectory).value,
     jbakeNodeBinDir := {
-      (blendedDocs/Compile/fastOptJS/webpack).value
-      val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
+      (blendedDocs / Compile / fastOptJS / webpack).value
+      val modulesDir = (blendedDocs / Compile / fastOptJS / crossTarget).value
       Some(modulesDir / "node_modules" / ".bin")
     },
 
     jbakeSiteAssets := {
-      (blendedDocs/Compile/fastOptJS/webpack).value
+      (blendedDocs / Compile / fastOptJS / webpack).value
 
-      val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
+      val modulesDir = (blendedDocs / Compile / fastOptJS / crossTarget).value
       val assetDir = (Compile / jbakeOutputDir).value
 
       Map(
@@ -29,7 +29,7 @@ object RootSettings {
         modulesDir / "node_modules" / "bootstrap" / "dist" / "js" / "bootstrap.min.js" -> assetDir / "js" / "bootstrap.min.js",
         modulesDir / "node_modules" / "jquery" / "dist" / "jquery.min.js" -> assetDir / "js" / "jquery.min.js",
         modulesDir / "node_modules" / "perfect-scrollbar" / "dist" / "perfect-scrollbar.js" -> assetDir / "js" / "perfect-scrollbar.js",
-        modulesDir / "node_modules" / "perfect-scrollbar" / "css" / "perfect-scrollbar.css" -> assetDir / "css" / "perfect-scrollbar.css",
+        modulesDir / "node_modules" / "perfect-scrollbar" / "css" / "perfect-scrollbar.css" -> assetDir / "css" / "perfect-scrollbar.css"
       )
     }
   )

@@ -8,7 +8,7 @@ trait CommonSettings extends ProjectConfig {
 
   val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
-  override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+  override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
     organization := "de.wayofquality.blended",
     homepage := Some(url("https://github.com/woq-blended/blended")),
 

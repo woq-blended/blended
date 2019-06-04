@@ -5,4 +5,4 @@ package blended.updater.config
  * @param id
  * @param actions
  */
-case class ContainerRegistryResponseOK(id: String, actions: List[UpdateAction] = List.empty)
+case class ContainerRegistryResponseOK(id : String, actions : List[UpdateAction] = List.empty)

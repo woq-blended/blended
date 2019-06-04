@@ -6,10 +6,10 @@ import scala.collection.immutable
 
 class TransientOverlayConfigPersistor extends OverlayConfigPersistor {
 
-  private[this] var state: immutable.Set[OverlayConfig] = Set()
+  private[this] var state : immutable.Set[OverlayConfig] = Set()
 
-  override def persistOverlayConfig(overlayConfig: OverlayConfig): Unit = state += overlayConfig
+  override def persistOverlayConfig(overlayConfig : OverlayConfig) : Unit = state += overlayConfig
 
-  override def findOverlayConfigs(): List[OverlayConfig] = state.toList
+  override def findOverlayConfigs() : List[OverlayConfig] = state.toList
 
 }

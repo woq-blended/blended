@@ -12,21 +12,21 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
 class EnvelopeFileDropper(
-  cfg: FileDropConfig,
+  cfg : FileDropConfig,
   headerConfig : FlowHeaderConfig,
   dropActor : ActorRef,
   log : Logger
-)(implicit system: ActorSystem) extends JmsEnvelopeHeader {
+)(implicit system : ActorSystem) extends JmsEnvelopeHeader {
 
   // Get the content of the envelope as a ByteString which we can write to disk
-  private def extractContent(env: FlowEnvelope): Try[ByteString] = Try {
+  private def extractContent(env : FlowEnvelope) : Try[ByteString] = Try {
     env.flowMessage match {
-      case tMsg: TextFlowMessage =>
+      case tMsg : TextFlowMessage =>
         val charSet = env.headerWithDefault[String](cfg.charsetHeader, "UTF-8")
         log.info(s"Using charset [$charSet] to file drop text message [${env.id}]")
         ByteString(tMsg.getText().getBytes(charSet))
 
-      case bMsg: BinaryFlowMessage =>
+      case bMsg : BinaryFlowMessage =>
         bMsg.content
 
       case m =>
@@ -38,7 +38,7 @@ class EnvelopeFileDropper(
 
   // Try to get the correlation Id from the message, fall back with the correlation ID from
   // the FlowEnvelope, finally fall back with the envelope ID
-  private[this] def corrId(env: FlowEnvelope): String = {
+  private[this] def corrId(env : FlowEnvelope) : String = {
     env.headerWithDefault[String](
       "JMSCorrelationID",
       env.headerWithDefault[String](corrIdHeader(headerConfig.prefix), env.id)
@@ -46,7 +46,7 @@ class EnvelopeFileDropper(
   }
 
   // extract the drop Command from the envelope
-  private[this] def dropCmd(env: FlowEnvelope)(f: FlowEnvelope => Try[ByteString]): Try[FileDropCommand] = Try {
+  private[this] def dropCmd(env : FlowEnvelope)(f : FlowEnvelope => Try[ByteString]) : Try[FileDropCommand] = Try {
     FileDropCommand(
       id = env.id,
       content = f(env).get,
@@ -55,24 +55,24 @@ class EnvelopeFileDropper(
       compressed = env.headerWithDefault[Boolean](cfg.compressHeader, false),
       append = env.headerWithDefault[Boolean](cfg.appendHeader, false),
       timestamp = env.headerWithDefault[Long](timestampHeader(headerConfig.prefix), System.currentTimeMillis()),
-      properties = Map("JMSCorrelationID" -> corrId(env)) ++ env.flowMessage.header.mapValues(_.value),
+      properties = Map("JMSCorrelationID" -> corrId(env)) ++ env.flowMessage.header.mapValues(_.value)
     )
   }
 
-  private[this] def handleError(env: FlowEnvelope, error: Throwable): FileDropResult = {
+  private[this] def handleError(env : FlowEnvelope, error : Throwable) : FileDropResult = {
     log.error(s"Error dropping envelope [${env.id}] to file : [${error.getMessage()}]")
-    val cmd = dropCmd(env)(e => Success(ByteString(""))).get
+    val cmd = dropCmd(env)(_ => Success(ByteString(""))).get
     FileDropResult(cmd, Some(error))
   }
 
-  def dropEnvelope(env: FlowEnvelope): (FileDropCommand, Future[FileDropResult]) = {
+  def dropEnvelope(env : FlowEnvelope) : (FileDropCommand, Future[FileDropResult]) = {
 
-    val p: Promise[FileDropResult] = Promise()
+    val p : Promise[FileDropResult] = Promise()
 
     dropCmd(env)(extractContent) match {
       case Success(cmd) =>
-        implicit val to: Timeout = Timeout(cfg.dropTimeout)
-        implicit val eCtxt: ExecutionContext = system.dispatcher
+        implicit val to : Timeout = Timeout(cfg.dropTimeout)
+        implicit val eCtxt : ExecutionContext = system.dispatcher
 
         (dropActor ? cmd).mapTo[FileDropResult].onComplete {
           case Success(r) => p.complete(Success(r))

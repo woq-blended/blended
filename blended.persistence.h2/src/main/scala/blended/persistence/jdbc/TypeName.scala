@@ -4,7 +4,7 @@ sealed trait TypeName {
   /**
    * Internal storage type name of the type (max 10 characters).
    */
-  def name: String
+  def name : String
 }
 
 object TypeName {
@@ -45,8 +45,8 @@ object TypeName {
     override def name = "LongString"
   }
 
-  def values: Seq[TypeName] = Seq(String, Long, Int, Short, Byte, Boolean, Double, Float, Array, Object, Null, LongString)
+  def values : Seq[TypeName] = Seq(String, Long, Int, Short, Byte, Boolean, Double, Float, Array, Object, Null, LongString)
 
-  def fromString(name: String): Option[TypeName] = values.find(_.name == name)
+  def fromString(name : String) : Option[TypeName] = values.find(_.name == name)
 
 }

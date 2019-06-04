@@ -27,11 +27,11 @@ object BlendedSecurityCrypto extends ProjectFactory {
       )
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / testlogDefaultLevel := "INFO"
     )
 
-    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = super.dependsOn ++ Seq(
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = super.dependsOn ++ Seq(
       BlendedTestsupport.project % Test
     )
   }

@@ -7,8 +7,8 @@ import blended.updater.config.RuntimeConfig
  */
 trait RuntimeConfigPersistor {
 
-  def persistRuntimeConfig(runtimeConfig: RuntimeConfig): Unit
+  def persistRuntimeConfig(runtimeConfig : RuntimeConfig) : Unit
 
-  def findRuntimeConfigs(): List[RuntimeConfig]
+  def findRuntimeConfigs() : List[RuntimeConfig]
 
 }

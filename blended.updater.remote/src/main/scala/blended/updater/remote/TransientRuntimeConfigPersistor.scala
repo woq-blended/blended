@@ -6,9 +6,9 @@ import scala.collection.immutable
 
 class TransientRuntimeConfigPersistor extends RuntimeConfigPersistor {
 
-  private[this] var state: immutable.Set[RuntimeConfig] = Set.empty
+  private[this] var state : immutable.Set[RuntimeConfig] = Set.empty
 
-  override def persistRuntimeConfig(rCfg: RuntimeConfig): Unit = state += rCfg
+  override def persistRuntimeConfig(rCfg : RuntimeConfig) : Unit = state += rCfg
 
-  override def findRuntimeConfigs(): List[RuntimeConfig] = state.toList
+  override def findRuntimeConfigs() : List[RuntimeConfig] = state.toList
 }

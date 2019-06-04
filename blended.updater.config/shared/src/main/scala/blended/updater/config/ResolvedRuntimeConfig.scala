@@ -8,11 +8,11 @@ package blended.updater.config
  * @see [FeatureResolver] for a way to automatically resolve features, e.g. from remote repositories.
  *
  */
-case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
+case class ResolvedRuntimeConfig(runtimeConfig : RuntimeConfig) {
 
   {
     // Check if all feature reference have a according resolved feature
-    def check(features: List[FeatureRef], depChain: List[String]): Unit = features.foreach { f =>
+    def check(features : List[FeatureRef], depChain : List[String]) : Unit = features.foreach { f =>
       val depName = s"${f.name}-${f.version}"
       val newDepChain = depName :: depChain
       require(depChain.find(_ == depName).isEmpty, s"No cycles in feature dependencies allowed, but detected: ${newDepChain.mkString(" required by ")}")
@@ -39,15 +39,15 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
 
   }
 
-  def lookupFeature(featureRef: FeatureRef): Option[FeatureConfig] = {
+  def lookupFeature(featureRef : FeatureRef) : Option[FeatureConfig] = {
     (runtimeConfig.resolvedFeatures).find(f => f.name == featureRef.name && f.version == featureRef.version)
   }
 
   /**
    * All referenced features.
    */
-  def allReferencedFeatures: List[FeatureConfig] = {
-    def find(features: List[FeatureRef]): List[FeatureConfig] = features.flatMap { f =>
+  def allReferencedFeatures : List[FeatureConfig] = {
+    def find(features : List[FeatureRef]) : List[FeatureConfig] = features.flatMap { f =>
       val feature = lookupFeature(f).get
       feature +: find(feature.features)
     }
@@ -57,9 +57,9 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
   /**
    * All bundles of this runtime config including those trasitively defined in the features.
    */
-  def allBundles: List[BundleConfig] = (runtimeConfig.bundles ++ allReferencedFeatures.flatMap(_.bundles)).distinct
+  def allBundles : List[BundleConfig] = (runtimeConfig.bundles ++ allReferencedFeatures.flatMap(_.bundles)).distinct
 
-  val framework: BundleConfig = {
+  val framework : BundleConfig = {
     val fs = allBundles.filter(b => b.startLevel == Some(0))
     require(fs.distinct.size == 1, s"A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): ${fs.size}${
       if (fs.isEmpty) "" else fs.mkString("\n  ", "\n  ", "")
@@ -73,7 +73,7 @@ object ResolvedRuntimeConfig extends (RuntimeConfig => ResolvedRuntimeConfig) {
   /**
    * Construct with additional resolved features.
    */
-  def apply(runtimeConfig: RuntimeConfig, features: List[FeatureConfig]): ResolvedRuntimeConfig = {
+  def apply(runtimeConfig : RuntimeConfig, features : List[FeatureConfig]) : ResolvedRuntimeConfig = {
 
     val allFeatures = (runtimeConfig.resolvedFeatures ++ features).distinct
 

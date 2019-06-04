@@ -11,15 +11,15 @@ object BlendedDocsJs extends ProjectFactory {
     override val projectName = "blended.docs"
     override val description = "Dummy Js project to download npm modules for the doc generator"
     override val osgi = false
-    override val projectDir: Option[String] = Some("doc")
+    override val projectDir : Option[String] = Some("doc")
     override val publish = false
 
-    override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(
+    override def plugins : Seq[AutoPlugin] = super.plugins ++ Seq(
       ScalaJSPlugin,
       ScalaJSBundlerPlugin
     )
 
-    override def settings: Seq[sbt.Setting[_]] = Seq(
+    override def settings : Seq[sbt.Setting[_]] = Seq(
       Compile / fastOptJS / webpackConfigFile := Some(baseDirectory.value / "docs.webpack.config.js"),
       Compile / fastOptJS / webpackMonitoredDirectories += baseDirectory.value / "scss",
       Compile / fastOptJS / webpackMonitoredFiles / includeFilter := "*.scss",

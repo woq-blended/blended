@@ -18,7 +18,7 @@ class CamelSampleActivator extends DominoActivator {
       ctxt.addComponent("activemq", JmsComponent.jmsComponent(cf))
 
       ctxt.addRoutes(new RouteBuilder() {
-        override def configure(): Unit = {
+        override def configure() : Unit = {
           from("activemq:queue:SampleIn").id("SampleRoute")
             .setHeader("Description", constant("BlendedSample"))
             .to("activemq:queue:SampleOut")

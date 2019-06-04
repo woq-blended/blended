@@ -5,14 +5,14 @@ package blended.launcher.internal
  */
 object ARM {
 
-  def using[C <: AutoCloseable, R](c: C)(f: C => R): R = {
+  def using[C <: AutoCloseable, R](c : C)(f : C => R) : R = {
     try {
       f(c)
     } finally {
       try {
         c.close()
       } catch {
-        case t: Throwable => t.addSuppressed(t)
+        case t : Throwable => t.addSuppressed(t)
       }
     }
   }

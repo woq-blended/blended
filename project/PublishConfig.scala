@@ -5,9 +5,9 @@ import xerial.sbt.Sonatype
 
 trait PublishConfig extends ProjectConfig {
 
-  def publish: Boolean = true
+  def publish : Boolean = true
 
-  override def settings: Seq[sbt.Setting[_]] = super.settings ++
+  override def settings : Seq[sbt.Setting[_]] = super.settings ++
     (if (publish) Seq(
       // General settings for subprojects to be published
       publishMavenStyle := true,
@@ -39,7 +39,7 @@ trait PublishConfig extends ProjectConfig {
       publishLocal := {}
     ))
 
-  override def plugins: Seq[AutoPlugin] = super.plugins ++
+  override def plugins : Seq[AutoPlugin] = super.plugins ++
     (if (publish) Seq(Sonatype) else Seq())
 
 }

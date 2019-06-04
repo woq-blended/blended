@@ -8,13 +8,13 @@ import blended.security.akka.http.BlendedSecurityDirectives
 import blended.util.logging.Logger
 
 trait ArtifactRepoRoutes {
-  deps: BlendedSecurityDirectives =>
+  deps : BlendedSecurityDirectives =>
 
   private[this] val log = Logger[ArtifactRepoRoutes]
 
-  protected def artifactRepos: List[ArtifactRepo]
+  protected def artifactRepos : List[ArtifactRepo]
 
-  def getRepoFile(repo: String, path: String) = {
+  def getRepoFile(repo : String, path : String) = {
     artifactRepos.find(a => a.repoId == repo) match {
       case None =>
         log.debug(s"No repository with id: ${repo}")
@@ -61,7 +61,7 @@ trait ArtifactRepoRoutes {
     }
   }
 
-  val httpRoute: Route = get {
+  val httpRoute : Route = get {
     path(Segment) { (repoId) =>
       getRepoFile(repoId, "")
     } ~

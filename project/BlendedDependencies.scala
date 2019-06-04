@@ -12,7 +12,7 @@ object BlendedDependencies extends ProjectFactory {
     override val description = "Blended dependencies"
     override val osgi = false
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++
       Seq(
         coverageEnabled := false,
         exportDependenciesFile := {
@@ -29,7 +29,7 @@ object BlendedDependencies extends ProjectFactory {
           exportDependenciesFile
         )
 
-    override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(
+    override def plugins : Seq[AutoPlugin] = super.plugins ++ Seq(
       SbtPlugin
     )
   }

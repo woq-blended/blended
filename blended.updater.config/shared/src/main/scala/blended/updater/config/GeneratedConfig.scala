@@ -6,4 +6,4 @@ package blended.updater.config
  *
  * @param configFile The relative config file name.
  */
-case class GeneratedConfig(configFile: String, config: String)
+case class GeneratedConfig(configFile : String, config : String)

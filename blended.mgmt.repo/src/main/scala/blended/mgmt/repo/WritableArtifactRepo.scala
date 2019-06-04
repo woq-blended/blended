@@ -11,6 +11,6 @@ trait WritableArtifactRepo extends ArtifactRepo {
    * If the optional `sha1Sum` is given, it file contents checksum will be checked against it,
    * and a checksum mismatch will result in returning a [[scala.util.Failure]].
    */
-  def uploadFile(path: String, file: InputStream, sha1Sum: Option[String]): Try[Unit]
+  def uploadFile(path : String, file : InputStream, sha1Sum : Option[String]) : Try[Unit]
 
 }
