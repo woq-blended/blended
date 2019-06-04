@@ -24,7 +24,7 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 
     val msg = flowMsg match {
       case t :
-        TextFlowMessage => session.createTextMessage(t.getText())
+        TextFlowMessage => session.createTextMessage(Option(t.body()).map(_.toString).getOrElse(null))
       case b :
         BinaryFlowMessage =>
         val r = session.createBytesMessage()
