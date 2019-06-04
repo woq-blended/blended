@@ -93,7 +93,7 @@ class FlowTransactionManager(pSvc : PersistenceService) extends Actor {
               log.debug(s"Creating new transaction actor for [${e.transactionId}]")
               val s : FlowTransaction = FlowTransaction(
                 id = e.transactionId,
-                creationProps = e.properties,
+                creationProps = e.properties
               )
               val a : ActorRef = context.actorOf(FlowTransactionActor.props(persistor, s))
               a.tell(e, respondTo)

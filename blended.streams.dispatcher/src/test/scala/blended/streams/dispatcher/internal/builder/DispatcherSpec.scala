@@ -18,6 +18,7 @@ class DispatcherSpec extends DispatcherSpecSupport
 
   override def loggerName: String = classOf[DispatcherSpec].getName()
   private val goodSend = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
+  private val defaultBufferSize : Int = 10
 
   private def runDispatcher(
     ctxt : DispatcherExecContext,
@@ -29,7 +30,7 @@ class DispatcherSpec extends DispatcherSpecSupport
 
     val transColl = Collector[FlowTransactionEvent]("trans")(_ => {})
 
-    val source = Source.actorRef[FlowEnvelope](10, OverflowStrategy.fail)
+    val source = Source.actorRef[FlowEnvelope](defaultBufferSize, OverflowStrategy.fail)
 
     val sinkGraph = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
@@ -72,7 +73,7 @@ class DispatcherSpec extends DispatcherSpecSupport
       val testMsgs : DispatcherExecContext => Seq[FlowEnvelope] = ctxt => Seq(
         FlowEnvelope(),
         FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").get,
-        FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoOutbound").get,
+        FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoOutbound").get
       )
 
       runTest(testMsgs){ events =>
@@ -84,7 +85,7 @@ class DispatcherSpec extends DispatcherSpecSupport
     "produce a transaction update event for the started worklist if the envelope is only routed externally" in {
 
       val testMsgs : DispatcherExecContext => Seq[FlowEnvelope] = ctxt => Seq(
-        FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoCbe").get,
+        FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoCbe").get
       )
 
       runTest(testMsgs){ events =>
@@ -99,7 +100,7 @@ class DispatcherSpec extends DispatcherSpecSupport
 
     "produce a transaction update event for the started worklist and one transaction update for each outbound flow that is routed internal" in {
       val testMsgs : DispatcherExecContext => Seq[FlowEnvelope] = ctxt => Seq(
-        FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "FanOut").get,
+        FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "FanOut").get
       )
 
       runTest(testMsgs){ events =>

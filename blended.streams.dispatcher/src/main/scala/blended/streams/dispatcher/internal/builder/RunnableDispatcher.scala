@@ -181,7 +181,7 @@ class RunnableDispatcher(
         // Prepare and start the dispatcher
         val streamCfg = StreamControllerConfig.fromConfig(routerCfg.rawConfig).get
           .copy(
-            name = dispLogger.name,
+            name = dispLogger.name
           )
 
         val actor = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg))
