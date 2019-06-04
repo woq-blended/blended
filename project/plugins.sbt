@@ -15,7 +15,7 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.9")
 // Support for artifact signing with pgp
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")
 // Export test coveragt to codacy
-addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "1.3.15")
+addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "2.112")
 
 // OSGi bundle build support
 addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.5")
