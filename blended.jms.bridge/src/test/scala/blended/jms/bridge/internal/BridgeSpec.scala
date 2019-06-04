@@ -11,7 +11,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.jms._
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowMessage, TextFlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionStarted, FlowTransactionUpdate}
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
@@ -126,11 +126,30 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val messages : List[FlowEnvelope] =
         consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
 
-      messages should have size(msgCount)
+      messages should have size msgCount
 
       messages.foreach{ env =>
         env.header[Unit]("UnitProperty") should be (Some(()))
       }
+
+      consumeEvents().get should be (empty)
+
+      switch.shutdown()
+    }
+
+    "process text messages with a null body" in {
+
+      implicit val timeout : FiniteDuration = 1.second
+
+      val msg : TextFlowMessage = TextFlowMessage(null, FlowMessage.noProps)
+      val msgs : Seq[FlowEnvelope] = Seq(FlowEnvelope(msg))
+
+      val switch : KillSwitch = sendMessages("sampleIn", external)(msgs:_*)
+
+      val messages : List[FlowEnvelope] =
+        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
+
+      messages should have size msgs.size
 
       consumeEvents().get should be (empty)
 
@@ -268,7 +287,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       implicit val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
-      val switch = sendOutbound(msgCount, false)
+      val switch = sendOutbound(msgCount, track = false)
 
       val messages : List[FlowEnvelope] =
         consumeMessages(external, "sampleOut").get
@@ -282,6 +301,8 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       val envelopes : List[FlowTransactionEvent] = consumeEvents().get
 
       envelopes should be (empty)
+
+      switch.shutdown()
     }
 
     "process normal inbound messages with tracked transactions" in {

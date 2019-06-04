@@ -224,10 +224,14 @@ case class BinaryFlowMessage(content : ByteString, override val header: FlowMess
 }
 
 case class TextFlowMessage(content : String, override val header: FlowMessageProps) extends FlowMessage(header) {
-  override def body(): Any = content
-  def getText(): String = content
 
-  override def bodySize(): Int = content.length()
+  private val textContent : Option [String] = Option(content)
+
+  override def body(): Any = textContent.getOrElse(null)
+
+  def getText(): String = textContent.getOrElse("")
+
+  override def bodySize(): Int = getText().length()
 
   override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
     copy(header = newHeader(key, value, overwrite).get)
