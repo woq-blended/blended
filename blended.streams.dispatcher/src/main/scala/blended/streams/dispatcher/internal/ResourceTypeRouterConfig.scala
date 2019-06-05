@@ -23,8 +23,8 @@ object ResourceTypeRouterConfig {
 
   def create(
     idSvc : ContainerIdentifierService,
-    provider: BridgeProviderRegistry,
-    cfg: Config
+    provider : BridgeProviderRegistry,
+    cfg : Config
   ) : Try[ResourceTypeRouterConfig] = Try {
 
     val internalProvider = provider.internalProvider.get
@@ -38,19 +38,20 @@ object ResourceTypeRouterConfig {
     val logHeader : List[String] = cfg.getStringList(applicationLogHeaderPath, List.empty)
 
     val routes : Map[String, ResourceTypeConfig] =
-      cfg.getConfigMap(resourcetypesPath, Map.empty).map { case (key, value) =>
-        key -> ResourceTypeConfig.create(
-          idSvc = idSvc,
-          registry = provider,
-          resType = key,
-          defaultProvider = internalProvider,
-          defaultEventProvider = eventProvider,
-          defaultLogHeader = logHeader,
-          cfg = value
-        ).get
+      cfg.getConfigMap(resourcetypesPath, Map.empty).map {
+        case (key, value) =>
+          key -> ResourceTypeConfig.create(
+            idSvc = idSvc,
+            registry = provider,
+            resType = key,
+            defaultProvider = internalProvider,
+            defaultEventProvider = eventProvider,
+            defaultLogHeader = logHeader,
+            cfg = value
+          ).get
       }
 
-    val defaultHeader : List[HeaderProcessorConfig] = cfg.getConfigList(defaultHeaderPath, List.empty).map{ cfg =>
+    val defaultHeader : List[HeaderProcessorConfig] = cfg.getConfigList(defaultHeaderPath, List.empty).map { cfg =>
       HeaderProcessorConfig.create(cfg)
     }
 
@@ -82,14 +83,14 @@ object ResourceTypeConfig {
   private[this] val outboundPath = "outbound"
   private[this] val timeoutPath = "timeout"
 
-  def create (
+  def create(
     idSvc : ContainerIdentifierService,
-    registry: BridgeProviderRegistry,
-    resType: String,
-    defaultProvider: BridgeProviderConfig,
-    defaultEventProvider: BridgeProviderConfig,
+    registry : BridgeProviderRegistry,
+    resType : String,
+    defaultProvider : BridgeProviderConfig,
+    defaultEventProvider : BridgeProviderConfig,
     defaultLogHeader : List[String],
-    cfg: Config
+    cfg : Config
   ) : Try[ResourceTypeConfig] = Try {
 
     val outboundRoutes : List[OutboundRouteConfig] = cfg.getConfigList(outboundPath).asScala.map { c =>
@@ -107,10 +108,10 @@ object ResourceTypeConfig {
 }
 
 case class ResourceTypeConfig(
-  resourceType: String,
+  resourceType : String,
   inboundConfig : Option[InboundRouteConfig],
   outbound : List[OutboundRouteConfig],
-  withCBE: Boolean,
+  withCBE : Boolean,
   timeout : FiniteDuration
 )
 
@@ -120,16 +121,16 @@ object OutboundRouteConfig {
 
   def create(
     idSvc : ContainerIdentifierService,
-    registry: BridgeProviderRegistry,
-    cfg: Config,
-    defaultProvider: BridgeProviderConfig,
-    defaultEventProvider: BridgeProviderConfig,
+    registry : BridgeProviderRegistry,
+    cfg : Config,
+    defaultProvider : BridgeProviderConfig,
+    defaultEventProvider : BridgeProviderConfig,
     defaultLogHeader : List[String]
   ) : Try[OutboundRouteConfig] = Try {
 
     val id = cfg.getString("id", "default")
 
-    val outboundHeader  = cfg.getConfigList(outboundHeaderPath, List.empty).map(c => OutboundHeaderConfig.create(
+    val outboundHeader = cfg.getConfigList(outboundHeaderPath, List.empty).map(c => OutboundHeaderConfig.create(
       idSvc, registry, c, defaultProvider, defaultEventProvider, defaultLogHeader
     ).get)
 
@@ -142,9 +143,9 @@ object OutboundRouteConfig {
 
 case class OutboundRouteConfig(
   id : String,
-  outboundHeader: List[OutboundHeaderConfig]
+  outboundHeader : List[OutboundHeaderConfig]
 ) extends WorklistItem {
-  override def toString: String =
+  override def toString : String =
     s"${getClass().getSimpleName()}(id=$id)"
 }
 
@@ -154,8 +155,8 @@ object InboundRouteConfig {
   private[this] val headerPath = "header"
 
   def create(
-    idSvc: ContainerIdentifierService,
-    cfg: Config
+    idSvc : ContainerIdentifierService,
+    cfg : Config
   ) : Try[InboundRouteConfig] = Try {
 
     val destName = idSvc.resolvePropertyString(cfg.getString(inboundUriPath)).map(_.toString()).get
@@ -170,7 +171,7 @@ object InboundRouteConfig {
 }
 
 case class InboundRouteConfig(
-  entry: JmsDestination,
+  entry : JmsDestination,
   header : Map[String, String]
 )
 
@@ -188,18 +189,18 @@ object OutboundHeaderConfig {
   private[this] val timeToLivePath = "timeToLive"
   private[this] val deliveryModePath = "deliveryMode"
 
-  def create (
-    idSvc: ContainerIdentifierService,
-    registry: BridgeProviderRegistry,
-    cfg: Config,
-    defaultProvider: BridgeProviderConfig,
-    defaultEventProvider: BridgeProviderConfig,
+  def create(
+    idSvc : ContainerIdentifierService,
+    registry : BridgeProviderRegistry,
+    cfg : Config,
+    defaultProvider : BridgeProviderConfig,
+    defaultEventProvider : BridgeProviderConfig,
     defaultLogHeader : List[String]
   ) : Try[OutboundHeaderConfig] = Try {
 
     val bridgeProvider = ProviderResolver.providerFromConfig(idSvc, registry, cfg, bridgeVendorPath, bridgeProviderPath).get match {
       case Some(p) => p
-      case None => defaultProvider
+      case None    => defaultProvider
     }
 
     val bridgeDestination = cfg.getStringOption(bridgeDestinationPath).map(s => idSvc.resolvePropertyString(s).get).map(_.toString())

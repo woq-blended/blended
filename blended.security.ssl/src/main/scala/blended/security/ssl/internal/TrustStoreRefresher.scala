@@ -57,6 +57,6 @@ class TrustStoreRefresher(ms : MemoryKeystore) {
   }
 
   private def updateRoots(trusted : MemoryKeystore, keystore : MemoryKeystore) : Try[MemoryKeystore] = Try {
-    keystore.certificates.foldLeft(trusted) { case (s, (alias, c)) => updateRoot(s, c).get }
+    keystore.certificates.foldLeft(trusted) { case (s, (_, c)) => updateRoot(s, c).get }
   }
 }

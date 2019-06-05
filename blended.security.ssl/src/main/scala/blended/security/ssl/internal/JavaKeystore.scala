@@ -64,7 +64,9 @@ class JavaKeystore(
       }
     } else {
       log.info(s"Loading empty key store [${keystore.getAbsolutePath()}] ...")
+      // scalastyle:off null
       ks.load(null, storepass)
+      // scalastyle:on null
     }
 
     ks
@@ -76,7 +78,7 @@ class JavaKeystore(
       val certCount = ks.aliases().asScala.size
       log.info(s"Storing [$certCount] certificates to [$keystore]")
       ks.store(fos, storepass)
-      log.info(s"Successfully written key store to [${keystore}] with storePass [${new String(storepass)}]")
+      log.info(s"Successfully written key store to [$keystore] with storePass [${new String(storepass)}]")
     } finally {
       fos.close()
     }
@@ -94,7 +96,7 @@ class JavaKeystore(
           throw new Exception(s"Certificate for alias [$alias] not found.")
         case Some(c) => List(c.asInstanceOf[X509Certificate])
       }
-      case Some(chain) => chain.toList.map(_.asInstanceOf[X509Certificate])
+      case Some(c) => c.toList.map(_.asInstanceOf[X509Certificate])
     }
 
     val pubKey : PublicKey = chain.head.getPublicKey()

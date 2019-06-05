@@ -16,13 +16,13 @@ import scala.concurrent.{ExecutionContext, Future}
 class DispatcherSpec extends DispatcherSpecSupport
   with Matchers {
 
-  override def loggerName: String = classOf[DispatcherSpec].getName()
+  override def loggerName : String = classOf[DispatcherSpec].getName()
   private val goodSend = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
   private val defaultBufferSize : Int = 10
 
   private def runDispatcher(
     ctxt : DispatcherExecContext,
-    send: Flow[FlowEnvelope, FlowEnvelope, NotUsed]
+    send : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
   ) : (ActorRef, KillSwitch, Collector[FlowTransactionEvent]) = {
 
     implicit val system : ActorSystem = ctxt.system
@@ -51,20 +51,19 @@ class DispatcherSpec extends DispatcherSpecSupport
     (actor, killswitch, transColl)
   }
 
-  private def runTest[T](testMsg: DispatcherExecContext => Seq[FlowEnvelope])(f : List[FlowTransactionEvent] => T) : Future[T] = {
+  private def runTest[T](testMsg : DispatcherExecContext => Seq[FlowEnvelope])(f : List[FlowTransactionEvent] => T) : Future[T] = {
     withDispatcherConfig { ctxt =>
       implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
       val (actor, killswitch, coll) = runDispatcher(ctxt, goodSend)
 
-      akka.pattern.after(500.millis, ctxt.system.scheduler)( Future { killswitch.shutdown() } )
+      akka.pattern.after(500.millis, ctxt.system.scheduler)(Future { killswitch.shutdown() })
 
       testMsg(ctxt).foreach(env => actor ! env)
 
       coll.result.map(l => f(l))
     }
   }
-
 
   "The Dispatcher should" - {
 
@@ -76,7 +75,7 @@ class DispatcherSpec extends DispatcherSpecSupport
         FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoOutbound").get
       )
 
-      runTest(testMsgs){ events =>
+      runTest(testMsgs) { events =>
         events should have size 3
         assert(events.forall(_.state == FlowTransactionState.Failed))
       }
@@ -88,12 +87,12 @@ class DispatcherSpec extends DispatcherSpecSupport
         FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoCbe").get
       )
 
-      runTest(testMsgs){ events =>
+      runTest(testMsgs) { events =>
         events should have size 1
         events.foreach { e =>
           val event = e.asInstanceOf[FlowTransactionUpdate]
-          event.state should be (FlowTransactionState.Updated)
-          event.updatedState should be (WorklistState.Started)
+          event.state should be(FlowTransactionState.Updated)
+          event.updatedState should be(WorklistState.Started)
         }
       }
     }
@@ -103,7 +102,7 @@ class DispatcherSpec extends DispatcherSpecSupport
         FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "FanOut").get
       )
 
-      runTest(testMsgs){ events =>
+      runTest(testMsgs) { events =>
         events should have size 2
 
         assert(events.forall(_.state == FlowTransactionState.Updated))

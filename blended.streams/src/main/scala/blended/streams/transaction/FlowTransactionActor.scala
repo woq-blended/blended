@@ -14,23 +14,23 @@ object FlowTransactionActor {
 
   case class TransactionState(tid : String)
 
-  def props(persistor: FlowTransactionPersistor, initialState: FlowTransaction) : Props =
+  def props(persistor : FlowTransactionPersistor, initialState : FlowTransaction) : Props =
     Props(new FlowTransactionActor(persistor, initialState))
 }
 
-class FlowTransactionActor(persistor: FlowTransactionPersistor, initialState: FlowTransaction) extends Actor {
+class FlowTransactionActor(persistor : FlowTransactionPersistor, initialState : FlowTransaction) extends Actor {
 
-  private [this] val log : Logger = Logger[FlowTransactionActor]
+  private[this] val log : Logger = Logger[FlowTransactionActor]
 
-  override def receive: Receive = handleState(initialState)
+  override def receive : Receive = handleState(initialState)
 
-  private[this] def updateState(state: FlowTransaction, evt: FlowTransactionEvent) : Try[FlowTransaction] = Try {
+  private[this] def updateState(state : FlowTransaction, evt : FlowTransactionEvent) : Try[FlowTransaction] = Try {
     val newState : FlowTransaction = state.updateTransaction(evt).get
     log.trace(s"New state is [$newState]")
     newState
   }
 
-  private[this] def processEvent(requestor : ActorRef, state: FlowTransaction, event : FlowTransactionEvent): Unit = {
+  private[this] def processEvent(requestor : ActorRef, state : FlowTransaction, event : FlowTransactionEvent) : Unit = {
     updateState(state, event) match {
       case Success(s) =>
         persistor.persistTransaction(s)
@@ -42,7 +42,7 @@ class FlowTransactionActor(persistor: FlowTransactionPersistor, initialState: Fl
     }
   }
 
-  private[this] def handleState(state: FlowTransaction): Receive = {
+  private[this] def handleState(state : FlowTransaction) : Receive = {
     case e : FlowTransactionEvent =>
       processEvent(sender(), state, e)
     case TransactionState(_) =>
@@ -68,9 +68,9 @@ class FlowTransactionManager(pSvc : PersistenceService) extends Actor {
     case Failure(_) => None
   }
 
-  override def receive: Receive = handleEvent(Map.empty)
+  override def receive : Receive = handleEvent(Map.empty)
 
-  private[this] def handleEvent(cache: Map[String, ActorRef]): Receive = {
+  private[this] def handleEvent(cache : Map[String, ActorRef]) : Receive = {
 
     case e : FlowTransactionEvent =>
       val respondTo : ActorRef = sender()
@@ -105,7 +105,7 @@ class FlowTransactionManager(pSvc : PersistenceService) extends Actor {
       val respondTo : ActorRef = sender()
       cache.get(tid) match {
         case Some(a) => a.tell(state, respondTo)
-        case None => restoreTransaction(state.tid).foreach(_.tell(state, respondTo))
+        case None    => restoreTransaction(state.tid).foreach(_.tell(state, respondTo))
       }
 
     case m => log.warn(s"Unhandled msg [$m] ")

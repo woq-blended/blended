@@ -17,12 +17,13 @@ import scala.util.Try
 trait CertificateRequestBuilder {
 
   private val log : Logger = Logger[CertificateRequestBuilder]
+  private val defaultValidDays : Int = 365
 
   def hostCertificateRequest(
     cnProvider : CommonNameProvider,
     keyPair : KeyPair,
     serial : BigInteger = new BigInteger("1"),
-    validDays : Int = 365,
+    validDays : Int = defaultValidDays,
     issuedBy : Option[CertificateHolder] = None
   ) : Try[X509v3CertificateBuilder] = Try {
 

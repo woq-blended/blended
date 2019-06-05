@@ -11,18 +11,18 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Random, Success, Try}
 
 class JmsSinkStage(
-  name: String, settings : JmsProducerSettings
+  name : String, settings : JmsProducerSettings
 )(implicit actorSystem : ActorSystem)
   extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
 
-  private case class Push(env: FlowEnvelope)
+  private case class Push(env : FlowEnvelope)
 
   private val in = Inlet[FlowEnvelope](s"JmsSink($name.in)")
   private val out = Outlet[FlowEnvelope](s"JmsSink($name.out)")
 
   override val shape : FlowShape[FlowEnvelope, FlowEnvelope] = FlowShape(in, out)
 
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+  override def createLogic(inheritedAttributes : Attributes) : GraphStageLogic =
     new JmsStageLogic[JmsProducerSession, JmsProducerSettings](
       settings,
       inheritedAttributes,
@@ -32,11 +32,11 @@ class JmsSinkStage(
       private[this] val rnd = new Random()
       private[this] var producer : Option[MessageProducer] = None
 
-      override protected def handleTimer: PartialFunction[Any, Unit] = super.handleTimer orElse {
+      override protected def handleTimer : PartialFunction[Any, Unit] = super.handleTimer orElse {
         case Push(env) => pushMessage(env)
       }
 
-      private def pushMessage(env: FlowEnvelope) : Unit = {
+      private def pushMessage(env : FlowEnvelope) : Unit = {
         if (jmsSessions.size > 0) {
           push(out, sendMessage(env))
         } else {
@@ -44,7 +44,7 @@ class JmsSinkStage(
         }
       }
 
-      override protected def createSession(connection: Connection): Try[JmsProducerSession] = {
+      override protected def createSession(connection : Connection) : Try[JmsProducerSession] = {
 
         try {
           val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
@@ -67,19 +67,19 @@ class JmsSinkStage(
         }
       }
 
-      override protected def onSessionOpened(jmsSession: JmsProducerSession): Unit = {
+      override protected def onSessionOpened(jmsSession : JmsProducerSession) : Unit = {
         producer = Some(jmsSession.session.createProducer(null))
         settings.log.debug(s"Created anonymous producer for [${jmsSession.sessionId}]")
       }
 
-      def sendMessage(env: FlowEnvelope): FlowEnvelope = {
+      def sendMessage(env : FlowEnvelope) : FlowEnvelope = {
 
         var jmsDest : Option[JmsDestination] = None
 
         settings.log.debug(s"Trying to send envelope [${env.id}][${env.flowMessage.header.mkString(",")}]")
         // select one sender session randomly
         val idx : Int = rnd.nextInt(jmsSessions.size)
-        val key = jmsSessions.keys.takeRight(idx+1).head
+        val key = jmsSessions.keys.takeRight(idx + 1).head
         val p = jmsSessions.toIndexedSeq(idx)
         val session = p._2
 
@@ -87,7 +87,8 @@ class JmsSinkStage(
           val sendParams = JmsFlowSupport.envelope2jms(jmsSettings, session.session, env).get
           producer.foreach { p =>
             val sendTtl : Long = sendParams.ttl match {
-              case Some(l) => if (l.toMillis < 0L) {
+              case Some(l) =>
+                if (l.toMillis < 0L) {
                   settings.log.warn(s"The message [${env.id}] has expired and wont be sent to the JMS destination.")
                 }
                 l.toMillis
@@ -118,19 +119,21 @@ class JmsSinkStage(
       }
 
       // First simply pass the pull upstream if any
-      setHandler(out,
+      setHandler(
+        out,
         new OutHandler {
-          override def onPull(): Unit = {
+          override def onPull() : Unit = {
             pull(in)
           }
         }
       )
 
       // We can only start pushing message after at least one session is available
-      setHandler(in,
+      setHandler(
+        in,
         new InHandler {
 
-          override def onPush(): Unit = {
+          override def onPush() : Unit = {
             val env = grab(in)
             pushMessage(env)
           }

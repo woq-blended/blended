@@ -34,8 +34,7 @@ class SelfSignedProviderSpec extends LoggingFreeSpec
 
     "update a self signed certificate by maintaining the same key pair and increasing the serial number" in {
 
-      val cnProvider : CommonNameProvider =
-        new HostnameCNProvider("root")
+      val cnProvider : CommonNameProvider = HostnameCNProvider("root")
 
       val provider : CertificateProvider =
         new SelfSignedCertificateProvider(selfSignedCfg(cnProvider))
@@ -60,8 +59,7 @@ class SelfSignedProviderSpec extends LoggingFreeSpec
 
     "requires a private key in in the old key to refresh" in {
 
-      val cnProvider : CommonNameProvider =
-        new HostnameCNProvider("root")
+      val cnProvider : CommonNameProvider = HostnameCNProvider("root")
 
       val provider : CertificateProvider =
         new SelfSignedCertificateProvider(selfSignedCfg(cnProvider))

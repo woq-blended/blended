@@ -18,14 +18,14 @@ class TransactionOutbound(
   headerConfig : FlowHeaderConfig,
   tMgr : ActorRef,
   dispatcherCfg : ResourceTypeRouterConfig,
-  internalCf: IdAwareConnectionFactory,
-  log: Logger
-)(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport {
+  internalCf : IdAwareConnectionFactory,
+  log : Logger
+)(implicit system : ActorSystem, bs : DispatcherBuilderSupport) extends JmsStreamSupport {
 
   private implicit val materializer : Materializer = ActorMaterializer()
   private val config = dispatcherCfg.providerRegistry.mandatoryProvider(internalCf.vendor, internalCf.provider)
 
-  private [builder] val jmsSource : Try[Source[FlowEnvelope, NotUsed]] = Try {
+  private[builder] val jmsSource : Try[Source[FlowEnvelope, NotUsed]] = Try {
 
     val transDest : JmsDestination = Option(System.getProperty("blended.streams.transactionShard")) match {
       case None => config.get.transactions
@@ -69,16 +69,15 @@ class TransactionOutbound(
         // all messages that have run through the dispatcher will have the correct CBE setting
         performSend = { env =>
           val result = env.header[Boolean](bs.headerCbeEnabled).getOrElse(false) &&
-          FlowTransactionState.withName(
-            env.header[String](bs.headerConfig.headerState).getOrElse(FlowTransactionState.Updated.toString())
-          ) != FlowTransactionState.Updated
+            FlowTransactionState.withName(
+              env.header[String](bs.headerConfig.headerState).getOrElse(FlowTransactionState.Updated.toString())
+            ) != FlowTransactionState.Updated
 
           log.debug(s"CBE generation for envelope [${env.id}] is [$result]")
           result
         },
         sendFlow = sendFlow
       ).build()
-
 
     val src : Source[FlowEnvelope, NotUsed] = jmsSource.get.via(transactionStream)
 

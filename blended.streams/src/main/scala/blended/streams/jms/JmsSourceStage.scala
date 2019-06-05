@@ -17,35 +17,35 @@ import scala.util.{Failure, Success, Try}
 
 class JmsSourceStage(
   name : String,
-  settings: JMSConsumerSettings,
+  settings : JMSConsumerSettings,
   log : Logger = Logger[JmsSourceStage]
-)(implicit actorSystem: ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
+)(implicit actorSystem : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val out = Outlet[FlowEnvelope](s"JmsSource($name.out)")
 
   private val headerConfig : FlowHeaderConfig = settings.headerCfg
 
-  override def shape: SourceShape[FlowEnvelope] = SourceShape(out)
+  override def shape : SourceShape[FlowEnvelope] = SourceShape(out)
 
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =  {
+  override def createLogic(inheritedAttributes : Attributes) : GraphStageLogic = {
 
     val logic : GraphStageLogic = new SourceStageLogic[JmsConsumerSession](shape, out, settings, inheritedAttributes) {
 
       private val bufferSize = (settings.bufferSize + 1) * settings.sessionCount
       private val backpressure = new Semaphore(bufferSize)
 
-      override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
+      override private[jms] val handleError = getAsyncCallback[Throwable] { ex =>
         fail(out, ex)
       }
 
       private val dest : JmsDestination = jmsSettings.jmsDestination match {
         case Some(d) => d
-        case None => throw new IllegalArgumentException("Destination must be defined for consumer")
+        case None    => throw new IllegalArgumentException("Destination must be defined for consumer")
       }
 
       override protected def createSession(
-        connection: Connection
-      ): Try[JmsConsumerSession] = {
+        connection : Connection
+      ) : Try[JmsConsumerSession] = {
 
         try {
           val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
@@ -64,13 +64,13 @@ class JmsSourceStage(
         }
       }
 
-      override protected def pushMessage(msg: FlowEnvelope): Unit = {
+      override protected def pushMessage(msg : FlowEnvelope) : Unit = {
         log.trace("Pushing message downstream")
         push(out, msg)
         backpressure.release()
       }
 
-      override protected def onSessionOpened(jmsSession: JmsConsumerSession): Unit = {
+      override protected def onSessionOpened(jmsSession : JmsConsumerSession) : Unit = {
 
         log.debug(s"Creating JMS consumer in [$id] for destination [$dest]")
 
@@ -78,7 +78,7 @@ class JmsSourceStage(
           case Success(consumer) =>
             try {
               consumer.setMessageListener(new MessageListener {
-                override def onMessage(message: Message): Unit = {
+                override def onMessage(message : Message) : Unit = {
                   backpressure.acquire()
                   // Use a Default Envelope that simply ignores calls to acknowledge if any
                   val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get

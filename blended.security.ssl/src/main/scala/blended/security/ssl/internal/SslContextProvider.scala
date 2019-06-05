@@ -11,6 +11,7 @@ object SslContextProvider {
   private[ssl] val propTrustStorePwd = "javax.net.ssl.trustStorePassword"
 }
 
+// scalastyle:off null
 class SslContextProvider {
 
   import SslContextProvider.{propTrustStore, propTrustStorePwd}
@@ -57,3 +58,4 @@ class SslContextProvider {
     ctxt
   }
 }
+// scalastyle:on null

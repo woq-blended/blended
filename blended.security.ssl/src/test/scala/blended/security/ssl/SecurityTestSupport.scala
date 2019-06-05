@@ -32,7 +32,7 @@ trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSig
   val selfSignedCfg : CommonNameProvider => SelfSignedConfig = cnProvider => SelfSignedConfig(
     commonNameProvider = cnProvider,
     sigAlg = "SHA256withRSA",
-    keyStrength = 2048,
+    keyStrength = keyStrength,
     validDays = validDays
   )
 
@@ -50,9 +50,9 @@ trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSig
     f
   }
 
-  def createRootCertificate(cn : String = "root", validDays : Int = validDays) : Try[CertificateHolder] = Try {
+  def createRootCertificate(cn : String, validDays : Int = validDays) : Try[CertificateHolder] = Try {
 
-    val cnProvider : CommonNameProvider = new HostnameCNProvider(cn)
+    val cnProvider : CommonNameProvider = HostnameCNProvider(cn)
     new SelfSignedCertificateProvider(selfSignedCfg(cnProvider).copy(validDays = validDays)).refreshCertificate(None, cnProvider).get
   }
 

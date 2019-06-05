@@ -9,7 +9,7 @@ import org.apache.activemq.ActiveMQConnectionFactory
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
-case class BrokerConfig (
+case class BrokerConfig(
   override val vendor : String,
   override val provider : String,
   override val clientId : String,
@@ -27,14 +27,14 @@ case class BrokerConfig (
   file : String,
   withSsl : Boolean
 ) extends ConnectionConfig {
-  override val enabled: Boolean = true
-  override val defaultUser: Option[String] = None
-  override val defaultPassword: Option[String] = None
-  override val useJndi: Boolean = false
-  override val cfEnabled: Option[ConnectionConfig => Boolean] = None
-  override val cfClassName: Option[String] = Some(classOf[ActiveMQConnectionFactory].getName())
-  override val ctxtClassName: Option[String] = None
-  override val jmsClassloader: Option[ClassLoader] = None
+  override val enabled : Boolean = true
+  override val defaultUser : Option[String] = None
+  override val defaultPassword : Option[String] = None
+  override val useJndi : Boolean = false
+  override val cfEnabled : Option[ConnectionConfig => Boolean] = None
+  override val cfClassName : Option[String] = Some(classOf[ActiveMQConnectionFactory].getName())
+  override val ctxtClassName : Option[String] = None
+  override val jmsClassloader : Option[ClassLoader] = None
 }
 
 object BrokerConfig {
@@ -56,7 +56,7 @@ object BrokerConfig {
 
   val ssl : Config => Boolean = cfg => cfg.getBoolean("withSsl", true)
 
-  def create(brokerName : String, idSvc: ContainerIdentifierService, cfg: Config) : Try[BrokerConfig] = Try {
+  def create(brokerName : String, idSvc : ContainerIdentifierService, cfg : Config) : Try[BrokerConfig] = Try {
 
     val resolve : String => Try[Any] = value => idSvc.resolvePropertyString(value)
 

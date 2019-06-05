@@ -52,7 +52,7 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
       mandatoryService[SSLContext](registry)(Some("(type=server)"))
 
       val invalid = sslInfo.getInvalidCypherSuites()
-      log.info(s"Invalid CypherSuites [${invalid.size}] : [\n${invalid.mkString("\n")}\n]")
+      log.info(s"Invalid CypherSuites [${invalid.length}] : [\n${invalid.mkString("\n")}\n]")
 
       invalid should be(empty)
     }

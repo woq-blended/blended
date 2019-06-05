@@ -25,7 +25,7 @@ class RunnableDispatcher(
   idSvc : ContainerIdentifierService,
   pSvc : PersistenceService,
   routerCfg : ResourceTypeRouterConfig
-)(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
+)(implicit system : ActorSystem, materializer : Materializer) extends JmsStreamSupport {
 
   private val startedDispatchers : mutable.Map[String, ActorRef] = mutable.Map.empty
   private var transMgr : Option[ActorRef] = None
@@ -50,8 +50,7 @@ class RunnableDispatcher(
   }
 
   // Simply stick the transaction event into the transaction destination
-  private[builder] def transactionSend()(implicit system : ActorSystem, materializer: Materializer) :
-    Graph[FlowShape[FlowTransactionEvent, FlowEnvelope], NotUsed] = {
+  private[builder] def transactionSend()(implicit system : ActorSystem, materializer : Materializer) : Graph[FlowShape[FlowTransactionEvent, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
@@ -133,7 +132,7 @@ class RunnableDispatcher(
 
       val setShard = Option(System.getProperty("blended.streams.transactionShard")) match {
         case None => source
-        case Some(shard) => source.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
+        case Some(shard) => source.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
           env.withHeader(bs.headerConfig.headerTransShard, shard, overwrite = false).get
         })
       }

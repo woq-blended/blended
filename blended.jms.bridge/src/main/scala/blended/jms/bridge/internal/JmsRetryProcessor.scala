@@ -58,12 +58,13 @@ case class JmsRetryConfig(
   maxRetries : Long = -1,
   retryTimeout : FiniteDuration = 1.day
 ) {
-  override def toString: String = s"${getClass().getSimpleName}[${cf.vendor}:${cf.provider}](retryDestination=$retryDestName," +
+  override def toString : String = s"${getClass().getSimpleName}[${cf.vendor}:${cf.provider}](retryDestination=$retryDestName," +
     s"failedDestination=$failedDestName,retryInterval=$retryInterval,maxRetries=$maxRetries,retryTimeout=$retryTimeout)"
 }
 
 class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
-  implicit system : ActorSystem, materializer : Materializer
+  implicit
+  system : ActorSystem, materializer : Materializer
 ) extends JmsStreamSupport {
 
   private[this] val id : String = retryCfg.headerCfg.prefix + ".retry." + retryCfg.retryDestName
@@ -80,7 +81,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
     val validator : FlowProcessor.IntegrationStep
   ) extends FlowHeaderConfigAware with JmsEnvelopeHeader {
 
-    override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
+    override def sendParameter(session : Session, env : FlowEnvelope) : Try[JmsSendParameter] = Try {
 
       val dest : JmsDestination = env.exception match {
         // If the envelope does not have an exception, we will send it to the original destination for reprocessing
@@ -195,7 +196,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
       // case the envelope is marked with an exception after trying to forward the
       // message
 
-      val transSplit = b.add(FlowProcessor.partition[FlowEnvelope]{ env => env.exception.isEmpty && router.validate(env).isFailure })
+      val transSplit = b.add(FlowProcessor.partition[FlowEnvelope] { env => env.exception.isEmpty && router.validate(env).isFailure })
       val transMerge = b.add(Merge[FlowEnvelope](2))
 
       merge.out ~> transSplit.in
@@ -237,8 +238,8 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
     }
   }
 
-  def stop(): Unit = {
-    actor.synchronized{
+  def stop() : Unit = {
+    actor.synchronized {
       actor.foreach(system.stop)
       actor = None
     }

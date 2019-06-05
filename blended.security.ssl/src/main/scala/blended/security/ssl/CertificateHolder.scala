@@ -64,8 +64,7 @@ object CertificateHolder {
   def create(cert : X509Certificate) : CertificateHolder = CertificateHolder(
     publicKey = cert.getPublicKey(),
     privateKey = None,
-    chain = List(cert),
-    changed = false
+    chain = List(cert)
   )
 
   def create(publicKey : PublicKey, chain : List[Certificate]) : Try[CertificateHolder] =
@@ -105,12 +104,11 @@ object CertificateHolder {
           case None =>
             throw new MissingRootCertificateException
 
-          case Some(root) => {
+          case Some(root) =>
             // The root must have signed itself correctly
             root.verify(root.getPublicKey())
             // We kick off the sort with the root certificate as a starting point
             sort(certs.filter(c => !c.equals(root)))(root :: Nil).get
-          }
         }
       }
     }
@@ -120,7 +118,7 @@ object CertificateHolder {
 
   // A test that yields true if and only if the certificate is not self signed AND was signed by
   // the given principal
-  private def signedBy(issuer : Principal) : (X509Certificate => Boolean) = c =>
+  private def signedBy(issuer : Principal) : X509Certificate => Boolean = c =>
     !c.getIssuerDN().equals(c.getSubjectDN()) && c.getIssuerDN().equals(issuer)
 
   // Helper function to sort the certificates of a given chain so that any certificate in the chain is

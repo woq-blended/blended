@@ -19,18 +19,18 @@ import scala.util.Try
 
 trait JmsStreamSupport {
   /**
-    * Process a sequence of messages with a given flow. If any of the processed
-    * messages cause an exception in the provided flow, the Stream will terminated
-    * with this exception been thrown.
-    *
-    * The resulting stream will expose a killswitch, so that it stays
-    * open and the test code needs to tear it down eventually.
-    */
+   * Process a sequence of messages with a given flow. If any of the processed
+   * messages cause an exception in the provided flow, the Stream will terminated
+   * with this exception been thrown.
+   *
+   * The resulting stream will expose a killswitch, so that it stays
+   * open and the test code needs to tear it down eventually.
+   */
 
   def processMessages(
     processFlow : Flow[FlowEnvelope, FlowEnvelope, _],
     msgs : FlowEnvelope*
-  )(implicit system: ActorSystem) : Try[KillSwitch]  = Try {
+  )(implicit system : ActorSystem) : Try[KillSwitch] = Try {
 
     implicit val materializer : Materializer = ActorMaterializer()
     implicit val eCtxt : ExecutionContext = system.dispatcher
@@ -38,12 +38,12 @@ trait JmsStreamSupport {
     val hasException : AtomicBoolean = new AtomicBoolean(false)
     val sendCount : AtomicInteger = new AtomicInteger(0)
 
-    val (((actor : ActorRef, killswitch : KillSwitch), done: Future[Done]), errEnv: Future[Option[FlowEnvelope]]) =
+    val (((actor : ActorRef, killswitch : KillSwitch), done : Future[Done]), errEnv : Future[Option[FlowEnvelope]]) =
       Source.actorRef[FlowEnvelope](msgs.size, OverflowStrategy.fail)
         .viaMat(processFlow)(Keep.left)
         .viaMat(KillSwitches.single)(Keep.both)
         .watchTermination()(Keep.both)
-        .via(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{env =>
+        .via(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
           if (env.exception.isDefined) {
             env.exception.foreach { t =>
               hasException.set(true)
@@ -76,16 +76,16 @@ trait JmsStreamSupport {
         throw new Exception("Failed to create flow.")
       }
 
-    } while(!hasException.get && sendCount.get < msgs.size)
+    } while (!hasException.get && sendCount.get < msgs.size)
 
     killswitch
   }
 
   def sendMessages(
-    producerSettings: JmsProducerSettings,
+    producerSettings : JmsProducerSettings,
     log : Logger,
     msgs : FlowEnvelope*
-  )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext): Try[KillSwitch] = {
+  )(implicit system : ActorSystem, materializer : Materializer, ectxt : ExecutionContext) : Try[KillSwitch] = {
 
     val producer : Flow[FlowEnvelope, FlowEnvelope, _] = jmsProducer(
       name = producerSettings.jmsDestination.map(_.asString).getOrElse("producer"),
@@ -95,7 +95,7 @@ trait JmsStreamSupport {
 
     processMessages(
       processFlow = producer,
-      msgs = msgs:_*
+      msgs = msgs : _*
     )
   }
 
@@ -107,7 +107,7 @@ trait JmsStreamSupport {
     listener : Integer = 2,
     minMessageDelay : Option[FiniteDuration] = None,
     selector : Option[String] = None
-  )(implicit timeout : FiniteDuration, system: ActorSystem, materializer: Materializer) : Collector[FlowEnvelope] = {
+  )(implicit timeout : FiniteDuration, system : ActorSystem, materializer : Materializer) : Collector[FlowEnvelope] = {
 
     val listenerCount : Int = if (dest.isInstanceOf[JmsQueue]) {
       listener
@@ -137,10 +137,10 @@ trait JmsStreamSupport {
   }
 
   def jmsProducer(
-    name: String,
-    settings: JmsProducerSettings,
-    autoAck: Boolean
-  )(implicit system: ActorSystem, materializer: Materializer): Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+    name : String,
+    settings : JmsProducerSettings,
+    autoAck : Boolean
+  )(implicit system : ActorSystem, materializer : Materializer) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
     val f = Flow.fromGraph(new JmsSinkStage(name, settings)).named(name)
 
@@ -155,7 +155,7 @@ trait JmsStreamSupport {
     name : String,
     settings : JMSConsumerSettings,
     minMessageDelay : Option[FiniteDuration]
-  )(implicit system: ActorSystem): Source[FlowEnvelope, NotUsed] = {
+  )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] = {
 
     if (settings.acknowledgeMode == AcknowledgeMode.ClientAcknowledge) {
       Source.fromGraph(new JmsAckSourceStage(name, settings, minMessageDelay))

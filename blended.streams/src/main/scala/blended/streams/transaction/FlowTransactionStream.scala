@@ -21,10 +21,10 @@ class FlowTransactionStream(
   internalCf : Option[IdAwareConnectionFactory],
   headerCfg : FlowHeaderConfig,
   tMgr : ActorRef,
-  streamLogger: Logger,
+  streamLogger : Logger,
   performSend : FlowEnvelope => Boolean,
   sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
-)(implicit system: ActorSystem) extends JmsStreamSupport {
+)(implicit system : ActorSystem) extends JmsStreamSupport {
 
   private case class TransactionStreamContext(
     envelope : FlowEnvelope,
@@ -65,7 +65,7 @@ class FlowTransactionStream(
 
       // TODO: Refactor to remove Await
       val t : Try[FlowTransaction] = Try {
-        Await.result( (tMgr ? event).mapTo[FlowTransaction], timeout.duration)
+        Await.result((tMgr ? event).mapTo[FlowTransaction], timeout.duration)
       }
 
       TransactionStreamContext(
@@ -145,7 +145,7 @@ class FlowTransactionStream(
     )
   }
 
-  def build(): Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  def build() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
     val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._

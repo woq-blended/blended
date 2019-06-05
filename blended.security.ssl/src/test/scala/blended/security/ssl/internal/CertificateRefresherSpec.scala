@@ -17,13 +17,16 @@ class CertificateRefresherSpec extends FreeSpec with PojoSrTestHelper {
     cal.getTime()
   }
 
+  // scalastyle:off method.name
   implicit class RichDate(date : Date) {
     def <(other : Date) : Boolean = date.before(other)
     def <=(other : Date) : Boolean = !date.after(other)
     def >(other : Date) : Boolean = date.after(other)
     def >=(other : Date) : Boolean = !date.before(other)
   }
+  // scalastyle:on method.name
 
+  // scalastyle:off magic.number
   "Automatic certificate refresher" - {
     "Calculation of the best next schedule time for an refresh attempt" - {
 
@@ -50,7 +53,7 @@ class CertificateRefresherSpec extends FreeSpec with PojoSrTestHelper {
         }
 
         "schedule should be on next day" in {
-          val now = newDate(100, 5, 1, 2, 0)
+          val now = newDate(100, 5, 1, 2)
           val validEnd = newDate(100, 5, 5)
           val date = CertificateRefresher.nextRefreshScheduleTime(validEnd, refresherConfig, Some(now))
           assert(date === newDate(100, 5, 2, 1, 30))
@@ -65,7 +68,7 @@ class CertificateRefresherSpec extends FreeSpec with PojoSrTestHelper {
           assert(date === newDate(100, 5, 1, 1, 30))
         }
         "schedule should be on next day" in {
-          val now = newDate(100, 5, 1, 2, 0)
+          val now = newDate(100, 5, 1, 2)
           val validEnd = newDate(100, 4, 20)
           val date = CertificateRefresher.nextRefreshScheduleTime(validEnd, refresherConfig, Some(now))
           assert(date === newDate(100, 5, 2, 1, 30))
@@ -73,4 +76,5 @@ class CertificateRefresherSpec extends FreeSpec with PojoSrTestHelper {
       }
     }
   }
+  // scalastyle:on magic.number
 }

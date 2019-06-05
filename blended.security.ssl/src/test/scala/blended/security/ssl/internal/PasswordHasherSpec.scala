@@ -32,7 +32,7 @@ class PasswordHasherSpec extends LoggingFreeSpec
           val pwd1 : String = hasher.password(p1)
           val pwd2 : String = hasher.password(p2)
 
-          pwd1 should not equal (pwd2)
+          pwd1 should not equal pwd2
         }
       }
     }
@@ -47,7 +47,7 @@ class PasswordHasherSpec extends LoggingFreeSpec
           forAll { p : String =>
             val pwd1 : String = h1.password(p)
             val pwd2 : String = h2.password(p)
-            pwd1 should not equal (pwd2)
+            pwd1 should not equal pwd2
           }
         }
       }

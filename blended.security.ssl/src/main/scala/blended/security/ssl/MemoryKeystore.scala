@@ -14,7 +14,7 @@ case class MemoryKeystore(certificates : Map[String, CertificateHolder]) {
   private[this] val log : Logger = Logger[MemoryKeystore]
   private[this] val millisPerDay : Long = 1.day.toMillis
 
-  val changedAliases : List[String] = certificates.filter { case (k, v) => v.changed }.keys.toList
+  val changedAliases : List[String] = certificates.filter { case (_, v) => v.changed }.keys.toList
 
   // The in memory keystore is consistent if and only if all certificates have a private key defined
   // or none of it does have a private key defined.
@@ -61,7 +61,7 @@ case class MemoryKeystore(certificates : Map[String, CertificateHolder]) {
         this
       case Some(p) =>
         val newCert = p.refreshCertificate(oldCert, certCfg.cnProvider).get
-        log.info(s"Obtained certificate for alias [${certCfg.alias}] : [${newCert}]")
+        log.info(s"Obtained certificate for alias [${certCfg.alias}] : [$newCert]")
         update(certCfg.alias, newCert).get
     }
   }

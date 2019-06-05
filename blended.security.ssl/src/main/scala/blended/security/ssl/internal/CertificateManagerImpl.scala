@@ -65,7 +65,7 @@ class CertificateManagerImpl(
           registerSslContextProvider()
           log.info("Successfully refreshed trusted certificate store")
 
-        case Success(Some(sks)) =>
+        case Success(Some(_)) =>
           val jks = javaKeystore.get
           //
           //          log.info(s"Successfully obtained [${sks.certificates.size}] Server Certificate(s) for SSLContext")
@@ -123,19 +123,19 @@ class CertificateManagerImpl(
     // first refresh the server certificates if required
     log.debug("Loading keystore...")
     val ks = loadKeyStore().get
-    log.debug(s"Loaded keystore [${ks}]")
+    log.debug(s"Loaded keystore [$ks]")
 
     ks.map { ms =>
-      log.debug(s"Refreshing certificates for keystore [${ms}]")
+      log.debug(s"Refreshing certificates for keystore [$ms]")
       val changedKs = ms.refreshCertificates(cfg.certConfigs, providerMap).get
 
       log.debug(s"Saving keystore...")
       val jks = javaKeystore.get
       jks.saveKeyStore(changedKs) match {
-        case f @ Failure(t) =>
+        case Failure(t) =>
           log.warn(t)(s"Failed to save keystore to file [${jks.keystore.getAbsolutePath()}] : [${t.getMessage()}]")
           throw t
-        case Success(ks) => ks
+        case Success(s) => s
       }
     }
   }

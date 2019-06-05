@@ -22,7 +22,11 @@ class CountingAckSource(
   name : String,
   msgCount : Long,
   numSlots : Int
-)(handleAck : AcknowledgeContext => Unit)(handleDeny : AcknowledgeContext => Unit)(implicit system : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
+)(
+  handleAck : AcknowledgeContext => Unit
+)(
+  handleDeny : AcknowledgeContext => Unit
+)(implicit system : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val out = Outlet[FlowEnvelope](s"CountingAckSource($name.out)")
   override def shape : SourceShape[FlowEnvelope] = SourceShape(out)
@@ -54,7 +58,7 @@ class CountingAckSource(
       if (counter.incrementAndGet() <= msgCount) {
         val msg : FlowMessage = FlowMessage(FlowMessage.props("Counter" -> counter.get()).get)
 
-        Some(new DefaultAcknowledgeContext(
+        Some(DefaultAcknowledgeContext(
           inflightId = id,
           envelope = FlowEnvelope(msg)
             .withRequiresAcknowledge(true)
@@ -96,11 +100,11 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
         Source.fromGraph(ackSource)
           .via(new AckProcessor("AckCounter-ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout) { env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout) { _ => }
 
-      Await.result(collector.result, timeout + 100.millis) should have size (expectedCnt)
+      Await.result(collector.result, timeout + 100.millis) should have size expectedCnt
 
-      // The last batch of numSlots will not necessarily be acknowldged yet
+      // The last batch of numSlots will not necessarily be acknowledged yet
       ack.get() should be(expectedCnt)
       deny.get() should be(0L)
     }
@@ -118,14 +122,14 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
 
       val s : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(ackSource)
-          .via(FlowProcessor.fromFunction("deny", log) { env => Try { throw new Exception("Boom") } })
+          .via(FlowProcessor.fromFunction("deny", log) { _ => Try { throw new Exception("Boom") } })
           .via(new AckProcessor("DenyCounter-ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout) { env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout) { _ => }
 
-      Await.result(collector.result, timeout + 100.millis) should have size (expectedCnt)
+      Await.result(collector.result, timeout + 100.millis) should have size expectedCnt
 
-      // The last batch of numSlots will not necessarily be acknowldged yet
+      // The last batch of numSlots will not necessarily be acknowledged yet
       ack.get() should be(0L)
       deny.get() should be(expectedCnt)
     }
@@ -143,11 +147,11 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
 
       val s : Source[FlowEnvelope, NotUsed] = Source.fromGraph(ackSource)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout) { env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout) { _ => }
 
-      Await.result(collector.result, timeout + 100.millis) should have size (1)
+      Await.result(collector.result, timeout + 100.millis) should have size 1
 
-      // The last batch of numSlots will not necessarily be acknowldged yet
+      // The last batch of numSlots will not necessarily be acknowledged yet
       ack.get() should be(0L)
       deny.get() should be(1)
     }

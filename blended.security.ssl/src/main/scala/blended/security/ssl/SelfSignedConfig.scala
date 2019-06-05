@@ -14,11 +14,13 @@ case class SelfSignedConfig(
 
 object SelfSignedConfig {
 
+  private val defaultKeyStrength : Int = 2048
+
   val sigAlgPath = "signatureAlgorithm"
   val validDaysPath = "validDays"
 
   def fromConfig(cfg : Config, idSvc : ContainerIdentifierService) : SelfSignedConfig = {
-    val keyStrength = cfg.getInt("keyStrength", 2048)
+    val keyStrength = cfg.getInt("keyStrength", defaultKeyStrength)
     val signatureAlgorithm = cfg.getString("signatureAlgorithm", "SHA256withRSA")
     val validDays = cfg.getInt("validDays", 1)
 

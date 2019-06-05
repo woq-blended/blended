@@ -26,7 +26,7 @@ class CertificateHolderSpec extends LoggingFreeSpec
       }
     }
 
-    extendChain(createRootCertificate().get, length - 1)
+    extendChain(createRootCertificate(cn = "root").get, length - 1)
   }
 
   "The certificate holder should" - {
@@ -41,7 +41,7 @@ class CertificateHolderSpec extends LoggingFreeSpec
 
     "Ensure the certificate chain does have a root certificate" in {
 
-      val root : CertificateHolder = createRootCertificate().get
+      val root : CertificateHolder = createRootCertificate(cn = "root").get
       val host : CertificateHolder = createHostCertificate("host", root).get
 
       intercept[MissingRootCertificateException] {
@@ -50,9 +50,9 @@ class CertificateHolderSpec extends LoggingFreeSpec
     }
 
     "Ensure the signature links are correct" in {
-      val root : CertificateHolder = createRootCertificate().get
+      val root : CertificateHolder = createRootCertificate(cn = "root").get
       val host : CertificateHolder = createHostCertificate("host", root).get
-      val fakeRoot : CertificateHolder = createRootCertificate().get
+      val fakeRoot : CertificateHolder = createRootCertificate(cn = "root").get
 
       intercept[SignatureException] {
         CertificateHolder.create(host.publicKey, host.chain.head :: fakeRoot.chain.head :: Nil).get

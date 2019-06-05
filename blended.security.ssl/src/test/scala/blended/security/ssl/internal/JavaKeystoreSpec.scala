@@ -34,7 +34,7 @@ class JavaKeystoreSpec extends LoggingFreeSpec
       val ms : MemoryKeystore = jks.loadKeyStore().get
 
       ms.consistent should be(true)
-      ms.certificates should not be (empty)
+      ms.certificates should not be empty
     }
 
     "Allow to store a new certificate (with private key)" in {
@@ -49,10 +49,10 @@ class JavaKeystoreSpec extends LoggingFreeSpec
       ms1.consistent should be(true)
       ms1.certificates should be(empty)
 
-      val cert : CertificateHolder = createRootCertificate().get.copy(changed = true)
+      val cert : CertificateHolder = createRootCertificate(cn = "root").get.copy(changed = true)
       val ms2 : MemoryKeystore = jks.saveKeyStore(ms1.update("test", cert).get).get
 
-      ms2.certificates should have size (1)
+      ms2.certificates should have size 1
       ms2.consistent should be(true)
       ms2.certificates.forall(_._2.privateKey.isDefined) should be(true)
     }
@@ -69,18 +69,16 @@ class JavaKeystoreSpec extends LoggingFreeSpec
       ms1.consistent should be(true)
       ms1.certificates should be(empty)
 
-      val cert : CertificateHolder = createRootCertificate().get.copy(changed = true)
+      val cert : CertificateHolder = createRootCertificate(cn = "root").get.copy(changed = true)
       jks.saveKeyStore(ms1.update("test", cert).get).get
 
       val ms2 : MemoryKeystore = jks.loadKeyStore().get
 
-      ms2.certificates should have size (1)
+      ms2.certificates should have size 1
       ms2.consistent should be(true)
       ms2.certificates.forall(_._2.privateKey.isEmpty) should be(true)
 
-      val cert2 = ms2.certificates.get("test").get
-
-      assert(cert.publicKey.equals(cert2.publicKey))
+      assert(cert.publicKey.equals(ms2.certificates("test").publicKey))
     }
   }
 }

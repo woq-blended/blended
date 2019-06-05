@@ -12,7 +12,7 @@ trait SslContextInfo {
     getEnabledCypherSuites().filter { s => !getAllowedCypherSuites().contains(s) }
   }
 
-  override def toString : String = s"SSLContextInfo(protocol=$getProtocol()," +
+  override def toString : String = s"SSLContextInfo(protocol=${getProtocol()}," +
     s"enabledProtocols=${getEnabledProtocols().mkString(",")},\n" +
     s"enabledCyphers=${getEnabledCypherSuites().mkString(",\n")}\n" +
     s"invalidCyphers=${getInvalidCypherSuites().mkString(",\n")}\n)"

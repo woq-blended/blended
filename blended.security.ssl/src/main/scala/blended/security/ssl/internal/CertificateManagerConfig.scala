@@ -30,13 +30,6 @@ case class KeystoreConfig(
 
 /**
  * Configuration of [[CertificateManagerImpl]]
- *
- * @param keyStore The used keyStore.
- * @param storePass The password used to open the key store.
- * @param keyPass The key password.
- *   If the days until the end of the certificate validity fall below this threshold,
- *   the [[CertificateManagerImpl]] will try to re-new the certificate.
- * @param skipInitialCheck If `true` no initial certifcate check will be issues.
  */
 case class CertificateManagerConfig(
   clientOnly : Boolean,
