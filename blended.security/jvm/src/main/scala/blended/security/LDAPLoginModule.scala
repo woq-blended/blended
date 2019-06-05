@@ -13,7 +13,6 @@ import javax.security.auth.login.LoginException
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.util.Try
 
 class LDAPLoginModule extends AbstractLoginModule {
 
@@ -30,7 +29,7 @@ class LDAPLoginModule extends AbstractLoginModule {
   }
 
   // obtain the initial LDAP Context
-  private[this] lazy val dirContext : Try[DirContext] = Try {
+  private[this] lazy val dirContext : DirContext = {
 
     try {
       val env : mutable.Map[String, String] = mutable.Map(
@@ -39,8 +38,8 @@ class LDAPLoginModule extends AbstractLoginModule {
         Context.SECURITY_AUTHENTICATION -> "simple"
       )
 
-      env ++= ldapCfg.systemUser.map(u => (Context.SECURITY_PRINCIPAL -> u))
-      env ++= ldapCfg.systemPassword.map(u => (Context.SECURITY_CREDENTIALS -> u))
+      env ++= ldapCfg.systemUser.map(u => Context.SECURITY_PRINCIPAL -> u)
+      env ++= ldapCfg.systemPassword.map(u => Context.SECURITY_CREDENTIALS -> u)
 
       new InitialDirContext(new util.Hashtable[String, Object](env.asJava))
     } catch {
@@ -56,7 +55,7 @@ class LDAPLoginModule extends AbstractLoginModule {
     // First of all we will obtain the directory context
 
     try {
-      dirContext.get
+      dirContext
     } catch {
       case t : Throwable =>
         log.error(t)(t.getMessage())
@@ -69,9 +68,9 @@ class LDAPLoginModule extends AbstractLoginModule {
     true
   }
 
-  override protected def postCommit() : Unit = dirContext.get.close()
-  override protected def postAbort() : Unit = dirContext.get.close()
-  override protected def postLogout() : Unit = dirContext.get.close()
+  override protected def postCommit() : Unit = dirContext.close()
+  override protected def postAbort() : Unit = dirContext.close()
+  override protected def postLogout() : Unit = dirContext.close()
 
   @throws[LoginException]
   private[this] def validateUser() : String = {
@@ -85,21 +84,23 @@ class LDAPLoginModule extends AbstractLoginModule {
       val userSearchFormat = new MessageFormat(ldapCfg.userSearch)
       val filter = userSearchFormat.format(Array(doRFC2254Encoding(user)))
 
-      val r = dirContext.get.search(ldapCfg.userBase, filter, constraint)
+      val r = dirContext.search(ldapCfg.userBase, filter, constraint)
 
       LdapSearchResult(r).result match {
         case Nil => throw new LoginException(s"User [$user] not found in LDAP.")
         case head :: tail =>
-          if (tail.length > 0) {
+          if (tail.nonEmpty) {
             log.warn(s"Search for user [$user] returned [${1 + tail.length}] records, using first record only.")
           }
 
           val name = head.getNameInNamespace()
 
-          dirContext.get.addToEnvironment(Context.SECURITY_PRINCIPAL, name)
-          dirContext.get.addToEnvironment(Context.SECURITY_CREDENTIALS, pwd)
+          dirContext.addToEnvironment(Context.SECURITY_PRINCIPAL, name)
+          dirContext.addToEnvironment(Context.SECURITY_CREDENTIALS, pwd)
 
-          dirContext.get.getAttributes("", null)
+          // scalastyle:off null
+          dirContext.getAttributes("", null)
+          // scalastyle:on null
           log.info(s"User [$user] authenticated with LDAP name [$name]")
           name
       }
@@ -109,12 +110,12 @@ class LDAPLoginModule extends AbstractLoginModule {
         throw new LoginException(t.getMessage())
     } finally {
       ldapCfg.systemUser match {
-        case None    => dirContext.get.removeFromEnvironment(Context.SECURITY_PRINCIPAL)
-        case Some(u) => dirContext.get.addToEnvironment(Context.SECURITY_PRINCIPAL, u)
+        case None    => dirContext.removeFromEnvironment(Context.SECURITY_PRINCIPAL)
+        case Some(u) => dirContext.addToEnvironment(Context.SECURITY_PRINCIPAL, u)
       }
       ldapCfg.systemPassword match {
-        case None    => dirContext.get.removeFromEnvironment(Context.SECURITY_CREDENTIALS)
-        case Some(p) => dirContext.get.addToEnvironment(Context.SECURITY_CREDENTIALS, p)
+        case None    => dirContext.removeFromEnvironment(Context.SECURITY_CREDENTIALS)
+        case Some(p) => dirContext.addToEnvironment(Context.SECURITY_CREDENTIALS, p)
       }
     }
   }
@@ -127,13 +128,14 @@ class LDAPLoginModule extends AbstractLoginModule {
     val groupSearchFormat = new MessageFormat(ldapCfg.groupSearch)
     val filter = groupSearchFormat.format(Array(doRFC2254Encoding(member)))
 
-    val r = dirContext.get.search(ldapCfg.groupBase, filter, constraint)
+    val r = dirContext.search(ldapCfg.groupBase, filter, constraint)
 
     LdapSearchResult(r).result.map { sr =>
       sr.getAttributes().get(ldapCfg.groupAttribute).get().toString()
     }
   }
 
+  // scalastyle:off cyclomatic.complexity
   // convenience method to encode a filter string
   private[this] def doRFC2254Encoding(inputString : String) : String = inputString match {
     case s if s.isEmpty()        => ""
@@ -144,5 +146,5 @@ class LDAPLoginModule extends AbstractLoginModule {
     case s if s.startsWith("\0") => "\\00" + doRFC2254Encoding(s.substring(1))
     case s                       => s.substring(0, 1) + doRFC2254Encoding(s.substring(1))
   }
-
+  // scalastyle:on cyclomatic.complexity
 }

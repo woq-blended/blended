@@ -10,7 +10,7 @@ import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
 import org.scalatest.{FreeSpec, Matchers}
 
-import scala.collection.{immutable, immutable => sci}
+import scala.collection.{immutable => sci}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Try
@@ -37,7 +37,9 @@ class CollectorServiceSpec
 
     "should GET /container return container infos" in {
       Get("/container") ~> infoRoute ~> check {
-        responseAs[Seq[RemoteContainerState]] should be(Seq(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List()), List())))
+        responseAs[Seq[RemoteContainerState]] should be(Seq(
+          RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List()), List())
+        ))
       }
       getCurrentStateLatch.isOpen should be(true)
     }
@@ -82,18 +84,18 @@ class CollectorServiceSpec
 
     // that we want to use
     val service = new CollectorService with DummyBlendedSecurityDirectives with PrickleSupport {
-      override def getOverlayConfigs() : immutable.Seq[OverlayConfig] = List(OverlayConfig("o1", "1", List(), Map()))
+      override def getOverlayConfigs() : sci.Seq[OverlayConfig] = List(OverlayConfig("o1", "1", List(), Map()))
 
       // unused
       override def processContainerInfo(info : ContainerInfo) : ContainerRegistryResponseOK = ???
 
-      override def getCurrentState() : immutable.Seq[RemoteContainerState] = ???
+      override def getCurrentState() : sci.Seq[RemoteContainerState] = ???
 
       override def registerRuntimeConfig(rc : RuntimeConfig) : Unit = ???
 
       override def registerOverlayConfig(oc : OverlayConfig) : Unit = ???
 
-      override def getRuntimeConfigs() : immutable.Seq[RuntimeConfig] = ???
+      override def getRuntimeConfigs() : sci.Seq[RuntimeConfig] = ???
 
       override def addUpdateAction(containerId : String, updateAction : UpdateAction) : Unit = ???
 
