@@ -2,10 +2,14 @@ package blended.mgmt.agent.internal
 
 import akka.actor.Props
 import blended.akka.{OSGIActor, OSGIActorConfig}
+import blended.container.context.api.ContainerIdentifierService
 import blended.updater.config.ContainerInfo
 import blended.util.logging.Logger
 
 import scala.util.{Failure, Try}
+
+import blended.updater.config.ServiceInfo
+import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.
@@ -22,7 +26,8 @@ import scala.util.{Failure, Try}
  * Configuration:
  *
  * This actor reads a configuration class [[MgmtReporterConfig]] from the [[OSGIActorConfig]].
- * Only if all necessary configuration are set (currently `initialUpdateDelayMsec` and `updateIntervalMsec`), the reporter sends information to the management container.
+ * Only if all necessary configuration are set (currently `initialUpdateDelayMsec` and `updateIntervalMsec`),
+ * the reporter sends information to the management container.
  * The target URL of the management container is configured with the `registryUrl` config entry.
  *
  */
@@ -37,15 +42,11 @@ class OsgiMgmtReporter(cfg : OSGIActorConfig) extends OSGIActor(cfg) with MgmtRe
       log.warn(e)("Incomplete management reporter config. Disabled connection to management server.")
       f
     case x =>
-      log.info(s"Management reporter config: ${x}")
+      log.info(s"Management reporter config: $x")
       x
   }
 
-  private[this] val idSvc = cfg.idSvc
-
-  protected def createContainerInfo : ContainerInfo =
-    ContainerInfo(idSvc.uuid, idSvc.properties, serviceInfos.values.toList, profileInfo.profiles, System.currentTimeMillis(), Nil)
-
+  override protected val idSvc: ContainerIdentifierService = cfg.idSvc
 }
 
 object OsgiMgmtReporter {

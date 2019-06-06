@@ -1,19 +1,24 @@
 package blended.mgmt.agent.internal
 
-import akka.actor.{Actor, Cancellable}
+import akka.actor.Actor
 import akka.event.LoggingReceive
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
+import blended.container.context.api.ContainerIdentifierService
 import blended.prickle.akka.http.PrickleSupport
 import blended.updater.config._
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationLong
 import scala.util.Try
+
+import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
+import blended.akka.OSGIActorConfig
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.
@@ -30,7 +35,8 @@ import scala.util.Try
  * Configuration:
  *
  * This actor reads a configuration class [[MgmtReporterConfig]] from the [[OSGIActorConfig]].
- * Only if all necessary configuration are set (currently `initialUpdateDelayMsec` and `updateIntervalMsec`), the reporter sends information to the management container.
+ * Only if all necessary configuration are set (currently `initialUpdateDelayMsec` and `updateIntervalMsec`),
+ * the reporter sends information to the management container.
  * The target URL of the management container is configured with the `registryUrl` config entry.
  *
  */
@@ -42,72 +48,68 @@ trait MgmtReporter extends Actor with PrickleSupport {
   ////////////////////
   // ABSTRACT
   protected val config : Try[MgmtReporterConfig]
-  //
-  protected def createContainerInfo : ContainerInfo
+  protected val idSvc : ContainerIdentifierService
   ////////////////////
 
-  ////////////////////
-  // MUTABLE
-  private[this] var _ticker : Option[Cancellable] = None
-  private[this] var _serviceInfos : Map[String, ServiceInfo] = Map()
-  private[this] var _lastProfileInfo : ProfileInfo = ProfileInfo(0L, Nil)
-  private[this] var _appliedUpdateActionIds : List[String] = List()
-  ////////////////////
+  private case class MgmtReporterState(
+    serviceInfos : Map[String, ServiceInfo],
+    lastProfileInfo : ProfileInfo,
+    appliedUpdateActionIds : List[String]
+  )
 
   private[this] lazy val log = Logger[MgmtReporter]
 
-  implicit private[this] lazy val eCtxt = context.system.dispatcher
-  implicit private[this] lazy val materializer : ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
-
-  protected def serviceInfos : Map[String, ServiceInfo] = _serviceInfos
-
-  protected def profileInfo : ProfileInfo = _lastProfileInfo
-
-  //  protected def appliedUpdateActionIds = _appliedUpdateActionIds
-  //  protected def clearAppliedUpdateActions(ids: List[String]) = _appliedUpdateActionIds = _appliedUpdateActionIds.filter(ids.contains)
+  implicit private lazy val eCtxt : ExecutionContext = context.system.dispatcher
+  implicit private lazy val materializer : ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 
   override def preStart() : Unit = {
     super.preStart()
 
     config foreach { config =>
       if (config.initialUpdateDelayMsec < 0 || config.updateIntervalMsec <= 0) {
-        log.warn("Inapropriate timing configuration detected. Disabling automatic container status reporting")
+        log.warn("Inappropriate timing configuration detected. Disabling automatic container status reporting")
       } else {
         log.info(s"Activating automatic container status reporting with update interval [${config.updateIntervalMsec}]")
-        _ticker = Some(context.system.scheduler.schedule(config.initialUpdateDelayMsec.milliseconds, config.updateIntervalMsec.milliseconds, self, Tick))
+        context.system.scheduler.scheduleOnce(config.initialUpdateDelayMsec.millis, self, Tick)
       }
     }
 
     context.system.eventStream.subscribe(context.self, classOf[ServiceInfo])
     context.system.eventStream.subscribe(context.self, classOf[ProfileInfo])
     context.system.eventStream.subscribe(context.self, classOf[UpdateActionApplied])
+
+    context.become(reporting(MgmtReporterState(
+      serviceInfos = Map.empty,
+      lastProfileInfo = ProfileInfo(0L, Nil),
+      appliedUpdateActionIds = List.empty
+    )))
   }
 
   override def postStop() : Unit = {
     context.system.eventStream.unsubscribe(context.self)
-
-    _ticker.foreach(_.cancel())
-    _ticker = None
-
     super.postStop()
   }
 
-  def receive : Receive = LoggingReceive {
 
+  private def handleTick(state : MgmtReporterState) : Receive = {
     case Tick =>
-      config.foreach { config =>
+      config.foreach { cfg =>
 
-        // we submit the applied update actions to the mgmt server
-        val appliedUpdateActions = _appliedUpdateActionIds
-
-        val info = createContainerInfo.copy(appliedUpdateActionIds = appliedUpdateActions)
-        log.debug(s"Performing report [${info}].")
+        val info = ContainerInfo(
+          containerId = idSvc.uuid,
+          properties = idSvc.properties,
+          serviceInfos = state.serviceInfos.values.toList,
+          profiles = state.lastProfileInfo.profiles,
+          timestampMsec = System.currentTimeMillis(),
+          appliedUpdateActionIds = state.appliedUpdateActionIds
+        )
+        log.debug(s"Performing report [$info].")
 
         val entity = Marshal(info).to[MessageEntity]
 
         val request = entity.map { entity =>
           HttpRequest(
-            uri = config.registryUrl,
+            uri = cfg.registryUrl,
             method = HttpMethods.POST,
             entity = entity
           )
@@ -116,18 +118,44 @@ trait MgmtReporter extends Actor with PrickleSupport {
         // TODO think about ssl
         val responseFuture = request.flatMap { request =>
           Http(context.system).singleRequest(request)
-        }.map(r => r -> appliedUpdateActions)
+        }.map(r => r -> state.appliedUpdateActionIds)
 
         import akka.pattern.pipe
         responseFuture.pipeTo(self)
+
+        context.system.scheduler.scheduleOnce(cfg.updateIntervalMsec.millis, self, Tick)
+      }
+  }
+
+  private def handleEvents(state : MgmtReporterState) : Receive = {
+    // from event stream
+    case serviceInfo @ ServiceInfo(name, _, _, _, _) =>
+      log.debug(s"Update service info for: $name")
+      context.become(reporting(state.copy(state.serviceInfos ++ Map(name -> serviceInfo))))
+
+    // from event stream
+    case pi @ ProfileInfo(timestamp, _) =>
+      if (timestamp > state.lastProfileInfo.timeStamp) {
+        log.debug("Update profile info to: " + pi)
+        context.become(reporting(state.copy(lastProfileInfo = pi)))
+      } else {
+        log.debug(s"Ignoring profile info with timestamp [${timestamp.underlying()}] which is older than "
+          + s"[${state.lastProfileInfo.timeStamp.underlying()}]: $pi")
       }
 
-    case (response @ HttpResponse(status, headers, entity, protocol), appliedUpdateActionIds : List[String]) =>
+    case UpdateActionApplied(id, _) =>
+      context.become(reporting(state.copy(appliedUpdateActionIds = id :: state.appliedUpdateActionIds)))
+  }
+
+  private def handleHttpRequests(state : MgmtReporterState) : Receive = {
+    case (response @ HttpResponse(status, _, entity, _), appliedIds : List[String]) =>
       status match {
         case StatusCodes.OK =>
           // As the server accepted also the list of applied update action IDs
           // we remove those from the list
-          _appliedUpdateActionIds = _appliedUpdateActionIds.filterNot(appliedUpdateActionIds.contains)
+          context.become(reporting(state.copy(
+            appliedUpdateActionIds = state.appliedUpdateActionIds.filterNot(appliedIds.contains)
+          )))
 
           import akka.pattern.pipe
 
@@ -135,37 +163,27 @@ trait MgmtReporter extends Actor with PrickleSupport {
           Unmarshal(entity).to[ContainerRegistryResponseOK].pipeTo(self)
 
         case _ =>
-          log.warn(s"Non-OK response ${config.map(c => c.registryUrl).getOrElse("")} from node: ${response}")
+          log.warn(s"Non-OK response ${config.map(c => c.registryUrl).getOrElse("")} from node: $response")
           response.discardEntityBytes()
       }
 
     case ContainerRegistryResponseOK(id, actions) =>
-      log.debug(s"Reported [${id}] to management node")
-      if (!actions.isEmpty) {
-        log.info(s"Received ${actions.size} update actions from management node: ${actions}")
+      log.debug(s"Reported [$id] to management node")
+      if (actions.nonEmpty) {
+        log.info(s"Received ${actions.size} update actions from management node: $actions")
         actions.foreach { action : UpdateAction =>
-          log.debug(s"Publishing event to event stream: ${action}")
+          log.debug(s"Publishing event to event stream: $action")
           context.system.eventStream.publish(action)
         }
       }
+  }
 
-    // from event stream
-    case serviceInfo @ ServiceInfo(name, svcType, ts, lifetime, props) =>
-      log.debug(s"Update service info for: ${name}")
-      _serviceInfos += name -> serviceInfo
+  def receive : Receive = Actor.emptyBehavior
 
-    // from event stream
-    case pi @ ProfileInfo(timestamp, _) =>
-      if (timestamp > _lastProfileInfo.timeStamp) {
-        log.debug("Update profile info to: " + pi)
-        _lastProfileInfo = pi
-      } else {
-        log.debug(s"Ingnoring profile info with timestamp [${timestamp.underlying()}] which is older than [${_lastProfileInfo.timeStamp.underlying()}]: ${pi}")
-      }
-
-    case UpdateActionApplied(id, _) =>
-      _appliedUpdateActionIds ::= id
-
+  private def reporting(state : MgmtReporterState) : Receive = LoggingReceive {
+    handleTick(state)
+      .orElse(handleHttpRequests(state))
+      .orElse(handleEvents(state))
   }
 }
 
@@ -187,7 +205,8 @@ object MgmtReporter {
     initialUpdateDelayMsec : Long
   ) {
 
-    override def toString() : String = s"${getClass().getSimpleName()}(registryUrl=${registryUrl},updateInetervalMsec=${updateIntervalMsec},initialUpdateDelayMsec=${initialUpdateDelayMsec})"
+    override def toString() : String = s"${getClass().getSimpleName()}(registryUrl=$registryUrl,updateInetervalMsec=" +
+      s"$updateIntervalMsec,initialUpdateDelayMsec=$initialUpdateDelayMsec)"
   }
 
   case object Tick
