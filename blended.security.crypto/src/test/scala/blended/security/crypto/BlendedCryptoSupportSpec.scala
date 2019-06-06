@@ -24,7 +24,7 @@ class BlendedCryptoSupportSpec extends LoggingFreeSpec
 
           log.info(s"Encrypted [$s] to [$encrypted]")
 
-          encrypted should not be (s)
+          encrypted should not be s
           cs.decrypt(encrypted).get should be(s)
         }
       }

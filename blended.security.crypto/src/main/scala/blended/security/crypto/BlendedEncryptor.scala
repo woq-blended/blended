@@ -20,6 +20,7 @@ object BlendedEncryptor {
     } else {
       val cs : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport(cmdLine.secret)
 
+      // scalastyle:off regex
       cmdLine.plain.foreach { p =>
         cs.encrypt(p) match {
           case Failure(t) =>
@@ -28,6 +29,7 @@ object BlendedEncryptor {
             System.out.println(s"Encrypted value for [$p] : [$e]")
         }
       }
+      // scalastyle:on regex
     }
   }
 
@@ -52,6 +54,6 @@ object BlendedEncryptor {
       description = "The plain text to encrypt."
     )
     var _plain : String = _
-    def plain = Option(_plain)
+    def plain : Option[String] = Option(_plain)
   }
 }

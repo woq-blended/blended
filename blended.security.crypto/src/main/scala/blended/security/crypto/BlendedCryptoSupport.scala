@@ -8,26 +8,37 @@ import javax.crypto.spec.SecretKeySpec
 
 import scala.io.Source
 import scala.util.Try
+import scala.util.control.NonFatal
 
 object BlendedCryptoSupport {
+
+  val keyBytes : Int = 16
 
   def initCryptoSupport(fileName : String) : ContainerCryptoSupport = {
 
     val defaultPwd : String = "vczP26-QZ5n%$8YP"
     val f : File = new File(fileName)
 
-    val pwd : String = if (f.exists() && f.isFile() && f.canRead()) {
-      Source.fromFile(f).getLines().toList.headOption.getOrElse(defaultPwd)
-    } else {
-      defaultPwd
+    val src = Source.fromFile(f)
+
+    val pwd : String = try {
+      if (f.exists() && f.isFile() && f.canRead()) {
+        src.getLines().toList.headOption.getOrElse(defaultPwd)
+      } else {
+        defaultPwd
+      }
+    } catch {
+      case NonFatal(t) => defaultPwd
+    } finally {
+      src.close()
     }
 
-    val secretFromFile : Array[Char] = (pwd + "*" + 16).substring(0, 16).toCharArray()
+    val secretFromFile : Array[Char] = (pwd + "*" + keyBytes).substring(0, keyBytes).toCharArray()
 
     val secret : String = {
-      val salt : Array[Char] = ("V*YE6FPXW6#!g^hD" + "*" * 16).substring(0, 16).toCharArray()
-      val mixed : String = secretFromFile.zip(salt).map { case (a, b) => a.toString + b.toString } mkString ("")
-      mixed.substring(0, 16)
+      val salt : Array[Char] = ("V*YE6FPXW6#!g^hD" + "*" * keyBytes).substring(0, keyBytes).toCharArray()
+      val mixed : String = secretFromFile.zip(salt).map { case (a, b) => a.toString + b.toString }.mkString("")
+      mixed.substring(0, keyBytes)
     }
 
     new BlendedCryptoSupport(secret, "AES")
@@ -36,10 +47,10 @@ object BlendedCryptoSupport {
 
 class BlendedCryptoSupport(secret : String, alg : String) extends ContainerCryptoSupport {
 
-  private val KEYBYTES = 16
+  import BlendedCryptoSupport.keyBytes
 
   private val key : Key = {
-    val fixedSecret : String = (secret + (" " * KEYBYTES)).substring(0, KEYBYTES)
+    val fixedSecret : String = (secret + (" " * keyBytes)).substring(0, keyBytes)
     new SecretKeySpec(fixedSecret.getBytes("UTF-8"), alg)
   }
 
