@@ -90,7 +90,6 @@ trait MgmtReporter extends Actor with PrickleSupport {
     super.postStop()
   }
 
-
   private def handleTick(state : MgmtReporterState) : Receive = {
     case Tick =>
       config.foreach { cfg =>

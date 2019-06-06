@@ -46,7 +46,7 @@ class OsgiMgmtReporter(cfg : OSGIActorConfig) extends OSGIActor(cfg) with MgmtRe
       x
   }
 
-  override protected val idSvc: ContainerIdentifierService = cfg.idSvc
+  override protected val idSvc : ContainerIdentifierService = cfg.idSvc
 }
 
 object OsgiMgmtReporter {

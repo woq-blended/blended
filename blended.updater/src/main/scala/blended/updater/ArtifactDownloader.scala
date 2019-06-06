@@ -16,7 +16,7 @@ class ArtifactDownloader(mvnRepositories : List[String])
 
   private[this] val log = Logger[ArtifactDownloader]
 
-  private def fileIssue(file : File, artifact: Artifact) : Option[String] = {
+  private def fileIssue(file : File, artifact : Artifact) : Option[String] = {
     if (!file.exists()) {
       Some(s"File does not exist: $file")
     } else {

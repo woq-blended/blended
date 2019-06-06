@@ -19,7 +19,7 @@ object Artifact extends ((String, Option[String], Option[String]) => Artifact) {
     // scalastyle:off null
     fileName : String = null,
     sha1Sum : String = null
-    // scalastyle:on null
+  // scalastyle:on null
   ) : Artifact = {
     Artifact(
       url = url,

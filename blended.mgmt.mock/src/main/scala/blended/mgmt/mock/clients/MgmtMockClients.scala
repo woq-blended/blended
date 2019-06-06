@@ -22,14 +22,14 @@ class MgmtMockClients(config : Config) {
   private[this] val rnd = new Random()
 
   private[this] val ctCtxt : ContainerContext = new ContainerContext {
-    override def getContainerDirectory(): String = "."
-    override def getContainerConfigDirectory(): String = getContainerDirectory()
-    override def getContainerLogDirectory(): String = getContainerDirectory()
-    override def getProfileDirectory(): String = getContainerDirectory()
-    override def getProfileConfigDirectory(): String = getContainerDirectory()
-    override def getContainerHostname(): String = "localhost"
-    override def getContainerCryptoSupport(): ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("pwd.txt")
-    override def getContainerConfig(): TSConfig = ConfigFactory.empty()
+    override def getContainerDirectory() : String = "."
+    override def getContainerConfigDirectory() : String = getContainerDirectory()
+    override def getContainerLogDirectory() : String = getContainerDirectory()
+    override def getProfileDirectory() : String = getContainerDirectory()
+    override def getProfileConfigDirectory() : String = getContainerDirectory()
+    override def getContainerHostname() : String = "localhost"
+    override def getContainerCryptoSupport() : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("pwd.txt")
+    override def getContainerConfig() : TSConfig = ConfigFactory.empty()
   }
 
   implicit val system : ActorSystem = ActorSystem("MgmtMockClients")
@@ -51,7 +51,7 @@ class MgmtMockClients(config : Config) {
       )
 
       val idSvc : ContainerIdentifierService = new ContainerIdentifierServiceImpl(ctCtxt) {
-        override lazy val uuid: String = ci.containerId
+        override lazy val uuid : String = ci.containerId
       }
 
       system.actorOf(ContainerActor.props(reporterConfig, idSvc), name = "container-" + ci.containerId)

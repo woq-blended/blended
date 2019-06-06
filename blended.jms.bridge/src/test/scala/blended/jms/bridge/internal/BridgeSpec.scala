@@ -11,7 +11,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.jms._
-import blended.streams.message.{FlowEnvelope, FlowMessage, TextFlowMessage}
+import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionStarted, FlowTransactionUpdate}
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
@@ -141,7 +141,25 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
 
       implicit val timeout : FiniteDuration = 1.second
 
-      val msg : TextFlowMessage = TextFlowMessage(null, FlowMessage.noProps)
+      val msg : FlowMessage = TextFlowMessage(null, FlowMessage.noProps)
+      val msgs : Seq[FlowEnvelope] = Seq(FlowEnvelope(msg))
+
+      val switch : KillSwitch = sendMessages("sampleIn", external)(msgs : _*)
+
+      val messages : List[FlowEnvelope] =
+        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
+
+      messages should have size msgs.size
+
+      consumeEvents().get should be(empty)
+
+      switch.shutdown()
+    }
+
+    "process messages with an empty binary body" in {
+      implicit val timeout : FiniteDuration = 1.second
+
+      val msg : FlowMessage = BinaryFlowMessage(Array.empty[Byte], FlowMessage.noProps)
       val msgs : Seq[FlowEnvelope] = Seq(FlowEnvelope(msg))
 
       val switch : KillSwitch = sendMessages("sampleIn", external)(msgs : _*)

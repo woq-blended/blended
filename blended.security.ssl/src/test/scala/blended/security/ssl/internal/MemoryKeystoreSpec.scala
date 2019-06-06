@@ -24,7 +24,7 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
     cnProvider = cnProvider
   )
 
-  private def newHostCertificate(cn : String, issuedBy : CertificateHolder, days: Int) : CertificateHolder =
+  private def newHostCertificate(cn : String, issuedBy : CertificateHolder, days : Int) : CertificateHolder =
     createHostCertificate(cn, issuedBy, days) match {
       case Success(h) => h
       case Failure(t) => fail(t)
@@ -45,7 +45,7 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
       val ms : MemoryKeystore = MemoryKeystore(Map.empty)
       ms.nextCertificateTimeout() match {
         case Success(to) => assert(start <= to.getTime() && System.currentTimeMillis() >= to.getTime())
-        case Failure(t) => fail(t)
+        case Failure(t)  => fail(t)
       }
     }
 
@@ -58,9 +58,8 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
       val ms : MemoryKeystore = MemoryKeystore(Map("root" -> root))
       ms.nextCertificateTimeout() match {
         case Success(to) => assert(start <= to.getTime() && to.getTime() <= end)
-        case Failure(t) => fail(t)
+        case Failure(t)  => fail(t)
       }
-
 
     }
 

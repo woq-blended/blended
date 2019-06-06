@@ -65,9 +65,9 @@ trait ArtifactRepoRoutes {
     path(Segment) { repoId =>
       getRepoFile(repoId, "")
     } ~
-    path(Segment / Remaining) { (repoId, rest) =>
-      getRepoFile(repoId, rest)
-    }
+      path(Segment / Remaining) { (repoId, rest) =>
+        getRepoFile(repoId, rest)
+      }
   }
 
 }
