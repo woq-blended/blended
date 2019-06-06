@@ -33,8 +33,6 @@ object BlendedEncryptor {
     }
   }
 
-  private class NoArgsProvidedException extends Exception("No command line arguments provided.")
-
   private class CmdLine {
 
     @CmdOption(names = Array("--help", "-h"), description = "Show this help", isHelp = true)

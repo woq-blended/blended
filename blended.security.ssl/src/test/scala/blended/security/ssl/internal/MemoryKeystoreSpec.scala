@@ -7,7 +7,8 @@ import blended.testsupport.scalatest.LoggingFreeSpec
 import javax.security.auth.x500.X500Principal
 import org.scalatest.Matchers
 
-import scala.util.Failure
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 class MemoryKeystoreSpec extends LoggingFreeSpec
   with Matchers
@@ -24,6 +25,18 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
     cnProvider = cnProvider
   )
 
+  private def newHostCertificate(cn : String, issuedBy : CertificateHolder, days: Int) : CertificateHolder = try {
+    createHostCertificate(cn, issuedBy, days).get
+  } catch {
+    case NonFatal(t) => fail(t)
+  }
+
+  private def newRootCertificate(cn : String, days : Int = validDays) : CertificateHolder = try {
+    createRootCertificate(cn, days).get
+  } catch {
+    case NonFatal(t) => fail(t)
+  }
+
   "The Memory key store" - {
 
     "calculate the next certificate timeout correctly from an empty store" in {
@@ -31,9 +44,10 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
       val start : Long = System.currentTimeMillis()
 
       val ms : MemoryKeystore = MemoryKeystore(Map.empty)
-      val timeout : Long = ms.nextCertificateTimeout().get.getTime()
-
-      assert(start <= timeout && timeout <= System.currentTimeMillis())
+      ms.nextCertificateTimeout() match {
+        case Success(to) => assert(start <= to.getTime() && System.currentTimeMillis() >= to.getTime())
+        case Failure(t) => fail(t)
+      }
     }
 
     "calculate the next certificate timeout correctly from an non-empty store" in {
@@ -41,20 +55,22 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
       val start : Long = System.currentTimeMillis() + (validDays - 1) * millisPerDay
       val end : Long = start + 2 * millisPerDay
 
-      val root : CertificateHolder = createRootCertificate("root").get
+      val root : CertificateHolder = newRootCertificate("root")
       val ms : MemoryKeystore = MemoryKeystore(Map("root" -> root))
-      val timeout : Long = ms.nextCertificateTimeout().get.getTime()
+      ms.nextCertificateTimeout() match {
+        case Success(to) => assert(start <= to.getTime() && to.getTime() <= end)
+        case Failure(t) => fail(t)
+      }
 
-      assert(start <= timeout && timeout <= end)
+
     }
 
     "not allow inconsistent updates" in {
 
-      val root : CertificateHolder = createRootCertificate("root").get
+      val root : CertificateHolder = newRootCertificate("root")
       val ms : MemoryKeystore = MemoryKeystore(Map("root" -> root))
 
-      val host : CertificateHolder = createHostCertificate("host", root, validDays).get
-        .copy(privateKey = None)
+      val host : CertificateHolder = newHostCertificate("host", root, validDays).copy(privateKey = None)
 
       intercept[InconsistentKeystoreException] {
         ms.update("host", host).get
@@ -86,7 +102,7 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
     "should not update the certificates if the required provider can't be found (non-empty store)" in {
 
       // Create a root certificate with a validity less than validDays to trigger a refresh
-      val root : CertificateHolder = createRootCertificate(cn = "root", validDays = validDays / 2).get
+      val root : CertificateHolder = newRootCertificate(cn = "root", days = validDays / 2)
 
       val ms : MemoryKeystore = MemoryKeystore(Map(certCfg.alias -> root))
       val newMs = ms.refreshCertificates(List(certCfg), Map.empty).get
@@ -101,8 +117,8 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
 
       val provider : CertificateProvider = new SelfSignedCertificateProvider(selfSignedCfg(cnProvider))
 
-      val timingOut : CertificateHolder = createRootCertificate("timingOut", validDays = validDays / 2).get
-      val stillValid : CertificateHolder = createRootCertificate("stillValid", validDays = validDays * 2).get
+      val timingOut : CertificateHolder = newRootCertificate("timingOut", days = validDays / 2)
+      val stillValid : CertificateHolder = newRootCertificate("stillValid", days = validDays * 2)
 
       val ms : MemoryKeystore = MemoryKeystore(Map("timingOut" -> timingOut, "stillValid" -> stillValid))
 
@@ -125,8 +141,8 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
       val provider : CertificateProvider = (_ : Option[CertificateHolder], _ : CommonNameProvider) =>
         Failure(new Exception("Boom"))
 
-      val timingOut : CertificateHolder = createRootCertificate("timingOut", validDays = validDays / 2).get
-      val stillValid : CertificateHolder = createRootCertificate("stillValid", validDays = validDays * 2).get
+      val timingOut : CertificateHolder = newRootCertificate("timingOut", days = validDays / 2)
+      val stillValid : CertificateHolder = newRootCertificate("stillValid", days = validDays * 2)
 
       val ms : MemoryKeystore = MemoryKeystore(Map("timingOut" -> timingOut, "stillValid" -> stillValid))
 
@@ -146,8 +162,8 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
 
     "should allow to look up a certificate by the subjectPrincipal" in {
 
-      val c1 : CertificateHolder = createRootCertificate("cert1", validDays = validDays).get
-      val c2 : CertificateHolder = createRootCertificate("cert2", validDays = validDays).get
+      val c1 : CertificateHolder = newRootCertificate("cert1", days = validDays)
+      val c2 : CertificateHolder = newRootCertificate("cert2", days = validDays)
 
       val ms : MemoryKeystore = MemoryKeystore(Map("cert1" -> c1, "cert2" -> c2))
 

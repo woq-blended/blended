@@ -1,13 +1,16 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedMgmtWs extends ProjectFactory {
+  //scalastyle:off object.name
   object config extends ProjectSettings {
+    //scalastyle:on object.name
     override val projectName = "blended.mgmt.ws"
     override val description = "Web sockets interface for Mgmt clients."
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.akkaHttp,
       Dependencies.akkaHttpCore,
 
@@ -20,8 +23,8 @@ object BlendedMgmtWs extends ProjectFactory {
       Dependencies.jclOverSlf4j % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.MgmtWSActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.MgmtWSActivator",
       exportPackage = Seq()
     )
 
