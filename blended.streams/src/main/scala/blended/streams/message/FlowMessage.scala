@@ -85,6 +85,8 @@ import blended.streams.message.FlowMessage.FlowMessageProps
 sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
 
   def body() : Any
+  def clearBody() : FlowMessage = this
+
   def header : FlowMessageProps = msgHeader
 
   def bodySize() : Int
@@ -173,7 +175,7 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
 
   def withHeader(key : String, value: Any, overwrite: Boolean = true) : Try[FlowMessage]
 
-  protected def doRemoveHeader(keys : String*) : FlowMessageProps = header.filter(k => !keys.contains(k))
+  protected def doRemoveHeader(keys : String*) : FlowMessageProps = header.filterKeys(k => !keys.contains(k))
 
   protected def newHeader(key : String, value: Any, overwrite: Boolean) : Try[FlowMessageProps] = Try {
     if (overwrite) {
@@ -221,13 +223,17 @@ case class BinaryFlowMessage(content : ByteString, override val header: FlowMess
   }
 
   override def removeHeader(keys: String*): FlowMessage = copy(header = doRemoveHeader(keys:_*))
+
+  override def clearBody(): FlowMessage = BinaryFlowMessage(Array.empty[Byte], header)
 }
 
 case class TextFlowMessage(content : String, override val header: FlowMessageProps) extends FlowMessage(header) {
 
-  private val textContent : Option [String] = Option(content)
+  private val textContent : Option[String] = Option(content)
 
-  override def body(): Any = textContent.getOrElse(null)
+  // scalastyle:off null
+  override def body(): Any = textContent.orNull
+  // scalastyle:on null
 
   def getText(): String = textContent.getOrElse("")
 
@@ -238,4 +244,8 @@ case class TextFlowMessage(content : String, override val header: FlowMessagePro
   }
 
   override def removeHeader(keys: String*): FlowMessage = copy(header = doRemoveHeader(keys:_*))
+
+  // scalastyle:off null
+  override def clearBody(): FlowMessage = TextFlowMessage("", header)
+  // scalastyle:on null
 }

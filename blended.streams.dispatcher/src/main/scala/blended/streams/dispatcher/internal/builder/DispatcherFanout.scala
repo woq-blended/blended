@@ -91,7 +91,7 @@ case class DispatcherFanout(
         }
 
         newEnv = if (oh.clearBody) {
-          newEnv.copy(flowMessage = BaseFlowMessage(newEnv.flowMessage.header))
+          newEnv.copy(flowMessage = newEnv.flowMessage.clearBody())
         } else {
           newEnv
         }
