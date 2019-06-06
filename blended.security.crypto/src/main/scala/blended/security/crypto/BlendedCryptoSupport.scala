@@ -6,7 +6,7 @@ import java.security.Key
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 
-import scala.io.Source
+import scala.io.{BufferedSource, Source}
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -19,18 +19,21 @@ object BlendedCryptoSupport {
     val defaultPwd : String = "vczP26-QZ5n%$8YP"
     val f : File = new File(fileName)
 
-    val src = Source.fromFile(f)
+    var src : Option[BufferedSource] = None
 
     val pwd : String = try {
       if (f.exists() && f.isFile() && f.canRead()) {
-        src.getLines().toList.headOption.getOrElse(defaultPwd)
+        src = Some(Source.fromFile(f))
+        src.map { s =>
+          s.getLines().toList.headOption.getOrElse(defaultPwd)
+        }.getOrElse(defaultPwd)
       } else {
         defaultPwd
       }
     } catch {
       case NonFatal(t) => defaultPwd
     } finally {
-      src.close()
+      src.foreach(_.close())
     }
 
     val secretFromFile : Array[Char] = (pwd + "*" + keyBytes).substring(0, keyBytes).toCharArray()
