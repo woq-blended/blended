@@ -16,53 +16,65 @@ class ArtifactDownloader(mvnRepositories : List[String])
 
   private[this] val log = Logger[ArtifactDownloader]
 
-  def receive : Actor.Receive = LoggingReceive {
-
-    case Download(reqId, artifact, file) =>
-
-      val url = artifact.url
-      val urls : Try[List[String]] =
-        if (url.startsWith(RuntimeConfig.MvnPrefix)) {
-          log.debug(s"detected Maven url: ${url}")
-          val gav = MvnGav.parse(artifact.url.substring(RuntimeConfig.MvnPrefix.length()))
-          gav.map(gav => mvnRepositories.map(repo => gav.toUrl(repo)))
-        } else Success(List(url))
-
-      def fileIssue() : Option[String] = {
-        if (!file.exists()) Some(s"File does not exist: ${file}")
-        else artifact.sha1Sum match {
-          case None => None
-          case Some(sha1) => RuntimeConfigCompanion.digestFile(file) match {
-            case Some(`sha1`)   => None
-            case Some(fileSha1) => Some(s"File checksum ${fileSha1} does not match ${sha1}")
-            case None           => Some(s"Chould not verify checksum of file ${file}")
-          }
+  private def fileIssue(file : File, artifact: Artifact) : Option[String] = {
+    if (!file.exists()) {
+      Some(s"File does not exist: $file")
+    } else {
+      artifact.sha1Sum match {
+        case None => None
+        case Some(sha1) => RuntimeConfigCompanion.digestFile(file) match {
+          case Some(`sha1`)   => None
+          case Some(fileSha1) => Some(s"File checksum $fileSha1 does not match $sha1")
+          case None           => Some(s"Could not verify checksum of file $file")
         }
       }
+    }
+  }
 
-      fileIssue() match {
+  private def artifactUrls(artifact : Artifact) : Try[List[String]] = {
+    val url = artifact.url
+
+    if (url.startsWith(RuntimeConfig.MvnPrefix)) {
+      log.debug(s"detected Maven url: [$url]")
+      val gav = MvnGav.parse(artifact.url.substring(RuntimeConfig.MvnPrefix.length()))
+      gav.map(gav => mvnRepositories.map(repo => gav.toUrl(repo)))
+    } else {
+      Success(List(url))
+    }
+  }
+
+  private def downloadArtifact(d : Download) : Reply =
+    artifactUrls(d.artifact) match {
+      case Success(Nil) =>
+        log.error("No urls or no Maven repositories defined")
+        DownloadFailed(d.requestId, s"Could not download file [${d.file}]. Error: No Maven repositories defined.")
+
+      case Success(url :: _) =>
+        RuntimeConfigCompanion.download(url, d.file) match {
+          case Success(f) =>
+            fileIssue(f, d.artifact) match {
+              case None        => DownloadFinished(d.requestId)
+              case Some(issue) => DownloadFailed(d.requestId, issue)
+            }
+          case Failure(e) =>
+            log.error(e)(s"Could not download file [${d.file}] from [$url]")
+            DownloadFailed(d.requestId, s"Could not download file [${d.file}] from [$url]. Error: ${e.getMessage()}")
+        }
+      case Failure(e) =>
+        log.error(e)(s"Could not download file [${d.file}]")
+        DownloadFailed(d.requestId, s"Could not download file [${d.file}]. Error: ${e.getMessage()}")
+    }
+
+  def receive : Actor.Receive = LoggingReceive {
+
+    case d @ Download(reqId, artifact, file) =>
+
+      fileIssue(file, artifact) match {
         case None =>
           sender() ! DownloadFinished(reqId)
+
         case Some(_) =>
-          urls match {
-            case Success(Nil) =>
-              log.error("No urls or no Maven repositories defined")
-              sender() ! DownloadFailed(reqId, s"Could not download file ${file}. Error: No Maven repositories defined.")
-            case Success(url :: _) =>
-              RuntimeConfigCompanion.download(url, file) match {
-                case Success(f) =>
-                  fileIssue() match {
-                    case None        => sender() ! DownloadFinished(reqId)
-                    case Some(issue) => sender() ! DownloadFailed(reqId, issue)
-                  }
-                case Failure(e) =>
-                  log.error(e)(s"Could not download file ${file} from ${url}")
-                  sender() ! DownloadFailed(reqId, s"Could not download file ${file} from ${url}. Error: ${e.getMessage()}")
-              }
-            case Failure(e) =>
-              log.error(e)(s"Could not download file ${file}")
-              sender() ! DownloadFailed(reqId, s"Could not download file ${file}. Error: ${e.getMessage()}")
-          }
+          sender ! downloadArtifact(d)
       }
   }
 }

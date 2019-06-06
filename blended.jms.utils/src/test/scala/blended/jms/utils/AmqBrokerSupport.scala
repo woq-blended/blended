@@ -1,5 +1,6 @@
 package blended.jms.utils
 
+import javax.jms.ConnectionFactory
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
@@ -7,7 +8,7 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 trait AmqBrokerSupport {
 
   lazy val brokerName : String = "blended"
-  def amqCf() = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false")
+  def amqCf() : ConnectionFactory = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false")
 
   def startBroker() : Option[BrokerService] = {
 
