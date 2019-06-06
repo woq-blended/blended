@@ -50,7 +50,7 @@ object RuntimeConfigBuilder {
     var featureRepos : Seq[String] = Seq()
 
     @CmdOption(names = Array("-m", "--maven-url"), args = Array("url"), maxCount = -1)
-    def addMavenUrl(mavenUrl : String) = this.mavenUrls ++= Seq(mavenUrl)
+    def addMavenUrl(mavenUrl : String) : Unit = this.mavenUrls ++= Seq(mavenUrl)
 
     var mavenUrls : Seq[String] = Seq()
 
@@ -59,7 +59,7 @@ object RuntimeConfigBuilder {
 
     @CmdOption(names = Array("--maven-artifact"), args = Array("GAV", "file"), maxCount = -1,
       description = "Gives explicit (already downloaded) file locations for Maven GAVs")
-    def addMavenDir(gav : String, file : String) = this.mavenArtifacts ++= Seq(gav -> file)
+    def addMavenDir(gav : String, file : String) : Unit = this.mavenArtifacts ++= Seq(gav -> file)
     var mavenArtifacts : Seq[(String, String)] = Seq()
 
     @CmdOption(names = Array("--explode-resources"), description = "Explode resources (unpack and update touch-files)")
@@ -67,7 +67,7 @@ object RuntimeConfigBuilder {
 
     @CmdOption(names = Array("--add-overlay-file"), args = Array("file"), maxCount = -1,
       description = "Add the given overlay config file to the final profile")
-    def addOverlayFile(file : String) = this.overlayFiles :+= file
+    def addOverlayFile(file : String): Unit = this.overlayFiles :+= file
     var overlayFiles : Seq[String] = Seq()
 
     @CmdOption(names = Array("--write-overlays-config"), description = "Write a specific overlays config (or base if no overlays were given)")
@@ -83,7 +83,7 @@ object RuntimeConfigBuilder {
 
     @CmdOption(names = Array("--env-var"), args = Array("key", "value"), maxCount = -1,
       description = "Add an additional environment variable as a fallback for resolving the config.")
-    def addEnvVar(key : String, value : String) = this.envVars ++= Seq(key -> value)
+    def addEnvVar(key : String, value : String) : Unit = this.envVars ++= Seq(key -> value)
     var envVars : Seq[(String, String)] = Seq()
   }
 
@@ -93,17 +93,31 @@ object RuntimeConfigBuilder {
       sys.exit(0)
     } catch {
       case e : Throwable =>
+        // scalastyle:off regex
         Console.err.println(s"An error occurred: ${e.getMessage()}")
+        // scalastyle:on regex
         sys.exit(1)
     }
   }
 
   /**
    * Same as [[RuntimeConfigBuilder#main]], but does not call `sys.exit` but throws an exception in case of non-success.
-   * @param args
    */
   def run(args : Array[String]) : Unit = {
     run(args = args, debugLog = None)
+  }
+
+  //    val debug = options.debug
+  val debug : CmdOptions => Option[String => Unit] => String => Unit = options => {
+    case Some(dl) => dl
+    case None =>
+      if (options.debug) {
+        // scalastyle:off regex
+        msg => Console.err.println(msg)
+        // scalastyle:on regex
+      } else {
+        _ => {}
+      }
   }
 
   def run(
@@ -113,7 +127,7 @@ object RuntimeConfigBuilder {
     errorLog : String => Unit = Console.err.println
   ) : Unit = {
 
-    val options = new CmdOptions()
+    val options : CmdOptions = new CmdOptions()
 
     val cp = new CmdlineParser(options)
     cp.parse(args : _*)
@@ -122,9 +136,8 @@ object RuntimeConfigBuilder {
       return
     }
 
-    //    val debug = options.debug
     val debug : String => Unit = debugLog match {
-      case Some(debugLog) => debugLog
+      case Some(dl) => dl
       case None =>
         if (options.debug) msg => Console.err.println(msg)
         else msg => {}
@@ -132,9 +145,11 @@ object RuntimeConfigBuilder {
 
     debug(s"RuntimeConfigBuilder: ${args.mkString(" ")}")
 
-    if (options.configFile.isEmpty()) sys.error("No config file given")
+    if (options.configFile.isEmpty()) {
+      sys.error("No config file given")
+    }
 
-    val mvnGavs = options.mavenArtifacts.map {
+    val mvnGavs : Seq[(MvnGav, String)] = options.mavenArtifacts.map {
       case (gav, file) => MvnGav.parse(gav) -> file
     }.collect {
       case (Success(gav), file) => gav -> file
@@ -173,7 +188,7 @@ object RuntimeConfigBuilder {
         includeResourceArchives = true,
         explodedResourceArchives = false
       )
-      if (!issues.isEmpty) {
+      if (issues.nonEmpty) {
         sys.error(issues.mkString("\n"))
       }
     }
@@ -196,13 +211,13 @@ object RuntimeConfigBuilder {
       val states = files.par.map {
         case (file, urls) =>
           if (!file.exists()) {
-            infoLog(s"Fetching: ${file}")
+            infoLog(s"Fetching: [$file]")
             urls.find { url =>
-              debug(s"Downloading ${file.getName()} from $url")
+              debug(s"Downloading [${file.getName()}] from [$url]")
               RuntimeConfigCompanion.download(url, file).isSuccess
             }.map { url => file -> Try(file)
             }.getOrElse {
-              val msg = s"Could not download ${file.getName()} from: $urls"
+              val msg = s"Could not download [${file.getName()}] from: $urls"
               errorLog(msg)
               sys.error(msg)
             }
@@ -214,7 +229,7 @@ object RuntimeConfigBuilder {
           errorLog(s"Could not download: $file (${e.getClass.getSimpleName()}: ${e.getMessage()})")
           e
       }
-      if (!issues.isEmpty) {
+      if (issues.nonEmpty) {
         sys.error(issues.mkString("\n"))
       }
     }
@@ -248,7 +263,9 @@ object RuntimeConfigBuilder {
           resources = resolved.runtimeConfig.resources.map(checkAndUpdateResource)
         )
       ).runtimeConfig
-    } else resolved.runtimeConfig
+    } else {
+      resolved.runtimeConfig
+    }
 
     if (options.explodeResources) {
       newRuntimeConfig.resources.map { r =>
@@ -256,7 +273,7 @@ object RuntimeConfigBuilder {
         if (!resourceFile.exists()) sys.error("Could not unpack missing resource file: " + resourceFile)
         val blacklist = List("profile.conf", "bundles", "resources", "overlays")
         Unzipper.unzip(resourceFile, localRuntimeConfig.baseDir, Nil,
-          fileSelector = Some { fileName : String => !blacklist.exists(fileName == _) },
+          fileSelector = Some { fileName : String => !blacklist.contains(fileName) },
           placeholderReplacer = None) match {
             case Failure(e) => throw new RuntimeException("Could not update resource file: " + resourceFile, e)
             case _          =>
