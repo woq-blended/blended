@@ -14,41 +14,41 @@ trait ArtifactRepoRoutes {
 
   protected def artifactRepos : List[ArtifactRepo]
 
-  def getRepoFile(repo : String, path : String) = {
+  def getRepoFile(repo : String, path : String) : Route = {
     artifactRepos.find(a => a.repoId == repo) match {
       case None =>
-        log.debug(s"No repository with id: ${repo}")
+        log.debug(s"No repository with id: [$repo]")
         complete {
-          StatusCodes.NotFound -> s"No repository with id: ${repo}"
+          StatusCodes.NotFound -> s"No repository with id: [$repo]"
         }
-      case Some(repo) =>
+      case Some(repository) =>
         log.debug("Request for path: " + path)
-        repo.findFile(path) match {
+        repository.findFile(path) match {
           case Some(file) =>
-            log.debug(s"Found file at path: ${path}")
+            log.debug(s"Found file at path: [$path]")
             getFromFile(file)
           case None =>
-            log.debug(s"Could not find file at path: ${path}")
-            repo.listFiles(path) match {
+            log.debug(s"Could not find file at path: [$path]")
+            repository.listFiles(path) match {
               case Iterator.empty => complete(StatusCodes.NotFound)
               case files =>
                 //                respondWithMediaType(MediaTypes.`text/html`) &
                 complete {
-                  val indexBase = repo.repoId + "/" + path
+                  val indexBase = repository.repoId + "/" + path
 
                   val goUp = if (path.isEmpty()) "" else """<br/><a href="..">..</a>"""
 
                   val renderedFiles = files.map { f =>
-                    s"""<br/><a href="${f}">${f}</a>"""
+                    s"""<br/><a href="$f">$f</a>"""
                   }.mkString
 
                   val html = s"""|<html>
-                    |<head><title>Index of ${indexBase}</title></head>
+                    |<head><title>Index of $indexBase</title></head>
                     |<body>
-                    |<h1>Index of ${indexBase}</h1>
+                    |<h1>Index of $indexBase</h1>
                     |<hr>
-                    |${goUp}
-                    |${renderedFiles}
+                    |$goUp
+                    |$renderedFiles
                     |<hr>
                     |</body>
                     |</html>
@@ -62,12 +62,12 @@ trait ArtifactRepoRoutes {
   }
 
   val httpRoute : Route = get {
-    path(Segment) { (repoId) =>
+    path(Segment) { repoId =>
       getRepoFile(repoId, "")
     } ~
-      path(Segment / Remaining) { (repoId, rest) =>
-        getRepoFile(repoId, rest)
-      }
+    path(Segment / Remaining) { (repoId, rest) =>
+      getRepoFile(repoId, rest)
+    }
   }
 
 }
