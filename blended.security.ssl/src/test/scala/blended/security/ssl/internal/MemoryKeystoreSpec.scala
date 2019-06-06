@@ -7,7 +7,6 @@ import blended.testsupport.scalatest.LoggingFreeSpec
 import javax.security.auth.x500.X500Principal
 import org.scalatest.Matchers
 
-import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 class MemoryKeystoreSpec extends LoggingFreeSpec
@@ -25,17 +24,17 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
     cnProvider = cnProvider
   )
 
-  private def newHostCertificate(cn : String, issuedBy : CertificateHolder, days: Int) : CertificateHolder = try {
-    createHostCertificate(cn, issuedBy, days).get
-  } catch {
-    case NonFatal(t) => fail(t)
-  }
+  private def newHostCertificate(cn : String, issuedBy : CertificateHolder, days: Int) : CertificateHolder =
+    createHostCertificate(cn, issuedBy, days) match {
+      case Success(h) => h
+      case Failure(t) => fail(t)
+    }
 
-  private def newRootCertificate(cn : String, days : Int = validDays) : CertificateHolder = try {
-    createRootCertificate(cn, days).get
-  } catch {
-    case NonFatal(t) => fail(t)
-  }
+  private def newRootCertificate(cn : String, days : Int = validDays) : CertificateHolder =
+    createRootCertificate(cn, days) match {
+      case Success(h) => h
+      case Failure(t) => fail(t)
+    }
 
   "The Memory key store" - {
 
