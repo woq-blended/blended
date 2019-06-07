@@ -37,7 +37,7 @@ case class JmsSampler(cfg : OSGIActorConfig, cf : ConnectionFactory) extends Jms
   override def startSampling() : Unit = if (!isSampling()) {
 
     if (destinationName.length() > 0) {
-      log.info(s"Starting topic sampler for destination [${destinationName}]")
+      log.info(s"Starting topic sampler for destination [$destinationName]")
       worker = Some(cfg.system.actorOf(JMSSampleControlActor.props(cfg, cf, this)))
     }
   }

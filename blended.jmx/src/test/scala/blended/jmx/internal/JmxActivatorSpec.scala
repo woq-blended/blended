@@ -15,7 +15,7 @@ class JmxActivatorSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper {
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
-    ("blended.jmx" -> new BlendedJmxActivator())
+    "blended.jmx" -> new BlendedJmxActivator()
   )
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()

@@ -31,7 +31,13 @@ class DummyConnection extends Connection {
 
   override def createConnectionConsumer(destination : Destination, s : String, serverSessionPool : ServerSessionPool, i : Int) : ConnectionConsumer = ???
 
-  override def createDurableConnectionConsumer(topic : Topic, s : String, s1 : String, serverSessionPool : ServerSessionPool, i : Int) : ConnectionConsumer = ???
+  override def createDurableConnectionConsumer(
+    topic : Topic,
+    s : String,
+    s1 : String,
+    serverSessionPool : ServerSessionPool,
+    i : Int
+  ) : ConnectionConsumer = ???
 }
 
 class DummyHolder(f : () => Connection)(implicit system : ActorSystem)

@@ -95,7 +95,9 @@ class JMSSampleActor(dir : File, cfg : OSGIActorConfig, cf : ConnectionFactory, 
       case WriteMsg =>
         msg match {
           case bMsg : BytesMessage =>
+            //scalastyle:off magic.number
             val bytes = new Array[Byte](8192)
+            //scalastyle:on magic.number
             val bos = new ByteArrayOutputStream()
 
             var bCnt = 0

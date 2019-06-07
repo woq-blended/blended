@@ -8,7 +8,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 object ServiceJmxCollector {
-  def props(cfg : OSGIActorConfig, svcConfig : ServiceJmxConfig, server : MBeanServer) =
+  def props(cfg : OSGIActorConfig, svcConfig : ServiceJmxConfig, server : MBeanServer) : Props =
     Props(new ServiceJmxCollector(cfg, svcConfig, server))
 }
 

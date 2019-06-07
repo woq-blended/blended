@@ -3,37 +3,48 @@ package blended.mgmt.service.jmx.internal
 import com.typesafe.config.{Config, ConfigObject}
 
 import scala.collection.JavaConverters._
+import blended.util.config.Implicits._
 
 object ServiceJmxConfig {
 
-  val intervalPath = "interval"
-  val templatesPath = "templates"
-  val servicesPath = "services"
+  private val intervalPath = "interval"
+  private val templatesPath = "templates"
+  private val servicesPath = "services"
+
+  private val defaultInterval : Int = 5
 
   private def readTemplates(cfg : ConfigObject) : Map[String, ServiceTypeTemplate] = {
     cfg.unwrapped().asScala.map {
-      case (key, value) =>
+      case (key, _) =>
         (key, ServiceTypeTemplate(key, cfg.toConfig().getObject(key).toConfig()))
     }.toMap
   }
 
   private def readServices(cfg : ConfigObject) : Map[String, SingleServiceConfig] = {
     cfg.unwrapped().asScala.map {
-      case (key, value) =>
+      case (key, _) =>
         (key, SingleServiceConfig(key, cfg.toConfig().getObject(key).toConfig()))
     }.toMap
   }
 
   def getStringMap(cfg : ConfigObject) : Map[String, String] =
-    cfg.unwrapped().asScala.map { case (key, value) => (key, cfg.toConfig().getString(key)) }.toMap
+    cfg.unwrapped().asScala.map { case (key, _) => (key, cfg.toConfig().getString(key)) }.toMap
 
   def apply(cfg : Config) : ServiceJmxConfig = new ServiceJmxConfig(
 
-    interval = if (cfg.hasPath(intervalPath)) cfg.getInt(intervalPath) else 5,
+    interval = cfg.getInt(intervalPath, defaultInterval),
 
-    templates = if (cfg.hasPath(templatesPath)) readTemplates(cfg.getObject(templatesPath)) else Map.empty,
+    templates = if (cfg.hasPath(templatesPath)) {
+      readTemplates(cfg.getObject(templatesPath))
+    } else {
+      Map.empty
+    },
 
-    services = if (cfg.hasPath(servicesPath)) readServices(cfg.getObject(servicesPath)) else Map.empty
+    services = if (cfg.hasPath(servicesPath)) {
+      readServices(cfg.getObject(servicesPath))
+    } else {
+      Map.empty
+    }
   )
 }
 

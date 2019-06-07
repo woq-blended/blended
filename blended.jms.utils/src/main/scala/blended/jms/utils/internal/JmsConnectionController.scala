@@ -6,22 +6,23 @@ import akka.pattern.ask
 import akka.util.Timeout
 import javax.jms.Connection
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 object JmsConnectionController {
-  def props(holder : ConnectionHolder) = Props(new JmsConnectionController(holder))
+  def props(holder : ConnectionHolder) : Props = Props(new JmsConnectionController(holder))
 }
 
 class JmsConnectionController(holder : ConnectionHolder) extends Actor with ActorLogging {
 
-  private[this] implicit val eCtxt = context.system.dispatcher
+  private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
 
   override def receive : Receive = disconnected
 
   def disconnected : Receive = LoggingReceive {
-    case Connect(t, id) =>
+    case Connect(t, _) =>
       val caller = sender()
 
       try {
@@ -39,7 +40,7 @@ class JmsConnectionController(holder : ConnectionHolder) extends Actor with Acto
     case Connect(t, _) =>
       sender ! ConnectResult(t, Right(c))
     case Disconnect(t) =>
-      implicit val timeout = Timeout(t + 1.second)
+      implicit val timeout : Timeout = Timeout(t + 1.second)
       val caller = sender()
 
       val closer = context.actorOf(ConnectionCloseActor.props(holder))
@@ -47,8 +48,8 @@ class JmsConnectionController(holder : ConnectionHolder) extends Actor with Acto
         case Success(r) =>
           context.become(disconnected)
           caller ! r
-        case Failure(t) =>
-          log.warning(s"Unexpected exception closing connection for provider [${holder.provider}] : [${t.getMessage()}]")
+        case Failure(e) =>
+          log.warning(s"Unexpected exception closing connection for provider [${holder.provider}] : [${e.getMessage()}]")
       }
   }
 

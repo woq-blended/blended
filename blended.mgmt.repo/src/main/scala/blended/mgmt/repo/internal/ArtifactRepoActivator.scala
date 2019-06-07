@@ -17,20 +17,20 @@ class ArtifactRepoActivator() extends DominoActivator with TypesafeConfigWatchin
     log.info(s"About to activate bundle: ${bundleContext.getBundle().getSymbolicName()}")
 
     whenTypesafeConfigAvailable { (config, idService) =>
-      log.debug(s"Config: ${config}")
+      log.debug(s"Config: $config")
 
       try {
         val repoId = config.getString("repoId")
 
         val baseDir = new File(config.getString("baseDir")).getAbsoluteFile()
         if (!baseDir.exists()) {
-          log.warn(s"baseDir for artifact repository does not exists: ${baseDir}")
+          log.warn(s"baseDir for artifact repository does not exist: $baseDir")
         }
 
         val repoService = new FileArtifactRepo(repoId, baseDir)
-        log.info(s"Created service: ${repoService}")
+        log.info(s"Created service: $repoService")
 
-        log.debug(s"About to register file based artifact repository to OSGi service registry: ${repoService}")
+        log.debug(s"About to register file based artifact repository to OSGi service registry: $repoService")
         repoService.providesService[ArtifactRepo, WritableArtifactRepo](
           "repoId" -> repoId,
           "baseDir" -> baseDir.getAbsolutePath()

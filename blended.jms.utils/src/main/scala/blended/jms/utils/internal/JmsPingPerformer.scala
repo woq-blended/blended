@@ -27,7 +27,8 @@ private[internal] case class PingInfo(
 //Todo: Migrate to JMS Stream Support
 private[internal] trait PingOperations { this : JMSSupport =>
 
-  private val log = Logger[PingOperations]
+  private val log : Logger = Logger[PingOperations]
+  private val receiveTimeout : Long = 100L
 
   def closeJmsResources(info : PingInfo)(implicit eCtxt : ExecutionContext) : Future[PingInfo] = Future {
 
@@ -36,7 +37,7 @@ private[internal] trait PingOperations { this : JMSSupport =>
       try {
         c.close()
       } catch {
-        case NonFatal(e) =>
+        case NonFatal(_) =>
           log.warn(s"Error closing consumer for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
       }
     }
@@ -45,7 +46,7 @@ private[internal] trait PingOperations { this : JMSSupport =>
       try {
         p.close()
       } catch {
-        case NonFatal(e) =>
+        case NonFatal(_) =>
           log.warn(s"Error closing producer for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
       }
     }
@@ -58,7 +59,7 @@ private[internal] trait PingOperations { this : JMSSupport =>
       }
       info.copy(session = None, consumer = None, producer = None)
     } catch {
-      case NonFatal(e) =>
+      case NonFatal(_) =>
         log.warn(s"Error closing session for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
         info
     }
@@ -138,7 +139,7 @@ private[internal] trait PingOperations { this : JMSSupport =>
       case None => PingFailed(new Exception(s"No consumer defined for [${info.cfg.vendor}:${info.cfg.provider}] and pingId [${info.pingId}]"))
       case Some(c) =>
         try {
-          Option(c.receive(100L)) match {
+          Option(c.receive(receiveTimeout)) match {
             case None => PingPending
             case Some(m) =>
               val id = m.getJMSCorrelationID()
@@ -147,8 +148,9 @@ private[internal] trait PingOperations { this : JMSSupport =>
                 val msg = s"Received ping id [$id] for [${info.cfg.vendor}:${info.cfg.provider}] did not match expected is [$info.pingId]"
                 log.debug(msg)
                 PingFailed(new Exception(msg))
-              } else
+              } else {
                 log.debug(s"Ping successful for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+              }
               PingSuccess(info.pingId)
           }
         } catch {
@@ -232,7 +234,7 @@ class JmsPingPerformer(config : ConnectionConfig, con : Connection, operations :
       info.session match {
         case None =>
           context.stop(self)
-        case Some(s) =>
+        case Some(_) =>
           operations.closeJmsResources(info).pipeTo(self)
       }
   }

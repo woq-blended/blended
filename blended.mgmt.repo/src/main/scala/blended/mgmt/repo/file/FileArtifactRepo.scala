@@ -50,7 +50,7 @@ class FileArtifactRepo(override val repoId : String, baseDir : File)
         while (sha1Stream.read != -1) {}
         Option(bytesToString(sha1Stream.getMessageDigest.digest))
       } catch {
-        case NonFatal(e) => None
+        case NonFatal(_) => None
       } finally {
         sha1Stream.close()
       }
@@ -63,11 +63,8 @@ class FileArtifactRepo(override val repoId : String, baseDir : File)
     ")"
 
   def listFiles(path : String) : Iterator[String] = {
-    val base = baseDir.toURI().normalize()
     withCheckedFilePath(path) { file =>
       if (!file.exists()) Iterator.empty else {
-        val fs = file.toPath().getFileSystem()
-
         def getFiles(dir : Path) : Iterator[Path] = {
           val files = Files.newDirectoryStream(dir).iterator().asScala
           files.flatMap { f =>
@@ -94,28 +91,28 @@ class FileArtifactRepo(override val repoId : String, baseDir : File)
           // no checksum or checksum differs means we cannot ensure the artifact is identical, so we abort
           sha1Sum match {
             case None =>
-              throw new ArtifactCollisionException(s"There is already an artifact installed under path: ${path}")
+              throw new ArtifactCollisionException(s"There is already an artifact installed under path: $path")
             case sum =>
               val existingSum = findFileSha1Checksum(path)
               if (sum != existingSum) {
-                log.info(s"Artifact with different checksum (existing: ${existingSum}, new: ${sum}) already present: ${path}")
-                throw new ArtifactCollisionException(s"There is already an artifact with a different checksum installed under path: ${path}")
+                log.info(s"Artifact with different checksum (existing: $existingSum, new: $sum) already present: $path")
+                throw new ArtifactCollisionException(s"There is already an artifact with a different checksum installed under path: $path")
               } else {
                 // else nothing to do
-                log.info(s"Artifact with same checksum already present: ${path}")
+                log.info(s"Artifact with same checksum already present: $path")
               }
           }
         } else {
-          log.error(s"Artifact path [${path}] is a directory. Cannot upload")
+          log.error(s"Artifact path [$path] is a directory. Cannot upload")
           // e.g. an existing directory
-          throw new IllegalArgumentException(s"The given path [${path}] cannot be used as artifact path")
+          throw new IllegalArgumentException(s"The given path [$path] cannot be used as artifact path")
         }
       } else {
         // file does not exists, installing now
         Option(file.getParentFile()).map(_.mkdirs())
         val fos = new FileOutputStream(file)
         try {
-          log.debug(s"About to save file: ${file}")
+          log.debug(s"About to save file: $file")
           StreamCopy.copy(fileContent, fos)
         } finally {
           fos.close()
@@ -129,7 +126,9 @@ object FileArtifactRepo {
 
   def bytesToString(digest : Array[Byte]) : String = {
     import java.lang.StringBuilder
+    //scalastyle:off magic.number
     val result = new StringBuilder(32)
+    //scalastyle:on magic.number
     val f = new Formatter(result)
     digest.foreach(b => f.format("%02x", b.asInstanceOf[Object]))
     result.toString()

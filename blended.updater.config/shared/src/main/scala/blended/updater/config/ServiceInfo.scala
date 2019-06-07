@@ -12,6 +12,6 @@ case class ServiceInfo(
 
   def isOutdated() : Boolean = isOutdatedAt(System.currentTimeMillis())
 
-  override def toString() : String = s"${getClass().getSimpleName()}(name=${name},serviceType=${serviceType}" +
-    s",timestampMsec=${timestampMsec},lifetimeMsec=${lifetimeMsec},props=${props})"
+  override def toString() : String = s"${getClass().getSimpleName()}(name=$name, serviceType=$serviceType" +
+    s", timestampMsec=$timestampMsec, lifetimeMsec=$lifetimeMsec, props=$props)"
 }

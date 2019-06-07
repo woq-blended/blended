@@ -21,14 +21,16 @@ class ServiceJmxAnalyser(server : MBeanServer, config : ServiceJmxConfig) {
 
   def instances(svcConfig : SingleServiceConfig) : List[(ObjectInstance, SingleServiceConfig, ServiceTypeTemplate)] = {
 
-    (config.templates.get(svcConfig.svcType)) match {
+    config.templates.get(svcConfig.svcType) match {
 
       case None =>
         log.warn(s"No Servicetype Template for service ${svcConfig.name} found")
         List.empty
 
       case Some(template) =>
-        server.queryMBeans(createFilter(svcConfig, template), null).asScala.toList.map((_, svcConfig, template))
+      //scalastyle:off null
+      server.queryMBeans(createFilter(svcConfig, template), null).asScala.toList.map((_, svcConfig, template))
+      //scalastyle:off null
 
     }
   }
@@ -36,7 +38,7 @@ class ServiceJmxAnalyser(server : MBeanServer, config : ServiceJmxConfig) {
   def serviceInfo(instance : ObjectInstance, svcConfig : SingleServiceConfig, template : ServiceTypeTemplate) : ServiceInfo = {
 
     def transformOne(name : List[String], value : Object) : List[(String, String)] = value match {
-      case cd if cd.isInstanceOf[CompositeDataSupport] => {
+      case cd if cd.isInstanceOf[CompositeDataSupport] =>
         val data = cd.asInstanceOf[CompositeDataSupport]
         data.getCompositeType().keySet().asScala.map { k =>
           data.get(k) match {
@@ -44,12 +46,11 @@ class ServiceJmxAnalyser(server : MBeanServer, config : ServiceJmxConfig) {
             case v => List((name.mkString(".") + "." + k, v.toString()))
           }
         }.toList.flatten
-      }
       case a => List((name.mkString("."), a.toString()))
     }
 
     def transformAll(name : List[String], attrs : List[Attribute]) : List[(String, String)] = attrs match {
-      case (head :: tail) =>
+      case head :: tail =>
         val newName = name ::: List(head.getName())
         transformOne(newName, head.getValue) ::: transformAll(name, tail)
       case Nil => List.empty
@@ -68,7 +69,7 @@ class ServiceJmxAnalyser(server : MBeanServer, config : ServiceJmxConfig) {
       name = instance.getObjectName().toString(),
       serviceType = template.name,
       timestampMsec = System.currentTimeMillis(),
-      lifetimeMsec = config.interval * 1000l,
+      lifetimeMsec = config.interval * 1000L,
       props = attributes()
     )
 

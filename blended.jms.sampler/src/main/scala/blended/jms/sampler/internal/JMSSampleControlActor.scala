@@ -9,7 +9,7 @@ import javax.jms.ConnectionFactory
 
 object JMSSampleControlActor {
 
-  def props(cfg : OSGIActorConfig, cf : ConnectionFactory, sampler : JmsSampler) =
+  def props(cfg : OSGIActorConfig, cf : ConnectionFactory, sampler : JmsSampler) : Props =
     Props(new JMSSampleControlActor(cfg, cf, sampler))
 }
 
@@ -43,13 +43,13 @@ class JMSSampleControlActor(cfg : OSGIActorConfig, cf : ConnectionFactory, sampl
 
       context.become(sampling(sampleActor, destName))
 
-      log.debug(s"Topic sampler [${destName}] started")
+      log.debug(s"Topic sampler [$destName] started")
   }
 
   def sampling(sampleActor : ActorRef, destName : String) : Receive = {
     case StopSampling => sampleActor ! StopSampling
     case Terminated(_) =>
-      log.debug(s"Topic sampler [${sampler}] terminated")
+      log.debug(s"Topic sampler [$sampler] terminated")
       context.stop(self)
       sampler.setSampling(false)
   }

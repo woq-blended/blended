@@ -3,6 +3,7 @@ package blended.mgmt.repo.file
 import java.io.{ByteArrayInputStream, File}
 
 import blended.testsupport.TestFile
+import blended.testsupport.TestFile.DeletePolicy
 import de.tobiasroeser.lambdatest.TempFile
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -10,7 +11,7 @@ import scala.util.Success
 
 class FileArtifactRepoSpec extends FreeSpec with TestFile with Matchers {
 
-  implicit val deletePolicy = TestFile.DeleteWhenNoFailure
+  private implicit val deletePolicy : DeletePolicy = TestFile.DeleteWhenNoFailure
 
   "A file repository" - {
     "should return existing file" in {

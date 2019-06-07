@@ -1,6 +1,6 @@
 package blended.mgmt.base.internal
 
-import java.io.{File, FileInputStream, FileOutputStream, FilenameFilter}
+import java.io.{File, FileInputStream, FileOutputStream}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
@@ -60,16 +60,14 @@ class FrameworkService(bundleContext : BundleContext, ctContext : ContainerConte
 
   private[this] def createLogArchive(timestamp : String) : Unit = {
 
-    val archiveName = s"restart-${timestamp}.zip"
+    val archiveName = s"restart-$timestamp.zip"
 
     val logDir = new File(ctContext.getContainerLogDirectory())
     log.info(s"Creating log archive from directory [${logDir.getAbsolutePath()}]")
 
-    val logFiles = logDir.list(new FilenameFilter {
-      override def accept(dir : File, name : String) : Boolean = {
-        val f = new File(dir, name)
-        f.isFile() && !name.startsWith("restart")
-      }
+    val logFiles = logDir.list( (dir : File, name : String) => {
+      val f = new File(dir, name)
+      f.isFile() && !name.startsWith("restart")
     }).toList
     log.info(s"Files :[$logFiles]")
 
