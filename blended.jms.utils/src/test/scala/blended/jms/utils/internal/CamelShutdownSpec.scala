@@ -9,10 +9,10 @@ import blended.jms.utils.{AmqBrokerSupport, BlendedJMSConnectionConfig, BlendedS
 import blended.util.logging.Logger
 import javax.jms.{ExceptionListener, JMSException}
 import org.apache.activemq.ActiveMQConnectionFactory
+import org.apache.camel.Exchange
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.jms.JmsComponent
 import org.apache.camel.impl.SimpleRegistry
-import org.apache.camel.{Exchange, Processor}
 import org.scalatest.FreeSpecLike
 
 class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
@@ -21,7 +21,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
 
   override lazy val brokerName : String = "shutdown"
 
-  val log = Logger[CamelShutdownSpec]
+  private val log : Logger = Logger[CamelShutdownSpec]
 
   "A Camel Context with an JMS endpoint should" - {
 
@@ -49,7 +49,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
           case o => Option(o) match {
             case None                                  => None
             case Some(same) if same == same.getCause() => None
-            case Some(e)                               => getJmsCause(e.getCause())
+            case Some(t)                               => getJmsCause(t.getCause())
           }
         }
 
@@ -57,7 +57,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
           case None =>
           case Some(illegalState) if illegalState.isInstanceOf[javax.jms.IllegalStateException] =>
             system.eventStream.publish(Reconnect("amq", "amq", Some(illegalState)))
-          case jmse =>
+          case _ =>
         }
 
       }
@@ -66,7 +66,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
         override def onException(exception : JMSException) : Unit = exceptionHandler(exception)
       }
 
-      val camelCtxt = BlendedCamelContextFactory.createContext("CamelShutdown", false)
+      val camelCtxt = BlendedCamelContextFactory.createContext(name ="CamelShutdown", withJmx = false)
       camelCtxt.addComponent("jms", JmsComponent.jmsComponent(cf))
       camelCtxt.getRegistry(classOf[SimpleRegistry]).put("el", exceptionListener)
 
@@ -76,43 +76,40 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
 
           onException(classOf[Exception]).to("jms:error")
 
+          // scalastyle:off magic.number
           0.to(20).foreach { i =>
             from(s"jms:SampleQ1$i?$consumerSettings").id(s"R$i").to(s"jms:SampleQ2$i")
 
             from(s"scheduler://foo$i?delay=100")
-              .process(new Processor {
-                override def process(exchange : Exchange) : Unit = {
-                  exchange.getOut().setBody(new Date().toString())
-                }
+              .process((exchange : Exchange) => {
+                exchange.getOut().setBody(new Date().toString())
               })
               .to(s"jms:SampleQ1$i?deliveryMode=2")
 
-            from(s"jms:SampleQ2$i?$consumerSettings").log(s"${body}")
+            from(s"jms:SampleQ2$i?$consumerSettings").log(s"$body")
           }
+          // scalastyle:on magic.number
         }
       })
 
       camelCtxt.start()
 
+      // scalastyle:off magic.number
       Thread.sleep(3000)
 
       stopBroker(broker)
       Thread.sleep(3000)
+      // scalastyle:on magic.number
 
       val start = System.currentTimeMillis()
 
-      new Thread(new Runnable {
-        override def run() : Unit = {
-          camelCtxt.removeRoute("R16")
-        }
-
+      new Thread(() => {
+        camelCtxt.removeRoute("R16")
       }).start()
 
-      new Thread(new Runnable {
-        override def run() : Unit = {
-          Logger("CamelStopper").info("Stopping Camel Context ...")
-          camelCtxt.stop()
-        }
+      new Thread(() => {
+        Logger("CamelStopper").info("Stopping Camel Context ...")
+        camelCtxt.stop()
       }).start()
 
       var stopped = false
@@ -121,7 +118,9 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
         stopped = camelCtxt.getStatus().isStopped()
         if (!stopped) {
           log.info("Waiting for Camel Context to stop properly")
+          // scalastyle:off magic.number
           Thread.sleep(500)
+          // scalastyle:on magic.number
         }
       }
 

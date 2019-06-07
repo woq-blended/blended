@@ -15,7 +15,11 @@ class BlendedJMSConnection(conn : Connection) extends Connection {
 
   override def getClientID : String = conn.getClientID
 
-  override def createConnectionConsumer(destination : Destination, s : String, serverSessionPool : ServerSessionPool, i : Int) : ConnectionConsumer = conn.createConnectionConsumer(destination, s, serverSessionPool, i)
+  override def createConnectionConsumer(
+    destination : Destination, s : String,
+    serverSessionPool : ServerSessionPool,
+    i : Int
+  ) : ConnectionConsumer = conn.createConnectionConsumer(destination, s, serverSessionPool, i)
 
   override def getMetaData : ConnectionMetaData = conn.getMetaData
 

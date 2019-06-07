@@ -44,8 +44,8 @@ object JmsDestination {
   def asString(jmsDest : JmsDestination) : String = {
     jmsDest match {
       case q : JmsQueue         => q.name
-      case t : JmsTopic         => s"${TOPICTAG}${destSeparator}${t.name}"
-      case dt : JmsDurableTopic => s"${TOPICTAG}${destSeparator}:${dt.subscriberName}${destSeparator}${dt.name}"
+      case t : JmsTopic         => s"$TOPICTAG$destSeparator${t.name}"
+      case dt : JmsDurableTopic => s"$TOPICTAG$destSeparator:${dt.subscriberName}$destSeparator${dt.name}"
     }
   }
 }

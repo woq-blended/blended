@@ -11,6 +11,7 @@ import scala.util.{Failure, Success, Try}
 
 object BlendedJMSConnectionConfig {
 
+  //scalastyle:off magic.number
   val defaultConfig = BlendedJMSConnectionConfig(
     vendor = "",
     provider = "",
@@ -35,8 +36,14 @@ object BlendedJMSConnectionConfig {
     ctxtClassName = None,
     jmsClassloader = None
   )
+  //scalastyle:on magic.number
 
-  def fromConfig(stringResolver : String => Try[Any])(vendor : String, provider : String, cfg : Config) : BlendedJMSConnectionConfig = {
+  // scalastyle:off method.length
+  def fromConfig(
+    stringResolver : String => Try[Any]
+  )(
+    vendor : String, provider : String, cfg : Config
+  ) : BlendedJMSConnectionConfig = {
 
     val enabled : Config => Boolean = cfg => cfg.getBoolean("enabled", defaultConfig.enabled)
     val jmxEnabled : Config => Boolean = cfg => cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
@@ -97,6 +104,7 @@ object BlendedJMSConnectionConfig {
       cfClassName = defaultConfig.cfClassName
     )
   }
+  // scalastyle:on method.length
 }
 
 case class BlendedJMSConnectionConfig(

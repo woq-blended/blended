@@ -45,7 +45,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : Act
 
             val c = config.defaultUser match {
               case None       => cf.createConnection()
-              case Some(user) => cf.createConnection(user, config.defaultPassword.getOrElse(null))
+              case Some(user) => cf.createConnection(user, config.defaultPassword.orNull)
             }
 
             try {

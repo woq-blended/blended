@@ -8,6 +8,8 @@ object ConnectionState {
   val CONNECTING = "connecting"
   val CLOSING = "closing"
   val DISCONNECTED = "disconnected"
+
+  val defaultMaxEvents : Int = 20
 }
 
 case class ConnectionState(
@@ -16,7 +18,7 @@ case class ConnectionState(
   lastConnect : Option[Date] = None,
   lastDisconnect : Option[Date] = None,
   failedPings : Int = 0,
-  maxEvents : Int = 20,
+  maxEvents : Int = ConnectionState.defaultMaxEvents,
   events : List[String] = List.empty,
   firstReconnectAttempt : Option[Date] = None,
   lastConnectAttempt : Option[Date] = None

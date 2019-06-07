@@ -36,14 +36,13 @@ class PollingJMSReceiver(
         destName = destName,
         msgHandler = msgHandler,
         errorHandler = errorHandler,
-        maxMessages = 0,
         receiveTimeout = receiveTimeout,
         subscriptionName = subscriptionName
       )
       timer.schedule(
         new TimerTask {
           override def run() : Unit = poll()
-        }, interval * 1000l
+        }, interval * 1000L
       )
     }
   }

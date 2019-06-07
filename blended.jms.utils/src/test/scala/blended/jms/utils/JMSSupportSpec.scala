@@ -30,7 +30,7 @@ class JMSSupportSpec extends FreeSpec
 
   override val camelContext : CamelContext = {
     val ctxt = CamelExtension(system).context
-    ctxt.addComponent("jms", JmsComponent.jmsComponent(amqCf))
+    ctxt.addComponent("jms", JmsComponent.jmsComponent(amqCf()))
     ctxt
   }
 
@@ -38,7 +38,7 @@ class JMSSupportSpec extends FreeSpec
 
   private def sendMessage(destName : String) : Unit = {
     sendMessage(
-      cf = amqCf,
+      cf = amqCf(),
       destName = destName,
       content = (),
       msgFactory = new JMSMessageFactory[Unit] {
@@ -79,13 +79,11 @@ class JMSSupportSpec extends FreeSpec
       sendMessage("test")
 
       receiveMessage(
-        cf = amqCf,
+        cf = amqCf(),
         destName = "test",
-        msgHandler = new JMSMessageHandler {
-          override def handleMessage(msg : Message) : Option[Throwable] = {
-            count.incrementAndGet()
-            None
-          }
+        msgHandler = (_ : Message) => {
+          count.incrementAndGet()
+          None
         },
         new RedeliveryErrorHandler(),
         subscriptionName = None
@@ -101,13 +99,9 @@ class JMSSupportSpec extends FreeSpec
       sendMessage("test")
 
       receiveMessage(
-        cf = amqCf,
+        cf = amqCf(),
         destName = "test",
-        msgHandler = new JMSMessageHandler {
-          override def handleMessage(msg : Message) : Option[Throwable] = {
-            Some(new Exception("test failure"))
-          }
-        },
+        msgHandler = (_ : Message) =>  Some(new Exception("test failure")),
         new RedeliveryErrorHandler(),
         subscriptionName = None
       )
@@ -119,18 +113,20 @@ class JMSSupportSpec extends FreeSpec
 
       sendMessage("test1")
 
+      // scalastyle:off magic.number
       val receiver = new PollingJMSReceiver(
-        cf = amqCf,
+        cf = amqCf(),
         destName = "test1",
         interval = 5,
-        receiveTimeout = 50l,
+        receiveTimeout = 50L,
         msgHandler = new ForwardingMessageHandler(
-          cf = amqCf,
+          cf = amqCf(),
           destName = "test2",
           additionalHeader = Map("foo" -> "bar")
         ),
         errorHandler = new RedeliveryErrorHandler()
       )
+      // scalastyle:on magic.number
 
       receiver.start()
 

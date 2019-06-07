@@ -16,7 +16,9 @@ object CloningMessageFactory extends JMSMessageFactory[Message] {
         session.createTextMessage(tMsg.getText)
       case bMsg : BytesMessage =>
         bMsg.reset()
+        //scalastyle:off magic.number
         val bytes = new Array[Byte](1024)
+        //scalastyle:on magic.number
         val r = session.createBytesMessage()
 
         var cnt = 0

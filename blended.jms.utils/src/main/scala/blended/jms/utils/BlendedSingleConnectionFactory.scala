@@ -106,7 +106,8 @@ class BlendedSingleConnectionFactory(
   }
 
   override def createConnection(user : String, password : String) : Connection = {
-    log.warn(s"BlendedSingleConnectionFactory.createConnection() for [$id]called with username and password, which is not supported.\nFalling back to default username and password.")
+    log.warn(s"BlendedSingleConnectionFactory.createConnection() for [$id]called with username and password, " +
+      "which is not supported.\nFalling back to default username and password.")
     createConnection()
   }
 }

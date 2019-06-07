@@ -25,9 +25,7 @@ abstract class ConnectionFactoryActivator extends DominoActivator with ActorSyst
 
   import ConnectionFactoryActivator._
 
-  private[this] lazy val loader = getClass().getClassLoader()
-
-  val connectionFactoryEnabled : Option[CFEnabled] = None
+  protected val connectionFactoryEnabled : Option[CFEnabled] = None
 
   protected val cfClass : Option[String] = None
   protected val ctxtClass : Option[String] = None
@@ -59,7 +57,7 @@ abstract class ConnectionFactoryActivator extends DominoActivator with ActorSyst
             cfg = osgiCfg.config.getConfig("factories").getConfig(cfProvider)
           )
 
-          val enabled : Boolean = fnEnabled.map(f => f(cfCfg)).getOrElse(true)
+          val enabled : Boolean = fnEnabled.forall(_(cfCfg))
 
           if (enabled) {
             val singleCf = new BlendedSingleConnectionFactory(
