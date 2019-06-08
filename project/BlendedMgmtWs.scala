@@ -33,6 +33,7 @@ object BlendedMgmtWs extends ProjectFactory {
       BlendedAkkaHttp.project,
       BlendedSecurityLoginApi.project,
       BlendedUpdaterConfigJvm.project,
+      BlendedJmxJvm.project,
 
       BlendedTestsupport.project % Test,
       BlendedMgmtRest.project % Test,

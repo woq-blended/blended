@@ -3,6 +3,7 @@ package blended.mgmt.ws.internal
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Terminated}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
+import blended.jmx.BlendedMBeanServerFacade
 import blended.security.GrantableObject
 import blended.security.login.api.Token
 import blended.updater.config.UpdateContainerInfo
@@ -24,8 +25,8 @@ trait Dispatcher {
 }
 
 object Dispatcher {
-  def create(system : ActorSystem) : Dispatcher = {
-    val dispatcherActor = system.actorOf(Props[DispatcherActor])
+  def create(system : ActorSystem, facade: BlendedMBeanServerFacade) : Dispatcher = {
+    val dispatcherActor = system.actorOf(DispatcherActor.props(facade))
 
     info : Token => {
       val in = Flow[String]
@@ -43,12 +44,17 @@ object Dispatcher {
     }
   }
 
-  class DispatcherActor extends Actor with ActorLogging {
+  object DispatcherActor {
+    def props(facade : BlendedMBeanServerFacade) : Props = Props(new DispatcherActor(facade))
+  }
+
+  class DispatcherActor(facade : BlendedMBeanServerFacade) extends Actor with ActorLogging {
 
     override def receive : Receive = Actor.emptyBehavior
 
     override def preStart() : Unit = {
       context.system.eventStream.subscribe(self, classOf[UpdateContainerInfo])
+      context.system.actorOf(JmxRefreshActor.props(self, facade))
       context.become(dispatching(Map.empty))
     }
 

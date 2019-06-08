@@ -15,6 +15,7 @@ import akka.stream.scaladsl.{Keep, Source}
 import akka.util.ByteString
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
+import blended.jmx.internal.BlendedJmxActivator
 import blended.mgmt.rest.internal.MgmtRestActivator
 import blended.persistence.h2.internal.H2Activator
 import blended.security.internal.SecurityActivator
@@ -57,6 +58,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
     "blended.security.login.rest" -> new RestLoginActivator(),
     "blended.persistence.h2" -> new H2Activator(),
     "blended.updater.remote" -> new RemoteUpdaterActivator(),
+    "blended.jmx" -> new BlendedJmxActivator(),
     "blended.mgmt.rest" -> new MgmtRestActivator(),
     "blended.mgmt.ws" -> new MgmtWSActivator()
   )

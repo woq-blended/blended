@@ -6,20 +6,22 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.scaladsl.Flow
+import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName}
 import blended.security.login.api.{Token, TokenStore}
 import blended.updater.config.ContainerInfo
 import blended.updater.config.json.PrickleProtocol._
+import blended.jmx.json.PrickleProtocol._
 import blended.util.logging.Logger
-import prickle.Pickle
+import prickle._
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
-class MgmtWebSocketServer(system : ActorSystem, store : TokenStore) {
+class MgmtWebSocketServer(system : ActorSystem, store : TokenStore, facade : BlendedMBeanServerFacade) {
 
   private[this] val log = Logger[MgmtWebSocketServer]
   private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
-  private[this] val dispatcher = Dispatcher.create(system)
+  private[this] val dispatcher = Dispatcher.create(system, facade)
 
   def route : Route = routeImpl
 
@@ -65,6 +67,10 @@ class MgmtWebSocketServer(system : ActorSystem, store : TokenStore) {
         case NewData(data) => data match {
           case ctInfo : ContainerInfo =>
             val json : String = Pickle.intoString(ctInfo)
+            TextMessage.Strict(json)
+
+          case names : List[JmxObjectName] =>
+            val json : String = Pickle.intoString(names)
             TextMessage.Strict(json)
 
           case msg : String => TextMessage.Strict(msg)
