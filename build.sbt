@@ -60,7 +60,8 @@ lazy val blendedCamelUtils = BlendedCamelUtils.project
 lazy val blendedJmsUtils = BlendedJmsUtils.project
 lazy val blendedActivemqBrokerstarter = BlendedActivemqBrokerstarter.project
 lazy val blendedContainerContextImpl = BlendedContainerContextImpl.project
-lazy val blendedJmx = BlendedJmx.project
+lazy val blendedJmxJvm = BlendedJmxJvm.project
+lazy val blendedJmxJs = BlendedJmxJs.project
 lazy val blendedJettyBoot = BlendedJettyBoot.project
 lazy val blendedJmsSampler = BlendedJmsSampler.project
 lazy val blendedTestsupportPojosr = BlendedTestsupportPojosr.project
@@ -125,7 +126,7 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedJmsUtils,
   blendedActivemqBrokerstarter,
   blendedContainerContextImpl,
-  blendedJmx,
+  blendedJmxJvm,
   blendedJettyBoot,
   blendedJmsSampler,
   blendedTestsupportPojosr,
@@ -169,6 +170,7 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
 lazy val jsProjects : Seq[ProjectReference] = Seq(
   blendedSecurityJs,
   blendedUpdaterConfigJs,
+  blendedJmxJs,
   blendedDocs
 )
 
@@ -183,5 +185,5 @@ lazy val root = {
     .settings(global)
     .enablePlugins(ScalaUnidocPlugin, JBake)
     .settings(RootSettings(BlendedDocsJs.project))
-    .aggregate((jvmProjects ++ jsProjects ++ Seq[ProjectReference](BlendedDependencies.project)):_*)
+    .aggregate(jvmProjects ++ jsProjects ++ Seq[ProjectReference](BlendedDependencies.project):_*)
 }

@@ -25,8 +25,8 @@ trait Dependencies {
   val sprayVersion = "1.3.4"
   val springVersion = "4.3.12.RELEASE_1"
 
-  protected def akka(m : String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
-  protected def akka_Http(m : String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
+  protected def akka(m : String) : ModuleID = "com.typesafe.akka" %% s"akka-$m" % akkaVersion
+  protected def akkaHttpModule(m : String) : ModuleID = "com.typesafe.akka" %% s"akka-$m" % akkaHttpVersion
 
   val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
   val activeMqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
@@ -34,11 +34,11 @@ trait Dependencies {
   val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
   val akkaActor = akka("actor")
   val akkaCamel = akka("camel")
-  val akkaHttp = akka_Http("http")
-  val akkaHttpCore = akka_Http("http-core")
-  val akkaHttpTestkit = akka_Http("http-testkit")
+  val akkaHttp = akkaHttpModule("http")
+  val akkaHttpCore = akkaHttpModule("http-core")
+  val akkaHttpTestkit = akkaHttpModule("http-testkit")
   val akkaOsgi = akka("osgi")
-  val akkaParsing = akka_Http("parsing")
+  val akkaParsing = akkaHttpModule("parsing")
   val akkaPersistence = akka("persistence")
   val akkaStream = akka("stream")
   val akkaStreamTestkit = akka("stream-testkit")
@@ -77,7 +77,7 @@ trait Dependencies {
   val h2 = "com.h2database" % "h2" % "1.4.197"
   val hikaricp = "com.zaxxer" % "HikariCP" % "3.1.0"
 
-  protected def jettyOsgi(n : String) = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
+  protected def jettyOsgi(n : String) : ModuleID = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
 
   val jcip = "net.jcip" % "jcip-annotations" % "1.0"
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
@@ -126,7 +126,7 @@ trait Dependencies {
   val sprayJson = "io.spray" %% s"spray-json" % sprayVersion
 
   //  protected def spring(n: String) = "org.springframework" % s"spring-${n}" % springVersion
-  protected def spring(n : String) = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-${n}" % springVersion
+  protected def spring(n : String): ModuleID = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-$n" % springVersion
 
   val springBeans = spring("beans")
   val springAop = spring("aop")
@@ -144,8 +144,7 @@ trait Dependencies {
   val travesty = "net.mikolak" %% "travesty" % s"0.9.1_2.5.17"
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.3"
-  // FIXME: Rename to typesafeSslConfigCore
-  val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.3.6"
+  val typesafeSslConfigCore = "com.typesafe" %% "ssl-config-core" % "0.3.6"
 
 }
 

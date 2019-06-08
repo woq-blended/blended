@@ -2,6 +2,7 @@ package blended.jmx.internal
 
 import java.io.File
 
+import blended.jmx.BlendedMBeanServerFacade
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -22,10 +23,11 @@ class JmxActivatorSpec extends SimplePojoContainerSpec
 
   "The JMX Activator" - {
 
-    "should expose the platform MBean Server as a service" in {
+    "should expose the platform MBean Server and a BlendedMBeanServerFacade as a service" in {
 
       implicit val timeout : FiniteDuration = 3.seconds
       mandatoryService[MBeanServer](registry)(None)
+      mandatoryService[BlendedMBeanServerFacade](registry)(None)
     }
   }
 }
