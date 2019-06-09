@@ -22,7 +22,9 @@ object RSATokenHandler {
   def apply() : RSATokenHandler = {
 
     val keygen = KeyPairGenerator.getInstance("RSA")
+    //scalastyle:off magic.number
     keygen.initialize(2048)
+    //scalastyle:on magic.number
 
     new RSATokenHandler(keygen.generateKeyPair())
   }

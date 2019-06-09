@@ -1,9 +1,7 @@
 package blended.jetty.boot.internal
 
 import domino.DominoActivator
-import javax.management.{MBeanServer, ObjectName}
 import javax.net.ssl.SSLContext
-import org.eclipse.jetty.jmx.MBeanContainer
 import org.eclipse.jetty.osgi.boot.JettyBootstrapActivator
 
 object JettyActivator {
@@ -14,28 +12,20 @@ object JettyActivator {
 
 class JettyActivator extends DominoActivator {
 
-  private val connectorName : ObjectName = new ObjectName("org.eclipse.jetty", "type", "connector")
-
   whenBundleActive {
-    whenServicePresent[MBeanServer] { mbeanServer =>
-      whenAdvancedServicePresent[SSLContext]("(type=server)") { sslCtxt =>
+    whenAdvancedServicePresent[SSLContext]("(type=server)") { sslCtxt =>
 
-        JettyActivator.sslContext = Some(sslCtxt)
-        onStop {
-          JettyActivator.sslContext = None
-        }
+      JettyActivator.sslContext = Some(sslCtxt)
+      onStop {
+        JettyActivator.sslContext = None
+      }
 
-        val jettyActivator = new JettyBootstrapActivator()
+      val jettyActivator = new JettyBootstrapActivator()
 
-        jettyActivator.start(bundleContext)
+      jettyActivator.start(bundleContext)
 
-        val mbeanContainer = new MBeanContainer(mbeanServer)
-        mbeanServer.registerMBean(mbeanContainer, connectorName)
-
-        onStop {
-          jettyActivator.stop(bundleContext)
-          mbeanServer.unregisterMBean(connectorName)
-        }
+      onStop {
+        jettyActivator.stop(bundleContext)
       }
     }
   }

@@ -13,12 +13,10 @@ object JmxObjectNameCompanion {
     if (objName.isPattern) {
       throw new InvalidObjectNameException()
     } else {
-
       val dom : String = objName.getDomain()
       val props : mutable.Map[String, String] = mutable.Map.empty
-      objName.getKeyPropertyList().forEach( (k,v) => props.put(k,v) )
+      objName.getKeyPropertyList().forEach( (k,v) => props.put(k,v))
       JmxObjectName(dom, props.toMap)
     }
   }
-
 }

@@ -1,6 +1,7 @@
 package blended.security.login.rest.internal
 
 import java.security.spec.X509EncodedKeySpec
+import java.util.Base64
 
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpHeader, HttpMethods, HttpResponse, StatusCodes}
@@ -11,7 +12,6 @@ import blended.security.akka.http.JAASSecurityDirectives
 import blended.security.login.api.TokenStore
 import javax.security.auth.Subject
 import org.slf4j.LoggerFactory
-import sun.misc.BASE64Encoder
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -26,6 +26,7 @@ class LoginService(
 
   private[this] lazy val publicKeyPEM : String = {
 
+    // scalastyle:off magic.number
     def lines(s : String)(current : List[String] = List.empty) : List[String] = {
       if (s.length <= 64) {
         s :: current
@@ -33,13 +34,15 @@ class LoginService(
         lines(s.substring(64))(s.substring(0, 64) :: current)
       }
     }
+    // scalastyle:on magic.number
 
     val key = tokenstore.publicKey()
     val encodedKey : Array[Byte] = new X509EncodedKeySpec(key.getEncoded()).getEncoded()
+    val stringKey : String = Base64.getEncoder().encodeToString(encodedKey)
 
     val pemLines : List[String] = (
       "-----END PUBLIC KEY-----" ::
-      lines(new BASE64Encoder().encode(encodedKey))(List("-----BEGIN PUBLIC KEY-----"))
+      lines(stringKey)(List("-----BEGIN PUBLIC KEY-----"))
     ).reverse
 
     pemLines.mkString("\n")
@@ -49,12 +52,14 @@ class LoginService(
 
   private[this] val loginRoute = {
 
+    // scalastyle:off magic.number
     val header : Seq[HttpHeader] = Seq(
       `Access-Control-Allow-Origin`.*,
       `Access-Control-Allow-Methods`(HttpMethods.GET, HttpMethods.POST, HttpMethods.OPTIONS),
       `Access-Control-Max-Age`(1000),
       `Access-Control-Allow-Headers`("origin", "x-csrftoken", "content-type", "accept", "authorization")
     )
+    // scalastyle:on magic.number
 
     pathSingleSlash {
       options {

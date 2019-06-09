@@ -5,7 +5,9 @@ import java.security.spec.X509EncodedKeySpec
 import java.security.{KeyFactory, PublicKey}
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Source
+import akka.stream.{ActorMaterializer, Materializer}
+import akka.util.ByteString
 import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
@@ -21,7 +23,7 @@ import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 import sun.misc.BASE64Decoder
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.util.Try
 
@@ -45,9 +47,9 @@ class LoginServiceSpec extends SimplePojoContainerSpec
   )
 
   private def withLoginService[T](request : Request[String, Nothing])(f : Response[String] => T) : T = {
-    implicit val system = mandatoryService[ActorSystem](registry)(None)
-    implicit val materializer = ActorMaterializer()
-    implicit val backend = AkkaHttpBackend()
+    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+    implicit val materializer : Materializer = ActorMaterializer()
+    implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
 
     mandatoryService[HttpContext](registry)(None)
 
@@ -57,15 +59,17 @@ class LoginServiceSpec extends SimplePojoContainerSpec
 
   private def serverKey() : Try[PublicKey] = Try {
 
-    implicit val system = mandatoryService[ActorSystem](registry)(None)
-    implicit val materializer = ActorMaterializer()
-    implicit val backend = AkkaHttpBackend()
+    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+    implicit val materializer : Materializer = ActorMaterializer()
+    implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
 
     val request = sttp.get(uri"http://localhost:9995/login/key")
     val response = request.send()
 
     val r = Await.result(response, 3.seconds)
     r.code should be(StatusCodes.Ok)
+
+    println(r.body.right.get)
 
     val rawString = r.body.right.get
       .replace("-----BEGIN PUBLIC KEY-----\n", "")
@@ -106,8 +110,8 @@ class LoginServiceSpec extends SimplePojoContainerSpec
           val token = Token(r.body.right.get, key).get
 
           token.permissions.granted.size should be(2)
-          token.permissions.granted.find(_.permissionClass == Some("admins")) should be(defined)
-          token.permissions.granted.find(_.permissionClass == Some("blended")) should be(defined)
+          token.permissions.granted.find(_.permissionClass.contains("admins")) should be(defined)
+          token.permissions.granted.find(_.permissionClass.contains("blended")) should be(defined)
         }
     }
 

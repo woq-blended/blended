@@ -88,7 +88,11 @@ object Dispatcher {
         dispatch(m)(clients)
 
       case UpdateContainerInfo(ctInfo) =>
-        dispatch(NewData(ctInfo))(clients)
+        self ! NewData(ctInfo)
+
+      case nd : NewData =>
+        log.debug(s"Received data to dispatch [${nd.data.getClass().getName()}][${nd.data}]")
+        dispatch(nd)(clients)
 
       case NewClient(info) =>
         log.info(s"New client connected [${info.id}]")

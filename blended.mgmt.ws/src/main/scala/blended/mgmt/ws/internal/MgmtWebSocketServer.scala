@@ -64,19 +64,15 @@ class MgmtWebSocketServer(system : ActorSystem, store : TokenStore, facade : Ble
           TextMessage.Strict(m)
 
         // NewData is a container to send arbitrary data back to the client
-        case NewData(data) => data match {
-          case ctInfo : ContainerInfo =>
-            val json : String = Pickle.intoString(ctInfo)
-            TextMessage.Strict(json)
-
-          case names : List[JmxObjectName] =>
-            val json : String = Pickle.intoString(names)
-            TextMessage.Strict(json)
-
-          case msg : String => TextMessage.Strict(msg)
-
-          case _            => TextMessage.Strict("")
-        }
+        case NewData(data) =>
+          val msg : String = data match {
+            case ctInfo : ContainerInfo => Pickle.intoString(ctInfo)
+            case names : List[JmxObjectName] => Pickle.intoString(names)
+            case msg : String => msg
+            case _            => ""
+          }
+          log.debug(s"Sending message via Web Sockets : [$msg]")
+          TextMessage.Strict(msg)
 
         case o =>
           TextMessage.Strict(o.toString())

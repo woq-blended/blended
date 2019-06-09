@@ -27,6 +27,7 @@ class JmxRefreshActor(dispatcher : ActorRef, mBeanSrv : BlendedMBeanServerFacade
     case Tick =>
       mBeanSrv.getMBeanNames() match {
         case Success(l) =>
+          log.debug(s"Found [${l.size}] MBean names")
           dispatcher ! NewData(l)
           context.system.scheduler.scheduleOnce(1.second, self, Tick)
         case Failure(t) =>
