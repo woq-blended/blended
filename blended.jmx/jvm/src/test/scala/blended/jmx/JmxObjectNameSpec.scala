@@ -24,11 +24,17 @@ class JmxObjectNameSpec extends LoggingFreeSpec
       jmxObjName.properties should have size 2
       jmxObjName.properties should contain ("type" ->"ConnectionFactory")
       jmxObjName.properties should contain ("name" -> "foo")
+    }
 
+    "be creatable from a well formatted String" in {
       val mbf : BlendedMBeanServerFacade = new BlendedMBeanServerFacadeImpl(mBeanServer)
       val names : List[JmxObjectName] = mbf.getMBeanNames().get
 
-      println(names.mkString("\n", "\n", ""))
+      assert(
+        names.forall{ n =>
+          JmxObjectName(n.objectName).get.equals(n)
+        }
+      )
     }
   }
 }
