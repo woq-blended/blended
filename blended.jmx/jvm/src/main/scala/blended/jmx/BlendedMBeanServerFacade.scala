@@ -4,6 +4,7 @@ import scala.util.Try
 
 trait BlendedMBeanServerFacade {
 
-  def getMBeanNames() : Try[List[JmxObjectName]]
+  def mbeanNames() : Try[List[JmxObjectName]]
+  def mbeanInfo(objName : JmxObjectName) : Unit
 
 }

@@ -28,10 +28,11 @@ class JmxObjectNameSpec extends LoggingFreeSpec
 
     "be creatable from a well formatted String" in {
       val mbf : BlendedMBeanServerFacade = new BlendedMBeanServerFacadeImpl(mBeanServer)
-      val names : List[JmxObjectName] = mbf.getMBeanNames().get
+      val names : List[JmxObjectName] = mbf.mbeanNames().get
 
       assert(
         names.forall{ n =>
+          mbf.mbeanInfo(n)
           JmxObjectName(n.objectName).get.equals(n)
         }
       )
