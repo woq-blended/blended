@@ -1,9 +1,9 @@
 package blended.jmx.internal
 
-import blended.jmx.{AttributeValue, BlendedMBeanServerFacade, JmxAttribute, JmxObject, JmxObjectName, JmxObjectNameCompanion}
-import javax.management.openmbean.CompositeDataSupport
-import javax.management.{Attribute, MBeanInfo, MBeanServer, ObjectName}
+import blended.jmx._
+import javax.management._
 import prickle.Pickle
+import blended.jmx.json.PrickleProtocol._
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -26,20 +26,18 @@ class BlendedMBeanServerFacadeImpl(svr : MBeanServer) extends BlendedMBeanServer
     val name : ObjectName = new ObjectName(objName.objectName)
     val info : MBeanInfo = svr.getMBeanInfo(name)
 
-    val attrNames : Array[String] = info.getAttributes().filter(_.isReadable()).map(_.getName())
+    val readableAttrs : Map[String, MBeanAttributeInfo] = info.getAttributes().filter(_.isReadable()).map(a => a.getName() -> a).toMap
+    val attrNames : Array[String] = readableAttrs.values.map(_.getName()).toArray
     val attrs : List[Attribute] = svr.getAttributes(name, attrNames).asList().asScala.toList
 
-    val obj : JmxObject = JmxObject(objName, attrs.map{ a =>
+    val attributes : Map[String, AttributeValue] = attrs.map { a =>
       val v = a.getValue()
+      val info : MBeanAttributeInfo = readableAttrs(a.getName())
 
-      if (!v.isInstanceOf[CompositeDataSupport] && !v.isInstanceOf[Array[_]]) {
-        val o : AttributeValue = AttributeValue.lift(v).get
-        println(s"$objName(${a.getName()}) : $o")
-      }
+      (a. getName(), AttributeValue.lift(v).get)
+    }.toMap
 
-      JmxAttribute(a.getName(), AttributeValue.lift(a.getValue()).get)
-
-    })
+    val obj : JmxObject = JmxObject(objName, CompositeAttributeValue(attributes))
 
 
     val json : String = Pickle.intoString(obj)

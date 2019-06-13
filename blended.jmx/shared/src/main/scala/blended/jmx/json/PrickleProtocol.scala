@@ -1,16 +1,24 @@
 package blended.jmx.json
 
-import blended.jmx.{JmxAttribute, JmxObject, JmxObjectName}
-import prickle.{Pickler, Unpickler}
+
+import blended.jmx._
+import prickle.{CompositePickler, Pickler, PicklerPair, Unpickler}
 
 object PrickleProtocol {
 
-  implicit val jmxObjectNamePickler : Pickler[JmxObjectName] = Pickler.materializePickler[JmxObjectName]
-  implicit val jmxObjectNameUnpickler : Unpickler[JmxObjectName] = Unpickler.materializeUnpickler[JmxObjectName]
-
-  implicit val jmxObjectPickler : Pickler[JmxObject] = Pickler.materializePickler[JmxObject]
-  implicit val jmxObjectUnpickler : Unpickler[JmxObject] = Unpickler.materializeUnpickler[JmxObject]
-
-  implicit val jmxAttributePickler : Pickler[JmxAttribute] = Pickler.materializePickler[JmxAttribute]
-  implicit val jmxAttributeUnpickler : Unpickler[JmxAttribute] = Unpickler.materializeUnpickler[JmxAttribute]
+  implicit val attributeValuePickler : PicklerPair[AttributeValue] = CompositePickler[AttributeValue]
+    .concreteType[StringAttributeValue]
+    .concreteType[UnitAttributeValue]
+    .concreteType[IntAttributeValue]
+    .concreteType[LongAttributeValue]
+    .concreteType[BooleanAttributeValue]
+    .concreteType[ByteAttributeValue]
+    .concreteType[ShortAttributeValue]
+    .concreteType[FloatAttributeValue]
+    .concreteType[DoubleAttributeValue]
+    .concreteType[CharAttributeValue]
+    .concreteType[ObjectNameAttributeValue]
+    .concreteType[ArrayAttributeValue]
+    .concreteType[TabularAttributeValue]
+    .concreteType[CompositeAttributeValue]
 }
