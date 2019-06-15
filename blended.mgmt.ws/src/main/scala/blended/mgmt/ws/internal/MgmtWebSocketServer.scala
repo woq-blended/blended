@@ -10,7 +10,6 @@ import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName}
 import blended.security.login.api.{Token, TokenStore}
 import blended.updater.config.ContainerInfo
 import blended.updater.config.json.PrickleProtocol._
-import blended.jmx.json.PrickleProtocol._
 import blended.util.logging.Logger
 import prickle._
 

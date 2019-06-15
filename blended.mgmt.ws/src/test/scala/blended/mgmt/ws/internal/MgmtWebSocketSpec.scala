@@ -154,7 +154,9 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
     }.toList
   }
 
-  def wsConnect(user : String, password : String)(implicit system : ActorSystem, materializer : Materializer) : (KillSwitch, CompletionStage[java.util.List[Message]]) = {
+  def wsConnect(user : String, password : String)(
+    implicit system : ActorSystem, materializer : Materializer
+  ) : (KillSwitch, CompletionStage[java.util.List[Message]]) = {
     val token = login(user, password).get
 
     // We need to set up a kill switch, so that the client can be closed
