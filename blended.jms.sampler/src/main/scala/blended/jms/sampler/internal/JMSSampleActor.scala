@@ -9,6 +9,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import blended.akka.OSGIActorConfig
 import blended.util.FileHelper
 import javax.jms._
+import scala.util.control.NonFatal
 
 case object StartSampling
 case object StopSampling
@@ -81,11 +82,15 @@ class JMSSampleActor(dir : File, cfg : OSGIActorConfig, cf : ConnectionFactory, 
     case object WriteMsg
 
     def writeMsg(bytes : Array[Byte]) : Unit = {
+
+      val fileName = s"$destName-${df.format(new Date())}-${count.incrementAndGet()}"
+
       try {
-        val fileName = s"$destName-${df.format(new Date())}-${count.incrementAndGet()}"
         val file = new File(dir, fileName)
         FileHelper.writeFile(file, bytes)
         log.info(s"Written [${bytes.length}] bytes to [${file.getAbsolutePath()}]")
+      } catch {
+        case NonFatal(t) => log.warning(s"Failed to write file [$fileName]")
       }
     }
 

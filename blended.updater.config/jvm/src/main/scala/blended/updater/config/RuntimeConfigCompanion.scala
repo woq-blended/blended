@@ -57,7 +57,7 @@ object RuntimeConfigCompanion {
 
     val propCfg : Map[String, String] => ConfigValue = m => ConfigPropertyMapConverter.propertyMapToConfigValue(m)
 
-    val config = Map(
+    val config = Map[String, Any](
       "name" -> runtimeConfig.name,
       "version" -> runtimeConfig.version,
       "bundles" -> runtimeConfig.bundles.map(BundleConfigCompanion.toConfig).map(_.root().unwrapped()).asJava,
@@ -119,7 +119,7 @@ object RuntimeConfigCompanion {
           val inStream = new BufferedInputStream(connection.getInputStream())
           try {
             val bufferSize = 1024
-            var buffer = new Array[Byte](bufferSize)
+            val buffer = new Array[Byte](bufferSize)
 
             while (inStream.read(buffer, 0, bufferSize) match {
               case count if count < 0 => false

@@ -31,6 +31,7 @@ blended.sslcontext/notes.txt
 pom.xml
 target/
 .bloop/
+.metals/
 
 # Eclipse settings and caches
 .project

@@ -24,7 +24,7 @@ class DefaultClientActivatorSpec extends SimplePojoContainerSpec
   )
 
   private implicit val timeout : FiniteDuration = 3.seconds
-  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
+  mandatoryService[ContainerIdentifierService](registry)(None)
 
   "The ActiveMQ Client Activator should" - {
 

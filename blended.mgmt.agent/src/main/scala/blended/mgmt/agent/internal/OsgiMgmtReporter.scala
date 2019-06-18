@@ -3,12 +3,10 @@ package blended.mgmt.agent.internal
 import akka.actor.Props
 import blended.akka.{OSGIActor, OSGIActorConfig}
 import blended.container.context.api.ContainerIdentifierService
-import blended.updater.config.ContainerInfo
 import blended.util.logging.Logger
 
 import scala.util.{Failure, Try}
 
-import blended.updater.config.ServiceInfo
 import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 
 /**

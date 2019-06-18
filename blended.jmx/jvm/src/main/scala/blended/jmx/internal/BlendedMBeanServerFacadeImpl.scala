@@ -32,8 +32,6 @@ class BlendedMBeanServerFacadeImpl(svr : MBeanServer) extends BlendedMBeanServer
 
     val attributes : Map[String, AttributeValue] = attrs.map { a =>
       val v = a.getValue()
-      val info : MBeanAttributeInfo = readableAttrs(a.getName())
-
       (a. getName(), AttributeValue.lift(v).get)
     }.toMap
 

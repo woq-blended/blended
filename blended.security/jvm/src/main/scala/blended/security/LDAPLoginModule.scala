@@ -143,7 +143,7 @@ class LDAPLoginModule extends AbstractLoginModule {
     case s if s.startsWith("*")  => "\\2a" + doRFC2254Encoding(s.substring(1))
     case s if s.startsWith("(")  => "\\28" + doRFC2254Encoding(s.substring(1))
     case s if s.startsWith(")")  => "\\29" + doRFC2254Encoding(s.substring(1))
-    case s if s.startsWith("\0") => "\\00" + doRFC2254Encoding(s.substring(1))
+    case s if s.startsWith("\u0000") => "\\00" + doRFC2254Encoding(s.substring(1))
     case s                       => s.substring(0, 1) + doRFC2254Encoding(s.substring(1))
   }
   // scalastyle:on cyclomatic.complexity

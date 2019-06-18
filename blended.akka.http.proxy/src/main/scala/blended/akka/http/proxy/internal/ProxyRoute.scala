@@ -25,8 +25,6 @@ trait ProxyRoute {
 
   def proxyRoute : Route = _proxyRoute
 
-  private[this] type HttpClient = HttpRequest ⇒ Future[HttpResponse]
-
   private[this] lazy val _proxyRoute : Route =
     pathEndOrSingleSlash {
       handle("")

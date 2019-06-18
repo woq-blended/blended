@@ -1,12 +1,12 @@
-package blended.mgmt.ws.internal
+package blended.websocket.internal
 
 import akka.actor.{Actor, ActorRef, Props}
 import blended.jmx.BlendedMBeanServerFacade
 import blended.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object JmxRefreshActor {
 

@@ -27,7 +27,7 @@ class LoginService(
   private[this] lazy val publicKeyPEM : String = {
 
     // scalastyle:off magic.number
-    def lines(s : String)(current : List[String] = List.empty) : List[String] = {
+    def lines(s : String)(current : List[String]) : List[String] = {
       if (s.length <= 64) {
         s :: current
       } else {

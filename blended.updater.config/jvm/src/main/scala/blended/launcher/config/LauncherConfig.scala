@@ -80,7 +80,7 @@ object LauncherConfig {
       "startLevel" -> launcherConfig.startLevel,
       "defaultStartLevel" -> launcherConfig.defaultStartLevel,
       "bundles" -> launcherConfig.bundles.map { b =>
-        Map(
+        Map[String, Any](
           "location" -> b.location,
           "start" -> b.start,
           "startLevel" -> b.startLevel

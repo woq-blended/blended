@@ -52,10 +52,10 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
   )
 
   private[this] val amqCF : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
-  private[this] val httpCtxt : HttpContext = mandatoryService[HttpContext](registry)(None)
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private implicit val materializer : Materializer = ActorMaterializer()
+  mandatoryService[HttpContext](registry)(None)
 
   "The Http Queue Service should (STTP client)" - {
 

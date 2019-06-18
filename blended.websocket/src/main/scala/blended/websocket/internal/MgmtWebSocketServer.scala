@@ -1,4 +1,4 @@
-package blended.mgmt.ws.internal
+package blended.websocket.internal
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes

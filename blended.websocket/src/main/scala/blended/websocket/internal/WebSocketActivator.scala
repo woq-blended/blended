@@ -1,4 +1,4 @@
-package blended.mgmt.ws.internal
+package blended.websocket.internal
 
 import blended.akka.ActorSystemWatching
 import blended.akka.http.{HttpContext, SimpleHttpContext}
@@ -6,7 +6,7 @@ import blended.jmx.BlendedMBeanServerFacade
 import blended.security.login.api.TokenStore
 import domino.DominoActivator
 
-class MgmtWSActivator extends DominoActivator with ActorSystemWatching {
+class WebSocketActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>

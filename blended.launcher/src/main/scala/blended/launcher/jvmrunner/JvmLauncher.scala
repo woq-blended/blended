@@ -15,8 +15,6 @@ import scala.util.control.NonFatal
 
 object JvmLauncher {
 
-  private[this] lazy val log = Logger[JvmLauncher.type]
-
   private[this] lazy val launcher = new JvmLauncher()
 
   def main(args : Array[String]) : Unit = {
@@ -240,9 +238,9 @@ class JvmLauncher() {
     classpath : Seq[File],
     jvmOpts : Array[String],
     arguments : Array[String],
-    interactive : Boolean = false,
-    errorsIntoOutput : Boolean = true,
-    directory : File = new File("."),
+    interactive : Boolean,
+    errorsIntoOutput : Boolean,
+    directory : File,
     shutdownTimeout : FiniteDuration
   ) : RunningProcess = {
 

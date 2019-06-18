@@ -4,7 +4,6 @@ import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.stream.scaladsl.{Keep, Sink}
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
@@ -31,7 +30,6 @@ class HttpQueueServiceSpec extends FreeSpec
 
   private val broker : BrokerService = startBroker()
   private val cf : IdAwareConnectionFactory = amqCf()
-  private val maerialzer : Materializer = ActorMaterializer()
 
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
 
@@ -97,9 +95,6 @@ class HttpQueueServiceSpec extends FreeSpec
         val r = response
         r.status should be(StatusCodes.OK)
         r.entity.contentType should be(ContentTypes.`text/plain(UTF-8)`)
-
-        val g = r.entity.dataBytes
-          .toMat(Sink.seq)(Keep.right)
 
         val vf = r.entity.dataBytes.toMat(Sink.seq[ByteString])(Keep.right).run()
 

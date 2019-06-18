@@ -46,8 +46,6 @@ final case class TabularAttributeValue(override val value : List[AttributeValue]
 
 object AttributeValue {
 
-  import scala.language.implicitConversions
-
   def apply() : AttributeValue = UnitAttributeValue()
   def apply(s : String) : AttributeValue = StringAttributeValue(s)
   def apply(i : Int) : AttributeValue = IntAttributeValue(i)

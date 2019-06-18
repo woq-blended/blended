@@ -43,8 +43,8 @@ class LDAPLoginSpec extends SimplePojoContainerSpec
       val groups = mgr.permissions(sub)
 
       assert(groups.granted.size == 2)
-      assert(groups.granted.exists(_.permissionClass == "admins"))
-      assert(groups.granted.exists(_.permissionClass == "blended"))
+      assert(groups.granted.exists(_.permissionClass == Some("admins")))
+      assert(groups.granted.exists(_.permissionClass == Some("blended")))
     }
   }
 

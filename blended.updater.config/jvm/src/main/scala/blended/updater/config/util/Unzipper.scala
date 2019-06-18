@@ -135,7 +135,7 @@ class Unzipper {
       }
     }
 
-    var filesToExtract = selectedFiles
+    val filesToExtract = selectedFiles
     var extractedFilesInv : List[File] = Nil
 
     try {

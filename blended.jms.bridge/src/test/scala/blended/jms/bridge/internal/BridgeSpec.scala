@@ -339,6 +339,8 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
 
       envelopes should have size (msgCount)
       assert(envelopes.forall(_.isInstanceOf[FlowTransactionUpdate]))
+
+      switch.shutdown()
     }
   }
 }

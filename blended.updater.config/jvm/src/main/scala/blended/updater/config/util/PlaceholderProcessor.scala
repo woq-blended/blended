@@ -13,7 +13,7 @@ class PlaceholderProcessor(props : Map[String, String], openSeq : String, closeS
   def process(in : InputStream, out : OutputStream) : Try[Unit] = Try {
     val is = new LineNumberReader(new InputStreamReader(in))
     val ps = new PrintStream(new BufferedOutputStream(out))
-    var line : String = null
+
     try {
       Iterator.continually(is.readLine()).takeWhile(_ != null).map { line =>
         process(line).get

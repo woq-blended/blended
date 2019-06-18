@@ -4,7 +4,6 @@ import akka.actor.Props
 import blended.container.context.api.ContainerIdentifierService
 import blended.mgmt.agent.internal.MgmtReporter
 import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
-import blended.updater.config.ContainerInfo
 
 import scala.util.Try
 

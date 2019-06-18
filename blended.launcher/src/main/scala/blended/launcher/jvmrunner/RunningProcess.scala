@@ -13,9 +13,6 @@ private[jvmrunner] class RunningProcess(
   shutdownTimeout : FiniteDuration
 ) {
 
-  private[this] val errThread : Thread = asyncCopy(process.getErrorStream, if (errorsIntoOutput) Console.out else Console.err)
-  private[this] val inThread : Thread = asyncCopy(process.getInputStream, Console.out, interactive)
-
   private[this] val in : InputStream = System.in
   private[this] val out : OutputStream = process.getOutputStream
 

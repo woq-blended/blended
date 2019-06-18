@@ -1,4 +1,4 @@
-package blended.mgmt.ws.internal
+package blended.websocket.internal
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Terminated}
 import akka.stream.OverflowStrategy
@@ -7,18 +7,13 @@ import blended.jmx.BlendedMBeanServerFacade
 import blended.security.GrantableObject
 import blended.security.login.api.Token
 import blended.updater.config.UpdateContainerInfo
+import blended.websocket.ClientInfo
 
 sealed trait DispatcherEvent
 case class NewClient(clientInfo : ClientInfo) extends DispatcherEvent
 case class ClientClosed(info : Token) extends DispatcherEvent
 case class ReceivedMessage(msg : String) extends DispatcherEvent
 case class NewData(data : Any) extends DispatcherEvent
-
-private[ws] case class ClientInfo(
-  id : String,
-  token : Token,
-  clientActor : ActorRef
-)
 
 trait Dispatcher {
   def newClient(info : Token) : Flow[String, DispatcherEvent, Any]

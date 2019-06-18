@@ -7,7 +7,7 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
 import blended.streams.jms.JmsEnvelopeHeader
-import blended.streams.message.{BaseFlowMessage, FlowEnvelope}
+import blended.streams.message.FlowEnvelope
 import blended.streams.worklist.{WorklistEvent, WorklistStarted}
 
 import scala.concurrent.duration._

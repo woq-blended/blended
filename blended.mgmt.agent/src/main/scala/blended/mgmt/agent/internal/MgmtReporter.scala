@@ -18,7 +18,6 @@ import scala.concurrent.duration.DurationLong
 import scala.util.Try
 
 import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
-import blended.akka.OSGIActorConfig
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.

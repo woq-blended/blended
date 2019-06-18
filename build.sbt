@@ -103,6 +103,7 @@ lazy val blendedJmsBridge = BlendedJmsBridge.project
 lazy val blendedStreams = BlendedStreams.project
 lazy val blendedStreamsDispatcher = BlendedStreamsDispatcher.project
 lazy val blendedStreamsTestsupport = BlendedStreamsTestsupport.project
+lazy val blendedWebSocket = BlendedWebsocket.project
 lazy val blendedDocs = BlendedDocsJs.project
 lazy val blendedDependencies = BlendedDependencies.project
 
@@ -164,7 +165,8 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedJmsBridge,
   blendedStreams,
   blendedStreamsDispatcher,
-  blendedStreamsTestsupport
+  blendedStreamsTestsupport,
+  blendedWebSocket
 )
 
 lazy val jsProjects : Seq[ProjectReference] = Seq(
