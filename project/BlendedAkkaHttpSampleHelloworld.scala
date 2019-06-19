@@ -1,14 +1,17 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedAkkaHttpSampleHelloworld extends ProjectFactory {
+  //scalastyle:off object.name
   object config extends ProjectSettings {
+  //scalastyle:on object.name
     override val projectName = "blended.akka.http.sample.helloworld"
     override val description = "A sample Akka HTTP bases HTTP endpoint for the blended container"
     override val projectDir = Some("blended.samples/blended.akka.http.sample.helloworld")
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.domino,
       Dependencies.orgOsgi,
       Dependencies.orgOsgiCompendium,
@@ -19,8 +22,8 @@ object BlendedAkkaHttpSampleHelloworld extends ProjectFactory {
       Dependencies.akkaHttpTestkit % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.HelloworldActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.HelloworldActivator",
       exportPackage = Seq()
     )
 
