@@ -2,7 +2,7 @@ package blended.jmx.json
 
 
 import blended.jmx._
-import prickle.{CompositePickler, Pickler, PicklerPair, Unpickler}
+import prickle.{CompositePickler, PicklerPair}
 
 object PrickleProtocol {
 
