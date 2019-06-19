@@ -1,4 +1,5 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import phoenix.{ProjectConfig, ProjectFactory}
 import sbt.Keys._
@@ -19,7 +20,9 @@ private object BlendedSecurityCross {
 }
 
 object BlendedSecurityJs extends ProjectFactory {
+  // scalastyle:off object.name
   object config extends ProjectConfig with CommonSettings with PublishConfig {
+  // scalastyle:on object.name
     override val projectName = "blended.security"
     override def createProject() : Project = BlendedSecurityCross.project.js
     override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
@@ -35,22 +38,24 @@ object BlendedSecurityJs extends ProjectFactory {
 }
 
 object BlendedSecurityJvm extends ProjectFactory {
+  // scalastyle:off object.name
   object config extends ProjectSettings {
+  // scalastyle:on object.name
     override val projectName = "blended.security"
     override val description = "Configuration bundle for the security framework."
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.prickle,
       Dependencies.scalatest % Test,
       Dependencies.logbackCore % Test,
       Dependencies.logbackClassic % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.SecurityActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.SecurityActivator",
       exportPackage = Seq(
         projectName,
-        s"${projectName}.json"
+        s"$projectName.json"
       )
     )
 

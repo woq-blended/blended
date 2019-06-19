@@ -32,6 +32,7 @@ pom.xml
 target/
 .bloop/
 .metals/
+.vscode/
 
 # Eclipse settings and caches
 .project

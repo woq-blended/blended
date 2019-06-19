@@ -1,13 +1,17 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedUpdaterRemote extends ProjectFactory {
+  // scalastyle:off object.name
   object config extends ProjectSettings {
+  // scalastyle:on object.name
+
     override val projectName = "blended.updater.remote"
     override val description = "OSGi Updater remote handle support"
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.orgOsgi,
       Dependencies.domino,
       Dependencies.akkaOsgi,
@@ -25,8 +29,8 @@ object BlendedUpdaterRemote extends ProjectFactory {
       Dependencies.mockitoAll % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.RemoteUpdaterActivator"
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.RemoteUpdaterActivator"
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(

@@ -1,4 +1,5 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import phoenix.{ProjectConfig, ProjectFactory}
 import sbt.Keys._
@@ -19,7 +20,9 @@ private object BlendedUpdaterConfigCross {
 }
 
 object BlendedUpdaterConfigJs extends ProjectFactory {
+  // scalastyle:off object.name
   object config extends ProjectConfig with CommonSettings with PublishConfig {
+  // scalastyle:on object.name
     override val projectName = "blended.updater.config"
 
     override def createProject() : Project = BlendedUpdaterConfigCross.project.js
@@ -43,13 +46,15 @@ object BlendedUpdaterConfigJs extends ProjectFactory {
 }
 
 object BlendedUpdaterConfigJvm extends ProjectFactory {
+  // scalastyle:off object.name
   object config extends ProjectSettings {
+  // scalastyle:on object.name
     override def createProject() : Project = BlendedUpdaterConfigCross.project.jvm
 
     override val projectName = "blended.updater.config"
     override val description = "Configurations for Updater and Launcher"
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.prickle,
       Dependencies.typesafeConfig,
       Dependencies.scalatest % Test,
@@ -59,11 +64,11 @@ object BlendedUpdaterConfigJvm extends ProjectFactory {
       Dependencies.log4s % Test
     )
 
-    override def bundle = super.bundle.copy(
+    override def bundle : OsgiBundle = super.bundle.copy(
       exportPackage = Seq(
         projectName,
-        s"${projectName}.json",
-        s"${projectName}.util",
+        s"$projectName.json",
+        s"$projectName.util",
         "blended.launcher.config"
       )
     )
