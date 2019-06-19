@@ -6,7 +6,7 @@ import sbt._
 object BlendedWebsocket extends ProjectFactory {
   //scalastyle:off object.name
   object config extends ProjectSettings {
-    //scalastyle:on object.name
+  //scalastyle:on object.name
     override val projectName = "blended.websocket"
     override val description = "The web socket server module."
 
@@ -24,18 +24,18 @@ object BlendedWebsocket extends ProjectFactory {
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(
-      bundleActivator = s"$projectName.internal.MgmtWSActivator",
-      exportPackage = Seq()
+      bundleActivator = s"$projectName.internal.WebSocketActivator",
+      exportPackage = Seq(projectName)
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project,
       BlendedAkkaHttp.project,
       BlendedSecurityLoginApi.project,
-      BlendedUpdaterConfigJvm.project,
-      BlendedJmxJvm.project,
 
       BlendedTestsupport.project % Test,
+      BlendedPersistence.project % Test,
+      BlendedPersistenceH2.project % Test,
       BlendedSecurityLoginImpl.project % Test,
       BlendedTestsupportPojosr.project % Test,
       BlendedSecurityLoginRest.project % Test

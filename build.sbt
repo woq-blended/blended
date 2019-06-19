@@ -82,7 +82,6 @@ lazy val blendedMgmtMock = BlendedMgmtMock.project
 lazy val blendedMgmtServiceJmx = BlendedMgmtServiceJmx.project
 lazy val blendedPrickle = BlendedPrickle.project
 lazy val blendedSecurityLoginApi = BlendedSecurityLoginApi.project
-lazy val blendedMgmtWs = BlendedMgmtWs.project
 lazy val blendedSecurityLoginImpl = BlendedSecurityLoginImpl.project
 lazy val blendedSecurityLoginRest = BlendedSecurityLoginRest.project
 lazy val blendedSecurityTest = BlendedSecurityTest.project
@@ -104,6 +103,7 @@ lazy val blendedStreams = BlendedStreams.project
 lazy val blendedStreamsDispatcher = BlendedStreamsDispatcher.project
 lazy val blendedStreamsTestsupport = BlendedStreamsTestsupport.project
 lazy val blendedWebSocket = BlendedWebsocket.project
+lazy val blendedWsJmx = BlendedWsJmx.project
 lazy val blendedDocs = BlendedDocsJs.project
 lazy val blendedDependencies = BlendedDependencies.project
 
@@ -148,7 +148,6 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedMgmtServiceJmx,
   blendedPrickle,
   blendedSecurityLoginApi,
-  blendedMgmtWs,
   blendedSecurityLoginImpl,
   blendedSecurityLoginRest,
   blendedSecurityTest,
@@ -166,7 +165,8 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedStreams,
   blendedStreamsDispatcher,
   blendedStreamsTestsupport,
-  blendedWebSocket
+  blendedWebSocket,
+  blendedWsJmx
 )
 
 lazy val jsProjects : Seq[ProjectReference] = Seq(

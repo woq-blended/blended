@@ -6,21 +6,17 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.scaladsl.Flow
-import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName}
 import blended.security.login.api.{Token, TokenStore}
-import blended.updater.config.ContainerInfo
-import blended.updater.config.json.PrickleProtocol._
 import blended.util.logging.Logger
-import prickle._
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
-class MgmtWebSocketServer(system : ActorSystem, store : TokenStore, facade : BlendedMBeanServerFacade) {
+class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
 
-  private[this] val log = Logger[MgmtWebSocketServer]
+  private[this] val log = Logger[WebSocketProtocolHandler]
   private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
-  private[this] val dispatcher = Dispatcher.create(system, facade)
+  private[this] val dispatcher = Dispatcher.create(system)
 
   def route : Route = routeImpl
 
@@ -33,7 +29,7 @@ class MgmtWebSocketServer(system : ActorSystem, store : TokenStore, facade : Ble
           log.error(s"Could not verify token [$token] : [${e.getMessage}]")
           complete(StatusCodes.Unauthorized)
         case Success(verified) =>
-          log.info(s"Starting Web Socket message handler ... [${verified.id}]")
+          log.info(s"Starting Web Socket message handler for token [${verified.id}]")
 
           store.getToken(verified.id) match {
             case None =>
@@ -65,8 +61,6 @@ class MgmtWebSocketServer(system : ActorSystem, store : TokenStore, facade : Ble
         // NewData is a container to send arbitrary data back to the client
         case NewData(data) =>
           val msg : String = data match {
-            case ctInfo : ContainerInfo => Pickle.intoString(ctInfo)
-            case names : List[JmxObjectName] => Pickle.intoString(names)
             case msg : String => msg
             case _            => ""
           }
@@ -83,7 +77,7 @@ class MgmtWebSocketServer(system : ActorSystem, store : TokenStore, facade : Ble
     Flow[T]
       .watchTermination()((_, f) => f.onComplete {
         case Failure(cause) =>
-          println(s"WS stream failed with $cause")
+          log.error(cause)(s"WS stream failed : [${cause.getMessage()}]")
         case _ => // ignore regular completion
       })
 }

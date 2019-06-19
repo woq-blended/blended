@@ -1,4 +1,4 @@
-package blended.websocket.internal
+package blended.ws.jmx.internal
 
 import akka.actor.{Actor, ActorRef, Props}
 import blended.jmx.BlendedMBeanServerFacade

@@ -1,13 +1,16 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedMgmtRest extends ProjectFactory {
+  //scalastyle:off object.name
   object config extends ProjectSettings {
+  //scalastyle:on object.name
     override val projectName = "blended.mgmt.rest"
     override val description = "REST interface to accept POST's from distributed containers. These will be delegated to the container registry."
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.akkaActor,
       Dependencies.domino,
       Dependencies.akkaHttp,
@@ -24,8 +27,8 @@ object BlendedMgmtRest extends ProjectFactory {
       Dependencies.jclOverSlf4j % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.MgmtRestActivator",
+    override def bundle: OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.MgmtRestActivator",
       exportPackage = Seq()
     )
 

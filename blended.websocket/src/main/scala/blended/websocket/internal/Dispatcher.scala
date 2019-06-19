@@ -1,12 +1,10 @@
 package blended.websocket.internal
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Terminated}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props, Status, Terminated}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import blended.jmx.BlendedMBeanServerFacade
 import blended.security.GrantableObject
 import blended.security.login.api.Token
-import blended.updater.config.UpdateContainerInfo
 import blended.websocket.ClientInfo
 
 sealed trait DispatcherEvent
@@ -20,8 +18,8 @@ trait Dispatcher {
 }
 
 object Dispatcher {
-  def create(system : ActorSystem, facade: BlendedMBeanServerFacade) : Dispatcher = {
-    val dispatcherActor = system.actorOf(DispatcherActor.props(facade))
+  def create(system : ActorSystem) : Dispatcher = {
+    val dispatcherActor = system.actorOf(Props[DispatcherActor])
 
     info : Token => {
       val in = Flow[String]
@@ -39,17 +37,11 @@ object Dispatcher {
     }
   }
 
-  object DispatcherActor {
-    def props(facade : BlendedMBeanServerFacade) : Props = Props(new DispatcherActor(facade))
-  }
-
-  class DispatcherActor(facade : BlendedMBeanServerFacade) extends Actor with ActorLogging {
+  class DispatcherActor extends Actor with ActorLogging {
 
     override def receive : Receive = Actor.emptyBehavior
 
     override def preStart() : Unit = {
-      context.system.eventStream.subscribe(self, classOf[UpdateContainerInfo])
-      context.system.actorOf(JmxRefreshActor.props(self, facade))
       context.become(dispatching(Map.empty))
     }
 
@@ -81,9 +73,6 @@ object Dispatcher {
     private def dispatching(clients : Map[String, ClientInfo]) : Receive = {
       case m : ReceivedMessage =>
         dispatch(m)(clients)
-
-      case UpdateContainerInfo(ctInfo) =>
-        self ! NewData(ctInfo)
 
       case nd : NewData =>
         log.debug(s"Received data to dispatch [${nd.data.getClass().getName()}][${nd.data}]")
