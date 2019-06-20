@@ -1,15 +1,17 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedMgmtAgent extends ProjectFactory {
-  
-  object config extends ProjectSettings {
-    
-    override val projectName = "blended.mgmt.agent"
-    override val description = "Bundle to regularly report monitoring information to a central container hosting the container registry"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.mgmt.agent"
+    override val description : String = "Bundle to regularly report monitoring information to a central container hosting the container registry"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.orgOsgi,
       Dependencies.akkaOsgi,
       Dependencies.akkaHttp,
@@ -18,8 +20,8 @@ object BlendedMgmtAgent extends ProjectFactory {
       Dependencies.scalatest % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.AgentActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.AgentActivator",
       exportPackage = Seq()
     )
 
