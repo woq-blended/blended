@@ -1,15 +1,20 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import phoenix.ProjectFactory
 import sbt.Keys._
 import sbt._
 
 object BlendedStreamsDispatcher extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.streams.dispatcher"
-    override val description = "A generic Dispatcher to support common integration routing."
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+
+    override val projectName : String = "blended.streams.dispatcher"
+    override val description : String = "A generic Dispatcher to support common integration routing."
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaStream,
       Dependencies.geronimoJms11Spec,
@@ -27,11 +32,11 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Dependencies.asciiRender % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.DispatcherActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.DispatcherActivator",
       exportPackage = Seq(
         projectName,
-        s"${projectName}.cbe"
+        s"$projectName.cbe"
       )
     )
 

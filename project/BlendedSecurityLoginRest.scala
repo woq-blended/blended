@@ -1,13 +1,17 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedSecurityLoginRest extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.security.login.rest"
-    override val description = "A REST service providing login services and web token management"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.security.login.rest"
+    override val description : String = "A REST service providing login services and web token management"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.akkaHttp,
       Dependencies.akkaHttpCore,
 
@@ -21,8 +25,8 @@ object BlendedSecurityLoginRest extends ProjectFactory {
       Dependencies.sttpAkka % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.RestLoginActivator"
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.RestLoginActivator"
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(

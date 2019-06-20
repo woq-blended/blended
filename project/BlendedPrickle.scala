@@ -1,20 +1,24 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import com.typesafe.sbt.osgi.OsgiKeys
 import phoenix.ProjectFactory
 import sbt.Keys._
 import sbt._
 
 object BlendedPrickle extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.prickle"
-    override val description = "OSGi package for Prickle and mircojson"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.prickle"
+    override val description : String = "OSGi package for Prickle and mircojson"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.prickle.intransitive(),
       Dependencies.microjson.intransitive()
     )
 
-    override def bundle = super.bundle.copy(
+    override def bundle : OsgiBundle = super.bundle.copy(
       importPackage = Seq(
         "prickle",
         "microjson"

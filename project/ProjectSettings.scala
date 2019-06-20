@@ -31,7 +31,7 @@ trait ProjectSettings
   def projectFactory: () => Project = { () =>
     val name = projectName.split("[.]").foldLeft("") {
       case ("", next) => next
-      case (name, next) => name + next.capitalize
+      case (n, next) => n + next.capitalize
     }
     Project(name, file(projectDir.getOrElse(projectName)))
   }
@@ -83,14 +83,14 @@ trait ProjectSettings
           annotatedTestNames.contains(t.name)
         }
 
-        val combined : Tests.Group = new Group(
+        val combined : Tests.Group = Group(
           name = "Combined",
           tests = otherTests,
           runPolicy = SubProcess(config = ForkOptions.apply().withRunJVMOptions(options))
         )
 
         val forked : Seq[Tests.Group] = forkedTests.map { t =>
-          new Group(
+          Group(
             name = t.name,
             tests = Seq(t),
             runPolicy = SubProcess(config = ForkOptions.apply().withRunJVMOptions(options))
@@ -104,11 +104,11 @@ trait ProjectSettings
         forked ++ Seq(combined)
       },
 
-    ) ++ (
+    ) ++
       // We need to explicitly load the rb settings again to
       // make sure the OSGi package is post-processed:
       ReproducibleBuildsPlugin.projectSettings
-      )
+
   }
 
 

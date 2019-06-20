@@ -16,7 +16,7 @@ import scala.util.Try
   * A command handler is built over an arbitrary type T, which is the implementation of the
   * command payload and response.
   */
-trait WebsocketCommandHandler[T] {
+trait WebSocketCommandHandler[T] {
 
   /**
     * Execute a command on behalf of a client. All permission information is contained
@@ -25,5 +25,5 @@ trait WebsocketCommandHandler[T] {
     * @param info The token with the security information
     * @return A WsData encoded response as a [[Try]]
     */
-  def handleCommand(cmd : WsData[T], info: Token) : Try[WsData[T]]
+  def handleCommand(cmd : WsCommandEnvelope[T], info: Token) : Try[WsCommandEnvelope[T]]
 }

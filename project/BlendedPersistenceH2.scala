@@ -1,14 +1,17 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedPersistenceH2 extends ProjectFactory {
+
+  // scalastyle:off object.name
   object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.persistence.h2"
+    override val description : String = "Implement a persistence backend with H2 JDBC database"
 
-    override val projectName = "blended.persistence.h2"
-    override val description = "Implement a persistence backend with H2 JDBC database"
-
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.slf4j,
       Dependencies.domino,
       Dependencies.h2,
@@ -26,11 +29,11 @@ object BlendedPersistenceH2 extends ProjectFactory {
       Dependencies.scalacheck % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.H2Activator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.H2Activator",
       exportPackage = Seq(),
       privatePackage = Seq(
-        s"${projectName}.internal",
+        s"$projectName.internal",
         "blended.persistence.jdbc"
       )
     )

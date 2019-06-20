@@ -3,12 +3,15 @@ import phoenix.ProjectFactory
 import sbt._
 
 object BlendedTestsupport extends ProjectFactory {
+
+  // scalastyle:off object.name
   object config extends ProjectSettings {
-    override val projectName = "blended.testsupport"
-    override val description = "Some test helper classes."
+  // scalastyle:on object.name
+    override val projectName : String = "blended.testsupport"
+    override val description : String = "Some test helper classes."
     override val osgi = false
 
-    override def deps = super.deps ++ Seq(
+    override def deps : Seq[ModuleID] = super.deps ++ Seq(
       Dependencies.commonsIo,
       Dependencies.akkaActor,
       Dependencies.akkaTestkit,

@@ -1,12 +1,17 @@
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedHawtioLogin extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.hawtio.login"
-    override val description = "Adding required imports to the hawtio war bundle"
 
-    override def bundle = super.bundle.copy(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  //scalastyle:on object.name
+
+    override val projectName : String = "blended.hawtio.login"
+    override val description : String = "Adding required imports to the hawtio war bundle"
+
+    override def bundle : OsgiBundle = super.bundle.copy(
       importPackage = Seq(
         "blended.security.boot",
         "com.sun.jndi.ldap;resolution:=optional"

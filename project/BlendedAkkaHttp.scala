@@ -1,13 +1,17 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedAkkaHttp extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.akka.http"
-    override val description = "Provide Akka HTTP support"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.akka.http"
+    override val description : String = "Provide Akka HTTP support"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.domino,
       Dependencies.orgOsgi,
       Dependencies.akkaStream,
@@ -23,8 +27,8 @@ object BlendedAkkaHttp extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.BlendedAkkaHttpActivator"
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.BlendedAkkaHttpActivator"
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(

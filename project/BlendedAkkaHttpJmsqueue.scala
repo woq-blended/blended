@@ -3,12 +3,14 @@ import phoenix.ProjectFactory
 import sbt._
 
 object BlendedAkkaHttpJmsqueue extends ProjectFactory {
+  // scalastyle:off object.name
   object config extends ProjectSettings {
+  //scalastyle:on object.name
 
-    override val projectName = "blended.akka.http.jmsqueue"
-    override val description = "Provide a simple REST interface to consume messages from JMS Queues"
+    override val projectName : String = "blended.akka.http.jmsqueue"
+    override val description : String = "Provide a simple REST interface to consume messages from JMS Queues"
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.domino,
       Dependencies.jms11Spec,
       Dependencies.sttp % Test,

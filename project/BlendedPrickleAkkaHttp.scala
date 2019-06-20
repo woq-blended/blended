@@ -3,11 +3,14 @@ import phoenix.ProjectFactory
 import sbt._
 
 object BlendedPrickleAkkaHttp extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.prickle.akka.http"
-    override val description = "Define some convenience to use Prickle with Akka HTTP"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.prickle.akka.http"
+    override val description : String = "Define some convenience to use Prickle with Akka HTTP"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.akkaHttpCore,
       Dependencies.akkaHttp,
       Dependencies.akkaStream,

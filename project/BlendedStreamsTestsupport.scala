@@ -3,12 +3,15 @@ import phoenix.ProjectFactory
 import sbt._
 
 object BlendedStreamsTestsupport extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.streams.testsupport"
-    override val description = "Some classes to make testing for streams a bit easier"
-    override val osgi = false
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.streams.testsupport"
+    override val description : String = "Some classes to make testing for streams a bit easier"
+    override val osgi : Boolean = false
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.scalacheck,
       Dependencies.scalatest,
       Dependencies.akkaTestkit,

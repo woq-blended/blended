@@ -3,11 +3,14 @@ import phoenix.ProjectFactory
 import sbt._
 
 object BlendedAkkaHttpRestjms extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.akka.http.restjms"
-    override val description = "Provide a simple REST interface to perform JMS request / reply operations"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  //scalastyle:on object.name
+    override val projectName : String = "blended.akka.http.restjms"
+    override val description : String = "Provide a simple REST interface to perform JMS request / reply operations"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.domino,
       Dependencies.akkaStream,
       Dependencies.akkaHttp,

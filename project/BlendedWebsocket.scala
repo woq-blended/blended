@@ -1,9 +1,45 @@
 import blended.sbt.Dependencies
 import blended.sbt.phoenix.osgi.OsgiBundle
-import phoenix.ProjectFactory
+import sbtcrossproject.CrossPlugin.autoImport._
+import sbtcrossproject.CrossProject
+import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
+import phoenix.{ProjectConfig, ProjectFactory}
+import sbt.Keys.{libraryDependencies, moduleName, name}
 import sbt._
+import scoverage.ScoverageKeys._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
-object BlendedWebsocket extends ProjectFactory {
+private object BlendedWebSocketCross {
+  private[this] val builder = sbtcrossproject
+    .CrossProject("blendedWebsocket", file("blended.websocket"))(JVMPlatform, JSPlatform)
+
+  val project : CrossProject = builder
+    .crossType(CrossType.Full)
+    .build()
+}
+
+object BlendedWebsocketJs extends ProjectFactory {
+  // scalastyle:off object.name
+  object config extends ProjectConfig with CommonSettings with PublishConfig {
+  // scalastyle:on object.name
+    override def projectName: String = "blended.websocket"
+    override def createProject(): Project = BlendedWebSocketCross.project.js
+
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      name := projectName,
+      moduleName := projectName,
+      libraryDependencies ++= Seq(
+        "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
+        "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % Test,
+        "org.scalacheck" %%% "scalacheck" % Dependencies.scalacheck.revision % Test
+      ),
+      coverageEnabled := false
+    )
+
+  }
+}
+
+object BlendedWebsocketJvm extends ProjectFactory {
   //scalastyle:off object.name
   object config extends ProjectSettings {
   //scalastyle:on object.name
@@ -40,5 +76,7 @@ object BlendedWebsocket extends ProjectFactory {
       BlendedTestsupportPojosr.project % Test,
       BlendedSecurityLoginRest.project % Test
     )
+
+    override def createProject(): Project = BlendedWebSocketCross.project.jvm
   }
 }

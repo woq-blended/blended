@@ -1,13 +1,17 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedContainerContextImpl extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.container.context.impl"
-    override val description = "A simple OSGI service to provide access to the container's config directory"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  //scalastyle:on object.name
+    override val projectName : String = "blended.container.context.impl"
+    override val description : String = "A simple OSGI service to provide access to the container's config directory"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.orgOsgiCompendium,
       Dependencies.orgOsgi,
       Dependencies.domino,
@@ -24,8 +28,8 @@ object BlendedContainerContextImpl extends ProjectFactory {
       Dependencies.jclOverSlf4j % "test"
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.ContainerContextActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.ContainerContextActivator",
       importPackage = Seq("blended.launcher.runtime;resolution:=optional")
     )
 

@@ -3,11 +3,14 @@ import phoenix.ProjectFactory
 import sbt._
 
 object BlendedAkkaHttpProxy extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.akka.http.proxy"
-    override val description = "Provide Akka HTTP Proxy support"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  //scalastyle:on object.name
+    override val projectName : String = "blended.akka.http.proxy"
+    override val description : String = "Provide Akka HTTP Proxy support"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.domino,
       Dependencies.akkaStream,
       Dependencies.akkaHttp,

@@ -1,7 +1,7 @@
 package blended.akka.http.restjms.internal
 
+import blended.util.config.Implicits._
 import com.typesafe.config.Config
-
 import scala.collection.JavaConverters._
 
 object RestJMSConfig {
@@ -10,12 +10,12 @@ object RestJMSConfig {
 
   def fromConfig(cfg : Config) : RestJMSConfig = {
 
-    val operations : Map[String, JmsOperationConfig] = cfg.hasPath(operationsPath) match {
-      case false => Map.empty
-      case true =>
-        cfg.getObject(operationsPath).keySet().asScala.map { key =>
-          (key, JmsOperationConfig(cfg.getConfig(operationsPath).getConfig(s""""$key"""")))
-        }.toMap
+    val operations : Map[String, JmsOperationConfig] = if (cfg.hasPath(operationsPath)) {
+      cfg.getObject(operationsPath).keySet().asScala.map { key =>
+        (key, JmsOperationConfig(cfg.getConfig(operationsPath).getConfig(s""""$key"""")))
+      }.toMap
+    } else {
+      Map.empty
     }
 
     RestJMSConfig(operations)
@@ -28,47 +28,45 @@ case class RestJMSConfig(
 )
 
 object JmsOperationConfig {
+  private val destinationPath = "destination"
+  private val headerPath = "header"
+  private val receivetimeoutPath = "receivetimeout"
+  private val timeoutPath = "timeout"
+  private val jmsReplyPath = "jmsreply"
+  private val cTypePath = "contentTypes"
+  private val isSoapPath = "isSoap"
+  private val encodingPath = "encoding"
+
+  //noinspection NameBooleanParameters
   def apply(cfg : Config) : JmsOperationConfig = {
 
-    val destinationPath = "destination"
-    val headerPath = "header"
-    val receivetimeoutPath = "receivetimeout"
-    val timeoutPath = "timeout"
-    val jmsReplyPath = "jmsreply"
-    val cTypePath = "contentTypes"
-    val isSoapPath = "isSoap"
-    val encodingPath = "encoding"
 
     new JmsOperationConfig(
       destination = cfg.getString(destinationPath),
+      //scalastyle:off magic.number
+      timeout = cfg.getLong(timeoutPath, 1000L),
+      receivetimeout = cfg.getLong(receivetimeoutPath, 250L),
+      //scalastyle:on magic.number
 
-      timeout = cfg.hasPath(timeoutPath) match {
-        case true  => cfg.getLong(timeoutPath)
-        case false => 1000L
-      },
-
-      receivetimeout = cfg.hasPath(receivetimeoutPath) match {
-        case true  => cfg.getLong(receivetimeoutPath)
-        case false => 250L
-      },
-
-      header = cfg.hasPath(headerPath) match {
-        case false => Map.empty
-        case true => cfg.getObject(headerPath).keySet().asScala.map { key =>
+      header = if (cfg.hasPath(headerPath)) {
+        cfg.getObject(headerPath).keySet().asScala.map { key =>
           (key, cfg.getObject(headerPath).get(key).unwrapped().asInstanceOf[String])
         }.toMap
+      } else {
+        Map.empty
       },
 
-      jmsReply = !cfg.hasPath(jmsReplyPath) || cfg.getBoolean(jmsReplyPath),
+      jmsReply = cfg.getBoolean(jmsReplyPath, true),
 
-      contentTypes = cfg.hasPath(cTypePath) match {
-        case false => None
-        case true  => Some(cfg.getStringList(cTypePath).asScala.toList)
+      contentTypes = if (cfg.hasPath(cTypePath)) {
+        Some(cfg.getStringList(cTypePath).asScala.toList)
+      } else {
+        None
       },
 
-      isSoap = cfg.hasPath(isSoapPath) && cfg.getBoolean(isSoapPath),
+      isSoap = cfg.getBoolean(isSoapPath, false),
 
-      encoding = if (cfg.hasPath(encodingPath)) cfg.getString(encodingPath) else "UTF-8"
+      encoding = cfg.getString(encodingPath, "UTF-8")
     )
   }
 }

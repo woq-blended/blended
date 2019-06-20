@@ -1,13 +1,17 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedMgmtRepo extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.mgmt.repo"
-    override val description = "File Artifact Repository"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.mgmt.repo"
+    override val description : String = "File Artifact Repository"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.scalatest % Test,
       Dependencies.lambdaTest % Test,
       Dependencies.akkaTestkit % Test,
@@ -17,11 +21,11 @@ object BlendedMgmtRepo extends ProjectFactory {
       Dependencies.scalatest % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.ArtifactRepoActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.ArtifactRepoActivator",
       privatePackage = Seq(
-        s"${projectName}.file.*",
-        s"${projectName}.internal.*"
+        s"$projectName.file.*",
+        s"$projectName.internal.*"
       )
     )
 

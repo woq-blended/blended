@@ -3,7 +3,9 @@ import phoenix.ProjectFactory
 import sbt._
 
 object BlendedMgmtAgent extends ProjectFactory {
+  
   object config extends ProjectSettings {
+    
     override val projectName = "blended.mgmt.agent"
     override val description = "Bundle to regularly report monitoring information to a central container hosting the container registry"
 

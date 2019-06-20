@@ -1,15 +1,19 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import com.typesafe.sbt.osgi.OsgiKeys._
 import phoenix.ProjectFactory
 import sbt.Keys._
 import sbt._
 
 object BlendedSecuritySsl extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.security.ssl"
-    override val description = "Bundle to provide simple Server Certificate Management."
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.security.ssl"
+    override val description : String = "Bundle to provide simple Server Certificate Management."
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.domino.intransitive(),
       Dependencies.bouncyCastleBcprov,
       Dependencies.bouncyCastlePkix,
@@ -20,8 +24,8 @@ object BlendedSecuritySsl extends ProjectFactory {
       Dependencies.scalacheck % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.CertificateActivator"
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.CertificateActivator"
     )
 
     override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(

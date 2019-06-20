@@ -15,12 +15,14 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
     def pure : ModuleID = moduleId.withExclusions(Vector(InclExclRule()))
   }
 
+  // scalastyle:off object.name
   object config extends ProjectSettings {
-    override val projectName = "blended.security.scep.standalone"
-    override val description = "Standalone client to manage certificates via SCEP"
-    override val osgi = false
+  // scalastyle:on object.name
+    override val projectName : String = "blended.security.scep.standalone"
+    override val description : String = "Standalone client to manage certificates via SCEP"
+    override val osgi : Boolean = false
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.felixConnect,
       Dependencies.domino.pure,
       Dependencies.typesafeConfig.pure,

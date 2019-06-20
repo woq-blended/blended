@@ -1,15 +1,18 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedSecurityCrypto extends ProjectFactory {
 
+  // scalastyle:off object.name
   object config extends ProjectSettings {
-    override val projectName = "blended.security.crypto"
-    override val description = "Provides classes and mainline for encrypting / decrypting arbitrary Strings."
+  // scalastyle:on object.name
+    override val projectName : String = "blended.security.crypto"
+    override val description : String = "Provides classes and mainline for encrypting / decrypting arbitrary Strings."
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.cmdOption,
 
       Dependencies.scalatest % Test,
@@ -18,7 +21,7 @@ object BlendedSecurityCrypto extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def bundle = super.bundle.copy(
+    override def bundle : OsgiBundle = super.bundle.copy(
       importPackage = Seq(
         "de.tototec.cmdoption;resolution:=optional"
       ),

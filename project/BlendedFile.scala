@@ -6,11 +6,14 @@ import phoenix.ProjectFactory
 import sbt._
 
 object BlendedFile extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.file"
-    override val description = "Bundle to define a customizable Filedrop / Filepoll API"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  //scalastyle:on object.name
+    override val projectName : String = "blended.file"
+    override val description : String = "Bundle to define a customizable Filedrop / Filepoll API"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.commonsIo % "test",
       Dependencies.activeMqBroker % "test",
       Dependencies.activeMqKahadbStore % "test",

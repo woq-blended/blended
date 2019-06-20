@@ -5,11 +5,13 @@ import scoverage.ScoverageSbtPlugin.autoImport._
 
 object BlendedDependencies extends ProjectFactory {
 
-  val exportDependenciesFile = taskKey[File]("Export project dependencies as Scala file")
+  private val exportDependenciesFile = taskKey[File]("Export project dependencies as Scala file")
 
+  // scalastyle:off object.name
   object config extends ProjectSettings {
-    override val projectName = "blended.dependencies"
-    override val description = "Blended dependencies"
+  // scalastyle:on object.name
+    override val projectName : String = "blended.dependencies"
+    override val description : String = "Blended dependencies"
     override val osgi = false
 
     override def settings : Seq[sbt.Setting[_]] = super.settings ++

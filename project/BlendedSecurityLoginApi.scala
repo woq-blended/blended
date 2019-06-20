@@ -1,13 +1,17 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 private object BlendedSecurityLoginApi extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.security.login.api"
-    override val description = "API to provide the backend for a Login Service"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.security.login.api"
+    override val description : String = "API to provide the backend for a Login Service"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.prickle,
       Dependencies.jjwt,
       Dependencies.scalatest % Test,
@@ -15,7 +19,7 @@ private object BlendedSecurityLoginApi extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def bundle = super.bundle.copy(
+    override def bundle : OsgiBundle = super.bundle.copy(
       importPackage = Seq("android.*;resolution:=optional")
     )
 

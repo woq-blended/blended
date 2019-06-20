@@ -6,7 +6,7 @@ import sbt._
 object BlendedMgmtWs extends ProjectFactory {
   //scalastyle:off object.name
   object config extends ProjectSettings {
-    //scalastyle:on object.name
+  //scalastyle:on object.name
     override val projectName = "blended.mgmt.ws"
     override val description = "Web sockets interface for Mgmt clients."
 

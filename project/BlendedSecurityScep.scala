@@ -1,4 +1,5 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import com.typesafe.sbt.osgi.OsgiKeys._
 import phoenix.ProjectFactory
 import sbt.Keys._
@@ -10,11 +11,13 @@ object BlendedSecurityScep extends ProjectFactory {
     "jscep"
   )
 
+  // scalastyle:off object.name
   object config extends ProjectSettings {
-    override val projectName = "blended.security.scep"
-    override val description = "Bundle to manage the container certificate via SCEP."
+  // scalastyle:on object.name
+    override val projectName : String = "blended.security.scep"
+    override val description : String = "Bundle to manage the container certificate via SCEP."
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.bouncyCastlePkix,
       Dependencies.bouncyCastleBcprov,
       Dependencies.commonsIo,
@@ -28,8 +31,8 @@ object BlendedSecurityScep extends ProjectFactory {
       Dependencies.scalatest % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.ScepActivator"
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.ScepActivator"
     )
 
     override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(

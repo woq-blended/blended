@@ -1,15 +1,19 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import com.typesafe.sbt.osgi.OsgiKeys._
 import phoenix.ProjectFactory
 import sbt.Keys._
 import sbt._
 
 object BlendedSecurityLoginImpl extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.security.login.impl"
-    override val description = "Implementation of the Login backend."
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.security.login.impl"
+    override val description : String = "Implementation of the Login backend."
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.jjwt,
       Dependencies.bouncyCastleBcprov,
       Dependencies.scalatest % Test,
@@ -17,8 +21,8 @@ object BlendedSecurityLoginImpl extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.LoginActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.LoginActivator",
       importPackage = Seq("android.*;resolution:=optional"),
       privatePackage = Seq(projectName),
       exportPackage = Seq()

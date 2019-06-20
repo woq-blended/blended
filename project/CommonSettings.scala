@@ -6,7 +6,8 @@ import xerial.sbt.Sonatype.SonatypeKeys._
 
 trait CommonSettings extends ProjectConfig {
 
-  val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
+  private val m2Repo : String =
+    "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
   override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
     organization := "de.wayofquality.blended",

@@ -3,11 +3,14 @@ import phoenix.ProjectFactory
 import sbt._
 
 object BlendedPersistence extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.persistence"
-    override val description = "Provide a technology agnostic persistence API with pluggable Data Objects defined in other bundles"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.persistence"
+    override val description : String = "Provide a technology agnostic persistence API with pluggable Data Objects defined in other bundles"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.slf4j,
       Dependencies.domino,
       Dependencies.scalatest % Test,

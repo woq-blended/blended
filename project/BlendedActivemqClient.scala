@@ -1,21 +1,24 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedActivemqClient extends ProjectFactory {
 
+  // scalastyle:off object.name
   object config extends ProjectSettings {
-    override val projectName = "blended.activemq.client"
-    override val description = "An Active MQ Connection factory as a service"
+  // scalastyle:on object.name
+    override val projectName : String = "blended.activemq.client"
+    override val description : String = "An Active MQ Connection factory as a service"
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.activeMqClient,
       Dependencies.activeMqBroker % Test,
       Dependencies.activeMqKahadbStore % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.AmqClientActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.AmqClientActivator",
       exportPackage = Seq(projectName)
     )
 

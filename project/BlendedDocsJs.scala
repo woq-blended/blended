@@ -7,12 +7,15 @@ import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 
 object BlendedDocsJs extends ProjectFactory {
+
+  // scalastyle:off object.name
   object config extends ProjectSettings {
-    override val projectName = "blended.docs"
-    override val description = "Dummy Js project to download npm modules for the doc generator"
-    override val osgi = false
+  //scalastyle:on object.name
+    override val projectName :String = "blended.docs"
+    override val description : String = "Dummy Js project to download npm modules for the doc generator"
+    override val osgi : Boolean = false
     override val projectDir : Option[String] = Some("doc")
-    override val publish = false
+    override val publish : Boolean = false
 
     override def plugins : Seq[AutoPlugin] = super.plugins ++ Seq(
       ScalaJSPlugin,

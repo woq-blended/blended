@@ -3,11 +3,16 @@ import phoenix.ProjectFactory
 import sbt._
 
 object BlendedJmsUtils extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.jms.utils"
-    override val description = "A bundle to provide a ConnectionFactory wrapper that monitors a single connection and is able to monitor the connection via an active ping."
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  //scalastyle:on object.name
+
+    override val projectName : String = "blended.jms.utils"
+    override val description : String =
+      "A bundle to provide a ConnectionFactory wrapper that monitors a single connection and is able to monitor the connection via an active ping."
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.camelJms,
       Dependencies.jms11Spec,
       Dependencies.scalatest % Test,

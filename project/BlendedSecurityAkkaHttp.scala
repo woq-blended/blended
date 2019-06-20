@@ -3,11 +3,14 @@ import phoenix.ProjectFactory
 import sbt._
 
 private object BlendedSecurityAkkaHttp extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.security.akka.http"
-    override val description = "Some security aware Akka HTTP routes for the blended container"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.security.akka.http"
+    override val description : String = "Some security aware Akka HTTP routes for the blended container"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.akkaHttp,
       Dependencies.akkaStream,
       Dependencies.orgOsgi,

@@ -1,16 +1,19 @@
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import phoenix.ProjectFactory
 import sbt._
 
 object BlendedAkka extends ProjectFactory {
 
+  // scalastyle:off object.name
   object config extends ProjectSettings {
+  // scalastyle:on object.name
 
     override val projectName = "blended.akka"
     override val description = "Provide OSGi services and API to use Actors in OSGi bundles with a shared ActorSystem."
 
-    override def deps = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.orgOsgi,
       Dependencies.akkaActor,
       Dependencies.domino,
@@ -20,11 +23,11 @@ object BlendedAkka extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def bundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.BlendedAkkaActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.BlendedAkkaActivator",
       exportPackage = Seq(
         projectName,
-        s"${projectName}.protocol"
+        s"$projectName.protocol"
       )
     )
 

@@ -1,6 +1,7 @@
 import java.nio.file.{Files, StandardCopyOption}
 
 import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
 import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlugin}
@@ -11,11 +12,14 @@ import sbt.Keys._
 import sbt._
 
 object BlendedLauncher extends ProjectFactory {
-  object config extends ProjectSettings {
-    override val projectName = "blended.launcher"
-    override val description = "Provide an OSGi Launcher"
 
-    override def deps = Seq(
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  //scalastyle:on object.name
+    override val projectName : String = "blended.launcher"
+    override val description : String = "Provide an OSGi Launcher"
+
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.cmdOption,
       Dependencies.orgOsgi,
       Dependencies.typesafeConfig,
@@ -26,15 +30,15 @@ object BlendedLauncher extends ProjectFactory {
       Dependencies.scalatest % Test
     )
 
-    override def bundle = super.bundle.copy(
+    override def bundle : OsgiBundle = super.bundle.copy(
       importPackage = Seq(
         "org.apache.commons.daemon;resolution:=optional",
         "de.tototec.cmdoption.*;resolution:=optional"
       ),
       privatePackage = Seq(
-        s"${projectName}.internal",
-        s"${projectName}.jvmrunner",
-        s"${projectName}.runtime"
+        s"$projectName.internal",
+        s"$projectName.jvmrunner",
+        s"$projectName.runtime"
       )
     )
 
@@ -44,7 +48,7 @@ object BlendedLauncher extends ProjectFactory {
       FilterResources
     )
 
-    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    private def scalaSettings : Seq[sbt.Setting[_]] = Seq(
       Compile / filterSources := Seq(baseDirectory.value / "src" / "runner" / "resources"),
       Compile / filterTargetDir := target.value / "runner",
       Compile / filterRegex := "[@]([^\\n]+?)[@]",
@@ -91,32 +95,35 @@ object BlendedLauncher extends ProjectFactory {
           tf
         }
       }.taskValue
-    ) ++ Seq(
+    )
 
-        Universal / topLevelDirectory := None,
+    private def packageSettings : Seq[sbt.Setting[_]] = Seq(
+      Universal / topLevelDirectory := None,
 
-        Universal / mappings += {
-          val packaged = (Compile / packageBin).value
-          packaged -> s"lib/${packaged.getName}"
+      Universal / mappings += {
+        val packaged = (Compile / packageBin).value
+        packaged -> s"lib/${packaged.getName}"
+      },
+      Universal / mappings ++= {
+        val dir = baseDirectory.value / "src" / "runner" / "binaryResources"
+        PathFinder(dir).**("***").pair(relativeTo(dir))
+      },
+      Universal / mappings ++= (Compile / dependencyClasspathAsJars).value
+        .map(_.data)
+        .filter(_.isFile)
+        .filterNot(_.getName().startsWith("akka-actor"))
+        .filterNot(_.getName().startsWith("akka-slf4j"))
+        .filterNot(_.getName().startsWith("prickle"))
+        .map { f =>
+          f -> s"lib/${f.getName()}"
         },
-        Universal / mappings ++= {
-          val dir = baseDirectory.value / "src" / "runner" / "binaryResources"
-          PathFinder(dir).**("***").pair(relativeTo(dir))
-        },
-        Universal / mappings ++= (Compile / dependencyClasspathAsJars).value
-          .map(_.data)
-          .filter(_.isFile)
-          .filterNot(_.getName().startsWith("akka-actor"))
-          .filterNot(_.getName().startsWith("akka-slf4j"))
-          .filterNot(_.getName().startsWith("prickle"))
-          .map { f =>
-            f -> s"lib/${f.getName()}"
-          },
-        Universal / mappings ++= (Compile / filterResources).value,
-        Universal / packageBin / mainClass := None,
+      Universal / mappings ++= (Compile / filterResources).value,
+      Universal / packageBin / mainClass := None,
 
-        packagedArtifacts ++= (Universal / packagedArtifacts).value
-      )
+      packagedArtifacts ++= (Universal / packagedArtifacts).value
+    )
+
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ scalaSettings ++ packageSettings
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtilLogging.project,
