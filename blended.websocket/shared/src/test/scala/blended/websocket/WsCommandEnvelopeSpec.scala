@@ -1,39 +1,42 @@
 package blended.websocket
 
-import blended.websocket.json.PrickleProtocol._
 import org.scalatest.{FreeSpec, Matchers}
-import prickle._
+import prickle.{Pickler, Unpickler}
 
 class WsCommandEnvelopeSpec extends FreeSpec
   with Matchers {
 
-  private def simpleDecodeTest(cmd : StringCommandEnvelope.WsCommand) : Unit = {
-    val encoded : WsMessageEncoded = StringCommandEnvelope.encode(cmd)
-    val json : String = Pickle.intoString(encoded)
-    val decoded : WsMessageEncoded = Unpickle[WsMessageEncoded].fromString(json).get
-    val cmd2 : StringCommandEnvelope.WsCommand = StringCommandEnvelope.decode(decoded).get
-    cmd2 should be (cmd)
-  }
+  private val ctxt : WsMessageContext = WsMessageContext(
+    namespace = "testNs",
+    name = "test"
+  )
 
   "A WsCommandEnvelope should" - {
 
-    "encode / decode to/from Json correctly" in {
+    def decodeTest[T](cmd: WsMessageEnvelope[T])(implicit p : Pickler[T], up : Unpickler[T]) : Unit = {
+      val json : String = cmd.encode()
+      val (c, s) = WsMessageEnvelope.decode[T](json).get
+      c should be (cmd.context)
+      s should be (cmd.content)
+    }
 
-      simpleDecodeTest(StringCommandEnvelope.WsCommand(
-        namespace = "testNs",
-        name = "test",
+    "encode / decode to/from Json correctly (String)" in {
+
+      decodeTest(WsStringMessage(ctxt, "my cool command"))
+
+      decodeTest(WsStringMessage(
+        ctxt.copy(
+          // scalastyle:off magic.number
+          status = Some(200),
+          // scalastyle:on magic.number
+          statusMsg = Some("This worked")
+        ),
         content = "my cool command"
       ))
+    }
 
-      simpleDecodeTest(StringCommandEnvelope.WsCommand(
-        namespace = "testNs",
-        name = "test",
-        content = "my cool command",
-        // scalastyle:off magic.number
-        status = Some(200),
-        // scalastyle:on magic.number
-        statusMsg = Some("This worked")
-      ))
+    "encode / decode to/from Json correctly (Unit)" in {
+      decodeTest(WsUnitMessage(ctxt))
     }
   }
 }

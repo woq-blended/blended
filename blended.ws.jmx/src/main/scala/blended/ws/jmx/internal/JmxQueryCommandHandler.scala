@@ -1,7 +1,7 @@
 package blended.ws.jmx.internal
 
 import blended.security.login.api.Token
-import blended.websocket.{WebSocketCommandHandler, WsCommandEnvelope}
+import blended.websocket.{WebSocketCommandHandler, WsMessageEnvelope}
 
 import scala.util.Try
 

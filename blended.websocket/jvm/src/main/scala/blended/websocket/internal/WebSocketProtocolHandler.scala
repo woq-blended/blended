@@ -8,6 +8,7 @@ import akka.http.scaladsl.server._
 import akka.stream.scaladsl.Flow
 import blended.security.login.api.{Token, TokenStore}
 import blended.util.logging.Logger
+import blended.websocket.WsUnitMessage
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -16,12 +17,12 @@ class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
 
   private[this] val log = Logger[WebSocketProtocolHandler]
   private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
-  private[this] val dispatcher = Dispatcher.create(system)
+  private[this] val cmdHandler : CommandHandlerManager = CommandHandlerManager.create(system)
 
   def route : Route = routeImpl
 
   private[this] lazy val routeImpl : Route = pathSingleSlash {
-    log.info("Received Web Socket upgrade request")
+    log.debug("Received Web Socket upgrade request")
     parameter("token") { token =>
       log.debug(s"Evaluating token [$token]")
       store.verifyToken(token) match {
@@ -35,13 +36,14 @@ class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
             case None =>
               complete(StatusCodes.BadRequest)
             case Some(info) =>
-              handleWebSocketMessages(dispatcherFlow(info))
+              // A web socket handler is simply a flow Message -> Message
+              handleWebSocketMessages(handlerFlow(info))
           }
       }
     }
   }
 
-  private[this] def dispatcherFlow(info : Token) : Flow[Message, Message, Any] = {
+  private[this] def handlerFlow(info : Token) : Flow[Message, Message, Any] = {
     Flow[Message]
       // We will only process TextMessage.Strict variants for now,
       // so we use a collect here
@@ -49,25 +51,17 @@ class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
         case TextMessage.Strict(msg) => msg
       }
       // We will pass the incoming Strings through the dispatcher
-      // which will process them and generate DispatcherEvents as
+      // which will process them and generate WsUnitMessages as
       // appropriate. These will be converted to WebSocket messages
       // and sent back to the client
-      .via(dispatcher.newClient(info))
+      .via(cmdHandler.newClient(info))
       .map {
 
-        case ReceivedMessage(m) =>
-          TextMessage.Strict(m)
-
-        // NewData is a container to send arbitrary data back to the client
-        case NewData(data) =>
-          val msg : String = data match {
-            case msg : String => msg
-            case _            => ""
-          }
-          log.debug(s"Sending message via Web Sockets : [$msg]")
-          TextMessage.Strict(msg)
+        case result : WsUnitMessage =>
+          TextMessage.Strict(result.encode())
 
         case o =>
+          log.warn(s"cmd handler flow had unexpected result of type [${o.getClass().getName()}]")
           TextMessage.Strict(o.toString())
       }
       .via(reportErrorsFlow)
