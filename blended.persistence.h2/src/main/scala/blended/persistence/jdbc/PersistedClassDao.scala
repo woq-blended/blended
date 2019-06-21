@@ -96,10 +96,7 @@ class PersistedClassDao(dataSource : DataSource) {
   }
 
   /**
-   * Initialize Database.
-   *
-   * @throws SQLException
-   * @throws LiquibaseException
+   * Initialize the Database.
    */
   def init() : Try[Unit] = Try {
     val changelogName = "blended/persistence/jdbc/PersistedClassDao-changelog.xml"
@@ -109,17 +106,17 @@ class PersistedClassDao(dataSource : DataSource) {
       val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(jdbcConnection)
       val liquibase = new Liquibase(changelogName, new ClassLoaderResourceAccessor(getClass().getClassLoader()), database)
       liquibase.update("")
-      log.debug(s"Database changelog applied: ${changelogName}")
+      log.debug(s"Database changelog applied: [$changelogName]")
     } catch {
       case NonFatal(e) =>
-        log.error(e)(s"Could not apply DB changelog: ${changelogName}")
+        log.error(e)(s"Could not apply DB changelog: [$changelogName]")
         throw e
     } finally {
       jdbcConnection.close()
     }
   }
 
-  def fieldRowMapper(prefix : String = "") : RowMapper[(Long, PersistedField)] = { (rs, nr) =>
+  def fieldRowMapper(prefix : String = "") : RowMapper[(Long, PersistedField)] = { (rs, _) =>
 
     val holderId = rs.getLong(prefix + PF.HolderId)
 
@@ -131,7 +128,8 @@ class PersistedClassDao(dataSource : DataSource) {
     val valueString = Option(rs.getString(prefix + PF.ValueString))
     val typeNameString = rs.getString(prefix + PF.TypeName)
     val typeName = TypeName.fromString(typeNameString).getOrElse {
-      throw new IllegalStateException(s"Unsupported type name [${typeNameString}] found in database column ${PF.TypeName}. Supported types: ${TypeName.values.mkString(", ")}")
+      throw new IllegalStateException(s"Unsupported type name [$typeNameString] found in database column ${PF.TypeName}." +
+        s" Supported types: [${TypeName.values.mkString(", ")}]")
     }
 
     holderId -> PersistedField(fieldId, baseFieldId, name, valueLong, valueDouble, valueString, typeName)
@@ -157,11 +155,13 @@ class PersistedClassDao(dataSource : DataSource) {
     val byId = fields.foldLeft(Map[Long, List[PersistedField]]()) { (map, rs) =>
       val id = rs._1
       val field = rs._2
-      val tail = map.get(id).getOrElse(Nil)
+      val tail = map.getOrElse(id, Nil)
       map + (id -> (field :: tail))
     }
-    byId.toList.map { case (id, fields) => PersistedClass(id = Some(id), name = pClass, fields = fields.reverse) }
+    byId.toList.map { case (id, f) => PersistedClass(id = Some(id), name = pClass, fields = f.reverse) }
   }
+
+  private val _fName : Long => String = id => s"f$id"
 
   def createByExampleQuery(pClass : String, selectCols : Seq[String], fields : Seq[PersistedField]) : (String, MapSqlParameterSource) = {
     val mainField = "field"
@@ -172,24 +172,22 @@ class PersistedClassDao(dataSource : DataSource) {
     var queryCriterias : List[String] = Nil
     val queryParams = new MapSqlParameterSource()
 
-    queryCriterias ::= s"${mainField}.${PF.HolderId} = ${cls}.${PC.Id} and ${cls}.${PC.Name} = :clsName"
+    queryCriterias ::= s"$mainField.${PF.HolderId} = $cls.${PC.Id} and $cls.${PC.Name} = :clsName"
     queryParams.addValue("clsName", pClass)
-
-    def _fName(id : Long) : String = s"f${id}"
 
     fields.foreach { field =>
       val fName = _fName(field.fieldId)
       queryFields ::= fName
 
       // match holder-id
-      queryCriterias ::= s"${fName}.${PF.HolderId} = ${mainField}.${PF.HolderId}"
+      queryCriterias ::= s"$fName.${PF.HolderId} = $mainField.${PF.HolderId}"
 
       // match name
-      queryCriterias ::= s"${fName}.${PF.Name} = :${fName}Name"
+      queryCriterias ::= s"$fName.${PF.Name} = :${fName}Name"
       queryParams.addValue(fName + "Name", field.name)
 
       // match type name
-      queryCriterias ::= s"${fName}.${PF.TypeName} = :${fName}TypeName"
+      queryCriterias ::= s"$fName.${PF.TypeName} = :${fName}TypeName"
       queryParams.addValue(fName + "TypeName", field.typeName.name)
 
       // We only match value fields if they belong to the field type
@@ -198,33 +196,33 @@ class PersistedClassDao(dataSource : DataSource) {
           // match string value
           field.valueString match {
             case Some(v) =>
-              queryCriterias ::= s"${fName}.${PF.ValueString} = :${fName}ValueString"
+              queryCriterias ::= s"$fName.${PF.ValueString} = :${fName}ValueString"
               queryParams.addValue(fName + "ValueString", v)
 
             case None =>
-              queryCriterias ::= s"${fName}.${PF.ValueString} is null"
+              queryCriterias ::= s"$fName.${PF.ValueString} is null"
           }
 
         case TypeName.Boolean | TypeName.Long | TypeName.Int | TypeName.Byte =>
           // match long value
           field.valueLong match {
             case Some(v) =>
-              queryCriterias ::= s"${fName}.${PF.ValueLong} = :${fName}ValueLong"
+              queryCriterias ::= s"$fName.${PF.ValueLong} = :${fName}ValueLong"
               queryParams.addValue(fName + "ValueLong", v.longValue())
 
             case None =>
-              queryCriterias ::= s"${fName}.${PF.ValueLong} is null"
+              queryCriterias ::= s"$fName.${PF.ValueLong} is null"
           }
 
         case TypeName.Double | TypeName.Float =>
           // match double value
           field.valueDouble match {
             case Some(v) =>
-              queryCriterias ::= s"${fName}.${PF.ValueDouble} = :${fName}ValueDouble"
+              queryCriterias ::= s"$fName.${PF.ValueDouble} = :${fName}ValueDouble"
               queryParams.addValue(fName + "ValueDouble", v.doubleValue())
 
             case None =>
-              queryCriterias ::= s"${fName}.${PF.ValueDouble} is null"
+              queryCriterias ::= s"$fName.${PF.ValueDouble} is null"
           }
 
         case _ =>
@@ -233,7 +231,7 @@ class PersistedClassDao(dataSource : DataSource) {
       }
 
       field.baseFieldId.foreach { baseFieldId =>
-        queryCriterias ::= s"${fName}.${PF.BaseFieldId} = ${_fName(baseFieldId)}.${PF.FieldId}"
+        queryCriterias ::= s"$fName.${PF.BaseFieldId} = ${_fName(baseFieldId)}.${PF.FieldId}"
       }
     }
 
@@ -246,7 +244,7 @@ class PersistedClassDao(dataSource : DataSource) {
     //   and field.holderId = field1.holderId and field1.typeName = "String" and field1.name = "k1" and field1.valueString = "v1"
     //   and field.holderId = field2.holderId and field2.typeName = "Long" and field2.name = "k2" and field2.valueDouble = 2
     val sql = s"select ${selectCols.map(mainField + "." + _).mkString(", ")} " +
-      s"\nfrom ${PC.Table} ${cls}, ${queryFields.reverse.map(PF.Table + " " + _).mkString(", ")} " +
+      s"\nfrom ${PC.Table} $cls, ${queryFields.reverse.map(PF.Table + " " + _).mkString(", ")} " +
       s"\nwhere ${queryCriterias.reverse.mkString(" and ")}"
 
     sql -> queryParams
@@ -260,9 +258,9 @@ class PersistedClassDao(dataSource : DataSource) {
     )
     val (sql, queryParams) = createByExampleQuery(pClass, pfCols, fields)
 
-    log.trace(s"find request: ${fields}")
-    log.trace(s"Generated query: ${sql}")
-    log.trace(s"parameter map: ${queryParams.getValues}")
+    log.trace(s"find request: [$fields]")
+    log.trace(s"Generated query: [$sql]")
+    log.trace(s"parameter map: [${queryParams.getValues}]")
 
     val allFields = jdbcTemplate.query(sql, queryParams, fieldRowMapper())
     inferPersistedClassesFromFields(pClass, allFields.asScala)
@@ -272,13 +270,13 @@ class PersistedClassDao(dataSource : DataSource) {
     val cols = Seq(PF.HolderId)
     val (sql, queryParams) = createByExampleQuery(pClass, cols, fields)
     val classIds = jdbcTemplate.queryForList(sql, queryParams, classOf[java.lang.Long]).asScala.toList.distinct
-    log.trace(s"Found ${classIds.size} class entries to be deleted. Ids: ${classIds}")
+    log.trace(s"Found ${classIds.size} class entries to be deleted. Ids: [$classIds]")
 
-    if (classIds.size > 0) {
+    if (classIds.nonEmpty) {
       val sql = s"delete from ${PC.Table} where ${PC.Id} in (:deleteIds)"
       val paramMap = new MapSqlParameterSource()
       paramMap.addValue("deleteIds", classIds.asJava)
-      log.trace(s"delete query: ${sql}, params: ${paramMap.getValues()}")
+      log.trace(s"delete query: [$sql], params: [${paramMap.getValues()}]")
       jdbcTemplate.update(sql, paramMap)
     } else {
       0L

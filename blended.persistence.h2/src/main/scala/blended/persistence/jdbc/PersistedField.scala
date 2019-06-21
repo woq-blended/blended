@@ -132,17 +132,6 @@ object PersistedField {
       map
     }
 
-    //    def internArray(fields: Seq[PersistedField], parentId: Long): ju.Collection[_ <: Any] = {
-    //      val (root, other) = fields.partition(_.baseFieldId == parentId)
-    //      if (!other.isEmpty) {
-    //        // unsupported case: complex objects in list
-    //        ???
-    //      } else {
-    //        val col = new ju.LinkedList[Any]()
-    //        root.sortBy(_.index.getOrElse(0L)).map
-    //      }
-    //    }
-
     internMap(persistedFields, None)
   }
 
