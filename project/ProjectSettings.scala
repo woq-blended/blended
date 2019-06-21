@@ -35,9 +35,7 @@ trait ProjectSettings
     }
     Project(name, file(projectDir.getOrElse(projectName)))
   }
-
-
-
+  
   private def hasForkAnnotation(clazz: AnalyzedClass): Boolean = {
 
     val c = clazz.api().classApi()

@@ -1,13 +1,15 @@
 import blended.sbt.Dependencies
 import blended.sbt.phoenix.osgi.OsgiBundle
+import de.wayofquality.sbt.filterresources.FilterResources
 import sbtcrossproject.CrossPlugin.autoImport._
 import sbtcrossproject.CrossProject
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 import phoenix.{ProjectConfig, ProjectFactory}
-import sbt.Keys.{libraryDependencies, moduleName, name}
+import sbt.Keys._
 import sbt._
 import scoverage.ScoverageKeys._
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
 
 private object BlendedWebSocketCross {
   private[this] val builder = sbtcrossproject
@@ -46,6 +48,14 @@ object BlendedWebsocketJvm extends ProjectFactory {
     override val projectName = "blended.websocket"
     override val description = "The web socket server module."
 
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Compile / filterProperties ++= Map("projectVersion" -> version.value),
+      Compile / compile := {
+        (Compile / filterResources).value
+        (Compile / compile).value
+      }
+    )
+
     override def deps : Seq[ModuleID] = Seq(
       Dependencies.akkaHttp,
       Dependencies.akkaHttpCore,
@@ -61,7 +71,10 @@ object BlendedWebsocketJvm extends ProjectFactory {
 
     override def bundle : OsgiBundle = super.bundle.copy(
       bundleActivator = s"$projectName.internal.WebSocketActivator",
-      exportPackage = Seq(projectName)
+      exportPackage = Seq(
+        projectName,
+        s"$projectName.json"
+      )
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
@@ -76,6 +89,8 @@ object BlendedWebsocketJvm extends ProjectFactory {
       BlendedTestsupportPojosr.project % Test,
       BlendedSecurityLoginRest.project % Test
     )
+
+    override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(FilterResources)
 
     override def createProject(): Project = BlendedWebSocketCross.project.jvm
   }
