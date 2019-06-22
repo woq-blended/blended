@@ -5,6 +5,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.TextMessage
 import blended.websocket.internal.CommandHandlerManager.WsClientUpdate
 import prickle._
+import RichWsMessageContext.toRichContext
 
 import scala.util.{Failure, Success, Try}
 

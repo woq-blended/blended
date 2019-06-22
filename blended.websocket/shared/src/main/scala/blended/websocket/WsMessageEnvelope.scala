@@ -2,7 +2,6 @@ package blended.websocket
 
 import java.util.Base64
 
-import akka.http.scaladsl.model.StatusCode
 import blended.websocket.json.PrickleProtocol._
 import prickle._
 
@@ -14,8 +13,6 @@ case class WsMessageContext(
   status : Option[Int] = None,
   statusMsg : Option[String] = None
 ) {
-  def withStatus(s : StatusCode) : WsMessageContext = withStatus(s.intValue())
-  def withStatus(s : StatusCode, m : String) : WsMessageContext = withStatus(s.intValue(), m)
   def withStatus(s : Int) : WsMessageContext = copy(status = Some(s), statusMsg = None)
   def withStatus(s : Int, m : String) : WsMessageContext = copy(status = Some(s), statusMsg = Some(m))
 }
