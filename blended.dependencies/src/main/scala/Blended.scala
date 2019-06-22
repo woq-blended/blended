@@ -7,7 +7,7 @@ trait Blended {
   // TODO: Find a way to generate the current version
   def blendedVersion : String // = version.value
 
-  def blended(name : String) = "de.wayofquality.blended" %% name % blendedVersion
+  private def blended(name : String): ModuleID = "de.wayofquality.blended" %% name % blendedVersion
 
   val activemqBrokerstarter = blended("blended.activemq.brokerstarter")
   val activemqClient = blended("blended.activemq.client")

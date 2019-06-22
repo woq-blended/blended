@@ -20,9 +20,9 @@ object BlendedCamelContextFactory {
     name : String,
     withJmx : Boolean,
     idSvc : ContainerIdentifierService
-  ) =
+  ) : CamelContext =
     new BlendedCamelContextFactory with IdServiceCamelContextPropertyProvider {
-      override def idService = idSvc
+      override def idService : ContainerIdentifierService = idSvc
     }.createContext(name, withJmx)
 }
 

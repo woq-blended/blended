@@ -103,7 +103,10 @@ object DispatcherOutbound {
     result
   }
 
-  def apply(dispatcherCfg : ResourceTypeRouterConfig, idSvc : ContainerIdentifierService)(implicit bs : DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+  def apply(
+    dispatcherCfg : ResourceTypeRouterConfig,
+    idSvc : ContainerIdentifierService
+  )(implicit bs : DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
     /*-------------------------------------------------------------------------------------------------*/
     val routingDecider = FlowProcessor.fromFunction("routingDecider", bs.streamLogger) { env =>

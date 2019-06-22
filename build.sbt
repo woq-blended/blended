@@ -15,7 +15,10 @@ addCommandAlias("ciBuild", "; clean ; test ")
 addCommandAlias(name = "ciPublish", value="; clean ; packageBin ; publishSigned ")
 
 // A convenience to package everything, sign it and push it to maven central
-addCommandAlias("ciRelease", s"""; clean; packageBin ; sonatypeOpen "Auto Release via Travis ($travisBuildNumber)" ; publishSigned ; sonatypeClose ; sonatypeRelease""")
+addCommandAlias(
+  "ciRelease",
+  s"""; clean; packageBin ; sonatypeOpen "Auto Release via Travis ($travisBuildNumber)" ; publishSigned ; sonatypeClose ; sonatypeRelease"""
+)
 
 addCommandAlias("cleanPublish", "; coverageOff ; clean ; publishM2")
 addCommandAlias("cleanCoverage", "; coverage ; clean ; test ; coverageReport ; coverageAggregate ; coverageOff")

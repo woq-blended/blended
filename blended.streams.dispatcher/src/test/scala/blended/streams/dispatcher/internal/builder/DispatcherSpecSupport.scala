@@ -61,7 +61,9 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     var con : Option[Connection] = None
 
     do {
+      // scalastyle:off magic.number
       Thread.sleep(100)
+      // scalastyle:on magic.number
       con = Try {
         cf.createConnection()
       } match {

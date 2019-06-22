@@ -24,7 +24,7 @@ class CbeFlowSpec extends DispatcherSpecSupport
   with PojoSrTestHelper
   with JmsStreamSupport {
 
-  private implicit val timeout = 3.seconds
+  private implicit val timeout : FiniteDuration = 3.seconds
   override def loggerName : String = "outbound"
 
   override def bundles : Seq[(String, BundleActivator)] = super.bundles ++ Seq(
@@ -57,7 +57,10 @@ class CbeFlowSpec extends DispatcherSpecSupport
     ).build()
   }
 
-  def sendTransactions(ctxt : DispatcherExecContext, cf : IdAwareConnectionFactory)(envelopes : FlowEnvelope*)(implicit system : ActorSystem, materializer : Materializer, eCtxt : ExecutionContext) : KillSwitch = {
+  def sendTransactions(
+    ctxt : DispatcherExecContext,
+    cf : IdAwareConnectionFactory
+  )(envelopes : FlowEnvelope*)(implicit system : ActorSystem, materializer : Materializer, eCtxt : ExecutionContext) : KillSwitch = {
 
     val (actor, switch) = Source.actorRef(envelopes.size, OverflowStrategy.fail)
       .viaMat(KillSwitches.single)(Keep.both)

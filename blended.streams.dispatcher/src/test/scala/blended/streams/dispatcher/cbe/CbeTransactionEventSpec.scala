@@ -5,7 +5,6 @@ import java.util.Date
 import blended.streams.transaction.{EventSeverity, FlowTransactionState}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.XMLSupport
-import blended.util.logging.Logger
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
@@ -13,15 +12,14 @@ import scala.concurrent.duration._
 class CbeTransactionEventSpec extends LoggingFreeSpec
   with Matchers {
 
-  private val log = Logger[CbeTransactionEventSpec]
-
-  val headers = Map(
+  private val headers = Map(
     "foo" -> "bar",
     "Application" -> "XX",
     "Module" -> "YY"
   )
 
-  val comp = CbeComponent(
+  // scalastyle:off magic.number
+  private val comp = CbeComponent(
     "SIB-2.0",
     "TestComponent",
     "cc-9999",
@@ -31,6 +29,7 @@ class CbeTransactionEventSpec extends LoggingFreeSpec
     "Route",
     9999
   )
+  // scalastyle:on magic.number
 
   private[this] def validateCBE(event : CbeTransactionEvent, xml : String) : XMLSupport = {
 

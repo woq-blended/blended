@@ -1,18 +1,22 @@
 package blended.akka.http.internal
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.{ConnectionContext, Http}
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import domino.DominoActivator
 import javax.net.ssl.SSLContext
 
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching {
 
   private[this] val log = Logger[BlendedAkkaHttpActivator]
+  private[this] val defaultHttpPort : Int = 8080
+  private[this] val defaultHttpsPort : Int = 8443
 
   whenBundleActive {
 
@@ -22,15 +26,15 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
       val config = cfg.config
 
       val httpHost = config.getString("host", "0.0.0.0")
-      val httpPort = config.getInt("port", 8080)
+      val httpPort = config.getInt("port", defaultHttpPort)
 
       val httpsHost = config.getString("ssl.host", "0.0.0.0")
-      val httpsPort = config.getInt("ssl.port", 8443)
+      val httpsPort = config.getInt("ssl.port", defaultHttpsPort)
 
-      implicit val actorSysten = cfg.system
-      implicit val actorMaterializer = ActorMaterializer()
+      implicit val actorSystem : ActorSystem = cfg.system
+      implicit val actorMaterializer : Materializer = ActorMaterializer()
       // needed for the future flatMap/onComplete in the end
-      implicit val executionContext = actorSysten.dispatcher
+      implicit val executionContext : ExecutionContext = actorSystem.dispatcher
 
       val dynamicRoutes = new RouteProvider()
 

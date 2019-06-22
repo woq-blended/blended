@@ -22,7 +22,7 @@ case class BundleConfig(
 
   def sha1Sum : Option[String] = artifact.sha1Sum
 
-  override def toString() : String = s"${getClass().getSimpleName()}(artifact=${artifact},start=${start},url=${url},startLevel=${startLevel})"
+  override def toString() : String = s"${getClass().getSimpleName()}(artifact=$artifact,start=$start,url=$url,startLevel=$startLevel)"
 }
 
 object BundleConfig extends ((Artifact, Boolean, Option[Int]) => BundleConfig) {

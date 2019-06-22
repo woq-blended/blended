@@ -4,6 +4,8 @@ import de.tototec.cmdoption.CmdOption
 
 class Cmdline {
 
+  private val defaultTimeout : Int = 20
+
   @CmdOption(names = Array("--help", "-h"), description = "Show this help", isHelp = true)
   var help : Boolean = false
 
@@ -13,7 +15,7 @@ class Cmdline {
     description = "Generate a password from a given seed and salt. The salt is either implicitly set or explicitly given with --salt"
   )
   var _password : String = _
-  def password = Option(_password)
+  def password : Option[String] = Option(_password)
 
   @CmdOption(
     names = Array("--salt", "-s"),
@@ -21,7 +23,7 @@ class Cmdline {
     description = "Use this salt when generating a password with --password"
   )
   var _salt : String = _
-  def salt = Option(_salt)
+  def salt : Option[String] = Option(_salt)
 
   @CmdOption(
     names = Array("--refresh-certs", "-r"),
@@ -36,7 +38,7 @@ class Cmdline {
     hidden = true
   )
   var _csrFile : String = _
-  def csrFile = Option(_csrFile)
+  def csrFile : Option[String] = Option(_csrFile)
 
   @CmdOption(
     names = Array("--cert-info"),
@@ -45,14 +47,14 @@ class Cmdline {
     hidden = true
   )
   var _infoFile : String = _
-  def infoFile = Option(_infoFile)
+  def infoFile : Option[String] = Option(_infoFile)
 
   @CmdOption(
     names = Array("--timeout"),
     args = Array("sec"),
     description = "Timeout (in seconds) used when refreshing certificates"
   )
-  var timeout = 20
+  var timeout : Int = defaultTimeout
 
   @CmdOption(
     names = Array("--base-dir"),
@@ -60,6 +62,6 @@ class Cmdline {
     description = "Alternative base directory (aka 'scepclient.home', used to lookup the 'etc' directory)"
   )
   var _baseDir : String = _
-  def baseDir = Option(_baseDir)
+  def baseDir : Option[String] = Option(_baseDir)
 
 }

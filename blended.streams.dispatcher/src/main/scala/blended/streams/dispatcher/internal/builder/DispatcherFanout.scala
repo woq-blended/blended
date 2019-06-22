@@ -42,7 +42,8 @@ case class DispatcherFanout(
     }
   }
 
-  private[builder] lazy val fanoutOutbound = FlowProcessor.transform[Seq[(OutboundRouteConfig, FlowEnvelope)]]("fanoutOutbound", bs.streamLogger)(funFanoutOutbound)
+  private[builder] lazy val fanoutOutbound =
+    FlowProcessor.transform[Seq[(OutboundRouteConfig, FlowEnvelope)]]("fanoutOutbound", bs.streamLogger)(funFanoutOutbound)
 
   /*-------------------------------------------------------------------------------------------------*/
   private lazy val outboundMsg : OutboundRouteConfig => FlowEnvelope => Try[FlowEnvelope] = { outCfg => env =>

@@ -39,8 +39,9 @@ class BlendedPojoBundle(
   override def start() : Unit = {
 
     if (m_state != Bundle.RESOLVED) {
-      if (m_state == Bundle.ACTIVE) return
-      throw new BundleException("Bundle is in wrong state for start")
+      if (m_state == Bundle.ACTIVE) {
+        throw new BundleException("Bundle is in wrong state for start")
+      }
     }
 
     try {
@@ -70,13 +71,15 @@ class BlendedPojoBundle(
           dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STOPPING, this))
           activator.stop(m_context)
         } catch {
-          case ex : Throwable => throw new BundleException("Error while stopping bundle", ex);
+          case ex : Throwable => throw new BundleException("Error while stopping bundle", ex)
         } finally {
-          registry.unregisterServices(this);
-          dispatcher.removeListeners(m_context);
-          m_context = null;
-          m_state = Bundle.RESOLVED;
-          dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STOPPED, this));
+          registry.unregisterServices(this)
+          dispatcher.removeListeners(m_context)
+          // scalastyle:off null
+          m_context = null
+          // scalastyle:on null
+          m_state = Bundle.RESOLVED
+          dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STOPPED, this))
         }
 
       case Bundle.RESOLVED =>

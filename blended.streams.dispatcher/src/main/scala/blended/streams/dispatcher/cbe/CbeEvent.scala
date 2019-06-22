@@ -1,6 +1,6 @@
 package blended.streams.dispatcher.cbe
 
-import java.text.SimpleDateFormat
+import java.text.{DateFormat, SimpleDateFormat}
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
@@ -26,7 +26,7 @@ object CbeEvent {
       case _      => EventSeverity.Information
     }
 
-    new CbeTransactionEvent(
+    CbeTransactionEvent(
       id = id,
       severity = sev,
       component = component,
@@ -52,52 +52,58 @@ case class CbeTransactionEvent(
   situation : String = "STATUS"
 ) {
 
-  def asCBE() : String = {
+  private val ignoreHeader : List[String] = List("Application", "Module", "ModuleLast")
 
-    val ignoreHeader = List("Application", "Module", "ModuleLast")
+  private val sdf : DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
+  private val intSeverity : Int = severity
 
-    val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS")
-    val intSeverity : Int = severity
+  private val cbeMsg : String = msg match {
+    case None    => s"Transaction [$id] state [${state.getOrElse("n/a")}]"
+    case Some(s) => s
+  }
 
-    val cbeMsg = msg match {
-      case None    => s"Transaction [$id] state [${state.getOrElse("n/a")}]"
-      case Some(s) => s
-    }
+  private val dataElements : String = ExtendedDataElements(
+    properties.filterKeys(!ignoreHeader.contains(_)).map { case (k, v) => (k, v.toString) }
+  )
 
-    val dataElements = ExtendedDataElements(
-      properties.filterKeys(!ignoreHeader.contains(_)).map { case (k, v) => (k, v.toString) }
-    )
+  private val application : String = ExtendedDataElements(Map(
+    "Module" -> component.subComponent,
+    "Application" -> component.application
+  ))
 
-    val application = ExtendedDataElements(Map(
-      "Module" -> component.subComponent,
-      "Application" -> component.application
-    ))
+  private val moduleLast : String = if (closeProcess) {
+    ExtendedDataElement("ModuleLast", component.subComponent).element
+  } else {
+    ""
+  }
 
-    val moduleLast = if (closeProcess)
-      ExtendedDataElement("ModuleLast", component.subComponent).element
-    else
-      ""
-
-    val transaction = state.map { s =>
-      s"""
-         |  <extendedDataElements name="TRANSACTION" type="noValue">
-         |    <children name="TRANSACTION_ID" type="string">
-         |      <values>$id</values>
-         |    </children>
-         |
-         |    <children name="TRANSACTION_STATUS" type="string">
-         |      <values>$s</values>
-         |    </children>
-         |""".stripMargin + (if (intSeverity >= EventSeverity.Critical)
-        """
-          |    <children name="TRANSACTION_FAILURE_REASON" type="string">
-          |      <values>$event.transaction.reason</values>
-          |    </children>#end
-          |
+  private val severityElement : String = if (intSeverity >= EventSeverity.Critical) {
+    """
+      |    <children name="TRANSACTION_FAILURE_REASON" type="string">
+      |      <values>$event.transaction.reason</values>
+      |    </children>#end
+      |
           """.stripMargin
-      else "") + "  </extendedDataElements>"
-    }.getOrElse("")
+  } else {
+    ""
+  }
 
+  private val transaction : String = state.map { s =>
+    s"""
+       |  <extendedDataElements name="TRANSACTION" type="noValue">
+       |    <children name="TRANSACTION_ID" type="string">
+       |      <values>$id</values>
+       |    </children>
+       |
+         |    <children name="TRANSACTION_STATUS" type="string">
+       |      <values>$s</values>
+       |    </children>
+       |""".stripMargin +
+      severityElement +
+      "  </extendedDataElements>"
+  }.getOrElse("")
+
+  def asCBE() : String =
     s"""<?xml version="1.0" encoding="UTF-8"?>
        |<CommonBaseEvent
        |  msg="$cbeMsg"
@@ -116,7 +122,6 @@ case class CbeTransactionEvent(
        |    <situationType type="ReportSituation" reportCategory="$situation" reasoningScope="INTERNAL" />
        |  </situation>
        |</CommonBaseEvent>""".stripMargin
-  }
 
 }
 
