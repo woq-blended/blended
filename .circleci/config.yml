@@ -1,0 +1,8 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: atooni/alpine:0.1
+    steps:
+      - checkout
+      - run: echo "Hello CircleCi"
