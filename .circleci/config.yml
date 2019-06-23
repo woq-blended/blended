@@ -5,7 +5,7 @@ jobs:
       only:
         - circleci
     docker:
-      - image: circleci/openjdk:8-stretch-node-browsers-legacy 
+      - image: atooni/apline:0.1
     steps:
       - checkout
       - run: echo "Hello CircleCi"
