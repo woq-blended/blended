@@ -1,5 +1,8 @@
 version: 2
 jobs:
+  branches:
+    only:
+      - circleci
   build:
     docker:
       - image: atooni/alpine:0.1
