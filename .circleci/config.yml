@@ -1,11 +1,14 @@
 version: 2
 jobs:
   build:
+    shell: /bin/sh -leo pipefail
+    working_directory: ~/blended
     branches:
       only:
         - circleci
     docker:
-      - image: atooni/alpine:0.1
+      - image: atooni/build-alpine:0.1
+        user: blended
     steps:
       - checkout
-      - run: echo "Hello CircleCi"
+      - run: sbt clean 
