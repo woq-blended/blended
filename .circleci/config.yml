@@ -1,11 +1,11 @@
 version: 2
 jobs:
-  branches:
-    only:
-      - circleci
   build:
+    branches:
+      only:
+        - circleci
     docker:
-      - image: atooni/alpine:0.1
+      - image: circleci/openjdk:8-stretch-node-browsers-legacy 
     steps:
       - checkout
       - run: echo "Hello CircleCi"
