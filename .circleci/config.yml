@@ -19,15 +19,12 @@ jobs:
 
       - run:
           name: Run SBT
-          command: sbt test
-          environment:
-            - SBT_OPTS: -Xmx1536M -XX:MaxMetaspaceSize=768m
-
-      - run:
-          name: Save test results
           command: |
+            sbt test
             mkdir -p ~/blended/target/test-results/junit/
             find ~/blended -type f -regex ".*/test-reports/.*xml" -exec cp {} ~/blended/target/test-results/junit/ \;
+          environment:
+            - SBT_OPTS: -Xmx1536M -XX:MaxMetaspaceSize=768m
 
       - store_test_results:
           path: ~/blended/target/test-results
