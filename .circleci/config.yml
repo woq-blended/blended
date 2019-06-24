@@ -21,7 +21,7 @@ jobs:
           name: Run SBT
           command: sbt test
           environment: 
-            - SBT_OPTS: -Xms1024M -Xmx4096M -Xss1M -XX:MaxPermSize=2048M
+            - SBT_OPTS: -Xmx3072M -Xss1M -XX:MaxMetaspaceSize=2048m
 
       - run:
           name: Save test results
