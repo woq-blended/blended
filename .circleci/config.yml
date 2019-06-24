@@ -13,15 +13,15 @@ jobs:
       - checkout
 
       - restore-cache:
-          keys: 
+          keys:
             - v1-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
             - v1-blended-core-
 
-      - run: 
+      - run:
           name: Run SBT
           command: sbt test
-          environment: 
-            - SBT_OPTS: -Xmx3072M -Xss1M -XX:MaxMetaspaceSize=2048m
+          environment:
+            - SBT_OPTS: -Xmx1536M -XX:MaxMetaspaceSize=768m
 
       - run:
           name: Save test results

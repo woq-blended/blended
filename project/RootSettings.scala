@@ -7,6 +7,8 @@ import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 object RootSettings {
 
   def apply(blendedDocs : Project) : Seq[Setting[_]] = Seq(
+    Test / parallelExecution := false,
+
     jbakeVersion := "2.6.4",
     jbakeMode := System.getenv().getOrDefault("JBAKE_MODE", "build"),
     jbakeInputDir := (blendedDocs / baseDirectory).value,
