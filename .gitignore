@@ -31,13 +31,3 @@ blended.sslcontext/notes.txt
 pom.xml
 target/
 .bloop/
-
-# Eclipse settings and caches
-.project
-.classpath
-.settings/
-.cache
-.cache-main
-.cache-tests
-target-ide/
-
