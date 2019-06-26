@@ -3,6 +3,7 @@ package blended.security.login.rest.internal
 import java.io.File
 import java.security.spec.X509EncodedKeySpec
 import java.security.{KeyFactory, PublicKey}
+import java.util.Base64
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
@@ -21,7 +22,6 @@ import com.softwaremill.sttp._
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
-import sun.misc.BASE64Decoder
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
@@ -69,14 +69,12 @@ class LoginServiceSpec extends SimplePojoContainerSpec
     val r = Await.result(response, 3.seconds)
     r.code should be(StatusCodes.Ok)
 
-    println(r.body.right.get)
-
     val rawString = r.body.right.get
       .replace("-----BEGIN PUBLIC KEY-----\n", "")
-      .replace("-----END PRIVATE KEY-----", "")
+      .replace("-----END PUBLIC KEY-----", "")
       .replaceAll("\n", "")
 
-    val bytes = new BASE64Decoder().decodeBuffer(rawString)
+    val bytes : Array[Byte] = Base64.getDecoder().decode(rawString)
     val x509 = new X509EncodedKeySpec(bytes)
     val kf = KeyFactory.getInstance("RSA")
     kf.generatePublic(x509)
@@ -100,7 +98,7 @@ class LoginServiceSpec extends SimplePojoContainerSpec
 
     "Respond with Ok if called with correct credentials" in {
 
-      val key : PublicKey = serverKey.get
+      val key : PublicKey = serverKey().get
 
       withLoginService(
         sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
@@ -117,7 +115,7 @@ class LoginServiceSpec extends SimplePojoContainerSpec
 
     "Allow a user to login twice" in {
 
-      val key : PublicKey = serverKey.get
+      val key : PublicKey = serverKey().get
       val request = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
 
       withLoginService(request) { r1 =>

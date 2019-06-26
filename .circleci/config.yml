@@ -1,17 +1,30 @@
 version: 2
 jobs:
-  build:
+  prepare:
     shell: /bin/sh -leo pipefail
     working_directory: ~/blended
-    branches:
-      only:
-        - circleci
     docker:
       - image: atooni/build-alpine:0.1
         user: blended
     steps:
       - checkout
+      - restore-cache:
+          keys:
+            - v1-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
+            - v1-blended-core-
+      - run: sbt clean update
+      - save_cache:
+          key: v1-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
+          paths:
+            - ~/.ivy2
 
+  build:
+    shell: /bin/sh -leo pipefail
+    working_directory: ~/blended
+    docker:
+      - image: atooni/build-alpine:0.1
+        user: blended
+    steps:
       - restore-cache:
           keys:
             - v1-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
@@ -20,7 +33,7 @@ jobs:
       - run:
           name: Run SBT
           command: |
-            sbt clean test
+            bash ~/scripts/batchTest.sh
           environment:
             - SBT_OPTS: -Xmx1024M -XX:MaxMetaspaceSize=512m
 
@@ -38,3 +51,14 @@ jobs:
           key: v1-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
           paths:
             - ~/.ivy2
+
+workflows:
+  version: 2
+  build-test:
+    jobs:
+      - prepare
+
+      - build:
+          requires:
+            - prepare
+
