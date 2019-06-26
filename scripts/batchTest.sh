@@ -5,7 +5,7 @@ mkdir -p target
 
 function projects() {
   projects=()
-  for p in $(sbt projects | grep "  blended" | sed s/[^b]*//) ; do
+  for p in $(sbt projects | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g" | grep "  blended" | sed s/[^b]*//) ; do
     projects+="$p "
   done
 
@@ -30,11 +30,10 @@ function getBatch() {
 function testBatchCmd() {
   projects=($@)
   sem=${#projects[@]}
-  cmd=(';coverageOn;')
+  cmd=('coverageOn ')
   for ((idx = 0 ; idx < $sem ; idx++)) ; do
-    cmd+=$(echo "${projects[$idx]}/test;")
+    cmd+=$(echo "${projects[$idx]}/test ")
   done
-    cmd+='exit'
 
   echo "${cmd[@]}"
 }
@@ -44,11 +43,17 @@ p=($(projects))
 prjCount=${#p[@]}
 batchCount=$(($prjCount / $BATCHSIZE))
 
+rc=0
 for ((i=0 ; i <= $batchCount ; i++)) ; do
   prj=($(getBatch $i ${p[@]}))
   if [ ${#prj[@]} -gt 0 ] ; then
-    echo "$(testBatchCmd ${prj[@]})" > target/cmd.txt
-    sbt < target/cmd.txt
+    cmd=$(echo "sbt $(testBatchCmd ${prj[@]})")
+    eval $cmd
+    brc=$?
+    if [ $brc -gt $rc ] ; then
+      rc=$brc
+    fi
   fi
 done
 
+exit $rc

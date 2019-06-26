@@ -17,14 +17,14 @@ class HttpActivatorSpec extends SimplePojoContainerSpec
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
-    ("blended.akka" -> new BlendedAkkaActivator()),
-    ("blended.akka.http" -> new BlendedAkkaHttpActivator())
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.akka.http" -> new BlendedAkkaHttpActivator()
   )
 
   "The Akka Http Activator should" - {
 
     "start a HTTP server based on Akka HTTP" in {
-      pending
+      fail("BOOM")
     }
   }
 }
