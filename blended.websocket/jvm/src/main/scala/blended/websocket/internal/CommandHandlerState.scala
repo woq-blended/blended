@@ -2,7 +2,7 @@ package blended.websocket.internal
 
 import blended.security.login.api.Token
 import blended.util.logging.Logger
-import blended.websocket.{ClientInfo, WebSocketCommandPackage, WsContext}
+import blended.websocket.{ClientInfo, WebSocketCommandPackage, WsContext, WsMessageEncoded}
 
 private[internal] case class CommandHandlerState(
   clients : Map[String, ClientInfo] = Map.empty,
@@ -39,7 +39,7 @@ private[internal] case class CommandHandlerState(
 
   def packageByNS(ns : String) : Option[WebSocketCommandPackage] = handler.get(ns)
 
-  def respondToClient(r : WsContext, t : Token) : Unit = clientByToken(t).foreach(_.clientActor ! r)
+  def respondToClient(r : WsContext, t : Token) : Unit = clientByToken(t).foreach(_.clientActor ! WsMessageEncoded.fromContext(r))
 
 }
 

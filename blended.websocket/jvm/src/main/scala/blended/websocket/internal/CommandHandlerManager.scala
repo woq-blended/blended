@@ -22,7 +22,7 @@ trait CommandHandlerManager {
     * try to decode the incoming command and produce a Websockets message carrying a result.
     * @param t : The token with the client specific id and permissions.
     */
-  def newClient(t : Token) : Flow[String, WsContext, NotUsed]
+  def newClient(t : Token) : Flow[String, WsMessageEncoded, NotUsed]
 
   def addCommandPackage(pkg : WebSocketCommandPackage) : Unit
   def removeCommandPackage(pkg : WebSocketCommandPackage) : Unit
@@ -36,7 +36,7 @@ object CommandHandlerManager {
   case class ClientClosed(t : Token)
   case class ReceivedMessage(t: Token, s : String)
   case class WsClientUpdate(
-    msg : String,
+    msg : WsMessageEncoded,
     token : Token
   )
 
@@ -50,7 +50,7 @@ object CommandHandlerManager {
 
     // for each new client we will create a flow which will consume Strings and emit
     // WSMessageEnvelopes
-    override def newClient(token : Token) : Flow[String, WsContext, NotUsed] = {
+    override def newClient(token : Token) : Flow[String, WsMessageEncoded, NotUsed] = {
       val in = Flow[String]
         .map(s => ReceivedMessage(token, s))
         .to(Sink.actorRef[ReceivedMessage](cmdHandler, ClientClosed(token)))
@@ -59,7 +59,7 @@ object CommandHandlerManager {
       // will be sent to the client via Web Sockets
       // The new client will be registered with the DispatcherActor, which will then watch this
       // actor and dispatch events to the client as long as it is active.
-      val out = Source.actorRef[WsContext](1, OverflowStrategy.fail)
+      val out = Source.actorRef[WsMessageEncoded](1, OverflowStrategy.fail)
         .mapMaterializedValue { c => cmdHandler ! NewClient(token, c) }
 
       Flow.fromSinkAndSourceCoupled(in, out)
@@ -161,9 +161,9 @@ object CommandHandlerManager {
       // Forward an emitted message from a command handler to the connected client
       case u : WsClientUpdate =>
         log.debug(s"Processing WsClientUpdate for [${u.token.id}] : [${u.msg}]")
-//        state.clientByToken(u.token).foreach{ ci =>
-//          ci.clientActor ! TextMessageu.msg
-//        }
+        state.clientByToken(u.token).foreach{ ci =>
+          ci.clientActor ! u.msg
+        }
     }
   }
 }

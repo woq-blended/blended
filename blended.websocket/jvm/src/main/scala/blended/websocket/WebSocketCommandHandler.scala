@@ -61,9 +61,7 @@ trait WebSocketCommandHandler[T] {
     */
   final def handleCommand(cmd : WsMessageEncoded, t: Token)(implicit up : Unpickler[T]): WsContext = {
 
-    log.debug(s"Command is [$cmd]")
     val json : String = new String(Base64.getDecoder().decode(cmd.content))
-    log.debug(s"JSon is [$json]")
     JsonHelper.decode[T](json) match {
 
       case Success(content) =>
@@ -90,12 +88,13 @@ trait WebSocketCommandHandler[T] {
     result: WsContext
   )(implicit p : Pickler[T], system: ActorSystem) : Unit = {
 
-    val m : WsMessageEncoded = WsMessageEncoded(
-      context = result, content = JsonHelper.encode(msg)
+    log.debug(s"Emitting [$msg]")
+    val m : WsMessageEncoded = WsMessageEncoded.fromObject[T](
+      context = result, t = msg
     )
 
     system.eventStream.publish(WsClientUpdate(
-      msg = Pickle.intoString(m),
+      msg = m,
       token = token
     ))
   }

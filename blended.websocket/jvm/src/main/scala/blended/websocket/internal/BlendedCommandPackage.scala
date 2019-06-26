@@ -1,10 +1,21 @@
 package blended.websocket.internal
 
+import java.util.Properties
+
 import akka.actor.ActorSystem
 import blended.security.login.api.Token
 import blended.websocket.json.PrickleProtocol._
 import blended.websocket._
 import prickle._
+
+object BlendedCommandPackage {
+
+  val version : String = {
+    val props : Properties = new Properties()
+    props.load(getClass().getResourceAsStream("version.properties"))
+    Option(props.get("version")).map(_.toString).getOrElse("")
+  }
+}
 
 class BlendedCommandPackage(
   override val namespace : String
@@ -23,9 +34,10 @@ class BlendedCommandPackage(
 
     override def doHandleCommand: PartialFunction[BlendedWsMessages, Token => WsContext] = {
       case _ : Version => t =>
-        val r : WsContext = WsContext(namespace = namespace, name = name)
-        emit(VersionResponse("3.1-ui-SNAPSHOT"), t, r)
-        r
+        val ctxt : WsContext = WsContext(namespace = namespace, name = name)
+        // This is a side effect, which will push the version info to the client
+        emit(VersionResponse(BlendedCommandPackage.version), t, ctxt)
+        ctxt
     }
   }
 

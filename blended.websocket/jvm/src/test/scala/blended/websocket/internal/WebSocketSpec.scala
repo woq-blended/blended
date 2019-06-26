@@ -229,10 +229,10 @@ class WebSocketSpec extends SimplePojoContainerSpec
          // login and retrieve the token
          val (switch, actor) = wsConnect("bg_test", "secret", probe.ref)
 
-         actor ! TextMessage.Strict(WsMessageEncoded.fromContext(WsContext(namespace = "foo", name = "bar")))
+         actor ! TextMessage.Strict(WsMessageEncoded.fromContext(WsContext(namespace = "foo", name = "bar")).json)
          fishForResponse(AkkaStatusCodes.NotFound)(probe).get
 
-         actor ! TextMessage.Strict(WsMessageEncoded.fromContext(WsContext(namespace = "blended", name = "doesNotExist")))
+         actor ! TextMessage.Strict(WsMessageEncoded.fromContext(WsContext(namespace = "blended", name = "doesNotExist")).json)
          fishForResponse(AkkaStatusCodes.NotFound)(probe).get
 
          switch.shutdown()
@@ -252,14 +252,24 @@ class WebSocketSpec extends SimplePojoContainerSpec
           val blendedCmd : BlendedWsMessages = Version()
 
           val msg = WsMessageEncoded.fromObject(WsContext(namespace = "blended", name = "version"), blendedCmd)
-          actor ! TextMessage.Strict(msg)
+          actor ! TextMessage.Strict(msg.json)
 
-          // As the text is not a properly encoded command, it will return a BadRequest on
-          // the websockets stream
           probe.fishForMessage(3.seconds) {
             case m: TextMessage.Strict =>
               val enc: WsMessageEncoded = Unpickle[WsMessageEncoded].fromString(m.getStrictText).get
               enc.context.status == AkkaStatusCodes.OK.intValue
+          }
+
+          // eventually the command should also send the version
+          probe.fishForMessage(3.seconds) {
+            case m: TextMessage.Strict =>
+              val enc: WsMessageEncoded = Unpickle[WsMessageEncoded].fromString(m.getStrictText).get
+              enc.context.status match {
+                case AkkaStatusCodes.OK.intValue =>
+                  val v : BlendedWsMessages = enc.decode[BlendedWsMessages].get
+                  v.isInstanceOf[VersionResponse] && v.asInstanceOf[VersionResponse].v.equals(BlendedCommandPackage.version)
+                case _ => false
+              }
           }
 
           switch.shutdown()

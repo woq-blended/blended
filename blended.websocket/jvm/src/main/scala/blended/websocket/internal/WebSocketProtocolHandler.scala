@@ -8,7 +8,7 @@ import akka.http.scaladsl.server._
 import akka.stream.scaladsl.Flow
 import blended.security.login.api.{Token, TokenStore}
 import blended.util.logging.Logger
-import blended.websocket.{WebSocketCommandPackage, WsContext, WsMessageEncoded}
+import blended.websocket.{WebSocketCommandPackage, WsMessageEncoded}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -66,11 +66,9 @@ class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
       // to the client as websocket messages
       .via(cmdHandler.newClient(info))
       .collect {
-        case result : WsContext =>
-          log.debug(s"Result of web socket command is [$result]")
-          val msg = WsMessageEncoded.fromContext(result)
-          log.debug(s"Raw response is [$msg]")
-          TextMessage.Strict(msg)
+        case enc : WsMessageEncoded =>
+          log.debug((s"Sending to client [$enc]"))
+          TextMessage.Strict(enc.json)
       }
       .via(reportErrorsFlow)
   }

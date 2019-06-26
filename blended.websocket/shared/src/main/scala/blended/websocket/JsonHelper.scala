@@ -27,13 +27,13 @@ case class WsContext(
 
 object WsMessageEncoded {
 
-  def fromContext(context : WsContext) : String = fromObject(context, ())
+  def fromContext(context : WsContext) : WsMessageEncoded = fromObject(context, ())
 
-  def fromObject[T](context: WsContext, t : T)(implicit p:  Pickler[T]) : String = {
+  def fromObject[T](context: WsContext, t : T)(implicit p:  Pickler[T]) : WsMessageEncoded = {
     val b64 : String = Base64.getEncoder().encodeToString(Pickle.intoString(t).getBytes())
-    Pickle.intoString(WsMessageEncoded(
+    WsMessageEncoded(
       context = context, content = b64
-    ))
+    )
   }
 }
 
@@ -42,4 +42,12 @@ case class WsMessageEncoded(
   // The payload - either command parameters sent by the client or the message
   // sent to a client
   content : String
-)
+) {
+
+  val json : String = Pickle.intoString(this)
+
+  def decode[T](implicit up : Unpickler[T]) : Try[T] = {
+    val json : String = new String(Base64.getDecoder().decode(content))
+    Unpickle[T].fromString(json)
+  }
+}
