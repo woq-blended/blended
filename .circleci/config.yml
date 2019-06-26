@@ -33,7 +33,7 @@ jobs:
       - run:
           name: Run SBT
           command: |
-            bash ~/scripts/batchTest.sh
+            bash ~/blended/scripts/batchTest.sh
           environment:
             - SBT_OPTS: -Xmx1024M -XX:MaxMetaspaceSize=512m
 
