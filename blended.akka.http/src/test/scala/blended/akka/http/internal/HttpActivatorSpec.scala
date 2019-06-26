@@ -24,7 +24,7 @@ class HttpActivatorSpec extends SimplePojoContainerSpec
   "The Akka Http Activator should" - {
 
     "start a HTTP server based on Akka HTTP" in {
-      fail("BOOM")
+      pending
     }
   }
 }

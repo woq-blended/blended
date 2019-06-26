@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.pattern.ask
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.Source
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
@@ -49,7 +49,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
   with JMSSupport {
 
   private[this] val counter = new AtomicLong(0)
-  private[this] implicit val materializer = ActorMaterializer()
+  private[this] implicit val materializer : Materializer = ActorMaterializer()
 
   val pingQueue : String
   val pingTopic : String
