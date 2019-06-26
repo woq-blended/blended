@@ -1,6 +1,5 @@
 package blended.websocket
 
-import akka.http.scaladsl.model.ws.TextMessage
 import blended.websocket.json.PrickleProtocol._
 import prickle._
 
@@ -15,27 +14,28 @@ object JsonHelper {
   def encode[T](obj : T)(implicit p : Pickler[T]) : String = Pickle.intoString(obj)
 }
 
-case class WsResult(
+// scalastyle:off magic.number
+case class WsContext(
   namespace : String,
   name : String,
   status : Int = 200,
   statusMsg : Option[String] = None
 )
+// scalastyle:on magic.number
 
 object WsMessageEncoded {
 
-  def fromResult(result : WsResult) : TextMessage.Strict = fromObject(result, ())
+  def fromContext(context : WsContext) : String = fromObject(context, ())
 
-  def fromObject[T](result: WsResult, t : T)(implicit p:  Pickler[T]) : TextMessage.Strict = {
-    TextMessage.Strict(
-      Pickle.intoString(WsMessageEncoded(
-      result = result, content = Pickle.intoString(t)
-    )))
+  def fromObject[T](context: WsContext, t : T)(implicit p:  Pickler[T]) : String = {
+    Pickle.intoString(WsMessageEncoded(
+      context = context, content = Pickle.intoString(t)
+    ))
   }
 }
 
 case class WsMessageEncoded(
-  result : WsResult,
+  context : WsContext,
   // The payload - either command parameters sent by the client or the message
   // sent to a client
   content : String

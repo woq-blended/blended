@@ -2,13 +2,12 @@ package blended.websocket.internal
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.ws.TextMessage
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.{NotUsed, actor}
 import blended.security.login.api.Token
 import blended.util.logging.Logger
-import blended.websocket.{ClientInfo, WebSocketCommandPackage, WsMessageEncoded, WsResult}
+import blended.websocket.{ClientInfo, WebSocketCommandPackage, WsContext, WsMessageEncoded}
 import prickle.Unpickle
 
 import scala.util.{Failure, Success}
@@ -23,7 +22,7 @@ trait CommandHandlerManager {
     * try to decode the incoming command and produce a Websockets message carrying a result.
     * @param t : The token with the client specific id and permissions.
     */
-  def newClient(t : Token) : Flow[String, WsResult, NotUsed]
+  def newClient(t : Token) : Flow[String, WsContext, NotUsed]
 }
 
 object CommandHandlerManager {
@@ -34,7 +33,7 @@ object CommandHandlerManager {
   case class ClientClosed(t : Token)
   case class ReceivedMessage(t: Token, s : String)
   case class WsClientUpdate(
-    msg : TextMessage.Strict,
+    msg : String,
     token : Token
   )
 
@@ -57,7 +56,7 @@ object CommandHandlerManager {
       // will be sent to the client via Web Sockets
       // The new client will be registered with the DispatcherActor, which will then watch this
       // actor and dispatch events to the client as long as it is active.
-      val out = Source.actorRef[WsResult](1, OverflowStrategy.fail)
+      val out = Source.actorRef[WsContext](1, OverflowStrategy.fail)
         .mapMaterializedValue { c => cmdHandler ! NewClient(token, c) }
 
       Flow.fromSinkAndSourceCoupled(in, out)
@@ -83,13 +82,13 @@ object CommandHandlerManager {
 
     override def receive: Receive = Actor.emptyBehavior
 
-    private def clientByToken(t : Token)(s: CommandHandlerState) : Option[ClientInfo] = {
-      s.clients.values.find(_.t.id == t.id)
-    }
+    private def clientByToken(t : Token)(s: CommandHandlerState) : Option[ClientInfo] = s.clients.values.find(_.t.id == t.id)
 
     private def packageByNS(ns : String)(s : CommandHandlerState) : Option[WebSocketCommandPackage[_]] = {
       s.handler.get(ns)
     }
+
+    private def respondToClient(r : WsContext, t : Token)(s : CommandHandlerState) : Unit = clientByToken(t)(s).foreach(_.clientActor ! r)
 
     private def handlePackages(state : CommandHandlerState) : Receive = {
       // Manage Ws Command Handler
@@ -121,7 +120,7 @@ object CommandHandlerManager {
         Unpickle[WsMessageEncoded].fromString(rm.s) match {
 
           case Success(msg) =>
-            packageByNS(msg.result.namespace)(state) match {
+            packageByNS(msg.context.namespace)(state) match {
               case Some(p) =>
                 self ! WsClientUpdate(
                   WsMessageEncoded.fromObject(
@@ -130,20 +129,20 @@ object CommandHandlerManager {
                 )
 
               case None =>
-                val result = WsResult(
-                  namespace = msg.result.namespace,
-                  name = msg.result.name,
+                val result = WsContext(
+                  namespace = msg.context.namespace,
+                  name = msg.context.name,
                   status = StatusCodes.NotFound.intValue,
                   statusMsg = None
                 )
 
-                self ! WsClientUpdate(WsMessageEncoded.fromResult(result), rm.t)
-
+                log.warn(result.toString())
+                respondToClient(result, rm.t)(state)
             }
 
           case Failure(_) =>
 
-            val result = WsResult(
+            val result = WsContext(
               namespace = "unknown",
               name = "unknown",
               status = StatusCodes.BadRequest.intValue,
@@ -151,8 +150,7 @@ object CommandHandlerManager {
             )
 
             log.warn(result.toString())
-
-            self ! result
+            respondToClient(result, rm.t)(state)
         }
     }
 

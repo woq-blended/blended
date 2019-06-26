@@ -2,7 +2,6 @@ package blended.websocket
 
 import akka.actor.ActorRef
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.ws.TextMessage
 import blended.security.login.api.Token
 import blended.websocket.internal.CommandHandlerManager.WsClientUpdate
 import prickle._
@@ -50,11 +49,12 @@ trait WebSocketCommandHandler[T] {
     * operation and results in a single [[String]]. On the other hand,
     * subscribing to container events or JMX events normally results in multiple WsMessages
     * with the event data as payload.
+ *
     * @param cmd The command to be executed
     * @param t The token with the security information
-    * @return A [[WsResult]] indicating the success or failure of the command
+    * @return A [[WsContext]] indicating the success or failure of the command
     */
-  final def handleCommand(cmd : WsMessageEncoded, t: Token)(implicit up : Unpickler[T]) : WsResult = {
+  final def handleCommand(cmd : WsMessageEncoded, t: Token)(implicit up : Unpickler[T]): WsContext = {
 
     JsonHelper.decode[T](cmd.content) match {
 
@@ -62,29 +62,29 @@ trait WebSocketCommandHandler[T] {
         if (doHandleCommand.isDefinedAt(content)) {
           doHandleCommand(content)(t)
         } else {
-          WsResult(cmdPackage.namespace, name, StatusCodes.NotImplemented.intValue, None)
+          WsContext(cmdPackage.namespace, name, StatusCodes.NotImplemented.intValue, None)
         }
 
       case Failure(ex) =>
-        WsResult(
+        WsContext(
           cmdPackage.namespace, name, StatusCodes.BadRequest.intValue,
           Some(s"Unable to decode command [${ex.getMessage()}] :")
         )
     }
   }
 
-  def doHandleCommand : PartialFunction[T,  Token => WsResult]
+  def doHandleCommand : PartialFunction[T,  Token => WsContext]
 
   def emit(
     msg : T,
     token : Token,
-    result: WsResult
+    result: WsContext
   )(implicit p : Pickler[T]) : Try[Unit] = Try {
     val m : WsMessageEncoded = WsMessageEncoded(
-      result = result, content = JsonHelper.encode(msg)
+      context = result, content = JsonHelper.encode(msg)
     )
     cmdPackage.handlerMgr ! WsClientUpdate(
-      msg = TextMessage.Strict(Pickle.intoString(m)),
+      msg = Pickle.intoString(m),
       token = token
     )
   }
@@ -109,21 +109,21 @@ trait WebSocketCommandPackage[T] {
   final def handleCommand(
     cmd : WsMessageEncoded,
     t : Token
-  ) : WsResult = {
-    if (cmd.result.namespace != namespace) {
-      WsResult(
+  ): WsContext = {
+    if (cmd.context.namespace != namespace) {
+      WsContext(
         namespace = namespace,
-        name = cmd.result.name,
+        name = cmd.context.name,
         StatusCodes.BadRequest.intValue,
-        Some(s"The given namespace [${cmd.result.namespace}] does not match [$namespace]")
+        Some(s"The given namespace [${cmd.context.namespace}] does not match [$namespace]")
       )
     } else {
-      commands.find(_.name == cmd.result.name) match {
+      commands.find(_.name == cmd.context.name) match {
         case None =>
-          WsResult(
-            cmd.result.namespace, cmd.result.name,
+          WsContext(
+            cmd.context.namespace, cmd.context.name,
             StatusCodes.NotFound.intValue,
-            Some(s"The command [${cmd.result.namespace}:${cmd.result.name}] could not be found")
+            Some(s"The command [${cmd.context.namespace}:${cmd.context.name}] could not be found")
           )
         case Some(c) => c.handleCommand(cmd, t)(unpickler)
       }

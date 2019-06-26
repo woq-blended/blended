@@ -2,7 +2,7 @@ package blended.websocket.internal
 
 import akka.actor.ActorRef
 import blended.security.login.api.Token
-import blended.websocket.{WebSocketCommandHandler, WebSocketCommandPackage, WsResult}
+import blended.websocket.{WebSocketCommandHandler, WebSocketCommandPackage, WsContext}
 import prickle._
 
 class BlendedCommandPackage(
@@ -19,9 +19,9 @@ class BlendedCommandPackage(
     override val name : String = "version"
     override val description: String = "Return the blended version"
 
-    override def doHandleCommand: PartialFunction[String, Token => WsResult] = {
+    override def doHandleCommand: PartialFunction[String, Token => WsContext] = {
       case n if n.equals(name) => t =>
-        val r : WsResult = WsResult(namespace = namespace, name = name)
+        val r : WsContext = WsContext(namespace = namespace, name = name)
         emit("3.1-ui-SNAPSHOT", t, r)
         r
     }

@@ -8,8 +8,7 @@ import akka.http.scaladsl.server._
 import akka.stream.scaladsl.Flow
 import blended.security.login.api.{Token, TokenStore}
 import blended.util.logging.Logger
-import blended.websocket.{WsMessageEncoded, JsonHelper, WsResult}
-import prickle.Pickle
+import blended.websocket.{WsMessageEncoded, WsContext}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -51,13 +50,21 @@ class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
       .collect {
         case TextMessage.Strict(msg) => msg
       }
-      // We will pass the incoming Strings through the dispatcher
-      // which will process them and generate WsUnitMessages as
-      // appropriate. These will be converted to WebSocket messages
-      // and sent back to the client
+      // Incoming Strings are always treated as commands and processed
+      // by the command handler chain. The result for each and every
+      // command is a WsResult, which is passed back to the client here.
+      // A command *might* send additional messages to the client as a
+      // result of executing the command (i.e. when setting up a listener
+      // on Container events).
+      // The additional messages are not passed through, but are sent directly
+      // to the client as websocket messages
       .via(cmdHandler.newClient(info))
       .collect {
-        case result : WsResult => WsMessageEncoded.fromResult(result)
+        case result : WsContext =>
+          log.debug(s"Result of web socket command is [$result]")
+          val msg = WsMessageEncoded.fromContext(result)
+          log.debug(s"Raw response is [$msg]")
+          TextMessage.Strict(msg)
       }
       .via(reportErrorsFlow)
   }
