@@ -12,11 +12,14 @@ jobs:
           keys:
             - v1-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
             - v1-blended-core-
-      - run: sbt clean update
+      - run: |
+          sbt clean update
+          cd ~/blended && npm install xunit-viewer
       - save_cache:
           key: v1-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
           paths:
             - ~/.ivy2
+            - ~/node_modules
 
   build:
     shell: /bin/sh -leo pipefail
@@ -44,6 +47,7 @@ jobs:
           command: |
             mkdir -p ~/blended/target/test-results/junit/
             find ~/blended -type f -regex ".*/test-reports/.*xml" -exec cp {} ~/blended/target/test-results/junit/ \;
+            ~/blended/node_modules/xunit-viewer/bin/xunit-viewer --results=~/blended/target/test-results/junit --output=~/blended/target/test-results/junit.html
           when: always
 
       - store_test_results:
