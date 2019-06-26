@@ -10,6 +10,7 @@ import sbt._
 import scoverage.ScoverageKeys._
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 private object BlendedWebSocketCross {
   private[this] val builder = sbtcrossproject
@@ -49,6 +50,10 @@ object BlendedWebsocketJvm extends ProjectFactory {
     override val description = "The web socket server module."
 
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogLogPackages := Map(
+        "blended.websocket" -> "DEBUG"
+      ),
+      Test / testlogDefaultLevel := "INFO",
       Compile / filterProperties ++= Map("projectVersion" -> version.value),
       Compile / compile := {
         (Compile / filterResources).value

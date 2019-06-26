@@ -3,9 +3,9 @@ package blended.websocket
 import akka.actor.ActorRef
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.TextMessage
+import blended.security.login.api.Token
 import blended.websocket.internal.CommandHandlerManager.WsClientUpdate
 import prickle._
-import RichWsMessageContext.toRichContext
 
 import scala.util.{Failure, Success, Try}
 
@@ -24,14 +24,19 @@ import scala.util.{Failure, Success, Try}
 trait WebSocketCommandHandler[T] {
 
   /**
-    * The central actor managing all command handlers and clients.
+     *The package this command belongs to
     */
-  def handlerMgr : ActorRef
+  def cmdPackage : WebSocketCommandPackage[T]
 
   /**
-    * The namespace of the commands handled by this handler
+    * The name of the handled command
     */
-  def namespace : String
+  def name : String
+
+  /**
+    * A short description of the handled command
+    */
+  def description : String
 
   /**
     * Execute a command on behalf of a client. All permission information is contained
@@ -42,43 +47,86 @@ trait WebSocketCommandHandler[T] {
     * to the client who has issued the command.
     *
     * For example, retrieving the current version of the WebSocket protocol is a one off
-    * operation and results in a single [[WsStringMessage]]. On the other hand,
+    * operation and results in a single [[String]]. On the other hand,
     * subscribing to container events or JMX events normally results in multiple WsMessages
     * with the event data as payload.
     * @param cmd The command to be executed
-    * @param info The token with the security information
-    * @return A [[WsUnitMessage]] indicating the success or failure of the command
+    * @param t The token with the security information
+    * @return A [[WsResult]] indicating the success or failure of the command
     */
-  final def handleCommand(cmd : WsMessageEncoded, info: ClientInfo)(implicit up : Unpickler[T]) : WsUnitMessage = {
+  final def handleCommand(cmd : WsMessageEncoded, t: Token)(implicit up : Unpickler[T]) : WsResult = {
 
-    WsMessageEnvelope.decode[T](cmd.content) match {
-      case Success((ctxt, content)) =>
-        doHandleCommand(content) match {
-          case Success(()) =>
-            WsUnitMessage(ctxt.withStatus(StatusCodes.OK))
-          case Failure(t) =>
-            WsUnitMessage(ctxt.withStatus(StatusCodes.InternalServerError, t.getMessage()))
+    JsonHelper.decode[T](cmd.content) match {
+
+      case Success(content) =>
+        if (doHandleCommand.isDefinedAt(content)) {
+          doHandleCommand(content)(t)
+        } else {
+          WsResult(cmdPackage.namespace, name, StatusCodes.NotImplemented.intValue, None)
         }
 
-      case Failure(t) => WsUnitMessage(
-        cmd.context.withStatus(StatusCodes.BadRequest, s"Unable to decode command [${t.getMessage()}] :")
-      )
+      case Failure(ex) =>
+        WsResult(
+          cmdPackage.namespace, name, StatusCodes.BadRequest.intValue,
+          Some(s"Unable to decode command [${ex.getMessage()}] :")
+        )
     }
-
   }
 
-  def doHandleCommand(cmd : T) : Try[Unit]
+  def doHandleCommand : PartialFunction[T,  Token => WsResult]
 
   def emit(
-    msg : WsMessageEnvelope[T],
-    status: Option[Int],
-    statusMsg : Option[String],
-    client : ClientInfo
+    msg : T,
+    token : Token,
+    result: WsResult
   )(implicit p : Pickler[T]) : Try[Unit] = Try {
-    val s : String = msg.encode(status, statusMsg)
-    handlerMgr ! WsClientUpdate(
-      msg = TextMessage.Strict(s),
-      client = client
+    val m : WsMessageEncoded = WsMessageEncoded(
+      result = result, content = JsonHelper.encode(msg)
     )
+    cmdPackage.handlerMgr ! WsClientUpdate(
+      msg = TextMessage.Strict(Pickle.intoString(m)),
+      token = token
+    )
+  }
+}
+
+trait WebSocketCommandPackage[T] {
+
+  /**
+    * The central actor managing all command handlers and clients.
+    */
+  def handlerMgr : ActorRef
+
+  /**
+    * The namespace the handle command belongs to
+    */
+  def namespace : String
+
+  def commands : Seq[WebSocketCommandHandler[T]]
+
+  def unpickler : Unpickler[T]
+
+  final def handleCommand(
+    cmd : WsMessageEncoded,
+    t : Token
+  ) : WsResult = {
+    if (cmd.result.namespace != namespace) {
+      WsResult(
+        namespace = namespace,
+        name = cmd.result.name,
+        StatusCodes.BadRequest.intValue,
+        Some(s"The given namespace [${cmd.result.namespace}] does not match [$namespace]")
+      )
+    } else {
+      commands.find(_.name == cmd.result.name) match {
+        case None =>
+          WsResult(
+            cmd.result.namespace, cmd.result.name,
+            StatusCodes.NotFound.intValue,
+            Some(s"The command [${cmd.result.namespace}:${cmd.result.name}] could not be found")
+          )
+        case Some(c) => c.handleCommand(cmd, t)(unpickler)
+      }
+    }
   }
 }

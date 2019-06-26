@@ -8,7 +8,8 @@ import akka.http.scaladsl.server._
 import akka.stream.scaladsl.Flow
 import blended.security.login.api.{Token, TokenStore}
 import blended.util.logging.Logger
-import blended.websocket.WsUnitMessage
+import blended.websocket.{WsMessageEncoded, JsonHelper, WsResult}
+import prickle.Pickle
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -55,14 +56,8 @@ class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
       // appropriate. These will be converted to WebSocket messages
       // and sent back to the client
       .via(cmdHandler.newClient(info))
-      .map {
-
-        case result : WsUnitMessage =>
-          TextMessage.Strict(result.encode())
-
-        case o =>
-          log.warn(s"cmd handler flow had unexpected result of type [${o.getClass().getName()}]")
-          TextMessage.Strict(o.toString())
+      .collect {
+        case result : WsResult => WsMessageEncoded.fromResult(result)
       }
       .via(reportErrorsFlow)
   }

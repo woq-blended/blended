@@ -4,7 +4,7 @@ import java.io.File
 import java.security.spec.X509EncodedKeySpec
 import java.security.{KeyFactory, PublicKey}
 import java.util.Base64
-import java.util.concurrent.CompletionStage
+import java.util.concurrent.{CompletionStage, TimeUnit}
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -33,6 +33,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
+import scala.collection.JavaConverters._
 
  class WebSocketSpec extends SimplePojoContainerSpec
    with LoggingFreeSpecLike
@@ -173,14 +174,43 @@ import scala.util.Try
            val token = login("bg_test", "secret").get
 
            // set up the WS listener
-           val (resp, _) = source
-             .viaMat(wsFlow(token.webToken))(Keep.right)
+           val ((_, resp), _) = source
+             .viaMat(wsFlow(token.webToken))(Keep.both)
              .toMat(incoming)(Keep.both)
              .run()
 
            // We are expecting a Switch Protocol result when the WS client is connected
            val connected = Await.result(resp, 3.seconds)
            connected.response.status should be(AkkaStatusCodes.SwitchingProtocols)
+       }
+     }
+
+     "respond to a malformed web socket request with BAD_REQUEST" in {
+       withWebSocketServer(registry) { actorSystem =>
+         actorMaterializer =>
+           implicit val system: ActorSystem = actorSystem
+           implicit val materializer: Materializer = actorMaterializer
+
+           // login and retrieve the token
+           val token = login("bg_test", "secret").get
+
+           // set up the WS listener
+           val ((actor, resp), messages) = source
+             .viaMat(wsFlow(token.webToken))(Keep.both)
+             .toMat(incoming)(Keep.both)
+             .run()
+
+           val wsMessages = messages.toCompletableFuture
+
+           // We are expecting a Switch Protocol result when the WS client is connected
+           val connected = Await.result(resp, 3.seconds)
+           connected.response.status should be(AkkaStatusCodes.SwitchingProtocols)
+
+           actor ! TextMessage.Strict("Hello Blended")
+
+           val foo = wsMessages.get(3, TimeUnit.SECONDS).asScala
+           foo should have size(1)
+
        }
      }
    }

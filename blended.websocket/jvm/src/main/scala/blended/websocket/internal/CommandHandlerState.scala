@@ -2,11 +2,11 @@ package blended.websocket.internal
 
 import blended.security.login.api.Token
 import blended.util.logging.Logger
-import blended.websocket.{ClientInfo, WebSocketCommandHandler}
+import blended.websocket.{ClientInfo, WebSocketCommandPackage}
 
 private[internal] case class CommandHandlerState(
   clients : Map[String, ClientInfo] = Map.empty,
-  handler : Map[String, WebSocketCommandHandler[_]] = Map.empty
+  handler : Map[String, WebSocketCommandPackage[_]] = Map.empty
 ) {
 
   private val log : Logger = Logger[CommandHandlerState]
@@ -25,13 +25,13 @@ private[internal] case class CommandHandlerState(
     )
   }
 
-  def addHandler(h : WebSocketCommandHandler[_]) : CommandHandlerState = {
+  def addHandler(h : WebSocketCommandPackage[_]) : CommandHandlerState = {
     log.info(s"Adding command handler for namespace [${h.namespace}]")
     copy(handler = handler.filterKeys(_ != h.namespace) ++ Map(h.namespace -> h))
   }
 
-  def removeHandler(h : WebSocketCommandHandler[_]) : CommandHandlerState = {
-    log.info(s"Removing command handler for namespace [${h.namespace}]")
+  def removeHandler(h : WebSocketCommandPackage[_]) : CommandHandlerState = {
+    log.info(s"Removing command package for namespace [${h.namespace}]")
     copy(handler = handler.filterKeys(_ != h.namespace))
   }
 }

@@ -1,13 +1,17 @@
 package blended.websocket.internal
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.TextMessage
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.{NotUsed, actor}
 import blended.security.login.api.Token
 import blended.util.logging.Logger
-import blended.websocket.{ClientInfo, WebSocketCommandHandler, WsUnitMessage}
+import blended.websocket.{ClientInfo, WebSocketCommandPackage, WsMessageEncoded, WsResult}
+import prickle.Unpickle
+
+import scala.util.{Failure, Success}
 
 trait CommandHandlerManager {
   /**
@@ -19,19 +23,19 @@ trait CommandHandlerManager {
     * try to decode the incoming command and produce a Websockets message carrying a result.
     * @param t : The token with the client specific id and permissions.
     */
-  def newClient(t : Token) : Flow[String, WsUnitMessage, NotUsed]
+  def newClient(t : Token) : Flow[String, WsResult, NotUsed]
 }
 
 object CommandHandlerManager {
 
-  case class AddCommandHandler(handler: WebSocketCommandHandler[_])
-  case class RemoveCommandHandler(handler: WebSocketCommandHandler[_])
+  case class AddCommandPackage(handler: WebSocketCommandPackage[_])
+  case class RemoveCommandPackage(handler: WebSocketCommandPackage[_])
   case class NewClient(t : Token, clientActor : ActorRef)
   case class ClientClosed(t : Token)
   case class ReceivedMessage(t: Token, s : String)
   case class WsClientUpdate(
     msg : TextMessage.Strict,
-    client : ClientInfo
+    token : Token
   )
 
   /**
@@ -53,7 +57,7 @@ object CommandHandlerManager {
       // will be sent to the client via Web Sockets
       // The new client will be registered with the DispatcherActor, which will then watch this
       // actor and dispatch events to the client as long as it is active.
-      val out = Source.actorRef[WsUnitMessage](1, OverflowStrategy.fail)
+      val out = Source.actorRef[WsResult](1, OverflowStrategy.fail)
         .mapMaterializedValue { c => cmdHandler ! NewClient(token, c) }
 
       Flow.fromSinkAndSourceCoupled(in, out)
@@ -79,13 +83,23 @@ object CommandHandlerManager {
 
     override def receive: Receive = Actor.emptyBehavior
 
-    private def handling(state : CommandHandlerState) : Receive = {
-      // Manage Ws Command Handler
-      case AddCommandHandler(h) =>
-        context.become(handling(state.addHandler(h)))
-      case RemoveCommandHandler(h) =>
-        context.become(handling(state.removeHandler(h)))
+    private def clientByToken(t : Token)(s: CommandHandlerState) : Option[ClientInfo] = {
+      s.clients.values.find(_.t.id == t.id)
+    }
 
+    private def packageByNS(ns : String)(s : CommandHandlerState) : Option[WebSocketCommandPackage[_]] = {
+      s.handler.get(ns)
+    }
+
+    private def handlePackages(state : CommandHandlerState) : Receive = {
+      // Manage Ws Command Handler
+      case AddCommandPackage(h) =>
+        context.become(handling(state.addHandler(h)))
+      case RemoveCommandPackage(h) =>
+        context.become(handling(state.removeHandler(h)))
+    }
+
+    private def handleClients(state : CommandHandlerState) : Receive = {
       // Manage client connects / disconnects
       case NewClient(info, clientActor) =>
         context.watch(clientActor)
@@ -99,15 +113,62 @@ object CommandHandlerManager {
         state.clients.values.find(_.clientActor == ca).foreach { ci =>
           context.become(handling(state.removeClient(ci.t)))
         }
+    }
+
+    private def handleCommand(state: CommandHandlerState) : Receive = {
+      case rm : ReceivedMessage =>
+        log.debug(s"Handling message [${rm.s}] for client [${rm.t.id}]")
+        Unpickle[WsMessageEncoded].fromString(rm.s) match {
+
+          case Success(msg) =>
+            packageByNS(msg.result.namespace)(state) match {
+              case Some(p) =>
+                self ! WsClientUpdate(
+                  WsMessageEncoded.fromObject(
+                    p.handleCommand(msg, rm.t), ()
+                  ), rm.t
+                )
+
+              case None =>
+                val result = WsResult(
+                  namespace = msg.result.namespace,
+                  name = msg.result.name,
+                  status = StatusCodes.NotFound.intValue,
+                  statusMsg = None
+                )
+
+                self ! WsClientUpdate(WsMessageEncoded.fromResult(result), rm.t)
+
+            }
+
+          case Failure(_) =>
+
+            val result = WsResult(
+              namespace = "unknown",
+              name = "unknown",
+              status = StatusCodes.BadRequest.intValue,
+              statusMsg = Some(s"Message [${rm.s}] not decoded into valid web socket request")
+            )
+
+            log.warn(result.toString())
+
+            self ! result
+        }
+    }
+
+
+    private def handling(state : CommandHandlerState) : Receive =
+      handlePackages(state)
+        .orElse(handleClients(state))
+        .orElse(handleCommand(state))
+        .orElse {
 
       // Forward an emitted message from a command handler to the connected client
       case u : WsClientUpdate =>
-        state.clients.values.find(_.t.id == u.client.t.id).foreach{ ci =>
+        clientByToken(u.token)(state).foreach{ ci =>
           ci.clientActor ! u.msg
         }
 
-      case rm : ReceivedMessage =>
-        log.info(s"Handling message [${rm.s}] for client [${rm.t.id}]")
 
     }
   }
