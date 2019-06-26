@@ -26,7 +26,7 @@ jobs:
         user: blended
     steps:
       - checkout
-      -
+
       - restore-cache:
           keys:
             - v1-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
