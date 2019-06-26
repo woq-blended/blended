@@ -1,6 +1,5 @@
 package blended.jmx.json
 
-
 import blended.jmx._
 import prickle.{CompositePickler, PicklerPair}
 

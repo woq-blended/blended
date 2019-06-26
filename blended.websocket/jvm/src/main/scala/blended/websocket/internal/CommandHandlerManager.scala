@@ -23,12 +23,15 @@ trait CommandHandlerManager {
     * @param t : The token with the client specific id and permissions.
     */
   def newClient(t : Token) : Flow[String, WsContext, NotUsed]
+
+  def addCommandPackage(pkg : WebSocketCommandPackage) : Unit
+  def removeCommandPackage(pkg : WebSocketCommandPackage) : Unit
 }
 
 object CommandHandlerManager {
 
-  case class AddCommandPackage(handler: WebSocketCommandPackage[_])
-  case class RemoveCommandPackage(handler: WebSocketCommandPackage[_])
+  case class AddCommandPackage(handler: WebSocketCommandPackage)
+  case class RemoveCommandPackage(handler: WebSocketCommandPackage)
   case class NewClient(t : Token, clientActor : ActorRef)
   case class ClientClosed(t : Token)
   case class ReceivedMessage(t: Token, s : String)
@@ -40,14 +43,14 @@ object CommandHandlerManager {
   /**
     * Create an empty command handler within an Actor system.
     */
-  def create(system: ActorSystem): CommandHandlerManager = {
+  def create(system: ActorSystem): CommandHandlerManager = new CommandHandlerManager {
     // This creates one actor which will dispatch all incoming client
     // messages and dispatch them accordingly
-    val cmdHandler = system.actorOf(Props[CommandHandlerActor])
+    private val cmdHandler : ActorRef = system.actorOf(Props[CommandHandlerActor])
 
     // for each new client we will create a flow which will consume Strings and emit
     // WSMessageEnvelopes
-    token: Token => {
+    override def newClient(token : Token) : Flow[String, WsContext, NotUsed] = {
       val in = Flow[String]
         .map(s => ReceivedMessage(token, s))
         .to(Sink.actorRef[ReceivedMessage](cmdHandler, ClientClosed(token)))
@@ -61,6 +64,10 @@ object CommandHandlerManager {
 
       Flow.fromSinkAndSourceCoupled(in, out)
     }
+
+    override def addCommandPackage(pkg: WebSocketCommandPackage): Unit = cmdHandler ! AddCommandPackage(pkg)
+
+    override def removeCommandPackage(pkg: WebSocketCommandPackage): Unit = cmdHandler ! RemoveCommandPackage(pkg)
   }
 
   /**
@@ -78,17 +85,10 @@ object CommandHandlerManager {
     // We start with no handlers and no clients
     override def preStart(): Unit = {
       context.become(handling(CommandHandlerState()))
+      context.system.eventStream.subscribe(self, classOf[WsClientUpdate])
     }
 
     override def receive: Receive = Actor.emptyBehavior
-
-    private def clientByToken(t : Token)(s: CommandHandlerState) : Option[ClientInfo] = s.clients.values.find(_.t.id == t.id)
-
-    private def packageByNS(ns : String)(s : CommandHandlerState) : Option[WebSocketCommandPackage[_]] = {
-      s.handler.get(ns)
-    }
-
-    private def respondToClient(r : WsContext, t : Token)(s : CommandHandlerState) : Unit = clientByToken(t)(s).foreach(_.clientActor ! r)
 
     private def handlePackages(state : CommandHandlerState) : Receive = {
       // Manage Ws Command Handler
@@ -120,13 +120,10 @@ object CommandHandlerManager {
         Unpickle[WsMessageEncoded].fromString(rm.s) match {
 
           case Success(msg) =>
-            packageByNS(msg.context.namespace)(state) match {
+            state.packageByNS(msg.context.namespace) match {
               case Some(p) =>
-                self ! WsClientUpdate(
-                  WsMessageEncoded.fromObject(
-                    p.handleCommand(msg, rm.t), ()
-                  ), rm.t
-                )
+                val response : WsContext = p.handleCommand(msg, rm.t)
+                state.respondToClient(response, rm.t)
 
               case None =>
                 val result = WsContext(
@@ -137,7 +134,7 @@ object CommandHandlerManager {
                 )
 
                 log.warn(result.toString())
-                respondToClient(result, rm.t)(state)
+                state.respondToClient(result, rm.t)
             }
 
           case Failure(_) =>
@@ -150,7 +147,7 @@ object CommandHandlerManager {
             )
 
             log.warn(result.toString())
-            respondToClient(result, rm.t)(state)
+            state.respondToClient(result, rm.t)
         }
     }
 
@@ -163,11 +160,10 @@ object CommandHandlerManager {
 
       // Forward an emitted message from a command handler to the connected client
       case u : WsClientUpdate =>
-        clientByToken(u.token)(state).foreach{ ci =>
-          ci.clientActor ! u.msg
-        }
-
-
+        log.debug(s"Processing WsClientUpdate for [${u.token.id}] : [${u.msg}]")
+//        state.clientByToken(u.token).foreach{ ci =>
+//          ci.clientActor ! TextMessageu.msg
+//        }
     }
   }
 }

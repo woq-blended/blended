@@ -8,7 +8,7 @@ import akka.http.scaladsl.server._
 import akka.stream.scaladsl.Flow
 import blended.security.login.api.{Token, TokenStore}
 import blended.util.logging.Logger
-import blended.websocket.{WsMessageEncoded, WsContext}
+import blended.websocket.{WebSocketCommandPackage, WsContext, WsMessageEncoded}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -18,6 +18,9 @@ class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
   private[this] val log = Logger[WebSocketProtocolHandler]
   private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
   private[this] val cmdHandler : CommandHandlerManager = CommandHandlerManager.create(system)
+
+  def addCommandPackage(pkg : WebSocketCommandPackage) : Unit = cmdHandler.addCommandPackage(pkg)
+  def removeCommandPackage(pkg : WebSocketCommandPackage) : Unit = cmdHandler.removeCommandPackage(pkg)
 
   def route : Route = routeImpl
 
@@ -37,6 +40,9 @@ class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
               complete(StatusCodes.BadRequest)
             case Some(info) =>
               // A web socket handler is simply a flow Message -> Message
+              // Inbound messages will be treated as commands coming from the
+              // client, outbound message are usually WsEncoded messages that
+              // can carry a status code and a JSON encoded payload
               handleWebSocketMessages(handlerFlow(info))
           }
       }

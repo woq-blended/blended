@@ -8,7 +8,7 @@ import java.util.Base64
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
-import akka.http.scaladsl.model.{StatusCodes => AkkaStatusCodes}
+import akka.http.scaladsl.model.{StatusCode, StatusCodes => AkkaStatusCodes}
 import akka.stream._
 import akka.stream.javadsl.Sink
 import akka.stream.scaladsl.{Keep, Source}
@@ -25,7 +25,7 @@ import blended.security.login.rest.internal.RestLoginActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import blended.websocket.{WsContext, WsMessageEncoded}
+import blended.websocket.{BlendedWsMessages, Version, VersionResponse, WsContext, WsMessageEncoded}
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
 import com.softwaremill.sttp._
 import org.osgi.framework.BundleActivator
@@ -211,6 +211,15 @@ class WebSocketSpec extends SimplePojoContainerSpec
    }
 
    "respond to an unknown command with a NOT_FOUND" in {
+
+     def fishForResponse : StatusCode => TestProbe => Try[Unit] = sc => p => Try {
+       p.fishForMessage(3.seconds) {
+         case m: TextMessage.Strict =>
+           val enc: WsMessageEncoded = Unpickle[WsMessageEncoded].fromString(m.getStrictText).get
+           enc.context.status == sc.intValue
+       }
+     }
+
      withWebSocketServer(registry) { actorSystem =>
        actorMaterializer =>
          implicit val system: ActorSystem = actorSystem
@@ -220,18 +229,42 @@ class WebSocketSpec extends SimplePojoContainerSpec
          // login and retrieve the token
          val (switch, actor) = wsConnect("bg_test", "secret", probe.ref)
 
-         val cmd: String = WsMessageEncoded.fromContext(WsContext(namespace = "foo", name = "bar"))
+         actor ! TextMessage.Strict(WsMessageEncoded.fromContext(WsContext(namespace = "foo", name = "bar")))
+         fishForResponse(AkkaStatusCodes.NotFound)(probe).get
 
-         actor ! TextMessage.Strict(cmd)
-
-         probe.fishForMessage(3.seconds) {
-           case m: TextMessage.Strict =>
-             val enc: WsMessageEncoded = Unpickle[WsMessageEncoded].fromString(m.getStrictText).get
-             enc.context.status == AkkaStatusCodes.NotFound.intValue
-         }
+         actor ! TextMessage.Strict(WsMessageEncoded.fromContext(WsContext(namespace = "blended", name = "doesNotExist")))
+         fishForResponse(AkkaStatusCodes.NotFound)(probe).get
 
          switch.shutdown()
      }
     }
+
+    "respond to a valid Web Socket request" in {
+      withWebSocketServer(registry) { actorSystem =>
+        actorMaterializer =>
+          implicit val system: ActorSystem = actorSystem
+          implicit val materializer: Materializer = actorMaterializer
+
+          val probe: TestProbe = TestProbe()
+          // login and retrieve the token
+          val (switch, actor) = wsConnect("bg_test", "secret", probe.ref)
+
+          val blendedCmd : BlendedWsMessages = Version()
+
+          val msg = WsMessageEncoded.fromObject(WsContext(namespace = "blended", name = "version"), blendedCmd)
+          actor ! TextMessage.Strict(msg)
+
+          // As the text is not a properly encoded command, it will return a BadRequest on
+          // the websockets stream
+          probe.fishForMessage(3.seconds) {
+            case m: TextMessage.Strict =>
+              val enc: WsMessageEncoded = Unpickle[WsMessageEncoded].fromString(m.getStrictText).get
+              enc.context.status == AkkaStatusCodes.OK.intValue
+          }
+
+          switch.shutdown()
+      }
+    }
+
   }
 }

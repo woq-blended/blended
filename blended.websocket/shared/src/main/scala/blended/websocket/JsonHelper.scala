@@ -1,5 +1,7 @@
 package blended.websocket
 
+import java.util.Base64
+
 import blended.websocket.json.PrickleProtocol._
 import prickle._
 
@@ -28,8 +30,9 @@ object WsMessageEncoded {
   def fromContext(context : WsContext) : String = fromObject(context, ())
 
   def fromObject[T](context: WsContext, t : T)(implicit p:  Pickler[T]) : String = {
+    val b64 : String = Base64.getEncoder().encodeToString(Pickle.intoString(t).getBytes())
     Pickle.intoString(WsMessageEncoded(
-      context = context, content = Pickle.intoString(t)
+      context = context, content = b64
     ))
   }
 }
