@@ -82,7 +82,7 @@ class CertificateRefresher(
       // request new cert
       certMgr.checkCertificates() match {
         case Failure(e) =>
-          log.debug(e)("Automatic certifcate refresh failed. Countinuing with old SslContextProvider")
+          log.debug(e)("Automatic certifcate refresh failed. Continuing with old SslContextProvider")
           scheduleRefresh(refresherConfig)
 
         case Success(None) =>

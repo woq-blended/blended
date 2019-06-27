@@ -17,7 +17,7 @@ class BrokerActivator
 
       val brokerConfigs = osgiCfg.config.getConfigMap("broker", Map.empty).map {
         case (brokerName, cfg) =>
-          (brokerName -> BrokerConfig.create(brokerName, osgiCfg.idSvc, cfg).get)
+          brokerName -> BrokerConfig.create(brokerName, osgiCfg.idSvc, cfg).get
       }
 
       val withSsl = brokerConfigs.values.exists(_.withSsl)
