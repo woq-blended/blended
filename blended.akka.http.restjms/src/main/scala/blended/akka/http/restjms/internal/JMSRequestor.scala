@@ -106,7 +106,7 @@ trait JMSRequestor {
     val uri : String = if (opCfg.receivetimeout > 0) {
       baseUri + s"&receiveTimeout=${opCfg.receivetimeout}"
     } else {
-      case false => baseUri
+      baseUri
     }
 
     log.info(s"Using request/reply uri [$uri] with content type [$requestContentType]")
