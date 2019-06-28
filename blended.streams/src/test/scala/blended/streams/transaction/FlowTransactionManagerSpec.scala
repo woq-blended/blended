@@ -77,7 +77,7 @@ class FlowTransactionManagerSpec extends SimplePojoContainerSpec
         l should have size 1
         val t = l.head
         t.tid should be(env.id)
-        t.creationProps.get("foo") should be(Some(MsgProperty("bar")))
+        t.creationProps.get("foo") should be(Some(MsgProperty("bar").get))
       }
     }
 
@@ -90,7 +90,7 @@ class FlowTransactionManagerSpec extends SimplePojoContainerSpec
       singleTest(FlowTransaction.startEvent(Some(env))) { l =>
         l should have size 1
         l.head.tid should be(env.id)
-        l.head.creationProps.get("foo") should be(Some(MsgProperty("bar")))
+        l.head.creationProps.get("foo") should be(Some(MsgProperty("bar").get))
       }
 
       system.stop(mgr)
@@ -99,7 +99,7 @@ class FlowTransactionManagerSpec extends SimplePojoContainerSpec
       val t2 = Await.result(transaction(mgr2, env.id), 3.seconds)
 
       t2.tid should be(env.id)
-      t2.creationProps.get("foo") should be(Some(MsgProperty("bar")))
+      t2.creationProps.get("foo") should be(Some(MsgProperty("bar").get))
 
       system.stop(mgr2)
     }

@@ -62,8 +62,8 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
     val creationProps : Map[String, MsgProperty] =
       storeProps.filterKeys(_.startsWith(creationPrefix)).map {
         case (k, v) =>
-          k.substring(creationPrefix.length) -> MsgProperty.lift(v).get
-      }.toMap
+          k.substring(creationPrefix.length) -> MsgProperty(v).get
+      }
 
     val worklist : Map[String, List[WorklistState]] = {
       val wlProps = storeProps.filterKeys(_.startsWith(worklistPrefix))

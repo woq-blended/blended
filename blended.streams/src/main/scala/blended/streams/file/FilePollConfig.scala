@@ -35,7 +35,7 @@ object FilePollConfig {
       cfg.getConfig(PATH_HEADER).entrySet().asScala.map { e =>
         val k = e.getKey()
         val v = idSvc.resolvePropertyString(cfg.getConfig(PATH_HEADER).getString(k, "")).get.toString()
-        k -> MsgProperty.lift(v).get
+        k -> MsgProperty(v).get
       }.toMap
     } else {
       Map.empty

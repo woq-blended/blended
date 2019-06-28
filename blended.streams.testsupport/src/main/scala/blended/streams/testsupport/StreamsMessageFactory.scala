@@ -50,7 +50,7 @@ class StreamsMessageFactory(fileName : String) {
   private def readHeader(doc : Document) : Try[FlowMessageProps] = Try {
 
     val headerList = doc.getElementsByTagName("headerProperty")
-    val headers : Seq[Element] = 0.to(headerList.getLength - 1).map(i => headerList.item(i).asInstanceOf[Element])
+    val headers : Seq[Element] = 0.until(headerList.getLength - 1).map(i => headerList.item(i).asInstanceOf[Element])
 
     headers.map { elem =>
       val propType = elem.getAttribute("type")
@@ -60,7 +60,7 @@ class StreamsMessageFactory(fileName : String) {
       val constructor = clazz.getConstructor(classOf[String])
       val obj = constructor.newInstance(value)
 
-      name -> MsgProperty.lift(obj).get
+      name -> MsgProperty(obj).get
     }.toMap
   }
 

@@ -48,7 +48,9 @@ class FlowMessageSpec extends LoggingFreeSpec
     "Support all property types correctly" in {
 
       val unitName : String = "unit"
+      //scalastyle:off null
       val unitProps : FlowMessageProps = FlowMessage.props(unitName -> null).get
+      //scalastyle:on null
       val unitMsg : FlowMessage = FlowMessage(unitProps)
       unitMsg.header[Unit](unitName) should be(Some(()))
 

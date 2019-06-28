@@ -63,8 +63,6 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
   val hyphen_repl : String = "_HYPHEN_"
   val dot_repl : String = "_DOT_"
 
-  import MsgProperty.lift
-
   // Convert a JMS message into a FlowMessage. This is normally used in JMS Sources
   val jms2flowMessage : FlowHeaderConfig => JmsSettings => Message => Try[FlowMessage] = headerConfig => settings => msg => Try {
 
@@ -97,14 +95,14 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
 
       val expireHeaderMap : Map[String, MsgProperty] = msg.getJMSExpiration() match {
         case 0L => Map.empty
-        case v  => Map(expireHeader(prefix) -> MsgProperty.lift(v).get)
+        case v  => Map(expireHeader(prefix) -> MsgProperty(v).get)
       }
 
       val corrIdMap : Map[String, MsgProperty] =
         Option(msg.getJMSCorrelationID()).map { s =>
           Map(
-            corrIdHeader(prefix) -> MsgProperty(s),
-            "JMSCorrelationID" -> MsgProperty(s)
+            corrIdHeader(prefix) -> MsgProperty(s).get,
+            "JMSCorrelationID" -> MsgProperty(s).get
           )
         }.getOrElse(Map.empty)
 
@@ -114,29 +112,28 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
           .replaceAll(hyphen_repl, hyphen)
           .replaceAll(dot_repl, dot)
 
-        propName -> lift(msg.getObjectProperty(name.toString())).get
+        propName -> MsgProperty(msg.getObjectProperty(name.toString())).get
       }.toMap
 
       val replyToMap : Map[String, MsgProperty] =
-        Option(msg.getJMSReplyTo()).map(d => replyToHeader(prefix) -> lift(JmsDestination.create(d).get.asString).get).toMap
+        Option(msg.getJMSReplyTo()).map(d => replyToHeader(prefix) -> MsgProperty(JmsDestination.create(d).get.asString).get).toMap
 
       props ++ headers ++ expireHeaderMap ++ corrIdMap ++ replyToMap
     }
 
-    val flowMessge = msg match {
+    val flowMessage = msg match {
       case t : TextMessage =>
         TextFlowMessage(t.getText(), props)
 
-      case b : BytesMessage => {
+      case b : BytesMessage =>
         val content : Array[Byte] = new Array[Byte](b.getBodyLength().toInt)
         b.readBytes(content)
         BinaryFlowMessage(content, props)
-      }
 
       case _ => FlowMessage(props)
     }
 
-    flowMessge
+    flowMessage
   }
 
   val envelope2jms : (JmsProducerSettings, Session, FlowEnvelope) => Try[JmsSendParameter] = (settings, session, flowEnv) => Try {

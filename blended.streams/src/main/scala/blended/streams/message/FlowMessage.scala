@@ -4,6 +4,7 @@ import akka.NotUsed
 import akka.util.ByteString
 
 import scala.reflect.ClassTag
+import scala.runtime.BoxedUnit
 import scala.util.Try
 
 sealed trait MsgProperty {
@@ -26,34 +27,31 @@ case class DoubleMsgProperty(override val value : Double) extends MsgProperty
 
 object MsgProperty {
 
-  import scala.language.implicitConversions
+  def apply(o: Any) : Try[MsgProperty] = Try {
+    val resMap : Map[Class[_], Any => MsgProperty] = Map(
+      classOf[Unit] -> (_ => UnitMsgProperty()),
+      classOf[Short] -> (v => ShortMsgProperty(v.asInstanceOf[Short])),
+      classOf[Int] -> (v => IntMsgProperty(v.asInstanceOf[Int])),
+      classOf[Long] -> (v => LongMsgProperty(v.asInstanceOf[Long])),
+      classOf[Boolean] -> (v => BooleanMsgProperty(v.asInstanceOf[Boolean])),
+      classOf[Byte] -> (v => ByteMsgProperty(v.asInstanceOf[Byte])),
+      classOf[Float] -> (v => FloatMsgProperty(v.asInstanceOf[Float])),
+      classOf[Double] -> (v => DoubleMsgProperty(v.asInstanceOf[Double])),
+      classOf[String] -> (v => StringMsgProperty(v.toString())),
+      classOf[BoxedUnit] -> (_ => UnitMsgProperty()),
+      classOf[java.lang.Integer] -> (v => IntMsgProperty(v.asInstanceOf[Int])),
+      classOf[java.lang.Long] -> (v => LongMsgProperty(v.asInstanceOf[Long])),
+      classOf[java.lang.Short] -> (v => ShortMsgProperty(v.asInstanceOf[Short])),
+      classOf[java.lang.Float] -> (v => FloatMsgProperty(v.asInstanceOf[Float])),
+      classOf[java.lang.Double] -> (v => DoubleMsgProperty(v.asInstanceOf[Double])),
+      classOf[java.lang.Boolean] -> (v => BooleanMsgProperty(v.asInstanceOf[Boolean])),
+      classOf[java.lang.Byte] -> (v => ByteMsgProperty(v.asInstanceOf[Byte]))
+    )
 
-  def apply() : MsgProperty = UnitMsgProperty()
-  def apply(s : String) : MsgProperty = StringMsgProperty(s)
-  def apply(i : Int) : MsgProperty = IntMsgProperty(i)
-  def apply(l : Long) : MsgProperty = LongMsgProperty(l)
-  def apply(b : Boolean) : MsgProperty = BooleanMsgProperty(b)
-  def apply(b : Byte) : MsgProperty = ByteMsgProperty(b)
-  def apply(s : Short) : MsgProperty = ShortMsgProperty(s)
-  def apply(f : Float) : MsgProperty = FloatMsgProperty(f)
-  def apply(d : Double) : MsgProperty = DoubleMsgProperty(d)
-
-  def lift(v : Any) : Try[MsgProperty] = Try {
-    Option(v) match {
-      case None => apply()
-      case Some(o) =>
-        o match {
-          case u : Unit              => apply()
-          case s : String            => apply(s)
-          case i : java.lang.Integer => apply(i)
-          case l : java.lang.Long    => apply(l)
-          case b : java.lang.Boolean => apply(b)
-          case b : java.lang.Byte    => apply(b)
-          case s : java.lang.Short   => apply(s)
-          case f : java.lang.Float   => apply(f)
-          case d : java.lang.Double  => apply(d)
-          case _                     => throw new IllegalArgumentException(s"Unsupported Msg Property type [${o.getClass().getName()}]")
-        }
+    val v : Any = Option(o).getOrElse(())
+    resMap.get(v.getClass()).map(f => f(v)) match {
+      case None => throw new IllegalArgumentException(s"Unsupported Msg Property type [${v.getClass().getName()}]")
+      case Some(p) => p
     }
   }
 
@@ -67,7 +65,7 @@ object FlowMessage {
   def props(m : (String, Any)*) : Try[FlowMessageProps] = Try {
     m.map {
       case (k, v) =>
-        val p : MsgProperty = MsgProperty.lift(v).get
+        val p : MsgProperty = MsgProperty(v).get
         k -> p
     }.toMap
   }
@@ -92,59 +90,55 @@ sealed abstract class FlowMessage(msgHeader : FlowMessageProps) {
 
   def bodySize() : Int
 
+  private def classMatch(v : Any, clazz : Class[_]) : Boolean = {
+
+    val intClasses : Seq[Class[_]] = Seq(classOf[Integer], classOf[Int])
+    val longClasses : Seq[Class[_]] = Seq(classOf[java.lang.Long], classOf[Long])
+    val shortClasses : Seq[Class[_]] = Seq(classOf[java.lang.Short], classOf[Short])
+    val floatClasses : Seq[Class[_]] = Seq(classOf[java.lang.Float], classOf[Float])
+    val doubleClasses : Seq[Class[_]] = Seq(classOf[java.lang.Double], classOf[Double])
+    val boolClasses : Seq[Class[_]] = Seq(classOf[java.lang.Boolean], classOf[Boolean])
+    val byteClasses : Seq[Class[_]] = Seq(classOf[java.lang.Byte], classOf[Byte])
+
+    val matches : Map[Class[_], Seq[Class[_]]] = Map(
+      classOf[java.lang.Integer] -> intClasses,
+      classOf[Int] -> intClasses,
+      classOf[java.lang.Long] -> longClasses,
+      classOf[Long] -> longClasses,
+      classOf[Short] -> shortClasses,
+      classOf[java.lang.Short] -> shortClasses,
+      classOf[java.lang.Float] -> floatClasses,
+      classOf[Float] -> floatClasses,
+      classOf[java.lang.Double] -> doubleClasses,
+      classOf[Double] -> doubleClasses,
+      classOf[java.lang.Boolean] -> boolClasses,
+      classOf[Boolean] -> boolClasses,
+      classOf[java.lang.Byte] -> byteClasses,
+      classOf[Byte] -> byteClasses
+    )
+
+    v.getClass() == clazz || matches.get(v.getClass()).exists { clazzes =>
+      clazzes.exists(c => v.getClass().isAssignableFrom(c))
+    }
+  }
+
+  private def fromString[T](v : String)(implicit clazz : ClassTag[T]) : Option[T] = {
+
+    val resMap : Map[Class[_], String => Any] = Map (
+      classOf[Short] -> (s => s.toShort),
+      classOf[Int] -> (s => s.toInt),
+      classOf[Long] -> (s => s.toLong),
+      classOf[Boolean] -> (s => s.toBoolean),
+      classOf[Byte] -> (s => s.toByte),
+      classOf[Float] -> (s => s.toFloat),
+      classOf[Double] -> (s => s.toDouble),
+      classOf[Unit] -> (_ => Unit)
+    )
+
+    resMap.get(clazz.runtimeClass).map(_(v)).map(_.asInstanceOf[T])
+  }
+
   def header[T](name : String)(implicit m : Manifest[T]) : Option[T] = {
-
-    case class ByteMsgProperty(override val value : Byte) extends MsgProperty
-    case class FloatMsgProperty(override val value : Float) extends MsgProperty
-    case class DoubleMsgProperty(override val value : Double) extends MsgProperty
-
-    def fromString[T](v : String)(implicit clazz : ClassTag[T]) : Option[T] = clazz.runtimeClass match {
-      case c if c == classOf[Short]   => Some(v.toShort.asInstanceOf[T])
-      case c if c == classOf[Int]     => Some(v.toInt.asInstanceOf[T])
-      case c if c == classOf[Long]    => Some(v.toLong.asInstanceOf[T])
-      case c if c == classOf[Boolean] => Some(v.toBoolean.asInstanceOf[T])
-      case c if c == classOf[Byte]    => Some(v.toByte.asInstanceOf[T])
-      case c if c == classOf[Float]   => Some(v.toFloat.asInstanceOf[T])
-      case c if c == classOf[Double]  => Some(v.toDouble.asInstanceOf[T])
-      case c if c == classOf[Unit]    => Some(().asInstanceOf[T])
-      case _                          => None
-    }
-
-    def classMatch(v : Any, clazz : Class[_]) : Boolean = {
-
-      val intClasses : Seq[Class[_]] = Seq(classOf[Integer], classOf[Int])
-      val longClasses : Seq[Class[_]] = Seq(classOf[java.lang.Long], classOf[Long])
-      val shortClasses : Seq[Class[_]] = Seq(classOf[java.lang.Short], classOf[Short])
-      val floatClasses : Seq[Class[_]] = Seq(classOf[java.lang.Float], classOf[Float])
-      val doubleClasses : Seq[Class[_]] = Seq(classOf[java.lang.Double], classOf[Double])
-      val boolClasses : Seq[Class[_]] = Seq(classOf[java.lang.Boolean], classOf[Boolean])
-      val byteClasses : Seq[Class[_]] = Seq(classOf[java.lang.Byte], classOf[Byte])
-
-      val matches : Map[Class[_], Seq[Class[_]]] = Map(
-        classOf[java.lang.Integer] -> intClasses,
-        classOf[Int] -> intClasses,
-        classOf[java.lang.Long] -> longClasses,
-        classOf[Long] -> longClasses,
-        classOf[Short] -> shortClasses,
-        classOf[java.lang.Short] -> shortClasses,
-        classOf[java.lang.Float] -> floatClasses,
-        classOf[Float] -> floatClasses,
-        classOf[java.lang.Double] -> doubleClasses,
-        classOf[Double] -> doubleClasses,
-        classOf[java.lang.Boolean] -> boolClasses,
-        classOf[Boolean] -> boolClasses,
-        classOf[java.lang.Byte] -> byteClasses,
-        classOf[Byte] -> byteClasses
-      )
-
-      if (v.getClass() == clazz) {
-        true
-      } else {
-        matches.get(v.getClass()).exists { clazzes =>
-          clazzes.exists(c => v.getClass().isAssignableFrom(c))
-        }
-      }
-    }
 
     header.get(name) match {
       case Some(v) if classMatch(v.value, m.runtimeClass) =>
@@ -181,12 +175,12 @@ sealed abstract class FlowMessage(msgHeader : FlowMessageProps) {
 
   protected def newHeader(key : String, value : Any, overwrite : Boolean) : Try[FlowMessageProps] = Try {
     if (overwrite) {
-      header.filterKeys(_ != key) + (key -> MsgProperty.lift(value).get)
+      header.filterKeys(_ != key) + (key -> MsgProperty(value).get)
     } else {
       if (header.isDefinedAt(key)) {
         header
       } else {
-        header + (key -> MsgProperty.lift(value).get)
+        header + (key -> MsgProperty(value).get)
       }
     }
   }
@@ -233,9 +227,7 @@ case class TextFlowMessage(content : String, override val header : FlowMessagePr
 
   private val textContent : Option[String] = Option(content)
 
-  // scalastyle:off null
   override def body() : Any = textContent.orNull
-  // scalastyle:on null
 
   def getText() : String = textContent.getOrElse("")
 
@@ -247,7 +239,5 @@ case class TextFlowMessage(content : String, override val header : FlowMessagePr
 
   override def removeHeader(keys : String*) : FlowMessage = copy(header = doRemoveHeader(keys : _*))
 
-  // scalastyle:off null
   override def clearBody() : FlowMessage = TextFlowMessage("", header)
-  // scalastyle:on null
 }
