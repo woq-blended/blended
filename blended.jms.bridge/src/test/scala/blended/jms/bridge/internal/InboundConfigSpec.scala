@@ -10,6 +10,7 @@ import blended.testsupport.pojosr.MockContainerContext
 import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
 import org.scalatest.Matchers
+import blended.util.RichTry._
 
 class InboundConfigSpec extends LoggingFreeSpec
   with Matchers {
@@ -36,7 +37,7 @@ class InboundConfigSpec extends LoggingFreeSpec
 
       val cfg = ConfigFactory.parseString(cfgString)
 
-      val inbound = InboundConfig.create(idSvc, cfg).get
+      val inbound = InboundConfig.create(idSvc, cfg).unwrap
 
       // scalastyle:off magic.number
       inbound.name should be("test")
@@ -62,7 +63,7 @@ class InboundConfigSpec extends LoggingFreeSpec
 
       val cfg = ConfigFactory.parseString(cfgString)
 
-      val inbound = InboundConfig.create(idSvc, cfg).get
+      val inbound = InboundConfig.create(idSvc, cfg).unwrap
 
       // scalastyle:off magic.number
       inbound.name should be("test")
@@ -89,7 +90,7 @@ class InboundConfigSpec extends LoggingFreeSpec
         """.stripMargin
 
       val cfg = ConfigFactory.parseString(cfgString)
-      val inbound = InboundConfig.create(idSvc, cfg).get
+      val inbound = InboundConfig.create(idSvc, cfg).unwrap
 
       inbound.header should have size 1
       inbound.header.head should be(HeaderProcessorConfig("ResourceType", Some("Test"), overwrite = true))

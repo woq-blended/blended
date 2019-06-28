@@ -26,6 +26,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
+import blended.util.RichTry._
 
 abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
@@ -64,7 +65,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
     log = log,
     headerCfg = headerCfg,
     connectionFactory = amqCf,
-    jmsDestination = Some(JmsDestination.create(destName).get)
+    jmsDestination = Some(JmsDestination.create(destName).unwrap)
   )
 
   // scalastyle:off magic.number
@@ -91,7 +92,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
 
     sendMessages(producerSettings(retryCfg.retryDestName), log, Seq(env) : _*) match {
       case Success(s) =>
-        val msgs : List[FlowEnvelope] = consumeMessages(destName)(timeout).get
+        val msgs : List[FlowEnvelope] = consumeMessages(destName)(timeout).unwrap
         s.shutdown()
         Success(msgs)
 
@@ -110,7 +111,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
     val coll : Collector[FlowEnvelope] = receiveMessages(
       headerCfg = headerCfg,
       cf = amqCf,
-      dest = JmsDestination.create(dest).get,
+      dest = JmsDestination.create(dest).unwrap,
       log = log,
       listener = 1
     )
@@ -131,9 +132,9 @@ class JmsRetryProcessorForwardSpec extends ProcessorSpecSupport("retryForward") 
     val srcQueue : String = "myQueue"
 
     val retryMsg : FlowEnvelope = FlowEnvelope()
-      .withHeader(headerCfg.headerRetryDestination, srcQueue).get
+      .withHeader(headerCfg.headerRetryDestination, srcQueue).unwrap
 
-    withExpectedDestination(srcQueue, new JmsRetryProcessor("spec", retryCfg))(retryMsg).get.headOption match {
+    withExpectedDestination(srcQueue, new JmsRetryProcessor("spec", retryCfg))(retryMsg).unwrap.headOption match {
       case None =>
         fail("Expected message in original JMS destination")
       case Some(env) =>
@@ -149,10 +150,10 @@ class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount")
     val srcQueue : String = "myQueue"
 
     val retryMsg : FlowEnvelope = FlowEnvelope()
-      .withHeader(headerCfg.headerRetryDestination, srcQueue).get
-      .withHeader(headerCfg.headerRetryCount, retryCfg.maxRetries).get
+      .withHeader(headerCfg.headerRetryDestination, srcQueue).unwrap
+      .withHeader(headerCfg.headerRetryCount, retryCfg.maxRetries).unwrap
 
-    withExpectedDestination(retryCfg.failedDestName, new JmsRetryProcessor("spec", retryCfg))(retryMsg).get.headOption match {
+    withExpectedDestination(retryCfg.failedDestName, new JmsRetryProcessor("spec", retryCfg))(retryMsg).unwrap.headOption match {
       case None => fail(s"Expected message in [${retryCfg.failedDestName}]")
       case Some(env) =>
         env.header[Long](headerCfg.headerRetryCount) should be(Some(retryCfg.maxRetries + 1))
@@ -167,15 +168,15 @@ class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeo
     val srcQueue : String = "myQueue"
 
     val retryMsg : FlowEnvelope = FlowEnvelope()
-      .withHeader(headerCfg.headerRetryDestination, srcQueue).get
-      .withHeader(headerCfg.headerFirstRetry, System.currentTimeMillis() - 2 * retryCfg.retryTimeout.toMillis).get
+      .withHeader(headerCfg.headerRetryDestination, srcQueue).unwrap
+      .withHeader(headerCfg.headerFirstRetry, System.currentTimeMillis() - 2 * retryCfg.retryTimeout.toMillis).unwrap
 
-    withExpectedDestination(retryCfg.failedDestName, new JmsRetryProcessor("spec", retryCfg))(retryMsg).get.headOption match {
+    withExpectedDestination(retryCfg.failedDestName, new JmsRetryProcessor("spec", retryCfg))(retryMsg).unwrap.headOption match {
       case None => fail(s"Expected message in [${retryCfg.failedDestName}]")
       case Some(env) =>
 
-        val now = System.currentTimeMillis()
-        val first = env.header[Long](headerCfg.headerFirstRetry).get
+        val now : Long = System.currentTimeMillis()
+        val first : Long = env.header[Long](headerCfg.headerFirstRetry).getOrElse(now)
 
         assert(first + retryCfg.retryTimeout.toMillis <= now)
     }
@@ -187,7 +188,7 @@ class JmsRetryProcessorMissingDestinationSpec extends ProcessorSpecSupport("miss
   "Consume messages from the retry destination and pass them to the retry failed destination if no original destination is known" in {
     val retryMsg : FlowEnvelope = FlowEnvelope()
 
-    withExpectedDestination(retryCfg.failedDestName, new JmsRetryProcessor("spec", retryCfg))(retryMsg).get.headOption match {
+    withExpectedDestination(retryCfg.failedDestName, new JmsRetryProcessor("spec", retryCfg))(retryMsg).unwrap.headOption match {
       case None =>
         fail(s"Expected message in [${retryCfg.failedDestName}]")
 
@@ -215,21 +216,21 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
     val id : String = UUID.randomUUID().toString()
 
     val retryMsg : FlowEnvelope = FlowEnvelope(
-      FlowMessage(FlowMessage.props(headerCfg.headerRetryDestination -> srcQueue).get),
+      FlowMessage(FlowMessage.props(headerCfg.headerRetryDestination -> srcQueue).unwrap),
       id
     )
 
-    val messages = withExpectedDestination(srcQueue, router, retryCfg.retryInterval * 5)(retryMsg).get
+    val messages = withExpectedDestination(srcQueue, router, retryCfg.retryInterval * 5)(retryMsg).unwrap
     messages should be(empty)
 
-    consumeMessages(retryCfg.failedDestName)(1.second).get.headOption match {
+    consumeMessages(retryCfg.failedDestName)(1.second).unwrap.headOption match {
       case None => fail(s"Expected message in [${retryCfg.failedDestName}]")
       case Some(env) =>
         // Make sure the message has travelled [maxRetries] loops
         env.header[String](headerCfg.headerTransId) should be(Some(id))
         env.header[Long](headerCfg.headerRetryCount) should be(Some(3))
 
-        val events = consumeTransactions().get
+        val events = consumeTransactions().unwrap
         events should have size 1
 
         // We lso expect a failed transaction event in the transactions destinations
@@ -239,7 +240,7 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
           case Some(e) =>
             e.header[String](headerCfg.headerTransId) should be(Some(id))
 
-            val t = FlowTransactionEvent.envelope2event(headerCfg)(e).get
+            val t = FlowTransactionEvent.envelope2event(headerCfg)(e).unwrap
             assert(t.transactionId.equals(id))
             assert(t.isInstanceOf[FlowTransactionFailed])
         }
@@ -276,9 +277,9 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
         )
       }
 
-      val messages = withExpectedDestination("myQueue", router)(FlowEnvelope()).get
+      val messages = withExpectedDestination("myQueue", router)(FlowEnvelope()).unwrap
       messages should be(empty)
-      consumeMessages(retryCfg.retryDestName)(1.second).get should not be empty
+      consumeMessages(retryCfg.retryDestName)(1.second).unwrap should not be empty
     }
   }
 }

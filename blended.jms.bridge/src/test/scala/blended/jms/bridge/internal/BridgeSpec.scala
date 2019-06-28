@@ -25,6 +25,7 @@ import org.scalatest.prop.PropertyChecks
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Try
+import blended.util.RichTry._
 
 //noinspection NameBooleanParameters
 abstract class BridgeSpecSupport extends SimplePojoContainerSpec
@@ -72,13 +73,13 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
     timeout : FiniteDuration, system : ActorSystem, materializer : Materializer
   ) : Try[List[FlowEnvelope]] = Try {
 
-    val coll : Collector[FlowEnvelope] = receiveMessages(headerCfg, cf, JmsDestination.create(destName).get, log)
+    val coll : Collector[FlowEnvelope] = receiveMessages(headerCfg, cf, JmsDestination.create(destName).unwrap, log)
     Await.result(coll.result, timeout + 1.second)
   }
 
   protected def consumeEvents()(implicit timeout : FiniteDuration, system : ActorSystem, materializer : Materializer) : Try[List[FlowTransactionEvent]] = Try {
-    consumeMessages(internal, "internal.transactions").get.map { env =>
-      FlowTransactionEvent.envelope2event(headerCfg)(env).get
+    consumeMessages(internal, "internal.transactions").unwrap.map { env =>
+      FlowTransactionEvent.envelope2event(headerCfg)(env).unwrap
     }
   }
 
@@ -87,7 +88,7 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
     // scalastyle:off null
     1.to(msgCount).map { i =>
       FlowMessage(s"Message $i")(FlowMessage.noProps)
-        .withHeader("UnitProperty", null).get
+        .withHeader("UnitProperty", null).unwrap
     }.map(FlowEnvelope.apply).map(f)
     // scalastyle:on null
   }
@@ -97,10 +98,10 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
       log = log,
       headerCfg = headerCfg,
       connectionFactory = cf,
-      jmsDestination = Some(JmsDestination.create(destName).get)
+      jmsDestination = Some(JmsDestination.create(destName).unwrap)
     )
 
-    sendMessages(pSettings, log, msgs : _*).get
+    sendMessages(pSettings, log, msgs : _*).unwrap
   }
 }
 
@@ -111,9 +112,8 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
 
   private def sendInbound(msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount) { env =>
-      env
-        .withHeader(destinationName, s"sampleOut").get
-    }.get
+      env.withHeader(destinationName, s"sampleOut").unwrap
+    }.unwrap
 
     sendMessages("sampleIn", external)(msgs : _*)
   }
@@ -127,7 +127,7 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val switch = sendInbound(msgCount)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
+        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).unwrap
 
       messages should have size msgCount
 
@@ -135,7 +135,7 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be(Some(()))
       }
 
-      consumeEvents().get should be(empty)
+      consumeEvents().unwrap should be(empty)
 
       switch.shutdown()
     }
@@ -153,11 +153,11 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val switch : KillSwitch = sendMessages("sampleIn", external)(msgs : _*)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
+        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).unwrap
 
       messages should have size msgs.size
 
-      consumeEvents().get should be(empty)
+      consumeEvents().unwrap should be(empty)
 
       switch.shutdown()
     }
@@ -171,11 +171,11 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val switch : KillSwitch = sendMessages("sampleIn", external)(msgs : _*)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
+        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).unwrap
 
       messages should have size msgs.size
 
-      consumeEvents().get should be(empty)
+      consumeEvents().unwrap should be(empty)
 
       switch.shutdown()
     }
@@ -188,8 +188,8 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
   private def sendInbound(msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount) { env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
-    }.get
+        .withHeader(destinationName, s"sampleOut").unwrap
+    }.unwrap
 
     sendMessages("sampleIn", external)(msgs : _*)
   }
@@ -204,7 +204,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
       val switch = sendInbound(msgCount)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
+        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).unwrap
 
       messages should have size msgCount
 
@@ -212,7 +212,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be(Some(()))
       }
 
-      val envelopes : List[FlowTransactionEvent] = consumeEvents().get
+      val envelopes : List[FlowTransactionEvent] = consumeEvents().unwrap
 
       envelopes should have size msgCount
       assert(envelopes.forall(_.isInstanceOf[FlowTransactionStarted]))
@@ -228,7 +228,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
         destinationName -> "SampleHeaderOut",
         "Description" -> desc,
         headerCfg.headerTrack -> false
-      ).get))
+      ).unwrap))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
         log = log,
@@ -237,9 +237,9 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
         jmsDestination = Some(JmsQueue("SampleHeaderIn"))
       )
 
-      val switch : KillSwitch = sendMessages(pSettings, log, env).get
+      val switch : KillSwitch = sendMessages(pSettings, log, env).unwrap
 
-      val result : List[FlowEnvelope] = consumeMessages(internal, "bridge.data.in.activemq.external").get
+      val result : List[FlowEnvelope] = consumeMessages(internal, "bridge.data.in.activemq.external").unwrap
 
       result should have size 1
       result.head.header[String]("ResourceType") should be(Some(desc))
@@ -254,9 +254,8 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
 
   private def sendInbound(msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount) { env =>
-      env
-        .withHeader(destinationName, s"sampleOut").get
-    }.get
+      env.withHeader(destinationName, s"sampleOut").unwrap
+    }.unwrap
 
     sendMessages("sampleIn", external)(msgs : _*)
   }
@@ -278,10 +277,10 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
 
       val switch = sendInbound(msgCount)
 
-      consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get should be(empty)
-      consumeEvents().get should be(empty)
+      consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).unwrap should be(empty)
+      consumeEvents().unwrap should be(empty)
 
-      consumeMessages(external, "sampleIn").get should have size msgCount
+      consumeMessages(external, "sampleIn").unwrap should have size msgCount
 
       switch.shutdown()
     }
@@ -295,9 +294,9 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount) { env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
-        .withHeader(headerCfg.headerTrack, track).get
-    }.get
+        .withHeader(destinationName, s"sampleOut").unwrap
+        .withHeader(headerCfg.headerTrack, track).unwrap
+    }.unwrap
 
     sendMessages("bridge.data.out.activemq.external", internal)(msgs : _*)
   }
@@ -311,7 +310,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       val switch = sendOutbound(msgCount, track = false)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(external, "sampleOut").get
+        consumeMessages(external, "sampleOut").unwrap
 
       messages should have size msgCount
 
@@ -319,7 +318,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be(Some(()))
       }
 
-      val envelopes : List[FlowTransactionEvent] = consumeEvents().get
+      val envelopes : List[FlowTransactionEvent] = consumeEvents().unwrap
 
       envelopes should be(empty)
 
@@ -333,7 +332,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       val switch = sendOutbound(msgCount, track = true)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(external, "sampleOut").get
+        consumeMessages(external, "sampleOut").unwrap
 
       messages should have size msgCount
 
@@ -341,7 +340,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be(Some(()))
       }
 
-      val envelopes : List[FlowTransactionEvent] = consumeEvents().get
+      val envelopes : List[FlowTransactionEvent] = consumeEvents().unwrap
 
       envelopes should have size msgCount
       assert(envelopes.forall(_.isInstanceOf[FlowTransactionUpdate]))
@@ -357,9 +356,9 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount) { env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
-        .withHeader(headerCfg.headerTrack, track).get
-    }.get
+        .withHeader(destinationName, s"sampleOut").unwrap
+        .withHeader(headerCfg.headerTrack, track).unwrap
+    }.unwrap
 
     sendMessages("bridge.data.out.activemq.external", internal)(msgs : _*)
   }
@@ -383,7 +382,7 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
 
       val switch = sendOutbound(msgCount, track = true)
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").unwrap
 
       retried should have size msgCount
 
@@ -392,8 +391,8 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
         env.header[String](headerCfg.headerRetryDestination) should be(Some("bridge.data.out.activemq.external"))
       }
 
-      consumeEvents().get should be(empty)
-      consumeMessages(external, "sampleOut").get should be(empty)
+      consumeEvents().unwrap should be(empty)
+      consumeMessages(external, "sampleOut").unwrap should be(empty)
 
       switch.shutdown()
     }
@@ -408,9 +407,9 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount) { env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
-        .withHeader(headerCfg.headerTrack, track).get
-    }.get
+        .withHeader(destinationName, s"sampleOut").unwrap
+        .withHeader(headerCfg.headerTrack, track).unwrap
+    }.unwrap
 
     sendMessages("bridge.data.out.activemq.external", internal)(msgs : _*)
   }
@@ -434,16 +433,16 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
 
       val switch = sendOutbound(msgCount, track = true)
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").unwrap
       retried should be(empty)
 
-      consumeEvents().get should be(empty)
+      consumeEvents().unwrap should be(empty)
 
       retried.foreach { env =>
         env.header[Unit]("UnitProperty") should be(Some(()))
       }
 
-      consumeMessages(internal, "bridge.data.out.activemq.external").get should have size msgCount
+      consumeMessages(internal, "bridge.data.out.activemq.external").unwrap should have size msgCount
 
       switch.shutdown()
     }
@@ -456,9 +455,9 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount) { env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
-        .withHeader(headerCfg.headerTrack, track).get
-    }.get
+        .withHeader(destinationName, s"sampleOut").unwrap
+        .withHeader(headerCfg.headerTrack, track).unwrap
+    }.unwrap
 
     sendMessages("bridge.data.out.activemq.external", internal)(msgs : _*)
   }
@@ -482,16 +481,16 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
 
       val switch = sendOutbound(msgCount, track = true)
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").unwrap
       retried should have size msgCount
 
-      consumeEvents().get should be(empty)
+      consumeEvents().unwrap should be(empty)
 
       retried.foreach { env =>
         env.header[Unit]("UnitProperty") should be(Some(()))
       }
 
-      consumeMessages(internal, "bridge.data.out.activemq.external").get should be(empty)
+      consumeMessages(internal, "bridge.data.out.activemq.external").unwrap should be(empty)
 
       switch.shutdown()
     }
@@ -506,9 +505,9 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount) { env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
-        .withHeader(headerCfg.headerTrack, track).get
-    }.get
+        .withHeader(destinationName, s"sampleOut").unwrap
+        .withHeader(headerCfg.headerTrack, track).unwrap
+    }.unwrap
 
     sendMessages("bridge.data.out.activemq.external", internal)(msgs : _*)
   }
@@ -532,12 +531,12 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
 
       val switch = sendOutbound(msgCount, track = true)
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").unwrap
       retried should be(empty)
 
-      consumeEvents().get should be(empty)
+      consumeEvents().unwrap should be(empty)
 
-      consumeMessages(internal, "bridge.data.out.activemq.external").get should have size 2
+      consumeMessages(internal, "bridge.data.out.activemq.external").unwrap should have size 2
 
       switch.shutdown()
     }
