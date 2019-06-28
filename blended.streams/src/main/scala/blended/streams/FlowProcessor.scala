@@ -14,7 +14,10 @@ object FlowProcessor {
 
   type IntegrationStep = FlowEnvelope => Try[FlowEnvelope]
 
-  def transform[T](name : String, log : Logger)(f : FlowEnvelope => Try[T])(implicit clazz : ClassTag[T]) : Graph[FlowShape[FlowEnvelope, Either[FlowEnvelope, T]], NotUsed] = {
+  def transform[T](
+    name : String,
+    log : Logger
+  )(f : FlowEnvelope => Try[T])(implicit clazz : ClassTag[T]) : Graph[FlowShape[FlowEnvelope, Either[FlowEnvelope, T]], NotUsed] = {
 
     Flow.fromFunction[FlowEnvelope, Either[FlowEnvelope, T]] { env =>
       env.exception match {
@@ -51,7 +54,9 @@ object FlowProcessor {
               s
 
             case Failure(t) =>
-              log.warn(t)(s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
+              log.warn(t)(
+                s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]"
+              )
               env.withException(t)
           }
 
@@ -63,7 +68,11 @@ object FlowProcessor {
     }.named(name)
   }
 
-  def log(level : LogLevel, logger : Logger, text : String = "") : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+  def log(
+    level : LogLevel,
+    logger : Logger,
+    text : String = ""
+  ) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
     logger.log(level, s"$text : $env")
     env
   }

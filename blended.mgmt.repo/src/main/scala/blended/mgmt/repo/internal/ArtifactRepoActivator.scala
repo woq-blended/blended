@@ -16,7 +16,7 @@ class ArtifactRepoActivator() extends DominoActivator with TypesafeConfigWatchin
   whenBundleActive {
     log.info(s"About to activate bundle: ${bundleContext.getBundle().getSymbolicName()}")
 
-    whenTypesafeConfigAvailable { (config, idService) =>
+    whenTypesafeConfigAvailable { (config, _) =>
       log.debug(s"Config: $config")
 
       try {

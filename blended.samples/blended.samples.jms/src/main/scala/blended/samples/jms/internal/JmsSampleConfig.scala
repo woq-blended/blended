@@ -4,19 +4,22 @@ import com.typesafe.config.Config
 
 object JmsSampleConfig {
   def apply(cfg : Config) : JmsSampleConfig = new JmsSampleConfig(
-    destination = cfg.hasPath("destination") match {
-      case true  => cfg.getString("destination")
-      case false => "topic:jmsSample"
+    destination = if (cfg.hasPath("destination")) {
+      cfg.getString("destination")
+    } else {
+      "topic:jmsSample"
     },
 
-    producerInterval = cfg.hasPath("producerInterval") match {
-      case true  => cfg.getLong("producerInterval")
-      case false => 0l
+    producerInterval = if (cfg.hasPath("producerInterval")) {
+      cfg.getLong("producerInterval")
+    } else {
+      0L
     },
 
-    consumeSelector = cfg.hasPath("consumeSelector") match {
-      case true  => Some(cfg.getString("consumeSelector"))
-      case false => None
+    consumeSelector = if (cfg.hasPath("consumeSelector")) {
+      Some(cfg.getString("consumeSelector"))
+    } else {
+      None
     }
   )
 }

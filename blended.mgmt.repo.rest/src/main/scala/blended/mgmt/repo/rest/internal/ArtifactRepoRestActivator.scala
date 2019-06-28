@@ -25,14 +25,15 @@ class ArtifactRepoRestActivator
       }
 
       log.info("Registering route under context path: repo")
-      new SimpleHttpContext("repo", repoRoutes.httpRoute).providesService[HttpContext]
+      SimpleHttpContext("repo", repoRoutes.httpRoute).providesService[HttpContext]
 
       watchServices[ArtifactRepo] {
-        case AddingService(repo, r) =>
+        case AddingService(repo, _) =>
           repoRoutes.addRepo(repo)
-        case ModifiedService(repo, r) =>
-        // nothing to do
-        case RemovedService(repo, r) =>
+        case ModifiedService(repo, _) =>
+          repoRoutes.removeRepo(repo)
+          repoRoutes.addRepo(repo)
+        case RemovedService(repo, _) =>
           repoRoutes.removeRepo(repo)
       }
 

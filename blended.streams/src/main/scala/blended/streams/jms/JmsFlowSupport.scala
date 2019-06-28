@@ -30,6 +30,10 @@ case class JmsAcknowledgeHandler(
   }
 }
 
+object JmsSendParameter {
+  val defaultPriority : Int = 4
+}
+
 final case class JmsSendParameter(
   message : Message,
   destination : JmsDestination,

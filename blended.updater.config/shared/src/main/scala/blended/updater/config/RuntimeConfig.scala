@@ -19,9 +19,9 @@ case class RuntimeConfig(
   resolvedFeatures : List[FeatureConfig] = List.empty
 ) {
 
-  override def toString() : String = s"${getClass().getSimpleName()}(name=${name},version=${version},bundles=${bundles}" +
-    s",startLevel=${startLevel},defaultStartLevel=${defaultStartLevel},properties=${properties},frameworkProperties=${frameworkProperties}" +
-    s",systemProperties=${systemProperties},features=${features},resources=${resources},resolvedFeatures=${resolvedFeatures})"
+  override def toString() : String = s"${getClass().getSimpleName()}(name=$name,version=$version,bundles=$bundles" +
+    s",startLevel=$startLevel,defaultStartLevel=$defaultStartLevel,properties=$properties,frameworkProperties=$frameworkProperties" +
+    s",systemProperties=$systemProperties,features=$features,resources=$resources,resolvedFeatures=$resolvedFeatures)"
 
   def mvnBaseUrl : Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
 
@@ -30,7 +30,7 @@ case class RuntimeConfig(
   def resolveFileName(url : String) : Try[String] = RuntimeConfig.resolveFileName(url)
 
   // TODO: Review this for JavaScript
-  def baseDir(profileBaseDir : File) : File = new File(profileBaseDir, s"${name}/${version}")
+  def baseDir(profileBaseDir : File) : File = new File(profileBaseDir, s"$name/$version")
 
   //    def localRuntimeConfig(baseDir: File): LocalRuntimeConfig = LocalRuntimeConfig(runtimeConfig = this, baseDir = baseDir)
 
@@ -45,7 +45,10 @@ case class RuntimeConfig(
 }
 
 object RuntimeConfig
-  extends ((String, String, List[BundleConfig], Int, Int, Map[String, String], Map[String, String], Map[String, String], List[FeatureRef], List[Artifact], List[FeatureConfig]) => RuntimeConfig) {
+  extends ((
+    String, String, List[BundleConfig], Int, Int, Map[String, String], Map[String, String],
+    Map[String, String], List[FeatureRef], List[Artifact], List[FeatureConfig]) => RuntimeConfig
+   ) {
 
   val MvnPrefix = "mvn:"
 
@@ -55,7 +58,7 @@ object RuntimeConfig
     val PROFILE_NAME = "blended.updater.profile.name"
     val PROFILE_VERSION = "blended.updater.profile.version"
     /**
-     * selected overlays, format: name:version,name:verion
+     * selected overlays, format: name:version,name:version
      */
     val OVERLAYS = "blended.updater.profile.overlays"
     val PROFILE_LOOKUP_FILE = "blended.updater.profile.lookup.file"
@@ -67,16 +70,20 @@ object RuntimeConfig
   def resolveBundleUrl(url : String, mvnBaseUrl : Option[String] = None) : Try[String] = Try {
     if (url.startsWith(MvnPrefix)) {
       mvnBaseUrl match {
-        case Some(base) => MvnGav.parse(url.substring(MvnPrefix.size)).get.toUrl(base)
-        case None       => sys.error("No repository defined to resolve url: " + url)
+        case Some(base) => MvnGav.parse(url.substring(MvnPrefix.length)).get.toUrl(base)
+        case None => sys.error("No repository defined to resolve url: " + url)
       }
-    } else url
+    } else {
+      url
+    }
   }
 
   def resolveFileName(url : String) : Try[String] = Try {
     val resolvedUrl = if (url.startsWith(MvnPrefix)) {
-      MvnGav.parse(url.substring(MvnPrefix.size)).get.toUrl("file:///")
-    } else url
+      MvnGav.parse(url.substring(MvnPrefix.length)).get.toUrl("file:///")
+    } else {
+      url
+    }
     val path = new URL(resolvedUrl).getPath()
     path.split("[/]").filter(!_.isEmpty()).reverse.headOption.getOrElse(path)
   }

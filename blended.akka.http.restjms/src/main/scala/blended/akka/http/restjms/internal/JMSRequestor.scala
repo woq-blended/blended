@@ -20,7 +20,7 @@ trait JMSRequestor {
 
   private[this] val log = Logger[JMSRequestor]
   private[this] val defaultContentTypes = List("application/json", "text/xml")
-  private[this] val opCounter : AtomicLong = new AtomicLong(0l)
+  private[this] val opCounter : AtomicLong = new AtomicLong(0L)
 
   implicit val eCtxt : ExecutionContext
   implicit val materializer : ActorMaterializer
@@ -66,7 +66,7 @@ trait JMSRequestor {
                     )
                   )
 
-                case h :: _ =>
+                case _ :: _ =>
                   complete {
                     val f = requestReply(path.toString(), opCfg, cType, request)
 
@@ -103,8 +103,9 @@ trait JMSRequestor {
 
     val baseUri = s"jms:${opCfg.destination}?jmsKeyFormatStrategy=passthrough&disableTimeToLive=true&requestTimeout=${opCfg.timeout}&replyTo=restJMS.$operation"
 
-    val uri = (opCfg.receivetimeout > 0) match {
-      case true  => baseUri + s"&receiveTimeout=${opCfg.receivetimeout}"
+    val uri : String = if (opCfg.receivetimeout > 0) {
+      baseUri + s"&receiveTimeout=${opCfg.receivetimeout}"
+    } else {
       case false => baseUri
     }
 
@@ -136,14 +137,14 @@ trait JMSRequestor {
     data.map { result =>
 
       val content : Array[Byte] = result.flatten.toArray
-      log.debug(s"Received request [$opNum] of length [${content.size}] encoding [${opCfg.encoding}], [${new String(content, opCfg.encoding)}]")
+      log.debug(s"Received request [$opNum] of length [${content.length}] encoding [${opCfg.encoding}], [${new String(content, opCfg.encoding)}]")
 
       executeCamel(operation, opCfg, cType, content) match {
         case Success(exchange) =>
 
           if (opCfg.jmsReply) {
             val body = exchange.getOut().getBody(classOf[Array[Byte]])
-            log.info(s"Received response [$opNum] of length [${body.size}] encoding [${opCfg.encoding}], [${new String(body, opCfg.encoding)}]")
+            log.info(s"Received response [$opNum] of length [${body.length}] encoding [${opCfg.encoding}], [${new String(body, opCfg.encoding)}]")
 
             HttpResponse(
               status = StatusCodes.OK,

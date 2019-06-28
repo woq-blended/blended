@@ -39,6 +39,5 @@ class BlendedMBeanServerFacadeImpl(svr : MBeanServer) extends BlendedMBeanServer
 
 
     val json : String = Pickle.intoString(obj)
-    //println(s"\n\n${System.currentTimeMillis() - start} : $json")
   }
 }

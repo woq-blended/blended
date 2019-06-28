@@ -5,16 +5,12 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 import blended.updater.config._
-import blended.util.logging.Logger
 
 import scala.util.Random
 
 object MockObjects {
 
-  private[this] val log = Logger("blended.mgmt.mock.MockObjects")
-
   private[this] lazy val countries : List[String] = List("de", "cz", "bg", "ro")
-  private[this] lazy val osTypes : List[String] = List("Lnx", "Windows")
   private[this] lazy val connectIds : List[String] = List("A", "B")
 
   private[this] lazy val serviceCount = new AtomicInteger(0)
@@ -33,16 +29,18 @@ object MockObjects {
   private[this] def sizedProperties(namePrefix : String = "prop", numProps : Int) =
     1.to(numProps).map(i => (s"$namePrefix-$i", s"value$i")).toMap
 
+  // scalastyle:off magic.number
   private[this] def serviceInfo(numProps : Int = 10) : ServiceInfo = ServiceInfo(
     name = s"service-${serviceCount.incrementAndGet()}",
     serviceType = s"type-${rnd.nextInt(3) + 1}",
     timestampMsec = System.currentTimeMillis(),
-    lifetimeMsec = 5000l,
+    lifetimeMsec = 5000L,
     props = sizedProperties(namePrefix = "property", numProps = rnd.nextInt(10) + 1)
   )
+  // scalastyle:on magic.number
 
   private[this] def serviceSeq(numServices : Int) : List[ServiceInfo] =
-    1.to(numServices).map(i => serviceInfo()).toList
+    1.to(numServices).map(_ => serviceInfo()).toList
 
   val noOverlays = OverlaySet(
     overlays = Set.empty[OverlayRef],
@@ -74,11 +72,13 @@ object MockObjects {
     ProfileGroup(name = "blended-simple", "1.1", List(noOverlays, someOverlays, invalid))
   ).flatMap(_.toSingle)
 
-  def createContainer(numContainers : Integer) : List[ContainerInfo] = 1.to(numContainers).map { i =>
+  def createContainer(numContainers : Integer) : List[ContainerInfo] = 1.to(numContainers).map { _ =>
 
-    val serviceSeqs = 1.to(3).map { i =>
+    // scalastyle:off magic.number
+    val serviceSeqs = 1.to(3).map { _ =>
       serviceSeq(rnd.nextInt(5) + 1)
     }.toList
+    // scalastyle:on magic.number
 
     ContainerInfo(
       containerId = UUID.randomUUID().toString(),

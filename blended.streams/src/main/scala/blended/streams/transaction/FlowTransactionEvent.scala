@@ -179,7 +179,8 @@ object FlowTransactionEvent {
 
             val updatedState : WorklistState = envelope.flowMessage match {
               case txtMsg : TextFlowMessage => WorklistState.withName(txtMsg.content)
-              case m                        => throw new InvalidTransactionEnvelopeException(s"Expected TextFlowMessage for an update envelope, actual [${m.getClass().getName()}]")
+              case m =>
+                throw new InvalidTransactionEnvelopeException(s"Expected TextFlowMessage for an update envelope, actual [${m.getClass().getName()}]")
             }
 
             FlowTransactionUpdate(id, envelope.flowMessage.header, updatedState, branchIds : _*)

@@ -72,7 +72,7 @@ class ArtifactDownloaderTest
         val artifact = Artifact(url = file.toURI().toString())
         actorRef ! ArtifactDownloader.Download(id, artifact, target)
         fishForMessage() {
-          case ArtifactDownloader.DownloadFailed(`id`, ex) => true
+          case ArtifactDownloader.DownloadFailed(`id`, _) => true
         }
       }
     }

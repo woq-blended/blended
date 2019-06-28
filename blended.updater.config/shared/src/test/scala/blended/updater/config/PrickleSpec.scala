@@ -24,7 +24,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
           "org.apache.activemq:type=Broker,brokerName=blended,destinationType=Queue,destinationName=SampleIn",
           "jmsQueue",
           System.currentTimeMillis(),
-          3000l,
+          3000L,
           Map(
             "Name" -> "SampleIn",
             "InFlightCount" -> "0",
@@ -37,7 +37,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
           "org.apache.activemq:type=Broker,brokerName=blended,destinationType=Queue,destinationName=SampleIn,endpoint=Consumer,clientId=ID_x3.local-45075-1488278206331-3_1,consumerId=ID_x3.local-45075-1488278206331-4_1_2_1",
           "jmsQueue",
           System.currentTimeMillis(),
-          3000l,
+          3000L,
           Map(
             "Name" -> "SampleIn",
             "InFlightCount" -> "0",
@@ -50,7 +50,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
           "java.lang:type=Memory",
           "Runtime",
           System.currentTimeMillis(),
-          3000l,
+          3000L,
           Map(
             "HeapMemoryUsage.committed" -> "383254528",
             "HeapMemoryUsage.init" -> "260046848",
@@ -62,7 +62,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
           "java.lang:type=OperationSystem",
           "Runtime",
           System.currentTimeMillis(),
-          3000l,
+          3000L,
           Map(
             "Name" -> "Linux"
           )
@@ -71,7 +71,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
           "akka://BlendedActorSystem/user/blended.updater",
           "Updater",
           System.currentTimeMillis(),
-          3000l,
+          3000L,
           Map(
             "profile.active" -> "blended.demo.node-2.1.0-SNAPSHOT",
             "profiles.valid" -> "blended.demo.node-2.1.0-SNAPSHOT"
@@ -138,7 +138,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
     "a ServiceInfo" in logException {
 
-      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
+      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000L, Map("svc" -> "test"))
 
       val json = Pickle.intoString(svcInfo)
       log.info("json: " + json)
@@ -150,7 +150,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
     "a list of ServiceInfo's" in logException {
 
-      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
+      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000L, Map("svc" -> "test"))
 
       val json = Pickle.intoString(List(svcInfo))
       log.info("json: " + json)
@@ -162,7 +162,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
     "a ContainerInfo" in logException {
 
-      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
+      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000L, Map("svc" -> "test"))
       val profile = Profile("myProfile", "1.0", OverlaySet(Set(), OverlayState.Valid, None))
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L, Nil)
@@ -191,7 +191,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     }
 
     "a RemoteContainerState" in logException {
-      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
+      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000L, Map("svc" -> "test"))
       val profile = Profile("myProfile", "1.0", OverlaySet(Set(), OverlayState.Valid, None))
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L, Nil)

@@ -44,7 +44,7 @@ class DispatcherDestinationResolver(
       message = msg,
       destination = dest,
       deliveryMode = delMode,
-      priority = 4,
+      priority = JmsSendParameter.defaultPriority,
       ttl = ttl
     )
   }

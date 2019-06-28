@@ -74,7 +74,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
 
   private def readUpdateEnv() : Option[UpdateEnv] = try {
     val props = blended.launcher.runtime.Branding.getProperties()
-    println("Blended Launcher detected: " + props)
+    log.info("Blended Launcher detected: " + props)
     val pName = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_NAME))
     val pVersion = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_VERSION))
     val pProfileLookupFile = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE))
@@ -87,7 +87,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
         case x =>
           log.debug("Unsupported overlay: " + x.mkString(":"))
           None
-      }.toList
+      }
     }
     Some(
       UpdateEnv(
@@ -100,10 +100,10 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
       )
     )
   } catch {
-    case e : NoClassDefFoundError =>
+    case _ : NoClassDefFoundError =>
       // could not load optional branding class
       None
-    case e : NoSuchElementException =>
+    case _ : NoSuchElementException =>
       // could not found some required properties
       None
   }
@@ -123,12 +123,12 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
               val newConfig = profileLookup.copy(
                 profileName = newName,
                 profileVersion = newVersion,
-                overlays = newOverlays.toSet
+                overlays = newOverlays
               )
-              log.debug(s"About to update profile lookup file: ${lookupFile} with config: ${newConfig}")
+              log.debug(s"About to update profile lookup file: [$lookupFile] with config: [$newConfig]")
               ConfigWriter.write(ProfileLookup.toConfig(newConfig), lookupFile, None)
               true
-            case Failure(e) =>
+            case Failure(_) =>
               false
           }
 

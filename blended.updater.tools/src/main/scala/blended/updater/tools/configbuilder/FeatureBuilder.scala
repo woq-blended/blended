@@ -26,15 +26,15 @@ object FeatureBuilder {
   class Cmdline {
 
     @CmdOption(names = Array("-w", "--work-dir"), args = Array("dir"))
-    def setOutputDir(outputDir : String) = this.outputDir = Option(outputDir)
+    def setOutputDir(outputDir : String) : Unit = this.outputDir = Option(outputDir)
     var outputDir : Option[String] = None
 
     @CmdOption(names = Array("-m", "--maven-url", "--maven-dir"), args = Array("URL"), maxCount = -1)
-    def addMavenUrl(mavenDir : String) = this.mavenUrl ++= Seq(mavenDir)
+    def addMavenUrl(mavenDir : String) : Unit = this.mavenUrl ++= Seq(mavenDir)
     var mavenUrl : Seq[String] = Seq()
 
     @CmdOption(names = Array("--maven-artifact"), args = Array("GAV", "file"), maxCount = -1)
-    def addMavenDir(gav : String, file : String) = this.mavenArtifacts ++= Seq(gav -> file)
+    def addMavenDir(gav : String, file : String) : Unit = this.mavenArtifacts ++= Seq(gav -> file)
     var mavenArtifacts : Seq[(String, String)] = Seq()
 
     @CmdOption(names = Array("-d", "--download-missing"))
@@ -89,7 +89,9 @@ object FeatureBuilder {
       return
     }
 
-    if (cmdlineCommon.debug) Console.err.println(s"Config: ${cmdline}")
+    if (cmdlineCommon.debug) {
+      Console.err.println(s"Config: $cmdline")
+    }
 
     run(cmdline, cmdlineCommon.debug)
   }
@@ -121,9 +123,13 @@ object FeatureBuilder {
         if (bundleFile.exists()) {
           val digest = RuntimeConfigCompanion.digestFile(bundleFile)
           if (bundle.sha1Sum.isDefined && bundle.sha1Sum != digest) {
-            if (debug) Console.err.println(s"Bundle file ${bundleFile} has invalid checksum: ${digest}, expected: ${bundle.sha1Sum}")
+            if (debug) {
+              Console.err.println(s"Bundle file [$bundleFile] has invalid checksum: [$digest], expected: [${bundle.sha1Sum}]")
+            }
             if (cmdline.discardInvalid) {
-              if (debug) Console.err.println(s"Deleting bundle file ${bundleFile}")
+              if (debug) {
+                Console.err.println(s"Deleting bundle file [$bundleFile]")
+              }
               bundleFile.delete()
             }
           }
@@ -137,10 +143,10 @@ object FeatureBuilder {
             if (directUrl.isDefined) directUrl.toSeq
             else mvnUrls.map(url => RuntimeConfig.resolveBundleUrl(bundle.url, Option(url)).get)
           urls.find { url =>
-            Console.err.println(s"Downloading ${bundleFile.getName()} from ${url}")
+            Console.err.println(s"Downloading ${bundleFile.getName()} from [$url]")
             RuntimeConfigCompanion.download(url, bundleFile).isSuccess
           } getOrElse {
-            val msg = s"Could not download ${bundleFile.getName()} from: ${urls}"
+            val msg = s"Could not download [${bundleFile.getName()}] from: [$urls]"
             Console.err.println(msg)
             sys.error(msg)
           }
@@ -154,7 +160,7 @@ object FeatureBuilder {
             val digest = RuntimeConfigCompanion.digestFile(bundleFile)
             bundle.copy(artifact = bundle.artifact.copy(sha1Sum = digest))
           } else {
-            val msg = s"Cannot update checksum of missing bundle file: ${bundleFile.getName()}"
+            val msg = s"Cannot update checksum of missing bundle file: [${bundleFile.getName()}]"
             Console.err.println(msg)
             sys.error(msg)
           }
@@ -170,5 +176,4 @@ object FeatureBuilder {
       ConfigWriter.write(FeatureConfigCompanion.toConfig(newFeature), ps, None)
     }
   }
-
 }

@@ -67,7 +67,7 @@ class RunnableDispatcher(
         destinationResolver = s => new TransactionDestinationResolver(s, JmsDestination.asString(internal.transactions)),
         jmsDestination = None,
         deliveryMode = JmsDeliveryMode.Persistent,
-        priority = 4,
+        priority = JmsSendParameter.defaultPriority,
         timeToLive = None
       )
 

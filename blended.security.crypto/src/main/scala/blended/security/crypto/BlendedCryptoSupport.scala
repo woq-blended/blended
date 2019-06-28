@@ -31,7 +31,7 @@ object BlendedCryptoSupport {
         defaultPwd
       }
     } catch {
-      case NonFatal(t) => defaultPwd
+      case NonFatal(_) => defaultPwd
     } finally {
       src.foreach(_.close())
     }

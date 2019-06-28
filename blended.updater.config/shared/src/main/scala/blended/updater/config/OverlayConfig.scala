@@ -3,10 +3,8 @@ package blended.updater.config
 /**
  * Definition of an overlay.
  *
- * @param name
- * 	 The name of the overlay.
- * @param version
- * 	 The version of the overlay.
+ * @param name The name of the overlay.
+ * @param version The version of the overlay.
  * @param generatedConfigs
  *   The config file generators.
  * @param properties
