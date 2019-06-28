@@ -132,7 +132,7 @@ class BridgeStreamBuilder(
       Option(System.getProperty("blended.streams.transactionShard")) match {
         case None => result
         case Some(shard) => result.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-          env.withHeader(cfg.headerCfg.headerTransShard, shard, false).get
+          env.withHeader(cfg.headerCfg.headerTransShard, shard, overwrite = false).get
         })
       }
     }

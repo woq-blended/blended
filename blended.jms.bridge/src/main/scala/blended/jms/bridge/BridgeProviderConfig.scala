@@ -6,6 +6,7 @@ import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
 import scala.util.Try
+import blended.util.RichTry._
 
 case class BridgeProviderConfig(
   vendor : String,
@@ -27,6 +28,7 @@ case class BridgeProviderConfig(
 
 }
 
+//noinspection NameBooleanParameters
 object BridgeProviderConfig {
 
   def create(idSvc : ContainerIdentifierService, cfg : Config) : Try[BridgeProviderConfig] = Try {
@@ -40,8 +42,8 @@ object BridgeProviderConfig {
     val eventDest = resolve(cfg.getString("transactions", "blended.transaction"))
     val cbeDest = resolve(cfg.getString("cbes", "blended.cbe"))
 
-    val retryDest : Option[JmsDestination] = cfg.getStringOption("retry").map(resolve).map(s => JmsDestination.create(s).get)
-    val retryFailed : JmsDestination = JmsDestination.create(cfg.getString("retryFailed", errorDest)).get
+    val retryDest : Option[JmsDestination] = cfg.getStringOption("retry").map(resolve).map(s => JmsDestination.create(s).unwrap)
+    val retryFailed : JmsDestination = JmsDestination.create(cfg.getString("retryFailed", errorDest)).unwrap
 
     val inbound = s"${cfg.getString("inbound")}"
     val outbound = s"${cfg.getString("outbound")}"
@@ -52,13 +54,13 @@ object BridgeProviderConfig {
       vendor = vendor,
       provider = provider,
       internal = internal,
-      inbound = JmsDestination.create(inbound).get,
-      outbound = JmsDestination.create(outbound).get,
+      inbound = JmsDestination.create(inbound).unwrap,
+      outbound = JmsDestination.create(outbound).unwrap,
       retry = retryDest,
       retryFailed = retryFailed,
-      errors = JmsDestination.create(errorDest).get,
-      transactions = JmsDestination.create(eventDest).get,
-      cbes = JmsDestination.create(cbeDest).get
+      errors = JmsDestination.create(errorDest).unwrap,
+      transactions = JmsDestination.create(eventDest).unwrap,
+      cbes = JmsDestination.create(cbeDest).unwrap
     )
   }
 }

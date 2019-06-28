@@ -20,6 +20,7 @@ import scala.util.{Failure, Success}
 
 private[bridge] object BridgeControllerConfig {
 
+  //noinspection NameBooleanParameters
   def create(
     cfg : Config,
     internalCf : IdAwareConnectionFactory,

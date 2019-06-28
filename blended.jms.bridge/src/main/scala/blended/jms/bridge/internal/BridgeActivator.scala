@@ -49,7 +49,7 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
       val (internalVendor, internalProvider) = providerList.filter(_.internal) match {
         case Nil      => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
         case h :: Nil => (h.vendor, h.provider)
-        case h :: _   => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
+        case _ => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
       }
 
       val registry = new BridgeProviderRegistry(providerList)
@@ -101,24 +101,24 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
           watchServices[IdAwareConnectionFactory] {
 
-            case AddingService(cf, context) => identifyCf(context) match {
+            case AddingService(conF, context) => identifyCf(context) match {
               case Success(_) =>
-                bridge ! BridgeController.AddConnectionFactory(cf)
+                bridge ! BridgeController.AddConnectionFactory(conF)
               case Failure(t) =>
                 log.warn(t.getMessage)
             }
 
-            case ModifiedService(cf, context) => identifyCf(context) match {
+            case ModifiedService(conF, context) => identifyCf(context) match {
               case Success(_) =>
-                bridge ! BridgeController.RemoveConnectionFactory(cf)
-                bridge ! BridgeController.AddConnectionFactory(cf)
+                bridge ! BridgeController.RemoveConnectionFactory(conF)
+                bridge ! BridgeController.AddConnectionFactory(conF)
               case Failure(t) =>
                 log.warn(t.getMessage)
             }
 
-            case RemovedService(cf, context) => identifyCf(context) match {
+            case RemovedService(conF, context) => identifyCf(context) match {
               case Success(_) =>
-                bridge ! BridgeController.RemoveConnectionFactory(cf)
+                bridge ! BridgeController.RemoveConnectionFactory(conF)
               case Failure(t) =>
                 log.warn(t.getMessage)
             }

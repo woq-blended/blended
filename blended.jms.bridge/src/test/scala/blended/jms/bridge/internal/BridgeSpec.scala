@@ -26,6 +26,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Try
 
+//noinspection NameBooleanParameters
 abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper
@@ -83,10 +84,12 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
 
   protected def generateMessages(msgCount : Int)(f : FlowEnvelope => FlowEnvelope = { env => env }) : Try[Seq[FlowEnvelope]] = Try {
 
+    // scalastyle:off null
     1.to(msgCount).map { i =>
       FlowMessage(s"Message $i")(FlowMessage.noProps)
         .withHeader("UnitProperty", null).get
     }.map(FlowEnvelope.apply).map(f)
+    // scalastyle:on null
   }
 
   protected def sendMessages(destName : String, cf : IdAwareConnectionFactory)(msgs : FlowEnvelope*) : KillSwitch = {
@@ -141,7 +144,10 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
 
       implicit val timeout : FiniteDuration = 1.second
 
+      // scalastyle:off null
       val msg : FlowMessage = TextFlowMessage(null, FlowMessage.noProps)
+      // scalastyle:on null
+
       val msgs : Seq[FlowEnvelope] = Seq(FlowEnvelope(msg))
 
       val switch : KillSwitch = sendMessages("sampleIn", external)(msgs : _*)
@@ -200,7 +206,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
       val messages : List[FlowEnvelope] =
         consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
 
-      messages should have size (msgCount)
+      messages should have size msgCount
 
       messages.foreach { env =>
         env.header[Unit]("UnitProperty") should be(Some(()))
@@ -208,7 +214,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
 
       val envelopes : List[FlowTransactionEvent] = consumeEvents().get
 
-      envelopes should have size (msgCount)
+      envelopes should have size msgCount
       assert(envelopes.forall(_.isInstanceOf[FlowTransactionStarted]))
 
       switch.shutdown()
@@ -275,7 +281,7 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
       consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get should be(empty)
       consumeEvents().get should be(empty)
 
-      consumeMessages(external, "sampleIn").get should have size (msgCount)
+      consumeMessages(external, "sampleIn").get should have size msgCount
 
       switch.shutdown()
     }
@@ -307,7 +313,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       val messages : List[FlowEnvelope] =
         consumeMessages(external, "sampleOut").get
 
-      messages should have size (msgCount)
+      messages should have size msgCount
 
       messages.foreach { env =>
         env.header[Unit]("UnitProperty") should be(Some(()))
@@ -324,12 +330,12 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       implicit val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
-      val switch = sendOutbound(msgCount, true)
+      val switch = sendOutbound(msgCount, track = true)
 
       val messages : List[FlowEnvelope] =
         consumeMessages(external, "sampleOut").get
 
-      messages should have size (msgCount)
+      messages should have size msgCount
 
       messages.foreach { env =>
         env.header[Unit]("UnitProperty") should be(Some(()))
@@ -337,7 +343,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
 
       val envelopes : List[FlowTransactionEvent] = consumeEvents().get
 
-      envelopes should have size (msgCount)
+      envelopes should have size msgCount
       assert(envelopes.forall(_.isInstanceOf[FlowTransactionUpdate]))
 
       switch.shutdown()
@@ -375,11 +381,11 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
       implicit val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
-      val switch = sendOutbound(msgCount, true)
+      val switch = sendOutbound(msgCount, track = true)
 
       val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
 
-      retried should have size (msgCount)
+      retried should have size msgCount
 
       retried.foreach { env =>
         env.header[Unit]("UnitProperty") should be(Some(()))
@@ -426,7 +432,7 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
       implicit val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
-      val switch = sendOutbound(msgCount, true)
+      val switch = sendOutbound(msgCount, track = true)
 
       val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
       retried should be(empty)
@@ -437,7 +443,7 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be(Some(()))
       }
 
-      consumeMessages(internal, "bridge.data.out.activemq.external").get should have size (msgCount)
+      consumeMessages(internal, "bridge.data.out.activemq.external").get should have size msgCount
 
       switch.shutdown()
     }
@@ -474,10 +480,10 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
       implicit val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
-      val switch = sendOutbound(msgCount, true)
+      val switch = sendOutbound(msgCount, track = true)
 
       val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
-      retried should have size (msgCount)
+      retried should have size msgCount
 
       consumeEvents().get should be(empty)
 
@@ -524,14 +530,14 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
       implicit val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
-      val switch = sendOutbound(msgCount, true)
+      val switch = sendOutbound(msgCount, track = true)
 
       val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
       retried should be(empty)
 
       consumeEvents().get should be(empty)
 
-      consumeMessages(internal, "bridge.data.out.activemq.external").get should have size (2)
+      consumeMessages(internal, "bridge.data.out.activemq.external").get should have size 2
 
       switch.shutdown()
     }

@@ -67,6 +67,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
     jmsDestination = Some(JmsDestination.create(destName).get)
   )
 
+  // scalastyle:off magic.number
   def retryCfg : JmsRetryConfig = JmsRetryConfig(
     cf = amqCf,
     retryDestName = "retryQueue",
@@ -77,6 +78,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
     retryTimeout = 100.millis,
     headerCfg = headerCfg
   )
+  // scalastyle:on magic.number
 
   def withExpectedDestination(
     destName : String,
@@ -228,16 +230,16 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
         env.header[Long](headerCfg.headerRetryCount) should be(Some(3))
 
         val events = consumeTransactions().get
-        events should have size (1)
+        events should have size 1
 
         // We lso expect a failed transaction event in the transactions destinations
         events.headOption match {
           case None =>
             fail("Expected transaction failed event")
-          case Some(env) =>
-            env.header[String](headerCfg.headerTransId) should be(Some(id))
+          case Some(e) =>
+            e.header[String](headerCfg.headerTransId) should be(Some(id))
 
-            val t = FlowTransactionEvent.envelope2event(headerCfg)(env).get
+            val t = FlowTransactionEvent.envelope2event(headerCfg)(e).get
             assert(t.transactionId.equals(id))
             assert(t.isInstanceOf[FlowTransactionFailed])
         }
@@ -256,7 +258,7 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
         // This causes the send to the original destination to fail within the flow, causing
         // the envelope to travel the error path.
         override protected def sendToOriginal : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(
-          FlowProcessor.fromFunction("failedSendOriginal", log) { env =>
+          FlowProcessor.fromFunction("failedSendOriginal", log) { _ =>
             Try {
               throw new Exception("Boom")
             }
@@ -266,7 +268,7 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
         // This causes the resend to the retry queue to fail, causing the envelope to be denied and causing
         // a redelivery on the retry queue (in other words the envelope will stay at the head of the queue
         override protected def sendToRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(
-          FlowProcessor.fromFunction("failedSendRetry", log) { env =>
+          FlowProcessor.fromFunction("failedSendRetry", log) { _ =>
             Try {
               throw new Exception("Boom")
             }
@@ -276,7 +278,7 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
 
       val messages = withExpectedDestination("myQueue", router)(FlowEnvelope()).get
       messages should be(empty)
-      consumeMessages(retryCfg.retryDestName)(1.second).get should not be (empty)
+      consumeMessages(retryCfg.retryDestName)(1.second).get should not be empty
     }
   }
 }
