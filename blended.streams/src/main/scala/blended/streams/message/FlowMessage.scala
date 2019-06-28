@@ -7,6 +7,8 @@ import scala.reflect.ClassTag
 import scala.runtime.BoxedUnit
 import scala.util.Try
 
+import blended.util.RichTry._
+
 sealed trait MsgProperty {
   def value : Any
   override def toString : String = value.toString
@@ -65,7 +67,7 @@ object FlowMessage {
   def props(m : (String, Any)*) : Try[FlowMessageProps] = Try {
     m.map {
       case (k, v) =>
-        val p : MsgProperty = MsgProperty(v).get
+        val p : MsgProperty = MsgProperty(v).unwrap
         k -> p
     }.toMap
   }
@@ -165,7 +167,7 @@ sealed abstract class FlowMessage(msgHeader : FlowMessageProps) {
   def withHeaders(header : FlowMessageProps) : Try[FlowMessage] = Try {
     header.foldLeft(this) {
       case (current, (key, prop)) =>
-        current.withHeader(key, prop.value).get
+        current.withHeader(key, prop.value).unwrap
     }
   }
 
@@ -175,12 +177,12 @@ sealed abstract class FlowMessage(msgHeader : FlowMessageProps) {
 
   protected def newHeader(key : String, value : Any, overwrite : Boolean) : Try[FlowMessageProps] = Try {
     if (overwrite) {
-      header.filterKeys(_ != key) + (key -> MsgProperty(value).get)
+      header.filterKeys(_ != key) + (key -> MsgProperty(value).unwrap)
     } else {
       if (header.isDefinedAt(key)) {
         header
       } else {
-        header + (key -> MsgProperty(value).get)
+        header + (key -> MsgProperty(value).unwrap)
       }
     }
   }
@@ -194,7 +196,7 @@ case class BaseFlowMessage(override val header : FlowMessageProps) extends FlowM
   override def bodySize() : Int = 0
 
   override def withHeader(key : String, value : Any, overwrite : Boolean = true) : Try[FlowMessage] = Try {
-    copy(header = newHeader(key, value, overwrite).get)
+    copy(header = newHeader(key, value, overwrite).unwrap)
   }
 
   override def removeHeader(keys : String*) : FlowMessage = copy(header = doRemoveHeader(keys : _*))
@@ -215,7 +217,7 @@ case class BinaryFlowMessage(content : ByteString, override val header : FlowMes
   override def bodySize() : Int = content.size
 
   override def withHeader(key : String, value : Any, overwrite : Boolean = true) : Try[FlowMessage] = Try {
-    copy(header = newHeader(key, value, overwrite).get)
+    copy(header = newHeader(key, value, overwrite).unwrap)
   }
 
   override def removeHeader(keys : String*) : FlowMessage = copy(header = doRemoveHeader(keys : _*))
@@ -234,7 +236,7 @@ case class TextFlowMessage(content : String, override val header : FlowMessagePr
   override def bodySize() : Int = getText().length()
 
   override def withHeader(key : String, value : Any, overwrite : Boolean = true) : Try[FlowMessage] = Try {
-    copy(header = newHeader(key, value, overwrite).get)
+    copy(header = newHeader(key, value, overwrite).unwrap)
   }
 
   override def removeHeader(keys : String*) : FlowMessage = copy(header = doRemoveHeader(keys : _*))
