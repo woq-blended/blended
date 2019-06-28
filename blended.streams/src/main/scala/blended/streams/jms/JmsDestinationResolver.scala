@@ -24,7 +24,9 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 
     val msg = flowMsg match {
       case t :
-        TextFlowMessage => session.createTextMessage(Option(t.body()).map(_.toString).getOrElse(null))
+        // scalastyle:off null
+        TextFlowMessage => session.createTextMessage(Option(t.body()).map(_.toString).orNull)
+      // scalastyle:on null
       case b :
         BinaryFlowMessage =>
         val r = session.createBytesMessage()
@@ -35,13 +37,15 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
     }
 
     flowMsg.header.filter {
-      case (k, v) => !k.startsWith("JMS")
+      case (k, _) => !k.startsWith("JMS")
     }.foreach {
       case (k, v) =>
         val propName = k.replaceAll("\\" + dot, dot_repl).replaceAll(hyphen, hyphen_repl)
         v match {
-          case u : UnitMsgProperty => msg.setObjectProperty(propName, null)
+          // scalastyle:off null
+          case _ : UnitMsgProperty => msg.setObjectProperty(propName, null)
           case o                   => msg.setObjectProperty(propName, o.value)
+          // scalastyle:on null
         }
     }
 
@@ -92,7 +96,7 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
         case None =>
           log.trace(s"Trying to resolve destination for [$id] from settings.")
           settings.jmsDestination match {
-            case Some(d) => d
+            case Some(dest) => dest
             case None =>
               throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
           }
@@ -112,7 +116,7 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
 
   val timeToLive : FlowMessage => Option[FiniteDuration] = { flowMsg =>
     flowMsg.header[Long](expireHeader(headerConfig.prefix)) match {
-      case Some(l) => Some((Math.max(1L, l - System.currentTimeMillis())).millis)
+      case Some(l) => Some(Math.max(1L, l - System.currentTimeMillis()).millis)
       case None    => settings.timeToLive
     }
   }

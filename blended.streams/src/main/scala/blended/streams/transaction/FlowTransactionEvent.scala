@@ -157,7 +157,7 @@ object FlowTransactionEvent {
       (envelope.header[String](cfg.headerTransId), envelope.header[String](cfg.headerState)) match {
         case (Some(id), Some(state)) => FlowTransactionState.withName(state) match {
           case FlowTransactionState.Started =>
-            val header = envelope.flowMessage.header.filter { case (k, v) => !k.startsWith("JMS") }
+            val header = envelope.flowMessage.header.filter { case (k, _) => !k.startsWith("JMS") }
             FlowTransactionStarted(id, header)
 
           case FlowTransactionState.Completed =>

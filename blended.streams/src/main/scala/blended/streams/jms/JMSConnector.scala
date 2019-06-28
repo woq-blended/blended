@@ -19,7 +19,7 @@ object JmsConnector {
   def nextSessionId : String = {
 
     if (sessionIdCounter.get() == Long.MaxValue) {
-      sessionIdCounter.set(0l)
+      sessionIdCounter.set(0L)
     }
 
     s"${sessionIdCounter.incrementAndGet()}"
@@ -184,13 +184,14 @@ trait JmsConnector[S <: JmsSession] { this : TimerGraphStageLogic =>
               "Please see ConnectionRetrySettings.connectTimeout"
           )
         )
-      } else
+      } else {
         connectionRef.get match {
           case Some(connection) =>
             Future.successful(connection)
           case None =>
             Future.failed(new IllegalStateException("BUG: Connection reference not set when connected"))
         }
+      }
     }
 
     Future.firstCompletedOf(Iterator(connectionFuture, timeoutFuture))(ec)

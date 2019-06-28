@@ -11,6 +11,7 @@ object EventSeverity extends Enumeration {
   type EventSeverity = Value
   val Unknown, Information, Harmless, Warning, Minor, Critical, Fatal = Value
 
+  // scalastyle:off magic.number
   implicit def severityToInt(severity : EventSeverity) : Int = severity match {
     case Unknown     => 0
     case Information => 10
@@ -20,4 +21,5 @@ object EventSeverity extends Enumeration {
     case Critical    => 50
     case Fatal       => 60
   }
+  // scalastyle:off magic.number
 }

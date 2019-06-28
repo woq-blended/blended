@@ -124,12 +124,12 @@ case class FlowTransaction private[transaction] (
           copy(creationProps = started.properties)
           this
 
-        case completed : FlowTransactionCompleted => copy(
+        case _ : FlowTransactionCompleted => copy(
           state = FlowTransactionState.Completed,
           worklist = Map.empty
         )
 
-        case failed : FlowTransactionFailed => copy(
+        case _ : FlowTransactionFailed => copy(
           state = FlowTransactionState.Failed,
           worklist = Map.empty
         )

@@ -36,7 +36,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
 
   val faulty = new FlowProcessor {
     override val name : String = "faulty"
-    override val f : IntegrationStep = env => Failure(new Exception("Boom"))
+    override val f : IntegrationStep = _ => Failure(new Exception("Boom"))
   }
 
   "The FlowProcessor should" - {

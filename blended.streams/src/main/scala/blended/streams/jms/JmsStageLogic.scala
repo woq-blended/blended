@@ -25,12 +25,12 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   private[jms] val stopping = new AtomicBoolean(false)
 
   // Is the source stopped ?
-  private[jms] var stopped = new AtomicBoolean(false)
+  private[jms] val stopped = new AtomicBoolean(false)
 
-  private[jms] def doMarkStopped = stopped.set(true)
+  private[jms] def doMarkStopped(): Unit = stopped.set(true)
 
   // Mark the source as stopped and try to finish handling all in flight messages
-  private[jms] val markStopped = getAsyncCallback[Done.type] { _ => doMarkStopped }
+  private[jms] val markStopped = getAsyncCallback[Done.type] { _ => doMarkStopped() }
 
   // Mark the source as failed and abort all message processing
   private[jms] val markAborted = getAsyncCallback[Throwable] { ex =>
@@ -70,7 +70,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
       Future
         .sequence(closeSessionFutures)
         .onComplete { _ =>
-          Option(jmsConnection).map { jc =>
+          Option(jmsConnection).foreach { jc =>
             jc.onComplete {
               case Success(connection) =>
                 try {

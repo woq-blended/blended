@@ -29,7 +29,7 @@ object FlowProcessor {
               log.warn(t)(s"Failed to create [${clazz.runtimeClass.getName()}] in [${env.id}]:[$name]")
               Left(env.withException(t))
           }
-        case Some(t) =>
+        case Some(_) =>
           log.debug(s"Not executing function [${env.id}]:[$name] as envelope has exception [${env.exception.map(_.getMessage()).getOrElse("")}].")
           Left(env)
       }

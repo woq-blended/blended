@@ -238,7 +238,7 @@ final class JmsAckSourceStage(
               Success(new JmsAckSession(
                 connection = connection,
                 session = session,
-                sessionId = nextSessionId,
+                sessionId = nextSessionId(),
                 jmsDestination = d
               ))
             case None =>

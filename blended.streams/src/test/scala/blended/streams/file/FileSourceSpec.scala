@@ -96,7 +96,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout) { env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout) { _ => }
 
       val result : List[FlowEnvelope] = Await.result(collector.result, timeout + 100.millis)
 
