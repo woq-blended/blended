@@ -189,9 +189,13 @@ class FileDropActor extends Actor {
     val fdr = FileDropResult.result(state.cmd, t)
 
     if (t.isDefined) {
+      // in case an error was encountered, we will restore the original file
+      // and forget the append
       state.tmpFile.foreach { tf => tf.renameTo(finalFile(state.cmd)) }
       state.outFile.delete()
     } else {
+      // In case the command was successful, we will delete the tmpfile
+      // and create the final file
       state.tmpFile.foreach(_.delete())
       state.outFile.renameTo(finalFile(state.cmd))
     }
