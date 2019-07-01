@@ -151,7 +151,6 @@ object CommandHandlerManager {
         }
     }
 
-
     private def handling(state : CommandHandlerState) : Receive =
       handlePackages(state)
         .orElse(handleClients(state))

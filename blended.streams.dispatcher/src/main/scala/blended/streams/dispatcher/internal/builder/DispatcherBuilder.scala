@@ -13,6 +13,7 @@ import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction._
 import blended.streams.worklist._
 import blended.util.logging.Logger
+import blended.util.RichTry._
 
 class MismatchedEnvelopeException(id : String)
   extends Exception(s"Worklist event [$id] couldn't find the corresponding envelope")
@@ -89,7 +90,7 @@ case class DispatcherBuilder(
 
       val toWorklist = b.add(Flow.fromFunction[FlowEnvelope, Either[FlowEnvelope, WorklistEvent]] { env =>
         try {
-          val worklist = bs.worklist(env).get
+          val worklist = bs.worklist(env).unwrap
           val event : WorklistEvent = env.exception match {
             case None    => WorklistStepCompleted(worklist = worklist, state = WorklistState.Completed)
             case Some(_) => WorklistStepCompleted(worklist = worklist, state = WorklistState.Failed)
@@ -254,11 +255,11 @@ case class DispatcherBuilder(
           bs.streamLogger.debug(s"Routing error envelope [${env.id}] to [$vendor:$provider:$dest]")
 
           env
-            .withHeader(deliveryModeHeader(bs.headerConfig.prefix), JmsDeliveryMode.Persistent.asString).get
-            .withHeader(bs.headerBridgeVendor, vendor).get
-            .withHeader(bs.headerBridgeProvider, provider).get
-            .withHeader(bs.headerBridgeDest, dest).get
-            .withHeader(bs.headerConfig.headerState, FlowTransactionState.Failed.toString).get
+            .withHeader(deliveryModeHeader(bs.headerConfig.prefix), JmsDeliveryMode.Persistent.asString).unwrap
+            .withHeader(bs.headerBridgeVendor, vendor).unwrap
+            .withHeader(bs.headerBridgeProvider, provider).unwrap
+            .withHeader(bs.headerBridgeDest, dest).unwrap
+            .withHeader(bs.headerConfig.headerState, FlowTransactionState.Failed.toString).unwrap
         } catch {
           case t : Throwable =>
             bs.streamLogger.warn(s"Failed to resolve error routing for envelope [${env.id}] : [${t.getMessage()}]")

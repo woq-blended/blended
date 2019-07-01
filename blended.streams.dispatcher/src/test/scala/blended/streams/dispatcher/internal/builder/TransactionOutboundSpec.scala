@@ -21,6 +21,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.reflect.ClassTag
+import blended.util.RichTry._
 
 @RequiresForkedJVM
 class TransactionOutboundSpec extends DispatcherSpecSupport
@@ -50,8 +51,9 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
 
   private val ctxt = createDispatcherExecContext()
 
-  val (internalVendor, internalProvider) = ctxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).get
-  private val cf = jmsConnectionFactory(registry, ctxt)(internalVendor, internalProvider, 3.seconds).get
+  val (internalVendor, internalProvider) =
+    ctxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).unwrap
+  private val cf = jmsConnectionFactory(registry, ctxt)(internalVendor, internalProvider, 3.seconds).unwrap
 
   private val tMgr = system.actorOf(FlowTransactionManager.props(pSvc))
 
@@ -68,9 +70,9 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
 
   def transactionEnvelope(ctxt : DispatcherExecContext, event : FlowTransactionEvent) : FlowEnvelope = {
     FlowTransactionEvent.event2envelope(ctxt.bs.headerConfig)(event)
-      .withHeader(ctxt.bs.headerEventVendor, "activemq").get
-      .withHeader(ctxt.bs.headerEventProvider, "activemq").get
-      .withHeader(ctxt.bs.headerEventDest, JmsDestination.create("cbeOut").get.asString).get
+      .withHeader(ctxt.bs.headerEventVendor, "activemq").unwrap
+      .withHeader(ctxt.bs.headerEventProvider, "activemq").unwrap
+      .withHeader(ctxt.bs.headerEventDest, JmsDestination.create("cbeOut").unwrap.asString).unwrap
   }
 
   def sendTransactions(ctxt: DispatcherExecContext, cf : IdAwareConnectionFactory)(envelopes: FlowEnvelope*)
@@ -87,7 +89,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       pSettings,
       log = ctxt.bs.streamLogger,
       envelopes: _*
-    ).get
+    ).unwrap
   }
 
   def receiveCbes: Collector[FlowEnvelope] = receiveMessages(
@@ -148,7 +150,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
         properties = FlowMessage.noProps,
         updatedState = WorklistState.Completed,
         branchIds = "foo, bar"
-      )).withHeader(ctxt.bs.headerCbeEnabled, true).get
+      )).withHeader(ctxt.bs.headerCbeEnabled, true).unwrap
 
       val switch = sendTransactions(ctxt, cf)(envStart)
       val collector = receiveCbes

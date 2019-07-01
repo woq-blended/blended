@@ -1,0 +1,14 @@
+{
+  "patterns": [
+    {
+      "patternId": "Custom_Scala_GetCalls",
+      "category": "ErrorProne",
+      "level": "Warning"
+    },
+    {
+      "patternId" : "Custom_Scala_NonFatal",
+      "category" : "CodeStyle",
+      "level" : "Warning"
+    }
+  ]
+}
