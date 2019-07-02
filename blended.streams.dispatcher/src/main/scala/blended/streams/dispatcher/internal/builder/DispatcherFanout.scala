@@ -9,6 +9,7 @@ import blended.streams.dispatcher.internal._
 import blended.streams.jms.JmsEnvelopeHeader
 import blended.streams.message.FlowEnvelope
 import blended.streams.worklist.{WorklistEvent, WorklistStarted}
+import blended.util.RichTry._
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -27,8 +28,8 @@ case class DispatcherFanout(
           val obEnv =
             env
               .withContextObject(bs.outboundCfgKey, ob)
-              .withHeader(bs.headerConfig.headerBranch, ob.id).get
-          (ob, outboundMsg(ob)(obEnv).get)
+              .withHeader(bs.headerConfig.headerBranch, ob.id).unwrap
+          (ob, outboundMsg(ob)(obEnv).unwrap)
         }
       }
     } match {
@@ -56,7 +57,7 @@ case class DispatcherFanout(
           case Some(c) =>
             val resolve = idSvc.resolvePropertyString(c, env.flowMessage.header.mapValues(_.value))
             bs.streamLogger.debug(s"Resolved condition to [$resolve][${resolve.map(_.getClass().getName())}]")
-            val use = resolve.map(_.asInstanceOf[Boolean]).get
+            val use = resolve.map(_.asInstanceOf[Boolean]).unwrap
 
             val s = s"using header for [${env.id}]:[outboundMsg] block with expression [$c]"
             if (use) {
@@ -71,26 +72,26 @@ case class DispatcherFanout(
 
     Try {
 
-      outCfg.outboundHeader.filter(b => useHeaderBlock(b).get).foldLeft(env) {
+      outCfg.outboundHeader.filter(b => useHeaderBlock(b).unwrap).foldLeft(env) {
         case (current, oh) =>
           var newEnv : FlowEnvelope = current
-            .withHeader(bs.headerConfig.headerMaxRetries, oh.maxRetries).get
-            .withHeader(bs.headerAutoComplete, oh.autoComplete).get
+            .withHeader(bs.headerConfig.headerMaxRetries, oh.maxRetries).unwrap
+            .withHeader(bs.headerAutoComplete, oh.autoComplete).unwrap
 
           if (oh.timeToLive >= 0L) {
-            newEnv = newEnv.withHeader(bs.headerTimeToLive, oh.timeToLive).get
+            newEnv = newEnv.withHeader(bs.headerTimeToLive, oh.timeToLive).unwrap
           } else {
             newEnv = newEnv.removeHeader(bs.headerTimeToLive)
           }
 
           newEnv = newEnv
-            .withHeader(deliveryModeHeader(bs.headerConfig.prefix), oh.deliveryMode).get
+            .withHeader(deliveryModeHeader(bs.headerConfig.prefix), oh.deliveryMode).unwrap
 
           oh.header.foreach {
             case (header, value) =>
-              val resolved = idSvc.resolvePropertyString(value, env.flowMessage.header.mapValues(_.value)).get
+              val resolved = idSvc.resolvePropertyString(value, env.flowMessage.header.mapValues(_.value)).unwrap
               bs.streamLogger.trace(s"[${newEnv.id}]:[${outCfg.id}] - resolved property [$header] to [$resolved]")
-              newEnv = newEnv.withHeader(header, resolved).get
+              newEnv = newEnv.withHeader(header, resolved).unwrap
           }
 
           newEnv = if (oh.clearBody) {

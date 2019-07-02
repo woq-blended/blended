@@ -10,6 +10,7 @@ import javax.jms._
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.Try
+import blended.util.RichTry._
 
 case class JmsAcknowledgeHandler(
   id : String,
@@ -95,18 +96,18 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
         deliveryModeHeader(prefix) -> delMode,
         timestampHeader(prefix) -> msg.getJMSTimestamp(),
         typeHeader(prefix) -> msg.getJMSType()
-      ).get
+      ).unwrap
 
       val expireHeaderMap : Map[String, MsgProperty] = msg.getJMSExpiration() match {
         case 0L => Map.empty
-        case v  => Map(expireHeader(prefix) -> MsgProperty(v).get)
+        case v  => Map(expireHeader(prefix) -> MsgProperty(v).unwrap)
       }
 
       val corrIdMap : Map[String, MsgProperty] =
         Option(msg.getJMSCorrelationID()).map { s =>
           Map(
-            corrIdHeader(prefix) -> MsgProperty(s).get,
-            "JMSCorrelationID" -> MsgProperty(s).get
+            corrIdHeader(prefix) -> MsgProperty(s).unwrap,
+            "JMSCorrelationID" -> MsgProperty(s).unwrap
           )
         }.getOrElse(Map.empty)
 
@@ -116,11 +117,11 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
           .replaceAll(hyphen_repl, hyphen)
           .replaceAll(dot_repl, dot)
 
-        propName -> MsgProperty(msg.getObjectProperty(name.toString())).get
+        propName -> MsgProperty(msg.getObjectProperty(name.toString())).unwrap
       }.toMap
 
       val replyToMap : Map[String, MsgProperty] =
-        Option(msg.getJMSReplyTo()).map(d => replyToHeader(prefix) -> MsgProperty(JmsDestination.create(d).get.asString).get).toMap
+        Option(msg.getJMSReplyTo()).map(d => replyToHeader(prefix) -> MsgProperty(JmsDestination.create(d).unwrap.asString).unwrap).toMap
 
       props ++ headers ++ expireHeaderMap ++ corrIdMap ++ replyToMap
     }
@@ -142,7 +143,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
 
   val envelope2jms : (JmsProducerSettings, Session, FlowEnvelope) => Try[JmsSendParameter] = (settings, session, flowEnv) => Try {
 
-    settings.destinationResolver(settings).sendParameter(session, flowEnv).get
+    settings.destinationResolver(settings).sendParameter(session, flowEnv).unwrap
 
   }
 }

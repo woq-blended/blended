@@ -8,6 +8,7 @@ import com.typesafe.config.Config
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
+import blended.util.RichTry._
 
 object BlendedJMSConnectionConfig {
 
@@ -72,7 +73,7 @@ object BlendedJMSConnectionConfig {
     val clientId : Config => Try[String] = cfg => Try {
       cfg.getStringOption("clientId") match {
         case None    => defaultConfig.clientId
-        case Some(s) => stringResolver(s).map(_.toString).get
+        case Some(s) => stringResolver(s).map(_.toString).unwrap
       }
     }
 

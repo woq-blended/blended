@@ -10,6 +10,7 @@ import blended.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
+import blended.util.RichTry._
 
 class EnvelopeFileDropper(
   cfg : FileDropConfig,
@@ -49,7 +50,7 @@ class EnvelopeFileDropper(
   private[this] def dropCmd(env : FlowEnvelope)(f : FlowEnvelope => Try[ByteString]) : Try[FileDropCommand] = Try {
     FileDropCommand(
       id = env.id,
-      content = f(env).get,
+      content = f(env).unwrap,
       directory = env.headerWithDefault[String](cfg.dirHeader, cfg.defaultDir),
       fileName = env.headerWithDefault[String](cfg.fileHeader, ""),
       compressed = env.headerWithDefault[Boolean](cfg.compressHeader, false),
@@ -61,7 +62,7 @@ class EnvelopeFileDropper(
 
   private[this] def handleError(env : FlowEnvelope, error : Throwable) : FileDropResult = {
     log.error(s"Error dropping envelope [${env.id}] to file : [${error.getMessage()}]")
-    val cmd = dropCmd(env)(_ => Success(ByteString(""))).get
+    val cmd = dropCmd(env)(_ => Success(ByteString(""))).unwrap
     dropActor ! FileDropAbort(error)
     FileDropResult(cmd, Some(error))
   }

@@ -9,6 +9,7 @@ import javax.jms.Session
 
 import scala.concurrent.duration._
 import scala.util.Try
+import blended.util.RichTry._
 
 class DispatcherDestinationResolver(
   override val settings : JmsProducerSettings,
@@ -20,22 +21,24 @@ class DispatcherDestinationResolver(
 
   override def sendParameter(session : Session, env : FlowEnvelope) : Try[JmsSendParameter] = Try {
 
-    val internal = registry.internalProvider.get
+    val internal = registry.internalProvider.unwrap
 
-    val msg = createJmsMessage(session, env).get
+    val msg = createJmsMessage(session, env).unwrap
 
-    val vendor : String = env.header[String](bs.headerBridgeVendor).get
-    val provider : String = env.header[String](bs.headerBridgeProvider).get
+    val vendor : Option[String] = env.header[String](bs.headerBridgeVendor)
+    val provider : Option[String] = env.header[String](bs.headerBridgeProvider)
 
     val dest : JmsDestination = (vendor, provider) match {
-      case (internal.vendor, internal.provider) =>
-        JmsDestination.create(env.header[String](bs.headerBridgeDest).get).get
-      case (v, p) =>
+      case (Some(internal.vendor), Some(internal.provider)) =>
+        JmsDestination.create(env.header[String](bs.headerBridgeDest).get).unwrap
+      case (Some(v), Some(p)) =>
         val dest = s"${internal.outbound.name}.$v.$p"
-        JmsDestination.create(dest).get
+        JmsDestination.create(dest).unwrap
+      case (_, _) =>
+        throw new Exception(s"[${bs.headerBridgeVendor}] and [${bs.headerBridgeProvider}] must be set in the message")
     }
 
-    val delMode : JmsDeliveryMode = JmsDeliveryMode.create(env.header[String](deliveryModeHeader(bs.headerConfig.prefix)).get).get
+    val delMode : JmsDeliveryMode = JmsDeliveryMode.create(env.header[String](deliveryModeHeader(bs.headerConfig.prefix)).get).unwrap
     val ttl : Option[FiniteDuration] = env.header[Long](bs.headerTimeToLive).map(_.millis)
 
     bs.streamLogger.debug(s"Sending envelope [${env.id}] to [$dest]")

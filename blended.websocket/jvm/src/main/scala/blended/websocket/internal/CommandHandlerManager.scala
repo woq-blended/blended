@@ -7,7 +7,7 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.{NotUsed, actor}
 import blended.security.login.api.Token
 import blended.util.logging.Logger
-import blended.websocket.{ClientInfo, WebSocketCommandPackage, WsContext, WsMessageEncoded}
+import blended.websocket.{ClientInfo, WebSocketCommandPackage, WsContext, WsMessageEncoded, WebSocketCommandHandler}
 import prickle.Unpickle
 
 import scala.util.{Failure, Success}
@@ -76,7 +76,8 @@ object CommandHandlerManager {
     * The central command handler will keep track of all registered specialized
     * command handlers, so that it can dispatch any inbound WsMessage to the
     * relevant command handler. It will also keep track of the connected clients,
-    * as the command handlers will eventually send WsMessages to a particular client.
+    * as the command handlers will eventually send WsMessages to a particular client
+    * via their emit method.
     */
   private class CommandHandlerActor extends Actor {
 
@@ -90,6 +91,10 @@ object CommandHandlerManager {
 
     override def receive: Receive = Actor.emptyBehavior
 
+    /**
+      * Handle (de)registration of [[BlendedCommandPackage]]s.
+      * @param state The CommandHandler State managing packages and clients.
+      */
     private def handlePackages(state : CommandHandlerState) : Receive = {
       // Manage Ws Command Handler
       case AddCommandPackage(h) =>
@@ -98,6 +103,10 @@ object CommandHandlerManager {
         context.become(handling(state.removeHandler(h)))
     }
 
+    /**
+      * Handle client (dis)connects.
+      * @param state The CommandHandler State managing packages and clients.
+      */
     private def handleClients(state : CommandHandlerState) : Receive = {
       // Manage client connects / disconnects
       case NewClient(info, clientActor) =>
@@ -114,6 +123,17 @@ object CommandHandlerManager {
         }
     }
 
+    /**
+      * Handle incoming commands.
+      *
+      * This is the main command dispatcher. It will try to decode an incoming
+      * command into a [[WsContext]] and dispatch it to the corresponding
+      * [[BlendedCommandPackage]] for further processing.
+      *
+      * Any implemented commands may use their emit method to dispatch messages
+      * to a particular client.
+      * @param state The CommandHandler State managing packages and clients.
+      */
     private def handleCommand(state: CommandHandlerState) : Receive = {
       case rm : ReceivedMessage =>
         log.debug(s"Handling message [${rm.s}] for client [${rm.t.id}]")
@@ -151,18 +171,27 @@ object CommandHandlerManager {
         }
     }
 
+    /**
+      * The actual receive method.
+      *
+      * Here we maintain the command handler state and processes incoming [[WsClientUpdate]]s.
+      * A [[WsClientUpdate]] is normally sent over the Akka event stream by using a [[WebSocketCommandHandler]].
+      * The Client Update will be dispatched to the client associated with the [[Token]] within
+      * the update.
+      *
+      * @param state The CommandHandler State managing packages and clients.
+      */
     private def handling(state : CommandHandlerState) : Receive =
       handlePackages(state)
         .orElse(handleClients(state))
         .orElse(handleCommand(state))
         .orElse {
-
-      // Forward an emitted message from a command handler to the connected client
-      case u : WsClientUpdate =>
-        log.debug(s"Processing WsClientUpdate for [${u.token.id}] : [${u.msg}]")
-        state.clientByToken(u.token).foreach{ ci =>
-          ci.clientActor ! u.msg
+          // Forward an emitted message from a command handler to the connected client
+          case u : WsClientUpdate =>
+            log.debug(s"Processing WsClientUpdate for [${u.token.id}] : [${u.msg}]")
+            state.clientByToken(u.token).foreach{ ci =>
+              ci.clientActor ! u.msg
+            }
         }
-    }
   }
 }

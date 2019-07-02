@@ -1,3 +1,4 @@
 package blended.launcher
 
-class LauncherException(msg : String, cause : Throwable = null, val errorCode : Int) extends RuntimeException(msg, cause)
+class LauncherException(msg : String, cause : Option[Throwable] = None, val errorCode : Int)
+  extends RuntimeException(msg, cause.orNull)

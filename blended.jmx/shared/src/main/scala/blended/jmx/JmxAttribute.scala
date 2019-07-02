@@ -58,8 +58,8 @@ object AttributeValue {
   def apply(c : Char) : AttributeValue = CharAttributeValue(c)
   def apply(n : JmxObjectName) : AttributeValue = ObjectNameAttributeValue(n)
   def apply(a : Array[AttributeValue]) : AttributeValue = ArrayAttributeValue(a.toList)
-  def apply(m : Map[String, AttributeValue]) = CompositeAttributeValue(m)
-  def apply(t : List[AttributeValue]) = TabularAttributeValue(t)
+  def apply(m : Map[String, AttributeValue]) : AttributeValue = CompositeAttributeValue(m)
+  def apply(t : List[AttributeValue]) : AttributeValue = TabularAttributeValue(t)
 
   def lift(v : Any) : Try[AttributeValue] = Try {
     Option(v) match {

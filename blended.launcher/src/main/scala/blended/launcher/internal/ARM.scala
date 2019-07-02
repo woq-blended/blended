@@ -1,5 +1,7 @@
 package blended.launcher.internal
 
+import scala.util.control.NonFatal
+
 /**
  * Created by lefou on 11.04.16.
  */
@@ -12,7 +14,7 @@ object ARM {
       try {
         c.close()
       } catch {
-        case t : Throwable => t.addSuppressed(t)
+        case NonFatal(t) => t.addSuppressed(t)
       }
     }
   }
