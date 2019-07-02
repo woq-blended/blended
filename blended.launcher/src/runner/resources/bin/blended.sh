@@ -60,8 +60,8 @@ JAVA_OPTS="${JAVA_OPTS} -Dblended.home=${BLENDED_HOME}"
 # Options for the container JVM (inner) started/managed by the service daemon JVM
 # Use prefix "-jvmOpt=" to mark each JVM option to be passed to the container JVM
 
-CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dsun.net.client.defaultConnectTimeout=500"
-CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dsun.net.client.defaultReadTimeout=500"
+CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dsun.net.client.defaultConnectTimeout=5000"
+CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dsun.net.client.defaultReadTimeout=5000"
 CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=${LOGBACK_CONFIG_SETTING}"
 CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dblended.home=${BLENDED_HOME}"
 CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} ${EXTRA_START_BUNDLES}"
