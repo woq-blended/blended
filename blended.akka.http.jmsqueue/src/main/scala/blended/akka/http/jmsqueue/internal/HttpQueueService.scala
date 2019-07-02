@@ -120,15 +120,13 @@ trait HttpQueueService {
 
   private[this] def receive(vendor : String, provider : String, queue : String) : HttpResponse = {
 
-    withConnectionFactory[HttpResponse](vendor, provider) { ocf : Option[ConnectionFactory] =>
-      ocf match {
-        case None =>
-          val msg = s"No connection factory found for [$vendor:$provider]"
-          log.warn(msg)
-          messageToResponse(ReceiveResult(vendor, provider, queue, Failure(new Exception(msg))))
-        case Some(cf) =>
-          messageToResponse(performReceive(vendor, provider, queue)(cf))
-      }
+    withConnectionFactory[HttpResponse](vendor, provider) {
+      case None =>
+        val msg = s"No connection factory found for [$vendor:$provider]"
+        log.warn(msg)
+        messageToResponse(ReceiveResult(vendor, provider, queue, Failure(new Exception(msg))))
+      case Some(cf) =>
+        messageToResponse(performReceive(vendor, provider, queue)(cf))
     }
   }
 
@@ -153,7 +151,7 @@ trait HttpQueueService {
                   }
               }
             case _ =>
-              log.warn(s"Request [${path.mkString(("/"))}] does not match the form 'path/queue'")
+              log.warn(s"Request [${path.mkString("/")}] does not match the form 'path/queue'")
               complete(StatusCodes.BadRequest)
           }
         }
