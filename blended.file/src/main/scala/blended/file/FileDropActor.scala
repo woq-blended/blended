@@ -26,7 +26,7 @@ case class FileDropCommand(
 
   override def equals(obj: scala.Any): Boolean = obj match {
     case cmd : FileDropCommand =>
-      content.sameElements(cmd.content) &&
+      content.equals(cmd.content) &&
       directory.equals(cmd.directory) &&
       fileName.equals(cmd.fileName) &&
       compressed == cmd.compressed &&

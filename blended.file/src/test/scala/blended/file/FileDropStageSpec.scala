@@ -49,7 +49,14 @@ class FileDropStageSpec extends LoggingFreeSpec
 
   def dropFlow(cfg : FileDropConfig, bufferSize : Int) : ((ActorRef, KillSwitch), Future[Seq[FileDropResult]]) = {
 
-    val dropper : Flow[FlowEnvelope, FileDropResult, _] = Flow.fromGraph(new FileDropStage(name = "spec", config = cfg, headerCfg = headerCfg, dropActor = dropActor, log = log))
+    val dropper : Flow[FlowEnvelope, FileDropResult, _] =
+      Flow.fromGraph(new FileDropStage(
+        name = "spec",
+        config = cfg,
+        headerCfg = headerCfg,
+        dropActor = dropActor,
+        log = log
+      ))
 
     Source.actorRef[FlowEnvelope](bufferSize, OverflowStrategy.fail)
       .viaMat(dropper)(Keep.left)

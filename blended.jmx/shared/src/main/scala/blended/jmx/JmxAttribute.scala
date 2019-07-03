@@ -6,7 +6,7 @@ import scala.collection.JavaConverters._
 
 import scala.util.Try
 
-final case class JmxObject(
+final case class JmxBeanInfo(
   objName : JmxObjectName,
   attributes : CompositeAttributeValue
 )
