@@ -45,7 +45,7 @@ class FileDropSpec extends LoggingFreeSpec
   val dropActor : ActorRef = system.actorOf(Props[FileDropActor])
 
   private def dropFile(dropper : EnvelopeFileDropper, cfg : FileDropConfig, env : FlowEnvelope) : Try[FileDropResult] = Try {
-    val (cmd, r) = dropper.dropEnvelope(env)
+    val (_, r) = dropper.dropEnvelope(env)
     Await.result(r, to)
   }
 
@@ -66,7 +66,7 @@ class FileDropSpec extends LoggingFreeSpec
       dropFile(dropper, cfg, env).get
     }
 
-    results should have size (count)
+    results should have size count
     assert(results.forall(_.error.isEmpty))
 
     1.to(count).foreach { i =>
@@ -78,7 +78,9 @@ class FileDropSpec extends LoggingFreeSpec
 
     "drop an uncompressed file into a given directory" in simpleDrops(1)
 
+    // scalastyle:off magic.number
     "drop an uncompressed file into a given directory (bulk)" in simpleDrops(500)
+    // scalastyle:on magic.number
 
     "create a duplicate file if the file already exists in the target directory (without append)" in {
 
