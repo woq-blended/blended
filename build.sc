@@ -480,10 +480,12 @@ object blended extends Module {
         )
         override def osgiHeaders = super.osgiHeaders().copy(
           `Export-Package` = Seq(
-            blendedModule,
+            // we have files in binaryResources and in classes, so we need to merge
+            s"${blendedModule};-split-package:=merge-first",
             s"${blendedModule}.json",
             s"${blendedModule}.util",
-            "blended.launcher.config"
+            // we have files in binaryResources and in classes, so we need to merge
+            "blended.launcher.config;-split-package:=merge-first"
           )
         )
         override def moduleDeps = Seq(
