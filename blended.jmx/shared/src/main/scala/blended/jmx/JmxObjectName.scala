@@ -3,7 +3,6 @@ package blended.jmx
 import javax.management.ObjectName
 
 import scala.util.Try
-import blended.util.RichTry._
 import scala.collection.JavaConverters._
 
 class InvalidObjectNameFormatException(name : String) extends Exception(s"Value [${name}] is not a valid object name")
@@ -32,7 +31,7 @@ object JmxObjectName {
         val parts : Array[String] = s.split(":")
 
         if (parts.length == 2) {
-          JmxObjectName(parts(0), parseMap(parts(1))(name).unwrap)
+          JmxObjectName(parts(0), parseMap(parts(1))(name).get)
         } else {
           throw new InvalidObjectNameFormatException(s)
         }

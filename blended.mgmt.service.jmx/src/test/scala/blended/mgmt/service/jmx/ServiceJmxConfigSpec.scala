@@ -36,5 +36,4 @@ class ServiceJmxConfigSpec extends FreeSpec
       svcConfig.query should be(Map("destinationName" -> "SampleIn"))
     }
   }
-
 }

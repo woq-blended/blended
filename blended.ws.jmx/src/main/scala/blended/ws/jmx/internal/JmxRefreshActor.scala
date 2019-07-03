@@ -25,7 +25,7 @@ class JmxRefreshActor(dispatcher : ActorRef, mBeanSrv : BlendedMBeanServerFacade
 
   override def receive: Receive = {
     case Tick =>
-      mBeanSrv.mbeanNames() match {
+      mBeanSrv.mbeanNames(None) match {
         case Success(l) =>
           log.debug(s"Found [${l.size}] MBean names")
           //dispatcher ! NewData(l)
