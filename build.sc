@@ -1,8 +1,10 @@
 import scala.util.Try
 
 import ammonite.runtime.tools.IvyThing
+import mill.api.Loose
 import mill.{PathRef, _}
-import mill.define.Target
+import mill.define.{Sources, Target}
+import mill.scalajslib.ScalaJSModule
 import mill.scalalib._
 import mill.scalalib.publish._
 import os.Path
@@ -82,18 +84,6 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
   }
 
   object Dependencies {
-
-    //    class Group(group: String) {
-    //      def %(artifact: String): GroupArtifact = GroupArtifact(group, artifact, isScala = false)
-    //
-    //      def %%(artifact: String): GroupArtifact = GroupArtifact(group, artifact, isScala = true)
-    //    }
-    //
-    //    case class GroupArtifact(group: String, artifact: String, isScala: Boolean) {
-    //      def %(version: String): Dep = ivy"${group}:${if (isScala) ":" else ""}${artifact}:${version}"
-    //    }
-    //
-    //    implicit def implGroup(group: String): Group = new Group(group)
 
     // Versions
     val activeMqVersion = "5.15.6"
@@ -386,6 +376,18 @@ object blended extends Module {
           Dependencies.logbackClassic
         )
       }
+
+    }
+
+    object js extends ScalaJSModule {
+      override def millSourcePath: Path = blended.security.jvm.millSourcePath / os.up / "js"
+      override def scalaJSVersion = "0.6.26"
+      override def scalaVersion = blended.security.jvm.scalaVersion
+      override def sources: Sources = T.sources(millSourcePath / os.up / "shared" / "src" / "main" / "scala")
+
+      override def ivyDeps = Agg(
+        ivy"com.github.benhutchison::prickle::1.1.14"
+      )
     }
 
     object boot extends BlendedModule {
@@ -505,6 +507,15 @@ object blended extends Module {
             testsupport
           )
         }
+      }
+
+      object js extends ScalaJSModule {
+        override def millSourcePath: Path = blended.updater.config.jvm.millSourcePath / os.up / "js"
+        override def scalaJSVersion = "0.6.26"
+        override def scalaVersion = blended.updater.config.jvm.scalaVersion
+        override def sources: Sources = T.sources(millSourcePath / os.up / "shared" / "src" / "main" / "scala")
+
+        override def moduleDeps: Seq[JavaModule] = Seq(blended.security.js)
       }
     }
   }
