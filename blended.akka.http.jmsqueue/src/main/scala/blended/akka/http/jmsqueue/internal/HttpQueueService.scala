@@ -24,7 +24,8 @@ trait HttpQueueService {
 
   private[this] def propsToHeaders(m : Message) : List[HttpHeader] = m.getPropertyNames().asScala.map { key =>
     val realKey = key.toString()
-    RawHeader(realKey, m.getObjectProperty(realKey).toString())
+    val realValue = Option(m.getObjectProperty(realKey)).map(_.toString()).getOrElse("")
+    RawHeader(realKey, realValue)
   }.toList
 
   private[this] def messageToResponse(result: ReceiveResult) : HttpResponse = {
@@ -77,7 +78,7 @@ trait HttpQueueService {
     try {
       conn = Some(cf.createConnection())
       conn.get.start()
-      sess = Some(conn.get.createSession(false, Session.AUTO_ACKNOWLEDGE))
+      sess = Some(conn.get.createSession(false, Session.CLIENT_ACKNOWLEDGE))
       consumer = Some(sess.get.createConsumer(sess.get.createQueue(queue)))
 
       Option(consumer.get.receive(100)) match {
@@ -86,6 +87,7 @@ trait HttpQueueService {
           ReceiveResult(vendor, provider, queue, Success(None))
         case Some(m) =>
           log.debug(s"Received message from queue [$queue] for [$vendor:$provider] : [$m]")
+          m.acknowledge()
           ReceiveResult(vendor, provider, queue, Success(Some(m)))
       }
 
@@ -120,15 +122,13 @@ trait HttpQueueService {
 
   private[this] def receive(vendor: String, provider: String, queue: String) : HttpResponse = {
 
-    withConnectionFactory[HttpResponse](vendor, provider) { ocf : Option[ConnectionFactory] =>
-      ocf match {
-        case None =>
-          val msg = s"No connection factory found for [$vendor:$provider]"
-          log.warn(msg)
-          messageToResponse(ReceiveResult(vendor, provider, queue, Failure(new Exception(msg))))
-        case Some(cf) =>
-          messageToResponse(performReceive(vendor,provider,queue)(cf))
-      }
+    withConnectionFactory[HttpResponse](vendor, provider) {
+      case None =>
+        val msg = s"No connection factory found for [$vendor:$provider]"
+        log.warn(msg)
+        messageToResponse(ReceiveResult(vendor, provider, queue, Failure(new Exception(msg))))
+      case Some(cf) =>
+        messageToResponse(performReceive(vendor,provider,queue)(cf))
     }
   }
 

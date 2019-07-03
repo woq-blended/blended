@@ -27,6 +27,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.Right
 
+// ToDo: Enhance with Property based test
 class SttpQueueServiceSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
@@ -132,5 +133,30 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       response.contentType should be (defined)
       assert(response.contentType.forall(_.startsWith("application/octet-stream")))
     }
+
+    "allow null values for JMS message properties" in {
+      val msg : String = "Hello Blended"
+      val env : FlowEnvelope = FlowEnvelope(
+        FlowMessage(ByteString(msg))(FlowMessage.props("iamnull" -> null).get)
+      )
+
+      val pSettings : JmsProducerSettings = JmsProducerSettings(
+        log = log,
+        headerCfg = headerCfg,
+        connectionFactory = amqCF,
+        jmsDestination = Some(JmsQueue("Queue1"))
+      )
+
+      sendMessages(pSettings, log, env)
+
+      val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
+      val response = request.send()
+
+      response.code should be (StatusCodes.Ok)
+      response.body should be (Right("Hello Blended"))
+      response.contentType should be (defined)
+      assert(response.contentType.forall(_.startsWith("application/octet-stream")))
+    }
+
   }
 }
