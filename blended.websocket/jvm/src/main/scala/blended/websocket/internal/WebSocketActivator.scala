@@ -3,6 +3,7 @@ package blended.websocket.internal
 import akka.actor.ActorSystem
 import blended.akka.ActorSystemWatching
 import blended.akka.http.{HttpContext, SimpleHttpContext}
+import blended.jmx.BlendedMBeanServerFacade
 import blended.security.login.api.TokenStore
 import domino.DominoActivator
 import blended.util.config.Implicits._
@@ -32,6 +33,13 @@ class WebSocketActivator extends DominoActivator with ActorSystemWatching {
           case ModifiedService(pkg, _) =>
             wss.removeCommandPackage(pkg)
             wss.addCommandPackage(pkg)
+        }
+
+        whenServicePresent[BlendedMBeanServerFacade] { facade =>
+          val jmxPackage : WebSocketCommandPackage = new JmxCommandPackage(jmxFacade = facade)
+          jmxPackage.providesService[WebSocketCommandPackage](
+            "namespace" -> jmxPackage.namespace
+          )
         }
 
         log.info(s"Starting Blended Websocket protocol handler with context [$webContext]")

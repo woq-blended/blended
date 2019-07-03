@@ -39,6 +39,9 @@ object BlendedWebsocketJs extends ProjectFactory {
       coverageEnabled := false
     )
 
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedJmxJs.project
+    )
   }
 }
 
@@ -86,6 +89,7 @@ object BlendedWebsocketJvm extends ProjectFactory {
       BlendedAkka.project,
       BlendedAkkaHttp.project,
       BlendedSecurityLoginApi.project,
+      BlendedJmxJvm.project,
 
       BlendedTestsupport.project % Test,
       BlendedPersistence.project % Test,

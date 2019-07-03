@@ -1,9 +1,16 @@
 package blended.jmx.json
 
+import blended.jmx
 import blended.jmx._
-import prickle.{CompositePickler, PicklerPair}
+import prickle._
 
 object PrickleProtocol {
+
+  implicit val objNamePickler : Pickler[JmxObjectName] = Pickler.materializePickler[JmxObjectName]
+  implicit val objNameUnpickler : Unpickler[JmxObjectName] = Unpickler.materializeUnpickler[jmx.JmxObjectName]
+
+  implicit val infoPickler : Pickler[JmxBeanInfo] = Pickler.materializePickler[JmxBeanInfo]
+  implicit val infoUnpickler : Unpickler[JmxBeanInfo] = Unpickler.materializeUnpickler[JmxBeanInfo]
 
   implicit val attributeValuePickler : PicklerPair[AttributeValue] = CompositePickler[AttributeValue]
     .concreteType[StringAttributeValue]
@@ -21,3 +28,4 @@ object PrickleProtocol {
     .concreteType[TabularAttributeValue]
     .concreteType[CompositeAttributeValue]
 }
+

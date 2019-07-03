@@ -29,12 +29,12 @@ class JsonSpec extends FreeSpec
   "A BlendedWsMessage should" - {
 
     "encode / decode to/from Json correctly (Version)" in {
-      val v: BlendedWsMessages = Version()
+      val v: BlendedWsMessage = Version()
       decodeTest(v)
     }
 
     "encode / decode to/from Json correctly (VersionResponse)" in {
-      val v: BlendedWsMessages = VersionResponse("foo")
+      val v: BlendedWsMessage = VersionResponse("foo")
       decodeTest(v)
     }
   }
@@ -47,11 +47,11 @@ class JsonSpec extends FreeSpec
     }
 
     "encode / decode to/from Json correctly (object)" in {
-      val obj : BlendedWsMessages = VersionResponse("V1")
+      val obj : BlendedWsMessage = VersionResponse("V1")
       val v: WsMessageEncoded = WsMessageEncoded.fromObject(WsContext(namespace = "foo", name = "bar"), obj)
       val v2 : WsMessageEncoded = decodeTest(v)
 
-      v2.decode[BlendedWsMessages].get should be (obj)
+      v2.decode[BlendedWsMessage].get should be (obj)
     }
 
   }
