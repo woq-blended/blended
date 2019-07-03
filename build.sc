@@ -13,10 +13,11 @@ import os.Path
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.0.6`
 import de.tobiasroeser.mill.osgi._
 
+
 trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
   def scalaVersion = "2.12.8"
 
-  def publishVersion = "3.1-SNAPSHOT"
+  def publishVersion = T { blended.version() }
 
   def blendedModule: String
 
@@ -70,12 +71,12 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
 
   import ammonite.runtime.tools.IvyConstructor._
 
-  implicit def coursierToMillDep(dep: coursier.Dependency): Dep = ivy"${dep.module.organization}:${
+  implicit def coursierToMillDep(dep: coursier.Dependency): Dep = ivy"${dep.module.organization.value}:${
     val suffix = s"_${IvyThing.scalaBinaryVersion}"
-    if (dep.module.name.endsWith(suffix)) {
-      ":" + dep.module.name.substring(0, dep.module.name.length - suffix.length())
+    if (dep.module.name.value.endsWith(suffix)) {
+      ":" + dep.module.name.value.substring(0, dep.module.name.value.length - suffix.length())
     } else {
-      dep.module.name
+      dep.module.name.value
     }
   }:${dep.version}"
 
@@ -254,6 +255,9 @@ trait BlendedJvmModule extends BlendedModule {
 }
 
 object blended extends Module {
+
+  def basePath = millSourcePath / os.up
+  def version = T.input { os.read(basePath / "version.txt").trim() }
 
   object container extends Module {
     object context extends Module {
