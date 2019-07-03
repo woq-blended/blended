@@ -101,8 +101,8 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
     val akkaHttpVersion = "10.1.7"
     val camelVersion = "2.19.5"
     val dominoVersion = "1.1.3"
-    val jettyVersion = "9.4.8.v20171121"
-    val jolokiaVersion = "1.5.0"
+    val jettyVersion = "9.4.18.v20190429"
+    val jolokiaVersion = "1.6.1"
     val microJsonVersion = "1.4"
     val parboiledVersion = "1.1.6"
     val prickleVersion = "1.1.14"
@@ -115,7 +115,7 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
 
     protected def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
 
-    protected def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
+    protected def akkaHttpModule(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
 
     val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
     val activeMqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
@@ -123,11 +123,11 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
     val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
     val akkaActor = akka("actor")
     val akkaCamel = akka("camel")
-    val akkaHttp = akka_Http("http")
-    val akkaHttpCore = akka_Http("http-core")
-    val akkaHttpTestkit = akka_Http("http-testkit")
+    val akkaHttp = akkaHttpModule("http")
+    val akkaHttpCore = akkaHttpModule("http-core")
+    val akkaHttpTestkit = akkaHttpModule("http-testkit")
     val akkaOsgi = akka("osgi")
-    val akkaParsing = akka_Http("parsing")
+    val akkaParsing = akkaHttpModule("parsing")
     val akkaPersistence = akka("persistence")
     val akkaStream = akka("stream")
     val akkaStreamTestkit = akka("stream-testkit")
@@ -232,8 +232,7 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
     val travesty = "net.mikolak" %% "travesty" % s"0.9.1_2.5.17"
 
     val typesafeConfig = "com.typesafe" % "config" % "1.3.3"
-    // FIXME: Rename to typesafeSslConfigCore
-    val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.3.6"
+    val typesafeSslConfigCore = "com.typesafe" %% "ssl-config-core" % "0.3.6"
 
   }
 
@@ -442,7 +441,8 @@ object blended extends Module {
       Dependencies.camelCore,
       Dependencies.camelJms,
       Dependencies.scalatest,
-      Dependencies.junit
+      Dependencies.junit,
+      Dependencies.commonsIo
     )
     override def moduleDeps = Seq(
       util,
