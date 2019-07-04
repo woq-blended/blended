@@ -35,6 +35,8 @@ object WsMessageEncoded {
       context = context, content = b64
     )
   }
+
+  def fromCommand(namespace : String, name: String) : WsMessageEncoded = fromContext(WsContext(namespace, name))
 }
 
 case class WsMessageEncoded(
