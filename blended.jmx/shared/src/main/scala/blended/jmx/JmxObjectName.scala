@@ -1,9 +1,6 @@
 package blended.jmx
 
-import javax.management.ObjectName
-
 import scala.util.Try
-import scala.collection.JavaConverters._
 
 class InvalidObjectNameFormatException(name : String) extends Exception(s"Value [${name}] is not a valid object name")
 
@@ -37,16 +34,6 @@ object JmxObjectName {
         }
     }
   }
-
-  def fromObjName(objName : ObjectName) : JmxObjectName = {
-
-    val keys : Seq[String] = objName.getKeyPropertyList().keys.asScala.toSeq
-
-    JmxObjectName(
-      domain = objName.getDomain(),
-      properties = (for (k <- keys) yield (k, objName.getKeyProperty(k))).toMap
-    )
-  }
 }
 
 case class JmxObjectName (
@@ -55,8 +42,7 @@ case class JmxObjectName (
 ) {
 
   val sortedProps : List[String] = properties.toList.sorted.map{ case (k,v) => s"$k=$v" }
-  val objectName : ObjectName = new ObjectName(s"$domain:${sortedProps.mkString(",")}")
-  val objectNamePattern : ObjectName = new ObjectName(s"$domain:${sortedProps.mkString(",")},*")
+  val objectName : String = s"$domain:${sortedProps.mkString(",")}"
 
   override val toString: String = {
     s"${getClass().getSimpleName()}($objectName)"

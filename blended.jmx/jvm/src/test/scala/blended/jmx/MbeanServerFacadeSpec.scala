@@ -5,6 +5,7 @@ import java.lang.management.ManagementFactory
 import blended.jmx.internal.BlendedMBeanServerFacadeImpl
 import blended.util.RichTry._
 import org.scalatest.{FreeSpec, Matchers}
+import JmxObjectNameCompanion._
 
 class MbeanServerFacadeSpec extends FreeSpec
   with Matchers {
@@ -27,7 +28,7 @@ class MbeanServerFacadeSpec extends FreeSpec
         mbf.mbeanNames(Some(objName)).unwrap
 
       names should have size 1
-      JmxObjectName.fromObjName(names.head.objectName) should be (objName)
+      JmxObjectNameCompanion.createJmxObjectName(names.head).unwrap should be (objName)
     }
 
     "allow to query for a group of names" in {
@@ -37,7 +38,7 @@ class MbeanServerFacadeSpec extends FreeSpec
 
       assert(names.size > 1)
       assert(names.forall { n =>
-        objName.isAncestor(JmxObjectName.fromObjName(n.objectName))
+        objName.isAncestor(JmxObjectNameCompanion.createJmxObjectName(n).unwrap)
       })
 
     }

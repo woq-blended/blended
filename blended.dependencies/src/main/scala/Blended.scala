@@ -54,7 +54,6 @@ trait Blended {
   val mgmtMock = blended("blended.mgmt.mock")
   val mgmtRest = blended("blended.mgmt.rest")
   val mgmtServiceJmx = blended("blended.mgmt.service.jmx")
-  val mgmtWs = blended("blended.mgmt.ws")
   val persistence = blended("blended.persistence")
   val persistenceH2 = blended("blended.persistence.h2")
   val prickle = blended("blended.prickle")
@@ -84,4 +83,5 @@ trait Blended {
   val updaterTools = blended("blended.updater.tools")
   val util = blended("blended.util")
   val utilLogging = blended("blended.util.logging")
+  val webSocket = blended("blended.websocket")
 }

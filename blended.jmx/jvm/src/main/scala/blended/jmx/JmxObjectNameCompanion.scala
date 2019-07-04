@@ -6,7 +6,14 @@ import scala.collection.mutable
 import scala.util.Try
 
 class InvalidObjectNameException extends Exception("Expected a concrete object name, the given value is a pattern")
+
+
 object JmxObjectNameCompanion {
+
+  implicit def toObjectName(n : JmxObjectName) : ObjectName = new ObjectName(n.objectName)
+
+  def toPattern(name : JmxObjectName) : ObjectName =
+    new ObjectName(s"${name.domain}:${name.sortedProps.mkString(",")},*")
 
   def createJmxObjectName(objName : ObjectName) : Try[JmxObjectName] = Try {
 
