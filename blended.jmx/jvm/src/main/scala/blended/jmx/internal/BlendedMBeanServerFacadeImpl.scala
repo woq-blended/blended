@@ -20,16 +20,17 @@ class BlendedMBeanServerFacadeImpl(svr : MBeanServer) extends BlendedMBeanServer
   }
 
   def mbeanInfo(objName : JmxObjectName) : Try[JmxBeanInfo] = Try {
-
     val info : MBeanInfo = svr.getMBeanInfo(objName)
 
-    val readableAttrs : Map[String, MBeanAttributeInfo] = info.getAttributes().filter(_.isReadable()).map(a => a.getName() -> a).toMap
+    val readableAttrs : Map[String, MBeanAttributeInfo] =
+      info.getAttributes().filter(_.isReadable()).map(a => a.getName() -> a).toMap
+
     val attrNames : Array[String] = readableAttrs.values.map(_.getName()).toArray
     val attrs : List[Attribute] = svr.getAttributes(objName, attrNames).asList().asScala.toList
 
     val attributes : Map[String, AttributeValue] = attrs.map { a =>
       val v = a.getValue()
-      (a. getName(), AttributeValue.lift(v).unwrap)
+      (a. getName(), JmxAttributeCompanion.lift(v).unwrap)
     }.toMap
 
     JmxBeanInfo(objName, CompositeAttributeValue(attributes))

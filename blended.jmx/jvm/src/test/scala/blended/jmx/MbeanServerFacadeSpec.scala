@@ -33,8 +33,7 @@ class MbeanServerFacadeSpec extends FreeSpec
 
     "allow to query for a group of names" in {
       val objName : JmxObjectName = JmxObjectName("java.lang:type=MemoryPool").unwrap
-      val names : List[JmxObjectName] =
-        mbf.mbeanNames(Some(objName)).unwrap
+      val names : List[JmxObjectName] = mbf.mbeanNames(Some(objName)).unwrap
 
       assert(names.size > 1)
       assert(names.forall { n =>
