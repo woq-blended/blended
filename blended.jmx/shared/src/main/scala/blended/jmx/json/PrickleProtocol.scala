@@ -11,6 +11,9 @@ object PrickleProtocol {
   implicit val objNamePickler : Pickler[JmxObjectName] = Pickler.materializePickler[JmxObjectName]
   implicit val objectNameUnpickler : Unpickler[JmxObjectName] = Unpickler.materializeUnpickler[JmxObjectName]
 
+  implicit val beanInfoPickler : Pickler[JmxBeanInfo] = Pickler.materializePickler[JmxBeanInfo]
+  implicit val beanInfoUnpickler : Unpickler[JmxBeanInfo] = Unpickler.materializeUnpickler[JmxBeanInfo]
+
   implicit val bigIntPickler : Pickler[BigInt] = new Pickler[BigInt] {
     override def pickle[P](obj: BigInt, state: PickleState)(implicit config: PConfig[P]): P = {
       config.makeString(obj.toString())

@@ -7,7 +7,7 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.{NotUsed, actor}
 import blended.security.login.api.Token
 import blended.util.logging.Logger
-import blended.websocket.{ClientInfo, WebSocketCommandPackage, WsContext, WsMessageEncoded, WebSocketCommandHandler}
+import blended.websocket._
 import prickle.Unpickle
 
 import scala.util.{Failure, Success}
