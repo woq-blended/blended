@@ -7,6 +7,10 @@ import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 object RootSettings {
 
   def apply(blendedDocs : Project) : Seq[Setting[_]] = Seq(
+    publishArtifact := false,
+    publish := {},
+    publishLocal := {},
+
     Test / parallelExecution := false,
 
     jbakeVersion := "2.6.4",
