@@ -4,6 +4,7 @@ import akka.http.scaladsl.model.ws.TextMessage
 import akka.testkit.TestProbe
 import blended.websocket.json.PrickleProtocol._
 import blended.websocket.{BlendedJmxMessage, JmxSubscribe, JmxUpdate, WsContext, WsMessageEncoded}
+import scala.concurrent.duration._
 
 class JmxCommandPackageSpec extends AbstractWebSocketSpec {
 
@@ -27,8 +28,9 @@ class JmxCommandPackageSpec extends AbstractWebSocketSpec {
               upd.names.nonEmpty && upd.beans.isEmpty
             }
           }
-        }
 
+          probe.expectNoMessage(3.seconds)
+        }
       }
     }
   }

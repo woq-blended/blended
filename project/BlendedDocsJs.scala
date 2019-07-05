@@ -22,7 +22,8 @@ object BlendedDocsJs extends ProjectFactory {
       ScalaJSBundlerPlugin
     )
 
-    override def settings : Seq[sbt.Setting[_]] = Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / fork := false,
       Compile / fastOptJS / webpackConfigFile := Some(baseDirectory.value / "docs.webpack.config.js"),
       Compile / fastOptJS / webpackMonitoredDirectories += baseDirectory.value / "scss",
       Compile / fastOptJS / webpackMonitoredFiles / includeFilter := "*.scss",
