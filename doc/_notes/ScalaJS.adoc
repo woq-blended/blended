@@ -1,3 +1,0 @@
-https://ochrons.github.io/scalajs-spa-tutorial/en/index.html[ScalaJS Single Page applications]
-
-http://www.lihaoyi.com/hands-on-scala-js/#Hands-onScala.js[Hands on ScalaJS]

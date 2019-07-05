@@ -19,6 +19,7 @@ status=published
 == Unit Testing (AG)
 == Integration Testing (AG)
 == Management
+=== Websocket protocol (AG)
 === Rest API (TR)
 === UI (AG)
 = Developing Blended (internal)
