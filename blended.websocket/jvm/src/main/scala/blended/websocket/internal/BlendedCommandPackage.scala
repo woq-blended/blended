@@ -37,7 +37,9 @@ class BlendedCommandPackage(
       case _ : Version => t =>
         val ctxt : WsContext = WsContext(namespace = namespace, name = name)
         // This is a side effect, which will push the version info to the client
-        emit[BlendedWsMessage](VersionResponse(BlendedCommandPackage.version), t, ctxt)(system)
+        emit[BlendedWsMessage](
+          msg = VersionResponse(BlendedCommandPackage.version), token = t, context = ctxt, pickler = wsMessagesPicklerPair.pickler
+        )(system)
         ctxt
     }
   }

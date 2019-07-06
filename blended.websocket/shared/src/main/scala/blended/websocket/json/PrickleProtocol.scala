@@ -22,7 +22,7 @@ object PrickleProtocol {
   implicit val jmxUpdatePickler : Pickler[JmxUpdate] = Pickler.materializePickler[JmxUpdate]
   implicit val JmxUpdateUnpickler : Unpickler[JmxUpdate] = Unpickler.materializeUnpickler[JmxUpdate]
 
-  implicit val jmxMessagesPicklerPair : PicklerPair[BlendedJmxMessage] = CompositePickler[BlendedJmxMessage]
+  implicit val jmxMessagePicklerPair : PicklerPair[BlendedJmxMessage] = CompositePickler[BlendedJmxMessage]
     .concreteType[JmxSubscribe]
     .concreteType[JmxUnsubscribe]
     .concreteType[JmxUpdate]

@@ -32,6 +32,7 @@ class WebSocketSubscriptionActorSpec extends AbstractWebSocketSpec {
             context = WsContext("jmx", "subscribe"),
             token = token,
             interval = if (sub.intervalMS <= 0) None else Some(sub.intervalMS.millis),
+            pickler = jmxMessagePicklerPair.pickler,
             cmd = sub.asInstanceOf[BlendedJmxMessage],
             update = {
               case s @ JmxSubscribe(objName, _) => JmxUpdate(mbf.allMbeanNames().unwrap, Seq.empty)

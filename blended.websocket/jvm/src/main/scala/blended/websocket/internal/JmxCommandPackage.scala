@@ -20,7 +20,7 @@ class JmxCommandPackage(
 
   override type T = BlendedJmxMessage
 
-  override def unpickler: Unpickler[BlendedJmxMessage] = jmxMessagesPicklerPair.unpickler
+  override def unpickler: Unpickler[BlendedJmxMessage] = jmxMessagePicklerPair.unpickler
 
   override def commands: Seq[WebSocketCommandHandler[BlendedJmxMessage]] = Seq(
     new SubscriptionHandler(this)
@@ -40,7 +40,10 @@ class JmxCommandPackage(
 
         jmxFacade.mbeanNames(None) match {
           case Success(names) =>
-            emit[BlendedJmxMessage](JmxUpdate(names = names, beans = Seq.empty), t, ctxt)(system)
+            emit[BlendedJmxMessage](
+              msg = JmxUpdate(names = names, beans = Seq.empty),
+              token = t, context = ctxt, pickler = jmxMessagePicklerPair.pickler
+            )(system)
           case Failure(e) =>
             log.warn(e)(s"Error getting MBean names : [${e.getMessage()}]")
         }

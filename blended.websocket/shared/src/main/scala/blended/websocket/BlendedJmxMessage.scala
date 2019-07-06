@@ -2,7 +2,7 @@ package blended.websocket
 
 import blended.jmx.{JmxBeanInfo, JmxObjectName}
 
-sealed trait  BlendedJmxMessage
+sealed trait  BlendedJmxMessage extends WithKey
 
 /**
   * WebSocket clients use this message to subscribe to Jmx updates.
@@ -32,12 +32,16 @@ sealed trait  BlendedJmxMessage
 case class JmxSubscribe(
   objName: Option[JmxObjectName],
   intervalMS: Long,
-) extends BlendedJmxMessage
+) extends BlendedJmxMessage {
+  override def key: String = objName.toString()
+}
 
 /**
   * WebSocket clients will use this message to cancel their Jmx subscription.
   */
-case class JmxUnsubscribe() extends BlendedJmxMessage
+case class JmxUnsubscribe(sub : JmxSubscribe) extends BlendedJmxMessage {
+  override def key: String = sub.key
+}
 
 /**
   * The command handler will send JmxUpdated to it's subscribers.

@@ -2,14 +2,14 @@ package blended.websocket
 
 import java.util.Base64
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.StatusCodes
 import blended.security.login.api.Token
 import blended.util.logging.Logger
 import blended.websocket.internal.CommandHandlerManager.WsClientUpdate
 import prickle._
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 /**
   * A web socket command handler.
@@ -90,13 +90,14 @@ object WsUpdateEmitter {
   def emit[T](
     msg : T,
     token : Token,
-    result: WsContext
-  )(system : ActorSystem)(implicit p : Pickler[T]) : Unit = {
+    context: WsContext,
+    pickler : Pickler[T]
+  )(system : ActorSystem) : Unit = {
 
     log.debug(s"Emitting [$msg] to user [${token.user}]")
     val m : WsMessageEncoded = WsMessageEncoded.fromObject[T](
-      context = result, t = msg
-    )
+      context = context, t = msg
+    )(pickler)
 
     system.eventStream.publish(WsClientUpdate(
       msg = m,
