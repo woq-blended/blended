@@ -7,6 +7,7 @@ import blended.util.logging.Logger
 import blended.websocket.{BlendedJmxMessage, JmxSubscribe, JmxUpdate, WebSocketCommandHandler, WebSocketCommandPackage, WsContext}
 import blended.websocket.json.PrickleProtocol._
 import prickle.Unpickler
+import blended.websocket.WsUpdateEmitter.emit
 
 import scala.util.{Failure, Success}
 
@@ -39,7 +40,7 @@ class JmxCommandPackage(
 
         jmxFacade.mbeanNames(None) match {
           case Success(names) =>
-            emit(JmxUpdate(names = names, beans = Seq.empty), t, ctxt)
+            emit[BlendedJmxMessage](JmxUpdate(names = names, beans = Seq.empty), t, ctxt)(system)
           case Failure(e) =>
             log.warn(e)(s"Error getting MBean names : [${e.getMessage()}]")
         }

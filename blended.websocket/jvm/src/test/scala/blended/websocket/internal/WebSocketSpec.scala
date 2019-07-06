@@ -68,9 +68,9 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
        val probe: TestProbe = TestProbe()
 
-       withWebsocketConnection("bg_test", "secret", probe.ref) { actor =>
+       withWebsocketConnection("bg_test", "secret", probe.ref) { actor => _ =>
          actor ! TextMessage.Strict("Hello Blended")
-         fishForWsUpdate[Unit](probe, AkkaStatusCodes.BadRequest){ _ => true}
+         fishForWsUpdate[Unit](1.second)(probe, AkkaStatusCodes.BadRequest){ _ => true}
        }
      }
    }
@@ -80,12 +80,12 @@ class WebSocketSpec extends AbstractWebSocketSpec {
      withWebSocketServer {
 
        val probe: TestProbe = TestProbe()
-       withWebsocketConnection("bg_test", "secret", probe.ref) { actor =>
+       withWebsocketConnection("bg_test", "secret", probe.ref) { actor => _ =>
          actor ! TextMessage.Strict(WsMessageEncoded.fromContext(WsContext(namespace = "foo", name = "bar")).json)
-         fishForWsUpdate[Unit](probe, AkkaStatusCodes.NotFound){ _ => true}
+         fishForWsUpdate[Unit](1.second)(probe, AkkaStatusCodes.NotFound){ _ => true}
 
          actor ! TextMessage.Strict(WsMessageEncoded.fromContext(WsContext(namespace = "blended", name = "doesNotExist")).json)
-         fishForWsUpdate[Unit](probe, AkkaStatusCodes.NotFound){ _ => true}
+         fishForWsUpdate[Unit](1.second)(probe, AkkaStatusCodes.NotFound){ _ => true}
        }
       }
     }
@@ -93,21 +93,21 @@ class WebSocketSpec extends AbstractWebSocketSpec {
     "respond to a valid Web Socket request" in {
       withWebSocketServer {
 
-          val probe: TestProbe = TestProbe()
+        val probe: TestProbe = TestProbe()
 
-          withWebsocketConnection("bg_test", "secret", probe.ref) { actor =>
-            val blendedCmd : BlendedWsMessage = Version()
+        withWebsocketConnection("bg_test", "secret", probe.ref) { actor => _ =>
+          val blendedCmd : BlendedWsMessage = Version()
 
-            val msg = WsMessageEncoded.fromObject(WsContext(namespace = "blended", name = "version"), blendedCmd)
-            actor ! TextMessage.Strict(msg.json)
+          val msg = WsMessageEncoded.fromObject(WsContext(namespace = "blended", name = "version"), blendedCmd)
+          actor ! TextMessage.Strict(msg.json)
 
-            fishForWsUpdate[Unit](probe) { _ => true }
+          fishForWsUpdate[Unit](1.second)(probe) { _ => true }
 
-            fishForWsUpdate[BlendedWsMessage](probe) { wsMsg =>
-              wsMsg.isInstanceOf[VersionResponse] &&
-              wsMsg.asInstanceOf[VersionResponse].v.equals(BlendedCommandPackage.version)
-            }
+          fishForWsUpdate[BlendedWsMessage](1.second)(probe) { wsMsg =>
+            wsMsg.isInstanceOf[VersionResponse] &&
+            wsMsg.asInstanceOf[VersionResponse].v.equals(BlendedCommandPackage.version)
           }
+        }
       }
     }
   }

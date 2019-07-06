@@ -7,6 +7,7 @@ import blended.security.login.api.Token
 import blended.websocket.json.PrickleProtocol._
 import blended.websocket._
 import prickle._
+import WsUpdateEmitter.emit
 
 object BlendedCommandPackage {
 
@@ -36,7 +37,7 @@ class BlendedCommandPackage(
       case _ : Version => t =>
         val ctxt : WsContext = WsContext(namespace = namespace, name = name)
         // This is a side effect, which will push the version info to the client
-        emit(VersionResponse(BlendedCommandPackage.version), t, ctxt)
+        emit[BlendedWsMessage](VersionResponse(BlendedCommandPackage.version), t, ctxt)(system)
         ctxt
     }
   }

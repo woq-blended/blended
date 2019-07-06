@@ -81,14 +81,19 @@ trait WebSocketCommandHandler[T] {
   }
 
   def doHandleCommand : PartialFunction[T,  Token => WsContext]
+}
 
-  def emit(
+object WsUpdateEmitter {
+
+  private val log : Logger = Logger[WsUpdateEmitter.type]
+
+  def emit[T](
     msg : T,
     token : Token,
     result: WsContext
-  )(implicit p : Pickler[T], system: ActorSystem) : Unit = {
+  )(system : ActorSystem)(implicit p : Pickler[T]) : Unit = {
 
-    log.debug(s"Emitting [$msg]")
+    log.debug(s"Emitting [$msg] to user [${token.user}]")
     val m : WsMessageEncoded = WsMessageEncoded.fromObject[T](
       context = result, t = msg
     )

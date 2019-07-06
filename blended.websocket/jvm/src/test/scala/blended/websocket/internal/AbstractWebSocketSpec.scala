@@ -81,11 +81,11 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
     user: String,
     pwd: String,
     probe: ActorRef
-  )(f : ActorRef => T) : T = {
+  )(f : ActorRef => Token => T) : T = {
 
-    val (switch, actor) = wsConnect(user, pwd, probe)
+    val (switch, actor, token) = wsConnect(user, pwd, probe)
     try {
-      f(actor)
+      f(actor)(token)
     } finally {
       switch.shutdown()
     }
@@ -132,8 +132,8 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
 
   def wsConnect(user : String, password : String, wsListener : ActorRef)(
    implicit system : ActorSystem, materializer : Materializer
-  ) : (KillSwitch, ActorRef) = {
-   val token = login(user, password).unwrap
+  ) : (KillSwitch, ActorRef, Token) = {
+   val token : Token = login(user, password).unwrap
 
    // We need to set up a kill switch, so that the client can be closed
    val ((actor, resp), switch) = source
@@ -146,14 +146,14 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
    val connected = Await.result(resp, 3.seconds)
    connected.response.status should be(AkkaStatusCodes.SwitchingProtocols)
 
-   (switch, actor)
+   (switch, actor, token)
   }
 
-  def fishForWsUpdate[T](
+  def fishForWsUpdate[T](t : FiniteDuration)(
     probe : TestProbe,
     status : StatusCode = AkkaStatusCodes.OK
   )(f : T => Boolean)(implicit up : Unpickler[T]) : Any = {
-    probe.fishForMessage(3.seconds) {
+    probe.fishForMessage(t) {
       case m: TextMessage.Strict =>
         val enc: WsMessageEncoded = Unpickle[WsMessageEncoded].fromString(m.getStrictText).unwrap
         enc.context.status == status.intValue() && f(enc.decode[T].unwrap)
