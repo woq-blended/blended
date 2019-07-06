@@ -10,8 +10,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest, WebSocketUpgradeResponse}
 import akka.http.scaladsl.model.{StatusCode, StatusCodes => AkkaStatusCodes}
 import akka.stream._
-import akka.stream.javadsl.Sink
-import akka.stream.scaladsl.{Flow, Keep, Source}
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.testkit.TestProbe
 import akka.util.ByteString
 import akka.{Done, NotUsed}
@@ -27,6 +26,7 @@ import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.RichTry._
+import blended.util.logging.Logger
 import blended.websocket.json.PrickleProtocol._
 import blended.websocket._
 import com.softwaremill.sttp._
@@ -45,6 +45,7 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
   with Matchers
   with PojoSrTestHelper {
 
+  private val log : Logger = Logger(getClass().getName())
   protected implicit val timeout : FiniteDuration = 3.seconds
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
@@ -153,10 +154,19 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
     probe : TestProbe,
     status : StatusCode = AkkaStatusCodes.OK
   )(f : T => Boolean)(implicit up : Unpickler[T]) : Any = {
-    probe.fishForMessage(t) {
-      case m: TextMessage.Strict =>
-        val enc: WsMessageEncoded = Unpickle[WsMessageEncoded].fromString(m.getStrictText).unwrap
-        enc.context.status == status.intValue() && f(enc.decode[T].unwrap)
+    val msg : TextMessage = probe.expectMsgType[TextMessage](t)
+
+    val s : String = msg match {
+      case strict : TextMessage.Strict => strict.getStrictText
+      case streamed : TextMessage.Streamed =>
+        Await.result(streamed.textStream.runWith(Sink.seq[String]), 3.seconds).head
     }
+
+    log.debug(s"Received WebSocket message : [${s}]")
+    val enc: WsMessageEncoded = Unpickle[WsMessageEncoded].fromString(s).unwrap
+    assert(enc.context.status == status.intValue())
+    val obj : T = enc.decode[T].unwrap
+    log.debug(s"Got wrapped object [$obj]")
+    assert(f(obj))
   }
 }

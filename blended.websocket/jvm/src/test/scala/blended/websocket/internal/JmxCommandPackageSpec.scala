@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.ws.TextMessage
 import akka.testkit.TestProbe
 import blended.util.logging.Logger
 import blended.websocket.json.PrickleProtocol._
-import blended.websocket.{BlendedJmxMessage, JmxSubscribe, JmxUpdate, WsContext, WsMessageEncoded}
+import blended.websocket._
 
 import scala.concurrent.duration._
 
@@ -44,7 +44,7 @@ class JmxCommandPackageSpec extends AbstractWebSocketSpec {
 
     "Handle subscriptions for the JMX tree only (no regular updates)" in {
 
-      withjmxSubscription(JmxSubscribe(objName = None, intervalMS = 0L)) { probe =>
+      withjmxSubscription(JmxSubscribe(None, intervalMS = 0L)) { probe =>
         fishForWsUpdate[BlendedJmxMessage](probeTime)(probe)(checkUpdatedNoBeans)
         probe.expectNoMessage(3.seconds)
       }
@@ -52,7 +52,7 @@ class JmxCommandPackageSpec extends AbstractWebSocketSpec {
 
     "Handle subscriptions for the JMX tree only (with regular updates)" in {
 
-      withjmxSubscription(JmxSubscribe(objName = None, intervalMS = interval.toMillis)) { probe =>
+      withjmxSubscription(JmxSubscribe(None, intervalMS = interval.toMillis)) { probe =>
 
         fishForWsUpdate[BlendedJmxMessage](probeTime)(probe)(checkUpdatedNoBeans)
         fishForWsUpdate[BlendedJmxMessage](interval * 2)(probe)(checkUpdatedNoBeans)

@@ -33,7 +33,7 @@ case class JmxSubscribe(
   objName: Option[JmxObjectName],
   intervalMS: Long,
 ) extends BlendedJmxMessage {
-  override def key: String = objName.toString()
+  override def key: String = objName.map(_.objectName).getOrElse("None")
 }
 
 /**

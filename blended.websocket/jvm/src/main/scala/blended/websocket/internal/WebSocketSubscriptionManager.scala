@@ -9,19 +9,23 @@ import prickle.Pickler
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
+import scala.util.{Failure, Success, Try}
 
-case class WebsocketSubscription[T <: WithKey](
-  context : WsContext,
-  token : Token,
-  interval : Option[FiniteDuration],
-  pickler : Pickler[T],
-  cmd : T,
-  update : PartialFunction[T,T]
-)
+trait WebSocketSubscription {
 
-case class NewSubscription[T <: WithKey](sub : WebsocketSubscription[T])
-case class RemoveSubscription[T <: WithKey](sub : WebsocketSubscription[T])
+  type T <: WithKey
 
+  def context : WsContext
+  def token : Token
+  def interval : Option[FiniteDuration]
+  def pickler : Pickler[T]
+  def cmd : T
+  def update : PartialFunction[T,Try[T]]
+}
+
+sealed trait SubscriptionMessage
+case class NewSubscription(sub : WebSocketSubscription) extends SubscriptionMessage
+case class RemoveSubscription(sub : WebSocketSubscription) extends SubscriptionMessage
 /**
   * Manage all subscriptions for currently connected web socket clients.
   */
@@ -29,14 +33,16 @@ class WebSocketSubscriptionManager extends Actor {
 
   private val log : Logger = Logger[WebSocketSubscriptionManager]
 
-  private val subKey : WebsocketSubscription[_] => String =  { s =>
-    val userKey : String = s.asInstanceOf[WithKey].key
-    s"${s.context.namespace}:${s.context.name}:${userKey}:${s.token.user.getName()}"
+  private val subKey : WebSocketSubscription => String =  { s =>
+    s"${s.context.namespace}:${s.context.name}:${s.cmd.key}:${s.token.user.getName()}"
   }
 
   override def preStart(): Unit = {
     super.preStart()
+    context.system.eventStream.subscribe(self, classOf[NewSubscription])
+    context.system.eventStream.subscribe(self, classOf[RemoveSubscription])
     context.become(handling(Map.empty))
+    log.info(s"Started WebSocket subscription manager")
   }
 
   override def receive: Receive = Actor.emptyBehavior
@@ -74,11 +80,11 @@ class WebSocketSubscriptionManager extends Actor {
 
 object WebSocketSubscriptionActor {
 
-  def props[T <: WithKey](sub : WebsocketSubscription[T]) : Props =
-    Props(new WebSocketSubscriptionActor[T](sub))
+  def props[T <: WithKey](sub : WebSocketSubscription) : Props =
+    Props(new WebSocketSubscriptionActor(sub))
 }
 
-class WebSocketSubscriptionActor[T <: WithKey](subscription : WebsocketSubscription[T]) extends Actor {
+class WebSocketSubscriptionActor(subscription : WebSocketSubscription) extends Actor {
 
   private val log : Logger = Logger[WebSocketSubscriptionActor.type]
   private implicit val eCtxt : ExecutionContext = context.system.dispatcher
@@ -100,11 +106,16 @@ class WebSocketSubscriptionActor[T <: WithKey](subscription : WebsocketSubscript
       val user : String = subscription.token.user.getName()
       log.debug(s"Evaluating subscription command [${subscription.cmd}] for user [$user]")
       subscription.update.lift(subscription.cmd) match {
-        case Some(upd) =>
-          log.debug(s"Got subscription update for user [$user] : [$upd]")
-          emit[T](
-            msg = upd, token = subscription.token, context = subscription.context, pickler = subscription.pickler
-          )(context.system)
+        case Some(o) =>
+          o match {
+            case Success(upd) =>
+              log.debug(s"Got subscription update for user [$user] : [$upd]")
+              emit(
+                msg = upd, token = subscription.token, context = subscription.context, pickler = subscription.pickler
+              )(context.system)
+            case Failure(e) =>
+              log.error(s"Error getting subscription update : [${e.getMessage()}]")
+          }
           subscription.interval match {
             case None => context.stop(self)
             case Some(t) => context.system.scheduler.scheduleOnce(t, self, Tick)

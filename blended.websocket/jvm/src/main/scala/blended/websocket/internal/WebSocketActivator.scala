@@ -1,6 +1,6 @@
 package blended.websocket.internal
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem, Props}
 import blended.akka.ActorSystemWatching
 import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.jmx.BlendedMBeanServerFacade
@@ -49,6 +49,12 @@ class WebSocketActivator extends DominoActivator with ActorSystemWatching {
         blendedHandler.providesService[WebSocketCommandPackage](
           "namespace" -> blendedHandler.namespace
         )
+      }
+
+      val actor : ActorRef = system.actorOf(Props[WebSocketSubscriptionManager])
+
+      onStop{
+        system.stop(actor)
       }
     }
   }

@@ -54,7 +54,8 @@ object BlendedWebsocketJvm extends ProjectFactory {
 
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / testlogLogPackages := Map(
-        "blended.websocket" -> "DEBUG"
+        "blended.websocket" -> "DEBUG",
+        "blended.jmx" -> "DEBUG"
       ),
       Test / testlogDefaultLevel := "INFO",
       Compile / filterProperties ++= Map("projectVersion" -> version.value),

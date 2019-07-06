@@ -67,7 +67,6 @@ class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
       .via(cmdHandler.newClient(info))
       .collect {
         case enc : WsMessageEncoded =>
-          log.debug((s"Sending to client [$enc]"))
           TextMessage.Strict(enc.json)
       }
       .via(reportErrorsFlow)

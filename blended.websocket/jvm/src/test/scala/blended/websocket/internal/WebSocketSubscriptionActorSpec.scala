@@ -4,13 +4,16 @@ import java.lang.management.ManagementFactory
 
 import akka.actor.PoisonPill
 import akka.testkit.TestProbe
-import blended.jmx.BlendedMBeanServerFacade
 import blended.jmx.internal.BlendedMBeanServerFacadeImpl
+import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName}
+import blended.security.login.api.Token
 import blended.util.RichTry._
 import blended.websocket._
 import blended.websocket.json.PrickleProtocol._
+import prickle.Pickler
 
 import scala.concurrent.duration._
+import scala.util.Try
 
 class WebSocketSubscriptionActorSpec extends AbstractWebSocketSpec {
 
@@ -27,22 +30,23 @@ class WebSocketSubscriptionActorSpec extends AbstractWebSocketSpec {
 
         val wsProbe : TestProbe = TestProbe()
 
-        withWebsocketConnection("de_test", "secret", wsProbe.ref) { _ => token =>
-          val subscription : WebsocketSubscription[BlendedJmxMessage] = WebsocketSubscription[BlendedJmxMessage](
-            context = WsContext("jmx", "subscribe"),
-            token = token,
-            interval = if (sub.intervalMS <= 0) None else Some(sub.intervalMS.millis),
-            pickler = jmxMessagePicklerPair.pickler,
-            cmd = sub.asInstanceOf[BlendedJmxMessage],
-            update = {
-              case s @ JmxSubscribe(objName, _) => JmxUpdate(mbf.allMbeanNames().unwrap, Seq.empty)
-            }
-          )
+        withWebsocketConnection("de_test", "secret", wsProbe.ref) { _ => t =>
+          val subscription : WebSocketSubscription = new WebSocketSubscription {
+
+            override type T = BlendedJmxMessage
+
+            override val context : WsContext = WsContext("jmx", "subscribe")
+            override val token : Token = t
+            override val interval : Option[FiniteDuration] = if (sub.intervalMS <= 0) None else Some(sub.intervalMS.millis)
+            override val pickler : Pickler[BlendedJmxMessage] = jmxMessagePicklerPair.pickler
+            override val cmd : BlendedJmxMessage = sub.asInstanceOf[BlendedJmxMessage]
+            override val update : PartialFunction[T,Try[T]] = JmxCommandPackage.jmxUpdate(mbf)
+          }
 
           val s = system.actorOf(WebSocketSubscriptionActor.props[BlendedJmxMessage](subscription))
 
           fishForWsUpdate[BlendedJmxMessage](1.second)(wsProbe){ upd =>
-            upd.isInstanceOf[JmxUpdate]
+            upd.isInstanceOf[JmxUpdate] && upd.asInstanceOf[JmxUpdate].beans.nonEmpty
           }
 
           f(wsProbe)
@@ -53,18 +57,21 @@ class WebSocketSubscriptionActorSpec extends AbstractWebSocketSpec {
     }
 
     "emit a single message if it is created with a subscription without interval" in {
-      withJmxSubscription(JmxSubscribe(None, 0L)) { probe => probe.expectNoMessage(1.second) }
+      withJmxSubscription(JmxSubscribe(Some(JmxObjectName("java.lang:type=Memory").unwrap), 0L)) { probe => probe.expectNoMessage(1.second) }
     }
 
     "emit regular updates if an interval is set" in {
-      withJmxSubscription(JmxSubscribe(None, interval.toMillis)) { probe =>
+      withJmxSubscription(JmxSubscribe(Some(JmxObjectName("java.lang:type=Memory").unwrap), interval.toMillis)) { probe =>
         probe.expectNoMessage((interval.toMillis * 0.9).millis)
 
-        1.to(10).foreach { _ =>
+        // scalastyle:off magic.number
+        1.to(10).foreach { i =>
           fishForWsUpdate[BlendedJmxMessage](interval + (interval.toMillis/2).millis)(probe){ upd =>
-            upd.isInstanceOf[JmxUpdate]
+            upd.isInstanceOf[JmxUpdate] &&
+            upd.asInstanceOf[JmxUpdate].beans.nonEmpty
           }
         }
+        // scalastyle:on magic.number
       }
     }
   }
