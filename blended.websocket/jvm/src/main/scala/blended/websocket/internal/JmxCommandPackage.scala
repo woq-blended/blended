@@ -32,10 +32,6 @@ object JmxCommandPackage {
 
       JmxUpdate(allNames, infos)
     }
-
-    case m =>
-      val msg : String = s"Update called with invalid object : [$m]"
-      Failure(new Exception(msg))
   }
 }
 

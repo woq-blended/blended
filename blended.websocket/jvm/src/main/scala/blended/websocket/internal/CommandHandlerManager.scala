@@ -188,7 +188,7 @@ object CommandHandlerManager {
         .orElse {
           // Forward an emitted message from a command handler to the connected client
           case u : WsClientUpdate =>
-            log.debug(s"Processing WsClientUpdate for [${u.token.id}] : [${u.msg}]")
+            log.debug(s"Processing WsClientUpdate for [${u.token.id}]")
             state.clientByToken(u.token).foreach{ ci =>
               ci.clientActor ! u.msg
             }

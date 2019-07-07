@@ -109,7 +109,7 @@ class WebSocketSubscriptionActor(subscription : WebSocketSubscription) extends A
         case Some(o) =>
           o match {
             case Success(upd) =>
-              log.debug(s"Got subscription update for user [$user] : [$upd]")
+              log.debug(s"Got subscription update for user [$user]")
               emit(
                 msg = upd, token = subscription.token, context = subscription.context, pickler = subscription.pickler
               )(context.system)
