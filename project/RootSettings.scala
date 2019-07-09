@@ -7,6 +7,7 @@ import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 object RootSettings {
 
   def apply(blendedDocs : Project) : Seq[Setting[_]] = Seq(
+    scalaVersion := "2.12.8",
     publishArtifact := false,
     publish := {},
     publishLocal := {},

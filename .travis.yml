@@ -101,7 +101,7 @@ jobs:
       - bash $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
     #- bash $TRAVIS_BUILD_DIR/scripts/build-akka.sh
     script:
-      - sbt clean update publish unidoc cleanCoverage codacyCoverage
+      - sbt clean update publishLocal unidoc cleanCoverage codacyCoverage
     after_failure:
       - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
     after_success:
@@ -128,7 +128,6 @@ jobs:
     before_script:
       - git clone --branch master --depth 1 https://github.com/woq-blended/blended.container.git $TRAVIS_BUILD_DIR/container
     script:
-#      - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
       - docker info
       - cd ${TRAVIS_BUILD_DIR}/container
       - wget "https://cdn.azul.com/zulu/bin/zulu8.33.0.1-jdk8.0.192-linux_x64.tar.gz" -O "docker/blended.docker.base/files/zulu8.33.0.1-jdk8.0.192-linux_x64.tar.gz"

@@ -35,20 +35,10 @@ class WebSocketActivator extends DominoActivator with ActorSystemWatching {
             wss.addCommandPackage(pkg)
         }
 
-        whenServicePresent[BlendedMBeanServerFacade] { facade =>
-          val jmxPackage : WebSocketCommandPackage = new JmxCommandPackage(jmxFacade = facade)
-          jmxPackage.providesService[WebSocketCommandPackage](
-            "namespace" -> jmxPackage.namespace
-          )
-        }
+
 
         log.info(s"Starting Blended Websocket protocol handler with context [$webContext]")
         SimpleHttpContext(webContext, wss.route).providesService[HttpContext]
-
-        val blendedHandler : WebSocketCommandPackage = new BlendedCommandPackage("blended")
-        blendedHandler.providesService[WebSocketCommandPackage](
-          "namespace" -> blendedHandler.namespace
-        )
       }
 
       val actor : ActorRef = system.actorOf(Props[WebSocketSubscriptionManager])
@@ -56,6 +46,21 @@ class WebSocketActivator extends DominoActivator with ActorSystemWatching {
       onStop{
         system.stop(actor)
       }
+
+      whenServicePresent[BlendedMBeanServerFacade] { facade =>
+        val jmxPackage : WebSocketCommandPackage = new JmxCommandPackage(jmxFacade = facade)
+        log.info(s"Starting WebSocket command package [${jmxPackage.namespace}]")
+        jmxPackage.providesService[WebSocketCommandPackage](
+          "namespace" -> jmxPackage.namespace
+        )
+      }
+
+      val blendedHandler : WebSocketCommandPackage = new BlendedCommandPackage()
+      log.info(s"Starting WebSocket command package [${blendedHandler.namespace}]")
+      blendedHandler.providesService[WebSocketCommandPackage](
+        "namespace" -> blendedHandler.namespace
+      )
+
     }
   }
 }

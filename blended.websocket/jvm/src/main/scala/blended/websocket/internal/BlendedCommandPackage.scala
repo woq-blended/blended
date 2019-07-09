@@ -19,7 +19,7 @@ object BlendedCommandPackage {
 }
 
 class BlendedCommandPackage(
-  override val namespace : String
+  override val namespace : String = "blended"
 )(implicit system: ActorSystem) extends WebSocketCommandPackage {
 
   override type T = BlendedWsMessage

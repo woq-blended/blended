@@ -17,6 +17,13 @@ trait ActorSystemWatching extends DominoImplicits {
   /** Dependency */
   protected def bundleContext : BundleContext
 
+  /**
+   * Defines a capsule which will be entered when an Actor System becomes available 
+   * as a service. 
+   * 
+   * An instance of [[OSGIActorConfig]] contains convenient resources that can be used 
+   * to define Actors within an OSGI environment.
+   */ 
   def whenActorSystemAvailable(f : OSGIActorConfig => Unit) : Unit = {
     val m = new ActorSystemCapsule(capsuleContext, f, bundleContext)
     capsuleContext.addCapsule(m)
