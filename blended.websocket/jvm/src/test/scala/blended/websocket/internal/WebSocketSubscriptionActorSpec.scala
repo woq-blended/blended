@@ -62,7 +62,7 @@ class WebSocketSubscriptionActorSpec extends AbstractWebSocketSpec {
 
     "emit regular updates if an interval is set" in {
       withJmxSubscription(JmxSubscribe(Some(JmxObjectName("java.lang:type=Memory").unwrap), interval.toMillis)) { probe =>
-        probe.expectNoMessage((interval.toMillis * 0.9).millis)
+        probe.expectNoMessage((interval.toMillis * 0.7).millis)
 
         // scalastyle:off magic.number
         1.to(10).foreach { i =>
