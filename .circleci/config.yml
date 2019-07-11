@@ -47,7 +47,7 @@ jobs:
           command: |
             mkdir -p ~/blended/target/test-results/junit/
             find ~/blended -type f -regex ".*/test-reports/.*xml" -exec cp {} ~/blended/target/test-results/junit/ \;
-            ~/blended/node_modules/xunit-viewer/bin/xunit-viewer --results=~/blended/target/test-results/junit --output=~/blended/target/test-results/junit.html
+            xunit-viewer --results=~/blended/target/test-results/junit --output=~/blended/target/test-results/junit.html
           when: always
 
       - store_test_results:
