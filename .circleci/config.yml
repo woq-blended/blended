@@ -10,30 +10,28 @@ jobs:
       - checkout
       - restore-cache:
           keys:
-            - v2-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
-            - v2-blended-core-
+            - v3-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
+            - v3-blended-core-
       - run: |
           sbt clean update
-          cd ~/blended && npm install xunit-viewer
       - save_cache:
-          key: v2-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
+          key: v3-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
           paths:
             - ~/.ivy2
-            - ~/node_modules
 
   build:
     shell: /bin/sh -leo pipefail
     working_directory: ~/blended
     docker:
-      - image: atooni/build-alpine:0.1
+      - image: atooni/build-alpine:1.0
         user: blended
     steps:
       - checkout
 
       - restore-cache:
           keys:
-            - v2-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
-            - v2-blended-core-
+            - v3-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
+            - v3-blended-core-
 
       - run:
           name: Run SBT
@@ -57,7 +55,7 @@ jobs:
           path: ~/blended/target/test-results
 
       - save_cache:
-          key: v2-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
+          key: v3-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
           paths:
             - ~/.ivy2
 
