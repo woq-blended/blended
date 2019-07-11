@@ -4,7 +4,7 @@ jobs:
     shell: /bin/sh -leo pipefail
     working_directory: ~/blended
     docker:
-      - image: atooni/build-alpine:0.1
+      - image: atooni/build-alpine:1.0
         user: blended
     steps:
       - checkout
