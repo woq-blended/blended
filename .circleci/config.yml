@@ -2,7 +2,7 @@ version: 2
 jobs:
   prepare:
     shell: /bin/sh -leo pipefail
-    working_directory: ~/blended
+    working_directory: /home/blended/blended
     docker:
       - image: atooni/build-alpine:1.0
         user: blended
@@ -10,18 +10,18 @@ jobs:
       - checkout
       - restore-cache:
           keys:
-            - v3-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
+            - v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
             - v3-blended-core-
       - run: |
           sbt clean update
       - save_cache:
-          key: v3-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
+          key: v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
           paths:
-            - ~/.ivy2
+            - /home/blended/.ivy2
 
   build:
     shell: /bin/sh -leo pipefail
-    working_directory: ~/blended
+    working_directory: /home/blended/blended
     docker:
       - image: atooni/build-alpine:1.0
         user: blended
@@ -30,34 +30,34 @@ jobs:
 
       - restore-cache:
           keys:
-            - v3-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
+            - v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
             - v3-blended-core-
 
       - run:
           name: Run SBT
           command: |
-            bash ~/blended/scripts/batchTest.sh
+            bash /home/blended/blended/scripts/batchTest.sh
           environment:
             - SBT_OPTS: -Xmx1024M -XX:MaxMetaspaceSize=512m
 
       - run:
           name: Save test results
           command: |
-            mkdir -p ~/blended/target/test-results/junit/
-            find ~/blended -type f -regex ".*/test-reports/.*xml" -exec cp {} ~/blended/target/test-results/junit/ \;
-            xunit-viewer --results=~/blended/target/test-results/junit --output=~/blended/target/test-results/junit.html
+            mkdir -p /home/blended/blended/target/test-results/junit/
+            find /home/blended/blended -type f -regex ".*/test-reports/.*xml" -exec cp {} home/blended/blended/target/test-results/junit/ \;
+            xunit-viewer --results=/home/blended/blended/target/test-results/junit --output=home/blended/blended/target/test-results/junit.html
           when: always
 
       - store_test_results:
-          path: ~/blended/target/test-results
+          path: /home/blended/blended/target/test-results
 
       - store_artifacts:
-          path: ~/blended/target/test-results
+          path: /home/blended/blended/target/test-results
 
       - save_cache:
-          key: v3-blended-core-$(set -- $(sha1sum ~/blended/build.sbt) ; echo $1)
+          key: v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
           paths:
-            - ~/.ivy2
+            - /home/blended/.ivy2
 
 workflows:
   version: 2

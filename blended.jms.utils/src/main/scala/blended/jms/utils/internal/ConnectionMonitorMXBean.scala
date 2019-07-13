@@ -1,6 +1,6 @@
 package blended.jms.utils.internal
 
-trait ConnectionMonitorMBean {
+trait ConnectionMonitorMXBean {
 
   def getProvider() : String
   def getStatus() : String

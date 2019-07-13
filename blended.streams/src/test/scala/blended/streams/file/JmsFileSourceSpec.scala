@@ -103,7 +103,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       connectionFactory = cf,
       jmsDestination = Some(dest),
       acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
-      sessionRecreateTimeout = 100.millis
+      sessionIdleTimeout = 100.millis
     )
 
     Source.fromGraph(new JmsAckSourceStage(name, settings, minMessageDelay = None))
@@ -127,7 +127,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       connectionFactory = cf,
       headerCfg = headerCfg,
       jmsDestination = Some(dest),
-      sessionRecreateTimeout = 100.millis
+      sessionIdleTimeout = 100.millis
     )
   }
 

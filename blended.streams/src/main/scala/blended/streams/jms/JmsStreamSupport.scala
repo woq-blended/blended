@@ -158,9 +158,9 @@ trait JmsStreamSupport {
   )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] = {
 
     if (settings.acknowledgeMode == AcknowledgeMode.ClientAcknowledge) {
-      Source.fromGraph(new JmsAckSourceStage(name, settings, minMessageDelay))
+      Source.fromGraph(new JmsSource(name, settings, minMessageDelay))
     } else {
-      Source.fromGraph(new JmsSourceStage(name, settings))
+      Source.fromGraph(new JmsSource(name, settings, minMessageDelay, autoAcknowledge = false))
     }
   }
 }

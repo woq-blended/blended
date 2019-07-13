@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import akka.actor.ActorSystem
-import akka.stream.stage.{GraphStage, GraphStageLogic}
+import akka.stream.stage.{GraphStage, GraphStageLogic, TimerGraphStageLogic}
 import akka.stream.{Attributes, Outlet, SourceShape}
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
 import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
@@ -44,10 +44,10 @@ class FileAckSource(
 )(implicit system : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val pollId : String = s"${pollCfg.headerCfg.prefix}.FilePoller.${pollCfg.id}.source"
-  private val out : Outlet[FlowEnvelope] = Outlet(name = pollId)
+  private val outlet : Outlet[FlowEnvelope] = Outlet(name = pollId)
   private val sdf = new SimpleDateFormat("yyyyMMdd-HHmmssSSS")
 
-  override def shape : SourceShape[FlowEnvelope] = SourceShape(out)
+  override def shape : SourceShape[FlowEnvelope] = SourceShape(outlet)
 
   private class FileAckContext(
     inflightId : String,
@@ -56,7 +56,11 @@ class FileAckSource(
     val fileToProcess : File
   ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis())
 
-  private class FileSourceLogic() extends AckSourceLogic[FileAckContext](out, shape) {
+  private class FileSourceLogic() extends TimerGraphStageLogic(shape)
+    with AckSourceLogic[FileAckContext] {
+
+    override def out: Outlet[FlowEnvelope] = outlet
+
     /** The id to identify the instance in the log files */
     override def id : String = pollId
 

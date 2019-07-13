@@ -1,48 +1,16 @@
-/*
-  The AckSource logic encapsulates the underlying logic for an arbitrary Source
-  of FlowEnvelopes. The envelopes will be passed down stream and must be
-  acknowledged or denied eventually. An acknowledgement that takes too long,
-  will be treated as a denial as well.
 
-  A concrete implementation must implement the actions to be executed upon acknowledgement
-  and denial. For example, a JMS source would use a JMS acknowledge on the underlying
-  JMS message and a session.recover() upon a denial. A file system based source may move or
-  delete the original file upon acknowledge and restore the original file upon denial.
-
-  After picking up an envelope from an external system, the envelope will be considered to
-  be infligth until either an acknowledge or deny has been called. The AckSource logic defines
-  the maximum number of messages that can be inflight at any moment in time. No further messages
-  will be pulled from the external system until a free inflight slot will become available.
-
-  Concrete implementations must:
-
-  - create and maintain any technical connections required to poll the external system
-  - map the inbound data to a FlowEnvelope
-  - implement the concrete actions for acknowledgement and denial
-
-  We will use an AcknowledgeContext to hold an inflight envelope and the id of the infliht slot
-  it is using along with any additional that might be required to perform an acknowledge or denial.
-
-  As a result, each poll of the external system will produce an Option[AcknowledgeContext] which
-  will then be inserted into a free inflight slot. As a consequence, polling of the external system
-  will only be performed if and only if a free inflight slot is available.
-
-  As long as free inflight slots are available and no external messages are available, the
-  poll will be executed \in regular intervals. Concrete implementations may overwrite the
-  the nextPoll() method to modify the calculation of the next polling occurrence.
-*/
 
 package blended.streams
 
+import akka.stream.Outlet
 import akka.stream.stage.{AsyncCallback, OutHandler, TimerGraphStageLogic}
-import akka.stream.{Outlet, SourceShape}
 import blended.streams.AckState.AckState
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
 import blended.util.logging.Logger
 
 import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
  * The state of an acknowledgement :
@@ -72,11 +40,46 @@ case class DefaultAcknowledgeContext(
   override val created : Long
 ) extends AcknowledgeContext
 
-abstract class AckSourceLogic[T <: AcknowledgeContext](
-  out : Outlet[FlowEnvelope],
-  shape : SourceShape[FlowEnvelope],
-  ackTimeout : FiniteDuration = 1.seconds
-) extends TimerGraphStageLogic(shape) {
+/**
+  * Provide common logic for Source stages producing [[FlowEnvelope]]s requiring
+  * acknowledgement handling.
+  *
+  * The AckSource logic encapsulates the underlying logic for an arbitrary Source
+  * of FlowEnvelopes. The envelopes will be passed down stream and must be
+  * acknowledged or denied eventually. An acknowledgement that takes too long,
+  * will be treated as a denial as well.
+  *
+  * A concrete implementation must implement the actions to be executed upon acknowledgement
+  * and denial. For example, a JMS source would use a JMS acknowledge on the underlying
+  * JMS message and a session.recover() upon a denial. A file system based source may move or
+  * delete the original file upon acknowledge and restore the original file upon denial.
+
+  * After picking up an envelope from an external system, the envelope will be considered to
+  * be inflight until either an acknowledge or deny has been called. The AckSource logic defines
+  * the maximum number of messages that can be inflight at any moment in time. No further messages
+  * will be pulled from the external system until a free inflight slot will become available.
+  *
+  * Concrete implementations must:
+  *
+  * - create and maintain any technical connections required to poll the external system
+  * - map the inbound data to a FlowEnvelope
+  * - implement the concrete actions for acknowledgement and denial
+  *
+  * We will use an AcknowledgeContext to hold an inflight envelope and the id of the infliht slot
+  * it is using along with any additional that might be required to perform an acknowledge or denial.
+  *
+  * As a result, each poll of the external system will produce an Option[AcknowledgeContext] which
+  * will then be inserted into a free inflight slot. As a consequence, polling of the external system
+  * will only be performed if and only if a free inflight slot is available.
+
+  * As long as free inflight slots are available and no external messages are available, the
+  * poll will be executed \in regular intervals. Concrete implementations may overwrite the
+  * the nextPoll() method to modify the calculation of the next polling occurrence.
+*/
+trait AckSourceLogic[T <: AcknowledgeContext] { this : TimerGraphStageLogic =>
+
+  def out : Outlet[FlowEnvelope]
+  def ackTimeout : FiniteDuration = 1.second
 
   private case object Poll
   private case object CheckAck
@@ -86,7 +89,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   }
 
   /** The id to identify the instance in the log files */
-  def id : String
+  protected def id : String
 
   /** A logger that must be defined by concrete implementations */
   protected def log : Logger
@@ -209,9 +212,8 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
       }
 
       log.debug(s"Performing poll for [$id]")
-      doPerformPoll(id, ackHandler).get match {
-        case None =>
-
+      doPerformPoll(id, ackHandler) match {
+        case Success(None) =>
           nextPoll() match {
             case None => pollImmediately.invoke()
             case Some(d) => if (!isTimerActive(Poll)) {
@@ -219,12 +221,16 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
             }
           }
 
-        case Some(ackCtxt) =>
+        case Success(Some(ackCtxt)) =>
           // add the context to the inflight messages
           log.debug(s"Received [${ackCtxt.envelope.flowMessage}] in [$id]")
           addInflight(id, ackCtxt, AckState.Pending)
           // push the envelope to the outlet
           push(out, ackCtxt.envelope)
+
+        case Failure(t) =>
+          log.warn(t)(s"Failed to poll for new message in [$id]")
+          failStage(t)
       }
     }
   }

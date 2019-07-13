@@ -1,35 +1,15 @@
 package blended.streams.jms
 
-import blended.jms.utils.{JmsAckSession, JmsDestination}
+import blended.jms.utils.JmsDestination
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message._
 import blended.streams.transaction.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.RichTry._
 import javax.jms._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.Try
-import blended.util.RichTry._
-
-case class JmsAcknowledgeHandler(
-  id : String,
-  jmsMessage : Message,
-  session : JmsAckSession,
-  created : Long = System.currentTimeMillis(),
-  log : Logger
-) extends AcknowledgeHandler {
-
-  override def deny() : Try[Unit] = Try {
-    log.trace(s"Scheduling denial for envelope [$id] in [${session.sessionId}].")
-    session.deny(jmsMessage)
-  }
-
-  override def acknowledge() : Try[Unit] = Try {
-    log.trace(s"Scheduling acknowledgement for envelope [$id] in [${session.sessionId}].")
-    session.ack(jmsMessage)
-  }
-}
 
 object JmsSendParameter {
   val defaultPriority : Int = 4

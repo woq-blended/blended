@@ -2,8 +2,7 @@ package blended.streams.jms
 
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue, JmsTopic}
 import blended.streams.transaction.FlowHeaderConfig
-import blended.util.logging.LogLevel.LogLevel
-import blended.util.logging.{LogLevel, Logger}
+import blended.util.logging.Logger
 import javax.jms
 import javax.jms.Session
 
@@ -77,7 +76,7 @@ sealed trait JmsSettings {
   val sessionCount : Int
 
   // The timespan we will wait to recreate a JMS session after it has been closed due to a JMS exception
-  val sessionRecreateTimeout : FiniteDuration
+  val sessionIdleTimeout : FiniteDuration
 
   // The header configuration which encapsulates the defined header names being used in the
   // flow message
@@ -96,13 +95,11 @@ final case class JMSConsumerSettings(
   sessionCount : Int = 1,
   receiveTimeout : FiniteDuration = 0.seconds,
   pollInterval : FiniteDuration = 100.millis,
-  acknowledgeMode: AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
-  bufferSize: Int = 100,
-  receiveLogLevel : LogLevel = LogLevel.Info,
-  selector: Option[String] = None,
-  ackTimeout: FiniteDuration = 1.second,
-  durableName: Option[String] = None,
-  sessionRecreateTimeout : FiniteDuration = 100.millis
+  acknowledgeMode : AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
+  selector : Option[String] = None,
+  ackTimeout : FiniteDuration = 1.second,
+  durableName : Option[String] = None,
+  sessionIdleTimeout : FiniteDuration = 30.seconds
 ) extends JmsSettings {
 
   def withDestination(dest : Option[JmsDestination]) : JMSConsumerSettings = copy(jmsDestination = dest)
@@ -111,7 +108,6 @@ final case class JMSConsumerSettings(
 
   def withAcknowledgeMode(m : AcknowledgeMode) : JMSConsumerSettings = copy(acknowledgeMode = m)
   def withSessionCount(c : Int) : JMSConsumerSettings = copy(sessionCount = c)
-  def withBufferSize(s : Int) : JMSConsumerSettings = copy(bufferSize = s)
   def withSelector(s : Option[String]) : JMSConsumerSettings = copy(selector = s)
   def withAckTimeout(d : FiniteDuration) : JMSConsumerSettings = copy(ackTimeout = d)
   def withConnectionTimeout(d : FiniteDuration) : JMSConsumerSettings = copy(connectionTimeout = d)
@@ -147,7 +143,7 @@ final case class JmsProducerSettings(
   timeToLive : Option[FiniteDuration] = None,
   // A factory for correlation Ids in case no Correlation Id is set in the message
   correlationId : () => Option[String] = () => None,
-  sessionRecreateTimeout : FiniteDuration = 100.millis,
+  sessionIdleTimeout : FiniteDuration = 100.millis,
   clearPreviousException : Boolean = false
 ) extends JmsSettings {
 

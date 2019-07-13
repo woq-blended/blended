@@ -27,7 +27,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : Act
   def getConnectionFactory() : ConnectionFactory
 
   def getConnection() : Option[BlendedJMSConnection] = {
-    log.trace(s"Underlying connection is established : [${conn.isDefined}]")
+    log.trace(s"Underlying connection [$vendor:$provider] is established : [${conn.isDefined}]")
     conn
   }
 
