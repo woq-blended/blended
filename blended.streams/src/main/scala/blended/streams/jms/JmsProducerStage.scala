@@ -3,7 +3,7 @@ package blended.streams.jms
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage._
-import blended.jms.utils.{IdAwareConnectionFactory, JmsSession}
+import blended.jms.utils.JmsSession
 import blended.streams.message.FlowEnvelope
 import blended.util.RichTry._
 import javax.jms.{Destination, MessageProducer}

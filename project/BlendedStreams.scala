@@ -8,50 +8,47 @@ object BlendedStreams extends ProjectFactory {
 
   // scalastyle:off object.name
   object config extends ProjectSettings {
-    // scalastyle:on object.name
-    override val projectName: String = "blended.streams"
-    override val description: String = "Helper objects to work with Streams in blended integration flows."
+  // scalastyle:on object.name
+    override val projectName : String = "blended.streams"
+    override val description : String = "Helper objects to work with Streams in blended integration flows."
 
-    override def deps: Seq[ModuleID] = Seq(
+    override def deps : Seq[ModuleID] = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaStream,
       Dependencies.akkaPersistence,
       Dependencies.geronimoJms11Spec,
       Dependencies.levelDbJava,
 
-      Dependencies.commonsIo % "test",
-      Dependencies.scalacheck % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.activeMqBroker % "test",
-      Dependencies.activeMqKahadbStore % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.commonsIo % Test,
+      Dependencies.scalacheck % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.activeMqBroker % Test,
+      Dependencies.activeMqKahadbStore % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
-    override def bundle: OsgiBundle = super.bundle.copy(
-      bundleActivator = s"${projectName}.internal.BlendedStreamsActivator",
+    override def bundle : OsgiBundle = super.bundle.copy(
       exportPackage = Seq(
-        s"${projectName}",
-        s"${projectName}.file",
-        s"${projectName}.jms",
-        s"${projectName}.json",
-        s"${projectName}.message",
-        s"${projectName}.processor",
-        s"${projectName}.persistence",
-        s"${projectName}.transaction",
-        s"${projectName}.worklist"
-      ),
-      privatePackage = Seq(s"${projectName}.internal", s"${projectName}.transaction.internal")
+        projectName,
+        s"$projectName.file",
+        s"$projectName.jms",
+        s"$projectName.message",
+        s"$projectName.processor",
+        s"$projectName.persistence",
+        s"$projectName.transaction",
+        s"$projectName.worklist"
+      )
     )
 
-    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
         "App" -> "DEBUG",
         "spec" -> "DEBUG",
-        "blended" -> "DEBUG"
+        "blended" -> "TRACE"
       )
     )
 
@@ -63,9 +60,9 @@ object BlendedStreams extends ProjectFactory {
       BlendedPersistence.project,
 
       BlendedActivemqBrokerstarter.project % "test",
-      BlendedPersistenceH2.project % "test",
-      BlendedTestsupportPojosr.project % "test",
-      BlendedTestsupport.project % "test"
+      BlendedPersistenceH2.project % Test,
+      BlendedTestsupportPojosr.project % Test,
+      BlendedTestsupport.project % Test
     )
   }
 }

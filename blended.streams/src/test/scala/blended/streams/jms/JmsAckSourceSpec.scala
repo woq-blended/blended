@@ -99,16 +99,13 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       name = "test",
       settings = cSettings,
       minMessageDelay = minMessageDelay
-    ).via(Flow.fromFunction { env =>
-      env.acknowledge()
-      env
-    })
+    )
 
   "The JMS Ack Source should" - {
 
     "consume and acknowledge messages without delay correctly" in {
 
-      val msgCount : Int = 50
+      val msgCount : Int = 100
       val destName : String = "noDelay"
 
       val cSettings : JMSConsumerSettings = consumerSettings(destName)
@@ -128,8 +125,9 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
               timeout = 5.seconds
             )(e => e.acknowledge())
 
-            val result = Await.result(coll.result, 6.seconds).map { env => env.header[Int]("msgNo").get }
-            result should have size msgCount
+            val result : List[Int] = Await.result(coll.result, 6.seconds).map { env => env.header[Int]("msgNo").get }
+            val missing : List[Int] = 1.to(msgCount).filter(i => !result.contains(i)).toList
+            missing should be(empty)
 
             s.shutdown()
           case Failure(t) =>

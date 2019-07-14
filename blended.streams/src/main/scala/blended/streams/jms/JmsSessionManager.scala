@@ -42,6 +42,8 @@ class JmsSessionManager(
     */
   def afterSessionClose : JmsSession => Try[Unit] = { _ => Success(()) }
 
+  def onError : Throwable => Unit = _ => ()
+
   // We maintain a map of currently open sessions
   private val sessions : mutable.Map[String, JmsSession] = mutable.Map.empty
 
@@ -73,10 +75,15 @@ class JmsSessionManager(
     }
   }
 
-  def closeSession(id : String) : Try[Unit] = sessions.remove(id).map { sess =>
-    sess.closeSession()
-    afterSessionClose(sess)
-  }.getOrElse( Success() )
+  def closeSession(id : String) : Try[Unit] = Try {
+    sessions.remove(id).map { sess =>
+      log.debug(s"Closing session [${sess.sessionId}]")
+      sess.closeSession() match {
+        case Success(_) => afterSessionClose(sess)
+        case Failure(t) => onError(t)
+      }
+    }.getOrElse( Success() )
+  }
 
   def closeSessionAsync(id : String)(system : ActorSystem) : Future[Unit] =
     sessions.remove(id).map { _.closeSessionAsync()(system) }.getOrElse( Future {}(system.dispatcher) )

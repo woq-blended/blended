@@ -68,18 +68,19 @@ final class JmsConsumerStage(
     inflightId : String,
     env : FlowEnvelope,
     val jmsMessage : Message,
+    val jmsMessageAck : Message => Unit,
     val session : JmsSession,
-    val sessionMgr : JmsSessionManager
+    val sessionClose : JmsSession => Unit
   ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis()) {
 
     override def deny(): Unit = {
+      sessionClose(session)
       consumerSettings.log.info(s"Message [${envelope.id}] has been denied. Closing receiving session.")
-      sessionMgr.closeSession(session.sessionId)
     }
 
     override def acknowledge(): Unit = {
+      jmsMessageAck(jmsMessage)
       consumerSettings.log.info(s"Acknowledged envelope [${envelope.id}] for session [${session.sessionId}]")
-      jmsMessage.acknowledge()
     }
   }
 
@@ -91,12 +92,15 @@ final class JmsConsumerStage(
     override val log: Logger = consumerSettings.log
     override val autoAcknowledge: Boolean = consumerSettings.acknowledgeMode == AcknowledgeMode.AutoAcknowledge
 
+    private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable](t => failStage(t))
+
     private val srcDest : JmsDestination = consumerSettings.jmsDestination match {
       case Some(d) => d
       case None => throw new IllegalArgumentException(s"Destination must be set for consumer in [$id]")
     }
 
     private val closeSession : AsyncCallback[JmsSession] = getAsyncCallback(s => connector.sessionMgr.closeSession(s.sessionId))
+    private val ackMessage : AsyncCallback[Message] = getAsyncCallback[Message](m => m.acknowledge())
 
     private lazy val connector : JmsConnector = new JmsConnector(id, consumerSettings)(session => Try {
       consumerSettings.log.debug(
@@ -124,12 +128,14 @@ final class JmsConsumerStage(
     override protected def nextPoll(): Option[FiniteDuration] =
       Some(nextPollRelative.getOrElse(consumerSettings.pollInterval))
 
-    private def receive(session : JmsSession, c : MessageConsumer) : Try[Option[Message]] = Try {
+    private def receive(session : JmsSession) : Try[Option[Message]] = Try {
 
-      val msg : Option[Message] = if (consumerSettings.receiveTimeout.toMillis <= 0) {
-        Option(c.receiveNoWait())
-      } else {
-        Option(c.receive(consumerSettings.receiveTimeout.toMillis))
+      val msg : Option[Message] = consumer.get(session.sessionId).flatMap { c =>
+        if (consumerSettings.receiveTimeout.toMillis <= 0) {
+          Option(c.receiveNoWait())
+        } else {
+          Option(c.receive(consumerSettings.receiveTimeout.toMillis))
+        }
       }
 
       val result : Option[Message] = msg match {
@@ -138,11 +144,11 @@ final class JmsConsumerStage(
         case Some(m) =>
           minMessageDelay match {
             case Some(d) =>
-              val remainingDelay : Long = System.currentTimeMillis() - m.getJMSTimestamp()
-              if (remainingDelay <= d.toMillis) {
-                consumerSettings.log.trace(s"Message has not reached the minimum message delay yet ...")
-                connector.sessionMgr.closeSession(id)
-                nextPollRelative = Some(remainingDelay.millis)
+              val age : Long = System.currentTimeMillis() - m.getJMSTimestamp()
+              if (age <= d.toMillis) {
+                closeSession.invoke(session)
+                nextPollRelative = Some( (d.toMillis - age).millis )
+                consumerSettings.log.debug(s"Message has not reached the minimum message delay yet ...rescheduling in [$nextPollRelative]")
                 None
               } else {
                 nextPollRelative = None
@@ -178,35 +184,30 @@ final class JmsConsumerStage(
 
     override protected def doPerformPoll(id: String, ackHandler: AcknowledgeHandler): Try[Option[JmsAckContext]] = Try {
 
-      consumerSettings.log.debug(s"Trying to receive message from [${srcDest.asString}] in session [$id]")
-      None
+      connector.sessionMgr.getSession(id) match {
+        case Success(Some(s)) =>
 
-//      sessionMgr.getSession(id) match {
-//        case Success(Some(sess)) =>
-//          consumer.get(id).map { c =>
-//            receive(sess, c).unwrap.map { message =>
-//              createEnvelope(message, ackHandler).map { e =>
-//
-//                settings.log.info(
-//                  s"Message received [${e.id}][${srcDest.asString}][${sess.sessionId}] : ${e.flowMessage}"
-//                )
-//
-//                new JmsAckContext(
-//                  inflightId = id,
-//                  env = e,
-//                  jmsMessage = message,
-//                  session = sess
-//                )
-//              }
-//            }
-//          }
-//        case Success(None) =>
-//          log.trace(s"No session available in [$id]")
-//          None
-//        case Failure(t) =>
-//          handleError.invoke(t)
-//          throw t
-//      }
+          receive(s).unwrap
+            .map{ m =>
+              val e : FlowEnvelope = createEnvelope(m, ackHandler).unwrap
+
+              new JmsAckContext(
+                inflightId = id,
+                env = e,
+                jmsMessage = m,
+                jmsMessageAck = ackMessage.invoke,
+                session = s,
+                sessionClose = closeSession.invoke
+              )
+            }
+
+        case Success(None) =>
+          None
+
+        case Failure(t) =>
+          handleError.invoke(t)
+          throw t
+      }
     }
 
     override def postStop(): Unit = connector.sessionMgr.closeAll()

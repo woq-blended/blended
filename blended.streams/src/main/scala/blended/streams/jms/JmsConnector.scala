@@ -53,5 +53,6 @@ class JmsConnector(
   ) {
     override def onSessionOpen: JmsSession => Try[Unit] = onSessionOpened
     override def onSessionClose: JmsSession => Try[Unit] = onSessionClosed
+    override def onError: Throwable => Unit = onError
   }
 }

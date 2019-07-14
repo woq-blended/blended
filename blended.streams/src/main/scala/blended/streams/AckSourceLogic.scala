@@ -107,8 +107,8 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
   protected val inflightSlots : List[String]
 
   // The map of current inflight AcknowledgeContexts. An inflight slot is considered
-  // to be available if it's id does not occurr in the keys of the inflight map.
-  private var inflightMap : mutable.Map[String, (T, AckState)] = mutable.Map.empty
+  // to be available if it's id does not occur in the keys of the inflight map.
+  private val inflightMap : mutable.Map[String, (T, AckState)] = mutable.Map.empty
 
   // TODO: Make this configurable ?
   protected def nextPoll() : Option[FiniteDuration] = Some(1.second)
@@ -129,11 +129,10 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
   // A callback to update the ack state for an inflight message
   protected val updateAckState : AsyncCallback[(String, AckState)] = getAsyncCallback[(String, AckState)] {
     case (inflightId, state) =>
-
       inflightMap.get(inflightId) match {
         case Some((ctxt, _)) =>
           log.debug(s"Updating state for [$inflightId] to [$state]")
-          inflightMap.put(id, (ctxt, state))
+          inflightMap.put(inflightId, (ctxt, state))
           state match {
             case AckState.Acknowledged =>
               acknowledged(ctxt)
@@ -147,7 +146,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
   }
 
   private def acknowledged(ackCtxt : T) : Unit = {
-    log.debug(s"Flow envelope [${ackCtxt.envelope.id}] has been acknowledged in [$id]")
+    log.debug(s"Flow envelope [${ackCtxt.envelope.id}] has been acknowledged in [$id] : [${ackCtxt.envelope}]")
     ackCtxt.acknowledge()
     removeInflight(ackCtxt.inflightId)
     // If the poll timer is active we actually have executed a poll recently with no result
@@ -198,7 +197,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
     // make sure, the outlet has been pulled. If that is not the case,
     // the out handler will be called eventually, triggering another
     // poll()
-    if (isAvailable(out)) {
+    if (isAvailable(out) && !isTimerActive(Poll)) {
 
       val ackHandler : AcknowledgeHandler = new AcknowledgeHandler {
         override def acknowledge() : Try[Unit] = Try {
@@ -216,6 +215,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
           nextPoll() match {
             case None => pollImmediately.invoke()
             case Some(d) => if (!isTimerActive(Poll)) {
+              log.debug(s"Scheduling next poll in [$d]")
               scheduleOnce(Poll, d)
             }
           }
@@ -257,7 +257,9 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
           ackTimedOut(ctxt)
         }
 
-      case Poll => poll()
+      case Poll =>
+        log.trace(s"Received scheduled poll event")
+        poll()
     }
   }
 
@@ -282,6 +284,10 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
   */
 
   setHandler(out, new OutHandler() {
-    override def onPull() : Unit = poll()
+    override def onPull() : Unit = {
+      if (!isTimerActive(Poll)) {
+        poll()
+      }
+    }
   })
 }
