@@ -106,7 +106,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       sessionIdleTimeout = 100.millis
     )
 
-    Source.fromGraph(new JmsAckSourceStage(name, settings, minMessageDelay = None))
+    Source.fromGraph(new JmsConsumerStage(name, settings, minMessageDelay = None))
       .via(FlowProcessor.fromFunction("publish", log) { env =>
         Try {
           system.eventStream.publish(EnvelopeReceived(env))

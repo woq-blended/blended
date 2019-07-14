@@ -142,7 +142,7 @@ trait JmsStreamSupport {
     autoAck : Boolean
   )(implicit system : ActorSystem, materializer : Materializer) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
-    val f = Flow.fromGraph(new JmsSinkStage(name, settings)).named(name)
+    val f = Flow.fromGraph(new JmsProducerStage(name, settings)).named(name)
 
     if (autoAck) {
       f.via(new AckProcessor(s"ack-$name").flow.named(s"ack-$name"))
@@ -155,12 +155,6 @@ trait JmsStreamSupport {
     name : String,
     settings : JMSConsumerSettings,
     minMessageDelay : Option[FiniteDuration]
-  )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] = {
-
-    if (settings.acknowledgeMode == AcknowledgeMode.ClientAcknowledge) {
-      Source.fromGraph(new JmsSource(name, settings, minMessageDelay))
-    } else {
-      Source.fromGraph(new JmsSource(name, settings, minMessageDelay, autoAcknowledge = false))
-    }
-  }
+  )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] =
+    Source.fromGraph(new JmsConsumerStage(name, settings, minMessageDelay))
 }

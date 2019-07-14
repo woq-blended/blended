@@ -1,4 +1,4 @@
-package blended.jms.utils.internal
+package blended.jms.utils
 
 import java.util.Date
 
@@ -13,6 +13,7 @@ object ConnectionState {
 }
 
 case class ConnectionState(
+  vendor : String,
   provider : String,
   status : String = ConnectionState.DISCONNECTED,
   lastConnect : Option[Date] = None,

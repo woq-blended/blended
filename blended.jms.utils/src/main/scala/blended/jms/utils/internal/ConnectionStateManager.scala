@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
-import blended.jms.utils.internal.ConnectionState._
-import blended.jms.utils.{BlendedJMSConnection, ConnectionConfig, Reconnect}
+import blended.jms.utils.ConnectionState._
+import blended.jms.utils.{BlendedJMSConnection, ConnectionConfig, ConnectionState, Reconnect}
 import javax.jms.Connection
 
 import scala.concurrent.ExecutionContext
@@ -39,7 +39,8 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
   private var currentReceive : StateReceive = disconnected()
   // TODO : This is only exposed to be package private, so that the test code can access the state
   // We need to find "on official" way to query the state or listen to state change events
-  private[internal] var currentState : ConnectionState = ConnectionState(provider = config.provider).copy(status = DISCONNECTED)
+  private[internal] var currentState : ConnectionState =
+   ConnectionState(vendor = vendor, provider = config.provider).copy(status = DISCONNECTED)
 
   private val pingCounter = new AtomicLong(0)
   private var pinger : Option[ActorRef] = None
@@ -244,7 +245,9 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
       tsMsg.reverse ++ s.events.take(s.maxEvents - tsMsg.size)
     }
 
-    s.copy(events = newEvents.toList)
+    val newState : ConnectionState = s.copy(events = newEvents.toList)
+    context.system.eventStream.publish(ConnectionState)
+    newState
   }
 
   // To initialise the connection we check whether we have been connected at some point in the history of

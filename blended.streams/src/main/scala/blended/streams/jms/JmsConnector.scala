@@ -1,84 +1,57 @@
 package blended.streams.jms
 
-import akka.actor.ActorSystem
-import akka.stream.KillSwitch
-import akka.stream.stage.{AsyncCallback, TimerGraphStageLogic}
-import blended.jms.utils.{IdAwareConnectionFactory, JmsSession}
+import blended.jms.utils.JmsSession
 import javax.jms._
 
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-trait JmsConnector { this : TimerGraphStageLogic =>
-
-  protected def system : ActorSystem
-  protected def jmsSettings : JmsSettings
-
-  protected def onSessionOpened : JmsSession => Try[Unit] = { _ => Success(()) }
-  protected def beforeSessionCloseCallback : JmsSession => Try[Unit] = { _ => Success(()) }
-  protected def afterSessionCloseCallback : JmsSession => Try[Unit] = { _ => Success(()) }
-
-  // Just to identify the Source stage in log statements
-  protected val id : String = {
-    val result : String = jmsSettings.connectionFactory match {
-      case idAware : IdAwareConnectionFactory => idAware.id
-      case cf                                 => cf.toString()
-    }
-
-    result
-  }
-
-  /**
-    * Log an exception and then fail the stage.
-    */
-  protected val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable] { t =>
-    jmsSettings.log.error(s"Failing stage [$id] with [${t.getMessage()}")
-    failStage(t)
-  }
+class JmsConnector(
+  id : String,
+  jmsSettings : JmsSettings
+)(
+  onSessionOpened : JmsSession => Try[Unit]
+)(
+  onSessionClosed : JmsSession => Try[Unit]
+)(
+  onError : Throwable => Unit
+) {
 
   /**
     * Initialize the connection to be used for this stage. If the connection can't be established,
     * the stage will fail with an exception. For recovery, the stage should be wrapped within a
     * [[blended.streams.StreamControllerSupport]].
     */
-  protected val connection : Connection = Try {
+  val connection : Connection = Try {
+    jmsSettings.log.info(s"Trying to create JMS connection for stream [$id]")
     jmsSettings.connectionFactory.createConnection()
   } match {
     case Success(c) =>
+      jmsSettings.log.info(s"Created connection for stream [$id]")
       c.setExceptionListener(new ExceptionListener {
         override def onException(ex : JMSException) : Unit = {
           try {
-            connection.close() // best effort closing the connection.
+            c.close() // best effort closing the connection.
           } catch {
-            case _ : Throwable =>
+            case NonFatal(_) =>
           }
-
-          handleError.invoke(ex)
+          onError(ex)
         }
       })
       c
     case Failure(e) =>
-      handleError.invoke(e)
+      jmsSettings.log.error(s"Error creating JMS connection [${e.getMessage()}]")
+      onError(e)
       throw e
   }
 
-  protected val sessionMgr : JmsSessionManager = new JmsSessionManager(
+  val sessionMgr : JmsSessionManager = new JmsSessionManager(
+    name = id,
     conn = connection,
     maxSessions = jmsSettings.sessionCount,
     idleTimeout = jmsSettings.sessionIdleTimeout
   ) {
     override def onSessionOpen: JmsSession => Try[Unit] = onSessionOpened
-    override def beforeSessionClose: JmsSession => Try[Unit] = beforeSessionCloseCallback
-    override def afterSessionClose: JmsSession => Try[Unit] = afterSessionCloseCallback
-  }
-
-  // We expose the killswitch, so that the stage can be closed externally
-  protected def killSwitch = new KillSwitch {
-    override def shutdown() : Unit = sessionMgr.closeAll()
-    override def abort(ex : Throwable) : Unit = sessionMgr.closeAll()
-  }
-
-  override def postStop() : Unit = {
-    sessionMgr.closeAll()
+    override def onSessionClose: JmsSession => Try[Unit] = onSessionClosed
   }
 }
-

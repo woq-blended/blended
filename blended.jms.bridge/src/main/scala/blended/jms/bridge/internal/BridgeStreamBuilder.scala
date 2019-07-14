@@ -122,9 +122,9 @@ class BridgeStreamBuilder(
       .withSubScriberName(cfg.subscriberName)
 
     val src : Source[FlowEnvelope, NotUsed] = {
-      val result : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new JmsSource(
+      val result : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new JmsConsumerStage(
         name = streamId + "-source",
-        settings = srcSettings
+        consumerSettings = srcSettings
       ))
 
       // set the transaction from a the system property blended.streams.transactionShard

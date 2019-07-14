@@ -17,6 +17,7 @@ import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.scalatest.{BeforeAndAfterAll, Matchers}
+import blended.util.RichTry._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
@@ -63,7 +64,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
   private val log : Logger = Logger[JmsAckSourceSpec]
 
   val envelopes : Int => Seq[FlowEnvelope] = msgCount => 1.to(msgCount).map { i =>
-    FlowEnvelope().withHeader("msgNo", i).get
+    FlowEnvelope().withHeader("msgNo", i).unwrap
   }
 
   override protected def afterAll() : Unit = {
@@ -74,7 +75,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
   private val consumerSettings : String => JMSConsumerSettings = destName => {
 
-    val dest = JmsDestination.create(destName).get
+    val dest = JmsDestination.create(destName).unwrap
 
     JMSConsumerSettings(
       log = log,
@@ -105,7 +106,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
   "The JMS Ack Source should" - {
 
-    "Consume and acknowledge messages without delay correctly" in {
+    "consume and acknowledge messages without delay correctly" in {
 
       val msgCount : Int = 50
       val destName : String = "noDelay"
@@ -128,14 +129,15 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
             )(e => e.acknowledge())
 
             val result = Await.result(coll.result, 6.seconds).map { env => env.header[Int]("msgNo").get }
-            result should have size (msgCount)
+            result should have size msgCount
 
             s.shutdown()
-          case Failure(t) => fail(t)
+          case Failure(t) =>
+            fail(t)
         }
     }
 
-    "Do not consume messages before the minimum message delay is reached" in {
+    "not consume messages before the minimum message delay is reached" in {
 
       val msgCount : Int = 10
       val destName : String = "delayed"
@@ -170,11 +172,10 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
             )(e => e.acknowledge())
 
             val result2 : List[Int] = Await.result(coll2.result, minDelay + 1.seconds).map { env => env.header[Int]("msgNo").get }
-            result2 should have size (msgCount)
+            result2 should have size msgCount
 
           case Failure(t) => fail(t)
         }
     }
   }
-
 }

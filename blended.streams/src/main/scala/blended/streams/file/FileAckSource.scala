@@ -44,33 +44,67 @@ class FileAckSource(
 )(implicit system : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val pollId : String = s"${pollCfg.headerCfg.prefix}.FilePoller.${pollCfg.id}.source"
-  private val outlet : Outlet[FlowEnvelope] = Outlet(name = pollId)
+  private val out : Outlet[FlowEnvelope] = Outlet(name = pollId)
   private val sdf = new SimpleDateFormat("yyyyMMdd-HHmmssSSS")
 
-  override def shape : SourceShape[FlowEnvelope] = SourceShape(outlet)
+  override def shape : SourceShape[FlowEnvelope] = SourceShape(out)
 
   private class FileAckContext(
     inflightId : String,
     env : FlowEnvelope,
     val originalFile : File,
-    val fileToProcess : File
-  ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis())
+    val fileToProcess : File,
+    val log : Logger
+  ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis()) {
 
-  private class FileSourceLogic() extends TimerGraphStageLogic(shape)
-    with AckSourceLogic[FileAckContext] {
+    override def acknowledge() : Unit = {
+      log.info(s"Successfully processed envelope [${envelope.id}]")
+      pollCfg.backup match {
+        case None =>
+          if (fileToProcess.delete()) {
+            log.info(s"Deleted file for [${envelope.id}] : [${fileToProcess}]")
+          } else {
+            log.warn(s"File for [${envelope.id}] could not be deleted : [${fileToProcess}]")
+          }
+        case Some(d) =>
 
-    override def out: Outlet[FlowEnvelope] = outlet
+          val backupDir = new File(d)
+          if (!backupDir.exists()) {
+            backupDir.mkdirs()
+          }
+
+          val backupFileName = originalFile.getName + "-" + sdf.format(new Date())
+
+          val fFrom : File = fileToProcess
+          val fTo : File = new File(backupDir, backupFileName)
+
+          if (FileHelper.renameFile(fFrom, fTo)) {
+            log.info(s"Moved file for [${envelope.id}] from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
+          } else {
+            log.warn(s"File for [${envelope.id}] failed to be renamed from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
+          }
+      }
+    }
+
+    override def deny() : Unit = {
+      log.info(s"Restoring file [${originalFile}] in [${inflightId}]")
+      FileHelper.renameFile(fileToProcess, originalFile)
+    }
+
+  }
+
+  private class FileSourceLogic() extends AckSourceLogic[FileAckContext](shape, out) {
 
     /** The id to identify the instance in the log files */
-    override def id : String = pollId
+    override val id : String = pollId
 
     private var pendingFiles : mutable.ListBuffer[File] = ListBuffer.empty
 
     /** A logger that must be defined by concrete implementations */
-    override protected def log : Logger = Logger(pollId)
+    override protected val log : Logger = Logger(pollId)
 
     /** The id's of the available inflight slots */
-    override protected def inflightSlots() : List[String] =
+    override protected val inflightSlots : List[String] =
       1.to(pollCfg.batchSize).map(i => s"FilePoller-${pollCfg.id}-$i").toList
 
     // Reset the polling interval
@@ -117,7 +151,8 @@ class FileAckSource(
               inflightId = id,
               env = env,
               originalFile = f,
-              fileToProcess = fileToProcess
+              fileToProcess = fileToProcess,
+              log = log
             ))
           } else {
             None
@@ -146,40 +181,6 @@ class FileAckSource(
       } finally {
         FileAckSource.releaseDirectory(pollCfg.sourceDir)
       }
-    }
-
-    override protected def beforeAcknowledge(ackCtxt : FileAckContext) : Unit = {
-      log.info(s"Successfully processed envelope [${ackCtxt.envelope.id}]")
-      pollCfg.backup match {
-        case None =>
-          if (ackCtxt.fileToProcess.delete()) {
-            log.info(s"Deleted file for [${ackCtxt.envelope.id}] : [${ackCtxt.fileToProcess}]")
-          } else {
-            log.warn(s"File for [${ackCtxt.envelope.id}] could not be deleted : [${ackCtxt.fileToProcess}]")
-          }
-        case Some(d) =>
-
-          val backupDir = new File(d)
-          if (!backupDir.exists()) {
-            backupDir.mkdirs()
-          }
-
-          val backupFileName = ackCtxt.originalFile.getName + "-" + sdf.format(new Date())
-
-          val fFrom : File = ackCtxt.fileToProcess
-          val fTo : File = new File(backupDir, backupFileName)
-
-          if (FileHelper.renameFile(fFrom, fTo)) {
-            log.info(s"Moved file for [${ackCtxt.envelope.id}] from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
-          } else {
-            log.warn(s"File for [${ackCtxt.envelope.id}] failed to be renamed from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
-          }
-      }
-    }
-
-    override protected def beforeDenied(ackCtxt : FileAckContext) : Unit = {
-      log.info(s"Restoring file [${ackCtxt.originalFile}] in [${ackCtxt.inflightId}]")
-      FileHelper.renameFile(ackCtxt.fileToProcess, ackCtxt.originalFile)
     }
 
     /**
@@ -260,6 +261,5 @@ class FileAckSource(
     }
   }
 
-  override def createLogic(inheritedAttributes : Attributes) : GraphStageLogic =
-    new FileSourceLogic()
+  override def createLogic(inheritedAttributes : Attributes) : GraphStageLogic = new FileSourceLogic()
 }

@@ -2,7 +2,7 @@
 
 package blended.streams
 
-import akka.stream.Outlet
+import akka.stream.{Outlet, Shape}
 import akka.stream.stage.{AsyncCallback, OutHandler, TimerGraphStageLogic}
 import blended.streams.AckState.AckState
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
@@ -32,13 +32,20 @@ trait AcknowledgeContext {
   def envelope : FlowEnvelope
 
   def created : Long
+
+  def acknowledge() : Unit
+
+  def deny() : Unit
 }
 
 case class DefaultAcknowledgeContext(
   override val inflightId : String,
   override val envelope : FlowEnvelope,
   override val created : Long
-) extends AcknowledgeContext
+) extends AcknowledgeContext {
+  override def acknowledge() : Unit = ()
+  override def deny(): Unit = ()
+}
 
 /**
   * Provide common logic for Source stages producing [[FlowEnvelope]]s requiring
@@ -76,26 +83,28 @@ case class DefaultAcknowledgeContext(
   * poll will be executed \in regular intervals. Concrete implementations may overwrite the
   * the nextPoll() method to modify the calculation of the next polling occurrence.
 */
-trait AckSourceLogic[T <: AcknowledgeContext] { this : TimerGraphStageLogic =>
+abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outlet[FlowEnvelope]) extends TimerGraphStageLogic(shape) {
 
-  def out : Outlet[FlowEnvelope]
-  def ackTimeout : FiniteDuration = 1.second
+  protected val ackTimeout : FiniteDuration = 1.second
 
   private case object Poll
   private case object CheckAck
 
   override def preStart() : Unit = {
+    super.preStart()
     schedulePeriodically(CheckAck, 100.millis)
   }
 
   /** The id to identify the instance in the log files */
-  protected def id : String
+  protected val id : String
+
+  protected val autoAcknowledge : Boolean = false
 
   /** A logger that must be defined by concrete implementations */
-  protected def log : Logger
+  protected val log : Logger
 
   /** The id's of the available inflight slots */
-  protected def inflightSlots() : List[String]
+  protected val inflightSlots : List[String]
 
   // The map of current inflight AcknowledgeContexts. An inflight slot is considered
   // to be available if it's id does not occurr in the keys of the inflight map.
@@ -103,12 +112,6 @@ trait AckSourceLogic[T <: AcknowledgeContext] { this : TimerGraphStageLogic =>
 
   // TODO: Make this configurable ?
   protected def nextPoll() : Option[FiniteDuration] = Some(1.second)
-
-  // A callback to fail the stage
-  protected val fail : AsyncCallback[Throwable] = getAsyncCallback[Throwable] { t : Throwable =>
-    log.error(t)(s"Failing stage [$id]")
-    failStage(t)
-  }
 
   private def addInflight(inflightId : String, ackCtxt : T, state : AckState) : Unit = {
     inflightMap += (inflightId -> (ackCtxt, state))
@@ -125,31 +128,27 @@ trait AckSourceLogic[T <: AcknowledgeContext] { this : TimerGraphStageLogic =>
 
   // A callback to update the ack state for an inflight message
   protected val updateAckState : AsyncCallback[(String, AckState)] = getAsyncCallback[(String, AckState)] {
-    case (id, state) =>
+    case (inflightId, state) =>
 
-      inflightMap.get(id) match {
+      inflightMap.get(inflightId) match {
         case Some((ctxt, _)) =>
-          log.debug(s"Updating state for [$id] to [$state]")
+          log.debug(s"Updating state for [$inflightId] to [$state]")
           inflightMap.put(id, (ctxt, state))
           state match {
-            case AckState.Acknowledged => acknowledged(ctxt)
-            case AckState.Denied       => denied(ctxt)
+            case AckState.Acknowledged =>
+              acknowledged(ctxt)
+            case AckState.Denied       =>
+              denied(ctxt)
             case _                     =>
           }
         case None =>
-          log.debug(s"AckContext [$id] no longer inflight - perhaps it has timed out ?")
+          log.debug(s"AckContext [$inflightId] no longer inflight - perhaps it has timed out ?")
       }
   }
 
-  protected def beforeAcknowledge(ackCtxt : T) : Unit = {}
-  // this will be called whenever an inflight message has been acknowledged
-
   private def acknowledged(ackCtxt : T) : Unit = {
-    // First, we need to call beforeAcknowldege(), so that concrete implementations
-    // can perform the technical acknowledgement
     log.debug(s"Flow envelope [${ackCtxt.envelope.id}] has been acknowledged in [$id]")
-    beforeAcknowledge(ackCtxt)
-    // Then we clear the message from the inflight map
+    ackCtxt.acknowledge()
     removeInflight(ackCtxt.inflightId)
     // If the poll timer is active we actually have executed a poll recently with no result
     if (!isTimerActive(Poll)) {
@@ -160,18 +159,18 @@ trait AckSourceLogic[T <: AcknowledgeContext] { this : TimerGraphStageLogic =>
   override def postStop() : Unit = {
 
     val p : Map[String, T] = pending()
-    log.debug(s"[$id] has [${p.size}] envelopes still in inflight while stopping")
+    if (p.nonEmpty) {
+      log.debug(s"[$id] has [${p.size}] envelopes still in inflight while stopping")
+    }
 
     // perform any implementation specific logic to roll back pending envelopes
-    p.values.foreach(beforeDenied)
+    p.values.foreach(_.deny())
   }
-
-  protected def beforeDenied(ackCtxt : T) : Unit = {}
 
   // this will be called whenever an inflight message has been denied
   private def denied(ackCtxt : T) : Unit = {
     log.debug(s"Flow Envelope [${ackCtxt.envelope.id}] has been denied in [$id]")
-    beforeDenied(ackCtxt)
+    ackCtxt.deny()
     // we need to clean up the inflight map
     removeInflight(ackCtxt.inflightId)
     // If the poll timer is active we actually have executed a poll recently with no result
@@ -183,10 +182,10 @@ trait AckSourceLogic[T <: AcknowledgeContext] { this : TimerGraphStageLogic =>
   // this will be called whenever the acknowledgement for an inflight
   // message has timed out. Per default this will be delegated to the
   // denied() handler
-  protected def ackTimedOut(ackCtxt : T) = denied(ackCtxt)
+  protected def ackTimedOut(ackCtxt : T) : Unit = denied(ackCtxt)
 
   private def freeInflightSlot() : Option[String] =
-    inflightSlots().find { id =>
+    inflightSlots.find { id =>
       !inflightMap.keys.exists(_ == id)
     }
 
@@ -224,9 +223,14 @@ trait AckSourceLogic[T <: AcknowledgeContext] { this : TimerGraphStageLogic =>
         case Success(Some(ackCtxt)) =>
           // add the context to the inflight messages
           log.debug(s"Received [${ackCtxt.envelope.flowMessage}] in [$id]")
-          addInflight(id, ackCtxt, AckState.Pending)
           // push the envelope to the outlet
-          push(out, ackCtxt.envelope)
+          if (autoAcknowledge) {
+            ackCtxt.acknowledge()
+            push(out, ackCtxt.envelope.withRequiresAcknowledge(false).withAckHandler(None))
+          } else {
+            addInflight(id, ackCtxt, AckState.Pending)
+            push(out, ackCtxt.envelope)
+          }
 
         case Failure(t) =>
           log.warn(t)(s"Failed to poll for new message in [$id]")

@@ -19,6 +19,7 @@ import scala.util.{Failure, Success, Try}
   * @param idleTimeout The timeout after which an unused session will be closed.
   */
 class JmsSessionManager(
+  name : String,
   conn : Connection,
   maxSessions : Int,
   idleTimeout : FiniteDuration = 30.seconds
@@ -48,12 +49,12 @@ class JmsSessionManager(
 
     sessions.get(id) match {
       case Some(s) =>
-        log.debug(s"Reusing existing session for [$id]")
+        log.trace(s"Reusing existing session for session [$id] in [$name]")
         Success(Some(s))
       case None =>
         if (sessions.size < maxSessions) {
           try {
-            log.debug(s"Creating session with id [$id]")
+            log.debug(s"Creating session [$id] in [$name]")
             val s : JmsSession = JmsSession(
               conn.createSession(false, Session.CLIENT_ACKNOWLEDGE), id
             )
@@ -62,11 +63,11 @@ class JmsSessionManager(
             Success(Some(s))
           } catch {
             case NonFatal(t) =>
-              log.error(t)(s"Failed to create session : [${t.getMessage()}]")
+              log.error(t)(s"Failed to create session in [$name] : [${t.getMessage()}]")
               Failure(t)
           }
         } else {
-          log.warn(s"No free session slot available [$maxSessions].")
+          log.warn(s"No free session slot available in [$name] for [$id] : [$maxSessions].")
           Success(None)
         }
     }
