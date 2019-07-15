@@ -215,7 +215,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
           nextPoll() match {
             case None => pollImmediately.invoke()
             case Some(d) => if (!isTimerActive(Poll)) {
-              log.debug(s"Scheduling next poll in [$d]")
+              log.debug(s"Scheduling next poll for [$id] in [$d]")
               scheduleOnce(Poll, d)
             }
           }

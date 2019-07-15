@@ -99,7 +99,8 @@ final class JmsConsumerStage(
       case None => throw new IllegalArgumentException(s"Destination must be set for consumer in [$id]")
     }
 
-    private val closeSession : AsyncCallback[JmsSession] = getAsyncCallback(s => connector.sessionMgr.closeSession(s.sessionId))
+    private val closeAll : AsyncCallback[Unit] = getAsyncCallback[Unit](_ => connector.closeAll())
+    private val closeSession : AsyncCallback[JmsSession] = getAsyncCallback(s => connector.closeSession(s.sessionId))
     private val ackMessage : AsyncCallback[Message] = getAsyncCallback[Message](m => m.acknowledge())
 
     private lazy val connector : JmsConnector = new JmsConnector(id, consumerSettings)(session => Try {
@@ -118,7 +119,7 @@ final class JmsConsumerStage(
       }
     })( s => Try {
       removeConsumer(s.sessionId)
-    })( t => failStage(t) )
+    })(handleError.invoke)
 
     /** The id's of the available inflight slots */
     override protected val inflightSlots : List[String] =
@@ -183,9 +184,8 @@ final class JmsConsumerStage(
     }
 
     override protected def doPerformPoll(id: String, ackHandler: AcknowledgeHandler): Try[Option[JmsAckContext]] = Try {
-
-      connector.sessionMgr.getSession(id) match {
-        case Success(Some(s)) =>
+      connector.getSession(id) match {
+        case Some(s) =>
 
           receive(s).unwrap
             .map{ m =>
@@ -201,16 +201,16 @@ final class JmsConsumerStage(
               )
             }
 
-        case Success(None) =>
+        case None =>
           None
-
-        case Failure(t) =>
-          handleError.invoke(t)
-          throw t
       }
     }
 
-    override def postStop(): Unit = connector.sessionMgr.closeAll()
+    override def postStop(): Unit = {
+      log.debug(s"Stopping JmsConsumerStage [$id].")
+      connector.closeAll()
+    }
+
   }
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new JmsSourceLogic()

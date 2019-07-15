@@ -279,7 +279,7 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
 
       val messages = withExpectedDestination("myQueue", router)(FlowEnvelope()).unwrap
       messages should be(empty)
-      consumeMessages(retryCfg.retryDestName)(1.second).unwrap should not be empty
+      consumeMessages(retryCfg.retryDestName)(1.second).unwrap should not be (empty)
     }
   }
 }

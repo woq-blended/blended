@@ -65,7 +65,7 @@ class JmsSessionManager(
             Success(Some(s))
           } catch {
             case NonFatal(t) =>
-              log.error(t)(s"Failed to create session in [$name] : [${t.getMessage()}]")
+              log.error(s"Failed to create session in [$name] : [${t.getMessage()}]")
               Failure(t)
           }
         } else {

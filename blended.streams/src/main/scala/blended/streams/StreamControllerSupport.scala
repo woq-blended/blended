@@ -8,7 +8,7 @@ import blended.util.logging.Logger
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Random, Success}
+import scala.util.{Failure, Random, Success, Try}
 
 trait StreamControllerSupport[T, Mat] { this : Actor =>
 
@@ -39,6 +39,24 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
     newIntervalMillis.toLong.millis
   }
 
+  private def restart(streamCfg : StreamControllerConfig, interval : FiniteDuration, startedAt : Option[Long]) : Unit = {
+    val nextStart : FiniteDuration = startedAt match {
+      case None => nextInterval(interval)(streamCfg)
+      case Some(s) =>
+        if (System.currentTimeMillis() - s < streamCfg.maxDelay.toMillis) {
+          nextInterval(interval)(streamCfg)
+        } else {
+          streamCfg.minDelay
+        }
+    }
+
+    log.info(s"Scheduling restart of Stream [${streamCfg.name}] in [$nextStart]")
+
+    context.system.scheduler.scheduleOnce(nextStart, self, StreamController.Start)
+
+    context.become(starting(streamCfg, nextStart))
+  }
+
   def starting(streamCfg : StreamControllerConfig, interval : FiniteDuration) : Receive = {
     case StreamController.Stop =>
       context.stop(self)
@@ -46,16 +64,21 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
     case StreamController.Start =>
       log.debug(s"Initializing StreamController [${streamCfg.name}]")
 
-      val (mat, killswitch, done) = startStream()
+      startStream() match {
+        case Success( (mat, killswitch, done) ) =>
+          done.onComplete {
+            case Success(_) =>
+              self ! StreamController.StreamTerminated(None)
+            case Failure(t) =>
+              self ! StreamController.StreamTerminated(Some(t))
+          }
 
-      done.onComplete {
-        case Success(_) =>
-          self ! StreamController.StreamTerminated(None)
+          context.become(running(streamCfg, killswitch, interval, System.currentTimeMillis()))
+
         case Failure(t) =>
-          self ! StreamController.StreamTerminated(Some(t))
+          restart(streamCfg, interval, None)
       }
 
-      context.become(running(streamCfg, killswitch, interval, System.currentTimeMillis()))
   }
 
   def running(
@@ -76,17 +99,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
           log.error(e)(e.getMessage)
         }
 
-        val nextStart : FiniteDuration = if (System.currentTimeMillis() - startedAt < streamCfg.maxDelay.toMillis) {
-          nextInterval(interval)(streamCfg)
-        } else {
-          streamCfg.minDelay
-        }
-
-        log.info(s"Scheduling restart of Stream [${streamCfg.name}] in [$nextStart]")
-
-        context.system.scheduler.scheduleOnce(nextStart, self, StreamController.Start)
-
-        context.become(starting(streamCfg, nextStart))
+        restart(streamCfg, interval, Some(startedAt))
       } else {
         context.stop(self)
       }
@@ -96,7 +109,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
     case StreamController.StreamTerminated(_) => context.stop(self)
   }
 
-  def startStream() : (Mat, KillSwitch, Future[Done]) = {
+  private def startStream() : Try[(Mat, KillSwitch, Future[Done])] = Try {
     val ((m, s), d) = source()
       .viaMat(KillSwitches.single)(Keep.both)
       .watchTermination()(Keep.both)

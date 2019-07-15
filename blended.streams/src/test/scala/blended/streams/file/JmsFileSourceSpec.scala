@@ -26,6 +26,8 @@ import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
+import blended.util.RichTry._
+
 
 import scala.concurrent.duration._
 import scala.util.Try
@@ -95,7 +97,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     destName : String
   ) : Source[FlowEnvelope, NotUsed] = {
 
-    val dest = JmsDestination.create(destName).get
+    val dest = JmsDestination.create(destName).unwrap
 
     val settings : JMSConsumerSettings = JMSConsumerSettings(
       log = log,
@@ -121,7 +123,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     destName : String
   ) : JmsProducerSettings = {
 
-    val dest : JmsDestination = JmsDestination.create(destName).get
+    val dest : JmsDestination = JmsDestination.create(destName).unwrap
     JmsProducerSettings(
       log = log,
       connectionFactory = cf,

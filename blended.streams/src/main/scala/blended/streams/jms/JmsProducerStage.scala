@@ -9,8 +9,8 @@ import blended.util.RichTry._
 import javax.jms.{Destination, MessageProducer}
 
 import scala.concurrent.duration._
+import scala.util.Try
 import scala.util.control.NonFatal
-import scala.util.{Failure, Success, Try}
 
 class JmsProducerStage(
   name : String,
@@ -33,7 +33,6 @@ class JmsProducerStage(
     private val id : String = name
 
     private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
-      producerSettings.log.error(t)(s"Error in stage [$name] : [${t.getMessage()}]")
       failStage(t)
     }
 
@@ -45,12 +44,14 @@ class JmsProducerStage(
       // scalastyle:on null
     })(_ =>  Try {
       producer = None
-    })(t => failStage(t))
+    })(handleError.invoke)
+
+    private val closeAll : AsyncCallback[Unit] = getAsyncCallback[Unit](_ => connector.closeAll())
+    private val closeSession : AsyncCallback[JmsSession] = getAsyncCallback(s => connector.closeSession(s.sessionId))
 
     private def pushMessage(env : FlowEnvelope) : Unit = {
-
-      connector.sessionMgr.getSession(id) match {
-        case Success(Some(s)) =>
+      connector.getSession(id) match {
+        case Some(s) =>
           producer match {
             case None =>
               producerSettings.log.debug(s"No producer available for [$id]")
@@ -60,12 +61,9 @@ class JmsProducerStage(
               push(outlet, sendEnvelope(env)(s)(p))
           }
 
-        case Success(None) =>
+        case None =>
           producerSettings.log.warn(s"No producer session available in [$id]")
           scheduleOnce(Push(env), 10.millis)
-
-        case Failure(t) =>
-          handleError.invoke(t)
       }
     }
 
@@ -106,7 +104,7 @@ class JmsProducerStage(
       } catch {
         case NonFatal(t) =>
           producerSettings.log.error(t)(s"Error sending message [${env.id}] to [${producerSettings.jmsDestination}] in [${jmsSession.sessionId}]")
-          connector.sessionMgr.closeSession(jmsSession.sessionId)
+          closeSession.invoke(jmsSession)
           env.withException(t)
       }
     }
@@ -137,7 +135,7 @@ class JmsProducerStage(
     }
 
     override def postStop(): Unit = {
-      connector.sessionMgr.closeAll()
+      closeAll.invoke()
     }
   }
 
