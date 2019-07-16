@@ -121,6 +121,13 @@ final class JmsConsumerStage(
       removeConsumer(s.sessionId)
     })(handleError.invoke)
 
+
+    override protected def freeInflightSlot(): Option[String] =
+      determineNextSlot(inflightSlots.filter(id => connector.isOpen(id))) match {
+        case Some(s) => Some(s)
+        case None => determineNextSlot(inflightSlots)
+      }
+
     /** The id's of the available inflight slots */
     override protected val inflightSlots : List[String] =
       1.to(consumerSettings.sessionCount).map(i => s"$id-$i").toList

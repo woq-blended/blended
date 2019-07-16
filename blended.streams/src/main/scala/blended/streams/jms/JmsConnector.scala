@@ -85,4 +85,13 @@ class JmsConnector(
       handleError(t)
       ()
   }
+
+  def isOpen(id : String) : Boolean = withSessionMgr[Boolean] { mgr =>
+    mgr.isOpen(id)
+  } match {
+      case Success(b) => b
+      case Failure(t) =>
+        handleError(t)
+        false
+  }
 }

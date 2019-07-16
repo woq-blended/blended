@@ -10,7 +10,7 @@ import blended.util.logging.Logger
 
 import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Random, Success, Try}
 
 /**
  * The state of an acknowledgement :
@@ -110,6 +110,8 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
   // to be available if it's id does not occur in the keys of the inflight map.
   private val inflightMap : mutable.Map[String, (T, AckState)] = mutable.Map.empty
 
+  private var lastUsedSlot : Option[String] = None
+
   // TODO: Make this configurable ?
   protected def nextPoll() : Option[FiniteDuration] = Some(1.second)
 
@@ -183,10 +185,20 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
   // denied() handler
   protected def ackTimedOut(ackCtxt : T) : Unit = denied(ackCtxt)
 
-  private def freeInflightSlot() : Option[String] =
-    inflightSlots.find { id =>
-      !inflightMap.keys.exists(_ == id)
+  protected def determineNextSlot(slotList : List[String]) : Option[String] = {
+    lastUsedSlot = slotList.filter { id => !inflightMap.keys.exists(_ == id) } match {
+      case Nil => None
+      case head :: Nil => Some(head)
+      case l =>
+        Some(lastUsedSlot.flatMap{ lu => l.find{i => i > lu} }.getOrElse(l.head))
     }
+
+    lastUsedSlot
+  }
+
+  protected def freeInflightSlot() : Option[String] = {
+    determineNextSlot(inflightSlots)
+  }
 
   /* Concrete implementations must implement this method to realize the technical
      poll from the external system */

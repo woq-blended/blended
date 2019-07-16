@@ -47,6 +47,8 @@ class JmsSessionManager(
   // We maintain a map of currently open sessions
   private val sessions : mutable.Map[String, JmsSession] = mutable.Map.empty
 
+  def isOpen(id : String) : Boolean = sessions.contains(id)
+
   def getSession(id : String): Try[Option[JmsSession]] = {
 
     sessions.get(id) match {

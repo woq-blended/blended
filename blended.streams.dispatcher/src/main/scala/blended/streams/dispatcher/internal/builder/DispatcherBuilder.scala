@@ -117,7 +117,7 @@ case class DispatcherBuilder(
   }
 
   private[builder] def eventEnvelopes(worklistEvent : WorklistEvent) : Seq[FlowEnvelope] = {
-    worklistEvent.worklist.items match {
+    val result = worklistEvent.worklist.items match {
       // Should not happen
       case Seq() =>
         Seq(
@@ -132,6 +132,9 @@ case class DispatcherBuilder(
             .withException(new MismatchedEnvelopeException(worklistEvent.worklist.id))
         }
     }
+
+    bs.streamLogger.debug(s"Found worklist envelopes : [$result]")
+    result
   }
 
   private[builder] def branchIds(envelopes : Seq[FlowEnvelope]) : Seq[String] =
@@ -161,7 +164,10 @@ case class DispatcherBuilder(
       case term : WorklistTerminated =>
         if (term.state == WorklistStateCompleted) {
           val envelopes = eventEnvelopes(term)
+            // We only send transaction updates for a completed worklist, if auto completion is set to true ...
             .filter { _.header[Boolean](bs.headerAutoComplete).getOrElse(true) }
+            // ... AND the bridge outbound destination lies within the internal JMS provider
+            // (if the message goes to external, the final bridge send will complete the transaction
             .filter { env =>
               (env.header[String](bs.headerBridgeVendor), env.header[String](bs.headerBridgeProvider)) match {
                 case (Some(v), Some(p)) => dispatcherCfg.providerRegistry.jmsProvider(v, p).exists(_.internal)
@@ -170,6 +176,7 @@ case class DispatcherBuilder(
             }
 
           if (envelopes.isEmpty) {
+            bs.streamLogger.debug(s"No item envelopes found for [${event.worklist.id}]")
             None
           } else {
             Some(FlowTransactionUpdate(term.worklist.id, props, WorklistStateCompleted, branchIds(envelopes):_*))
@@ -178,7 +185,9 @@ case class DispatcherBuilder(
           Some(FlowTransactionFailed(event.worklist.id, props, term.reason.map(_.getMessage())))
         }
       // Completed worklist steps do nothing
-      case step : WorklistStepCompleted => None
+      case step : WorklistStepCompleted =>
+        bs.streamLogger.debug(s"No transaction event for completed worklist [${event.worklist.id}]")
+        None
     }
 
     bs.streamLogger.debug(s"Transaction update for worklist event [${event.worklist.id}] is [$transEvent]")
