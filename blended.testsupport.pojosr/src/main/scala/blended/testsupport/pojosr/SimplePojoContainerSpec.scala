@@ -1,6 +1,6 @@
 package blended.testsupport.pojosr
 
-import org.osgi.framework.BundleActivator
+import org.osgi.framework.{Bundle, BundleActivator, BundleContext}
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
 
 abstract class SimplePojoContainerSpec
@@ -22,6 +22,10 @@ abstract class SimplePojoContainerSpec
    * If required, inject additional system properties when firing up the container.
    */
   def systemProperties : Map[String, String] = Map.empty
+
+  def bundleByName(name : String) : Option[Bundle] = registry.getBundleContext().getBundles().find {
+    b => b.getSymbolicName() == name
+  }
 
   override protected def afterAll() : Unit = {
     _registry.foreach { r =>

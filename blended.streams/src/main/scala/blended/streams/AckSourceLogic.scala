@@ -209,20 +209,20 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
         }
       }
 
-      log.debug(s"Performing poll for [$id]")
+      log.trace(s"Performing poll for [$id]")
       doPerformPoll(id, ackHandler) match {
         case Success(None) =>
           nextPoll() match {
             case None => pollImmediately.invoke()
             case Some(d) => if (!isTimerActive(Poll)) {
-              log.debug(s"Scheduling next poll for [$id] in [$d]")
+              log.trace(s"Scheduling next poll for [$id] in [$d]")
               scheduleOnce(Poll, d)
             }
           }
 
         case Success(Some(ackCtxt)) =>
           // add the context to the inflight messages
-          log.debug(s"Received [${ackCtxt.envelope.flowMessage}] in [$id]")
+          log.info(s"Received [${ackCtxt.envelope}] in [$id]")
           // push the envelope to the outlet
           if (autoAcknowledge) {
             ackCtxt.acknowledge()

@@ -18,7 +18,7 @@ class JmsProducerStage(
 )(implicit actorSystem : ActorSystem)
   extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
 
-  producerSettings.log.info(s"Starting producer [$name]")
+  producerSettings.log.debug(s"Starting producer [$name]")
 
   private case class Push(env : FlowEnvelope)
 

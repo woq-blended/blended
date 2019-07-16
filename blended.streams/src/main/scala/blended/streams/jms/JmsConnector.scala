@@ -1,10 +1,9 @@
 package blended.streams.jms
 
 import blended.jms.utils.JmsSession
-import javax.jms._
 import blended.util.RichTry._
+import javax.jms._
 
-import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 class JmsConnector(
@@ -24,7 +23,7 @@ class JmsConnector(
     * [[blended.streams.StreamControllerSupport]].
     */
   private val connection : Option[Connection] = Try {
-    jmsSettings.log.info(s"Trying to create JMS connection for stream [$id]")
+    jmsSettings.log.debug(s"Trying to create JMS connection for stream [$id]")
     jmsSettings.connectionFactory.createConnection()
   } match {
     case Success(c) =>

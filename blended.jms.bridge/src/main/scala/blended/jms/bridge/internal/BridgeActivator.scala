@@ -15,6 +15,7 @@ import blended.util.RichTry._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 class BridgeActivator extends DominoActivator with ActorSystemWatching {
@@ -147,14 +148,14 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
               }
             }
 
-            onStop {
-              log.info("Stopping JMS bridge supervising actor.")
-              osgiCfg.system.stop(bridge)
-            }
-          } catch {
-            case t: Throwable =>
-              log.error(t)("Error starting JMS bridge")
+          onStop {
+            log.info("Stopping JMS bridge supervising actor.")
+            osgiCfg.system.stop(bridge)
           }
+
+        } catch {
+          case NonFatal(t) =>
+            log.error(t)("Error starting JMS bridge")
         }
       }
     }

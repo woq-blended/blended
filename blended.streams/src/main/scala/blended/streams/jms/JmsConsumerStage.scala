@@ -46,7 +46,7 @@ final class JmsConsumerStage(
 )(implicit actorSystem : ActorSystem)
   extends GraphStage[SourceShape[FlowEnvelope]] {
 
-  consumerSettings.log.info(s"Starting consumer [$name]")
+  consumerSettings.log.debug(s"Starting consumer [$name]")
 
   private[this] val consumer : mutable.Map[String, MessageConsumer] = mutable.Map.empty
 

@@ -449,9 +449,10 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
       retried should be(empty)
 
       consumeEvents().unwrap should be(empty)
+      bundleByName("blended.jms.bridge").foreach(_.stop())
 
-      retried.foreach { env =>
-        env.header[Unit]("UnitProperty") should be(Some(()))
+      registry.getBundleContext().getBundles().find(b => b.getSymbolicName() == "blended.jms.bridge").foreach { b =>
+        b.stop()
       }
 
       consumeMessages(internal, "bridge.data.out.activemq.external").unwrap should have size msgCount
@@ -548,8 +549,9 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
 
       val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").unwrap
       retried should be(empty)
-
       consumeEvents().unwrap should be(empty)
+
+      bundleByName("blended.jms.bridge").foreach(_.stop())
 
       consumeMessages(internal, "bridge.data.out.activemq.external").unwrap should have size 2
 
