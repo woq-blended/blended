@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
+import blended.jms.utils.{CloseTimeout, Connect, ConnectResult, ConnectionClosed, Disconnect}
 import javax.jms.JMSException
 import org.scalatest.FreeSpecLike
 

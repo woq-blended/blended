@@ -1,9 +1,8 @@
-package blended.jms.utils.internal
+package blended.jms.utils
 
 import java.util.Date
 
 import akka.actor.ActorRef
-import blended.jms.utils.ConnectionState
 import javax.jms.Connection
 
 import scala.concurrent.duration.FiniteDuration
@@ -58,3 +57,17 @@ case class ConnectionCommand(
   connectPending : Boolean = false,
   reconnectNow : Boolean = false
 )
+
+object KeepAlive {
+  def apply(vendor: String, provider: String): KeepAlive = new KeepAlive(vendor, provider)
+}
+
+case class KeepAlive(vendor : String, provider : String)
+
+object Reconnect {
+  def apply(cf : IdAwareConnectionFactory, e : Option[Throwable]) : Reconnect =
+    new Reconnect(cf.vendor, cf.provider, e)
+}
+
+case class Reconnect(vendor : String, provider : String, e : Option[Throwable])
+

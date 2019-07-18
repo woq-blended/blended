@@ -2,6 +2,7 @@ package blended.jms.utils.internal
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
+import blended.jms.utils.{CloseTimeout, ConnectionClosed, Disconnect}
 import javax.jms._
 import org.scalatest.FreeSpecLike
 

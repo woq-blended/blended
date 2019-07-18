@@ -32,6 +32,7 @@ object BlendedJmsUtils extends ProjectFactory {
       BlendedUpdaterConfigJvm.project,
       BlendedUtilLogging.project,
       BlendedAkka.project,
+
       BlendedCamelUtils.project % Test,
       BlendedTestsupport.project % Test
     )

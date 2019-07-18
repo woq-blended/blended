@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging, Props}
 import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.util.Timeout
+import blended.jms.utils.{Connect, ConnectResult, ConnectionClosed, Disconnect}
 import javax.jms.Connection
 
 import scala.concurrent.ExecutionContext

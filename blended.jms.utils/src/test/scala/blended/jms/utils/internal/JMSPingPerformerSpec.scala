@@ -9,7 +9,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.Source
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
-import blended.jms.utils.{BlendedJMSConnectionConfig, JMSSupport}
+import blended.jms.utils.{BlendedJMSConnectionConfig, ExecutePing, JMSSupport, PingFailed, PingResult, PingSuccess, PingTimeout}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.jms.{Connection, MessageProducer, Session}
 

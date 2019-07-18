@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.pattern.pipe
-import blended.jms.utils.{ConnectionConfig, JMSSupport}
+import blended.jms.utils.{ConnectionConfig, ExecutePing, JMSSupport, PingFailed, PingPending, PingResult, PingSuccess, PingTimeout}
 import blended.util.logging.Logger
 import javax.jms._
 

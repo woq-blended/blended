@@ -99,7 +99,6 @@ final class JmsConsumerStage(
       case None => throw new IllegalArgumentException(s"Destination must be set for consumer in [$id]")
     }
 
-    private val closeAll : AsyncCallback[Unit] = getAsyncCallback[Unit](_ => connector.closeAll())
     private val closeSession : AsyncCallback[JmsSession] = getAsyncCallback(s => connector.closeSession(s.sessionId))
     private val ackMessage : AsyncCallback[Message] = getAsyncCallback[Message](m => m.acknowledge())
 

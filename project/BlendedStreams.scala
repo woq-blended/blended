@@ -59,7 +59,7 @@ object BlendedStreams extends ProjectFactory {
       BlendedAkka.project,
       BlendedPersistence.project,
 
-      BlendedActivemqBrokerstarter.project % "test",
+      BlendedActivemqBrokerstarter.project % Test,
       BlendedPersistenceH2.project % Test,
       BlendedTestsupportPojosr.project % Test,
       BlendedTestsupport.project % Test

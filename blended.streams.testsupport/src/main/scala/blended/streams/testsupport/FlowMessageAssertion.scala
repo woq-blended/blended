@@ -5,13 +5,14 @@ import blended.streams.message._
 import blended.util.logging.Logger
 
 import scala.util.Try
+import blended.util.RichTry._
 
 object FlowMessageAssertion {
 
   def checkAssertions(envelopes : FlowEnvelope*)(assertions : FlowMessageAssertion*) : Seq[String] = {
     assertions.map(a => a.f(envelopes))
       .filter(_.isFailure)
-      .map(_.failed.get.getMessage())
+      .map(_.failed.unwrap.getMessage())
   }
 }
 
@@ -69,7 +70,7 @@ class ExpectedBodies(bodies : Option[Any]*) extends FlowMessageAssertion {
         }
       }
 
-      case baseMsg : BaseFlowMessage => expected.isDefined
+      case _ : BaseFlowMessage => expected.isDefined
     }
 
   override def f : Seq[FlowEnvelope] => Try[String] = l => {
@@ -78,7 +79,7 @@ class ExpectedBodies(bodies : Option[Any]*) extends FlowMessageAssertion {
       matchList.filter { case (expected, actual) => unmatched(actual)(expected) } match {
         case s if s.isEmpty => "Collector has received the correct bodies"
         case e =>
-          val msg = e.map { case (b, a) => s"[$b != ${a.body()}]" } mkString (",")
+          val msg = e.map { case (b, a) => s"[$b != ${a.body()}]" }.mkString(",")
           throw new Exception(s"Unexpected Bodies: $msg")
       }
     }
@@ -154,11 +155,11 @@ class ExpectedHeaders(headers : Map[String, Any]*) extends FlowMessageAssertion 
     }
 
     if (headers.length == 1) {
-      compareHeaders(l.map(m => (m, headers(0))).toMap).get
+      compareHeaders(l.map(m => (m, headers(0))).toMap).unwrap
     } else {
       l.size match {
         case n if n == headers.length =>
-          compareHeaders(l.zip(headers.toList).toMap).get
+          compareHeaders(l.zip(headers.toList).toMap).unwrap
         case _ =>
           throw new Exception(s"The number of messages received [${l.size}] does not match the number of header maps [${headers.length}]")
       }

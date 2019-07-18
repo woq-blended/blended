@@ -1,6 +1,7 @@
 package blended.jms.utils.internal
 
 import akka.actor._
+import blended.jms.utils.{CloseTimeout, ConnectionClosed, Disconnect}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}

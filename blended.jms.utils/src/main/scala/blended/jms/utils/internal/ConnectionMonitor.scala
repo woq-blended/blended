@@ -1,7 +1,7 @@
 package blended.jms.utils.internal
 import java.text.SimpleDateFormat
 
-import blended.jms.utils.ConnectionState
+import blended.jms.utils.{ConnectionCommand, ConnectionState}
 
 class ConnectionMonitor(vendor : String, provider : String, clientId : String) extends ConnectionMonitorMXBean {
 

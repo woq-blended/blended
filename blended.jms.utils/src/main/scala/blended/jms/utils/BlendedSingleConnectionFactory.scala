@@ -4,7 +4,7 @@ import java.lang.management.ManagementFactory
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import blended.jms.utils.internal.{CheckConnection, _}
+import blended.jms.utils.internal.{_}
 import blended.util.logging.Logger
 import javax.jms.{Connection, ConnectionFactory, JMSException}
 import javax.management.ObjectName

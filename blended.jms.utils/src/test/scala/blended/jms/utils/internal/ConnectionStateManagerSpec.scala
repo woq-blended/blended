@@ -2,7 +2,7 @@ package blended.jms.utils.internal
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import blended.jms.utils.{BlendedJMSConnectionConfig, ConnectionState}
+import blended.jms.utils.{BlendedJMSConnectionConfig, CheckConnection, ConnectionState, ConnectionStateChanged, Disconnect, PingFailed}
 import org.scalatest.FreeSpecLike
 
 import scala.concurrent.duration._
