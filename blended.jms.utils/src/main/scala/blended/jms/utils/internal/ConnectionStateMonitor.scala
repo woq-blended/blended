@@ -58,7 +58,7 @@ class ConnectionStateMonitor(val bc : Option[BundleContext], val monitorBean : O
 
     withService[FrameworkService, Unit] {
       case None =>
-        log.warning("Could not find FrameworkServive to restart Container. Restarting through Framework Bundle ...")
+        log.warning("Could not find FrameworkService to restart Container. Restarting through Framework Bundle ...")
         bundleContext.getBundle(0).update()
       case Some(s) => s.restartContainer(msg, true)
     }

@@ -2,6 +2,7 @@ package blended.jms.utils
 
 import javax.jms._
 
+@Deprecated
 class ForwardingMessageHandler(cf : ConnectionFactory, destName : String, additionalHeader : Map[String, AnyRef] = Map.empty)
   extends JMSMessageHandler
   with JMSSupport

@@ -25,6 +25,7 @@ private[internal] case class PingInfo(
 )
 
 //Todo: Migrate to JMS Stream Support
+@Deprecated
 private[internal] trait PingOperations { this : JMSSupport =>
 
   private val log : Logger = Logger[PingOperations]
@@ -160,6 +161,7 @@ private[internal] trait PingOperations { this : JMSSupport =>
   }
 }
 
+@Deprecated
 private[internal] class DefaultPingOperations extends PingOperations with JMSSupport
 
 object JmsPingPerformer {

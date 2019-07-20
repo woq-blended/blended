@@ -4,7 +4,7 @@ import java.lang.management.ManagementFactory
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import blended.jms.utils.internal.{_}
+import blended.jms.utils.internal._
 import blended.util.logging.Logger
 import javax.jms.{Connection, ConnectionFactory, JMSException}
 import javax.management.ObjectName
@@ -12,6 +12,7 @@ import org.osgi.framework.BundleContext
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 trait IdAwareConnectionFactory extends ConnectionFactory with ProviderAware {
   val clientId : String
@@ -58,14 +59,16 @@ class BlendedSingleConnectionFactory(
           try {
             jmxServer.unregisterMBean(objName)
           } catch {
-            case _ : Throwable => // do nothing
+            case NonFatal(t) =>
+              log.warn(s"Failed to deregister MBean [${objName.toString()}]:[${t.getMessage()}]")
           }
         }
 
         try {
           jmxServer.registerMBean(jmxBean, objName)
         } catch {
-          case t : Throwable => log.warn(s"Could not register MBean [${objName.toString}]:[${t.getMessage()}]")
+          case NonFatal(t) =>
+            log.warn(s"Could not register MBean [${objName.toString}]:[${t.getMessage()}]")
         }
 
         Some(jmxBean)
@@ -93,11 +96,14 @@ class BlendedSingleConnectionFactory(
           case None    => throw new Exception(s"Error connecting to [$id].")
         }
       } catch {
-        case e : Exception =>
+        case NonFatal(e) =>
           val msg = s"Error getting Connection Factory [${e.getMessage()}]"
           log.error(msg)
-          val jmsEx = new JMSException(msg)
-          jmsEx.setLinkedException(e)
+          val jmsEx : JMSException = new JMSException(msg)
+          e match {
+            case ex : Exception => jmsEx.setLinkedException(ex)
+            case _ =>
+          }
           throw jmsEx
       }
     } else {

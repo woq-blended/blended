@@ -2,6 +2,7 @@ package blended.jms.utils.internal
 
 trait ConnectionMonitorMXBean {
 
+  def getVendor() : String
   def getProvider() : String
   def getStatus() : String
   def getLastConnect() : String

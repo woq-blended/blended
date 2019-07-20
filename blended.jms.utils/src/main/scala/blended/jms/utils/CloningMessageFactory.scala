@@ -5,6 +5,7 @@ import javax.jms.{BytesMessage, Message, Session, TextMessage}
 
 import scala.collection.JavaConverters._
 
+@Deprecated
 object CloningMessageFactory extends JMSMessageFactory[Message] {
 
   private[this] val log = Logger("blended.jms.utils.CloningMessageFactory")

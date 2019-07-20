@@ -1,2 +1,0 @@
-package blended.jms.utils
-

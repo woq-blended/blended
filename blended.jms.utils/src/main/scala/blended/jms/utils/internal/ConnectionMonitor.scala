@@ -10,8 +10,8 @@ class ConnectionMonitor(vendor : String, provider : String, clientId : String) e
 
   private[this] var cmd : ConnectionCommand = ConnectionCommand(vendor = vendor, provider = provider)
 
+  override def getVendor() : String = vendor
   override def getProvider() : String = provider
-
   override def getClientId() : String = clientId
 
   def getCommand() : ConnectionCommand = cmd

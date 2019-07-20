@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicLong
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
 import blended.jms.utils.ConnectionState._
-import blended.jms.utils.{BlendedJMSConnection, CheckConnection, CloseTimeout, Connect, ConnectResult, ConnectTimeout, ConnectionClosed, ConnectionCommand, ConnectionConfig, ConnectionState, ConnectionStateChanged, Disconnect, ExecutePing, PingFailed, PingSuccess, PingTimeout, Reconnect, RestartContainer}
+import blended.jms.utils._
 import javax.jms.Connection
 
 import scala.concurrent.ExecutionContext

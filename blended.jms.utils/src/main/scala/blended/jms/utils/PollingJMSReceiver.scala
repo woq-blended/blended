@@ -5,6 +5,7 @@ import java.util.{Timer, TimerTask}
 
 import javax.jms.ConnectionFactory
 
+@Deprecated
 class PollingJMSReceiver(
   cf : ConnectionFactory,
   destName : String,

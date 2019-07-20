@@ -115,7 +115,7 @@ class JndiConnectionHolder(
     val envMap = new util.Hashtable[String, Object]()
 
     val cfgMap : Map[String, String] =
-      config.properties ++ (config.ctxtClassName.map(c => (Context.INITIAL_CONTEXT_FACTORY -> c)).toMap)
+      config.properties ++ config.ctxtClassName.map(c => (Context.INITIAL_CONTEXT_FACTORY -> c)).toMap
 
     cfgMap.foreach {
       case (k, v) =>
