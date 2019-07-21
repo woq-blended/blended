@@ -17,15 +17,14 @@ import scala.util.{Failure, Success, Try}
   * to be used as SSL server certificates.
   */
 class CertificateManagerImpl(
-                              override val bundleContext: BundleContext,
-                              override val capsuleContext: CapsuleContext,
-                              cfg: CertificateManagerConfig,
-                              providerMap: Map[String, CertificateProvider]
-                            )
-  extends CertificateManager
-    with Capsule
-    with CapsuleConvenience
-    with ServiceProviding {
+  override val bundleContext: BundleContext,
+  override val capsuleContext: CapsuleContext,
+  cfg: CertificateManagerConfig,
+  providerMap: Map[String, CertificateProvider]
+) extends CertificateManager
+  with Capsule
+  with CapsuleConvenience
+  with ServiceProviding {
 
   private[this] val log = Logger[CertificateManagerImpl]
 
@@ -58,7 +57,7 @@ class CertificateManagerImpl(
     if (!cfg.skipInitialCheck) {
       checkCertificates() match {
         case Failure(e) =>
-          log.error("Could not initialise Server certificate(s)")
+          log.warn(s"Could not initialise Server certificate(s), checking if required certificates are present")
           throw e
 
         case Success(None) =>
@@ -142,7 +141,7 @@ class CertificateManagerImpl(
         case f@Failure(t) =>
           log.warn(t)(s"Failed to save keystore to file [${jks.keystore.getAbsolutePath()}] : [${t.getMessage()}]")
           throw t
-        case Success(ks) => ks
+        case Success(keyStore) => keyStore
       }
     }
   }
