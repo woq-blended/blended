@@ -1,5 +1,7 @@
 package blended.streams.transaction
 
+import java.util.Date
+
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.worklist.WorklistState
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -26,7 +28,11 @@ class FlowTransactionSpec extends LoggingFreeSpec
     val branches : Seq[String] = 1.to(branchCount).map{ i => s"$i"}
 
     val event = FlowTransaction.startEvent(Some(main))
+
+    val now : Date = new Date()
     val t = FlowTransaction(
+      created = now,
+      lastUpdate = now,
       id = event.transactionId,
       creationProps = event.properties
     )

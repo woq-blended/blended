@@ -11,7 +11,7 @@ import blended.persistence.h2.internal.H2Activator
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionUpdate}
+import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManagerActor, FlowTransactionUpdate}
 import blended.streams.worklist.WorklistState
 import blended.testsupport.RequiresForkedJVM
 import blended.util.logging.Logger
@@ -53,7 +53,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   val (internalVendor, internalProvider) = ctxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).get
   private val cf = jmsConnectionFactory(registry, ctxt)(internalVendor, internalProvider, 3.seconds).get
 
-  private val tMgr = system.actorOf(FlowTransactionManager.props(pSvc))
+  private val tMgr = system.actorOf(FlowTransactionManagerActor.props(pSvc))
 
   override protected def beforeAll(): Unit = {
     implicit val bs : DispatcherBuilderSupport = ctxt.bs

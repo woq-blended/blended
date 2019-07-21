@@ -1,6 +1,6 @@
 package blended.streams.transaction
 
-import java.util.UUID
+import java.util.{Date, UUID}
 
 import blended.streams.message.{FlowEnvelope, MsgProperty}
 import blended.streams.transaction.FlowTransactionState.FlowTransactionState
@@ -16,9 +16,24 @@ object FlowTransaction {
   val stateSeparator : String = ":"
 
   def apply(env : Option[FlowEnvelope]) : FlowTransaction = {
+    val now : Date = new Date()
+
     env match {
-      case None => FlowTransaction(id = UUID.randomUUID().toString(), creationProps = Map.empty)
-      case Some(e) => FlowTransaction(id = e.id, creationProps = e.flowMessage.header)
+      case None =>
+        FlowTransaction(
+          id = UUID.randomUUID().toString(),
+          created = now,
+          lastUpdate = now,
+          creationProps = Map.empty
+        )
+
+      case Some(e) =>
+        FlowTransaction(
+          id = e.id,
+          created = now,
+          lastUpdate = now,
+          creationProps = e.flowMessage.header
+        )
     }
   }
 
@@ -38,7 +53,9 @@ object FlowTransaction {
   }
 
   val envelope2Transaction : FlowHeaderConfig => FlowEnvelope => FlowTransaction = { cfg => env =>
-    val state = env.header[String](cfg.headerState).map(FlowTransactionState.withName).getOrElse(FlowTransactionState.Started)
+    val state : FlowTransactionState =
+      env.header[String](cfg.headerState).map(FlowTransactionState.withName).getOrElse(FlowTransactionState.Started)
+
     val worklistState : Map[String, List[WorklistState]] = env.header[String](cfg.headerBranch).map { s =>
       if (s.isEmpty) {
         Map.empty[String, List[WorklistState]]
@@ -56,7 +73,16 @@ object FlowTransaction {
       }
     }.getOrElse(Map.empty[String, List[WorklistState]])
 
-    FlowTransaction(id = env.id, creationProps = env.flowMessage.header, state = state, worklist = worklistState)
+    val created : Date = new Date(env.header[Long](cfg.headerTransCreated).getOrElse(System.currentTimeMillis()))
+    val updated : Date = new Date(env.header[Long](cfg.headerTransUpdated).getOrElse(created.getTime()))
+
+    FlowTransaction(
+      id = env.id,
+      created = created,
+      lastUpdate = updated,
+      creationProps = env.flowMessage.header,
+      state = state, worklist = worklistState
+    )
   }
 
   private[transaction] def worklistState(currentState : FlowTransactionState, wl : Map[String, List[WorklistState]]) : List[FlowTransactionState] = {
@@ -93,8 +119,10 @@ object FlowTransaction {
   }
 }
 
-case class FlowTransaction private [transaction](
+case class FlowTransaction private[transaction](
   id : String,
+  created : Date,
+  lastUpdate : Date,
   creationProps : Map[String, MsgProperty],
   worklist : Map[String, List[WorklistState]] = Map.empty,
   state : FlowTransactionState = FlowTransactionState.Started
@@ -123,12 +151,12 @@ case class FlowTransaction private [transaction](
           copy(creationProps = started.properties)
           this
 
-        case completed : FlowTransactionCompleted => copy(
+        case _ : FlowTransactionCompleted => copy(
           state = FlowTransactionState.Completed,
           worklist = Map.empty
         )
 
-        case failed : FlowTransactionFailed => copy(
+        case _ : FlowTransactionFailed => copy(
           state = FlowTransactionState.Failed,
           worklist = Map.empty
         )

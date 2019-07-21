@@ -1,5 +1,6 @@
 package blended.streams.transaction
 
+import java.util.Date
 import java.{util => ju}
 
 import blended.persistence.PersistenceService
@@ -17,7 +18,6 @@ class TransactionNotFoundException(id : String)
 class TransactionIdNotUnique(id : String)
   extends Exception(s"Transaction [$id] is not unique in persistence store")
 
-
 class FlowTransactionPersistor(pSvc : PersistenceService) {
 
   private val creationPrefix = "create."
@@ -26,6 +26,8 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
 
   private val stateField : String = fieldPrefix + "transactionState"
   private val idField : String = fieldPrefix + "transactionId"
+  private val createdField : String = fieldPrefix + "transactionCreated"
+  private val updatedField : String = fieldPrefix + "transactionUpdated"
 
   private val pClass : String = classOf[FlowTransaction].getName()
 
@@ -40,6 +42,8 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
     }
 
     val stateProps : Map[String, _ <: Any] = Map(
+      createdField -> t.created.getTime(),
+      updatedField -> t.lastUpdate.getTime(),
       stateField -> t.state.toString(),
       idField -> t.id
     )
@@ -61,7 +65,7 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
     val creationProps : Map[String, MsgProperty] =
       storeProps.filterKeys(_.startsWith(creationPrefix)).map{ case (k,v) =>
         k.substring(creationPrefix.length) -> MsgProperty.lift(v).get
-      }.toMap
+      }
 
     val worklist : Map[String, List[WorklistState]] = {
       val wlProps = storeProps.filterKeys(_.startsWith(worklistPrefix))
@@ -75,9 +79,13 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
     }
 
     val id : String = property[String](idField, storeProps).get
+    val created : Long = property[Long](createdField, storeProps).get
+    val updated : Long = property[Long](updatedField, storeProps).get
 
     FlowTransaction(
       id = id,
+      created = new Date(created),
+      lastUpdate = new Date(updated),
       creationProps = creationProps,
       worklist = worklist,
       state = state

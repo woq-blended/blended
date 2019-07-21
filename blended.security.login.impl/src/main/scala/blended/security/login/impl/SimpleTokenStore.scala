@@ -8,7 +8,7 @@ import blended.security.login.api.{AbstractTokenStore, Token, TokenHandler}
 
 import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.Await
 import scala.util.{Failure, Success, Try}
 
 object TokenStoreMessages {
@@ -57,7 +57,6 @@ class SimpleTokenStore(
   import TokenStoreMessages._
 
   private[this] implicit val timeout : Timeout = Timeout(1.second)
-  private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
   private[this] val storeActor = system.actorOf(Props[MemoryTokenStore])
   /**
     * @inheritdoc

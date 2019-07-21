@@ -13,8 +13,7 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.security.auth.Subject
 import javax.security.auth.login.LoginContext
 import org.osgi.framework.BundleActivator
-import org.scalactic.source.Position
-import org.scalatest.{BeforeAndAfter, Matchers}
+import org.scalatest.Matchers
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._

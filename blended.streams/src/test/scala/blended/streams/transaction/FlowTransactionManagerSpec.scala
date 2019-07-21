@@ -41,7 +41,7 @@ class FlowTransactionManagerSpec extends SimplePojoContainerSpec
 
   private val pSvc : PersistenceService = mandatoryService[PersistenceService](registry)(None)
 
-  private val mgr : ActorRef  = system.actorOf(FlowTransactionManager.props(pSvc))
+  private val mgr : ActorRef  = system.actorOf(FlowTransactionManagerActor.props(pSvc))
 
   private def transaction(mgr : ActorRef, id : String)(implicit timeout: Timeout) : Future[FlowTransaction] = {
     log.debug(s"Getting transaction state [$id] from [${mgr.path}]")
@@ -95,7 +95,7 @@ class FlowTransactionManagerSpec extends SimplePojoContainerSpec
 
       system.stop(mgr)
 
-      val mgr2 = system.actorOf(FlowTransactionManager.props(pSvc))
+      val mgr2 = system.actorOf(FlowTransactionManagerActor.props(pSvc))
       val t2 = Await.result(transaction(mgr2, env.id), 3.seconds)
 
       t2.tid should be (env.id)

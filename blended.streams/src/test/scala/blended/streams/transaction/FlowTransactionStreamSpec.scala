@@ -52,7 +52,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
         implicit val materializer : Materializer = ActorMaterializer()
         implicit val log : Logger = Logger("spec.flow.stream")
 
-        val tMgr = system.actorOf(FlowTransactionManager.props(pSvc))
+        val tMgr = system.actorOf(FlowTransactionManagerActor.props(pSvc))
 
         val transColl = Collector[FlowTransaction]("trans")(_ => {})
 

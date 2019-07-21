@@ -11,7 +11,7 @@ import blended.persistence.PersistenceService
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
+import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManagerActor, TransactionDestinationResolver, TransactionWiretap}
 import blended.streams.{StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 
@@ -160,7 +160,7 @@ class RunnableDispatcher(
       val internalProvider = registry.internalProvider.get
 
       // We will create the Transaction Manager
-      transMgr = Some(system.actorOf(FlowTransactionManager.props(pSvc)))
+      transMgr = Some(system.actorOf(FlowTransactionManagerActor.props(pSvc)))
 
       // The transaction stream will process the transaction events from the transactions destination
       transStream = Some(transactionStream(transMgr.get).get)

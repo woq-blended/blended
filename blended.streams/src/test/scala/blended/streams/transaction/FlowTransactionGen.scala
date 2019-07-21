@@ -1,6 +1,6 @@
 package blended.streams.transaction
 
-import java.util.UUID
+import java.util.{Date, UUID}
 
 import blended.streams.message._
 import blended.streams.worklist.WorklistState
@@ -70,11 +70,13 @@ object FlowTransactionGen {
     wl <- wlGen
     cp <- creationProps
   } yield FlowTransaction(
-    id = UUID.randomUUID().toString(),
-    creationProps = cp,
-    worklist = wl,
-    state = FlowTransaction.transactionState(
-      FlowTransactionState.Started, wl
-    )
+      id = UUID.randomUUID().toString(),
+      created = new Date(),
+      lastUpdate = new Date(),
+      creationProps = cp,
+      worklist = wl,
+      state = FlowTransaction.transactionState(
+        FlowTransactionState.Started, wl
+      )
   )
 }

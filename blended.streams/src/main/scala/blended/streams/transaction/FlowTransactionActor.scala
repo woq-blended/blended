@@ -1,13 +1,12 @@
 package blended.streams.transaction
 
+import java.util.Date
+
 import akka.actor.{Actor, ActorRef, Props}
-import akka.util.Timeout
 import blended.persistence.PersistenceService
 import blended.streams.transaction.FlowTransactionActor.TransactionState
 import blended.util.logging.Logger
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 object FlowTransactionActor {
@@ -50,16 +49,14 @@ class FlowTransactionActor(persistor: FlowTransactionPersistor, initialState: Fl
   }
 }
 
-object FlowTransactionManager {
-  def props(pSvc : PersistenceService) : Props = Props(new FlowTransactionManager(pSvc))
+object FlowTransactionManagerActor {
+  def props(pSvc : PersistenceService) : Props = Props(new FlowTransactionManagerActor(pSvc))
 }
 
-class FlowTransactionManager(pSvc : PersistenceService) extends Actor {
+class FlowTransactionManagerActor(pSvc : PersistenceService) extends Actor {
 
-  private[this] val log = Logger[FlowTransactionManager]
+  private[this] val log = Logger[FlowTransactionManagerActor]
 
-  private[this] implicit val timeout : Timeout = Timeout(3.seconds)
-  private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
   private[this] val persistor : FlowTransactionPersistor = new FlowTransactionPersistor(pSvc)
 
   override def receive: Receive = handleEvent(Map.empty)
@@ -90,9 +87,12 @@ class FlowTransactionManager(pSvc : PersistenceService) extends Actor {
 
             case None =>
               log.debug(s"Creating new transaction actor for [${e.transactionId}]")
+              val now : Date = new Date()
               val s = FlowTransaction(
                 id = e.transactionId,
-                creationProps = e.properties,
+                created = now,
+                lastUpdate = now,
+                creationProps = e.properties
               )
               val a = context.actorOf(FlowTransactionActor.props(persistor, s))
               a.tell(e, respondTo)

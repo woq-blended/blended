@@ -100,6 +100,8 @@ case class FlowHeaderConfig private (
   headerTransShard : String = "TransactionShard",
   headerBranch : String = "BranchId",
   headerState : String = "TransactionState",
+  headerTransCreated : String = "TransactionCreated",
+  headerTransUpdated : String = "TransactionUpdate",
   headerTrack : String = "TrackTransaction",
   headerTrackSource : String = "TrackSource",
   headerRetryCount : String = "RetryCount",
