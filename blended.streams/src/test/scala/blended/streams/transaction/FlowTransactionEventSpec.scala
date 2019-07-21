@@ -5,7 +5,7 @@ import akka.serialization.SerializationExtension
 import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowTransactionEvent.{envelope2event, event2envelope}
-import blended.streams.worklist.WorklistState
+import blended.streams.worklist._
 import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import com.typesafe.config.ConfigFactory
@@ -83,10 +83,10 @@ class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
         updatedTrans.asInstanceOf[FlowTransactionUpdate].branchIds should be (updated.branchIds)
       }
 
-      singleTest(FlowTransactionUpdate("updated", FlowMessage.noProps, WorklistState.Started, "branch-1", "branch-2"))
-      singleTest(FlowTransactionUpdate("updated1", FlowMessage.noProps, WorklistState.Failed))
-      singleTest(FlowTransactionUpdate("updated1", FlowMessage.noProps, WorklistState.TimeOut))
-      singleTest(FlowTransactionUpdate("updated2", FlowMessage.noProps, WorklistState.Completed, "branch-3"))
+      singleTest(FlowTransactionUpdate("updated", FlowMessage.noProps, WorklistStateStarted, "branch-1", "branch-2"))
+      singleTest(FlowTransactionUpdate("updated1", FlowMessage.noProps, WorklistStateFailed))
+      singleTest(FlowTransactionUpdate("updated1", FlowMessage.noProps, WorklistStateTimeout))
+      singleTest(FlowTransactionUpdate("updated2", FlowMessage.noProps, WorklistStateCompleted, "branch-3"))
     }
 
     "should (de)serialize correctly" in {

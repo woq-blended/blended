@@ -12,6 +12,7 @@ import blended.persistence.PersistenceService
 import blended.persistence.h2.internal.H2Activator
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{CollectingActor, Collector}
+import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
@@ -52,7 +53,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
         implicit val materializer : Materializer = ActorMaterializer()
         implicit val log : Logger = Logger("spec.flow.stream")
 
-        val tMgr = system.actorOf(FlowTransactionManagerActor.props(pSvc))
+        val tMgr : FlowTransactionManager = new FileFlowTransactionManager()
 
         val transColl = Collector[FlowTransaction]("trans")(_ => {})
 
@@ -93,7 +94,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
       singleTest(FlowTransaction.startEvent()){ t =>
         t should have size 1
         t.head.worklist should be (empty)
-        t.head.state should be (FlowTransactionState.Started)
+        t.head.state should be (FlowTransactionStateStarted)
       }
     }
   }

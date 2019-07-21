@@ -3,9 +3,7 @@ package blended.streams.transaction
 import java.util.{Date, UUID}
 
 import blended.streams.message.{FlowEnvelope, MsgProperty}
-import blended.streams.transaction.FlowTransactionState.FlowTransactionState
-import blended.streams.worklist.WorklistState
-import blended.streams.worklist.WorklistState.WorklistState
+import blended.streams.worklist._
 import blended.util.logging.Logger
 
 import scala.util.Try
@@ -49,12 +47,14 @@ object FlowTransaction {
     FlowEnvelope(t.creationProps, t.tid)
       .withHeader(cfg.headerTransId, t.tid).get
       .withHeader(cfg.headerState, t.state.toString).get
+      .withHeader(cfg.headerTransCreated, t.created.getTime()).get
+      .withHeader(cfg.headerTransUpdated, t.lastUpdate.getTime()).get
       .withHeader(cfg.headerBranch, t.worklist.map { case (k,v) => s"$k=${v.mkString(stateSeparator)}" }.mkString(branchSeparator)).get
   }
 
   val envelope2Transaction : FlowHeaderConfig => FlowEnvelope => FlowTransaction = { cfg => env =>
     val state : FlowTransactionState =
-      env.header[String](cfg.headerState).map(FlowTransactionState.withName).getOrElse(FlowTransactionState.Started)
+      env.header[String](cfg.headerState).map(h => FlowTransactionState.apply(h).get).getOrElse(FlowTransactionStateStarted)
 
     val worklistState : Map[String, List[WorklistState]] = env.header[String](cfg.headerBranch).map { s =>
       if (s.isEmpty) {
@@ -69,7 +69,7 @@ object FlowTransaction {
               b(0) -> b(1).split(stateSeparator).toList
             }.toMap
 
-        branches.mapValues(s => s.map(WorklistState.withName))
+        branches.mapValues(s => s.map(i => WorklistState.apply(i).get))
       }
     }.getOrElse(Map.empty[String, List[WorklistState]])
 
@@ -87,14 +87,14 @@ object FlowTransaction {
 
   private[transaction] def worklistState(currentState : FlowTransactionState, wl : Map[String, List[WorklistState]]) : List[FlowTransactionState] = {
     wl.map { case (_,v) =>
-      if (v.contains(WorklistState.Failed) || v.contains(WorklistState.TimeOut)) {
-        FlowTransactionState.Failed
-      } else if (v.contains(WorklistState.Started) && v.contains(WorklistState.Completed)) {
-        FlowTransactionState.Completed
-      } else if (v.contains(WorklistState.Started)) {
-        FlowTransactionState.Started
-      } else if (v.contains(WorklistState.Completed)) {
-        FlowTransactionState.Updated
+      if (v.contains(WorklistStateFailed) || v.contains(WorklistStateTimeout)) {
+        FlowTransactionStateFailed
+      } else if (v.contains(WorklistStateStarted) && v.contains(WorklistStateCompleted)) {
+        FlowTransactionStateCompleted
+      } else if (v.contains(WorklistStateStarted)) {
+        FlowTransactionStateStarted
+      } else if (v.contains(WorklistStateCompleted)) {
+        FlowTransactionStateUpdated
       } else {
         currentState
       }
@@ -105,27 +105,27 @@ object FlowTransaction {
 
     val itemStates : List[FlowTransactionState] = FlowTransaction.worklistState(currentState, wl)
 
-    if (itemStates.contains(FlowTransactionState.Failed)) {
-      FlowTransactionState.Failed
+    if (itemStates.contains(FlowTransactionStateFailed)) {
+      FlowTransactionStateFailed
     } else if (itemStates.size > 1) {
-      FlowTransactionState.Updated
-    } else if (itemStates.equals(List(FlowTransactionState.Updated))) {
-      FlowTransactionState.Updated
-    } else if (itemStates.equals(List(FlowTransactionState.Completed))) {
-      FlowTransactionState.Completed
+      FlowTransactionStateUpdated
+    } else if (itemStates.equals(List(FlowTransactionStateUpdated))) {
+      FlowTransactionStateUpdated
+    } else if (itemStates.equals(List(FlowTransactionStateCompleted))) {
+      FlowTransactionStateCompleted
     } else {
       currentState
     }
   }
 }
 
-case class FlowTransaction private[transaction](
+case class FlowTransaction(
   id : String,
   created : Date,
   lastUpdate : Date,
   creationProps : Map[String, MsgProperty],
   worklist : Map[String, List[WorklistState]] = Map.empty,
-  state : FlowTransactionState = FlowTransactionState.Started
+  state : FlowTransactionState = FlowTransactionStateStarted
 ) {
 
   override def toString: String = {
@@ -137,7 +137,7 @@ case class FlowTransaction private[transaction](
 
   private[this] val log = Logger[FlowTransaction]
 
-  def terminated: Boolean = state == FlowTransactionState.Completed || state == FlowTransactionState.Failed
+  def terminated: Boolean = state == FlowTransactionStateCompleted || state == FlowTransactionStateFailed
 
   def updateTransaction(
     event : FlowTransactionEvent
@@ -152,12 +152,12 @@ case class FlowTransaction private[transaction](
           this
 
         case _ : FlowTransactionCompleted => copy(
-          state = FlowTransactionState.Completed,
+          state = FlowTransactionStateCompleted,
           worklist = Map.empty
         )
 
         case _ : FlowTransactionFailed => copy(
-          state = FlowTransactionState.Failed,
+          state = FlowTransactionStateFailed,
           worklist = Map.empty
         )
 

@@ -3,16 +3,14 @@ package blended.streams.transaction
 import java.util.Date
 
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.worklist.WorklistState
+import blended.streams.transaction
+import blended.streams.transaction.FlowTransaction.{envelope2Transaction, transaction2envelope}
+import blended.streams.worklist._
 import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
 import org.scalatest.Matchers
 
 import scala.collection.JavaConverters._
-import FlowTransaction.{envelope2Transaction, transaction2envelope}
-import blended.streams.transaction
-import blended.streams.worklist.WorklistState.WorklistState
-
 import scala.util.Try
 
 class FlowTransactionSpec extends LoggingFreeSpec
@@ -23,7 +21,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
   val main = FlowEnvelope(FlowMessage.noProps)
 
   // create a sample transaction witn n started branches
-  private def sampleTransAction(branchCount : Int, state: WorklistState = WorklistState.Started) : Try[FlowTransaction] = Try {
+  private def sampleTransAction(branchCount : Int, state: WorklistState = WorklistStateStarted) : Try[FlowTransaction] = Try {
 
     val branches : Seq[String] = 1.to(branchCount).map{ i => s"$i"}
 
@@ -55,7 +53,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
       val t = FlowTransaction(None)
       t.worklist should be (empty)
-      t.state should be (FlowTransactionState.Started)
+      t.state should be (FlowTransactionStateStarted)
     }
 
     "reflect the envelope id as transaction id if created with an envelope" in {
@@ -64,7 +62,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
     "a started transaction with n started branches should be in Started state" in {
       val t = sampleTransAction(branchCount).get
-      t.state should be (FlowTransactionState.Started)
+      t.state should be (FlowTransactionStateStarted)
       t.worklist should have size branchCount
     }
 
@@ -72,30 +70,30 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val t = sampleTransAction(branchCount).get
 
       val u = t.updateTransaction(
-        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Completed, "5")
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateCompleted, "5")
       ).get
 
-      u.state should be (FlowTransactionState.Updated)
+      u.state should be (FlowTransactionStateUpdated)
       u.worklist should have size branchCount
     }
 
     "a branch within a started transaction requires a started AND a completion update to complete" in {
       val t = sampleTransAction(1).get
       val u = t.updateTransaction(
-        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Completed, "1")
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateCompleted, "1")
       ).get
 
-      u.state should be (FlowTransactionState.Completed)
+      u.state should be (FlowTransactionStateCompleted)
       u.worklist should have size 1
 
-      val t2 = sampleTransAction(1, WorklistState.Completed).get
-      t2.state should be (FlowTransactionState.Updated)
+      val t2 = sampleTransAction(1, WorklistStateCompleted).get
+      t2.state should be (FlowTransactionStateUpdated)
 
       val u2 = t2.updateTransaction(
-        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Started, "1")
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateStarted, "1")
       ).get
 
-      u2.state should be (FlowTransactionState.Completed)
+      u2.state should be (FlowTransactionStateCompleted)
       u2.worklist should have size 1
     }
 
@@ -105,10 +103,10 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val branches = 1.to(t.worklist.size).map(i => s"$i")
 
       val u = t.updateTransaction(
-        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Completed, branches:_*)
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateCompleted, branches:_*)
       ).get
 
-      u.state should be (FlowTransactionState.Completed)
+      u.state should be (FlowTransactionStateCompleted)
       u.worklist should have size branchCount
     }
 
@@ -116,10 +114,10 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val t = sampleTransAction(branchCount).get
 
       val u = t.updateTransaction(
-        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Failed, "5")
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateFailed, "5")
       ).get
 
-      u.state should be (FlowTransactionState.Failed)
+      u.state should be (FlowTransactionStateFailed)
       u.worklist should have size 10
     }
 
@@ -127,10 +125,10 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val t = sampleTransAction(branchCount).get
 
       val u = t.updateTransaction(
-        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.TimeOut, "5")
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateTimeout, "5")
       ).get
 
-      u.state should be (FlowTransactionState.Failed)
+      u.state should be (FlowTransactionStateFailed)
       u.worklist should have size 10
     }
 
@@ -141,7 +139,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
       val u = t.updateTransaction(FlowTransactionCompleted(t.tid, FlowMessage.noProps)).get
 
-      u.state should be (FlowTransactionState.Completed)
+      u.state should be (FlowTransactionStateCompleted)
       u.worklist should be (empty)
     }
 
@@ -153,6 +151,8 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
         t2.tid should be(t.tid)
         t2.state should be(t.state)
+        t2.created should be(t.created)
+        t2.lastUpdate should be(t.lastUpdate)
         assert(t.worklist.forall { case (k, v) => t2.worklist(k) == v })
       }
 
@@ -160,7 +160,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
       singleTest(sampleTransAction(branchCount).get)
 
       val t = sampleTransAction(branchCount).get
-      t.updateTransaction(FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Completed, "5"))
+      t.updateTransaction(FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateCompleted, "5"))
       singleTest(t)
 
       val t2 = sampleTransAction(branchCount).get

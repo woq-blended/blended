@@ -1,8 +1,7 @@
 package blended.streams.transaction
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem}
-import akka.pattern.ask
+import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Sink, Source}
 import akka.util.Timeout
@@ -20,7 +19,7 @@ import scala.util.{Failure, Success, Try}
 class FlowTransactionStream(
   internalCf : Option[IdAwareConnectionFactory],
   headerCfg : FlowHeaderConfig,
-  tMgr : ActorRef,
+  tMgr : FlowTransactionManager,
   streamLogger: Logger,
   performSend : FlowEnvelope => Boolean,
   sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
@@ -63,10 +62,7 @@ class FlowTransactionStream(
     case Success((env, event)) =>
       streamLogger.debug(s"Recording transaction event [${event.transactionId}][${event.state}]")
 
-      // TODO: Refactor to remove Await
-      val t : Try[FlowTransaction] = Try {
-        Await.result( (tMgr ? event).mapTo[FlowTransaction], timeout.duration)
-      }
+      val t : Try[FlowTransaction] = tMgr.updateTransaction(event)
 
       TransactionStreamContext(
         envelope = env,
@@ -83,7 +79,7 @@ class FlowTransactionStream(
     val transEvent : Try[FlowEnvelope] = {
       in.trans.get match {
         case Success(t) =>
-          if (t.state == FlowTransactionState.Started || t.terminated) {
+          if (t.state == FlowTransactionStateStarted || t.terminated) {
             streamLogger.info(t.toString())
           } else {
             streamLogger.debug(t.toString())

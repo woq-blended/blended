@@ -5,9 +5,7 @@ import java.{util => ju}
 
 import blended.persistence.PersistenceService
 import blended.streams.message.MsgProperty
-import blended.streams.transaction.FlowTransactionState.FlowTransactionState
 import blended.streams.worklist.WorklistState
-import blended.streams.worklist.WorklistState.WorklistState
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -59,7 +57,7 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
 
     val state : FlowTransactionState = {
       val stateString : String = property[String](stateField, storeProps).get
-      FlowTransactionState.withName(stateString)
+      FlowTransactionState.apply(stateString).get
     }
 
     val creationProps : Map[String, MsgProperty] =
@@ -72,7 +70,7 @@ class FlowTransactionPersistor(pSvc : PersistenceService) {
 
       wlProps.map { case (k,v) =>
         val states : List[WorklistState] =
-          v.toString.split(",").map(s => WorklistState.withName(s)).toList
+          v.toString.split(",").map(s => WorklistState.apply(s).get).toList
 
         k.substring(worklistPrefix.length) -> states
       }

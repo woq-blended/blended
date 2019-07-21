@@ -1,10 +1,10 @@
 package blended.updater.config
 
 object UpdateAction {
-  val KindAddOverlayConfig = classOf[AddOverlayConfig].getSimpleName()
-  val KindAddRuntimeConfig = classOf[AddRuntimeConfig].getSimpleName()
-  val KindStageProfile = classOf[StageProfile].getSimpleName()
-  val KindActivateProfile = classOf[ActivateProfile].getSimpleName()
+  val KindAddOverlayConfig : String = classOf[AddOverlayConfig].getSimpleName()
+  val KindAddRuntimeConfig : String = classOf[AddRuntimeConfig].getSimpleName()
+  val KindStageProfile : String = classOf[StageProfile].getSimpleName()
+  val KindActivateProfile : String = classOf[ActivateProfile].getSimpleName()
 }
 
 sealed trait UpdateAction {

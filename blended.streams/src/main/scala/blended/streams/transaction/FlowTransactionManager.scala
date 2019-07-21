@@ -13,7 +13,7 @@ trait FlowTransactionManager {
   /**
     * Update a FlowTransaction.
     */
-  def updateTransaction(e : FlowTransactionEvent) : Try[FlowTransactionEvent]
+  def updateTransaction(e : FlowTransactionEvent) : Try[FlowTransaction]
 
   /**
     * Find a flow transaction by it's transaction id.
@@ -30,5 +30,3 @@ trait FlowTransactionManager {
     */
   def transactions : Source[FlowTransaction, NotUsed]
 }
-
-

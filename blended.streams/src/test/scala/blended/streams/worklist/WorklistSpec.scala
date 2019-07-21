@@ -86,8 +86,8 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
 
       withWorklistManager(
         WorklistStarted(worklist(item1)),
-        WorklistStepCompleted(worklist(item2), WorklistState.Completed),
-        WorklistStepCompleted(worklist(item1), WorklistState.Completed),
+        WorklistStepCompleted(worklist(item2), WorklistStateCompleted),
+        WorklistStepCompleted(worklist(item1), WorklistStateCompleted),
       ) { r =>
 
         r should have size(2)
@@ -98,8 +98,8 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
 
       withWorklistManager(
         WorklistStarted(worklist(item1, item2)),
-        WorklistStepCompleted(worklist(item2), WorklistState.Completed),
-        WorklistStepCompleted(worklist(item1), WorklistState.Completed),
+        WorklistStepCompleted(worklist(item2), WorklistStateCompleted),
+        WorklistStepCompleted(worklist(item1), WorklistStateCompleted),
       ) { r =>
 
         r should have size(2)
@@ -108,7 +108,7 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
 
         r.last match {
           case t : WorklistTerminated =>
-            t.state should be (WorklistState.Completed)
+            t.state should be (WorklistStateCompleted)
           case _ => fail()
         }
       }
@@ -128,7 +128,7 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
         assert(r.head.isInstanceOf[WorklistStarted])
         r.last match {
           case t : WorklistTerminated =>
-            t.state should be (WorklistState.TimeOut)
+            t.state should be (WorklistStateTimeout)
           case _ => fail()
         }
       }
