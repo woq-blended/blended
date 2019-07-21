@@ -112,10 +112,17 @@ class CertificateManagerImpl(
     // for all configured providers update the trusted certificates
     if (cfg.maintainTruststore) {
       providerMap.foreach {
-        case (key, provider) =>
-          provider.rootCertificates().get.foreach { ms =>
-            log.info(s"Updating trust store for root certificates of provider [$key]")
-            new TrustStoreRefresher(ms).refreshTruststore().get
+        case (_, provider) =>
+          provider.rootCertificates() match {
+            case Success(certs) => certs.foreach { ms =>
+              new TrustStoreRefresher(ms).refreshTruststore() match {
+                case Success(_) =>
+                case Failure(t) =>
+                  log.warn(s"Unable to update trust store : [${t.getMessage()}]")
+              }
+            }
+            case Failure(t) =>
+              log.warn(s"Unable to update trust store : [${t.getMessage()}]")
           }
       }
     }
