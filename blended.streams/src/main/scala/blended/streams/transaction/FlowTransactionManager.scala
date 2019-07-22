@@ -1,6 +1,7 @@
 package blended.streams.transaction
 
 import akka.NotUsed
+import akka.actor.{Actor, ActorRef, Props}
 import akka.stream.scaladsl.Source
 
 import scala.util.Try
@@ -18,7 +19,7 @@ trait FlowTransactionManager {
   /**
     * Find a flow transaction by it's transaction id.
     */
-  def findTransaction(tid : String) : Option[FlowTransaction]
+  def findTransaction(tid : String) : Try[Option[FlowTransaction]]
 
   /**
     * Delete a transaction by it's id
@@ -29,4 +30,16 @@ trait FlowTransactionManager {
     * A stream of all known transactions of the container.
     */
   def transactions : Source[FlowTransaction, NotUsed]
+}
+
+object FlowTransactionManagerActor {
+  def props(mgr : FlowTransactionManager) : Props = Props(new FlowTransactionManagerActor(mgr))
+}
+
+class FlowTransactionManagerActor(mgr : FlowTransactionManager) extends Actor {
+
+  override def receive: Receive = {
+    case (event : FlowTransactionEvent, respondTo : ActorRef) =>
+      respondTo ! mgr.updateTransaction(event)
+  }
 }

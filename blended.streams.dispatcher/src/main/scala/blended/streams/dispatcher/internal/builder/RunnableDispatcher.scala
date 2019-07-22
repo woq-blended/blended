@@ -176,15 +176,14 @@ class RunnableDispatcher(
         val dispLogger = Logger(bs.streamLogger.name + "." + provider.vendor + "." + provider.provider)
 
         // Connect the consumer to a dispatcher
-        val source = bridgeSource(internalProvider, provider, dispLogger).via(dispatcher)
+        val source : Source[FlowTransactionEvent, NotUsed] = bridgeSource(internalProvider, provider, dispLogger).via(dispatcher)
 
         // Prepare and start the dispatcher
-        val streamCfg = StreamControllerConfig.fromConfig(routerCfg.rawConfig).get
-          .copy(
-            name = dispLogger.name,
-          )
+        val streamCfg = StreamControllerConfig.fromConfig(routerCfg.rawConfig).get.copy(name = dispLogger.name)
 
-        val actor = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg))
+        // Wrap the dispatcher into a stream controller and make sure, the generated transaction events are sent to
+        // the proper JMS destination
+        val actor : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg))
 
         bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
         startedDispatchers.put(provider.id, actor)

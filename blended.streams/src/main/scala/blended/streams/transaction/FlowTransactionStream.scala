@@ -16,6 +16,31 @@ import scala.concurrent.{Await, ExecutionContext, Promise}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
+/**
+  * Consume transaction events from JMS and produce appropiate logging entries.
+  *
+  * Other parties produce [[FlowTransactionEvent]]s and send them to JMS wrapped
+  * within a [[FlowEnvelope]]. The transformation between transaction events and
+  * envelopes is encapsulated in the companion object of [[FlowTransactionEvent]].
+  *
+  * When a transaction event is received in it's envelope, the fthe following steps
+  * will be executed:
+  *
+  * 1) forward the envelope unmodified to a JMS topic. This is an optional step
+  *    that only applies if the [[internalCf]] parameter is not [[None]].
+  * 2) decode the inbound envelope back into a transaction event
+  * 3) use the underlying [[FlowTransactionManager]] to update the containers
+  *    persistent store of known transactions
+  * 4) log the transaction event
+  *
+  * @param internalCf
+  * @param headerCfg
+  * @param tMgr
+  * @param streamLogger
+  * @param performSend
+  * @param sendFlow
+  * @param system
+  */
 class FlowTransactionStream(
   internalCf : Option[IdAwareConnectionFactory],
   headerCfg : FlowHeaderConfig,

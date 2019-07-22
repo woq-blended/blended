@@ -98,7 +98,7 @@ class TransactionWiretap(
       ))
 
       val switchOffTracking = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-        log.debug(s"About to send envelope [$env]")
+        log.trace(s"About to send envelope [$env]")
         env.withHeader(headerCfg.headerTrack, false).get
       })
 

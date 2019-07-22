@@ -8,8 +8,6 @@ import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.persistence.PersistenceService
-import blended.persistence.h2.internal.H2Activator
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{CollectingActor, Collector}
 import blended.streams.transaction.internal.FileFlowTransactionManager
@@ -34,8 +32,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles: Seq[(String, BundleActivator)] = Seq(
-    "blended.akka" -> new BlendedAkkaActivator(),
-    "blended.persistence.h2" -> new H2Activator()
+    "blended.akka" -> new BlendedAkkaActivator()
   )
 
   "The FlowTransactionStream should" - {
@@ -44,16 +41,15 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
 
       def singleTest(event : FlowTransactionEvent)(f : List[FlowTransaction] => Unit) : Unit = {
 
-        implicit val timeout = 1.second
-        val idSvc = mandatoryService[ContainerIdentifierService](registry)(None)
-        implicit val system = mandatoryService[ActorSystem](registry)(None)
-        val pSvc : PersistenceService = mandatoryService[PersistenceService](registry)(None)
+        implicit val timeout : FiniteDuration = 1.second
+        val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
+        implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
 
         implicit val eCtxt : ExecutionContext = system.dispatcher
         implicit val materializer : Materializer = ActorMaterializer()
         implicit val log : Logger = Logger("spec.flow.stream")
 
-        val tMgr : FlowTransactionManager = new FileFlowTransactionManager()
+        val tMgr : FlowTransactionManager = new FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "transactions"))
 
         val transColl = Collector[FlowTransaction]("trans")(_ => {})
 

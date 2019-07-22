@@ -11,6 +11,7 @@ package-lock.json
 node_modules 
 target.tgz
 .sbtopts
+.metals 
 
 blended.sslcontext/notes.txt
 

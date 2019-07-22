@@ -68,10 +68,10 @@ class TransactionOutbound(
         // The default for CBE is false here
         // all messages that have run through the dispatcher will have the correct CBE setting
         performSend = { env =>
-          val result = env.header[Boolean](bs.headerCbeEnabled).getOrElse(false) &&
-          FlowTransactionState.withName(
-            env.header[String](bs.headerConfig.headerState).getOrElse(FlowTransactionState.Updated.toString())
-          ) != FlowTransactionState.Updated
+          val result : Boolean = env.header[Boolean](bs.headerCbeEnabled).getOrElse(false) &&
+          FlowTransactionState.apply(
+            env.header[String](bs.headerConfig.headerState).getOrElse(FlowTransactionStateUpdated.toString())
+          ).get != FlowTransactionStateUpdated
 
           log.debug(s"CBE generation for envelope [${env.id}] is [$result]")
           result

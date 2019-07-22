@@ -176,7 +176,11 @@ case class FlowTransaction(
           val newWorklist : Map[String, List[WorklistState]] =
             worklist.filterKeys { id => !updatedItemIds.contains(id) } ++ updatedItemIds
 
-          copy(worklist = newWorklist, state = FlowTransaction.transactionState(state, newWorklist))
+          copy(
+            worklist = newWorklist,
+            lastUpdate = new Date(),
+            state = FlowTransaction.transactionState(state, newWorklist)
+          )
       }
     } else {
       this

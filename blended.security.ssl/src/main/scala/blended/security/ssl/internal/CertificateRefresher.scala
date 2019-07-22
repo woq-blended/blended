@@ -111,7 +111,9 @@ class CertificateRefresher(
                   case Some(frameworkService) =>
                     // we want to restart the container, so no de- and re-registration of the ssl context
                     log.warn("Requesting framework restart")
-                    frameworkService.restartContainer("The certificate required for the SSL context was refreshed. An restart is required to cleanly use the new certificate.", true)
+                    frameworkService.restartContainer(
+                      "The certificate required for the SSL context was refreshed. An restart is required to cleanly use the new certificate.", true
+                    )
 
                   case None =>
                     log.error("Could not acquire a FrameworkService to restart the OSGi container. Skipping certificate refresh.")
