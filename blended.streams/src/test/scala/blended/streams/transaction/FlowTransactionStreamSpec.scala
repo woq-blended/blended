@@ -70,8 +70,6 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
             internalCf = None,
             tMgr = tMgr,
             streamLogger = log,
-            performSend = env => env.header[Boolean](cfg.prefix + "CbeEnabled").getOrElse(true),
-            sendFlow = good
           ).build()
 
           source

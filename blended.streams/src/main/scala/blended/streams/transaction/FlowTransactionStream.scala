@@ -1,19 +1,18 @@
 package blended.streams.transaction
 
-import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
-import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Sink, Source}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source, Zip}
 import akka.util.Timeout
+import akka.{Done, NotUsed}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
+import blended.streams.FlowProcessor
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Promise}
-import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -33,42 +32,49 @@ import scala.util.{Failure, Success, Try}
   *    persistent store of known transactions
   * 4) log the transaction event
   *
-  * @param internalCf
-  * @param headerCfg
-  * @param tMgr
-  * @param streamLogger
-  * @param performSend
-  * @param sendFlow
-  * @param system
+  * @param internalCf if the transaction event shall be forwarded to JMS, this
+  *                   the [[IdAwareConnectionFactory]] to be used for sending the
+  *                   message
+  * @param headerCfg The [[FlowHeaderConfig]] used to calculate the property names
+  * @param tMgr The [[FlowTransactionManager]] used to manage the persistence of the
+  *             known transactions of the container
+  * @param streamLogger a Logger to be used for any logging
+  * @param system The underlying [[ActorSystem]]
   */
 class FlowTransactionStream(
   internalCf : Option[IdAwareConnectionFactory],
   headerCfg : FlowHeaderConfig,
   tMgr : FlowTransactionManager,
-  streamLogger: Logger,
-  performSend : FlowEnvelope => Boolean,
-  sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
+  streamLogger: Logger
 )(implicit system: ActorSystem) extends JmsStreamSupport {
-
-  private case class TransactionStreamContext(
-    envelope : FlowEnvelope,
-    trans : Option[Try[FlowTransaction]],
-    sendEnvelope : Option[Try[FlowEnvelope]]
-  )
 
   private implicit val timeout : Timeout = Timeout(3.seconds)
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private implicit val materializer : Materializer = ActorMaterializer()
 
+  // We create an actor wrapping the transaction manager, so we can use it
+  // within the transaction stream
+  private val tMgrActor : ActorRef = system.actorOf(FlowTransactionManagerActor.props(tMgr))
+
+  // Then we create a Sink pointing to the tMgrActor, eating FlowTransactionEvents
+  private val tMgrSink : Sink[FlowTransactionEvent, NotUsed] = Sink.actorRef[FlowTransactionEvent](tMgrActor, Done)
+
+  // The we create a Source producing FlowTransactions from an Actor, so that the transaction
+  // manager can reply to that source
+  // TODO : Review buffer size
+  private val tMgrSource : Source[Try[FlowTransaction], ActorRef] =
+    Source.actorRef[Try[FlowTransaction]](50, OverflowStrategy.fail)
+
   // recreate the FlowTransactionEvent from the inbound envelope
-  private val updateEvent : FlowEnvelope => Try[(FlowEnvelope, FlowTransactionEvent)] = { env =>
+  private val updateEvent : FlowEnvelope => Try[FlowTransactionEvent] = { env =>
     Try {
       val event = FlowTransactionEvent.envelope2event(headerCfg)(env).get
-      streamLogger.debug(s"Received transaction event [${event.transactionId}][${event.state}]")
-      (env, event)
+      streamLogger.trace(s"Received transaction event [${event.transactionId}][${event.state}]")
+      event
     }
   }
 
+  // Create a JMS producer to perform the logging to JMS
   private val logEventToJms : IdAwareConnectionFactory => Flow[FlowEnvelope, FlowEnvelope, NotUsed] = { cf =>
 
     val settings : JmsProducerSettings = JmsProducerSettings(
@@ -83,26 +89,37 @@ class FlowTransactionStream(
   }
 
   // run the inbound transaction update through the transaction manager
-  private val recordTransaction : Try[(FlowEnvelope, FlowTransactionEvent)] => TransactionStreamContext = {
-    case Success((env, event)) =>
-      streamLogger.debug(s"Recording transaction event [${event.transactionId}][${event.state}]")
+  private val recordTransaction : Graph[FlowShape[Try[FlowTransactionEvent], Try[FlowTransaction]], NotUsed] = {
 
-      val t : Try[FlowTransaction] = tMgr.updateTransaction(event)
+    GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
 
-      TransactionStreamContext(
-        envelope = env,
-        trans = Some(t),
-        sendEnvelope = None
-      )
-    case Failure(t) =>
-      streamLogger.error(t)(s"Failed to record transaction [$t]")
-      throw t
+      val callTMgr = b.add(Flow.fromSinkAndSourceCoupled(tMgrSink, tMgrSource))
+
+      val errorFilter = b.add(FlowProcessor.partition[Try[FlowTransactionEvent]](_.isSuccess))
+
+      // If the incoming trys are success
+      val succ = b.add(Flow.fromFunction[Try[FlowTransactionEvent], FlowTransactionEvent](_.get))
+      errorFilter.out0 ~> succ ~> callTMgr
+
+      // if the incoming trys are failures
+      val failed = b.add(Flow.fromFunction[Try[FlowTransactionEvent], Try[FlowTransaction]](evt => Failure(evt.failed.get)))
+      errorFilter.out1 ~> failed
+
+      val fanIn = b.add(Merge[Try[FlowTransaction]](2))
+      callTMgr.out ~> fanIn.in(0)
+      failed.out ~> fanIn.in(1)
+
+      FlowShape(errorFilter.in, fanIn.out)
+    }
   }
 
-  private val logAndPrepareSend : TransactionStreamContext => TransactionStreamContext = { in =>
+  private val logTransaction : Graph[FlowShape[Try[FlowTransaction], Try[FlowEnvelope]], NotUsed] = {
 
-    val transEvent : Try[FlowEnvelope] = {
-      in.trans.get match {
+    GraphDSL.create() { implicit b =>
+
+
+      val f = b.add(Flow.fromFunction[Try[FlowTransaction], Try[FlowEnvelope]]{
         case Success(t) =>
           if (t.state == FlowTransactionStateStarted || t.terminated) {
             streamLogger.info(t.toString())
@@ -111,59 +128,18 @@ class FlowTransactionStream(
           }
           Success(FlowTransaction.transaction2envelope(headerCfg)(t))
         case Failure(t) =>
-          streamLogger.error(t)(t.getMessage())
           Failure(t)
-      }
-    }
+      })
 
-    in.copy(sendEnvelope = Some(transEvent))
+      FlowShape(f.in, f.out)
+    }
   }
 
-  private val sendTransaction : TransactionStreamContext => TransactionStreamContext = { in =>
-
-    val sendEnv : Try[FlowEnvelope] = in.sendEnvelope.get match {
-      case Success(s) =>
-        if (performSend(s)) {
-          streamLogger.debug(s"About to send transaction envelope  [${in.envelope.id}]")
-
-          val pEnv : Promise[FlowEnvelope] = Promise[FlowEnvelope]
-
-          val sentEnv : FlowEnvelope => FlowEnvelope = { env =>
-            pEnv.success(env)
-            env
-          }
-
-          // TODO : Avoid await
-          val (actor, switch) = Source.actorRef[FlowEnvelope](1, OverflowStrategy.fail)
-            .viaMat(sendFlow)(Keep.left)
-            .viaMat(Flow.fromFunction[FlowEnvelope, FlowEnvelope](sentEnv))(Keep.left)
-            .viaMat(KillSwitches.single)(Keep.both)
-            .toMat(Sink.ignore)(Keep.left)
-            .run()
-
-          actor ! s
-
-          try {
-            val env : message.FlowEnvelope = Await.result(pEnv.future, timeout.duration)
-            Success(env)
-          } catch {
-            case NonFatal(e) => Failure(e)
-          } finally {
-            switch.shutdown()
-          }
-        } else {
-          Success(s)
-        }
-      case Failure(t) =>
-        streamLogger.error(t)(s"Failed to create transaction envelope for [${in.envelope.id}]")
-        Failure(t)
+  private val createResult : ((FlowEnvelope, Try[FlowEnvelope])) => FlowEnvelope = { case (orig, env) =>
+    env match {
+      case Success(e) => e.withAckHandler(orig.getAckHandler).withRequiresAcknowledge(orig.requiresAcknowledge).clearException()
+      case Failure(t) => orig.withException(t)
     }
-
-    TransactionStreamContext(
-      envelope = in.envelope,
-      trans = None,
-      sendEnvelope = Some(sendEnv)
-    )
   }
 
   def build(): Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
@@ -171,41 +147,37 @@ class FlowTransactionStream(
     val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val performSend : TransactionStreamContext => FlowEnvelope = { ctxt =>
-        ctxt.sendEnvelope match {
-          case None =>
-            ctxt.envelope.withException(new IllegalStateException("Send transaction has not been called."))
-          case Some(s) => s match {
-            case Success(env) =>
-              streamLogger.debug(s"Send flow for transaction [${env.id}] completed successfully.")
-              ctxt.envelope.acknowledge()
-              env
-            case Failure(t) =>
-              ctxt.envelope.withException(t)
-          }
-        }
-      }
+      // decode the incoming FlowEvent
+      val decode = b.add(Flow.fromFunction(updateEvent).named("updateEvent"))
 
-      val ack : Flow[TransactionStreamContext, FlowEnvelope, NotUsed] =
-        Flow[TransactionStreamContext].map[FlowEnvelope](performSend).named("performSend")
+      // update the persisted transaction
+      val record = b.add(Flow.fromGraph(recordTransaction).named("recordTransaction"))
 
-      val update = b.add(Flow.fromFunction(updateEvent).named("updateEvent"))
-      val record = b.add(Flow.fromFunction(recordTransaction).named("recordTransaction"))
-      val logTrans = b.add(Flow.fromFunction(logAndPrepareSend).named("logTransaction"))
-      val sendTrans = b.add(Flow.fromFunction(sendTransaction).named("sendTransaction"))
-      val acknowledge = b.add(ack)
+      // log the transaction
+      val logTrans = b.add(Flow.fromGraph(logTransaction).named("logTransaction"))
 
-      val in : Inlet[FlowEnvelope] = internalCf match {
+      // We need to split, so that we keep the original message in one branch and process the
+      // event in the other branch
+      val split = b.add(Broadcast[FlowEnvelope](2))
+
+
+      val join = b.add(Zip[FlowEnvelope, Try[FlowEnvelope]])
+      split.out(0) ~> join.in0
+
+      internalCf match {
         case None =>
-          update ~> record ~> logTrans ~> sendTrans ~> acknowledge
-          update.in
+          split.out(1) ~> decode ~> record ~> logTrans
         case Some(cf) =>
           val logToJms = b.add(logEventToJms(cf).named("logToJms"))
-          logToJms ~> update ~> record ~> logTrans ~> sendTrans ~> acknowledge
-          logToJms.in
+          split.out(1) ~> logToJms ~> decode ~> record ~> logTrans
       }
 
-      FlowShape(in, acknowledge.out)
+      logTrans.out ~> join.in1
+
+      val result = b.add(Flow.fromFunction(createResult).named("result"))
+      join.out ~> result.in
+
+      FlowShape(split.in, result.out)
     }
 
     Flow.fromGraph(g)
