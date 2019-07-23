@@ -20,7 +20,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
   val main = FlowEnvelope(FlowMessage.noProps)
 
-  // create a sample transaction witn n started branches
+  // create a sample transaction with n started branches
   private def sampleTransAction(branchCount : Int, state: WorklistState = WorklistStateStarted) : Try[FlowTransaction] = Try {
 
     val branches : Seq[String] = 1.to(branchCount).map{ i => s"$i"}
@@ -48,6 +48,18 @@ class FlowTransactionSpec extends LoggingFreeSpec
   ))
 
   "A FlowTransaction should" - {
+
+    "a started transaction that recieves another started event as update should be in updated state" in {
+      val t = FlowTransaction(None)
+      t.worklist should be (empty)
+      t.state should be (FlowTransactionStateStarted)
+
+      val evt : FlowTransactionEvent = FlowTransactionStarted(t.tid, t.creationProps)
+      val t2 : FlowTransaction = t.updateTransaction(evt).get
+
+      t2.created should be (t.created)
+      t2.state should be (FlowTransactionStateUpdated)
+    }
 
     "have an empty worklist after being created" in {
 

@@ -7,7 +7,7 @@ import java.util.Date
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source
-import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionManagerConfig}
+import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionManagerConfig, FlowTransactionStateStarted}
 import blended.util.logging.Logger
 import prickle._
 import blended.streams.json.PrickleProtocol._
@@ -50,18 +50,27 @@ class FileFlowTransactionManager(cfg: FlowTransactionManagerConfig) extends Flow
   override def updateTransaction(e: FlowTransactionEvent): Try[FlowTransaction] = Try {
 
     measureDuration(s"Transaction update for [${e.transactionId}] took ") { () =>
-      val updated: FlowTransaction = (findTransaction(e.transactionId).get match {
+      val updated : FlowTransaction = findTransaction(e.transactionId).get match {
         case None =>
           val now: Date = new Date()
           log.trace(s"Storing new transaction [${e.transactionId}]")
-          FlowTransaction(
+
+          val newT : FlowTransaction = FlowTransaction(
             id = e.transactionId,
             created = now,
             lastUpdate = now,
             creationProps = e.properties
           )
-        case Some(r) => r
-      }).updateTransaction(e).get
+
+          // if the event was not a started event we need to apply it
+          if (e.state == FlowTransactionStateStarted) {
+            newT
+          } else {
+            newT.updateTransaction(e).get
+          }
+
+        case Some(r) => r.updateTransaction(e).get
+      }
 
       store(updated).get
     }
@@ -72,7 +81,7 @@ class FileFlowTransactionManager(cfg: FlowTransactionManagerConfig) extends Flow
     */
   override def findTransaction(tid: String): Try[Option[FlowTransaction]] = Try {
 
-    measureDuration(s"Excuted find for [$tid] in "){ () =>
+    measureDuration(s"Executed find for [$tid] in "){ () =>
       log.trace(s"Trying to find transaction [$tid]")
 
       val tFile : File = new File(dir, s"$tid.$extension")

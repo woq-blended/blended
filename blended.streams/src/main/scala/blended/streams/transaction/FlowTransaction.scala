@@ -148,15 +148,20 @@ case class FlowTransaction(
       event match {
 
         case started: FlowTransactionStarted =>
-          copy(creationProps = started.properties)
-          this
+          copy(
+            lastUpdate = new Date(),
+            creationProps = started.properties,
+            state = FlowTransactionStateUpdated
+          )
 
         case _ : FlowTransactionCompleted => copy(
+          lastUpdate = new Date(),
           state = FlowTransactionStateCompleted,
           worklist = Map.empty
         )
 
         case _ : FlowTransactionFailed => copy(
+          lastUpdate = new Date(),
           state = FlowTransactionStateFailed,
           worklist = Map.empty
         )
@@ -183,6 +188,7 @@ case class FlowTransaction(
           )
       }
     } else {
+      log.warn(s"Ignoring update event [${event.transactionId}] for transaction [$tid]")
       this
     }
   }
