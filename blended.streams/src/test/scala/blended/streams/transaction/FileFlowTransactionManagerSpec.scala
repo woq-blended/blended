@@ -17,7 +17,8 @@ class FileFlowTransactionManagerSpec extends LoggingFreeSpec
   with Matchers
   with PropertyChecks {
 
-  private def mgr : FlowTransactionManager  = new FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "transactions"))
+  private def mgr : FlowTransactionManager  =
+    FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "transactions"))
 
   private def singleTest[T](ftm : FlowTransactionManager, event : FlowTransactionEvent)(f : FlowTransaction => T) : T = {
     ftm.updateTransaction(event) match {

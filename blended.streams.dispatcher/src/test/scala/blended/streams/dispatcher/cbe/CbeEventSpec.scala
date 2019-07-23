@@ -2,26 +2,24 @@ package blended.streams.dispatcher.cbe
 
 import java.util.Date
 
-import blended.streams.transaction.{EventSeverity, FlowTransactionState}
+import blended.streams.transaction.{EventSeverity, FlowTransactionStateStarted}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.XMLSupport
-import blended.util.logging.Logger
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 
-class CbeTransactionEventSpec extends LoggingFreeSpec
+class CbeEventSpec extends LoggingFreeSpec
   with Matchers {
 
-  private val log = Logger[CbeTransactionEventSpec]
-
-  val headers = Map(
+  val headers : Map[String, String] = Map(
     "foo" -> "bar",
     "Application" -> "XX",
     "Module" -> "YY"
   )
 
-  val comp = CbeComponent(
+  //scalastyle:off magic.number
+  val comp : CbeComponent = CbeComponent(
     "SIB-2.0",
     "TestComponent",
     "cc-9999",
@@ -31,6 +29,7 @@ class CbeTransactionEventSpec extends LoggingFreeSpec
     "Route",
     9999
   )
+  //scalastyle:on magic.number
 
   private[this] def validateCBE(event : CbeTransactionEvent, xml : String) : XMLSupport = {
 
@@ -57,7 +56,7 @@ class CbeTransactionEventSpec extends LoggingFreeSpec
         id           = "myId",
         severity     = EventSeverity.Information,
         component    = comp,
-        state        = Some(FlowTransactionState.Started),
+        state        = Some(FlowTransactionStateStarted),
         properties   = headers,
         closeProcess = false,
         timeout      = 1.second,
@@ -73,7 +72,7 @@ class CbeTransactionEventSpec extends LoggingFreeSpec
         id           = "myId",
         severity     = EventSeverity.Information,
         component    = comp,
-        state        = Some(FlowTransactionState.Started),
+        state        = Some(FlowTransactionStateStarted),
         properties   = headers,
         closeProcess = true,
         timeout      = 1.second,

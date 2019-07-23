@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 
 import blended.streams.transaction.EventSeverity.EventSeverity
 import blended.streams.transaction.FlowTransactionState._
-import blended.streams.transaction.{EventSeverity, FlowTransactionState}
+import blended.streams.transaction.{EventSeverity, FlowTransactionState, FlowTransactionStateFailed}
 
 import scala.concurrent.duration._
 
@@ -15,14 +15,14 @@ object CbeEvent {
   def apply(
     id           : String,
     component    : CbeComponent,
-    state        : FlowTransactionState.FlowTransactionState,
+    state        : FlowTransactionState,
     properties   : Map[String, Object],
     closeProcess : Boolean,
     timeout      : Long
   ) : CbeTransactionEvent = {
 
     val sev = state match {
-      case Failed => EventSeverity.Critical
+      case FlowTransactionStateFailed => EventSeverity.Critical
       case _ => EventSeverity.Information
     }
 
@@ -43,7 +43,7 @@ case class CbeTransactionEvent(
   id           : String,
   severity     : EventSeverity,
   component    : CbeComponent,
-  state        : Option[FlowTransactionState.FlowTransactionState],
+  state        : Option[FlowTransactionState],
   properties   : Map[String, Object],
   timestamp    : Date,
   closeProcess : Boolean,

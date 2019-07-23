@@ -29,6 +29,7 @@ object BlendedStreams extends ProjectFactory {
         s"${b.bundleSymbolicName}",
         s"${b.bundleSymbolicName}.file",
         s"${b.bundleSymbolicName}.jms",
+        s"${b.bundleSymbolicName}.json",
         s"${b.bundleSymbolicName}.message",
         s"${b.bundleSymbolicName}.processor",
         s"${b.bundleSymbolicName}.persistence",
@@ -44,7 +45,7 @@ object BlendedStreams extends ProjectFactory {
         "spec" -> "DEBUG",
         "blended" -> "DEBUG",
         "blended.streams.transaction" -> "TRACE",
-        "blended.persistence" -> "TRACE"
+        "spec.flow.stream" -> "TRACE"
       )
     )
   }
@@ -54,10 +55,8 @@ object BlendedStreams extends ProjectFactory {
     BlendedUtilLogging.project,
     BlendedJmsUtils.project,
     BlendedAkka.project,
-    BlendedPersistence.project,
 
     BlendedActivemqBrokerstarter.project % "test",
-    BlendedPersistenceH2.project % "test",
     BlendedTestsupportPojosr.project % "test",
     BlendedTestsupport.project % "test"
   )

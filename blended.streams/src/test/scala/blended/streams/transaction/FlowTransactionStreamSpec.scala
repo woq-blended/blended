@@ -17,15 +17,17 @@ import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
+import org.scalatest.prop.PropertyChecks
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 
 @RequiresForkedJVM
 class FlowTransactionStreamSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
-  with PojoSrTestHelper {
+  with PojoSrTestHelper
+  with PropertyChecks {
 
   System.setProperty("testName", "stream")
 
@@ -35,33 +37,29 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
     "blended.akka" -> new BlendedAkkaActivator()
   )
 
+  private implicit val timeout : FiniteDuration = 1.second
+  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
+  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+  private implicit val eCtxt : ExecutionContext = system.dispatcher
+  private implicit val materializer : Materializer = ActorMaterializer()
+  private val log : Logger = Logger("spec.flow.stream")
+
+  private val tMgr : FlowTransactionManager =
+    FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "streamSpec"))
+
   "The FlowTransactionStream should" - {
 
     "record an incoming FlowTransactionUpdate correctly" in {
 
-      def singleTest(event : FlowTransactionEvent)(f : List[FlowTransaction] => Unit) : Unit = {
+      def singleTest(event : FlowTransactionEvent)(f : List[FlowEnvelope] => Unit) : Unit = {
 
-        implicit val timeout : FiniteDuration = 1.second
-        val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
-        implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-
-        implicit val eCtxt : ExecutionContext = system.dispatcher
-        implicit val materializer : Materializer = ActorMaterializer()
-        implicit val log : Logger = Logger("spec.flow.stream")
-
-        val tMgr : FlowTransactionManager = new FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "transactions"))
-
-        val transColl = Collector[FlowTransaction]("trans")(_ => {})
+        val transColl = Collector[FlowEnvelope]("trans"){ e =>
+          e.acknowledge()
+        }
 
         val cfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
 
         try {
-          val good : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { e =>
-            val t = FlowTransaction.envelope2Transaction(cfg)(e)
-            transColl.actor ! t
-            e
-          }
-
           val envelope = FlowTransactionEvent.event2envelope(cfg)(event)
           val source = Source.single[FlowEnvelope](envelope)
 
@@ -75,20 +73,18 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
           source
             .watchTermination()(Keep.right)
             .viaMat(stream)(Keep.left)
-            .toMat(Sink.ignore)(Keep.left)
+            .toMat(Sink.actorRef[FlowEnvelope](transColl.actor, CollectingActor.Completed))(Keep.left)
             .run()
 
-          akka.pattern.after(1.second, system.scheduler)(Future {transColl.actor ! CollectingActor.Completed })
           Await.result(transColl.result.map(t => f(t)), 3.seconds)
         } finally {
           system.stop(transColl.actor)
         }
       }
 
-      singleTest(FlowTransaction.startEvent()){ t =>
-        t should have size 1
-        t.head.worklist should be (empty)
-        t.head.state should be (FlowTransactionStateStarted)
+      forAll(FlowTransactionGen.genTrans) {t =>
+        val event : FlowTransactionEvent = FlowTransactionStarted(t.tid, t.creationProps)
+        singleTest(event){ t => t should have size 1 }
       }
     }
   }

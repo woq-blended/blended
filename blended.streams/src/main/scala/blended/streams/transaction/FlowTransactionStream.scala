@@ -1,10 +1,10 @@
 package blended.streams.transaction
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.NotUsed
+import akka.actor.ActorSystem
 import akka.stream._
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source, Zip}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Zip}
 import akka.util.Timeout
-import akka.{Done, NotUsed}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
 import blended.streams.FlowProcessor
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
@@ -35,11 +35,11 @@ import scala.util.{Failure, Success, Try}
   * @param internalCf if the transaction event shall be forwarded to JMS, this
   *                   the [[IdAwareConnectionFactory]] to be used for sending the
   *                   message
-  * @param headerCfg The [[FlowHeaderConfig]] used to calculate the property names
-  * @param tMgr The [[FlowTransactionManager]] used to manage the persistence of the
-  *             known transactions of the container
+  * @param headerCfg  The [[FlowHeaderConfig]] used to calculate the property names
+  * @param tMgr       The [[FlowTransactionManager]] used to manage the persistence of the
+  *                   known transactions of the container
   * @param streamLogger a Logger to be used for any logging
-  * @param system The underlying [[ActorSystem]]
+  * @param system     The underlying [[ActorSystem]]
   */
 class FlowTransactionStream(
   internalCf : Option[IdAwareConnectionFactory],
@@ -51,19 +51,6 @@ class FlowTransactionStream(
   private implicit val timeout : Timeout = Timeout(3.seconds)
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private implicit val materializer : Materializer = ActorMaterializer()
-
-  // We create an actor wrapping the transaction manager, so we can use it
-  // within the transaction stream
-  private val tMgrActor : ActorRef = system.actorOf(FlowTransactionManagerActor.props(tMgr))
-
-  // Then we create a Sink pointing to the tMgrActor, eating FlowTransactionEvents
-  private val tMgrSink : Sink[FlowTransactionEvent, NotUsed] = Sink.actorRef[FlowTransactionEvent](tMgrActor, Done)
-
-  // The we create a Source producing FlowTransactions from an Actor, so that the transaction
-  // manager can reply to that source
-  // TODO : Review buffer size
-  private val tMgrSource : Source[Try[FlowTransaction], ActorRef] =
-    Source.actorRef[Try[FlowTransaction]](50, OverflowStrategy.fail)
 
   // recreate the FlowTransactionEvent from the inbound envelope
   private val updateEvent : FlowEnvelope => Try[FlowTransactionEvent] = { env =>
@@ -94,7 +81,7 @@ class FlowTransactionStream(
     GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val callTMgr = b.add(Flow.fromSinkAndSourceCoupled(tMgrSink, tMgrSource))
+      val callTMgr = b.add(Flow.fromFunction[FlowTransactionEvent, Try[FlowTransaction]]{e => tMgr.updateTransaction(e) })
 
       val errorFilter = b.add(FlowProcessor.partition[Try[FlowTransactionEvent]](_.isSuccess))
 
@@ -118,7 +105,6 @@ class FlowTransactionStream(
 
     GraphDSL.create() { implicit b =>
 
-
       val f = b.add(Flow.fromFunction[Try[FlowTransaction], Try[FlowEnvelope]]{
         case Success(t) =>
           if (t.state == FlowTransactionStateStarted || t.terminated) {
@@ -137,8 +123,12 @@ class FlowTransactionStream(
 
   private val createResult : ((FlowEnvelope, Try[FlowEnvelope])) => FlowEnvelope = { case (orig, env) =>
     env match {
-      case Success(e) => e.withAckHandler(orig.getAckHandler).withRequiresAcknowledge(orig.requiresAcknowledge).clearException()
-      case Failure(t) => orig.withException(t)
+      case Success(e) =>
+        streamLogger.trace(s"Successfully processed transaction event [${e.id}]")
+        e.withAckHandler(orig.getAckHandler).withRequiresAcknowledge(orig.requiresAcknowledge).clearException()
+      case Failure(t) =>
+        streamLogger.trace(s"Failed to process transaction event [${orig.id}]")
+        orig.withException(t)
     }
   }
 

@@ -7,7 +7,7 @@ import java.util.Date
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source
-import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager}
+import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionManagerConfig}
 import blended.util.logging.Logger
 import prickle._
 import blended.streams.json.PrickleProtocol._
@@ -16,11 +16,19 @@ import scala.io.BufferedSource
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-class FileFlowTransactionManager(dir: File) extends FlowTransactionManager {
+object FileFlowTransactionManager {
+  def apply(dir : File) : FileFlowTransactionManager = new FileFlowTransactionManager(
+    FlowTransactionManagerConfig(dir)
+  )
+}
+
+class FileFlowTransactionManager(cfg: FlowTransactionManagerConfig) extends FlowTransactionManager {
 
   private val log : Logger = Logger[FileFlowTransactionManager]
   private val extension : String = "json"
   private val charset : Charset = Charset.forName("UTF-8")
+
+  private val dir : File = cfg.dir
 
   private lazy val initialized : Boolean = {
     if (!dir.exists()) {
@@ -45,7 +53,7 @@ class FileFlowTransactionManager(dir: File) extends FlowTransactionManager {
       val updated: FlowTransaction = (findTransaction(e.transactionId).get match {
         case None =>
           val now: Date = new Date()
-          log.debug(s"Storing new transaction [${e.transactionId}]")
+          log.trace(s"Storing new transaction [${e.transactionId}]")
           FlowTransaction(
             id = e.transactionId,
             created = now,
@@ -65,7 +73,7 @@ class FileFlowTransactionManager(dir: File) extends FlowTransactionManager {
   override def findTransaction(tid: String): Try[Option[FlowTransaction]] = Try {
 
     measureDuration(s"Excuted find for [$tid] in "){ () =>
-      log.debug(s"Trying to find transaction [$tid]")
+      log.trace(s"Trying to find transaction [$tid]")
 
       val tFile : File = new File(dir, s"$tid.$extension")
 
@@ -87,7 +95,7 @@ class FileFlowTransactionManager(dir: File) extends FlowTransactionManager {
       val tFile : File = new File(dir, s"${t.tid}.$extension")
 
       if (tFile.delete()) {
-        log.debug(s"deleted transaction file [${tFile.getAbsolutePath()}]")
+        log.trace(s"deleted transaction file [${tFile.getAbsolutePath()}]")
       } else {
         log.warn(s"Failed to delete transaction file [${tFile.getAbsolutePath()}]")
       }
@@ -122,16 +130,16 @@ class FileFlowTransactionManager(dir: File) extends FlowTransactionManager {
       writer.foreach{ w => w.write(json) }
       t
     } catch {
-      case NonFatal(t) =>
-        log.warn(s"Error writing transaction file [${tFile.getAbsolutePath()}][${t.getMessage()}]")
-        throw t
+      case NonFatal(e) =>
+        log.warn(s"Error writing transaction file [${tFile.getAbsolutePath()}][${e.getMessage()}]")
+        throw e
     } finally {
       writer.foreach { w =>
         try {
           w.close()
         } catch {
-          case NonFatal(t) =>
-            log.warn(s"Error closing file [${tFile.getAbsolutePath()}][${t.getMessage()}]")
+          case NonFatal(e) =>
+            log.warn(s"Error closing file [${tFile.getAbsolutePath()}][${e.getMessage()}]")
         }
       }
     }
@@ -151,7 +159,7 @@ class FileFlowTransactionManager(dir: File) extends FlowTransactionManager {
         src.close()
       } catch {
         case NonFatal(t) =>
-          log.warn(s"Error closing file [${f.getAbsolutePath()}]")
+          log.warn(s"Error closing file [${f.getAbsolutePath()}]:[${t.getMessage()}]")
       }
     }
   }
@@ -159,7 +167,7 @@ class FileFlowTransactionManager(dir: File) extends FlowTransactionManager {
   private def measureDuration[T](logMsg : String)(f: () => T) : T = {
     val start : Long = System.currentTimeMillis()
     val result : T = f()
-    log.debug(logMsg + s"[${System.currentTimeMillis() - start}]ms")
+    log.trace(logMsg + s"[${System.currentTimeMillis() - start}]ms")
     result
   }
 }

@@ -1,7 +1,6 @@
 package blended.streams.transaction
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorRef, Props}
 import akka.stream.scaladsl.Source
 
 import scala.util.Try
@@ -32,14 +31,3 @@ trait FlowTransactionManager {
   def transactions : Source[FlowTransaction, NotUsed]
 }
 
-object FlowTransactionManagerActor {
-  def props(mgr : FlowTransactionManager) : Props = Props(new FlowTransactionManagerActor(mgr))
-}
-
-class FlowTransactionManagerActor(mgr : FlowTransactionManager) extends Actor {
-
-  override def receive: Receive = {
-    case (event : FlowTransactionEvent, respondTo : ActorRef) =>
-      respondTo ! mgr.updateTransaction(event)
-  }
-}

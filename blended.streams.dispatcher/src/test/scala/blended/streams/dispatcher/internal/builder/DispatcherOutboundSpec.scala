@@ -5,13 +5,12 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Source}
 import akka.stream.{ActorMaterializer, Graph, Materializer, SinkShape}
 import blended.jms.bridge.BridgeProviderConfig
-import blended.jms.utils.{JmsDestination, JmsQueue}
+import blended.jms.utils.JmsDestination
 import blended.streams.dispatcher.internal.builder.DispatcherOutbound.DispatcherTarget
 import blended.streams.jms.JmsFlowSupport
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.worklist.WorklistState.WorklistState
-import blended.streams.worklist.{WorklistEvent, WorklistState}
+import blended.streams.worklist._
 import org.scalatest.Matchers
 
 import scala.concurrent.ExecutionContext
@@ -91,12 +90,12 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
     "produce a worklist completed event for successfull completions of the outbound flow" in {
       val good = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env}
-      testOutbound(WorklistState.Completed, good)
+      testOutbound(WorklistStateCompleted, good)
     }
 
     "produce a worklist failed event after unsuccessfull completions of the outbound flow" in {
       val bad = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env.withException(new Exception("Boom !")) }
-      testOutbound(WorklistState.Failed, bad)
+      testOutbound(WorklistStateFailed, bad)
     }
   }
 

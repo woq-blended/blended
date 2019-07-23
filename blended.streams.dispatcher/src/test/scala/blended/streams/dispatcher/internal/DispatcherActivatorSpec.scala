@@ -9,12 +9,11 @@ import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.persistence.h2.internal.H2Activator
 import blended.streams.dispatcher.internal.builder.DispatcherSpecSupport
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
 import blended.streams.testsupport.LoggingEventAppender
-import blended.streams.transaction.FlowTransactionState
+import blended.streams.transaction._
 import blended.testsupport.pojosr.PojoSrTestHelper
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
@@ -25,6 +24,7 @@ import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
+import blended.streams.internal.BlendedStreamsActivator
 
 @RequiresForkedJVM
 class DispatcherActivatorSpec extends DispatcherSpecSupport
@@ -44,7 +44,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator(),
     "blended.jms.bridge" -> new BridgeActivator(),
-    "blended.persistence.h2" -> new H2Activator(),
+    "blended.streams" -> new BlendedStreamsActivator(),
     "blended.streams.dispatcher" -> new DispatcherActivator()
   )
 
@@ -109,8 +109,8 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       // TODO: Reconstruct FlowTransaction from String ??
       assert(logEvents.size >= 4)
       assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") || e.getMessage().startsWith("Message received")})
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Started}]")) >= 1)
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Failed}]")) >= 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionStateStarted}]")) >= 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionStateFailed}]")) >= 1)
 
       errors should have size 1
       cbes should have size 0
@@ -155,8 +155,8 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       // TODO: Reconstruct FlowTransaction from String ??
       assert(logEvents.size >= 4)
       assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") || e.getMessage().startsWith("Message received")})
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Started}]")) >= 1)
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Completed}]")) >= 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateStarted]")) >= 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateCompleted]")) >= 1)
 
       errors should have size 0
       out should have size 1

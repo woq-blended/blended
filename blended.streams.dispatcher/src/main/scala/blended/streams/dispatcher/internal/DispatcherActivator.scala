@@ -5,9 +5,9 @@ import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.persistence.PersistenceService
 import blended.streams.dispatcher.internal.builder.{DispatcherBuilderSupport, RunnableDispatcher}
 import blended.streams.jms._
+import blended.streams.transaction.FlowTransactionManager
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 import domino.DominoActivator
@@ -20,7 +20,7 @@ class DispatcherActivator extends DominoActivator
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
-      whenServicePresent[PersistenceService] { pSvc =>
+      whenServicePresent[FlowTransactionManager] { tMgr =>
         whenServicePresent[BridgeProviderRegistry] { registry =>
 
           try {
@@ -49,7 +49,7 @@ class DispatcherActivator extends DominoActivator
                 cf = cf,
                 bs = bs,
                 idSvc = cfg.idSvc,
-                pSvc = pSvc,
+                tMgr = tMgr,
                 routerCfg = routerCfg
               )
 

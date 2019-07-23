@@ -1,19 +1,19 @@
 package blended.streams.dispatcher.internal.builder
 
+import java.io.File
 import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.persistence.PersistenceService
-import blended.persistence.h2.internal.H2Activator
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManagerActor, FlowTransactionUpdate}
-import blended.streams.worklist.WorklistState
-import blended.testsupport.RequiresForkedJVM
+import blended.streams.transaction.internal.FileFlowTransactionManager
+import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionUpdate}
+import blended.streams.worklist._
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.{BeforeAndAfterAll, Matchers}
@@ -34,16 +34,13 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   override def loggerName: String = "outbound"
 
   override def bundles: Seq[(String, BundleActivator)] = super.bundles ++ Seq(
-    "blended.activemq.brokerstarter" -> new BrokerActivator(),
-    "blended.persistence.h2" -> new H2Activator()
+    "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
     clazz = ClassTag(classOf[ActorSystem]),
     timeout = timeout
   )
-
-  private val pSvc = mandatoryService[PersistenceService](registry)(None)
 
   private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
@@ -53,7 +50,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   val (internalVendor, internalProvider) = ctxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).get
   private val cf = jmsConnectionFactory(registry, ctxt)(internalVendor, internalProvider, 3.seconds).get
 
-  private val tMgr = system.actorOf(FlowTransactionManagerActor.props(pSvc))
+  private val tMgr : FlowTransactionManager = FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "transOutbound"))
 
   override protected def beforeAll(): Unit = {
     implicit val bs : DispatcherBuilderSupport = ctxt.bs
@@ -146,7 +143,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       val envStart = transactionEnvelope(ctxt, FlowTransactionUpdate(
         transactionId = UUID.randomUUID().toString(),
         properties = FlowMessage.noProps,
-        updatedState = WorklistState.Completed,
+        updatedState = WorklistStateCompleted,
         branchIds = "foo, bar"
       )).withHeader(ctxt.bs.headerCbeEnabled, true).get
 

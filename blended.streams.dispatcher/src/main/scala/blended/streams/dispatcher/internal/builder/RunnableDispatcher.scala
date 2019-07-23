@@ -7,11 +7,10 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Source}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.persistence.PersistenceService
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManagerActor, TransactionDestinationResolver, TransactionWiretap}
+import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
 import blended.streams.{StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 
@@ -23,7 +22,7 @@ class RunnableDispatcher(
   cf : IdAwareConnectionFactory,
   bs : DispatcherBuilderSupport,
   idSvc : ContainerIdentifierService,
-  pSvc : PersistenceService,
+  tMgr : FlowTransactionManager,
   routerCfg : ResourceTypeRouterConfig
 )(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
@@ -83,7 +82,7 @@ class RunnableDispatcher(
     }
   }
 
-  private[builder] def transactionStream(tMgr : ActorRef) : Try[ActorRef] = Try {
+  private[builder] def transactionStream(tMgr : FlowTransactionManager) : Try[ActorRef] = Try {
 
     implicit val builderSupport : DispatcherBuilderSupport = bs
 
@@ -159,11 +158,8 @@ class RunnableDispatcher(
       // Get the internal provider
       val internalProvider = registry.internalProvider.get
 
-      // We will create the Transaction Manager
-      transMgr = Some(system.actorOf(FlowTransactionManagerActor.props(pSvc)))
-
       // The transaction stream will process the transaction events from the transactions destination
-      transStream = Some(transactionStream(transMgr.get).get)
+      transStream = Some(transactionStream(tMgr).get)
 
       // The blueprint for the dispatcher flow
       val dispatcher : Flow[FlowEnvelope, FlowTransactionEvent, NotUsed] =
