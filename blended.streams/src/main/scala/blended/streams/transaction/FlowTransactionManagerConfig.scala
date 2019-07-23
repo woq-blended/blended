@@ -8,7 +8,7 @@ import scala.concurrent.duration._
 
 object FlowTransactionManagerConfig {
 
-  val defaultRetainStale : FiniteDuration = 30.days
+  val defaultRetainStale : FiniteDuration = 10.days
   val defaultRetainCompleted : FiniteDuration = 1.hour
   val defaultRetainFailed : FiniteDuration = 7.days
 
