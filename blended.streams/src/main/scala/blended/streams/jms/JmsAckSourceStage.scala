@@ -195,7 +195,10 @@ final class JmsAckSourceStage(
                     s
                 }
 
-                settings.log.info(s"Message received [$envelopeId][${settings.jmsDestination.map(_.asString)}][${session.sessionId}] : $flowMessage")
+                settings.log.log(
+                  settings.receiveLogLevel,
+                  s"Message received [$envelopeId][${settings.jmsDestination.map(_.asString)}][${session.sessionId}] : $flowMessage"
+                )
 
                 val handler = JmsAcknowledgeHandler(
                   id = envelopeId,

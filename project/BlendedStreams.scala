@@ -25,6 +25,7 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.logbackClassic % "test"
     ),
     adaptBundle = b => b.copy(
+      bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedStreamsActivator",
       exportPackage = Seq(
         s"${b.bundleSymbolicName}",
         s"${b.bundleSymbolicName}.file",
@@ -35,7 +36,8 @@ object BlendedStreams extends ProjectFactory {
         s"${b.bundleSymbolicName}.persistence",
         s"${b.bundleSymbolicName}.transaction",
         s"${b.bundleSymbolicName}.worklist"
-      )
+      ),
+      privatePackage = b.privatePackage ++ Seq(s"${b.bundleSymbolicName}.transaction.internal")
     )
   ) {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(

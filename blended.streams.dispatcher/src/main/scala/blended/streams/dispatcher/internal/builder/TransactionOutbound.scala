@@ -11,7 +11,7 @@ import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.{FlowTransactionStream, _}
 import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 
 import scala.util.Try
 
@@ -37,6 +37,7 @@ class TransactionOutbound(
 
     val srcSettings = JMSConsumerSettings(
       log = log,
+      receiveLogLevel = LogLevel.Debug,
       headerCfg = headerConfig,
       connectionFactory = internalCf,
     )

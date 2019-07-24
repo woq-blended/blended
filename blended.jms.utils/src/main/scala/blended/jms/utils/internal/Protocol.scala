@@ -3,7 +3,7 @@ package blended.jms.utils.internal
 import java.util.Date
 
 import akka.actor.ActorRef
-import javax.jms.{Connection, JMSException}
+import javax.jms.Connection
 
 import scala.concurrent.duration.FiniteDuration
 

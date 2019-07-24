@@ -2,15 +2,14 @@ package blended.streams.transaction.internal
 
 import java.io.{BufferedWriter, File}
 import java.nio.charset.Charset
-import java.nio.file.Files
+import java.nio.file.{DirectoryStream, Files, Path}
 import java.util.Date
+import scala.collection.JavaConverters._
 
-import akka.NotUsed
-import akka.stream.scaladsl.Source
-import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionManagerConfig, FlowTransactionStateStarted}
+import blended.streams.json.PrickleProtocol._
+import blended.streams.transaction._
 import blended.util.logging.Logger
 import prickle._
-import blended.streams.json.PrickleProtocol._
 
 import scala.io.BufferedSource
 import scala.util.control.NonFatal
@@ -22,13 +21,15 @@ object FileFlowTransactionManager {
   )
 }
 
-class FileFlowTransactionManager(cfg: FlowTransactionManagerConfig) extends FlowTransactionManager {
+class FileFlowTransactionManager(
+  override val config: FlowTransactionManagerConfig
+) extends FlowTransactionManager {
 
   private val log : Logger = Logger[FileFlowTransactionManager]
   private val extension : String = "json"
   private val charset : Charset = Charset.forName("UTF-8")
 
-  private val dir : File = cfg.dir
+  private val dir : File = config.dir
 
   private lazy val initialized : Boolean = {
     if (!dir.exists()) {
@@ -66,10 +67,10 @@ class FileFlowTransactionManager(cfg: FlowTransactionManagerConfig) extends Flow
           if (e.state == FlowTransactionStateStarted) {
             newT
           } else {
-            newT.updateTransaction(e).get
+            newT.updateTransaction(e)
           }
 
-        case Some(r) => r.updateTransaction(e).get
+        case Some(r) => r.updateTransaction(e)
       }
 
       store(updated).get
@@ -85,39 +86,35 @@ class FileFlowTransactionManager(cfg: FlowTransactionManagerConfig) extends Flow
       log.trace(s"Trying to find transaction [$tid]")
 
       val tFile : File = new File(dir, s"$tid.$extension")
-
-      if (tFile.exists()) {
-        val json : String = load(tFile).get
-        val t : FlowTransaction = Unpickle[FlowTransaction].fromString(json).get
-        Some(t)
-      } else {
-        None
-      }
+      loadTransaction(tFile).get
     }
   }
 
   /**
     * @inheritdoc
     */
-  override def removeTransaction(tid: String): Try[Option[FlowTransaction]] = Try {
-    findTransaction(tid).get.map{ t =>
-      val tFile : File = new File(dir, s"${t.tid}.$extension")
+  override def removeTransaction(tid: String): Unit = Try {
+    val tFile : File = new File(dir, s"${tid}.$extension")
 
-      if (tFile.delete()) {
-        log.trace(s"deleted transaction file [${tFile.getAbsolutePath()}]")
-      } else {
-        log.warn(s"Failed to delete transaction file [${tFile.getAbsolutePath()}]")
-      }
-
-      t
+    if (tFile.delete()) {
+      log.trace(s"Deleted transaction file [${tFile.getAbsolutePath()}]")
+    } else {
+      log.warn(s"Failed to delete transaction file [${tFile.getAbsolutePath()}]")
     }
   }
 
   /**
     * @inheritdoc
     */
-  override def transactions: Source[FlowTransaction, NotUsed] =
-    Source.empty[FlowTransaction]
+  override def transactions: Iterator[FlowTransaction] = {
+    val dirStream : DirectoryStream[Path] = Files.newDirectoryStream(dir.toPath())
+    dirStream.iterator().asScala
+      .map{ p => loadTransaction(p.toFile()) }
+      .filter(_.isSuccess)
+      .map(_.get)
+      .filter(_.isDefined)
+      .map(_.get)
+  }
 
   private def store(t : FlowTransaction) : Try[FlowTransaction] = Try {
 
@@ -154,7 +151,17 @@ class FileFlowTransactionManager(cfg: FlowTransactionManagerConfig) extends Flow
     }
   }
 
-  private def load(f : File) : Try[String] = {
+  private def loadTransaction(f : File) : Try[Option[FlowTransaction]] = Try {
+    if (f.exists()) {
+      val json : String = loadFile(f).get
+      val t : FlowTransaction = Unpickle[FlowTransaction].fromString(json).get
+      Some(t)
+    } else {
+      None
+    }
+  }
+
+  private def loadFile(f : File) : Try[String] = {
     val src : BufferedSource = scala.io.Source.fromFile(f, "UTF-8")
 
     try {

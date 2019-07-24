@@ -57,6 +57,7 @@ class RoundtripConnectionVerifier(
       headerCfg = headerConfig,
       connectionFactory = cf,
       jmsDestination = Some(requestDest),
+      timeToLive = Some(receiveTimeout * 2),
       destinationResolver = s => new MessageDestinationResolver(s)
     )
 

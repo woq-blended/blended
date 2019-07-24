@@ -2,7 +2,8 @@ package blended.streams.jms
 
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue, JmsTopic}
 import blended.streams.transaction.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel.LogLevel
+import blended.util.logging.{LogLevel, Logger}
 import javax.jms
 import javax.jms.Session
 
@@ -97,6 +98,7 @@ final case class JMSConsumerSettings(
   pollInterval : FiniteDuration = 100.millis,
   acknowledgeMode: AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
   bufferSize: Int = 100,
+  receiveLogLevel : LogLevel = LogLevel.Info,
   selector: Option[String] = None,
   ackTimeout: FiniteDuration = 1.second,
   durableName: Option[String] = None,

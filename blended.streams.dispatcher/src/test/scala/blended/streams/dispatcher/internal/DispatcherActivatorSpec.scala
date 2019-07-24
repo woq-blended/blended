@@ -107,10 +107,10 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val cbes = results.last
 
       // TODO: Reconstruct FlowTransaction from String ??
-      assert(logEvents.size >= 4)
-      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") || e.getMessage().startsWith("Message received")})
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionStateStarted}]")) >= 1)
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionStateFailed}]")) >= 1)
+      assert(logEvents.size == 2)
+      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionStateStarted}]")) == 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionStateFailed}]")) == 1)
 
       errors should have size 1
       cbes should have size 0
@@ -153,10 +153,10 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val out = results(1)
 
       // TODO: Reconstruct FlowTransaction from String ??
-      assert(logEvents.size >= 4)
-      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") || e.getMessage().startsWith("Message received")})
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateStarted]")) >= 1)
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateCompleted]")) >= 1)
+      assert(logEvents.size == 2)
+      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateStarted]")) == 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateCompleted]")) == 1)
 
       errors should have size 0
       out should have size 1

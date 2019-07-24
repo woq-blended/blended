@@ -17,7 +17,6 @@ import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFa
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
 
-import scala.language.reflectiveCalls
 import scala.util.control.NonFatal
 
 object BrokerControlSupervisor {

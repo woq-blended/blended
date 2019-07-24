@@ -35,7 +35,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
       creationProps = event.properties
     )
 
-    t.updateTransaction(FlowTransactionUpdate(t.tid, FlowMessage.noProps, state, branches:_*)).get
+    t.updateTransaction(FlowTransactionUpdate(t.tid, FlowMessage.noProps, state, branches:_*))
   }
 
   private val cfg : FlowHeaderConfig = FlowHeaderConfig.create(ConfigFactory.parseMap(
@@ -55,7 +55,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
       t.state should be (FlowTransactionStateStarted)
 
       val evt : FlowTransactionEvent = FlowTransactionStarted(t.tid, t.creationProps)
-      val t2 : FlowTransaction = t.updateTransaction(evt).get
+      val t2 : FlowTransaction = t.updateTransaction(evt)
 
       t2.created should be (t.created)
       t2.state should be (FlowTransactionStateUpdated)
@@ -72,9 +72,9 @@ class FlowTransactionSpec extends LoggingFreeSpec
       FlowTransaction(Some(main)).tid should be (main.id)
     }
 
-    "a started transaction with n started branches should be in Started state" in {
+    "a started transaction with n started branches should be in Updated state" in {
       val t = sampleTransAction(branchCount).get
-      t.state should be (FlowTransactionStateStarted)
+      t.state should be (FlowTransactionStateUpdated)
       t.worklist should have size branchCount
     }
 
@@ -83,7 +83,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
       val u = t.updateTransaction(
         FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateCompleted, "5")
-      ).get
+      )
 
       u.state should be (FlowTransactionStateUpdated)
       u.worklist should have size branchCount
@@ -93,7 +93,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val t = sampleTransAction(1).get
       val u = t.updateTransaction(
         FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateCompleted, "1")
-      ).get
+      )
 
       u.state should be (FlowTransactionStateCompleted)
       u.worklist should have size 1
@@ -103,7 +103,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
       val u2 = t2.updateTransaction(
         FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateStarted, "1")
-      ).get
+      )
 
       u2.state should be (FlowTransactionStateCompleted)
       u2.worklist should have size 1
@@ -116,7 +116,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
       val u = t.updateTransaction(
         FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateCompleted, branches:_*)
-      ).get
+      )
 
       u.state should be (FlowTransactionStateCompleted)
       u.worklist should have size branchCount
@@ -127,7 +127,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
       val u = t.updateTransaction(
         FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateFailed, "5")
-      ).get
+      )
 
       u.state should be (FlowTransactionStateFailed)
       u.worklist should have size 10
@@ -138,7 +138,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
       val u = t.updateTransaction(
         FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistStateTimeout, "5")
-      ).get
+      )
 
       u.state should be (FlowTransactionStateFailed)
       u.worklist should have size 10
@@ -149,10 +149,38 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val env = FlowEnvelope(FlowMessage.noProps)
       val t = FlowTransaction(Some(env))
 
-      val u = t.updateTransaction(FlowTransactionCompleted(t.tid, FlowMessage.noProps)).get
+      val u = t.updateTransaction(FlowTransactionCompleted(t.tid, FlowMessage.noProps))
 
       u.state should be (FlowTransactionStateCompleted)
       u.worklist should be (empty)
+    }
+
+    "remain unchanged once it has reached 'completed'" in {
+      val env : FlowEnvelope = FlowEnvelope(FlowMessage.noProps)
+      val t : FlowTransaction = FlowTransaction(Some(env))
+
+      val u : FlowTransaction = t.updateTransaction(FlowTransactionCompleted(t.tid, FlowMessage.noProps))
+
+      u.state should be (FlowTransactionStateCompleted)
+
+      u.updateTransaction(FlowTransactionFailed(u.tid, u.creationProps, None)).state should be(FlowTransactionStateCompleted)
+      u.updateTransaction(FlowTransactionCompleted(u.tid, u.creationProps)).state should be(FlowTransactionStateCompleted)
+      u.updateTransaction(FlowTransactionStarted(u.tid, u.creationProps)).state should be(FlowTransactionStateCompleted)
+      u.updateTransaction(FlowTransactionUpdate(u.tid, u.creationProps, WorklistStateFailed)).state should be (FlowTransactionStateCompleted)
+    }
+
+    "remain unchanged once it has reached 'failed'" in {
+      val env : FlowEnvelope = FlowEnvelope(FlowMessage.noProps)
+      val t : FlowTransaction = FlowTransaction(Some(env))
+
+      val u : FlowTransaction = t.updateTransaction(FlowTransactionFailed(t.tid, FlowMessage.noProps, None))
+
+      u.state should be (FlowTransactionStateFailed)
+
+      u.updateTransaction(FlowTransactionFailed(u.tid, u.creationProps, None)).state should be(FlowTransactionStateFailed)
+      u.updateTransaction(FlowTransactionCompleted(u.tid, u.creationProps)).state should be(FlowTransactionStateFailed)
+      u.updateTransaction(FlowTransactionStarted(u.tid, u.creationProps)).state should be(FlowTransactionStateFailed)
+      u.updateTransaction(FlowTransactionUpdate(u.tid, u.creationProps, WorklistStateFailed)).state should be (FlowTransactionStateFailed)
     }
 
     "can be transformed into a FlowEnvelope and vice versa" in {

@@ -114,7 +114,11 @@ object FlowTransaction {
     } else if (itemStates.equals(List(FlowTransactionStateCompleted))) {
       FlowTransactionStateCompleted
     } else {
-      currentState
+      if (currentState == FlowTransactionStateStarted) {
+        FlowTransactionStateUpdated
+      } else {
+        currentState
+      }
     }
   }
 }
@@ -139,57 +143,64 @@ case class FlowTransaction(
 
   def terminated: Boolean = state == FlowTransactionStateCompleted || state == FlowTransactionStateFailed
 
-  def updateTransaction(
-    event : FlowTransactionEvent
-  ) : Try[FlowTransaction] = Try {
+  private def applyStarted(started : FlowTransactionStarted) : FlowTransaction = copy(
+    lastUpdate = new Date(),
+    creationProps = started.properties,
+    state = FlowTransactionStateUpdated
+  )
 
+  private def applyCompleted() : FlowTransaction = copy(
+    lastUpdate = new Date(),
+    state = FlowTransactionStateCompleted,
+    worklist = Map.empty
+  )
+
+  private def applyFailed() : FlowTransaction = copy(
+    lastUpdate = new Date(),
+    state = FlowTransactionStateFailed,
+    worklist = Map.empty
+  )
+
+  private def applyUpdate(updated : FlowTransactionUpdate) : FlowTransaction = {
+    // We extract the id's for the transaction parts
+    val updatedItemIds : Map[String, List[WorklistState]] =
+      updated.branchIds
+        .map{ id => id -> List(updated.updatedState) }
+        .map{ case (k, s) =>
+          val oldState : List[WorklistState] = worklist.getOrElse(k, List.empty)
+          k -> (s ::: oldState).distinct
+        }
+        .toMap
+
+    // We keep everything that is not in the update
+    val newWorklist : Map[String, List[WorklistState]] =
+      worklist.filterKeys { id => !updatedItemIds.contains(id) } ++ updatedItemIds
+
+    copy(
+      worklist = newWorklist,
+      lastUpdate = new Date(),
+      state = FlowTransaction.transactionState(state, newWorklist)
+    )
+  }
+
+  private val applyEvent : FlowTransactionEvent => FlowTransaction = { event =>
     if (event.transactionId == tid) {
-      log.trace(s"Updating transaction with [$event]")
-      event match {
-
-        case started: FlowTransactionStarted =>
-          copy(
-            lastUpdate = new Date(),
-            creationProps = started.properties,
-            state = FlowTransactionStateUpdated
-          )
-
-        case _ : FlowTransactionCompleted => copy(
-          lastUpdate = new Date(),
-          state = FlowTransactionStateCompleted,
-          worklist = Map.empty
-        )
-
-        case _ : FlowTransactionFailed => copy(
-          lastUpdate = new Date(),
-          state = FlowTransactionStateFailed,
-          worklist = Map.empty
-        )
-
-        case updated : FlowTransactionUpdate =>
-          // We extract the id's for the transaction parts
-          val updatedItemIds : Map[String, List[WorklistState]] =
-            updated.branchIds
-              .map{ id => id -> List(updated.updatedState) }
-              .map{ case (k, s) =>
-                val oldState : List[WorklistState] = worklist.getOrElse(k, List.empty)
-                k -> (s ::: oldState).distinct
-              }
-              .toMap
-
-          // We keep everything that is not in the update
-          val newWorklist : Map[String, List[WorklistState]] =
-            worklist.filterKeys { id => !updatedItemIds.contains(id) } ++ updatedItemIds
-
-          copy(
-            worklist = newWorklist,
-            lastUpdate = new Date(),
-            state = FlowTransaction.transactionState(state, newWorklist)
-          )
+      if (state == FlowTransactionStateStarted || state == FlowTransactionStateUpdated) {
+        log.trace(s"Updating transaction [$tid] with [$event]")
+        event match {
+          case started: FlowTransactionStarted => applyStarted(started)
+          case _ : FlowTransactionCompleted => applyCompleted()
+          case _ : FlowTransactionFailed => applyFailed()
+          case updated : FlowTransactionUpdate => applyUpdate(updated)
+        }
+      } else {
+        log.trace(s"Ignoring event for already terminated transaction [$tid]")
+        this
       }
     } else {
-      log.warn(s"Ignoring update event [${event.transactionId}] for transaction [$tid]")
       this
     }
   }
+
+  def updateTransaction(event : FlowTransactionEvent) : FlowTransaction = applyEvent(event)
 }

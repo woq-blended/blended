@@ -1,7 +1,5 @@
 package blended.updater.config
 
-import java.{util => ju}
-
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Arbitrary._
