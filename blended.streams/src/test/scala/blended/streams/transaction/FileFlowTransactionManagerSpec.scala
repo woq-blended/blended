@@ -239,7 +239,7 @@ class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
         val env : FlowEnvelope = FlowEnvelope(FlowMessage.noProps)
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))){_ =>}
 
-        if (i % 1000 == 0) { println(i) }
+        if (i % 5000 == 0) { println(i) }
 
         if (i % openRate == 0) {
           openCount.incrementAndGet()
