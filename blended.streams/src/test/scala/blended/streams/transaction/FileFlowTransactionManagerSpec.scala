@@ -1,16 +1,19 @@
 package blended.streams.transaction
 
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 
+import akka.actor.ActorSystem
+import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.internal.FileFlowTransactionManager
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
-import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 
-import scala.concurrent.duration._
 import scala.collection.mutable
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 trait FTMFactory {
@@ -20,7 +23,8 @@ trait FTMFactory {
   def createTransactionManager(cfg : FlowTransactionManagerConfig) : FlowTransactionManager
 }
 
-trait FlowTransactionManagerSpec extends LoggingFreeSpec
+trait FlowTransactionManagerSpec
+  extends LoggingFreeSpecLike
   with Matchers
   with PropertyChecks { this : FTMFactory =>
 
@@ -189,39 +193,78 @@ trait FlowTransactionManagerSpec extends LoggingFreeSpec
       tMgr.transactions.toList should have size (transactions.size - 1)
       tMgr.completed.toList.map(_.tid) should be (empty)
     }
+  }
+}
 
-    "handle bulk cleanups" in {
+@RequiresForkedJVM
+class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
+  with LoggingFreeSpecLike
+  with Matchers
+  with PropertyChecks
+  with FTMFactory {
+
+  private def updateTest[T](ftm : FlowTransactionManager, event : FlowTransactionEvent)(f : FlowTransaction => T) : T = {
+    ftm.updateTransaction(event) match {
+      case Success(t) => f(t)
+      case Failure(e) => fail(e)
+    }
+  }
+
+  override def createTransactionManager(cfg: FlowTransactionManagerConfig): FlowTransactionManager = {
+    val mgr : FileFlowTransactionManager = new FileFlowTransactionManager(cfg)
+    system.actorOf(TransactionManagerCleanupActor.props(mgr, cfg))
+    mgr
+  }
+
+  "The Transaction cleanup should" - {
+
+    "Clean up completed and failed transactions correctly" in {
       val tCount : Int = 50000
+      val completeRate : Int = 3
+      val openRate : Int = 1000
+
+      val openCount : AtomicInteger = new AtomicInteger(0)
 
       val cfg : FlowTransactionManagerConfig = FlowTransactionManagerConfig(
         dir = new File(BlendedTestSupport.projectTestOutput, "bulk"),
-        retainCompleted = 10.millis,
-        retainFailed = 10.millis,
+        retainCompleted = 1.seconds,
+        retainFailed = 1.seconds,
         retainStale = 1.day
       )
 
       val tMgr : FlowTransactionManager = createTransactionManager(cfg)
       tMgr.clearTransactions()
 
-      1.to(tCount).foreach{ _ =>
+      1.to(tCount).foreach{ i =>
         val env : FlowEnvelope = FlowEnvelope(FlowMessage.noProps)
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))){_ =>}
+
+        if (i % 1000 == 0) { println(i) }
+
+        if (i % openRate == 0) {
+          openCount.incrementAndGet()
+        } else {
+          if (i % completeRate == 0) {
+            updateTest(tMgr, FlowTransactionCompleted(env.id, env.flowMessage.header)){_ =>}
+          } else {
+            updateTest(tMgr, FlowTransactionFailed(env.id, env.flowMessage.header, None)){_ =>}
+          }
+        }
+
       }
 
-      tMgr.transactions.toList should have size tCount
-      val first : FlowTransaction = tMgr.transactions.take(1).toList.head
-      updateTest(tMgr, FlowTransactionCompleted(first.tid, first.creationProps)){_ =>}
-
-      Thread.sleep(cfg.retainCompleted.toMillis + 10)
-      tMgr.cleanUp()
-
-      tMgr.transactions.size should be (tCount - 1)
+      Thread.sleep(cfg.retainCompleted.toMillis + 1.second.toMillis)
+      tMgr.transactions.size should be (openCount.get())
     }
   }
 }
 
 @RequiresForkedJVM
-class FileFlowTransactionManagerSpec extends FlowTransactionManagerSpec with FTMFactory {
+class FileFlowTransactionManagerSpec extends FlowTransactionManagerSpec
+  with LoggingFreeSpecLike
+  with Matchers
+  with PropertyChecks
+  with FTMFactory {
   override def createTransactionManager(cfg: FlowTransactionManagerConfig): FlowTransactionManager =
     new FileFlowTransactionManager(cfg)
 }

@@ -4,13 +4,14 @@ import java.io.{BufferedWriter, File}
 import java.nio.charset.Charset
 import java.nio.file.{DirectoryStream, Files, Path}
 import java.util.Date
-import scala.collection.JavaConverters._
 
 import blended.streams.json.PrickleProtocol._
 import blended.streams.transaction._
 import blended.util.logging.Logger
 import prickle._
 
+import scala.collection.JavaConverters._
+import scala.concurrent.duration.FiniteDuration
 import scala.io.BufferedSource
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -26,7 +27,6 @@ class FileFlowTransactionManager(
 ) extends FlowTransactionManager {
 
   private val log : Logger = Logger[FileFlowTransactionManager]
-  private val extension : String = "json"
   private val charset : Charset = Charset.forName("UTF-8")
 
   private val dir : File = config.dir
@@ -51,7 +51,7 @@ class FileFlowTransactionManager(
   override def updateTransaction(e: FlowTransactionEvent): Try[FlowTransaction] = Try {
 
     measureDuration(s"Transaction update for [${e.transactionId}] took ") { () =>
-      val updated : FlowTransaction = findTransaction(e.transactionId).get match {
+      val (old, updated) : (Option[FlowTransaction], FlowTransaction) = findTransaction(e.transactionId).get match {
         case None =>
           val now: Date = new Date()
           log.trace(s"Storing new transaction [${e.transactionId}]")
@@ -64,16 +64,16 @@ class FileFlowTransactionManager(
           )
 
           // if the event was not a started event we need to apply it
-          if (e.state == FlowTransactionStateStarted) {
+          (None, if (e.state == FlowTransactionStateStarted) {
             newT
           } else {
             newT.updateTransaction(e)
-          }
+          })
 
-        case Some(r) => r.updateTransaction(e)
+        case Some(r) => (Some(r), r.updateTransaction(e))
       }
 
-      store(updated).get
+      store(old, updated).get
     }
   }
 
@@ -84,9 +84,14 @@ class FileFlowTransactionManager(
 
     measureDuration(s"Executed find for [$tid] in "){ () =>
       log.trace(s"Trying to find transaction [$tid]")
+      val iterator : Iterator[Path] = tidPaths(tid)
 
-      val tFile : File = new File(dir, s"$tid.$extension")
-      loadTransaction(tFile).get
+      if (iterator.isEmpty) {
+        None
+      } else {
+        val tFile : File = iterator.take(1).toList.head.toFile()
+        loadTransaction(tFile).get
+      }
     }
   }
 
@@ -94,12 +99,15 @@ class FileFlowTransactionManager(
     * @inheritdoc
     */
   override def removeTransaction(tid: String): Unit = Try {
-    val tFile : File = new File(dir, s"${tid}.$extension")
 
-    if (tFile.delete()) {
-      log.trace(s"Deleted transaction file [${tFile.getAbsolutePath()}]")
-    } else {
-      log.warn(s"Failed to delete transaction file [${tFile.getAbsolutePath()}]")
+    tidPaths(tid).foreach{ p =>
+      val tFile : File = p.toFile()
+
+      if (tFile.delete()) {
+        log.trace(s"Deleted transaction file [${tFile.getAbsolutePath()}]")
+      } else {
+        log.warn(s"Failed to delete transaction file [${tFile.getAbsolutePath()}]")
+      }
     }
   }
 
@@ -108,36 +116,101 @@ class FileFlowTransactionManager(
     */
   override def transactions: Iterator[FlowTransaction] = {
     val dirStream : DirectoryStream[Path] = Files.newDirectoryStream(dir.toPath())
-    dirStream.iterator().asScala
-      .map{ p => loadTransaction(p.toFile()) }
+    path2transIterator(dirStream.iterator().asScala)
+  }
+
+
+  /**
+    * @inheritdoc
+    */
+  override def completed: Iterator[FlowTransaction] = path2transIterator(stateDirectoryStream(FlowTransactionStateCompleted))
+
+  override def failed: Iterator[FlowTransaction] = path2transIterator(stateDirectoryStream(FlowTransactionStateFailed))
+
+  override def open: Iterator[FlowTransaction] = path2transIterator(
+    stateDirectoryStream(FlowTransactionStateStarted, FlowTransactionStateUpdated)
+  )
+
+
+  override def clearTransactions(): Unit = {
+    filteredDirectoryStream(_ => true).foreach(_.toFile().delete())
+  }
+
+  override def cleanUp(states : FlowTransactionState*): Unit = {
+    log.info(s"Performing cleanup for states [${states.mkString(",")}]")
+    val start : Long = System.currentTimeMillis()
+
+    val needsCleanUp : Path => Boolean = p => {
+      val nameParts : Array[String] = p.toFile().getName().split("\\.")
+      if (nameParts.length == 3) {
+        try {
+          val state : FlowTransactionState = FlowTransactionState.apply(nameParts(2)).get
+          val retain : FiniteDuration = state match {
+            case FlowTransactionStateFailed => config.retainFailed
+            case FlowTransactionStateCompleted => config.retainCompleted
+            case _ => config.retainStale
+          }
+          System.currentTimeMillis() - nameParts(1).toLong >= retain.toMillis
+        } catch {
+          case NonFatal(_) => false
+        }
+      } else {
+        false
+      }
+    }
+
+    stateDirectoryStream(states:_*).filter(needsCleanUp).foreach(p => p.toFile().delete())
+    log.info(s"CleanUp took [${System.currentTimeMillis() - start}]ms")
+  }
+
+
+  private val path2transIterator : Iterator[Path] => Iterator[FlowTransaction] = { pit =>
+    pit.map{ p => loadTransaction(p.toFile()) }
       .filter(_.isSuccess)
       .map(_.get)
       .filter(_.isDefined)
       .map(_.get)
   }
 
-  private def store(t : FlowTransaction) : Try[FlowTransaction] = Try {
+  private val tidPaths : String => Iterator[Path] = { tid =>
+    val searchTid : Path => Boolean = p => p.toFile().getName().startsWith(tid)
+    filteredDirectoryStream(searchTid)
+  }
 
-    val json : String = Pickle.intoString(t)
-    val tFile : File = new File(dir, s"${t.tid}.$extension")
-
-    if (log.isTraceEnabled) {
-      if (tFile.exists()) {
-        log.trace(s"Replacing transaction file [${tFile.getAbsolutePath()}]")
-      } else {
-        log.trace(s"Creating transaction file [${tFile.getAbsolutePath()}]")
-      }
+  private def filteredDirectoryStream(f :Path => Boolean) : Iterator[Path] = {
+    val tidFilter : DirectoryStream.Filter[Path] = new DirectoryStream.Filter[Path] {
+      override def accept(entry: Path): Boolean = f(entry)
     }
+
+    Files.newDirectoryStream(dir.toPath(), tidFilter).iterator().asScala
+  }
+
+  private def stateDirectoryStream(states : FlowTransactionState*) : Iterator[Path] = {
+    filteredDirectoryStream { p =>
+      val s : Array[String] = p.toFile().getName().split("\\.")
+      states.map(_.toString).contains(s(s.length -1))
+    }
+  }
+
+  private val filename : FlowTransaction => String = t =>
+    s"${t.tid}.${t.lastUpdate.getTime()}.${t.state}"
+
+  private def store(old: Option[FlowTransaction], changed : FlowTransaction) : Try[FlowTransaction] = Try {
+
+    val json : String = Pickle.intoString(changed)
+    val newFile : File = new File(dir, filename(changed))
+
+    old.foreach(t => new File(dir, filename(t)).delete())
 
     var writer : Option[BufferedWriter] = None
 
     try {
-      writer = Some(Files.newBufferedWriter(tFile.toPath(), charset))
+      writer = Some(Files.newBufferedWriter(newFile.toPath(), charset))
       writer.foreach{ w => w.write(json) }
-      t
+      changed
     } catch {
       case NonFatal(e) =>
-        log.warn(s"Error writing transaction file [${tFile.getAbsolutePath()}][${e.getMessage()}]")
+        log.warn(s"Error writing transaction file [${newFile.getAbsolutePath()}][${e.getMessage()}]")
         throw e
     } finally {
       writer.foreach { w =>
@@ -145,7 +218,7 @@ class FileFlowTransactionManager(
           w.close()
         } catch {
           case NonFatal(e) =>
-            log.warn(s"Error closing file [${tFile.getAbsolutePath()}][${e.getMessage()}]")
+            log.warn(s"Error closing file [${newFile.getAbsolutePath()}][${e.getMessage()}]")
         }
       }
     }
@@ -187,3 +260,5 @@ class FileFlowTransactionManager(
     result
   }
 }
+
+

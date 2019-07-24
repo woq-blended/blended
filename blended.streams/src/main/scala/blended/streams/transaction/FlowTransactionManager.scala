@@ -47,24 +47,13 @@ trait FlowTransactionManager {
     */
   def failed : Iterator[FlowTransaction] = listTransactions(_.state == FlowTransactionStateFailed)
 
+  def open : Iterator[FlowTransaction] = listTransactions(t => t.state == FlowTransactionStateStarted || t.state == FlowTransactionStateUpdated)
+
   def listTransactions(f : FlowTransaction => Boolean) : Iterator[FlowTransaction] = transactions.filter(f)
 
-  /**
-    * Best effort to clean up obsolete transaction files
-    */
-  def cleanUp() : Unit = {
-    val start : Long = System.currentTimeMillis()
+  def cleanUp(states : FlowTransactionState*) : Unit
 
-    val needsCleanUp : FlowTransaction => Boolean = t => t.state match {
-      case FlowTransactionStateCompleted => (System.currentTimeMillis() - t.lastUpdate.getTime()) >= config.retainCompleted.toMillis
-      case FlowTransactionStateFailed => (System.currentTimeMillis() - t.lastUpdate.getTime()) >= config.retainFailed.toMillis
-      case _ => (System.currentTimeMillis() - t.lastUpdate.getTime()) >= config.retainStale.toMillis
-    }
-
-    listTransactions(needsCleanUp).foreach(t => removeTransaction(t.tid))
-
-    log.trace(s"CleanUp took [${System.currentTimeMillis() - start}]ms")
-  }
-
+  def cleanUp() : Unit =
+    cleanUp(FlowTransactionStateStarted, FlowTransactionStateUpdated, FlowTransactionStateFailed, FlowTransactionStateCompleted)
 }
 
