@@ -20,18 +20,18 @@ class TransactionManagerCleanupActor(
 
   case class Tick(
     interval: FiniteDuration,
-    states : FlowTransactionState*
+    states : Seq[FlowTransactionState]
   )
 
   override def preStart(): Unit = {
-    context.system.scheduler.scheduleOnce(cfg.retainStale, self, Tick(cfg.retainStale, FlowTransactionStateStarted, FlowTransactionStateUpdated))
-    context.system.scheduler.scheduleOnce(cfg.retainCompleted, self, Tick(cfg.retainCompleted, FlowTransactionStateCompleted))
-    context.system.scheduler.scheduleOnce(cfg.retainFailed, self, Tick(cfg.retainFailed, FlowTransactionStateFailed))
+    self ! Tick(cfg.retainStale, Seq(FlowTransactionStateStarted, FlowTransactionStateUpdated))
+    self ! Tick(cfg.retainCompleted, Seq(FlowTransactionStateCompleted))
+    self ! Tick(cfg.retainFailed, Seq(FlowTransactionStateFailed))
   }
 
   override def receive: Receive = {
     case Tick(i, s) =>
-      mgr.cleanUp(s)
+      mgr.cleanUp(s:_*)
       context.system.scheduler.scheduleOnce(i, self, Tick(i, s))
   }
 }

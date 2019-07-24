@@ -7,6 +7,7 @@ import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
+import blended.streams.BlendedStreamsConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
@@ -51,6 +52,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   private val cf = jmsConnectionFactory(registry, ctxt)(internalVendor, internalProvider, 3.seconds).get
 
   private val tMgr : FlowTransactionManager = FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "transOutbound"))
+  private val streamsCfg : BlendedStreamsConfig = mandatoryService[BlendedStreamsConfig](registry)(None)
 
   override protected def beforeAll(): Unit = {
     implicit val bs : DispatcherBuilderSupport = ctxt.bs
@@ -59,6 +61,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       tMgr = tMgr,
       dispatcherCfg = ctxt.cfg,
       internalCf = cf,
+      transactionShard = streamsCfg.transactionShard,
       ctxt.bs.streamLogger
     ).build()
   }

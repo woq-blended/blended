@@ -12,7 +12,7 @@ import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{AckProcessor, HeaderProcessorConfig, HeaderTransformProcessor}
 import blended.streams.transaction._
-import blended.streams.{FlowProcessor, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamControllerConfig}
 import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
 
@@ -65,14 +65,17 @@ case class BridgeStreamConfig(
 )
 
 class BridgeStreamBuilder(
-  cfg : BridgeStreamConfig
+  bridgeCfg : BridgeStreamConfig,
+  streamsConfig : BlendedStreamsConfig
 )(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
   // So that we find the stream in the logs
-  protected val inId = s"${cfg.fromCf.vendor}:${cfg.fromCf.provider}:${cfg.fromDest.asString}"
-  protected val outId = s"${cfg.toCf.vendor}:${cfg.toCf.provider}:${cfg.toDest.map(_.asString).getOrElse("out")}"
-  protected val streamId = s"${cfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
+  protected val inId = s"${bridgeCfg.fromCf.vendor}:${bridgeCfg.fromCf.provider}:${bridgeCfg.fromDest.asString}"
+  protected val outId = s"${bridgeCfg.toCf.vendor}:${bridgeCfg.toCf.provider}:${bridgeCfg.toDest.map(_.asString).getOrElse("out")}"
+  protected val streamId = s"${bridgeCfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
   protected val bridgeLogger = Logger(streamId)
+
+  protected val transShard : Option[String] = streamsConfig.transactionShard
 
   protected val toSettings : IdAwareConnectionFactory => Option[JmsDestination] => JmsProducerSettings = cf => dest => {
     val resolver : JmsProducerSettings => JmsDestinationResolver = dest match {
@@ -85,23 +88,23 @@ class BridgeStreamBuilder(
     JmsProducerSettings(
       log = bridgeLogger,
       connectionFactory = cf,
-      headerCfg = cfg.headerCfg
+      headerCfg = bridgeCfg.headerCfg
     )
       .withDestination(dest)
       .withDestinationResolver(resolver)
       .withDeliveryMode(JmsDeliveryMode.Persistent)
   }
 
-  protected val internalProvider : Try[BridgeProviderConfig] = cfg.registry.internalProvider
+  protected val internalProvider : Try[BridgeProviderConfig] = bridgeCfg.registry.internalProvider
   protected val internalId : (String, String) = (internalProvider.get.vendor, internalProvider.get.provider)
   protected val retryDest : Option[JmsDestination] = internalProvider.get.retry
 
   protected val (isInbound, internalCf) : (Boolean, Try[IdAwareConnectionFactory]) = {
 
-    if ((cfg.fromCf.vendor, cfg.fromCf.provider) == internalId) {
-      (false, Success(cfg.fromCf))
-    } else if ((cfg.toCf.vendor, cfg.toCf.provider) == internalId) {
-      (true, Success(cfg.toCf))
+    if ((bridgeCfg.fromCf.vendor, bridgeCfg.fromCf.provider) == internalId) {
+      (false, Success(bridgeCfg.fromCf))
+    } else if ((bridgeCfg.toCf.vendor, bridgeCfg.toCf.provider) == internalId) {
+      (true, Success(bridgeCfg.toCf))
     } else {
       (true, Failure(new InvalidBridgeConfigurationException("One leg of the JMS bridge must be internal")))
     }
@@ -112,13 +115,13 @@ class BridgeStreamBuilder(
   protected def jmsSource : Source[FlowEnvelope, NotUsed] = {
 
     // configure the consumer
-    val srcSettings = JMSConsumerSettings(log = bridgeLogger, connectionFactory = cfg.fromCf, headerCfg = cfg.headerCfg)
+    val srcSettings = JMSConsumerSettings(log = bridgeLogger, connectionFactory = bridgeCfg.fromCf, headerCfg = bridgeCfg.headerCfg)
       .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
-      .withDestination(Some(cfg.fromDest))
+      .withDestination(Some(bridgeCfg.fromDest))
 
-      .withSessionCount(cfg.listener)
-      .withSelector(cfg.selector)
-      .withSubScriberName(cfg.subscriberName)
+      .withSessionCount(bridgeCfg.listener)
+      .withSelector(bridgeCfg.selector)
+      .withSubScriberName(bridgeCfg.subscriberName)
 
     val src : Source[FlowEnvelope, NotUsed] = {
       val result : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new JmsAckSourceStage(
@@ -129,24 +132,24 @@ class BridgeStreamBuilder(
       // set the transaction from a the system property blended.streams.transactionShard
       // Maintaining the transaction shard in the message will ensure that all transaction events
       // with the same event id will end up in the same transaction destination.
-      Option(System.getProperty("blended.streams.transactionShard")) match {
+      transShard match {
         case None => result
         case Some(shard) => result.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
-          env.withHeader(cfg.headerCfg.headerTransShard, shard, false).get
+          env.withHeader(bridgeCfg.headerCfg.headerTransShard, shard, false).get
         })
       }
     }
 
     // If we need to transform additional headers on the inbound leg
-    if (cfg.inbound && cfg.header.nonEmpty) {
+    if (bridgeCfg.inbound && bridgeCfg.header.nonEmpty) {
 
-      bridgeLogger.info(s"Creating Stream with header configs [${cfg.header}]")
+      bridgeLogger.info(s"Creating Stream with header configs [${bridgeCfg.header}]")
 
       val header : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = HeaderTransformProcessor(
         name = streamId + "-header",
         log = bridgeLogger,
-        rules = cfg.header,
-        idSvc = cfg.idSvc
+        rules = bridgeCfg.header,
+        idSvc = bridgeCfg.idSvc
       ).flow(bridgeLogger)
 
       src.via(header)
@@ -158,7 +161,7 @@ class BridgeStreamBuilder(
 
   // The jms producer for forwarding the messages to the target destination
   protected def jmsSend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
-    jmsProducer(name = streamId + "-sink", settings = toSettings(cfg.toCf)(cfg.toDest), autoAck = false)
+    jmsProducer(name = streamId + "-sink", settings = toSettings(bridgeCfg.toCf)(bridgeCfg.toDest), autoAck = false)
   }
 
 
@@ -182,13 +185,13 @@ class BridgeStreamBuilder(
         logEnvelope(s"Forwarding to retry [$d]")
           .via(
             Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-              env.withHeader(cfg.headerCfg.headerRetryDestination, JmsDestination.asString(cfg.fromDest)).get
+              env.withHeader(bridgeCfg.headerCfg.headerRetryDestination, JmsDestination.asString(bridgeCfg.fromDest)).get
             }
           )
           .via(
             jmsProducer(
               name = streamId + "-retry",
-              settings = toSettings(cfg.fromCf)(Some(d)).copy(clearPreviousException = true),
+              settings = toSettings(bridgeCfg.fromCf)(Some(d)).copy(clearPreviousException = true),
               autoAck = false
             )
           )
@@ -199,12 +202,12 @@ class BridgeStreamBuilder(
   // Decide whether a tracking event should be generated for this bridge step
   protected[bridge] val trackFilter : Graph[FanOutShape2[FlowEnvelope, FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.partition[FlowEnvelope] { env =>
 
-    val doTrack : Boolean = cfg.trackTransaction match {
+    val doTrack : Boolean = bridgeCfg.trackTransaction match {
       case TrackTransaction.Off => false
       case TrackTransaction.On => true
       case TrackTransaction.FromMessage =>
-        bridgeLogger.trace(s"Getting tracking mode from message property [${cfg.headerCfg.headerTrack}]")
-        val msgTrack = env.header[Boolean](cfg.headerCfg.headerTrack)
+        bridgeLogger.trace(s"Getting tracking mode from message property [${bridgeCfg.headerCfg.headerTrack}]")
+        val msgTrack = env.header[Boolean](bridgeCfg.headerCfg.headerTrack)
         msgTrack.getOrElse(false)
     }
 
@@ -216,8 +219,8 @@ class BridgeStreamBuilder(
   protected def sendTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = new TransactionWiretap(
     cf = internalCf.get,
     eventDest = internalProvider.get.transactions,
-    headerCfg = cfg.headerCfg,
-    inbound = cfg.inbound,
+    headerCfg = bridgeCfg.headerCfg,
+    inbound = bridgeCfg.inbound,
     trackSource = streamId,
     log = bridgeLogger
   ).flow()
@@ -302,9 +305,9 @@ class BridgeStreamBuilder(
     jmsSource.via(g)
   }
 
-  bridgeLogger.info(s"Starting bridge stream with config [inbound=${cfg.inbound},trackTransaction=${cfg.trackTransaction}]")
+  bridgeLogger.info(s"Starting bridge stream with config [inbound=${bridgeCfg.inbound},trackTransaction=${bridgeCfg.trackTransaction}]")
   // The stream will be handled by an actor which that can be used to shutdown the stream
   // and will restart the stream with a backoff strategy on failure
-  val streamCfg : StreamControllerConfig = StreamControllerConfig.fromConfig(cfg.rawConfig).get
+  val streamCfg : StreamControllerConfig = StreamControllerConfig.fromConfig(bridgeCfg.rawConfig).get
     .copy(name = streamId)
 }

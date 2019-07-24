@@ -160,7 +160,7 @@ class FileFlowTransactionManager(
     }
 
     stateDirectoryStream(states:_*).filter(needsCleanUp).foreach(p => p.toFile().delete())
-    log.info(s"CleanUp took [${System.currentTimeMillis() - start}]ms")
+    log.info(s"Clean up took [${System.currentTimeMillis() - start}]ms")
   }
 
 

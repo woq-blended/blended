@@ -205,9 +205,6 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val result1 : List[FlowEnvelope] = Await.result(collector1.result, 300.millis)
       val result2 : List[FlowEnvelope] = Await.result(collector2.result, t + 100.millis)
 
-      assert(result1.nonEmpty && result1.size < numMsg)
-      assert(result2.nonEmpty && result2.size < numMsg)
-
       assert(result1.size + result2.size >= numMsg)
 
       getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)

@@ -6,8 +6,8 @@ import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.streams.BlendedStreamsConfig
 import blended.util.logging.Logger
-import com.typesafe.config.Config
 import domino.DominoActivator
 import domino.service_watching.ServiceWatcherContext
 import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedService, RemovedService}
@@ -37,8 +37,9 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
   // We maintain the streamBuilder factory as a function here, so that unit tests can override
   // the factory with stream builders throwing particular exceptions
-  protected def streamBuilderFactory(system : ActorSystem)(materializer: Materializer)(cfg : BridgeStreamConfig) : BridgeStreamBuilder =
-    new BridgeStreamBuilder(cfg)(system, materializer)
+  protected def streamBuilderFactory(system : ActorSystem)(materializer: Materializer)(
+    bridgeCfg : BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
+  ) : BridgeStreamBuilder = new BridgeStreamBuilder(bridgeCfg, streamsCfg)(system, materializer)
 
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
@@ -60,97 +61,99 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
       log.info(s"Bridge Activator is using [$internalVendor:$internalProvider] as internal JMS Provider.")
 
-      whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=$internalVendor)(provider=$internalProvider))") { cf =>
+      whenServicePresent[BlendedStreamsConfig]{ streamsCfg =>
+        whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=$internalVendor)(provider=$internalProvider))") { cf =>
 
-        val ctrlConfig = BridgeControllerConfig.create(
-          cfg = osgiCfg.config,
-          internalCf = cf,
-          idSvc = osgiCfg.idSvc,
-          streamBuilderFactory = streamBuilderFactory
-        )
-
-        ctrlConfig.registry.providesService[BridgeProviderRegistry]
-
-        implicit val system : ActorSystem = osgiCfg.system
-        implicit val materialzer : ActorMaterializer = ActorMaterializer()
-
-        if (osgiCfg.config.hasPath("retry")) {
-
-          registry.internalProvider.get.retry.foreach { retryDest =>
-            val retryCfg : JmsRetryConfig = JmsRetryConfig.fromConfig(
-              idSvc = osgiCfg.idSvc,
-              cf = cf,
-              retryDestName = JmsDestination.asString(retryDest),
-              retryFailedName = JmsDestination.asString(registry.internalProvider.get.retryFailed),
-              eventDestName = JmsDestination.asString(registry.internalProvider.get.transactions),
-              cfg = osgiCfg.config.getConfig("retry")
-            ).get
-
-            val processor = new JmsRetryProcessor(s"$internalVendor:$internalProvider", retryCfg)
-
-            processor.start()
-
-            onStop {
-              processor.stop()
-            }
-          }
-        }
-
-        try {
-          val bridgeProps = BridgeController.props(ctrlConfig)
-
-          val restartProps = BackoffSupervisor.props(
-            Backoff.onStop(
-              bridgeProps,
-              childName = "BridgeController",
-              minBackoff = 3.seconds,
-              maxBackoff = 1.minute,
-              randomFactor = 0.2,
-              maxNrOfRetries = -1
-            ).withAutoReset(30.seconds)
-              .withSupervisorStrategy(
-                OneForOneStrategy() {
-                  case _ => SupervisorStrategy.Restart
-                }
-              )
+          val ctrlConfig = BridgeControllerConfig.create(
+            cfg = osgiCfg.config,
+            internalCf = cf,
+            idSvc = osgiCfg.idSvc,
+            streamsCfg = streamsCfg,
+            streamBuilderFactory = streamBuilderFactory
           )
 
-          log.info("Starting JMS bridge supervising actor.")
-          val bridge = osgiCfg.system.actorOf(bridgeProps, "BridgeSupervisor")
+          ctrlConfig.registry.providesService[BridgeProviderRegistry]
 
-          watchServices[IdAwareConnectionFactory] {
+          implicit val system: ActorSystem = osgiCfg.system
+          implicit val materialzer: ActorMaterializer = ActorMaterializer()
 
-            case AddingService(cf, context) => identifyCf(context) match {
-              case Success(_) =>
-                bridge ! BridgeController.AddConnectionFactory(cf)
-              case Failure(t) =>
-                log.warn(t.getMessage)
-            }
+          if (osgiCfg.config.hasPath("retry")) {
 
-            case ModifiedService(cf, context) => identifyCf(context) match {
-              case Success(_) =>
-                bridge ! BridgeController.RemoveConnectionFactory(cf)
-                bridge ! BridgeController.AddConnectionFactory(cf)
-              case Failure(t) =>
-                log.warn(t.getMessage)
-            }
+            registry.internalProvider.get.retry.foreach { retryDest =>
+              val retryCfg: JmsRetryConfig = JmsRetryConfig.fromConfig(
+                idSvc = osgiCfg.idSvc,
+                cf = cf,
+                retryDestName = JmsDestination.asString(retryDest),
+                retryFailedName = JmsDestination.asString(registry.internalProvider.get.retryFailed),
+                eventDestName = JmsDestination.asString(registry.internalProvider.get.transactions),
+                cfg = osgiCfg.config.getConfig("retry")
+              ).get
 
-            case RemovedService(cf, context) => identifyCf(context) match {
-              case Success(_) =>
-                bridge ! BridgeController.RemoveConnectionFactory(cf)
-              case Failure(t) =>
-                log.warn(t.getMessage)
+              val processor = new JmsRetryProcessor(s"$internalVendor:$internalProvider", retryCfg)
+
+              processor.start()
+
+              onStop {
+                processor.stop()
+              }
             }
           }
 
-          onStop {
-            log.info("Stopping JMS bridge supervising actor.")
-            osgiCfg.system.stop(bridge)
-          }
+          try {
+            val bridgeProps = BridgeController.props(ctrlConfig)
 
-        } catch {
-          case t : Throwable =>
-            log.error(t)("Error starting JMS bridge")
+            val restartProps = BackoffSupervisor.props(
+              Backoff.onStop(
+                bridgeProps,
+                childName = "BridgeController",
+                minBackoff = 3.seconds,
+                maxBackoff = 1.minute,
+                randomFactor = 0.2,
+                maxNrOfRetries = -1
+              ).withAutoReset(30.seconds)
+                .withSupervisorStrategy(
+                  OneForOneStrategy() {
+                    case _ => SupervisorStrategy.Restart
+                  }
+                )
+            )
+
+            log.info("Starting JMS bridge supervising actor.")
+            val bridge = osgiCfg.system.actorOf(bridgeProps, "BridgeSupervisor")
+
+            watchServices[IdAwareConnectionFactory] {
+
+              case AddingService(cf, context) => identifyCf(context) match {
+                case Success(_) =>
+                  bridge ! BridgeController.AddConnectionFactory(cf)
+                case Failure(t) =>
+                  log.warn(t.getMessage)
+              }
+
+              case ModifiedService(cf, context) => identifyCf(context) match {
+                case Success(_) =>
+                  bridge ! BridgeController.RemoveConnectionFactory(cf)
+                  bridge ! BridgeController.AddConnectionFactory(cf)
+                case Failure(t) =>
+                  log.warn(t.getMessage)
+              }
+
+              case RemovedService(cf, context) => identifyCf(context) match {
+                case Success(_) =>
+                  bridge ! BridgeController.RemoveConnectionFactory(cf)
+                case Failure(t) =>
+                  log.warn(t.getMessage)
+              }
+            }
+
+            onStop {
+              log.info("Stopping JMS bridge supervising actor.")
+              osgiCfg.system.stop(bridge)
+            }
+          } catch {
+            case t: Throwable =>
+              log.error(t)("Error starting JMS bridge")
+          }
         }
       }
     }

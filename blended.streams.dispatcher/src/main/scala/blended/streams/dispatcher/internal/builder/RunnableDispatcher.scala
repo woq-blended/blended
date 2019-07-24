@@ -11,7 +11,7 @@ import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
-import blended.streams.{StreamController, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 
 import scala.collection.mutable
@@ -23,7 +23,8 @@ class RunnableDispatcher(
   bs : DispatcherBuilderSupport,
   idSvc : ContainerIdentifierService,
   tMgr : FlowTransactionManager,
-  routerCfg : ResourceTypeRouterConfig
+  routerCfg : ResourceTypeRouterConfig,
+  streamsCfg : BlendedStreamsConfig
 )(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
   private val startedDispatchers : mutable.Map[String, ActorRef] = mutable.Map.empty
@@ -91,6 +92,7 @@ class RunnableDispatcher(
       tMgr = tMgr,
       internalCf = cf,
       dispatcherCfg = routerCfg,
+      transactionShard = streamsCfg.transactionShard,
       log = Logger(bs.headerConfig.prefix + ".transactions")
     ).build()
   }
@@ -130,7 +132,7 @@ class RunnableDispatcher(
 
     if (provider.internal) {
 
-      val setShard = Option(System.getProperty("blended.streams.transactionShard")) match {
+      val setShard = streamsCfg.transactionShard match {
         case None => source
         case Some(shard) => source.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
           env.withHeader(bs.headerConfig.headerTransShard, shard, false).get

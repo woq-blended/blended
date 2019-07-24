@@ -20,6 +20,7 @@ class TransactionOutbound(
   tMgr : FlowTransactionManager,
   dispatcherCfg : ResourceTypeRouterConfig,
   internalCf: IdAwareConnectionFactory,
+  transactionShard : Option[String],
   log: Logger
 )(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport {
 
@@ -28,7 +29,7 @@ class TransactionOutbound(
 
   private [builder] val jmsSource : Try[Source[FlowEnvelope, NotUsed]] = Try {
 
-    val transDest : JmsDestination = Option(System.getProperty("blended.streams.transactionShard")) match {
+    val transDest : JmsDestination = transactionShard match {
       case None => config.get.transactions
       case Some(shard) =>
         val d = JmsDestination.asString(config.get.transactions)

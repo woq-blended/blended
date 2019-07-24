@@ -10,6 +10,8 @@ import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
+import blended.streams.BlendedStreamsConfig
+import blended.streams.internal.{BlendedStreamsActivator, BlendedStreamsConfigImpl}
 import blended.streams.jms._
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage}
 import blended.streams.processor.Collector
@@ -44,12 +46,15 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   override def bundles: Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator(),
-    "blended.jms.bridge" -> bridgeActivator
+    "blended.streams" -> new BlendedStreamsActivator(),
+    "blended.jms.bridge" -> bridgeActivator,
   )
 
   protected implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   protected implicit val materializer : ActorMaterializer = ActorMaterializer()
   protected implicit val ectxt : ExecutionContext = system.dispatcher
+
+  protected val streamsCfg : BlendedStreamsConfig = mandatoryService[BlendedStreamsConfig](registry)(None)
 
   protected val (internal, external) = getConnectionFactories(registry)
   protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
@@ -258,8 +263,10 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
   }
 
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
-    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(cfg: BridgeStreamConfig): BridgeStreamBuilder =
-      new BridgeStreamBuilder(cfg)(system, materializer) {
+    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
+      cfg: BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
+    ): BridgeStreamBuilder =
+      new BridgeStreamBuilder(cfg, streamsCfg)(system, materializer) {
         override protected def jmsSend: Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
           env.withException(new Exception("Boom"))
         }
@@ -363,8 +370,11 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
   // We override the send flow with a flow simply triggering an exception, so that the
   // exceptional path will be triggered
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
-    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(cfg: BridgeStreamConfig): BridgeStreamBuilder =
-      new BridgeStreamBuilder(cfg)(system, materializer) {
+
+    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
+      cfg: BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
+    ): BridgeStreamBuilder =
+      new BridgeStreamBuilder(cfg, streamsCfg)(system, materializer) {
         override protected def jmsSend: Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
           env.withException(new Exception("Boom"))
         }
@@ -415,8 +425,10 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
   // We override the send flow with a flow simply triggering an exception, so that the
   // exceptional path will be triggered
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
-    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(cfg: BridgeStreamConfig): BridgeStreamBuilder =
-      new BridgeStreamBuilder(cfg)(system, materializer) {
+    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
+      cfg: BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
+    ): BridgeStreamBuilder =
+      new BridgeStreamBuilder(cfg, streamsCfg)(system, materializer) {
         override protected def jmsSend: Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
           env.withException(new Exception("Boom"))
         }
@@ -462,8 +474,10 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
   }
 
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
-    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(cfg: BridgeStreamConfig): BridgeStreamBuilder =
-      new BridgeStreamBuilder(cfg)(system, materializer) {
+    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
+      cfg: BridgeStreamConfig, streamsCfg: BlendedStreamsConfig
+    ): BridgeStreamBuilder =
+      new BridgeStreamBuilder(cfg, streamsCfg)(system, materializer) {
 
         override protected def sendTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
           Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
@@ -513,9 +527,10 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
   }
 
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
-    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(cfg: BridgeStreamConfig): BridgeStreamBuilder =
-      new BridgeStreamBuilder(cfg)(system, materializer) {
-
+    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
+      cfg: BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
+    ): BridgeStreamBuilder =
+      new BridgeStreamBuilder(cfg, streamsCfg)(system, materializer) {
         override protected def sendTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
           Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
             env.withException(new Exception("Boom !"))

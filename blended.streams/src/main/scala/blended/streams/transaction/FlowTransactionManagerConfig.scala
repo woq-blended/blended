@@ -22,7 +22,11 @@ object FlowTransactionManagerConfig {
       val retainCompleted = config.getDuration("retainCompleted", defaultRetainCompleted)
 
       FlowTransactionManagerConfig(
-        dir = new File(baseDir, dir),
+        dir = if (dir.startsWith("/")) {
+          new File(dir)
+        } else {
+          new File(baseDir, dir)
+        },
         retainStale = retainStale,
         retainCompleted = retainCompleted,
         retainFailed = retainFailed
