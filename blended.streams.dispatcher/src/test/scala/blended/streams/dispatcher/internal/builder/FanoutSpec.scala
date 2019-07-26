@@ -7,7 +7,7 @@ import akka.stream.scaladsl.{GraphDSL, Keep, RunnableGraph, Source}
 import blended.streams.dispatcher.internal.OutboundRouteConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.worklist.{WorklistEvent, WorklistState}
+import blended.streams.worklist.{WorklistEvent, WorklistStateStarted}
 import org.scalatest.Matchers
 
 import scala.concurrent.ExecutionContext
@@ -65,9 +65,9 @@ class FanoutSpec extends DispatcherSpecSupport
           performFanout(ctxt, fanout, resType, envelope) match {
             case Success(s) =>
               val wl = fanout.toWorklist(s)
-              wl.state should be(WorklistState.Started)
-              wl.worklist.id should be(envelope.id)
-              wl.worklist.items should have size rtCfg.outbound.size
+              wl.state should be (WorklistStateStarted)
+              wl.worklist.id should be (envelope.id)
+              wl.worklist.items should have size (rtCfg.outbound.size)
             case Failure(t) =>
               ctxt.bs.streamLogger.error(s"WorklistCreation failed for resource type [$resType]")
               fail(t)

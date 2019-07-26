@@ -47,7 +47,8 @@ object BlendedStreamsDispatcher extends ProjectFactory {
         "App" -> "DEBUG",
         "spec" -> "DEBUG",
         "blended" -> "DEBUG",
-        "outbound" -> "DEBUG"
+        "outbound" -> "DEBUG",
+        "blended.streams.transaction" -> "TRACE"
       )
     )
 

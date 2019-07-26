@@ -9,6 +9,7 @@ import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
+import blended.streams.internal.BlendedStreamsActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -39,6 +40,7 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.streams" -> new BlendedStreamsActivator(),
     "blended.jms.bridge" -> new BridgeActivator()
   )
 

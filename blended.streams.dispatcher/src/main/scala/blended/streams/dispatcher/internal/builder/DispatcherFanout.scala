@@ -39,7 +39,7 @@ case class DispatcherFanout(
         t.exception.foreach { e =>
           bs.streamLogger.error(e)(e.getMessage())
         }
-        Failure(t.exception.getOrElse(new Exception("Undexpected exception")))
+        Failure(t.exception.getOrElse(new Exception("Unexpected exception")))
     }
   }
 

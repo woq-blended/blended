@@ -17,12 +17,11 @@ import scala.util.{Failure, Success, Try}
  * to be used as SSL server certificates.
  */
 class CertificateManagerImpl(
-  override val bundleContext : BundleContext,
-  override val capsuleContext : CapsuleContext,
-  cfg : CertificateManagerConfig,
-  providerMap : Map[String, CertificateProvider]
-)
-  extends CertificateManager
+  override val bundleContext: BundleContext,
+  override val capsuleContext: CapsuleContext,
+  cfg: CertificateManagerConfig,
+  providerMap: Map[String, CertificateProvider]
+) extends CertificateManager
   with Capsule
   with CapsuleConvenience
   with ServiceProviding {
@@ -58,7 +57,7 @@ class CertificateManagerImpl(
     if (!cfg.skipInitialCheck) {
       checkCertificates() match {
         case Failure(e) =>
-          log.error("Could not initialise Server certificate(s)")
+          log.warn(s"Could not initialise Server certificate(s), checking if required certificates are present")
           throw e
 
         case Success(None) =>
@@ -112,10 +111,17 @@ class CertificateManagerImpl(
     // for all configured providers update the trusted certificates
     if (cfg.maintainTruststore) {
       providerMap.foreach {
-        case (key, provider) =>
-          provider.rootCertificates().get.foreach { ms =>
-            log.info(s"Updating trust store for root certificates of provider [$key]")
-            new TrustStoreRefresher(ms).refreshTruststore().get
+        case (_, provider) =>
+          provider.rootCertificates() match {
+            case Success(certs) => certs.foreach { ms =>
+              new TrustStoreRefresher(ms).refreshTruststore() match {
+                case Success(_) =>
+                case Failure(t) =>
+                  log.warn(s"Unable to update trust store : [${t.getMessage()}]")
+              }
+            }
+            case Failure(t) =>
+              log.warn(s"Unable to update trust store : [${t.getMessage()}]")
           }
       }
     }
@@ -135,7 +141,7 @@ class CertificateManagerImpl(
         case Failure(t) =>
           log.warn(t)(s"Failed to save keystore to file [${jks.keystore.getAbsolutePath()}] : [${t.getMessage()}]")
           throw t
-        case Success(s) => s
+        case Success(keyStore) => keyStore
       }
     }
   }

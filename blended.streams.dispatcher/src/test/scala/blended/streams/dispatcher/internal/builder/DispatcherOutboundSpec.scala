@@ -10,8 +10,7 @@ import blended.streams.dispatcher.internal.builder.DispatcherOutbound.Dispatcher
 import blended.streams.jms.JmsFlowSupport
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.worklist.WorklistState.WorklistState
-import blended.streams.worklist.{WorklistEvent, WorklistState}
+import blended.streams.worklist._
 import org.scalatest.Matchers
 
 import scala.concurrent.ExecutionContext
@@ -91,13 +90,13 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
   "The outbound flow of the dispatcher should" - {
 
     "produce a worklist completed event for successfull completions of the outbound flow" in {
-      val good = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
-      testOutbound(WorklistState.Completed, good)
+      val good = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env}
+      testOutbound(WorklistStateCompleted, good)
     }
 
     "produce a worklist failed event after unsuccessfull completions of the outbound flow" in {
-      val bad = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env.withException(new Exception("Boom !")) }
-      testOutbound(WorklistState.Failed, bad)
+      val bad = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env.withException(new Exception("Boom !")) }
+      testOutbound(WorklistStateFailed, bad)
     }
   }
 

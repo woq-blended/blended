@@ -1,6 +1,6 @@
 package blended.updater.config
 
-import org.scalacheck.Arbitrary.{arbitrary, _}
+import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Arbitrary, Gen}
 
 trait TestData {
@@ -129,7 +129,6 @@ trait TestData {
   val serviceInfos = for {
     name <- arbitrary[String]
     serviceType <- arbitrary[String]
-    //    timestamp <- arbitrary[ju.Date]
     timestampMsec <- Gen.choose(10000, Long.MaxValue)
     lifetimeMsec <- Gen.choose(0, Long.MaxValue) // arbitrary[Long].filter(_ >= 0)
     props <- arbitrary[Map[String, String]]

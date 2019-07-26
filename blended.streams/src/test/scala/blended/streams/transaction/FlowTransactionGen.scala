@@ -1,10 +1,9 @@
 package blended.streams.transaction
 
-import java.util.UUID
+import java.util.{Date, UUID}
 
 import blended.streams.message._
-import blended.streams.worklist.WorklistState
-import blended.streams.worklist.WorklistState.WorklistState
+import blended.streams.worklist._
 import org.scalacheck.Gen
 
 import scala.util.Random
@@ -14,13 +13,13 @@ object FlowTransactionGen {
   private val maxKey : Int = 1000
 
   private val wlStateGen : Gen[WorklistState] = Gen.oneOf(Seq(
-    WorklistState.Completed,
-    WorklistState.Started,
-    WorklistState.Failed,
-    WorklistState.TimeOut
+    WorklistStateCompleted,
+    WorklistStateStarted,
+    WorklistStateFailed,
+    WorklistStateTimeout
   ))
 
-  private val wlGen : Gen[Map[String, List[WorklistState]]] = Gen.nonEmptyMap(
+  val wlGen : Gen[Map[String, List[WorklistState]]] = Gen.nonEmptyMap(
     for {
       key <- Gen.choose(1, maxKey)
       states <- Gen.nonEmptyListOf(wlStateGen)
@@ -50,7 +49,7 @@ object FlowTransactionGen {
     DoubleMsgProperty(Random.nextDouble())
   )
 
-  private val propGen : Gen[MsgProperty] = for {
+  val propGen : Gen[MsgProperty] = for {
     i <- intGen
     l <- longGen
     s <- shortGen
@@ -72,11 +71,13 @@ object FlowTransactionGen {
     wl <- wlGen
     cp <- creationProps
   } yield FlowTransaction(
-    id = UUID.randomUUID().toString(),
-    creationProps = cp,
-    worklist = wl,
-    state = FlowTransaction.transactionState(
-      FlowTransactionState.Started, wl
-    )
+      id = UUID.randomUUID().toString(),
+      created = new Date(),
+      lastUpdate = new Date(),
+      creationProps = cp,
+      worklist = wl,
+      state = FlowTransaction.transactionState(
+        FlowTransactionStateStarted, wl
+      )
   )
 }

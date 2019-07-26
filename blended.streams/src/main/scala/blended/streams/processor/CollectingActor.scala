@@ -1,5 +1,6 @@
 package blended.streams.processor
 
+import akka.Done
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.scaladsl.Sink
 import blended.util.logging.Logger

@@ -70,7 +70,7 @@ case class DispatcherBuilder(
         processInbound.in,
         errorSplitter.out0, // Normal outcome
         processFanout.out1, // WorklistStarted event
-        errorSplitter.out1 // Outcome with Exception
+        errorSplitter.out1  // Outcome with Exception
       )
     }
   }
@@ -92,8 +92,8 @@ case class DispatcherBuilder(
         try {
           val worklist = bs.worklist(env).unwrap
           val event : WorklistEvent = env.exception match {
-            case None    => WorklistStepCompleted(worklist = worklist, state = WorklistState.Completed)
-            case Some(_) => WorklistStepCompleted(worklist = worklist, state = WorklistState.Failed)
+            case None => WorklistStepCompleted(worklist = worklist, state = WorklistStateCompleted)
+            case Some(_) => WorklistStepCompleted(worklist = worklist, state = WorklistStateFailed)
           }
 
           Right(event)
@@ -153,13 +153,13 @@ case class DispatcherBuilder(
         Some(FlowTransactionUpdate(
           transactionId = started.worklist.id,
           properties = props,
-          updatedState = WorklistState.Started,
-          branchIds = branchIds(eventEnvelopes(event)) : _*
+          updatedState = WorklistStateStarted,
+          branchIds = branchIds(eventEnvelopes(event)):_*
         ))
       // Worklist Termination does nothing for completed worklists,
       // for failed worklists it produces a Transaction failed update
       case term : WorklistTerminated =>
-        if (term.state == WorklistState.Completed) {
+        if (term.state == WorklistStateCompleted) {
           val envelopes = eventEnvelopes(term)
             .filter { _.header[Boolean](bs.headerAutoComplete).getOrElse(true) }
             .filter { env =>
@@ -172,7 +172,7 @@ case class DispatcherBuilder(
           if (envelopes.isEmpty) {
             None
           } else {
-            Some(FlowTransactionUpdate(term.worklist.id, props, WorklistState.Completed, branchIds(envelopes) : _*))
+            Some(FlowTransactionUpdate(term.worklist.id, props, WorklistStateCompleted, branchIds(envelopes):_*))
           }
         } else {
           Some(FlowTransactionFailed(event.worklist.id, props, term.reason.map(_.getMessage())))
@@ -224,10 +224,10 @@ case class DispatcherBuilder(
       // For completed worklist we will acknowledge the envelope and capture exceptions
       val processWorklist = b.add(
         Flow[(WorklistEvent, Option[FlowTransactionEvent])]
-          .map(_._1)
-          .filter(_.state == WorklistState.Completed)
-          .map(acknowledge)
-          .filter(_.exception.isDefined)
+        .map(_._1)
+        .filter(_.state == WorklistStateCompleted)
+        .map(acknowledge)
+        .filter(_.exception.isDefined)
       )
 
       wlManager ~> processEvent ~> branches
@@ -255,11 +255,11 @@ case class DispatcherBuilder(
           bs.streamLogger.debug(s"Routing error envelope [${env.id}] to [$vendor:$provider:$dest]")
 
           env
-            .withHeader(deliveryModeHeader(bs.headerConfig.prefix), JmsDeliveryMode.Persistent.asString).unwrap
-            .withHeader(bs.headerBridgeVendor, vendor).unwrap
-            .withHeader(bs.headerBridgeProvider, provider).unwrap
-            .withHeader(bs.headerBridgeDest, dest).unwrap
-            .withHeader(bs.headerConfig.headerState, FlowTransactionState.Failed.toString).unwrap
+            .withHeader(deliveryModeHeader(bs.headerConfig.prefix), JmsDeliveryMode.Persistent.asString).get
+            .withHeader(bs.headerBridgeVendor, vendor).get
+            .withHeader(bs.headerBridgeProvider, provider).get
+            .withHeader(bs.headerBridgeDest, dest).get
+            .withHeader(bs.headerConfig.headerState, FlowTransactionStateFailed.toString).get
         } catch {
           case t : Throwable =>
             bs.streamLogger.warn(s"Failed to resolve error routing for envelope [${env.id}] : [${t.getMessage()}]")

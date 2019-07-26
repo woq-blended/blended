@@ -7,12 +7,11 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Source}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.persistence.PersistenceService
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
-import blended.streams.{StreamController, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 
 import scala.collection.mutable
@@ -23,9 +22,10 @@ class RunnableDispatcher(
   cf : IdAwareConnectionFactory,
   bs : DispatcherBuilderSupport,
   idSvc : ContainerIdentifierService,
-  pSvc : PersistenceService,
-  routerCfg : ResourceTypeRouterConfig
-)(implicit system : ActorSystem, materializer : Materializer) extends JmsStreamSupport {
+  tMgr : FlowTransactionManager,
+  routerCfg : ResourceTypeRouterConfig,
+  streamsCfg : BlendedStreamsConfig
+)(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
   private val startedDispatchers : mutable.Map[String, ActorRef] = mutable.Map.empty
   private var transMgr : Option[ActorRef] = None
@@ -82,7 +82,7 @@ class RunnableDispatcher(
     }
   }
 
-  private[builder] def transactionStream(tMgr : ActorRef) : Try[ActorRef] = Try {
+  private[builder] def transactionStream(tMgr : FlowTransactionManager) : Try[ActorRef] = Try {
 
     implicit val builderSupport : DispatcherBuilderSupport = bs
 
@@ -91,6 +91,7 @@ class RunnableDispatcher(
       tMgr = tMgr,
       internalCf = cf,
       dispatcherCfg = routerCfg,
+      transactionShard = streamsCfg.transactionShard,
       log = Logger(bs.headerConfig.prefix + ".transactions")
     ).build()
   }
@@ -130,7 +131,7 @@ class RunnableDispatcher(
 
     if (provider.internal) {
 
-      val setShard = Option(System.getProperty("blended.streams.transactionShard")) match {
+      val setShard = streamsCfg.transactionShard match {
         case None => source
         case Some(shard) => source.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
           env.withHeader(bs.headerConfig.headerTransShard, shard, overwrite = false).get
@@ -158,11 +159,8 @@ class RunnableDispatcher(
       // Get the internal provider
       val internalProvider = registry.internalProvider.get
 
-      // We will create the Transaction Manager
-      transMgr = Some(system.actorOf(FlowTransactionManager.props(pSvc)))
-
       // The transaction stream will process the transaction events from the transactions destination
-      transStream = Some(transactionStream(transMgr.get).get)
+      transStream = Some(transactionStream(tMgr).get)
 
       // The blueprint for the dispatcher flow
       val dispatcher : Flow[FlowEnvelope, FlowTransactionEvent, NotUsed] =
@@ -175,15 +173,14 @@ class RunnableDispatcher(
         val dispLogger = Logger(bs.streamLogger.name + "." + provider.vendor + "." + provider.provider)
 
         // Connect the consumer to a dispatcher
-        val source = bridgeSource(internalProvider, provider, dispLogger).via(dispatcher)
+        val source : Source[FlowTransactionEvent, NotUsed] = bridgeSource(internalProvider, provider, dispLogger).via(dispatcher)
 
         // Prepare and start the dispatcher
-        val streamCfg = StreamControllerConfig.fromConfig(routerCfg.rawConfig).get
-          .copy(
-            name = dispLogger.name
-          )
+        val streamCfg = StreamControllerConfig.fromConfig(routerCfg.rawConfig).get.copy(name = dispLogger.name)
 
-        val actor = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg))
+        // Wrap the dispatcher into a stream controller and make sure, the generated transaction events are sent to
+        // the proper JMS destination
+        val actor : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg))
 
         bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
         startedDispatchers.put(provider.id, actor)

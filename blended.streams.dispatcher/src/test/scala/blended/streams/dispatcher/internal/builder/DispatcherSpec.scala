@@ -6,8 +6,8 @@ import akka.stream._
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Source}
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
-import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionState, FlowTransactionUpdate}
-import blended.streams.worklist.WorklistState
+import blended.streams.transaction._
+import blended.streams.worklist._
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
@@ -77,7 +77,7 @@ class DispatcherSpec extends DispatcherSpecSupport
 
       runTest(testMsgs) { events =>
         events should have size 3
-        assert(events.forall(_.state == FlowTransactionState.Failed))
+        assert(events.forall(_.state == FlowTransactionStateFailed))
       }
     }
 
@@ -91,8 +91,8 @@ class DispatcherSpec extends DispatcherSpecSupport
         events should have size 1
         events.foreach { e =>
           val event = e.asInstanceOf[FlowTransactionUpdate]
-          event.state should be(FlowTransactionState.Updated)
-          event.updatedState should be(WorklistState.Started)
+          event.state should be (FlowTransactionStateUpdated)
+          event.updatedState should be (WorklistStateStarted)
         }
       }
     }
@@ -105,7 +105,7 @@ class DispatcherSpec extends DispatcherSpecSupport
       runTest(testMsgs) { events =>
         events should have size 2
 
-        assert(events.forall(_.state == FlowTransactionState.Updated))
+        assert(events.forall(_.state == FlowTransactionStateUpdated))
         assert(events.map(_.transactionId).distinct.size == 1)
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
         event.branchIds should have size 1

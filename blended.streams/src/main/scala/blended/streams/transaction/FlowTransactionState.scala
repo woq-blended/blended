@@ -1,25 +1,41 @@
 package blended.streams.transaction
 
 import scala.language.implicitConversions
+import scala.util.Try
 
-object FlowTransactionState extends Enumeration {
-  type FlowTransactionState = Value
-  val Started, Updated, Completed, Failed = Value
+sealed trait FlowTransactionState{
+  val name : String
+  override def toString: String = name
+}
+
+case object FlowTransactionStateStarted extends FlowTransactionState { override val name: String = "Started" }
+case object FlowTransactionStateUpdated extends FlowTransactionState { override val name: String = "Updated" }
+case object FlowTransactionStateCompleted extends FlowTransactionState { override val name: String = "Completed" }
+case object FlowTransactionStateFailed extends FlowTransactionState { override val name: String = "Failed" }
+
+object FlowTransactionState {
+  def apply(s: String): Try[FlowTransactionState] = Try {
+    s match {
+      case "Started" => FlowTransactionStateStarted
+      case "Updated" => FlowTransactionStateUpdated
+      case "Completed" => FlowTransactionStateCompleted
+      case "Failed" => FlowTransactionStateFailed
+      case _ => throw new IllegalArgumentException(s"[$s] is not a valid TransactionState")
+    }
+  }
 }
 
 object EventSeverity extends Enumeration {
   type EventSeverity = Value
   val Unknown, Information, Harmless, Warning, Minor, Critical, Fatal = Value
 
-  // scalastyle:off magic.number
-  implicit def severityToInt(severity : EventSeverity) : Int = severity match {
-    case Unknown     => 0
-    case Information => 10
-    case Harmless    => 20
-    case Warning     => 30
-    case Minor       => 40
-    case Critical    => 50
-    case Fatal       => 60
+  implicit def severityToInt(severity: EventSeverity): Int = severity match {
+    case Unknown       =>  0
+    case Information   => 10
+    case Harmless      => 20
+    case Warning       => 30
+    case Minor         => 40
+    case Critical      => 50
+    case Fatal         => 60
   }
-  // scalastyle:off magic.number
 }

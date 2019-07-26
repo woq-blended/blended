@@ -34,9 +34,9 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
       mandatoryService[SSLContext](registry)(Some("(type=server)"))
       mandatoryService[SSLContext](registry)(Some("(type=client)"))
 
-      val hasher = new PasswordHasher(pojoUuid)
+      val hasher : PasswordHasher = new PasswordHasher(pojoUuid)
 
-      val jks = new JavaKeystore(
+      val jks : JavaKeystore = new JavaKeystore(
         store = new File(baseDir, "etc/keystore"),
         storepass = hasher.password("blended").toCharArray(),
         keypass = Some(hasher.password("mysecret").toCharArray())
@@ -49,7 +49,6 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
     "Only support selected CypherSuites and protocols" in {
 
       val sslInfo : blended.security.ssl.SslContextInfo = mandatoryService[blended.security.ssl.SslContextInfo](registry)(None)
-      mandatoryService[SSLContext](registry)(Some("(type=server)"))
 
       val invalid = sslInfo.getInvalidCypherSuites()
       log.info(s"Invalid CypherSuites [${invalid.length}] : [\n${invalid.mkString("\n")}\n]")

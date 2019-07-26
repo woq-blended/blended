@@ -7,7 +7,7 @@ import akka.stream.{FlowShape, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.worklist.WorklistState
+import blended.streams.worklist.WorklistStateCompleted
 import blended.util.logging.Logger
 import javax.jms.Session
 
@@ -55,7 +55,7 @@ class TransactionWiretap(
       env.exception match {
         case None =>
           val branch = env.header[String](headerCfg.headerBranch).getOrElse("default")
-          FlowTransactionUpdate(env.id, env.flowMessage.header, WorklistState.Completed, branch)
+          FlowTransactionUpdate(env.id, env.flowMessage.header, WorklistStateCompleted, branch)
 
         case Some(e) => FlowTransactionFailed(env.id, env.flowMessage.header, Some(e.getMessage()))
       }
@@ -98,7 +98,7 @@ class TransactionWiretap(
       ))
 
       val switchOffTracking = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-        log.debug(s"About to send envelope [$env]")
+        log.trace(s"About to send envelope [$env]")
         env.withHeader(headerCfg.headerTrack, false).get
       })
 

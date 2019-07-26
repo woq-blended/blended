@@ -9,7 +9,7 @@ import blended.jms.utils.JmsDestination
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
-import blended.streams.worklist.{WorklistEvent, WorklistStarted, WorklistState, WorklistStepCompleted}
+import blended.streams.worklist._
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
@@ -78,9 +78,9 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
 
       // Start a dummy worklist
       actor ! started
-      actor ! WorklistStepCompleted(wl, WorklistState.Completed)
+      actor ! WorklistStepCompleted(wl, WorklistStateCompleted)
 
-      akka.pattern.after(1.second, ctxt.system.scheduler)(Future { killSwitch.shutdown() })
+      akka.pattern.after(1.second, ctxt.system.scheduler)( Future { killSwitch.shutdown() } )
 
       transColl.result.map(t => f(master, t))
     }
@@ -98,6 +98,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
         val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl, timeout = 10.seconds)
+        val done = WorklistStepCompleted(worklist = wl, state = WorklistStateCompleted)
 
         // Start a dummy worklist
         actor ! started
@@ -110,7 +111,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
           val event = t.head.asInstanceOf[FlowTransactionUpdate]
           event.branchIds should be(Seq("test"))
 
-          event.updatedState should be(WorklistState.Started)
+          event.updatedState should be(WorklistStateStarted)
           event.transactionId should be(envelope.id)
         }
       }
@@ -126,10 +127,11 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
         val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl, timeout = 10.seconds)
+        val done = WorklistStepCompleted(worklist = wl, state = WorklistStateCompleted)
 
         // Start a dummy worklist
         actor ! started
-        actor ! WorklistStepCompleted(worklist = wl, state = WorklistState.Failed)
+        actor ! WorklistStepCompleted(worklist = wl, state = WorklistStateFailed)
 
         akka.pattern.after(1.second, ctxt.system.scheduler)(Future { killSwitch.shutdown() })
 
@@ -194,49 +196,49 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
 
         // Start a dummy worklist
         actor ! started
-        actor ! WorklistStepCompleted(wl, WorklistState.Completed)
+        actor ! WorklistStepCompleted(wl, WorklistStateCompleted)
 
-        akka.pattern.after(1.second, ctxt.system.scheduler)(Future { killSwitch.shutdown() })
+        akka.pattern.after(1.second, ctxt.system.scheduler)( Future { killSwitch.shutdown() } )
 
         transColl.result.map { t =>
           t.size should be(1)
-          ackCount.get() should be(1)
+          ackCount.get() should be (1)
         }
       }
     }
 
-    "Generate a transaction updated after the worklist has completed for all outbounds which are routed internally and should autocomplete" in {
+    "Generate a transaction updated after the worklist has completed for all outbounds which are routed internally and should autocomplete"  in {
 
-      run("activemq", "activemq", true) { (envelope, events) =>
-        events.size should be(2)
+      run("activemq", "activemq", true){ (envelope, events) =>
+        events.size should be (2)
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
-        event.branchIds should be(Seq("step-0"))
-        event.updatedState should be(WorklistState.Completed)
+        event.branchIds should be (Seq("step-0"))
+        event.updatedState should be (WorklistStateCompleted)
       }
 
-      run("activemq", "activemq", true, true, true) { (envelope, events) =>
-        events.size should be(2)
+      run("activemq", "activemq", true, true, true){ (envelope, events) =>
+        events.size should be (2)
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
         event.branchIds should have size 3
-        event.updatedState should be(WorklistState.Completed)
+        event.updatedState should be (WorklistStateCompleted)
       }
 
-      run("activemq", "activemq", false) { (envelope, events) =>
-        events.size should be(1)
+      run("activemq", "activemq", false){ (envelope, events) =>
+        events.size should be (1)
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
-        event.transactionId should be(envelope.id)
+        event.transactionId should be (envelope.id)
       }
 
-      run("activemq", "activemq", false, true) { (envelope, events) =>
+      run("activemq", "activemq", false, true){ (envelope, events) =>
         events should have size 2
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
-        event.branchIds should be(Seq("step-1"))
-        event.transactionId should be(envelope.id)
-        event.updatedState should be(WorklistState.Completed)
+        event.branchIds should be (Seq("step-1"))
+        event.transactionId should be (envelope.id)
+        event.updatedState should be (WorklistStateCompleted)
       }
     }
   }

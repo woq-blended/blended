@@ -33,7 +33,8 @@ object BlendedJmsBridge extends ProjectFactory {
         "" +
           "App" -> "DEBUG",
         "blended" -> "DEBUG",
-        "spec" -> "DEBUG"
+        "spec" -> "DEBUG",
+        "blended.jms" -> "TRACE"
       )
     )
 
