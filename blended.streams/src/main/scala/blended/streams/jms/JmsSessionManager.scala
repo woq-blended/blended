@@ -7,7 +7,6 @@ import javax.jms.{Connection, Session}
 
 import scala.collection.mutable
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -16,13 +15,11 @@ import scala.util.{Failure, Success, Try}
   *
   * @param conn The JMS connection that will be used to create the sessions.
   * @param maxSessions The maximum number of sessions this manager will create.
-  * @param idleTimeout The timeout after which an unused session will be closed.
   */
 class JmsSessionManager(
   name : String,
   conn : Connection,
-  maxSessions : Int,
-  idleTimeout : FiniteDuration = 30.seconds
+  maxSessions : Int
 ) {
 
   private val log : Logger = Logger[JmsSessionManager]

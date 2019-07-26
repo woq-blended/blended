@@ -39,8 +39,7 @@ class JmsConnector(
         new JmsSessionManager(
           name = id,
           conn = c,
-          maxSessions = jmsSettings.sessionCount,
-          idleTimeout = jmsSettings.sessionIdleTimeout
+          maxSessions = jmsSettings.sessionCount
         ) {
           override def onSessionOpen: JmsSession => Try[Unit] = onSessionOpened
           override def onSessionClose: JmsSession => Try[Unit] = onSessionClosed

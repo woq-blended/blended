@@ -2,7 +2,8 @@ package blended.streams.jms
 
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue, JmsTopic}
 import blended.streams.transaction.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel.LogLevel
+import blended.util.logging.{LogLevel, Logger}
 import javax.jms
 import javax.jms.Session
 
@@ -75,9 +76,6 @@ sealed trait JmsSettings {
   // The number of sessions used by the stage using this configuration
   val sessionCount : Int
 
-  // The timespan we will wait to recreate a JMS session after it has been closed due to a JMS exception
-  val sessionIdleTimeout : FiniteDuration
-
   // The header configuration which encapsulates the defined header names being used in the
   // flow message
   val headerCfg : FlowHeaderConfig
@@ -95,11 +93,11 @@ final case class JMSConsumerSettings(
   sessionCount : Int = 1,
   receiveTimeout : FiniteDuration = 0.seconds,
   pollInterval : FiniteDuration = 100.millis,
-  acknowledgeMode : AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
-  selector : Option[String] = None,
-  ackTimeout : FiniteDuration = 1.second,
-  durableName : Option[String] = None,
-  sessionIdleTimeout : FiniteDuration = 30.seconds
+  acknowledgeMode: AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
+  receiveLogLevel : LogLevel = LogLevel.Info,
+  selector: Option[String] = None,
+  ackTimeout: FiniteDuration = 1.second,
+  durableName: Option[String] = None
 ) extends JmsSettings {
 
   def withDestination(dest : Option[JmsDestination]) : JMSConsumerSettings = copy(jmsDestination = dest)
@@ -143,7 +141,6 @@ final case class JmsProducerSettings(
   timeToLive : Option[FiniteDuration] = None,
   // A factory for correlation Ids in case no Correlation Id is set in the message
   correlationId : () => Option[String] = () => None,
-  sessionIdleTimeout : FiniteDuration = 100.millis,
   clearPreviousException : Boolean = false
 ) extends JmsSettings {
 

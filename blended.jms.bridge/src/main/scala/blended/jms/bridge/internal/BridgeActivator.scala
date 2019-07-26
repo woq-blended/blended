@@ -148,14 +148,14 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
               }
             }
 
-          onStop {
-            log.info("Stopping JMS bridge supervising actor.")
-            osgiCfg.system.stop(bridge)
+            onStop {
+              log.info("Stopping JMS bridge supervising actor.")
+              osgiCfg.system.stop(bridge)
+            }
+          } catch {
+            case NonFatal(t) =>
+              log.error(t)("Error starting JMS bridge")
           }
-
-        } catch {
-          case NonFatal(t) =>
-            log.error(t)("Error starting JMS bridge")
         }
       }
     }
