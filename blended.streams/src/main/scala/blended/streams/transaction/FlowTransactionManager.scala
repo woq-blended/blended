@@ -2,7 +2,8 @@ package blended.streams.transaction
 
 import blended.util.logging.Logger
 
-import scala.util.Try
+import scala.concurrent.Future
+import scala.util.{Failure, Try}
 
 /**
   * Manage the flow transactions known within the container.
@@ -20,7 +21,7 @@ trait FlowTransactionManager {
   /**
     * Find a flow transaction by it's transaction id.
     */
-  def findTransaction(tid : String) : Try[Option[FlowTransaction]]
+  def findTransaction(tid : String) : Future[Option[FlowTransaction]]
 
   /**
     * Best effort to delete a transaction by it's id
@@ -30,30 +31,40 @@ trait FlowTransactionManager {
   /**
     * Best effort to remove all known transactions from the container.
     */
-  def clearTransactions() : Unit = transactions.foreach{ t => removeTransaction(t.tid) }
+  def clearTransactions() : Future[Int]  = withAll{ t => removeTransaction(t.tid) ; true }
 
   /**
     * A stream of all known transactions of the container.
     */
-  def transactions : Iterator[FlowTransaction]
+  def withAll(f : FlowTransaction => Boolean) : Future[Int]
 
   /**
     * All the completed transaction known to the container.
     */
-  def completed : Iterator[FlowTransaction] = listTransactions(_.state == FlowTransactionStateCompleted)
+  def withCompleted(f : FlowTransaction => Unit) : Future[Int] =
+    withTransactions(_.state == FlowTransactionStateCompleted)(f)
 
   /**
     * All the failed transaction known to the container.
     */
-  def failed : Iterator[FlowTransaction] = listTransactions(_.state == FlowTransactionStateFailed)
+  def withFailed(f : FlowTransaction => Unit) : Future[Int] =
+    withTransactions(_.state == FlowTransactionStateFailed)(f)
 
-  def open : Iterator[FlowTransaction] = listTransactions(t => t.state == FlowTransactionStateStarted || t.state == FlowTransactionStateUpdated)
+  def withOpen(f : FlowTransaction => Unit) : Future[Int] =
+    withTransactions(t => t.state == FlowTransactionStateStarted || t.state == FlowTransactionStateUpdated)(f)
 
-  def listTransactions(f : FlowTransaction => Boolean) : Iterator[FlowTransaction] = transactions.filter(f)
+  def withTransactions(select : FlowTransaction => Boolean)(f : FlowTransaction => Unit) : Future[Int] = withAll{ t =>
+    if (select(t)) {
+      f(t)
+      true
+    } else {
+      false
+    }
+  }
 
-  def cleanUp(states : FlowTransactionState*) : Unit
+  def cleanUp(states : FlowTransactionState*) : Future[Int]
 
-  def cleanUp() : Unit =
+  def cleanUp() : Future[Int] =
     cleanUp(FlowTransactionStateStarted, FlowTransactionStateUpdated, FlowTransactionStateFailed, FlowTransactionStateCompleted)
 }
 

@@ -45,9 +45,7 @@ object BlendedStreams extends ProjectFactory {
       Test / testlogLogPackages ++= Map(
         "App" -> "DEBUG",
         "spec" -> "DEBUG",
-        "blended" -> "DEBUG",
-        "blended.streams.transaction" -> "TRACE",
-        "spec.flow.stream" -> "TRACE"
+        "blended" -> "DEBUG"
       )
     )
   }

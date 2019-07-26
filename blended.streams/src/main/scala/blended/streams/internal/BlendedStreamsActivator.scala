@@ -2,6 +2,7 @@ package blended.streams.internal
 
 import java.io.File
 
+import akka.actor.ActorSystem
 import blended.akka.ActorSystemWatching
 import blended.streams.BlendedStreamsConfig
 import blended.streams.transaction.{FlowTransactionManager, FlowTransactionManagerConfig, TransactionManagerCleanupActor}
@@ -20,6 +21,8 @@ class BlendedStreamsActivator extends DominoActivator
 
       log.info(s"Starting bundle [${bundleContext.getBundle().getSymbolicName()}]")
       log.debug(s"${osgiCfg.config}")
+
+      implicit val system : ActorSystem = osgiCfg.system
 
       val baseDir : File = new File(osgiCfg.idSvc.getContainerContext().getContainerDirectory())
 
