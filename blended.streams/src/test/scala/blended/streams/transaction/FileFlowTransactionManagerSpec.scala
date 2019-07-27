@@ -192,7 +192,7 @@ trait FlowTransactionManagerSpec
       tMgr.updateTransaction(FlowTransactionCompleted(toComplete.tid, toComplete.creationProps))
       Await.result( tMgr.withCompleted{ _ => }, 3.seconds ) should be (1)
 
-      Thread.sleep(cfg.retainCompleted.toMillis + 50)
+      Thread.sleep(cfg.retainCompleted.toMillis * 2)
       tMgr.cleanUp()
 
       Await.result(tMgr.withAll{_ => true}, 3.seconds) should be (transactions.size - 1)
@@ -230,7 +230,7 @@ class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
     mgr
   }
 
-  "The Transaction cleanup should" - {
+  "The Transaction manager cleanup should" - {
 
     "Clean up completed and failed transactions correctly" in {
       val tCount : Int = 50000

@@ -62,12 +62,18 @@ class FileFlowTransactionManager(
         val now: Date = new Date()
         log.trace(s"Storing new transaction [${e.transactionId}]")
 
-        (None, FlowTransaction(
+        val newT : FlowTransaction = FlowTransaction(
           id = e.transactionId,
           created = now,
           lastUpdate = now,
           creationProps = e.properties
-        ))
+        )
+
+        if (e.state == FlowTransactionStateStarted) {
+          (None, newT)
+        } else {
+          (None, newT.updateTransaction(e))
+        }
       case Some(t) =>
         log.trace(s"Updating transaction [${e.transactionId}]")
         (Some(t), t.updateTransaction(e))

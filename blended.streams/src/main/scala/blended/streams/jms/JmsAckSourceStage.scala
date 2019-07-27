@@ -78,9 +78,11 @@ final class JmsAckSourceStage(
       }
 
       private[this] def removeConsumer(s : String) : Unit = {
-        consumer = consumer.filterKeys(_ != s)
-        cancelTimer(Poll(s))
-        settings.log.debug(s"Consumer count of [$id] is [${consumer.size}]")
+        if (consumer.contains(s)) {
+          consumer = consumer.filterKeys(_ != s)
+          cancelTimer(Poll(s))
+          settings.log.debug(s"Consumer count of [$id] is [${consumer.size}]")
+        }
       }
 
       private val ackHandler : FlowEnvelope => Option[JmsAcknowledgeHandler] = { env =>
@@ -88,6 +90,14 @@ final class JmsAckSourceStage(
           case None => None
           case Some(h) if h.isInstanceOf[JmsAcknowledgeHandler] => Some(h.asInstanceOf[JmsAcknowledgeHandler])
           case _ => None
+        }
+      }
+
+      override protected def beforeSessionClose(session: JmsAckSession): Unit = {
+        consumer.get(session.sessionId).foreach{ c =>
+          settings.log.debug(s"Closing Consumer for session [${session.sessionId}]")
+          c.close()
+          removeConsumer(session.sessionId)
         }
       }
 

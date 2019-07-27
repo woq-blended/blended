@@ -234,7 +234,9 @@ class FileAckSource(
             val dirStream : DirectoryStream[Path] = Files.newDirectoryStream(srcDir.toPath(), filter)
 
             try {
+              // scalastyle:off magic.number
               dirStream.iterator().asScala.take(100).map(_.toFile()).foreach(f => pendingFiles += f)
+              // scalastyle:on magic.number
             } catch {
               case NonFatal(e) =>
                 log.warn(s"Error reading directory [${srcDir.getAbsolutePath()}] : [${e.getMessage()}]")
@@ -246,7 +248,7 @@ class FileAckSource(
         }
 
         val result = pendingFiles.headOption
-        pendingFiles = if (!pendingFiles.isEmpty) pendingFiles.tail else pendingFiles
+        pendingFiles = if (pendingFiles.nonEmpty) pendingFiles.tail else pendingFiles
 
         result
       }
