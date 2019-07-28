@@ -193,6 +193,9 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       testWithJms(10.seconds, srcDir)
 
       controller.foreach(_ ! StreamController.Stop)
+      // scalastyle:off magic.number
+      Thread.sleep(1000)
+      // scalastyle:on magic.number
 
       stopBroker(b)
     }

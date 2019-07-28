@@ -78,9 +78,11 @@ final class JmsAckSourceStage(
       }
 
       private[this] def removeConsumer(s : String) : Unit = {
-        consumer = consumer.filterKeys(_ != s)
-        cancelTimer(Poll(s))
-        settings.log.debug(s"Consumer count of [$id] is [${consumer.size}]")
+        if (consumer.contains(s)) {
+          consumer = consumer.filterKeys(_ != s)
+          cancelTimer(Poll(s))
+          settings.log.debug(s"Consumer count of [$id] is [${consumer.size}]")
+        }
       }
 
       private val ackHandler : FlowEnvelope => Option[JmsAcknowledgeHandler] = { env =>
@@ -91,7 +93,15 @@ final class JmsAckSourceStage(
         }
       }
 
-      override protected def afterSessionClose(session : JmsAckSession) : Unit = removeConsumer(session.sessionId)
+      override protected def beforeSessionClose(session: JmsAckSession): Unit = {
+        consumer.get(session.sessionId).foreach{ c =>
+          settings.log.debug(s"Closing Consumer for session [${session.sessionId}]")
+          c.close()
+          removeConsumer(session.sessionId)
+        }
+      }
+
+      override protected def afterSessionClose(session: JmsAckSession): Unit = removeConsumer(session.sessionId)
 
       // This is to actually perform the acknowledement if one is pending
       private val acknowledge : FlowEnvelope => JmsAcknowledgeHandler => Try[Unit] = env => handler => Try {

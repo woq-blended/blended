@@ -86,13 +86,19 @@ trait JmsConnector[S <: JmsSession] { this : TimerGraphStageLogic =>
 
   protected def createSession(connection : Connection) : Try[S]
 
+  protected def beforeSessionClose(session : S) : Unit = {}
+
   protected def afterSessionClose(session : S) : Unit = {}
 
   protected[this] def closeSession(session : S) : Unit = {
 
     jmsSettings.log.debug(s"Closing session [${session.sessionId}]")
 
-    session.closeSessionAsync()(system).onComplete {
+    beforeSessionClose(session)
+
+    Try {
+      session.closeSession()
+    } match {
       case Success(_) =>
         jmsSessions -= session.sessionId
         onSessionClosed.invoke(session)

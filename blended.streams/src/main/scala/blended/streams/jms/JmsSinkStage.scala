@@ -30,7 +30,28 @@ class JmsSinkStage(
     ) with JmsConnector[JmsProducerSession] {
 
       private[this] val rnd = new Random()
-      private[this] var producer : Option[MessageProducer] = None
+      private[this] var producer : Map[String, MessageProducer] = Map.empty
+
+      private[this] def addProducer(s : String, p : MessageProducer) : Unit = {
+        producer = producer + (s -> p)
+        settings.log.debug(s"Producer count of [$id] is [${producer.size}]")
+      }
+
+      private[this] def removeProducer(s : String) : Unit = {
+        if (producer.contains(s)) {
+          producer = producer.filterKeys(_ != s)
+          settings.log.debug(s"Producer count of [$id] is [${producer.size}]")
+        }
+      }
+
+
+      override protected def beforeSessionClose(session: JmsProducerSession): Unit = {
+        producer.get(session.sessionId).foreach{ p =>
+          settings.log.debug(s"Closing producer for session [${session.sessionId}]")
+          p.close()
+          removeProducer(session.sessionId)
+        }
+      }
 
       override protected def handleTimer : PartialFunction[Any, Unit] = super.handleTimer orElse {
         case Push(env) => pushMessage(env)
@@ -67,9 +88,10 @@ class JmsSinkStage(
         }
       }
 
-      override protected def onSessionOpened(jmsSession : JmsProducerSession) : Unit = {
-        producer = Some(jmsSession.session.createProducer(null))
+      override protected def onSessionOpened(jmsSession: JmsProducerSession): Unit = {
+        val p : MessageProducer = jmsSession.session.createProducer(null)
         settings.log.debug(s"Created anonymous producer for [${jmsSession.sessionId}]")
+        addProducer(jmsSession.sessionId, p)
       }
 
       def sendMessage(env : FlowEnvelope) : FlowEnvelope = {
@@ -78,44 +100,49 @@ class JmsSinkStage(
 
         settings.log.debug(s"Trying to send envelope [${env.id}][${env.flowMessage.header.mkString(",")}]")
         // select one sender session randomly
-        val idx : Int = rnd.nextInt(jmsSessions.size)
-        val key = jmsSessions.keys.takeRight(idx + 1).head
-        val p = jmsSessions.toIndexedSeq(idx)
-        val session = p._2
 
-        val outEnvelope : FlowEnvelope = try {
-          val sendParams = JmsFlowSupport.envelope2jms(jmsSettings, session.session, env).get
-          producer.foreach { p =>
-            val sendTtl : Long = sendParams.ttl match {
-              case Some(l) =>
-                if (l.toMillis < 0L) {
-                  settings.log.warn(s"The message [${env.id}] has expired and wont be sent to the JMS destination.")
-                }
+        if (producer.nonEmpty) {
+          val idx: Int = rnd.nextInt(producer.size)
+          val (key, jmsProd): (String, MessageProducer) = producer.toIndexedSeq(idx)
+          val session : JmsProducerSession = jmsSessions(key)
+
+          val outEnvelope: FlowEnvelope = try {
+            val sendParams = JmsFlowSupport.envelope2jms(jmsSettings, session.session, env).get
+
+            val sendTtl: Long = sendParams.ttl match {
+              case Some(l) => if (l.toMillis < 0L) {
+                settings.log.warn(s"The message [${env.id}] has expired and wont be sent to the JMS destination.")
+              }
                 l.toMillis
               case None => 0L
             }
+
             if (sendTtl >= 0L) {
               jmsDest = Some(sendParams.destination)
-              val dest : Destination = sendParams.destination.create(session.session)
-              p.send(dest, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
+              val dest: Destination = sendParams.destination.create(session.session)
+              jmsProd.send(dest, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
               val logDest = s"${settings.connectionFactory.vendor}:${settings.connectionFactory.provider}:$dest"
               settings.log.debug(s"Successfully sent message to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]")
             }
+
+            if (settings.clearPreviousException) {
+              env.clearException()
+            } else {
+              env
+            }
+          } catch {
+            case t: Throwable =>
+              settings.log.error(t)(s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}]")
+              closeSession(session)
+              env.withException(t)
           }
 
-          if (settings.clearPreviousException) {
-            env.clearException()
-          } else {
-            env
-          }
-        } catch {
-          case t : Throwable =>
-            settings.log.error(t)(s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}]")
-            closeSession(session)
-            env.withException(t)
+          outEnvelope
+        } else {
+          val msg : String = s"No session available to send JMS message [${env.id}]"
+          settings.log.warn(s"No session available to send JMS message")
+          env.withException(new Exception(msg))
         }
-
-        outEnvelope
       }
 
       // First simply pass the pull upstream if any
