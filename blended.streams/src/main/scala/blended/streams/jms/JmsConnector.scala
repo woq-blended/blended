@@ -12,7 +12,9 @@ class JmsConnector(
 )(
   onSessionOpened : JmsSession => Try[Unit]
 )(
-  onSessionClosed : JmsSession => Try[Unit]
+  beforeSessionCloseCallback : JmsSession => Try[Unit]
+)(
+  afterSessionCloseCallback : JmsSession => Try[Unit]
 )(
   handleError : Throwable => Unit
 ) {
@@ -42,7 +44,8 @@ class JmsConnector(
           maxSessions = jmsSettings.sessionCount
         ) {
           override def onSessionOpen: JmsSession => Try[Unit] = onSessionOpened
-          override def onSessionClose: JmsSession => Try[Unit] = onSessionClosed
+          override def beforeSessionClose: JmsSession => Try[Unit] = beforeSessionCloseCallback
+          override def afterSessionClose: JmsSession => Try[Unit] = afterSessionCloseCallback
           override def onError: Throwable => Unit = handleError
         }
 

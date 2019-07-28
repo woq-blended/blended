@@ -9,7 +9,7 @@ import blended.util.RichTry._
 import javax.jms.{Destination, MessageProducer}
 
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.util.{Random, Success, Try}
 import scala.util.control.NonFatal
 
 class JmsProducerStage(
@@ -31,39 +31,65 @@ class JmsProducerStage(
 
     // Just to identify the Source stage in log statements
     private val id : String = name
+    private val rnd : Random = new Random()
 
     private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
       failStage(t)
     }
 
-    private var producer : Option[MessageProducer] = None
+    private var producer : Map[String, MessageProducer] = Map.empty
 
-    val connector : JmsConnector = new JmsConnector(id, producerSettings)(s => Try {
+    private[this] def addProducer(s : String, p : MessageProducer) : Unit = {
+      producer = producer + (s -> p)
+      producerSettings.log.debug(s"Producer count of [$id] is [${producer.size}]")
+    }
+
+    private[this] def removeProducer(s : String) : Unit = {
+      if (producer.contains(s)) {
+        producer = producer.filterKeys(_ != s)
+        producerSettings.log.debug(s"Producer count of [$id] is [${producer.size}]")
+      }
+    }
+
+    private val connector : JmsConnector = new JmsConnector(id, producerSettings)(s => Try {
       // scalastyle:off null
-      producer = Some(s.session.createProducer(null))
+      val p : MessageProducer = s.session.createProducer(null)
       // scalastyle:on null
-    })(_ =>  Try {
-      producer = None
-    })(handleError.invoke)
+      addProducer(s.sessionId, p)
+    })( s => Try {
+      producer.get(s.sessionId).foreach{ p =>
+        producerSettings.log.debug(s"Closing message producer for [${s.sessionId}]")
+        p.close()
+        removeProducer(s.sessionId)
+      }
+    }
+    )(_ =>  Success(()))(
+      handleError.invoke
+    )
 
-    private val closeAll : AsyncCallback[Unit] = getAsyncCallback[Unit](_ => connector.closeAll())
     private val closeSession : AsyncCallback[JmsSession] = getAsyncCallback(s => connector.closeSession(s.sessionId))
 
     private def pushMessage(env : FlowEnvelope) : Unit = {
-      connector.getSession(id) match {
-        case Some(s) =>
-          producer match {
-            case None =>
-              producerSettings.log.debug(s"No producer available for [$id]")
-              scheduleOnce(Push(env), 10.millis)
+      if (producer.nonEmpty) {
+        val idx: Int = rnd.nextInt(producer.size)
+        val (key, jmsProd): (String, MessageProducer) = producer.toIndexedSeq(idx)
 
-            case Some(p) =>
-              push(outlet, sendEnvelope(env)(s)(p))
-          }
+        connector.getSession(key) match {
+          case Some(s) =>
+            push(outlet, sendEnvelope(env)(s)(jmsProd))
 
-        case None =>
-          producerSettings.log.warn(s"No producer session available in [$id]")
-          scheduleOnce(Push(env), 10.millis)
+          case None =>
+            producerSettings.log.warn(s"No producer session available in [$id]")
+            scheduleOnce(Push(env), 10.millis)
+        }
+      } else {
+        // Kick off to initialize the producers
+        0.to(producerSettings.sessionCount).foreach{ i =>
+          connector.getSession(name + "-" + i)
+        }
+
+        producerSettings.log.debug(s"No producer available")
+        scheduleOnce(Push(env), 10.millis)
       }
     }
 
@@ -90,7 +116,7 @@ class JmsProducerStage(
           )
 
           val logDest = s"${producerSettings.connectionFactory.vendor}:${producerSettings.connectionFactory.provider}:$dest"
-          producerSettings.log.info(
+          producerSettings.log.debug(
             s"Successfully sent message to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] " +
               s"with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]"
           )
@@ -135,7 +161,8 @@ class JmsProducerStage(
     }
 
     override def postStop(): Unit = {
-      closeAll.invoke()
+      producerSettings.log.debug(s"Closing JMS Producer stage [$id]")
+      connector.closeAll()
     }
   }
 

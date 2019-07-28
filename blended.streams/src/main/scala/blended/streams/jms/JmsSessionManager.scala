@@ -77,6 +77,7 @@ class JmsSessionManager(
   def closeSession(id : String) : Try[Unit] = Try {
     sessions.remove(id).map { sess =>
       log.debug(s"Closing session [${sess.sessionId}]")
+      beforeSessionClose(sess)
       sess.closeSession() match {
         case Success(_) => afterSessionClose(sess)
         case Failure(t) => onError(t)
@@ -88,6 +89,7 @@ class JmsSessionManager(
     sessions.remove(id).map { _.closeSessionAsync()(system) }.getOrElse( Future {}(system.dispatcher) )
 
   def closeAll() : Try[Unit] = {
+    log.trace(s"Closing [${sessions.size}] sessions for [$name]")
     sessions.values.map{ sess =>
       closeSession(sess.sessionId)
     }.find(_.isFailure).getOrElse(Success())

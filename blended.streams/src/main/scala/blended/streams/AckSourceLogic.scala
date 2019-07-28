@@ -1,16 +1,15 @@
-
-
 package blended.streams
 
 import akka.stream.{Outlet, Shape}
 import akka.stream.stage.{AsyncCallback, OutHandler, TimerGraphStageLogic}
 import blended.streams.AckState.AckState
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel.LogLevel
+import blended.util.logging.{LogLevel, Logger}
 
 import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.util.{Failure, Random, Success, Try}
+import scala.util.{Failure, Success, Try}
 
 /**
  * The state of an acknowledgement :
@@ -102,6 +101,8 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
 
   /** A logger that must be defined by concrete implementations */
   protected val log : Logger
+
+  protected val receiveLogLevel : LogLevel = LogLevel.Info
 
   /** The id's of the available inflight slots */
   protected val inflightSlots : List[String]
@@ -234,7 +235,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outl
 
         case Success(Some(ackCtxt)) =>
           // add the context to the inflight messages
-          log.info(s"Received [${ackCtxt.envelope}] in [$id]")
+          log.log(receiveLogLevel, s"Received [${ackCtxt.envelope}] in [$id]")
           // push the envelope to the outlet
           if (autoAcknowledge) {
             ackCtxt.acknowledge()

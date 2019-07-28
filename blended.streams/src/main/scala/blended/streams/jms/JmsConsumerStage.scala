@@ -10,6 +10,7 @@ import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
 import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
 import blended.util.RichTry._
+import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.Logger
 import javax.jms.{Message, MessageConsumer}
 
@@ -48,18 +49,6 @@ final class JmsConsumerStage(
 
   consumerSettings.log.debug(s"Starting consumer [$name]")
 
-  private[this] val consumer : mutable.Map[String, MessageConsumer] = mutable.Map.empty
-
-  private[this] def addConsumer(s : String, c : MessageConsumer) : Unit = {
-    consumer.put(s, c)
-    consumerSettings.log.debug(s"Jms Consumer count of [$name] is [${consumer.size}]")
-  }
-
-  private[this] def removeConsumer(s : String) : Unit = {
-    consumer.remove(s)
-    consumerSettings.log.debug(s"Consumer count of [$name] is [${consumer.size}]")
-  }
-
   private val headerConfig : FlowHeaderConfig = consumerSettings.headerCfg
   private val out : Outlet[FlowEnvelope] = Outlet[FlowEnvelope](s"JmsAckSource($name.out)")
   override val shape : SourceShape[FlowEnvelope] = SourceShape[FlowEnvelope](out)
@@ -75,12 +64,12 @@ final class JmsConsumerStage(
 
     override def deny(): Unit = {
       sessionClose(session)
-      consumerSettings.log.info(s"Message [${envelope.id}] has been denied. Closing receiving session.")
+      consumerSettings.log.log(consumerSettings.receiveLogLevel, s"Message [${envelope.id}] has been denied. Closing receiving session.")
     }
 
     override def acknowledge(): Unit = {
       jmsMessageAck(jmsMessage)
-      consumerSettings.log.info(s"Acknowledged envelope [${envelope.id}] for session [${session.sessionId}]")
+      consumerSettings.log.log(consumerSettings.receiveLogLevel, s"Acknowledged envelope [${envelope.id}] for session [${session.sessionId}]")
     }
   }
 
@@ -91,6 +80,7 @@ final class JmsConsumerStage(
 
     override val log: Logger = consumerSettings.log
     override val autoAcknowledge: Boolean = consumerSettings.acknowledgeMode == AcknowledgeMode.AutoAcknowledge
+    override protected val receiveLogLevel: LogLevel = consumerSettings.receiveLogLevel
 
     private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable](t => failStage(t))
 
@@ -99,10 +89,23 @@ final class JmsConsumerStage(
       case None => throw new IllegalArgumentException(s"Destination must be set for consumer in [$id]")
     }
 
+    private[this] val consumer : mutable.Map[String, MessageConsumer] = mutable.Map.empty
+
+    private[this] def addConsumer(s : String, c : MessageConsumer) : Unit = {
+      consumer.put(s, c)
+      consumerSettings.log.debug(s"Jms Consumer count of [$name] is [${consumer.size}]")
+    }
+
+    private[this] def removeConsumer(s : String) : Unit = {
+      consumer.remove(s)
+      consumerSettings.log.debug(s"Consumer count of [$name] is [${consumer.size}]")
+    }
+
     private val closeSession : AsyncCallback[JmsSession] = getAsyncCallback(s => connector.closeSession(s.sessionId))
     private val ackMessage : AsyncCallback[Message] = getAsyncCallback[Message](m => m.acknowledge())
 
     private lazy val connector : JmsConnector = new JmsConnector(id, consumerSettings)(session => Try {
+      // After session opened
       consumerSettings.log.debug(
         s"Creating message consumer for session [${session.sessionId}], " +
           s"destination [$srcDest] and selector [${consumerSettings.selector}]"
@@ -117,9 +120,19 @@ final class JmsConsumerStage(
           closeSession.invoke(session)
       }
     })( s => Try {
-      removeConsumer(s.sessionId)
-    })(handleError.invoke)
-
+      // before session close
+      consumer.get(s.sessionId).foreach{ c =>
+        consumerSettings.log.debug(s"Closing message consumer for [${s.sessionId}]")
+        c.close()
+        removeConsumer(s.sessionId)
+      }
+    })(
+      //after Session close
+      _ => Success(())
+    )(
+      // error handler
+      handleError.invoke
+    )
 
     override protected def freeInflightSlot(): Option[String] =
       determineNextSlot(inflightSlots.filter(id => connector.isOpen(id))) match {
@@ -211,6 +224,7 @@ final class JmsConsumerStage(
           None
       }
     }
+
 
     override def postStop(): Unit = {
       log.debug(s"Stopping JmsConsumerStage [$id].")
