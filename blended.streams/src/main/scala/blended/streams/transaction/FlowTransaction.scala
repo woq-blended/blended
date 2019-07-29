@@ -3,7 +3,6 @@ package blended.streams.transaction
 import java.util.{Date, UUID}
 
 import blended.streams.message.{FlowEnvelope, MsgProperty}
-import blended.streams.transaction.FlowTransactionEvent._
 import blended.streams.worklist._
 import blended.util.logging.Logger
 

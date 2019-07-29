@@ -4,15 +4,12 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Zip}
-import akka.util.Timeout
 import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
 import blended.streams.FlowProcessor
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -48,8 +45,6 @@ class FlowTransactionStream(
   streamLogger: Logger
 )(implicit system: ActorSystem) extends JmsStreamSupport {
 
-  private implicit val timeout : Timeout = Timeout(3.seconds)
-  private implicit val eCtxt : ExecutionContext = system.dispatcher
   private implicit val materializer : Materializer = ActorMaterializer()
 
   // recreate the FlowTransactionEvent from the inbound envelope

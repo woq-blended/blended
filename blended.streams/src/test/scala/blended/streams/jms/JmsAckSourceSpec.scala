@@ -32,7 +32,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
   private val brokerName : String = "blended"
   private val consumerCount : Int = 5
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig(prefix = "Spec")
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(prefix = "Spec")
 
   private lazy val amqCf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
     vendor = "amq",

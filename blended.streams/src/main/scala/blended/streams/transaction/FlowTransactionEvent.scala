@@ -25,6 +25,8 @@ object FlowHeaderConfig {
   private val retryDestPath = "retryDestination"
   private val firstRetryPath = "firstRetry"
   private val transShardPath = "transactionShard"
+  private val transCreatedPath = "transactionCreated"
+  private val transUpdatedPath = "transactionUpdated"
 
   private val transId = "TransactionId"
   private val transShard = "TransactionShard"
@@ -32,6 +34,8 @@ object FlowHeaderConfig {
   private val transState = "TransactionState"
   private val trackTrans = "TrackTransaction"
   private val trackSource = "TrackSource"
+  private val transCreated = "TransactionCreated"
+  private val transUpdated = "TransactionUpdated"
   private val retryCount = "RetryCount"
   private val maxRetries = "MaxRetries"
   private val retryTimeout = "RetryTimeout"
@@ -53,6 +57,8 @@ object FlowHeaderConfig {
     headerState = header(prefix)(transState),
     headerTrack = header(prefix)(trackTrans),
     headerTrackSource = header(prefix)(trackSource),
+    headerTransCreated = header(prefix)(transCreated),
+    headerTransUpdated = header(prefix)(transUpdated),
     headerRetryCount = header(prefix)(retryCount),
     headerMaxRetries = header(prefix)(maxRetries),
     headerRetryTimeout = header(prefix)(retryTimeout),
@@ -74,6 +80,8 @@ object FlowHeaderConfig {
     val headerRetryTimeout = cfg.getString(retryTimeoutPath, retryTimeout)
     val headerRetryDest = cfg.getString(retryDestPath, retryDest)
     val headerFirstRetry = cfg.getString(firstRetryPath, firstRetry)
+    val headerTransCreated = cfg.getString(transCreatedPath, transCreated)
+    val headerTransUpdated = cfg.getString(transUpdatedPath, transUpdated)
 
     FlowHeaderConfig(
       prefix = prefix,
@@ -87,26 +95,28 @@ object FlowHeaderConfig {
       headerMaxRetries = header(prefix)(headerMaxRetries),
       headerRetryTimeout = header(prefix)(headerRetryTimeout),
       headerRetryDestination = header(prefix)(headerRetryDest),
-      headerFirstRetry = header(prefix)(headerFirstRetry)
+      headerFirstRetry = header(prefix)(headerFirstRetry),
+      headerTransCreated = header(prefix)(headerTransCreated),
+      headerTransUpdated = header(prefix)(headerTransUpdated)
     )
   }
 }
 
 case class FlowHeaderConfig private (
   prefix : String,
-  headerTransId : String = "TransactionId",
-  headerTransShard : String = "TransactionShard",
-  headerBranch : String = "BranchId",
-  headerState : String = "TransactionState",
-  headerTransCreated : String = "TransactionCreated",
-  headerTransUpdated : String = "TransactionUpdate",
-  headerTrack : String = "TrackTransaction",
-  headerTrackSource : String = "TrackSource",
-  headerRetryCount : String = "RetryCount",
-  headerMaxRetries : String = "MaxRetries",
-  headerRetryTimeout : String = "RetryTimeout",
-  headerRetryDestination : String = "RetryDestination",
-  headerFirstRetry : String = "FirstRetry"
+  headerTransId : String,
+  headerTransShard : String,
+  headerBranch : String,
+  headerState : String,
+  headerTransCreated : String,
+  headerTransUpdated : String,
+  headerTrack : String,
+  headerTrackSource : String,
+  headerRetryCount : String,
+  headerMaxRetries : String,
+  headerRetryTimeout : String,
+  headerRetryDestination : String,
+  headerFirstRetry : String
 )
 
 object FlowTransactionEvent {

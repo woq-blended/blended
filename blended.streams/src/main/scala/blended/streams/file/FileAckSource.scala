@@ -6,8 +6,7 @@ import java.nio.file.{DirectoryStream, Files, Path}
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import akka.actor.ActorSystem
-import akka.stream.stage.{GraphStage, GraphStageLogic, TimerGraphStageLogic}
+import akka.stream.stage.{GraphStage, GraphStageLogic}
 import akka.stream.{Attributes, Outlet, SourceShape}
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
 import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
@@ -41,7 +40,7 @@ object FileAckSource {
 
 class FileAckSource(
   pollCfg : FilePollConfig
-)(implicit system : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
+) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val pollId : String = s"${pollCfg.headerCfg.prefix}.FilePoller.${pollCfg.id}.source"
   private val out : Outlet[FlowEnvelope] = Outlet(name = pollId)
@@ -230,34 +229,41 @@ class FileAckSource(
         if (pendingFiles.isEmpty) {
           log.info(s"Executing directory scan for [${pollCfg.id}] for directory [${pollCfg.sourceDir}] with pattern [${pollCfg.pattern}]")
 
+          var dirStream : Option[DirectoryStream[Path]] = None
+
           try {
+
             val filter : DirectoryStream.Filter[Path] = new DirectoryStream.Filter[Path] {
               override def accept(entry : Path) : Boolean = {
                 entry.getParent().toFile().equals(srcDir) && pollCfg.pattern.forall(p => entry.toFile().getName().matches(p))
               }
             }
 
-            val dirStream : DirectoryStream[Path] = Files.newDirectoryStream(srcDir.toPath(), filter)
+            dirStream = Some(Files.newDirectoryStream(srcDir.toPath(), filter))
 
             try {
               // scalastyle:off magic.number
-              dirStream.iterator().asScala.take(100).map(_.toFile()).foreach(f => pendingFiles += f)
+              dirStream.get.iterator().asScala.take(100).map(_.toFile()).foreach(f => pendingFiles += f)
               // scalastyle:on magic.number
             } catch {
               case NonFatal(e) =>
                 log.warn(s"Error reading directory [${srcDir.getAbsolutePath()}] : [${e.getMessage()}]")
                 None
-            } finally {
-              dirStream.close()
             }
+          } finally {
+            dirStream.foreach{ ds => Try { ds.close() }}
           }
         }
-
-        val result = pendingFiles.headOption
-        pendingFiles = if (pendingFiles.nonEmpty) pendingFiles.tail else pendingFiles
-
-        result
       }
+
+      val result : Option[File] = pendingFiles.headOption
+      pendingFiles = if (pendingFiles.nonEmpty) {
+        pendingFiles.tail
+      } else {
+          pendingFiles
+      }
+
+      result
     }
   }
 
