@@ -1,12 +1,13 @@
 package blended.jms.utils.internal
 import java.text.SimpleDateFormat
 
+import blended.jms.utils.ConnectionState.Disconnected
 import blended.jms.utils.{ConnectionCommand, ConnectionState}
 
 class ConnectionMonitor(vendor : String, provider : String, clientId : String) extends ConnectionMonitorMXBean {
 
   private[this] val df = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS")
-  private[this] var state : ConnectionState = ConnectionState(vendor = vendor, provider = provider).copy(status = ConnectionState.DISCONNECTED)
+  private[this] var state : ConnectionState = ConnectionState(vendor = vendor, provider = provider).copy(status = Disconnected)
 
   private[this] var cmd : ConnectionCommand = ConnectionCommand(vendor = vendor, provider = provider)
 
@@ -20,7 +21,7 @@ class ConnectionMonitor(vendor : String, provider : String, clientId : String) e
   def setState(newState : ConnectionState) : Unit = { state = newState }
   def getState() : ConnectionState = state
 
-  override def getStatus() : String = state.status
+  override def getStatus() : String = state.status.toString()
 
   override def getLastConnect() : String = state.lastConnect match {
     case None    => "n/a"

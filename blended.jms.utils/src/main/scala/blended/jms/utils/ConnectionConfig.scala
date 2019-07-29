@@ -10,8 +10,11 @@ trait ConnectionConfig {
   val jmxEnabled : Boolean
   val keepAliveEnabled : Boolean
   val maxKeepAliveMissed : Int
+  val keepAliveInterval : FiniteDuration
   val minReconnect : FiniteDuration
   val maxReconnectTimeout : Option[FiniteDuration]
+  val connectTimeout : FiniteDuration
+  val retryInterval : FiniteDuration
   val clientId : String
   val defaultUser : Option[String]
   val defaultPassword : Option[String]

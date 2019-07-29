@@ -1,5 +1,7 @@
 package blended.jms.utils.internal
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import akka.actor.ActorSystem
 import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
 import javax.jms._
@@ -40,8 +42,10 @@ class DummyConnection extends Connection {
   ) : ConnectionConsumer = ???
 }
 
-class DummyHolder(f : () => Connection)(implicit system : ActorSystem)
+class DummyHolder(f : () => Connection, maxConnects : Int = Int.MaxValue)(implicit system : ActorSystem)
   extends ConnectionHolder(BlendedJMSConnectionConfig.defaultConfig) {
+
+  private val conCount : AtomicInteger = new AtomicInteger(0)
 
   override val vendor : String = "dummy"
   override val provider : String = "dummy"
@@ -55,9 +59,14 @@ class DummyHolder(f : () => Connection)(implicit system : ActorSystem)
   override def connect() : Connection = conn match {
     case Some(c) => c
     case None =>
-      val c = new BlendedJMSConnection(f())
-      conn = Some(c)
-      c
+      if (conCount.get() < maxConnects) {
+        conCount.incrementAndGet()
+        val c = new BlendedJMSConnection(f())
+        conn = Some(c)
+        c
+      }else {
+        throw new Exception("Max connects exceeded")
+      }
   }
 
   override def close() : Try[Unit] = Try {

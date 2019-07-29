@@ -76,9 +76,9 @@ class BlendedSingleConnectionFactory(
         None
       }
 
-      val monitor = system.actorOf(ConnectionStateMonitor.props(bundleContext, mbean), monitorName)
+      val monitor = system.actorOf(ConnectionStateMonitor.props(vendor, provider, bundleContext, mbean), monitorName)
       log.info(s"Connection State Monitor [$stateMgrName] created.")
-      Some(system.actorOf(ConnectionStateManager.props(config, monitor, holder), stateMgrName))
+      Some(system.actorOf(ConnectionStateManager.props(config, holder), stateMgrName))
     } else {
       log.info(s"Connection State Monitor [$stateMgrName] is disabled by config setting.")
       None

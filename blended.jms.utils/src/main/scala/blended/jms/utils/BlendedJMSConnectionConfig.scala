@@ -20,8 +20,11 @@ object BlendedJMSConnectionConfig {
     jmxEnabled = true,
     keepAliveEnabled = true,
     maxKeepAliveMissed = 5,
+    keepAliveInterval = 60.seconds,
     minReconnect = 5.minutes,
     maxReconnectTimeout = None,
+    connectTimeout = 30.seconds,
+    retryInterval = 10.seconds,
     clientId = "$[[" + ContainerIdentifierService.containerId + "]]",
     defaultUser = None,
     defaultPassword = None,
@@ -47,8 +50,11 @@ object BlendedJMSConnectionConfig {
     val jmxEnabled : Config => Boolean = cfg => cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
     val keepAliveEnabled : Config => Boolean = cfg => cfg.getBoolean("keepAliveEnabled", defaultConfig.keepAliveEnabled)
     val maxKeepAliveMissed : Config => Int = cfg => cfg.getInt("maxKeepAliveMissed", defaultConfig.maxKeepAliveMissed)
+    val keepAliveInterval : Config => FiniteDuration = cfg => cfg.getDuration("keepAliveInterval", defaultConfig.keepAliveInterval)
     val minReconnect : Config => FiniteDuration = cfg => cfg.getDuration("minReconnect", defaultConfig.minReconnect)
     val maxReconnectTimeout : Config => Option[FiniteDuration] = cfg => cfg.getDurationOption("maxReconnectTimeout")
+    val connectTimeout : Config => FiniteDuration = cfg => cfg.getDuration("connectTimeout", defaultConfig.connectTimeout)
+    val retryInterval : Config => FiniteDuration = cfg => cfg.getDuration("retryInterval", defaultConfig.retryInterval)
 
     val defaultUser : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_USER).map { u => stringResolver(u).get }.map(_.toString)
     val defaultPasswd : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_PWD).map { p => stringResolver(p).get }.map(_.toString)
@@ -81,8 +87,11 @@ object BlendedJMSConnectionConfig {
       jmxEnabled = jmxEnabled(cfg),
       keepAliveEnabled = keepAliveEnabled(cfg),
       maxKeepAliveMissed = maxKeepAliveMissed(cfg),
+      keepAliveInterval = keepAliveInterval(cfg),
       minReconnect = minReconnect(cfg),
       maxReconnectTimeout = maxReconnectTimeout(cfg),
+      connectTimeout = connectTimeout(cfg),
+      retryInterval = retryInterval(cfg),
       clientId = clientId(cfg).get,
       defaultUser = defaultUser(cfg),
       defaultPassword = defaultPasswd(cfg),
@@ -106,8 +115,11 @@ case class BlendedJMSConnectionConfig(
   override val jmxEnabled : Boolean,
   override val keepAliveEnabled : Boolean,
   override val maxKeepAliveMissed : Int,
+  override val keepAliveInterval: FiniteDuration,
   override val minReconnect : FiniteDuration,
   override val maxReconnectTimeout : Option[FiniteDuration],
+  override val connectTimeout: FiniteDuration,
+  override val retryInterval : FiniteDuration,
   override val clientId : String,
   override val defaultUser : Option[String],
   override val defaultPassword : Option[String],

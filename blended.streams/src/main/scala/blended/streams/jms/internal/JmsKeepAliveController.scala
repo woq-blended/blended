@@ -11,20 +11,20 @@ class JmsKeepAliveController extends Actor {
   override def preStart(): Unit =
     context.become(running(Map.empty))
 
-  private val cfKey : BlendedJMSConnectionConfig => String = cfCfg => s"${cfCfg.vendor}${cfCfg.provider}"
+  private val cfKey : ConnectionConfig => String = cfCfg => s"${cfCfg.vendor}${cfCfg.provider}"
 
   override def receive: Receive = Actor.emptyBehavior
 
   private def running(watched : Map[String, ActorRef]) : Receive = {
     case AddedConnectionFactory(cfCfg) =>
       if (!watched.contains(cfKey(cfCfg)) && cfCfg.keepAliveEnabled) {
-        log.info(s"Starting keep Alive actor for JMS connection factory ")
+        log.info(s"Starting keep Alive actor for JMS connection factory [${cfCfg.vendor}:${cfCfg.provider}]")
         val actor : ActorRef = context.system.actorOf(JmsKeepAliveActor.props(cfCfg))
         context.become(running(watched + (cfKey(cfCfg) -> actor)))
       }
 
     case RemovedConnectionFactory(cfCfg) => watched.get(cfKey(cfCfg)).foreach { actor =>
-      log.info(s"Stopping keep Alive Actor for JMS connection factory")
+      log.info(s"Stopping keep Alive Actor for JMS connection factory [${cfCfg.vendor}:${cfCfg.provider}]")
       context.system.stop(actor)
       context.become(running(watched - cfKey(cfCfg)))
     }
@@ -33,10 +33,10 @@ class JmsKeepAliveController extends Actor {
 
 object JmsKeepAliveActor {
 
-  def props(cfCfg : BlendedJMSConnectionConfig) : Props =
+  def props(cfCfg : ConnectionConfig) : Props =
     Props(new JmsKeepAliveActor(cfCfg))
 }
 
-class JmsKeepAliveActor(cfCfg : BlendedJMSConnectionConfig) extends Actor {
+class JmsKeepAliveActor(cfCfg : ConnectionConfig) extends Actor {
   override def receive: Receive = Actor.emptyBehavior
 }

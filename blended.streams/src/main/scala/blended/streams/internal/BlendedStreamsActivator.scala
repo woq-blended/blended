@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import blended.akka.ActorSystemWatching
 import blended.jms.utils._
 import blended.streams.BlendedStreamsConfig
-import blended.streams.jms.internal.JmsKeepAliveActor
+import blended.streams.jms.internal.{JmsKeepAliveActor, JmsKeepAliveController}
 import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.streams.transaction.{FlowTransactionManager, FlowTransactionManagerConfig, TransactionManagerCleanupActor}
 import blended.util.config.Implicits._
@@ -44,24 +44,24 @@ class BlendedStreamsActivator extends DominoActivator
 
       // initialise the JMS keep alive streams
 
-      val jmsKeepAliveActor = osgiCfg.system.actorOf(Props[JmsKeepAliveActor])
+      val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props[JmsKeepAliveController])
 
       // We will watch for published instances of JMS connection configurations
-      watchServices[BlendedJMSConnectionConfig]{
+      watchServices[ConnectionConfig]{
         case ServiceWatcherEvent.AddingService(cfCfg, _)   =>
-          jmsKeepAliveActor ! AddedConnectionFactory(cfCfg)
+          jmsKeepAliveCtrl ! AddedConnectionFactory(cfCfg)
 
         case ServiceWatcherEvent.ModifiedService(cfCfg, _) =>
-          jmsKeepAliveActor ! RemovedConnectionFactory(cfCfg)
-          jmsKeepAliveActor ! AddedConnectionFactory(cfCfg)
+          jmsKeepAliveCtrl ! RemovedConnectionFactory(cfCfg)
+          jmsKeepAliveCtrl ! AddedConnectionFactory(cfCfg)
 
         case ServiceWatcherEvent.RemovedService(cfCfg, _)  =>
-          jmsKeepAliveActor ! RemovedConnectionFactory(cfCfg)
+          jmsKeepAliveCtrl ! RemovedConnectionFactory(cfCfg)
       }
 
       onStop{
         osgiCfg.system.stop(tMgrCleanup)
-        osgiCfg.system.stop(jmsKeepAliveActor)
+        osgiCfg.system.stop(jmsKeepAliveCtrl)
       }
     }
   }

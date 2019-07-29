@@ -12,17 +12,11 @@ case object CloseTimeout
 case class ConnectTimeout(t : Long)
 
 sealed trait KeepAliveEvent
-case class AddedConnectionFactory(cfg : BlendedJMSConnectionConfig) extends KeepAliveEvent
-case class RemovedConnectionFactory(cfg : BlendedJMSConnectionConfig) extends KeepAliveEvent
+case class AddedConnectionFactory(cfg : ConnectionConfig) extends KeepAliveEvent
+case class RemovedConnectionFactory(cfg : ConnectionConfig) extends KeepAliveEvent
 case class MesssageReceived(cf : IdAwareConnectionFactory) extends KeepAliveEvent
 case class KeepAliveMissed(cf : IdAwareConnectionFactory, count : Int) extends KeepAliveEvent
-case class MaxKeepAliveExceeded(cf : IdAwareConnectionFactory) extends KeepAliveEvent
-
-/**
- * Command message to restart the container in case of an exception that can't be recovered.
- * @param reason The underlying reason to restart
- */
-case class RestartContainer(reason : Throwable)
+case class MaxKeepAliveExceeded(vendor : String, provider : String) extends KeepAliveEvent
 
 /**
  * Command message to establish a JMS Connection
@@ -31,7 +25,6 @@ case class Connect(ts : Date, id : String)
 
 /**
  * Command message to close a JMS Connection within a given timeout
- * @param timeout
  */
 case class Disconnect(timeout : FiniteDuration)
 
@@ -57,4 +50,3 @@ object Reconnect {
 }
 
 case class Reconnect(vendor : String, provider : String, e : Option[Throwable])
-

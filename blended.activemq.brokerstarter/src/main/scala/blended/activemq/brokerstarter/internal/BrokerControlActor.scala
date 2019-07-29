@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, PoisonPill, Props}
 import blended.akka.OSGIActorConfig
-import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory}
+import blended.jms.utils.{BlendedSingleConnectionFactory, ConnectionConfig, IdAwareConnectionFactory}
 import blended.util.logging.Logger
 import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
 import domino.service_providing.ServiceProviding
@@ -86,6 +86,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
   private[this] val log = Logger[BrokerControlActor]
   private[this] var broker : Option[BrokerService] = None
   private[this] var svcReg : Option[ServiceRegistration[_]] = None
+  private[this] var cfgReg : Option[ServiceRegistration[_]] = None
   private[this] val uuid = UUID.randomUUID().toString()
 
   override def toString : String = s"BrokerControlActor(${brokerCfg})"
@@ -156,6 +157,12 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
           "provider" -> brokerCfg.provider,
           "brokerName" -> brokerCfg.brokerName
         )))
+
+        cfgReg = Some(brokerCfg.providesService[ConnectionConfig](Map(
+          "vendor" -> brokerCfg.vendor,
+          "provider" -> brokerCfg.provider,
+          "brokerName" -> brokerCfg.brokerName
+        )))
       }
     }
   }
@@ -174,6 +181,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
         try {
           log.info(s"Removing OSGi service for Activemq Broker [${brokerCfg.brokerName}]")
           svcReg.foreach(_.unregister())
+          cfgReg.foreach(_.unregister())
         } catch {
           case _ : IllegalStateException => // was already unregistered
         }
