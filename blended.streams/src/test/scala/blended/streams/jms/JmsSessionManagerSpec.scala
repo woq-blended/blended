@@ -7,6 +7,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
+import blended.jms.utils.ConnectionState.Connected
 import blended.jms.utils.{ConnectionState, IdAwareConnectionFactory, JmsSession}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
@@ -38,7 +39,7 @@ class JmsSessionManagerSpec extends SimplePojoContainerSpec
     system.eventStream.subscribe(probe.ref, classOf[ConnectionState])
     probe.fishForMessage(3.seconds){
       case state : ConnectionState =>
-        state.vendor == "activemq" && state.provider == "activemq" && state.status == ConnectionState.CONNECTED
+        state.vendor == "activemq" && state.provider == "activemq" && state.status == Connected
     }
 
     cf.createConnection()
