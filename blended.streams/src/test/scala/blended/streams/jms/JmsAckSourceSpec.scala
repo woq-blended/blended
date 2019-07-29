@@ -103,6 +103,10 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
   "The JMS Ack Source should" - {
 
+    "signal message reception vi the Event Stream" in {
+      fail
+    }
+
     "consume and acknowledge messages without delay correctly" in {
 
       val msgCount : Int = 100

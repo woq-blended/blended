@@ -40,6 +40,11 @@ object BlendedStreams extends ProjectFactory {
         s"$projectName.persistence",
         s"$projectName.transaction",
         s"$projectName.worklist"
+      ),
+      privatePackage = Seq(
+        s"$projectName.internal",
+        s"$projectName.transaction.internal",
+        s"$projectName.jms.internal"
       )
     )
 

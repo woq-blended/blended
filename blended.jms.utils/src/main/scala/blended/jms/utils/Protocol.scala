@@ -2,7 +2,6 @@ package blended.jms.utils
 
 import java.util.Date
 
-import akka.actor.ActorRef
 import javax.jms.Connection
 
 import scala.concurrent.duration.FiniteDuration
@@ -12,18 +11,12 @@ case object ConnectionClosed
 case object CloseTimeout
 case class ConnectTimeout(t : Long)
 
-case class ExecutePing(pingActor : ActorRef, id : AnyVal)
-
-/**
- * Message hierarchy to indicate the outcome of a Ping. A successful ping will
- * simply be the id of the ping message, otherwise we will get the uderlying
- * exception
- */
-sealed trait PingResult
-case object PingPending extends PingResult
-case object PingTimeout extends PingResult
-case class PingSuccess(msg : String) extends PingResult
-case class PingFailed(t : Throwable) extends PingResult
+sealed trait KeepAliveEvent
+case class AddedConnectionFactory(cfg : BlendedJMSConnectionConfig) extends KeepAliveEvent
+case class RemovedConnectionFactory(cfg : BlendedJMSConnectionConfig) extends KeepAliveEvent
+case class MesssageReceived(cf : IdAwareConnectionFactory) extends KeepAliveEvent
+case class KeepAliveMissed(cf : IdAwareConnectionFactory, count : Int) extends KeepAliveEvent
+case class MaxKeepAliveExceeded(cf : IdAwareConnectionFactory) extends KeepAliveEvent
 
 /**
  * Command message to restart the container in case of an exception that can't be recovered.
@@ -57,12 +50,6 @@ case class ConnectionCommand(
   connectPending : Boolean = false,
   reconnectNow : Boolean = false
 )
-
-object KeepAlive {
-  def apply(vendor: String, provider: String): KeepAlive = new KeepAlive(vendor, provider)
-}
-
-case class KeepAlive(vendor : String, provider : String)
 
 object Reconnect {
   def apply(cf : IdAwareConnectionFactory, e : Option[Throwable]) : Reconnect =

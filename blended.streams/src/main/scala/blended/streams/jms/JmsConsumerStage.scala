@@ -13,6 +13,7 @@ import blended.util.RichTry._
 import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.Logger
 import javax.jms.{Message, MessageConsumer}
+import blended.jms.utils.MesssageReceived
 
 import scala.collection.mutable
 import scala.concurrent.duration._

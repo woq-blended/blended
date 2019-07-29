@@ -2,13 +2,11 @@ package blended.jms.utils.internal
 
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.LoggingReceive
 import blended.jms.utils.ConnectionState._
 import blended.jms.utils._
-import javax.jms.Connection
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -42,20 +40,6 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
   private[internal] var currentState : ConnectionState =
    ConnectionState(vendor = vendor, provider = config.provider).copy(status = DISCONNECTED)
 
-  private val pingCounter = new AtomicLong(0)
-  private var pinger : Option[ActorRef] = None
-
-  // the retry Schedule is the time interval we retry a connection after a failed connect attempt
-  // usually that is only a fraction of the ping interval (i.e. 5 seconds)
-  private val retrySchedule : FiniteDuration = config.retryInterval
-
-  // The schedule is the interval for the normal connection ping
-  private val schedule : FiniteDuration = config.pingInterval
-
-  // The ping timer is used to schedule ping messages over the underlying connection to check it's
-  // health
-  private var pingTimer : Option[Cancellable] = None
-
   // To this actor we delegate all connect and close operations for the underlying JMS provider
   private val controller : ActorRef = context.actorOf(JmsConnectionController.props(holder))
 
@@ -80,6 +64,7 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
     switchState(disconnected(), currentState)
     context.system.eventStream.subscribe(self, classOf[ConnectionCommand])
     context.system.eventStream.subscribe(self, classOf[Reconnect])
+    context.system.eventStream.subscribe(self, classOf[MaxKeepAliveExceeded])
   }
 
   // ---- State: Disconnected
@@ -87,7 +72,6 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
 
     // Upon a CheckConnection message we will kick off initiating and monitoring the connection
     case cc : CheckConnection =>
-      pingTimer = None
       initConnection(state, cc.now)
   }
 
@@ -98,50 +82,25 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
     // connect attempts
     case ConnectTimeout(_) => // do nothing, this will just get rid of irrelevant warnings in the log
 
-    // If we are already connected we simply try to ping the underlying connection
-    case _ : CheckConnection =>
-      pingTimer = None
-      conn.foreach(ping)
-
+    // For a disconnect we initiate to close the underlying connection
     case Disconnect(_) => disconnect(state)
 
-    // For a successful ping we log the event and schedule the next connectionCheck
-    case PingSuccess(m) =>
-      pinger = None
-      switchState(
-        connected(),
-        publishEvents(state, s"JMS connection for provider [$vendor:$provider] seems healthy [$m].").copy(failedPings = 0)
-      )
-      checkConnection(schedule)
-
-    case PingFailed(t) =>
-      pinger = None
-
-      checkReconnect(
-        publishEvents(state, s"Error sending connection ping for provider [$vendor:$provider] : [${t.getMessage()}].")
-          .copy(failedPings = state.failedPings + 1)
-      )
-
-    case PingTimeout =>
-      pinger = None
-
-      checkReconnect(
-        publishEvents(state, s"Ping for provider [$vendor:$provider] timed out.")
-          .copy(failedPings = state.failedPings + 1)
-      )
+    case MaxKeepAliveExceeded(cf : IdAwareConnectionFactory) =>
+      if (vendor == cf.vendor && provider == cf.provider) {
+        log.warning(s"Maximum number of missed keep alives has been reached [${vendor}:${provider}]")
+      }
   }
 
   // ---- State: Connecting
   def connecting()(state : ConnectionState) : Receive = {
 
     case _ : CheckConnection =>
-      pingTimer = None
 
     case ConnectResult(t, Left(e)) =>
       if (t == state.lastConnectAttempt.getOrElse(0L)) {
         switchState(disconnected(), state.copy(status = DISCONNECTED))
         if (!checkRestartForFailedReconnect(state, e)) {
-          checkConnection(retrySchedule)
+          // checkConnection(retrySchedule)
         }
       }
 
@@ -149,7 +108,7 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
     case ConnectResult(t, Right(c)) =>
       if (t == state.lastConnectAttempt.getOrElse(0L)) {
         conn = Some(new BlendedJMSConnection(c))
-        checkConnection(schedule)
+        // checkConnection(schedule)
         switchState(connected(), publishEvents(state, s"Successfully connected to provider [$vendor:$provider]").copy(
           status = CONNECTED,
           firstReconnectAttempt = None,
@@ -161,7 +120,7 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
     case ConnectTimeout(t) =>
       if (t == state.lastConnectAttempt.getOrElse(0L)) {
         switchState(disconnected(), state.copy(status = DISCONNECTED))
-        checkConnection(retrySchedule)
+        //checkConnection(retrySchedule)
       }
   }
 
@@ -169,7 +128,6 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
   def closing()(state : ConnectionState) : Receive = {
 
     case _ : CheckConnection =>
-      pingTimer = None
 
     // All good, happily disconnected
     case ConnectionClosed =>
@@ -278,14 +236,6 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
   // A simple convenience method to schedule the next connection check to ourselves
   private[this] def checkConnection(delay : FiniteDuration, force : Boolean = false) : Unit = {
 
-    if (force) {
-      pingTimer.foreach(_.cancel())
-      pingTimer = None
-    }
-
-    if (pingTimer.isEmpty) {
-      pingTimer = Some(context.system.scheduler.scheduleOnce(delay, self, CheckConnection(false)))
-    }
   }
 
   private[this] def connect(state : ConnectionState) : ConnectionState = {
@@ -346,49 +296,13 @@ class ConnectionStateManager(config : ConnectionConfig, monitor : ActorRef, hold
   // Experience has shown that for a close timeout it is best to restart
   // the container.
   private[this] def disconnect(s : ConnectionState) : Unit = {
-    pingTimer.foreach(_.cancel())
-    pingTimer = None
-
     // Notify the connection controller of the disconnect
     controller ! Disconnect(config.minReconnect)
     switchState(closing(), s.copy(status = CLOSING))
   }
 
-  // A reconnect is only schedule if we have reached the maximumPingTolerance for the connection
-  // Otherwise we schedule a connection check for the retry schedule, which is usually much shorter
-  // than the normal connection check
-  private[this] def checkReconnect(s : ConnectionState) : Unit = {
-    log.debug(s"Checking reconnect for provider [$vendor:$provider] state [$s] against tolerance [${config.pingTolerance}]")
-    if (s.failedPings == config.pingTolerance) {
-      reconnect(
-        publishEvents(s, s"Maximum ping tolerance for provider [$vendor:$provider] reached .... reconnecting.")
-      )
-    } else {
-      switchState(currentReceive, s)
-      checkConnection(retrySchedule)
-    }
-  }
-
   private[this] def reconnect(s : ConnectionState) : Unit = {
     disconnect(s)
     log.info(s"Restarting connection for [$vendor:$provider] in [${config.minReconnect}]")
-    checkConnection(config.minReconnect + 1.seconds)
-  }
-
-  private[this] def ping(c : Connection) : Unit = {
-
-    if (config.pingEnabled) {
-      pinger match {
-        case None =>
-          log.info(s"Checking JMS connection for provider [$vendor:$provider]")
-
-          pinger = Some(context.actorOf(JmsPingPerformer.props(config, c, new DefaultPingOperations())))
-          pinger.foreach(_ ! ExecutePing(self, pingCounter.getAndIncrement()))
-        case Some(_) =>
-          log.debug(s"Ignoring ping request for provider [$provider] as one pinger is already active.")
-      }
-    } else {
-      log.info(s"Ping is disabled for connection factory [${config.vendor}:${config.provider}]")
-    }
   }
 }

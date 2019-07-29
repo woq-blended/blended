@@ -131,7 +131,7 @@ object SimpleIdAwareConnectionFactory {
       vendor = vendor,
       provider = provider,
       clientId = clientId,
-      pingEnabled = false,
+      keepAliveEnabled = false,
       minReconnect = minReconnect
     )
 

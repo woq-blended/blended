@@ -2,7 +2,7 @@ package blended.jms.utils.internal
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import blended.jms.utils.{BlendedJMSConnectionConfig, CheckConnection, ConnectionState, ConnectionStateChanged, Disconnect, PingFailed}
+import blended.jms.utils._
 import org.scalatest.FreeSpecLike
 
 import scala.concurrent.duration._
@@ -86,11 +86,6 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
         case _                           => false
       }
 
-      (1.to(cfg.pingTolerance)).foreach { _ => csm ! PingFailed(new Exception("Boom")) }
-      probe.fishForMessage(3.seconds) {
-        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.DISCONNECTED
-        case _                           => false
-      }
       assert(csm.underlyingActor.currentState.lastDisconnect.isDefined)
       assert(holder.getConnection().isEmpty)
 

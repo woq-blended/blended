@@ -18,11 +18,8 @@ object BlendedJMSConnectionConfig {
     provider = "",
     enabled = true,
     jmxEnabled = true,
-    pingEnabled = true,
-    pingTolerance = 5,
-    pingInterval = 30.seconds,
-    pingTimeout = 3.seconds,
-    retryInterval = 5.seconds,
+    keepAliveEnabled = true,
+    maxKeepAliveMissed = 5,
     minReconnect = 5.minutes,
     maxReconnectTimeout = None,
     clientId = "$[[" + ContainerIdentifierService.containerId + "]]",
@@ -48,11 +45,8 @@ object BlendedJMSConnectionConfig {
 
     val enabled : Config => Boolean = cfg => cfg.getBoolean("enabled", defaultConfig.enabled)
     val jmxEnabled : Config => Boolean = cfg => cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
-    val pingEnabled : Config => Boolean = cfg => cfg.getBoolean("pingEnabled", defaultConfig.pingEnabled)
-    val pingTolerance : Config => Int = cfg => cfg.getInt("pingTolerance", defaultConfig.pingTolerance)
-    val pingInterval : Config => FiniteDuration = cfg => cfg.getDuration("pingInterval", defaultConfig.pingInterval)
-    val pingTimeout : Config => FiniteDuration = cfg => cfg.getDuration("pingTimeout", defaultConfig.pingTimeout)
-    val retryInterval : Config => FiniteDuration = cfg => cfg.getDuration("retryInterval", defaultConfig.retryInterval)
+    val keepAliveEnabled : Config => Boolean = cfg => cfg.getBoolean("keepAliveEnabled", defaultConfig.keepAliveEnabled)
+    val maxKeepAliveMissed : Config => Int = cfg => cfg.getInt("maxKeepAliveMissed", defaultConfig.maxKeepAliveMissed)
     val minReconnect : Config => FiniteDuration = cfg => cfg.getDuration("minReconnect", defaultConfig.minReconnect)
     val maxReconnectTimeout : Config => Option[FiniteDuration] = cfg => cfg.getDurationOption("maxReconnectTimeout")
 
@@ -85,11 +79,8 @@ object BlendedJMSConnectionConfig {
       enabled = enabled(cfg),
       provider = provider,
       jmxEnabled = jmxEnabled(cfg),
-      pingEnabled = pingEnabled(cfg),
-      pingTolerance = pingTolerance(cfg),
-      pingInterval = pingInterval(cfg),
-      pingTimeout = pingTimeout(cfg),
-      retryInterval = retryInterval(cfg),
+      keepAliveEnabled = keepAliveEnabled(cfg),
+      maxKeepAliveMissed = maxKeepAliveMissed(cfg),
       minReconnect = minReconnect(cfg),
       maxReconnectTimeout = maxReconnectTimeout(cfg),
       clientId = clientId(cfg).get,
@@ -113,11 +104,8 @@ case class BlendedJMSConnectionConfig(
   override val provider : String,
   override val enabled : Boolean,
   override val jmxEnabled : Boolean,
-  override val pingEnabled : Boolean,
-  override val pingTolerance : Int,
-  override val pingInterval : FiniteDuration,
-  override val pingTimeout : FiniteDuration,
-  override val retryInterval : FiniteDuration,
+  override val keepAliveEnabled : Boolean,
+  override val maxKeepAliveMissed : Int,
   override val minReconnect : FiniteDuration,
   override val maxReconnectTimeout : Option[FiniteDuration],
   override val clientId : String,
