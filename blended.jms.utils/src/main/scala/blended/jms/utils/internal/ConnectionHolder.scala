@@ -89,12 +89,12 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : Act
   def close() : Try[Unit] = {
 
     conn match {
-      case None => Success()
+      case None => Success(())
       case Some(c) =>
         log.info(s"Closing underlying connection for provider [$provider]")
         try {
           c.connection.close()
-          Success()
+          Success(())
         } catch {
           case NonFatal(t) =>
             Failure(t)

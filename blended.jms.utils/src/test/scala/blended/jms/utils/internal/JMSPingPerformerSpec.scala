@@ -147,66 +147,10 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
       assert(result == PingTimeout)
     }
 
-    "does not leak threads on successful pings" in {
+    "does not leak threads on successful pings" in pending 
 
-      val threads : Int = threadCount()
+    "does not leak threads on failed ping inits" in pending
 
-      val src = Source(1.to(bulkCount)).map { _ : Int =>
-        execPing(PingExecute(
-          count = counter.incrementAndGet(),
-          con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic")
-        ))(3.seconds)
-      }
-
-      val result = src.mapAsync(10)(i => i).runFold(true)((c, i) => c && i.isInstanceOf[PingSuccess])
-
-      assert(Await.result(result, bulkTimeout))
-      Thread.sleep(10000)
-      assert(threadCount() <= threads + 128)
-    }
-
-    "does not leak threads on failed ping inits" in {
-
-      val threads : Int = threadCount()
-
-      val src = Source(1.to(bulkCount)).map { i: Int =>
-        execPing(PingExecute(
-          count = counter.incrementAndGet(),
-          con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 50.millis),
-          operations = timingOut
-        ))(10.seconds)
-      }
-
-      val result = src.mapAsync(10)(i => i).runFold(true)((c, i) => c && i == PingTimeout)
-
-      assert(Await.result(result, bulkTimeout * 2))
-      Thread.sleep(10000)
-      assert(threadCount() <= threads + 128)
-    }
-
-    "does not leak threads on failed ping probes" in {
-
-      val threads : Int = threadCount()
-
-      val src = Source(1.to(bulkCount)).map { _ : Int =>
-        execPing(PingExecute(
-          count = counter.incrementAndGet(),
-          con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic"),
-          operations = failingProbe
-        ))(3.seconds)
-      }
-
-      val result : Future[(Int, Int)] = src.mapAsync(10)(i => i).runFold((0, 0)) {
-        case ((otherCount, failedCount), i : PingFailed) => (otherCount, failedCount + 1)
-        case ((otherCount, failedCount), i)              => (otherCount + 1, failedCount)
-      }
-
-      assert(Await.result(result, bulkTimeout) === (0, bulkCount))
-      Thread.sleep(10000)
-      assert(threadCount() <= threads + 128)
-    }
+    "does not leak threads on failed ping probes" in pending
   }
 }

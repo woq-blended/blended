@@ -30,7 +30,7 @@ class JmsSessionManagerSpec extends SimplePojoContainerSpec
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
-  private implicit val timeout : FiniteDuration = 1.second
+  private implicit val timeout : FiniteDuration = 3.seconds
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   private val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
   private val con : Connection = {
