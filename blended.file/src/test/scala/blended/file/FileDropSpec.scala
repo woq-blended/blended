@@ -24,7 +24,7 @@ class FileDropSpec extends LoggingFreeSpec
   private implicit val system : ActorSystem = ActorSystem(getClass().getSimpleName())
   private val to : FiniteDuration = 1.second
 
-  private val headerCfg = FlowHeaderConfig(prefix = "App")
+  private val headerCfg = FlowHeaderConfig.create(prefix = "App")
 
   private val dropCfg : FileDropConfig = FileDropConfig(
     dirHeader = "",

@@ -57,7 +57,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
         verify = env => true,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
-        headerConfig = FlowHeaderConfig(prefix = "App")
+        headerConfig = FlowHeaderConfig.create(prefix = "App")
       )
 
       val f = verifier.verifyConnection(cf)
@@ -70,7 +70,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
         verify = env => false,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
-        headerConfig = FlowHeaderConfig(prefix = "App")
+        headerConfig = FlowHeaderConfig.create(prefix = "App")
       )
 
       val f = verifier.verifyConnection(cf)
@@ -91,7 +91,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
         verify = env => false,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
-        headerConfig = FlowHeaderConfig(prefix = "App")
+        headerConfig = FlowHeaderConfig.create(prefix = "App")
       )
 
       val f = verifier.verifyConnection(ucf)

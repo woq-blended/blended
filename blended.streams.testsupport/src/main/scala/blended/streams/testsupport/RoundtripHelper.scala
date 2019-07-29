@@ -25,7 +25,7 @@ case class RoundtripHelper(
   inbound : (IdAwareConnectionFactory, JmsDestination),
   testMsgs : Seq[FlowEnvelope] = Seq.empty,
   timeout : FiniteDuration = 10.seconds,
-  headerConfig : FlowHeaderConfig = FlowHeaderConfig(prefix = "SIB"),
+  headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(prefix = "SIB"),
   outcome : Seq[ExpectedOutcome] = Seq.empty
 )(implicit system : ActorSystem) extends JmsStreamSupport {
 

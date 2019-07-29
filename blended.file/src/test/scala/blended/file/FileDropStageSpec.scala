@@ -27,7 +27,7 @@ class FileDropStageSpec extends LoggingFreeSpec
   private val log : Logger = Logger[FileDropStageSpec]
   private val to : FiniteDuration = 1.second
 
-  private val headerCfg = FlowHeaderConfig(prefix = "App")
+  private val headerCfg = FlowHeaderConfig.create(prefix = "App")
 
   val prepareDropper : FileDropConfig => String => FileDropConfig = cfg => subDir => {
     val dir = cfg.defaultDir + "/" + subDir
