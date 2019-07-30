@@ -193,7 +193,7 @@ trait FlowTransactionManagerSpec
       Await.result( tMgr.withCompleted{ _ => }, 3.seconds ) should be (1)
 
       Thread.sleep(cfg.retainCompleted.toMillis * 2)
-      tMgr.cleanUp()
+      Await.result(tMgr.cleanUp(), 3.seconds)
 
       Await.result(tMgr.withAll{_ => true}, 3.seconds) should be (transactions.size - 1)
       Await.result( tMgr.withCompleted{ _ => }, 3.seconds ) should be (0)
