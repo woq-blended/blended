@@ -161,10 +161,16 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       )
 
       val fileController : ActorRef =
-        system.actorOf(StreamController.props[FlowEnvelope, NotUsed](src, ctrlConfig.copy(name = name + ".controller")))
+        system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+          src = src,
+          streamCfg = ctrlConfig.copy(name = name + ".controller"))(
+          onMaterialize = _ => ()
+        ))
+
       val msgController : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
-        msgConsumer(destName, cf, destName), ctrlConfig.copy(name = name + ".consumer")
-      ))
+        src = msgConsumer(destName, cf, destName),
+        streamCfg = ctrlConfig.copy(name = name + ".consumer")
+      )(onMaterialize = _ => ()))
 
       Seq(fileController, msgController)
     }

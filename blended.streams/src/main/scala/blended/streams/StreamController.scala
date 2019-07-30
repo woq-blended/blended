@@ -51,7 +51,7 @@ object StreamController {
     src : Source[T, Mat],
     streamCfg : StreamControllerConfig
   )(
-    onMaterialize : Mat => Unit = _ => ()
+    onMaterialize : Mat => Unit = { _ : Mat => () }
   )(implicit materializer : Materializer) : Props =
     Props(new AbstractStreamController[T, Mat](streamCfg) {
       override def source() : Source[T, Mat] = src

@@ -155,6 +155,6 @@ trait JmsStreamSupport {
     name : String,
     settings : JMSConsumerSettings,
     minMessageDelay : Option[FiniteDuration]
-  ) : Source[FlowEnvelope, NotUsed] =
+  )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] =
     Source.fromGraph(new JmsConsumerStage(name, settings, minMessageDelay))
 }

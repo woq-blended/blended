@@ -29,10 +29,10 @@ object InboundConfig {
       case t : JmsDurableTopic => t
     }
 
-    val selector = cfg.getStringOption("selector")
+    val selector = cfg.getStringOption("selector").map(resolve)
     val persistent = JmsDeliveryMode.create(cfg.getString("persistent", JmsDeliveryMode.Persistent.asString)).get
 
-    val subscriberName = cfg.getStringOption("subscriberName")
+    val subscriberName = cfg.getStringOption("subscriberName").map(resolve)
 
     val listener = cfg.getInt("listener", 2)
 

@@ -92,6 +92,6 @@ class JmsSessionManager(
     log.trace(s"Closing [${sessions.size}] sessions for [$name]")
     sessions.values.map{ sess =>
       closeSession(sess.sessionId)
-    }.find(_.isFailure).getOrElse(Success())
+    }.find(_.isFailure).getOrElse(Success(()))
   }
 }

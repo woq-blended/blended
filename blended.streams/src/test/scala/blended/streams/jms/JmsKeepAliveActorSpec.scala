@@ -1,19 +1,34 @@
-package blended.jms.utils.internal
+package blended.jms.utils
 
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.testkit.TestKit
+import blended.streams.jms.internal.KeepAliveProducerFactory
+import blended.streams.message.FlowEnvelope
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import org.scalatest.Matchers
 
-import scala.concurrent.duration._
+import scala.collection.mutable
+import scala.concurrent.{ExecutionContext, Future}
 
 class JmsKeepAliveActorSpec extends TestKit(ActorSystem("JmsKeepAlive"))
   with LoggingFreeSpecLike
   with Matchers {
 
-  private val kaInterval : FiniteDuration = 100.millis
-  private val vendor = "sagum"
-  private val provider = "central"
+  private implicit val eCxtx : ExecutionContext = system.dispatcher
+
+  class DummyKeepAliveProducer extends KeepAliveProducerFactory {
+
+    val keepAliveEvents : mutable.ListBuffer[FlowEnvelope] = mutable.ListBuffer.empty
+
+    override val createProducer: BlendedSingleConnectionFactory => Future[ActorRef] = { bcf => Future {
+      system.actorOf(Props(new Actor() {
+        override def receive: Receive = {
+          case env : FlowEnvelope => keepAliveEvents.append(env)
+          case m => println(m)
+        }
+      }))
+    }}
+  }
 
   "The JmsKeepAliveActor should" - {
 

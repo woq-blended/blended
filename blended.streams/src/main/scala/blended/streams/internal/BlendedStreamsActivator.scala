@@ -3,10 +3,11 @@ package blended.streams.internal
 import java.io.File
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.utils._
 import blended.streams.BlendedStreamsConfig
-import blended.streams.jms.internal.JmsKeepAliveController
+import blended.streams.jms.internal.{JmsKeepAliveController, KeepAliveProducerFactory, StreamKeepAliveProducerFactory}
 import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.streams.transaction.{FlowTransactionManager, FlowTransactionManagerConfig, TransactionManagerCleanupActor}
 import blended.util.config.Implicits._
@@ -26,6 +27,7 @@ class BlendedStreamsActivator extends DominoActivator
       log.debug(s"${osgiCfg.config}")
 
       implicit val system : ActorSystem = osgiCfg.system
+      implicit val materializer : Materializer = ActorMaterializer()
 
       val baseDir : File = new File(osgiCfg.idSvc.getContainerContext().getContainerDirectory())
 
@@ -44,7 +46,12 @@ class BlendedStreamsActivator extends DominoActivator
 
       // initialise the JMS keep alive streams
 
-      val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props(new JmsKeepAliveController(osgiCfg.idSvc)))
+      val pf : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
+        log = bcf => Logger(s"blended.streams.keepalive.${bcf.vendor}.${bcf.provider}"),
+        idSvc = osgiCfg.idSvc
+      )
+
+      val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props(new JmsKeepAliveController(osgiCfg.idSvc, pf)))
 
       // We will watch for published instances of JMS connection configurations
       watchServices[IdAwareConnectionFactory]{
