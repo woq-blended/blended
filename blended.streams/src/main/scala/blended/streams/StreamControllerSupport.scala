@@ -66,6 +66,9 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
 
       startStream() match {
         case Success( (mat, killswitch, done) ) =>
+
+          materialized(mat)
+
           done.onComplete {
             case Success(_) =>
               self ! StreamController.StreamTerminated(None)
@@ -120,4 +123,6 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
   }
 
   def source() : Source[T, Mat]
+
+  def materialized(m : Mat) : Unit
 }

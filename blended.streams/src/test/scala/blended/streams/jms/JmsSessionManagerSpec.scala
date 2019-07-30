@@ -40,9 +40,6 @@ class JmsSessionManagerSpec extends SimplePojoContainerSpec
     probe.fishForMessage(3.seconds){
       case ConnectionStateChanged(state) =>
         state.vendor == "activemq" && state.provider == "activemq" && state.status == Connected
-      case m =>
-        println(m)
-        false
     }
 
     cf.createConnection()

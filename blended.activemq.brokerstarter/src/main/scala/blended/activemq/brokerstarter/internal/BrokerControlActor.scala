@@ -86,7 +86,6 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
   private[this] val log = Logger[BrokerControlActor]
   private[this] var broker : Option[BrokerService] = None
   private[this] var svcReg : Option[ServiceRegistration[_]] = None
-  private[this] var cfgReg : Option[ServiceRegistration[_]] = None
   private[this] val uuid = UUID.randomUUID().toString()
 
   override def toString : String = s"BrokerControlActor(${brokerCfg})"
@@ -145,7 +144,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
 
         val url = s"vm://${brokerCfg.brokerName}?create=false"
 
-        val jmsCfg = brokerCfg.copy(properties = brokerCfg.properties + ("brokerURL" -> url))
+        val jmsCfg : ConnectionConfig = brokerCfg.copy(properties = brokerCfg.properties + ("brokerURL" -> url))
 
         val cf = new BlendedSingleConnectionFactory(
           config = jmsCfg,
@@ -153,12 +152,6 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
         )(system = cfg.system)
 
         svcReg = Some(cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
-          "vendor" -> brokerCfg.vendor,
-          "provider" -> brokerCfg.provider,
-          "brokerName" -> brokerCfg.brokerName
-        )))
-
-        cfgReg = Some(brokerCfg.providesService[ConnectionConfig](Map(
           "vendor" -> brokerCfg.vendor,
           "provider" -> brokerCfg.provider,
           "brokerName" -> brokerCfg.brokerName
@@ -175,13 +168,12 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
         b.stop()
         b.waitUntilStopped()
       } catch {
-        case t : Throwable =>
+        case NonFatal(t) =>
           log.error(t)(s"Error stopping ActiveMQ broker [${brokerCfg.brokerName}]")
       } finally {
         try {
           log.info(s"Removing OSGi service for Activemq Broker [${brokerCfg.brokerName}]")
           svcReg.foreach(_.unregister())
-          cfgReg.foreach(_.unregister())
         } catch {
           case _ : IllegalStateException => // was already unregistered
         }

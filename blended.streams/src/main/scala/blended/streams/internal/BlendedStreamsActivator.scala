@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import blended.akka.ActorSystemWatching
 import blended.jms.utils._
 import blended.streams.BlendedStreamsConfig
-import blended.streams.jms.internal.{JmsKeepAliveActor, JmsKeepAliveController}
+import blended.streams.jms.internal.JmsKeepAliveController
 import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.streams.transaction.{FlowTransactionManager, FlowTransactionManagerConfig, TransactionManagerCleanupActor}
 import blended.util.config.Implicits._
@@ -44,19 +44,26 @@ class BlendedStreamsActivator extends DominoActivator
 
       // initialise the JMS keep alive streams
 
-      val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props[JmsKeepAliveController])
+      val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props(new JmsKeepAliveController(osgiCfg.idSvc)))
 
       // We will watch for published instances of JMS connection configurations
-      watchServices[ConnectionConfig]{
-        case ServiceWatcherEvent.AddingService(cfCfg, _)   =>
-          jmsKeepAliveCtrl ! AddedConnectionFactory(cfCfg)
+      watchServices[IdAwareConnectionFactory]{
+        case ServiceWatcherEvent.AddingService(cf, _)   => cf match {
+          case bcf : BlendedSingleConnectionFactory => jmsKeepAliveCtrl ! AddedConnectionFactory(bcf)
+          case _ =>
+        }
 
-        case ServiceWatcherEvent.ModifiedService(cfCfg, _) =>
-          jmsKeepAliveCtrl ! RemovedConnectionFactory(cfCfg)
-          jmsKeepAliveCtrl ! AddedConnectionFactory(cfCfg)
+        case ServiceWatcherEvent.ModifiedService(cf, _) => cf match {
+          case bcf : BlendedSingleConnectionFactory =>
+            jmsKeepAliveCtrl ! RemovedConnectionFactory(bcf)
+            jmsKeepAliveCtrl ! AddedConnectionFactory(bcf)
+          case _ =>
+        }
 
-        case ServiceWatcherEvent.RemovedService(cfCfg, _)  =>
-          jmsKeepAliveCtrl ! RemovedConnectionFactory(cfCfg)
+        case ServiceWatcherEvent.RemovedService(cf, _)  => cf match {
+          case bcf : BlendedSingleConnectionFactory => jmsKeepAliveCtrl ! RemovedConnectionFactory(bcf)
+          case _ =>
+        }
       }
 
       onStop{

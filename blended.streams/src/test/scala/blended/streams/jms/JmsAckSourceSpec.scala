@@ -1,11 +1,13 @@
 package blended.streams.jms
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, Materializer}
-import akka.testkit.TestKit
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwareConnectionFactory}
+import akka.testkit.{TestKit, TestProbe}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, MessageReceived, SimpleIdAwareConnectionFactory}
 import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
@@ -22,6 +24,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.{Failure, Success}
 import blended.util.RichTry._
+
+import scala.collection.generic.AtomicIndexFlag
 
 @RequiresForkedJVM
 class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
@@ -103,11 +107,18 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
   "The JMS Ack Source should" - {
 
-    "signal message reception vi the Event Stream" in {
-      fail
-    }
-
     "consume and acknowledge messages without delay correctly" in {
+
+      val eventCount : AtomicInteger = new AtomicInteger(0)
+
+      val eventActor : ActorRef = system.actorOf(Props(new Actor() {
+        override def receive: Receive = {
+          case e : MessageReceived =>
+            eventCount.incrementAndGet()
+        }
+      }))
+
+      system.eventStream.subscribe(eventActor, classOf[MessageReceived])
 
       val msgCount : Int = 100
       val destName : String = "noDelay"
@@ -122,21 +133,24 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
         log,
         envelopes(msgCount) : _*
       ) match {
-          case Success(s) =>
-            val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
-              name = "ackConsumer",
-              source = msgConsumer,
-              timeout = 5.seconds
-            )(e => e.acknowledge())
+        case Success(s) =>
+          val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
+            name = "ackConsumer",
+            source = msgConsumer,
+            timeout = 5.seconds
+          )(e => e.acknowledge())
 
-            val result : List[Int] = Await.result(coll.result, 6.seconds).map { env => env.header[Int]("msgNo").get }
-            val missing : List[Int] = 1.to(msgCount).filter(i => !result.contains(i)).toList
-            missing should be(empty)
+          val result : List[Int] = Await.result(coll.result, 6.seconds).map { env => env.header[Int]("msgNo").get }
+          val missing : List[Int] = 1.to(msgCount).filter(i => !result.contains(i)).toList
+          missing should be(empty)
 
-            s.shutdown()
-          case Failure(t) =>
-            fail(t)
-        }
+          s.shutdown()
+        case Failure(t) =>
+          fail(t)
+      }
+
+      eventCount.get() should be (msgCount)
+      system.stop(eventActor)
     }
 
     "not consume messages before the minimum message delay is reached" in {

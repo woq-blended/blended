@@ -140,7 +140,7 @@ trait JmsStreamSupport {
     name : String,
     settings : JmsProducerSettings,
     autoAck : Boolean
-  )(implicit system : ActorSystem, materializer : Materializer) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  )(implicit materializer : Materializer) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
     val f = Flow.fromGraph(new JmsProducerStage(name, settings)).named(name)
 
@@ -155,6 +155,6 @@ trait JmsStreamSupport {
     name : String,
     settings : JMSConsumerSettings,
     minMessageDelay : Option[FiniteDuration]
-  )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] =
+  ) : Source[FlowEnvelope, NotUsed] =
     Source.fromGraph(new JmsConsumerStage(name, settings, minMessageDelay))
 }

@@ -1,6 +1,6 @@
 package blended.streams
 
-import akka.actor.{Actor, ActorSystem, Props}
+import akka.actor.{Actor, Props}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import blended.util.config.Implicits._
@@ -47,13 +47,19 @@ object StreamController {
   case class Abort(t : Throwable)
   case class StreamTerminated(exception : Option[Throwable])
 
-  def props[T, Mat](src : Source[T, Mat], streamCfg : StreamControllerConfig)(implicit system : ActorSystem, materializer : Materializer) : Props =
+  def props[T, Mat](
+    src : Source[T, Mat],
+    streamCfg : StreamControllerConfig
+  )(
+    onMaterialize : Mat => Unit = _ => ()
+  )(implicit materializer : Materializer) : Props =
     Props(new AbstractStreamController[T, Mat](streamCfg) {
       override def source() : Source[T, Mat] = src
+      override def materialized(m: Mat): Unit = onMaterialize(m)
     })
 }
 
-abstract class AbstractStreamController[T, Mat](streamCfg : StreamControllerConfig)(implicit system : ActorSystem, materializer : Materializer)
+abstract class AbstractStreamController[T, Mat](streamCfg : StreamControllerConfig)(implicit materializer : Materializer)
   extends Actor
   with StreamControllerSupport[T, Mat] {
 

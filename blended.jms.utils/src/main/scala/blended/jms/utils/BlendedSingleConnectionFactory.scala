@@ -20,7 +20,7 @@ trait IdAwareConnectionFactory extends ConnectionFactory with ProviderAware {
 }
 
 class BlendedSingleConnectionFactory(
-  config : ConnectionConfig,
+  val config : ConnectionConfig,
   bundleContext : Option[BundleContext]
 )(implicit system : ActorSystem) extends IdAwareConnectionFactory {
 

@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{AsyncCallback, GraphStage, GraphStageLogic}
-import blended.jms.utils.{JmsDestination, JmsSession}
+import blended.jms.utils.{JmsDestination, JmsSession, MessageReceived}
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
 import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
@@ -13,7 +13,6 @@ import blended.util.RichTry._
 import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.Logger
 import javax.jms.{Message, MessageConsumer}
-import blended.jms.utils.MesssageReceived
 
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -81,6 +80,7 @@ final class JmsConsumerStage(
 
     override val log: Logger = consumerSettings.log
     override val autoAcknowledge: Boolean = consumerSettings.acknowledgeMode == AcknowledgeMode.AutoAcknowledge
+
     override protected val receiveLogLevel: LogLevel = consumerSettings.receiveLogLevel
 
     private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable](t => failStage(t))
@@ -89,6 +89,9 @@ final class JmsConsumerStage(
       case Some(d) => d
       case None => throw new IllegalArgumentException(s"Destination must be set for consumer in [$id]")
     }
+
+    private val vendor : String = consumerSettings.connectionFactory.vendor
+    private val provider : String = consumerSettings.connectionFactory.provider
 
     private[this] val consumer : mutable.Map[String, MessageConsumer] = mutable.Map.empty
 
@@ -211,6 +214,8 @@ final class JmsConsumerStage(
             .map{ m =>
               val e : FlowEnvelope = createEnvelope(m, ackHandler).unwrap
 
+              actorSystem.eventStream.publish(MessageReceived(vendor, provider, e.id))
+
               new JmsAckContext(
                 inflightId = id,
                 env = e,
@@ -226,12 +231,10 @@ final class JmsConsumerStage(
       }
     }
 
-
     override def postStop(): Unit = {
       log.debug(s"Stopping JmsConsumerStage [$id].")
       connector.closeAll()
     }
-
   }
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new JmsSourceLogic()

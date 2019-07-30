@@ -1,6 +1,5 @@
 package blended.streams.jms
 
-import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage._
 import blended.jms.utils.JmsSession
@@ -15,8 +14,7 @@ import scala.util.control.NonFatal
 class JmsProducerStage(
   name : String,
   producerSettings: JmsProducerSettings
-)(implicit actorSystem : ActorSystem)
-  extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
+) extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
 
   producerSettings.log.debug(s"Starting producer [$name]")
 
