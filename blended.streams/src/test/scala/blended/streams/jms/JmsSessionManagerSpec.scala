@@ -8,7 +8,7 @@ import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.ConnectionState.Connected
-import blended.jms.utils.{ConnectionState, IdAwareConnectionFactory, JmsSession}
+import blended.jms.utils.{ConnectionState, ConnectionStateChanged, IdAwareConnectionFactory, JmsSession}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -36,10 +36,13 @@ class JmsSessionManagerSpec extends SimplePojoContainerSpec
   private val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
   private val con : Connection = {
     val probe : TestProbe = TestProbe()
-    system.eventStream.subscribe(probe.ref, classOf[ConnectionState])
+    system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
     probe.fishForMessage(3.seconds){
-      case state : ConnectionState =>
+      case ConnectionStateChanged(state) =>
         state.vendor == "activemq" && state.provider == "activemq" && state.status == Connected
+      case m =>
+        println(m)
+        false
     }
 
     cf.createConnection()
