@@ -16,25 +16,26 @@ object InboundConfig {
 
     def resolve(value : String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
 
-    val name = resolve(cfg.getString("name"))
-    val vendor = resolve(cfg.getString("vendor"))
-    val provider = cfg.getStringOption("provider").map(resolve)
+    val name : String = resolve(cfg.getString("name"))
+    val vendor : String = resolve(cfg.getString("vendor"))
+    val provider : Option[String] = cfg.getStringOption("provider").map(resolve)
 
-    val inDest = JmsDestination.create(resolve(cfg.getString("from"))).get match {
+    val subscriberName : Option[String] = cfg.getStringOption("subscriberName").map(resolve)
+
+    val inDest : JmsDestination = JmsDestination.create(resolve(cfg.getString("from"))).get match {
       case q : JmsQueue => q
-      case t : JmsTopic => cfg.getStringOption("subscriberName") match {
+      case t : JmsTopic => subscriberName match  {
         case Some(sn) => JmsDurableTopic(t.name, sn)
         case None     => t
       }
       case t : JmsDurableTopic => t
     }
 
-    val selector = cfg.getStringOption("selector").map(resolve)
-    val persistent = JmsDeliveryMode.create(cfg.getString("persistent", JmsDeliveryMode.Persistent.asString)).get
+    val selector : Option[String] = cfg.getStringOption("selector").map(resolve)
+    val persistent : JmsDeliveryMode = JmsDeliveryMode.create(cfg.getString("persistent", JmsDeliveryMode.Persistent.asString)).get
 
-    val subscriberName = cfg.getStringOption("subscriberName").map(resolve)
 
-    val listener = cfg.getInt("listener", 2)
+    val listener : Int = cfg.getInt("listener", 2)
 
     val header : List[HeaderProcessorConfig] = cfg.getConfigList("header", List.empty).map { cfg =>
       HeaderProcessorConfig.create(cfg)
