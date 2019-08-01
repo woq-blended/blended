@@ -72,9 +72,9 @@ case class DefaultAcknowledgeContext(
 ) extends AcknowledgeContext
 
 abstract class AckSourceLogic[T <: AcknowledgeContext](
-  out : Outlet[FlowEnvelope],
-  shape : SourceShape[FlowEnvelope],
-  ackTimeout : FiniteDuration = 1.seconds
+  val out : Outlet[FlowEnvelope],
+  val shape : SourceShape[FlowEnvelope],
+  val ackTimeout : FiniteDuration = 1.second
 ) extends TimerGraphStageLogic(shape) {
 
   private case object Poll

@@ -19,8 +19,7 @@ object FilePollConfig {
   val PATH_LOCK           = "lock"
   val PATH_ASTEXT         = "asText"
   val PATH_TMP_EXT        = "extension"
-  val PATH_OP_TIMEOUT     = "operationTimeout"
-  val PATH_HANDLE_TIMEOUT = "handleTimeout"
+  val PATH_ACKTIMEOUT     = "ackTimeout"
   val PATH_FILENAME_PROP  = "filenameProperty"
   val PATH_FILEPATH_PROP  = "filepathProperty"
   val PATH_BATCHSIZE      = "batchSize"
@@ -54,13 +53,12 @@ object FilePollConfig {
       lock = cfg.getStringOption(PATH_LOCK),
       backup = cfg.getStringOption(PATH_BACKUP),
       charSet = cfg.getStringOption(PATH_CHARSET),
+      ackTimeout = cfg.getDuration(PATH_ACKTIMEOUT, 1.second),
       asText = cfg.getBoolean(PATH_ASTEXT, false),
       tmpExt = cfg.getString(PATH_TMP_EXT, "_to_send"),
       filenameProp = cfg.getString(PATH_FILENAME_PROP, "BlendedFileName"),
       filepathProp = cfg.getString(PATH_FILEPATH_PROP, "BlendedFilePath"),
       batchSize = cfg.getInt(PATH_BATCHSIZE, DEFAULT_BATCH_SIZE),
-      operationTimeout = cfg.getDuration(PATH_OP_TIMEOUT, 1.second),
-      handleTimeout = cfg.getDuration(PATH_HANDLE_TIMEOUT, 1.second),
       header = header
     )
   }
@@ -76,8 +74,7 @@ case class FilePollConfig(
   backup : Option[String],
   asText: Boolean,
   charSet : Option[String],
-  operationTimeout : FiniteDuration,
-  handleTimeout : FiniteDuration,
+  ackTimeout : FiniteDuration,
   batchSize : Int,
   filenameProp : String,
   filepathProp : String,

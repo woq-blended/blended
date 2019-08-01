@@ -56,7 +56,7 @@ class FileAckSource(
     val fileToProcess : File
   ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis())
 
-  private class FileSourceLogic() extends AckSourceLogic[FileAckContext](out, shape) {
+  private class FileSourceLogic() extends AckSourceLogic[FileAckContext](out, shape, pollCfg.ackTimeout) {
     /** The id to identify the instance in the log files */
     override def id: String = pollId
 
@@ -64,6 +64,8 @@ class FileAckSource(
 
     /** A logger that must be defined by concrete implementations */
     override protected def log: Logger = Logger(pollId)
+
+    log.info(s"Initializing FileAckSource with config [$pollCfg], ackTimeout [$ackTimeout]")
 
     /** The id's of the available inflight slots */
     override protected def inflightSlots(): List[String] =

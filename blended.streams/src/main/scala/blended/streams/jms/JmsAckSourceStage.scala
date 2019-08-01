@@ -56,7 +56,7 @@ final class JmsAckSourceStage(
   // TODO: Refactor to clean up code
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
 
-    val logic : GraphStageLogic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes) {
+    val logic : GraphStageLogic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes) with JmsEnvelopeHeader {
 
       private[this] var inflight : Map[String, FlowEnvelope] = Map.empty
       private[this] var consumer : Map[String, MessageConsumer] = Map.empty
@@ -74,14 +74,14 @@ final class JmsAckSourceStage(
 
       private[this] def addConsumer(s: String, c : MessageConsumer) : Unit = {
         consumer = consumer + (s -> c)
-        settings.log.debug(s"Consumer count of [$id] is [${consumer.size}]")
+        settings.log.debug(s"Consumer count of [$id][${settings.jmsDestination}] is [${consumer.size}]")
       }
 
       private[this] def removeConsumer(s : String) : Unit = {
         if (consumer.contains(s)) {
           consumer = consumer.filterKeys(_ != s)
           cancelTimer(Poll(s))
-          settings.log.debug(s"Consumer count of [$id] is [${consumer.size}]")
+          settings.log.debug(s"Consumer count of [$id][${settings.jmsDestination}] is [${consumer.size}]")
         }
       }
 
@@ -205,9 +205,14 @@ final class JmsAckSourceStage(
                     s
                 }
 
+                val now : Long = System.currentTimeMillis()
+
+                val msgAge : Long = now -
+                  flowMessage.header[Long](timestampHeader(headerConfig.prefix)).getOrElse(now)
+
                 settings.log.log(
                   settings.receiveLogLevel,
-                  s"Message received [$envelopeId][${settings.jmsDestination.map(_.asString)}][${session.sessionId}] : $flowMessage"
+                  s"Message received [$envelopeId][${settings.jmsDestination.map(_.asString)}] after [$msgAge]ms in [${session.sessionId}] : $flowMessage"
                 )
 
                 val handler = JmsAcknowledgeHandler(
