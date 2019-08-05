@@ -82,9 +82,11 @@ case class DefaultAcknowledgeContext(
   * poll will be executed \in regular intervals. Concrete implementations may overwrite the
   * the nextPoll() method to modify the calculation of the next polling occurrence.
 */
-abstract class AckSourceLogic[T <: AcknowledgeContext](shape : Shape, out : Outlet[FlowEnvelope]) extends TimerGraphStageLogic(shape) {
-
-  protected val ackTimeout : FiniteDuration = 1.second
+abstract class AckSourceLogic[T <: AcknowledgeContext](
+  val shape : Shape,
+  val out : Outlet[FlowEnvelope],
+  val ackTimeout : FiniteDuration = 1.second
+) extends TimerGraphStageLogic(shape) {
 
   private case object Poll
   private case object CheckAck

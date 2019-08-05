@@ -180,7 +180,7 @@ class RunnableDispatcher(
 
         // Wrap the dispatcher into a stream controller and make sure, the generated transaction events are sent to
         // the proper JMS destination
-        val actor : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg))
+        val actor : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg)(onMaterialize = _ => ()))
 
         bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
         startedDispatchers.put(provider.id, actor)

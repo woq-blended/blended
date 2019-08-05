@@ -92,8 +92,7 @@ class FileAckSource(
 
   }
 
-  private class FileSourceLogic() extends AckSourceLogic[FileAckContext](shape, out) {
-
+  private class FileSourceLogic() extends AckSourceLogic[FileAckContext](shape, out, pollCfg.ackTimeout) {
     /** The id to identify the instance in the log files */
     override val id : String = pollId
 
@@ -101,6 +100,8 @@ class FileAckSource(
 
     /** A logger that must be defined by concrete implementations */
     override protected val log : Logger = Logger(pollId)
+
+    log.info(s"Initializing FileAckSource with config [$pollCfg], ackTimeout [$ackTimeout]")
 
     /** The id's of the available inflight slots */
     override protected val inflightSlots : List[String] =

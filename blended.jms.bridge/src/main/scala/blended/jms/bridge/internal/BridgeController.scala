@@ -126,7 +126,7 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
     )
 
     val builder = ctrlCfg.streamBuilderFactory(system)(materializer)(inCfg, ctrlCfg.streamsCfg)
-    val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](builder.stream, builder.streamCfg))
+    val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](builder.stream, builder.streamCfg)(onMaterialize = _ => ()))
 
     streams += (builder.streamCfg.name -> actor)
   }
@@ -160,7 +160,7 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
     )
 
     val builder = ctrlCfg.streamBuilderFactory(system)(materializer)(outCfg, ctrlCfg.streamsCfg)
-    val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](builder.stream, builder.streamCfg))
+    val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](builder.stream, builder.streamCfg)(onMaterialize = _ => ()))
 
     streams += (builder.streamCfg.name -> actor)
   }
