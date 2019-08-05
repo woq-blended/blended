@@ -8,7 +8,7 @@ import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils._
 import blended.streams.jms.{AcknowledgeMode, JMSConsumerSettings, JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
 import blended.streams.{StreamController, StreamControllerConfig}
 import blended.util.logging.{LogLevel, Logger}
@@ -166,7 +166,8 @@ class JmsKeepAliveActor(
           producer.createProducer(bcf).onComplete{
             case Success(a) =>
               context.system.scheduler.scheduleOnce(bcf.config.keepAliveInterval, self, Tick)
-              context.become(running(a))
+              context.system.eventStream.subscribe(self, classOf[MessageReceived])
+              context.become(running(bcf.config, a, 0))
             case Failure(t) =>
               log.warn(s"Failed to create Keep Alive producer stream [${t.getMessage()}]")
           }
@@ -184,7 +185,22 @@ class JmsKeepAliveActor(
 
   override def receive: Receive = Actor.emptyBehavior
 
-  private def running(actor : ActorRef) : Receive = {
-    case _ =>
+  private def running(cfg : ConnectionConfig, actor : ActorRef, cnt : Int) : Receive = {
+    case Tick if cnt == cfg.maxKeepAliveMissed =>
+      context.system.eventStream.publish(MaxKeepAliveExceeded(cf.vendor, cf.provider))
+
+    case Tick =>
+      val env : FlowEnvelope = FlowEnvelope(FlowMessage.props(
+        "JMSCorrelationID" -> idSvc.uuid
+      ).get)
+
+      actor ! env
+      context.system.eventStream.publish(KeepAliveMissed(cf.vendor, cf.provider, cnt))
+
+      context.system.scheduler.scheduleOnce(cfg.keepAliveInterval, self, Tick)
+      context.become(running(cfg, actor, cnt + 1))
+
+    case MessageReceived(v, p, _) if (v == cf.vendor && p == cf.provider) =>
+      context.become(running(cfg, actor, 0))
   }
 }
