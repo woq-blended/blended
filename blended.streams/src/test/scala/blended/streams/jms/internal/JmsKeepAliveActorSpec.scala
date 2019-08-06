@@ -10,7 +10,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils._
 import blended.streams.message.FlowEnvelope
-import blended.testsupport.BlendedTestSupport
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import org.osgi.framework.BundleActivator
@@ -20,6 +20,7 @@ import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
+@RequiresForkedJVM
 class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper
@@ -36,7 +37,18 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   private implicit val eCxtx : ExecutionContext = system.dispatcher
 
-  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
+  private val idSvc : ContainerIdentifierService =
+    mandatoryService[ContainerIdentifierService](registry)(None)
+
+  private val cf : IdAwareConnectionFactory = {
+    val p: TestProbe = TestProbe()
+    system.eventStream.subscribe(p.ref, classOf[ConnectionStateChanged])
+    p.fishForMessage(3.seconds){
+      case ConnectionStateChanged(s) if s.status == Connected => true
+      case _ => false
+    }
+    mandatoryService[IdAwareConnectionFactory](registry)(None)
+  }
 
   class DummyKeepAliveProducer extends KeepAliveProducerFactory {
 
@@ -45,7 +57,8 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
     override val createProducer: BlendedSingleConnectionFactory => Future[ActorRef] = { _ => Future {
       system.actorOf(Props(new Actor() {
         override def receive: Receive = {
-          case env : FlowEnvelope => keepAliveEvents.append(env)
+          case env : FlowEnvelope =>
+            keepAliveEvents.append(env)
         }
       }))
     }}
@@ -57,17 +70,20 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
 
       val probe : TestProbe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[KeepAliveEvent])
+      system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
 
       val prod : DummyKeepAliveProducer = new DummyKeepAliveProducer()
-      val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
 
       val cfg : ConnectionConfig = cf.asInstanceOf[BlendedSingleConnectionFactory].config
       val ctrl : ActorRef = system.actorOf(JmsKeepAliveController.props(idSvc, prod))
 
       // scalastyle:off magic.number
       ctrl ! AddedConnectionFactory(cf)
-      0.until(cfg.maxKeepAliveMissed).foreach{ _ =>
-        probe.expectMsgClass(classOf[KeepAliveMissed])
+      0.to(cfg.maxKeepAliveMissed).foreach{ i =>
+        probe.fishForMessage(3.seconds){
+          case kam : KeepAliveMissed if kam.count == i =>
+            true
+        }
       }
       // scalastyle:on magic.number
 
@@ -100,7 +116,7 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
       // scalastyle:on magic.number
 
       val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
-      assert(envelopes.size == 1)
+      assert(envelopes.size == 2)
       assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(idSvc.uuid)))
 
       probe.fishForMessage(3.seconds){

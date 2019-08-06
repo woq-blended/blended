@@ -35,9 +35,9 @@ object BlendedStreams extends ProjectFactory {
         projectName,
         s"$projectName.file",
         s"$projectName.jms",
+        s"$projectName.json",
         s"$projectName.message",
         s"$projectName.processor",
-        s"$projectName.persistence",
         s"$projectName.transaction",
         s"$projectName.worklist"
       ),

@@ -25,7 +25,7 @@ class JmsSampleActivator extends DominoActivator with TypesafeConfigWatching {
     whenTypesafeConfigAvailable { (cfg, idSvc) =>
       val jmsSampleCfg = JmsSampleConfig(cfg)
 
-      whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)") { cf =>
+      whenAdvancedServicePresent[ConnectionFactory]("(provider=internal)") { cf =>
         whenServicePresent[ContainerIdentifierService] { idSvc =>
           val ctxt = BlendedCamelContextFactory.createContext(name = "JmsSampleContext", withJmx = true, idSvc = idSvc)
           ctxt.addComponent("activemq", JmsComponent.jmsComponent(cf))

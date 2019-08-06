@@ -2,26 +2,24 @@ package blended.streams.jms.internal
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.{Materializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.stream.{Materializer, OverflowStrategy}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{BlendedSingleConnectionFactory, JmsDestination}
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.util.logging.{LogLevel, Logger}
 
-import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
-import scala.util.{Success, Try}
+import scala.util.Success
 
 class StreamKeepAliveProducerFactory(
   log : BlendedSingleConnectionFactory => Logger,
   idSvc : ContainerIdentifierService
 )(implicit system: ActorSystem, materializer : Materializer) extends KeepAliveProducerFactory with JmsStreamSupport {
 
-  private val futMat : Promise[ActorRef] = Promise[ActorRef]
   private var stream : Option[ActorRef] = None
 
   private val producerSettings : BlendedSingleConnectionFactory => JmsProducerSettings = bcf =>
@@ -46,6 +44,8 @@ class StreamKeepAliveProducerFactory(
 
 
   override val createProducer: BlendedSingleConnectionFactory => Future[ActorRef] = { bcf =>
+
+    val futMat : Promise[ActorRef] = Promise[ActorRef]
 
     val setHeader : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(
       FlowProcessor.fromFunction("setHeader", log(bcf)){ env => {

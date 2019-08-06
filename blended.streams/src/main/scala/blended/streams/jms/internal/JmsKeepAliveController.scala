@@ -20,7 +20,7 @@ object JmsKeepAliveController{
 }
 
 /**
- * Keep track of connection factories registered as services andd create KeepAlive Streams as appropriate.
+ * Keep track of connection factories registered as services and create KeepAlive Streams as appropriate.
  */
 class JmsKeepAliveController(
   idSvc : ContainerIdentifierService,
@@ -45,7 +45,6 @@ class JmsKeepAliveController(
       if (!watched.contains(cfKey(cf))) {
         log.info(s"Starting keep Alive actor for JMS connection factory [${cf.vendor}:${cf.provider}]")
         val actor : ActorRef = context.system.actorOf(JmsKeepAliveActor.props(idSvc, cf, producer))
-        context.watch(actor)
         context.become(running(watched + (cfKey(cf) -> actor)))
       }
 
@@ -54,12 +53,6 @@ class JmsKeepAliveController(
       context.system.stop(actor)
       context.become(running(watched - cfKey(cf)))
     }
-
-    case Terminated(a) =>
-      watched.find{ case (_, v) => v == a }.foreach{ case (k,_) =>
-        log.warn(s"Jms KeepAliveActor [$k] terminated ...")
-        context.become(running(watched - k))
-      }
   }
 }
 
@@ -94,8 +87,11 @@ class JmsKeepAliveActor(
           producer.createProducer(bcf).onComplete{
             case Success(a) =>
               val timer : actor.Cancellable = context.system.scheduler.scheduleOnce(bcf.config.keepAliveInterval, self, Tick)
+
               context.system.eventStream.subscribe(self, classOf[MessageReceived])
-              context.become(running(timer, bcf.config, a, 0))
+              context.system.eventStream.subscribe(self, classOf[ConnectionStateChanged])
+
+              setCounter(bcf.config, a, 0)
             case Failure(t) =>
               log.warn(s"Failed to create Keep Alive producer stream [${t.getMessage()}]")
           }
@@ -113,6 +109,19 @@ class JmsKeepAliveActor(
 
   override def receive: Receive = Actor.emptyBehavior
 
+  private def setCounter(cfg : ConnectionConfig, actor : ActorRef, newCnt : Int, oldCnt : Option[Int] = None) : Unit = {
+    if (oldCnt.isEmpty || !oldCnt.contains(newCnt)) {
+      context.system.eventStream.publish(KeepAliveMissed(cf.vendor, cf.provider, newCnt))
+      val newTimer = context.system.scheduler.scheduleOnce(cfg.keepAliveInterval, self, Tick)
+      context.become(running(newTimer, cfg, actor, newCnt))
+    }
+  }
+
+  private def idle(cfg : ConnectionConfig, actor : ActorRef) : Receive = {
+    case ConnectionStateChanged(state) if state.status == Connected =>
+      setCounter(cfg, actor, 0)
+  }
+
   private def running(timer: Cancellable, cfg : ConnectionConfig, actor : ActorRef, cnt : Int) : Receive = {
     case Tick if cnt == cfg.maxKeepAliveMissed =>
       context.system.eventStream.publish(MaxKeepAliveExceeded(cf.vendor, cf.provider))
@@ -120,18 +129,19 @@ class JmsKeepAliveActor(
     case Tick =>
       val env : FlowEnvelope = FlowEnvelope(FlowMessage.props(
         "JMSCorrelationID" -> idSvc.uuid,
-        headerConfig.headerKeepAlivesMissed -> cnt
+        headerConfig.headerKeepAlivesMissed -> (cnt + 1)
       ).get)
 
       actor ! env
-      context.system.eventStream.publish(KeepAliveMissed(cf.vendor, cf.provider, cnt))
 
-      val timer = context.system.scheduler.scheduleOnce(cfg.keepAliveInterval, self, Tick)
-      context.become(running(timer, cfg, actor, cnt + 1))
+      setCounter(cfg, actor, cnt + 1, Some(cnt))
 
     case MessageReceived(v, p, _) if v == cf.vendor && p == cf.provider =>
       timer.cancel()
-      val newTimer = context.system.scheduler.scheduleOnce(cfg.keepAliveInterval, self, Tick)
-      context.become(running(newTimer, cfg, actor, 0))
+      setCounter(cfg,actor,0,Some(cnt))
+
+    case ConnectionStateChanged(state) if state.status != Connected =>
+      timer.cancel()
+      context.become(idle(cfg, actor))
   }
 }

@@ -31,7 +31,7 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
   private val vendor : String = config.vendor
   private val provider : String = config.provider
 
-  private val log : Logger = Logger[ConnectionStateManager]
+  private val log : Logger = Logger(s"${getClass().getName()}.$vendor.$provider")
 
   private var conn : Option[BlendedJMSConnection] = None
 
@@ -241,6 +241,7 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
 
   // A simple convenience method to schedule the next connection check to ourselves
   private[this] def checkConnection(delay : FiniteDuration, force : Boolean = false) : Unit = {
+    log.info(s"Scheduling connection check to [$vendor:$provider] in [$delay]")
     context.system.scheduler.scheduleOnce(delay, self, CheckConnection(false))
   }
 
