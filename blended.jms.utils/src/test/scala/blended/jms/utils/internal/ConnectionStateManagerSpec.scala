@@ -2,7 +2,6 @@ package blended.jms.utils.internal
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import blended.jms.utils.ConnectionState._
 import blended.jms.utils._
 import blended.util.logging.Logger
 import org.scalatest.FreeSpecLike
@@ -28,7 +27,7 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
     override val provider : String = cfg.provider
   }
 
-  private def fishForState(probe : TestProbe, duration: FiniteDuration = 3.seconds)(state : ConnectionState.State) = {
+  private def fishForState(probe : TestProbe, duration: FiniteDuration = 3.seconds)(state : JmsConnectionState) = {
     val msg : Any = probe.fishForMessage(duration){
       case changed : ConnectionStateChanged =>
         log.info(changed.toString())

@@ -27,6 +27,7 @@ object FlowHeaderConfig {
   private val transShardPath = "transactionShard"
   private val transCreatedPath = "transactionCreated"
   private val transUpdatedPath = "transactionUpdated"
+  private val keepAlivesMissedPath = "keepAlivesMissed"
 
   private val transId = "TransactionId"
   private val transShard = "TransactionShard"
@@ -41,6 +42,7 @@ object FlowHeaderConfig {
   private val retryTimeout = "RetryTimeout"
   private val retryDest = "RetryDestination"
   private val firstRetry = "FirstRetry"
+  private val keepAlivesMissed = "KeepAlivesMissed"
 
   val headerConfigPath : String = "blended.flow.header"
   val header : String => String => String = prefix => name => prefix + name
@@ -63,7 +65,8 @@ object FlowHeaderConfig {
     headerMaxRetries = header(prefix)(maxRetries),
     headerRetryTimeout = header(prefix)(retryTimeout),
     headerRetryDestination = header(prefix)(retryDest),
-    headerFirstRetry = header(prefix)(firstRetry)
+    headerFirstRetry = header(prefix)(firstRetry),
+    headerKeepAlivesMissed = header(prefix)(keepAlivesMissed)
   )
 
   def create(cfg : Config) : FlowHeaderConfig = {
@@ -82,6 +85,7 @@ object FlowHeaderConfig {
     val headerFirstRetry = cfg.getString(firstRetryPath, firstRetry)
     val headerTransCreated = cfg.getString(transCreatedPath, transCreated)
     val headerTransUpdated = cfg.getString(transUpdatedPath, transUpdated)
+    val headerKeepAlivesMissed = cfg.getString(keepAlivesMissedPath, keepAlivesMissed)
 
     FlowHeaderConfig(
       prefix = prefix,
@@ -97,7 +101,8 @@ object FlowHeaderConfig {
       headerRetryDestination = header(prefix)(headerRetryDest),
       headerFirstRetry = header(prefix)(headerFirstRetry),
       headerTransCreated = header(prefix)(headerTransCreated),
-      headerTransUpdated = header(prefix)(headerTransUpdated)
+      headerTransUpdated = header(prefix)(headerTransUpdated),
+      headerKeepAlivesMissed = header(prefix)(headerKeepAlivesMissed)
     )
   }
 }
@@ -116,7 +121,8 @@ case class FlowHeaderConfig private (
   headerMaxRetries : String,
   headerRetryTimeout : String,
   headerRetryDestination : String,
-  headerFirstRetry : String
+  headerFirstRetry : String,
+  headerKeepAlivesMissed : String
 )
 
 object FlowTransactionEvent {

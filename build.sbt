@@ -28,9 +28,6 @@ addCommandAlias(name = "siteComplete", "; cleanCoverage ; unidoc ; jbakeSite")
 inThisBuild(BuildHelper.readVersion(file("version.txt")))
 
 lazy val global = Def.settings(
-  Global/scalariformAutoformat := false,
-  Global/scalariformWithBaseDirectory := true,
-
   Global/testlogDirectory := target.value / "testlog",
 
   Global/useGpg := false,

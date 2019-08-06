@@ -20,10 +20,8 @@ addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "2.112")
 // OSGi bundle build support
 addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.5")
 
-// bloop compile server support (config file generator currently)
-//addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "1.0.0")
 // Scala source code formatter (also used by Scala-IDE/Eclipse)
-addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.2")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.0.0")
 // Strip artifacts to make them more reproducible (same input -> same output, checksum wise)
 addSbtPlugin("net.bzzt" % "sbt-reproducible-builds" % "0.16")
 

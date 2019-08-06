@@ -1,20 +1,17 @@
 package blended.streams.jms.internal
 
-import akka.NotUsed
+import akka.actor
 import akka.actor.SupervisorStrategy.Stop
-import akka.actor.{Actor, ActorRef, ActorSystem, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
+import akka.actor.{Actor, ActorRef, Cancellable, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
+import akka.stream.{ActorMaterializer, Materializer}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils._
-import blended.streams.jms.{AcknowledgeMode, JMSConsumerSettings, JmsProducerSettings, JmsStreamSupport}
+import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
-import blended.streams.{StreamController, StreamControllerConfig}
-import blended.util.logging.{LogLevel, Logger}
+import blended.util.logging.Logger
 
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 object JmsKeepAliveController{
@@ -71,76 +68,6 @@ trait KeepAliveProducerFactory {
   def stop() : Unit = ()
 }
 
-class StreamKeepAliveProducerFactory(
-  log : BlendedSingleConnectionFactory => Logger,
-  idSvc : ContainerIdentifierService
-)(implicit system: ActorSystem, materializer : Materializer) extends KeepAliveProducerFactory with JmsStreamSupport {
-
-  private val futMat : Promise[ActorRef] = Promise[ActorRef]
-  private var stream : Option[ActorRef] = None
-
-  private val producerSettings : BlendedSingleConnectionFactory => JmsProducerSettings = bcf =>
-    JmsProducerSettings(
-      log = log(bcf),
-      headerCfg = FlowHeaderConfig.create(idSvc),
-      connectionFactory = bcf,
-      jmsDestination = Some(JmsDestination.create(bcf.config.pingDestination).get),
-      timeToLive = Some(bcf.config.keepAliveInterval)
-    )
-
-  private val consumerSettings : BlendedSingleConnectionFactory => JMSConsumerSettings = bcf =>
-    JMSConsumerSettings(
-      log = log(bcf),
-      headerCfg = FlowHeaderConfig.create(idSvc),
-      connectionFactory = bcf,
-      jmsDestination = Some(JmsDestination.create(bcf.config.pingDestination).get),
-      receiveLogLevel = LogLevel.Debug,
-      acknowledgeMode = AcknowledgeMode.AutoAcknowledge,
-      selector = Some(s"JMSCorrelationID = '${idSvc.uuid}'")
-    )
-
-
-  override val createProducer: BlendedSingleConnectionFactory => Future[ActorRef] = { bcf =>
-
-    val producer: Sink[FlowEnvelope, NotUsed] = jmsProducer(
-      name = s"KeepAlive-send-${bcf.vendor}-${bcf.provider}",
-      settings = producerSettings(bcf),
-      autoAck = true
-    ).to(Sink.ignore)
-
-    val consumer: Source[FlowEnvelope, NotUsed] = jmsConsumer(
-      name = s"KeepAlive-Rec-${bcf.vendor}-${bcf.provider}",
-      settings = consumerSettings(bcf),
-      minMessageDelay = None
-    )
-
-    // scalastyle:off magic.number
-    val keepAliveSource: Source[FlowEnvelope, ActorRef] = Source.actorRef(
-      10, OverflowStrategy.dropBuffer
-    ).viaMat(Flow.fromSinkAndSourceCoupled(producer, consumer))(Keep.left)
-    // scalastyle:on magic.number
-
-    val streamCfg: StreamControllerConfig = StreamControllerConfig(
-      name = s"KeepAlive-stream-${bcf.vendor}-${bcf.provider}",
-      minDelay = 1.second,
-      maxDelay = 1.minute,
-      exponential = true,
-      onFailureOnly = true,
-      random = 0.2
-    )
-
-    stream = Some(system.actorOf(
-      StreamController.props[FlowEnvelope, ActorRef](keepAliveSource, streamCfg)(onMaterialize = { actor =>
-        futMat.complete(Success(actor))
-      })
-    ))
-
-    futMat.future
-  }
-
-  override def stop(): Unit = stream.foreach(system.stop)
-}
-
 object JmsKeepAliveActor {
   def props(idSvc : ContainerIdentifierService, cf : IdAwareConnectionFactory, producer : KeepAliveProducerFactory) : Props =
     Props(new JmsKeepAliveActor(idSvc, cf, producer))
@@ -156,6 +83,7 @@ class JmsKeepAliveActor(
   private val log : Logger = Logger[JmsKeepAliveActor]
   private implicit val eCtxt : ExecutionContext = context.system.dispatcher
   private implicit val materializer : Materializer = ActorMaterializer()
+  private val headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
 
   case object Tick
 
@@ -165,9 +93,9 @@ class JmsKeepAliveActor(
         if (bcf.config.keepAliveEnabled) {
           producer.createProducer(bcf).onComplete{
             case Success(a) =>
-              context.system.scheduler.scheduleOnce(bcf.config.keepAliveInterval, self, Tick)
+              val timer : actor.Cancellable = context.system.scheduler.scheduleOnce(bcf.config.keepAliveInterval, self, Tick)
               context.system.eventStream.subscribe(self, classOf[MessageReceived])
-              context.become(running(bcf.config, a, 0))
+              context.become(running(timer, bcf.config, a, 0))
             case Failure(t) =>
               log.warn(s"Failed to create Keep Alive producer stream [${t.getMessage()}]")
           }
@@ -185,22 +113,25 @@ class JmsKeepAliveActor(
 
   override def receive: Receive = Actor.emptyBehavior
 
-  private def running(cfg : ConnectionConfig, actor : ActorRef, cnt : Int) : Receive = {
+  private def running(timer: Cancellable, cfg : ConnectionConfig, actor : ActorRef, cnt : Int) : Receive = {
     case Tick if cnt == cfg.maxKeepAliveMissed =>
       context.system.eventStream.publish(MaxKeepAliveExceeded(cf.vendor, cf.provider))
 
     case Tick =>
       val env : FlowEnvelope = FlowEnvelope(FlowMessage.props(
-        "JMSCorrelationID" -> idSvc.uuid
+        "JMSCorrelationID" -> idSvc.uuid,
+        headerConfig.headerKeepAlivesMissed -> cnt
       ).get)
 
       actor ! env
       context.system.eventStream.publish(KeepAliveMissed(cf.vendor, cf.provider, cnt))
 
-      context.system.scheduler.scheduleOnce(cfg.keepAliveInterval, self, Tick)
-      context.become(running(cfg, actor, cnt + 1))
+      val timer = context.system.scheduler.scheduleOnce(cfg.keepAliveInterval, self, Tick)
+      context.become(running(timer, cfg, actor, cnt + 1))
 
-    case MessageReceived(v, p, _) if (v == cf.vendor && p == cf.provider) =>
-      context.become(running(cfg, actor, 0))
+    case MessageReceived(v, p, _) if v == cf.vendor && p == cf.provider =>
+      timer.cancel()
+      val newTimer = context.system.scheduler.scheduleOnce(cfg.keepAliveInterval, self, Tick)
+      context.become(running(newTimer, cfg, actor, 0))
   }
 }

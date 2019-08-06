@@ -5,7 +5,6 @@ import java.util.Date
 
 import akka.actor.{Actor, ActorRef, Props}
 import akka.event.LoggingReceive
-import blended.jms.utils.ConnectionState._
 import blended.jms.utils._
 import blended.util.logging.Logger
 

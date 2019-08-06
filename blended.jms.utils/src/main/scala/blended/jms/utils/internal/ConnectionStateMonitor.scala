@@ -2,7 +2,7 @@ package blended.jms.utils.internal
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.event.LoggingReceive
-import blended.jms.utils.ConnectionState.RestartContainer
+import blended.jms.utils.RestartContainer
 import blended.jms.utils.ConnectionStateChanged
 import blended.mgmt.base.FrameworkService
 import domino.service_consuming.ServiceConsuming

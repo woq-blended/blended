@@ -214,6 +214,7 @@ final class JmsConsumerStage(
             .map{ m =>
               val e : FlowEnvelope = createEnvelope(m, ackHandler).unwrap
 
+              // We signal that we have received a message for the underlying connection factory
               actorSystem.eventStream.publish(MessageReceived(vendor, provider, e.id))
 
               new JmsAckContext(

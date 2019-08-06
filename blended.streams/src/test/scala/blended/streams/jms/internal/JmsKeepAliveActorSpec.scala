@@ -1,6 +1,7 @@
-package blended.streams.jms
+package blended.streams.jms.internal
 
 import java.io.File
+import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.testkit.TestProbe
@@ -8,7 +9,6 @@ import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils._
-import blended.streams.jms.internal.{JmsKeepAliveController, KeepAliveProducerFactory}
 import blended.streams.message.FlowEnvelope
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
@@ -78,6 +78,9 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
       probe.fishForMessage(3.seconds){
         case _ : MaxKeepAliveExceeded => true
       }
+
+      ctrl ! RemovedConnectionFactory(cf)
+      system.stop(ctrl)
     }
 
     "Initiate a keep alive message / publish a KeepAliveMissed when the keep alive interval has been reached" in {
@@ -103,11 +106,15 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
       probe.fishForMessage(3.seconds){
         case _ : KeepAliveMissed => true
       }
+
+      ctrl ! RemovedConnectionFactory(cf)
+      system.stop(ctrl)
     }
 
     "Reset the Keep Alive counter once a message has been received" in {
       val probe : TestProbe = TestProbe()
-      system.eventStream.subscribe(probe.ref, classOf[KeepAliveEvent])
+      system.eventStream.subscribe(probe.ref, classOf[KeepAliveMissed])
+      system.eventStream.subscribe(probe.ref, classOf[MaxKeepAliveExceeded])
 
       val prod : DummyKeepAliveProducer = new DummyKeepAliveProducer()
       val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
@@ -122,20 +129,23 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
 
       probe.fishForMessage(3.seconds){
         case missed : KeepAliveMissed =>
-          println(missed)
-          true
+          missed.count > 0
       }
 
       val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
-      assert(envelopes.size == 1)
+      //assert(envelopes.size == 1)
       assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(idSvc.uuid)))
+
+      system.eventStream.publish(MessageReceived(cf.vendor, cf.provider, UUID.randomUUID().toString()))
 
       Thread.sleep(cfg.keepAliveInterval.toMillis + 100)
       probe.fishForMessage(3.seconds){
         case missed : KeepAliveMissed =>
-          println(missed)
           missed.count == 0
       }
+
+      ctrl ! RemovedConnectionFactory(cf)
+      system.stop(ctrl)
     }
   }
 }

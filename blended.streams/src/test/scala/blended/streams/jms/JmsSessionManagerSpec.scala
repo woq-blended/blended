@@ -7,12 +7,11 @@ import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.jms.utils.ConnectionState.Connected
-import blended.jms.utils.{ConnectionState, ConnectionStateChanged, IdAwareConnectionFactory, JmsSession}
+import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory, JmsSession}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import javax.jms.{Connection, ConnectionConsumer, ConnectionMetaData, Destination, ExceptionListener, JMSException, ServerSessionPool, Session, Topic}
+import javax.jms._
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
