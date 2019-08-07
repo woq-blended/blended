@@ -68,6 +68,10 @@ jobs:
           path: /home/blended/blended/target/scala-2.12/scoverage-report
           prefix: coverage
 
+      - store_artifacts:
+          path: /home/blended/blended/target/testlog
+          prefix: testlog
+
       - save_cache:
           key: v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
           paths:

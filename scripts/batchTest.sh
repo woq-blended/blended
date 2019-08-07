@@ -45,7 +45,6 @@ batchCount=$(($prjCount / $BATCHSIZE))
 
 rc=0
 for ((i=0 ; i <= $batchCount ; i++)) ; do
-# for ((i=0 ; i < 1 ; i++)) ; do
   prj=($(getBatch $i ${p[@]}))
   if [ ${#prj[@]} -gt 0 ] ; then
     cmd=$(echo "sbt $(testBatchCmd ${prj[@]})")
