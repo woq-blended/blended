@@ -34,11 +34,19 @@ jobs:
             - v3-blended-core-
 
       - run:
-          name: Run SBT
+          name: Compile
+          command: sbt clean compile test:compile
+
+      - run:
+          name: Coverage
           command: |
             bash /home/blended/blended/scripts/batchTest.sh
           environment:
             - SBT_OPTS: -Xmx1024M -XX:MaxMetaspaceSize=512m
+
+      - run:
+          name: Coverage Report
+          command: sbt coverageReport coverageAggregate
 
       - run:
           name: Save test results
@@ -53,6 +61,11 @@ jobs:
 
       - store_artifacts:
           path: /home/blended/blended/target/test-results
+          prefix: XUnit
+
+      - store_artifacts:
+          path: /home/blended/blended/target/scala-2.12/scoverage-report
+          prefix: coverage
 
       - save_cache:
           key: v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)

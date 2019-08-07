@@ -79,7 +79,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
     headerCfg = headerCfg
   )
 
-  protected val consumeAfter : FiniteDuration = retryCfg.retryInterval * 4
+  protected val consumeAfter : FiniteDuration = retryCfg.retryInterval * 5
   // scalastyle:on magic.number
 
   def withExpectedDestination(
