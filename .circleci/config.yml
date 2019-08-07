@@ -44,8 +44,8 @@ jobs:
           name: Save test results
           command: |
             mkdir -p /home/blended/blended/target/test-results/junit/
-            find /home/blended/blended -type f -regex ".*/test-reports/.*xml" -exec cp {} home/blended/blended/target/test-results/junit/ \;
-            xunit-viewer --results=/home/blended/blended/target/test-results/junit --output=home/blended/blended/target/test-results/junit.html
+            find /home/blended/blended -type f -regex ".*/test-reports/.*xml" -exec cp {} /home/blended/blended/target/test-results/junit/ \;
+            xunit-viewer --results=/home/blended/blended/target/test-results/junit --output=/home/blended/blended/target/test-results/junit.html
           when: always
 
       - store_test_results:

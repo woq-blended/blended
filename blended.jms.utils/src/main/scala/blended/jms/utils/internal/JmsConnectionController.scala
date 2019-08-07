@@ -50,7 +50,8 @@ class JmsConnectionController(holder : ConnectionHolder) extends Actor with Acto
           context.become(disconnected)
           caller ! r
         case Failure(e) =>
-          log.warning(s"Unexpected exception closing connection for provider [${holder.provider}] : [${e.getMessage()}]")
+          val id : String = Option(holder).map(h => s"${h.vendor}:${h.provider}").getOrElse("Unknown")
+          log.warning(s"Unexpected exception closing connection for provider [$id] : [${e.getMessage()}]")
       }
   }
 
