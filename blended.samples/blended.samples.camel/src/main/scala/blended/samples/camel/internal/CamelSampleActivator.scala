@@ -12,7 +12,7 @@ class CamelSampleActivator extends DominoActivator {
   whenBundleActive {
 
     val log = Logger[CamelSampleActivator]
-    whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)") { cf =>
+    whenAdvancedServicePresent[ConnectionFactory]("(&(vendor=activemq)(provider=internal))") { cf =>
 
       val ctxt = BlendedCamelContextFactory.createContext(name = "BlendedSampleContext", withJmx = true)
       ctxt.addComponent("activemq", JmsComponent.jmsComponent(cf))

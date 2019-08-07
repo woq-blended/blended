@@ -31,6 +31,7 @@ object BlendedStreams extends ProjectFactory {
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.BlendedStreamsActivator",
       exportPackage = Seq(
         projectName,
         s"$projectName.file",

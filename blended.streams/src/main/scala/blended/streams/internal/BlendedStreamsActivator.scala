@@ -24,7 +24,6 @@ class BlendedStreamsActivator extends DominoActivator
     whenActorSystemAvailable{ osgiCfg =>
 
       log.info(s"Starting bundle [${bundleContext.getBundle().getSymbolicName()}]")
-      log.debug(s"${osgiCfg.config}")
 
       implicit val system : ActorSystem = osgiCfg.system
       implicit val materializer : Materializer = ActorMaterializer()
