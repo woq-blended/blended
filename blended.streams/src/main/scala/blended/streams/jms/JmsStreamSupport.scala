@@ -106,7 +106,8 @@ trait JmsStreamSupport {
     log : Logger,
     listener : Integer = 2,
     minMessageDelay : Option[FiniteDuration] = None,
-    selector : Option[String] = None
+    selector : Option[String] = None,
+    completeOn : Option[Seq[FlowEnvelope] => Boolean] = None
   )(implicit timeout : FiniteDuration, system : ActorSystem, materializer : Materializer) : Collector[FlowEnvelope] = {
 
     val listenerCount : Int = if (dest.isInstanceOf[JmsQueue]) {
@@ -120,20 +121,18 @@ trait JmsStreamSupport {
       env.acknowledge()
     }
 
-    StreamFactories.runSourceWithTimeLimit(
-      dest.asString,
-      jmsConsumer(
-        name = dest.asString,
-        settings =
-          JMSConsumerSettings(log = log, headerCfg = headerCfg, connectionFactory = cf)
-            .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
-            .withSessionCount(listenerCount)
-            .withDestination(Some(dest))
-            .withSelector(selector),
-        minMessageDelay = minMessageDelay
-      ),
-      timeout
-    )(collected)
+    val source : Source[FlowEnvelope, NotUsed] = jmsConsumer(
+      name = dest.asString,
+      settings =
+        JMSConsumerSettings(log = log, headerCfg = headerCfg, connectionFactory = cf)
+          .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
+          .withSessionCount(listenerCount)
+          .withDestination(Some(dest))
+          .withSelector(selector),
+      minMessageDelay = minMessageDelay
+    )
+
+    StreamFactories.runSourceWithTimeLimit(dest.asString, source, timeout, completeOn)(collected)
   }
 
   def jmsProducer(

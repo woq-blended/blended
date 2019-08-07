@@ -1,11 +1,10 @@
 package blended.streams.processor
 
-import akka.Done
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.scaladsl.Sink
+import blended.streams.processor.CollectingActor.CompleteOn
 import blended.util.logging.Logger
 
-import scala.collection.mutable
 import scala.concurrent.{Future, Promise}
 import scala.reflect.ClassTag
 import scala.util.Success
@@ -29,6 +28,7 @@ case class Collector[T](
 object CollectingActor {
   object Completed
   object GetMessages
+  case class CompleteOn[T](f : Seq[T] => Boolean)
 
   def props[T](
     name : String, promise : Promise[List[T]]
@@ -44,21 +44,39 @@ class CollectingActor[T](
 )(implicit clazz : ClassTag[T]) extends Actor {
 
   private val log = Logger(getClass().getName())
-  private val messages = mutable.Buffer.empty[T]
 
-  override def receive : Receive = {
+  override def preStart(): Unit = context.become(working(Seq.empty, _ => false))
+
+  override def receive: Receive = Actor.emptyBehavior
+
+  private def complete(msgs: Seq[T]) : Unit = {
+    log.info(s"Completing Collector [$name] with [${msgs.size}] messages.")
+    promise.complete(Success(msgs.toList))
+    context.stop(self)
+  }
+
+  private def working(msgs : Seq[T], isComplete : Seq[T] => Boolean) : Receive = {
+
+    case c : CompleteOn[T] =>
+      context.become(working(msgs, c.f))
 
     case CollectingActor.GetMessages =>
-      sender() ! messages.toList
+      sender() ! msgs.toList
 
     case CollectingActor.Completed =>
-      log.info(s"Completing Collector [$name] with [${messages.size}] messages.")
-      promise.complete(Success(messages.toList))
+      complete(msgs)
 
     case msg : T =>
       log.trace(s"Collector [$name] received [$msg]")
+
+      val newSeq : Seq[T] = msgs :+ msg
       collected(msg)
-      messages += msg.asInstanceOf[T]
+
+      if (isComplete(newSeq)) {
+        complete(newSeq)
+      } else {
+        context.become(working(newSeq, isComplete))
+      }
 
     case m => log.error(s"Received unhandled message [$m]")
   }

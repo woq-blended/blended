@@ -1,7 +1,5 @@
 package blended.streams.testsupport
 
-package sib.itest.streams
-
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}

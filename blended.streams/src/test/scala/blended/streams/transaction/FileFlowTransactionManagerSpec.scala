@@ -10,6 +10,7 @@ import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
+import blended.util.logging.Logger
 import com.sun.management.UnixOperatingSystemMXBean
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
@@ -208,6 +209,8 @@ class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
   with PropertyChecks
   with FTMFactory {
 
+  private val log : Logger = Logger[BulkCleanupSpec]
+
   private def openFiles : Option[Long] = {
     val os : OperatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean()
     if(os.isInstanceOf[UnixOperatingSystemMXBean]) {
@@ -238,6 +241,7 @@ class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
       val openRate : Int = 1000
 
       val startOpen : Long = openFiles.get
+      log.info(s"Open files [$startOpen]")
 
       val openCount : AtomicInteger = new AtomicInteger(0)
 
@@ -255,7 +259,11 @@ class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
         val env : FlowEnvelope = FlowEnvelope(FlowMessage.noProps)
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))){_ =>}
 
-        if (i % 5000 == 0) { println(s"$i -- ${openFiles}") }
+        if (i % 5000 == 0) {
+          val msg : String = openFiles.map(c => s"$i -- $c -- ${c - startOpen}").getOrElse("")
+          println(msg)
+          log.info(msg)
+        }
 
         if (i % openRate == 0) {
           openCount.incrementAndGet()
@@ -269,10 +277,13 @@ class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
 
       }
 
-      Thread.sleep(cfg.retainCompleted.toMillis + 1.second.toMillis)
+      Thread.sleep(cfg.retainCompleted.toMillis * 3)
       Await.result(tMgr.withAll{_ => true}, 3.seconds) should be (openCount.get())
 
-      assert(Math.abs(openFiles.get - startOpen) <= 10)
+      openFiles.foreach{ l =>
+        log.info(s"Open files [$l]")
+        assert(l - startOpen <= 20)
+      }
     }
   }
 }
