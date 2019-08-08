@@ -37,7 +37,7 @@ jobs:
     steps:
       - checkout
 
-      - restore-cache:
+      - restore_cache:
           keys:
             - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
             - v3-blended-core-{{ arch }}
@@ -64,7 +64,7 @@ jobs:
     steps:
       - checkout
 
-      - restore-cache:
+      - restore_cache:
           keys:
             - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
             - v3-blended-core-{{ arch }}
@@ -92,7 +92,7 @@ jobs:
     steps:
       - checkout
 
-      - restore-cache:
+      - restore_cache:
           keys:
             - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
             - v3-blended-core-{{ arch }}
@@ -142,7 +142,7 @@ jobs:
           file: target.tgz
 
 workflows:
-  version: 2
+  version: 2.1
   blended:
     jobs:
       - prepare
