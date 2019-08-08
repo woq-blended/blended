@@ -1,4 +1,28 @@
-version: 2
+version: 2.1
+
+orbs:
+  blended:
+    commands:
+      persist_dir_to_workspace:
+        parameters:
+          workspace:
+            type: string
+          dir:
+            type: string
+          file:
+            type: string
+        steps:
+          - run:
+              name: Package << parameters.dir >>
+              command: |
+                mkdir -p << parameters.workspace >>
+                tar -C << parameters.dir >> -cvf << parameters.workspace >>/<< parameters.file >> .
+
+          - persist_to_workspace:
+              root: << parameters.workspace >>
+              paths:
+                - << parameters.file >>
+
 jobs:
   # -----------------------------------------------------------------------------------------------
   # Just prepare the build by running sbt update - this should throw up if any dependencies cannot
@@ -13,15 +37,15 @@ jobs:
     steps:
       - checkout
 
-      # When restoring the cache we omit the {{ epoch }}, so that the most recent one will be used
       - restore-cache:
           keys:
             - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
+            - v3-blended-core-{{ arch }}
 
-      - run: |
-          sbt clean update
+      - run:
+          name : SBT Update
+          command: sbt clean update
 
-      # Using the epoch as part od the caching key enforces a new cache to be generated even if an old one exists
       - save_cache:
           key: v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
           paths:
@@ -43,19 +67,16 @@ jobs:
       - restore-cache:
           keys:
             - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
+            - v3-blended-core-{{ arch }}
 
       - run:
           name: Compile
           command: sbt clean publishLocal
 
-      - run:
-          name: package_ivy_local
-          command: tar -C /home/blended/.ivy2 -cvzf /home/blended/blended/ivylocal.tgz local
-
-      - persist_to_workspace:
-          root: /home/blended/blended
-          paths:
-            - ivylocal.tgz
+      - blended/persist_dir_to_workspace:
+          workspace: /tmp/workspace
+          dir: /home/blended/.ivy2/local
+          file: ivylocal.tgz
 
   # -----------------------------------------------------------------------------------------------
   # Run all unit tests, produce a coverage report and upload coverage data to codacy
@@ -74,6 +95,7 @@ jobs:
       - restore-cache:
           keys:
             - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
+            - v3-blended-core-{{ arch }}
 
       - run:
           name: Coverage
@@ -114,16 +136,10 @@ jobs:
           path: /home/blended/blended/target/testlog
           prefix: testlog
 
-      # The normal persist workspace does not support to add directories recursively, so we create an
-      # archive and persist that. Later jobs have to unwrap the tar file
-      - run:
-          name: package_workspace
-          command: tar -C /home/blended/blended -cvzf /home/blended/blended/target.tgz target
-
-      - persist_to_workspace:
-          root: /home/blended/blended
-          paths:
-            - target.tgz
+      - blended/persist_dir_to_workspace:
+          workspace: /tmp/workspace
+          dir: /home/blended/blended/target
+          file: target.tgz
 
 workflows:
   version: 2
