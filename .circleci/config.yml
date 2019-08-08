@@ -16,14 +16,14 @@ jobs:
       # When restoring the cache we omit the {{ epoch }}, so that the most recent one will be used
       - restore-cache:
           keys:
-            - v3-blended-core-{{ arch }}-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
+            - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
 
       - run: |
           sbt clean update
 
       # Using the epoch as part od the caching key enforces a new cache to be generated even if an old one exists
       - save_cache:
-          key: v3-blended-core-{{ arch }}-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
+          key: v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
           paths:
             - /home/blended/.ivy2
 
@@ -42,7 +42,7 @@ jobs:
 
       - restore-cache:
           keys:
-            - v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
+            - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
 
       - run:
           name: Compile
@@ -73,7 +73,7 @@ jobs:
 
       - restore-cache:
           keys:
-            - v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
+            - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
 
       - run:
           name: Coverage
