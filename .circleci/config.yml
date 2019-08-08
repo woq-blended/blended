@@ -1,5 +1,9 @@
 version: 2
 jobs:
+  # -----------------------------------------------------------------------------------------------
+  # Just prepare the build by running sbt update - this should throw up if any dependencies cannot
+  # be resolved.
+  # -----------------------------------------------------------------------------------------------
   prepare:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/blended
@@ -11,15 +15,20 @@ jobs:
       - restore-cache:
           keys:
             - v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
-            - v3-blended-core-
+
       - run: |
           sbt clean update
+
       - save_cache:
           key: v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
           paths:
             - /home/blended/.ivy2
 
-  build:
+  # -----------------------------------------------------------------------------------------------
+  # perform the actual compile job. Here we simply run sbt publish local, so that all our modules
+  # end up in the local ivy directory
+  # -----------------------------------------------------------------------------------------------
+  compile:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/blended
     docker:
@@ -31,11 +40,38 @@ jobs:
       - restore-cache:
           keys:
             - v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
-            - v3-blended-core-
 
       - run:
           name: Compile
-          command: sbt clean compile test:compile
+          command: sbt clean publishLocal
+
+      - save_cache:
+          key: v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
+          paths:
+            - /home/blended/.ivy2
+
+      - save_cache:
+          key: v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
+          paths:
+            - /home/blended/.ivy2
+
+  # -----------------------------------------------------------------------------------------------
+  # Run all unit tests, produce a coverage report and upload coverage data to codacy
+  # we will attach the coverage data and other things to the current workspace, so that
+  # we can use it in later jobs within the workflow
+  # -----------------------------------------------------------------------------------------------
+  unit-test:
+    shell: /bin/sh -leo pipefail
+    working_directory: /home/blended/blended
+    docker:
+      - image: atooni/build-alpine:1.0
+        user: blended
+    steps:
+      - checkout
+
+      - restore-cache:
+          keys:
+            - v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
 
       - run:
           name: Coverage
@@ -76,19 +112,27 @@ jobs:
           path: /home/blended/blended/target/testlog
           prefix: testlog
 
-      - save_cache:
-          key: v3-blended-core-$(set -- $(sha1sum /home/blended/blended/build.sbt) ; echo $1)
+      # The normal persist workspace does not support to add directories recursively, so we create an
+      # archive and persist that. Later jobs have to unwrap the tar file
+      - package_workspace:
+          command: tar -C /home/blended/blended -cvzf /home/blended/blended/target.tgz target.tgz
+
+      - persist_to_workspace:
+          root: /home/blended/blended
           paths:
-            - /home/blended/.ivy2
+            - target.tgz
 
 workflows:
   version: 2
-  build-test:
+  blended:
     jobs:
       - prepare
 
-      - build:
-          context: blended
+      - compile:
           requires:
             - prepare
+      - unit-test:
+          context: blended
+          requires:
+            - compile
 
