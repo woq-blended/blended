@@ -57,6 +57,10 @@ jobs:
             xunit-viewer --results=/home/blended/blended/target/test-results/junit --output=/home/blended/blended/target/test-results/junit.html
           when: always
 
+      - run:
+          name: Build docs
+          command: sbt unidoc jbakeSite
+
       - store_test_results:
           path: /home/blended/blended/target/test-results
 
