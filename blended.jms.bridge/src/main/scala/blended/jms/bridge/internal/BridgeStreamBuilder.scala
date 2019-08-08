@@ -12,10 +12,8 @@ import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{AckProcessor, HeaderProcessorConfig, HeaderTransformProcessor}
 import blended.streams.transaction._
-import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, FlowProcessor}
 import blended.util.logging.{LogLevel, Logger}
-import com.typesafe.config.Config
-import blended.util.RichTry._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
@@ -58,8 +56,6 @@ case class BridgeStreamConfig(
   // A reference to an ContainerIdentifierService that must be used to resolve header
   // expressions
   idSvc : Option[ContainerIdentifierService] = None,
-  // The raw typesafe config object for the bridge configuration
-  rawConfig : Config,
   // the minimum timespan after which a new session will be created after closing a session
   // upon an exception
   sessionRecreateTimeout : FiniteDuration
@@ -73,7 +69,7 @@ class BridgeStreamBuilder(
   // So that we find the stream in the logs
   protected val inId = s"${bridgeCfg.fromCf.vendor}:${bridgeCfg.fromCf.provider}:${bridgeCfg.fromDest.asString}"
   protected val outId = s"${bridgeCfg.toCf.vendor}:${bridgeCfg.toCf.provider}:${bridgeCfg.toDest.map(_.asString).getOrElse("out")}"
-  protected val streamId = s"${bridgeCfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
+  val streamId = s"${bridgeCfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
   protected val bridgeLogger = Logger(streamId)
 
   protected val transShard : Option[String] = streamsConfig.transactionShard
@@ -306,8 +302,4 @@ class BridgeStreamBuilder(
   }
 
   bridgeLogger.info(s"Starting bridge stream with config [inbound=${bridgeCfg.inbound},trackTransaction=${bridgeCfg.trackTransaction}]")
-  // The stream will be handled by an actor which that can be used to shutdown the stream
-  // and will restart the stream with a backoff strategy on failure
-  val streamCfg : StreamControllerConfig = StreamControllerConfig.fromConfig(bridgeCfg.rawConfig).get
-    .copy(name = streamId)
 }

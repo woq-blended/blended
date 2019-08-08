@@ -9,12 +9,14 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
+import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.streams.FlowProcessor
+import blended.streams.internal.BlendedStreamsConfigImpl
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionFailed}
+import blended.streams.{BlendedStreamsConfig, FlowProcessor}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
@@ -50,6 +52,9 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
   protected implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   protected implicit val materializer : ActorMaterializer = ActorMaterializer()
   protected implicit val ectxt : ExecutionContext = system.dispatcher
+
+  protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
+  protected val streamsConfig : BlendedStreamsConfig = BlendedStreamsConfigImpl(idSvc)
 
   val prefix : String = "spec"
 
@@ -150,7 +155,7 @@ class JmsRetryProcessorForwardSpec extends ProcessorSpecSupport("retryForward") 
 
     withExpectedDestination(
       destName = srcQueue,
-      retryProcessor = new JmsRetryProcessor("spec", retryCfg),
+      retryProcessor = new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
       completeOn = s => s.nonEmpty
     )(retryMsg)(
@@ -171,7 +176,7 @@ class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount")
 
     withExpectedDestination(
       retryCfg.failedDestName,
-      new JmsRetryProcessor("spec", retryCfg),
+      new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
       completeOn = _.nonEmpty
     )(retryMsg) { l =>
@@ -196,7 +201,7 @@ class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeo
 
     withExpectedDestination(
       retryCfg.failedDestName,
-      new JmsRetryProcessor("spec", retryCfg),
+      new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
       completeOn = _.nonEmpty
     )(retryMsg) { l =>
@@ -219,7 +224,7 @@ class JmsRetryProcessorMissingDestinationSpec extends ProcessorSpecSupport("miss
 
     withExpectedDestination(
       retryCfg.failedDestName,
-      new JmsRetryProcessor("spec", retryCfg),
+      new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
       completeOn = _.nonEmpty
     )(retryMsg){ l =>
@@ -235,7 +240,7 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
   "Reinsert messages into the retry destination if the send to the original destination fails" in {
     val srcQueue : String = "myQueue"
 
-    val router = new JmsRetryProcessor("spec", retryCfg.copy(maxRetries = 2, retryTimeout = 1.day)) {
+    val router = new JmsRetryProcessor(streamsConfig, retryCfg.copy(maxRetries = 2, retryTimeout = 1.day)) {
 
       // This causes the send to the original destination to fail within the flow, causing
       // the envelope to travel the error path.
@@ -283,8 +288,7 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
   "The Jms Retry Processor should" - {
 
     "Deny messages that cannot be processed correctly by the retry router" in {
-      val router = new JmsRetryProcessor("spec", retryCfg) {
-
+      val router = new JmsRetryProcessor(streamsConfig, retryCfg) {
         // This causes the send to the original destination to fail within the flow, causing
         // the envelope to travel the error path.
         override protected def sendToOriginal : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(

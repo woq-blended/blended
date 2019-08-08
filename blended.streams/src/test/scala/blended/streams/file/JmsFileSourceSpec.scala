@@ -11,14 +11,16 @@ import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwareConnectionFactory}
+import blended.streams.internal.BlendedStreamsConfigImpl
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.FlowHeaderConfig
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.util.RichTry._
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -26,8 +28,6 @@ import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
-import blended.util.RichTry._
-
 
 import scala.concurrent.duration._
 import scala.util.Try
@@ -48,6 +48,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
   private implicit val timeout : FiniteDuration = 1.second
   private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfigImpl(idSvc)
 
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   private implicit val materializer : Materializer = ActorMaterializer()
@@ -151,25 +152,19 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       val src : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new FileAckSource(pollCfg))
         .via(jmsProducer(s"$name.send", producerSettings(cf, destName), autoAck = true))
 
-      val ctrlConfig : StreamControllerConfig = StreamControllerConfig(
-        name = name,
-        minDelay = 2.seconds,
-        maxDelay = 10.seconds,
-        exponential = false,
-        onFailureOnly = false,
-        random = 0.2
-      )
-
       val fileController : ActorRef =
         system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+          streamName = name + ".controller",
           src = src,
-          streamCfg = ctrlConfig.copy(name = name + ".controller"))(
+          streamCfg = streamCfg
+        )(
           onMaterialize = _ => ()
         ))
 
       val msgController : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+        streamName = name,
         src = msgConsumer(destName, cf, destName),
-        streamCfg = ctrlConfig.copy(name = name + ".consumer")
+        streamCfg = streamCfg
       )(onMaterialize = _ => ()))
 
       Seq(fileController, msgController)

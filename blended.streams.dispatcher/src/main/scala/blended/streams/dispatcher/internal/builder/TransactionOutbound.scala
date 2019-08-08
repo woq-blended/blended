@@ -10,7 +10,7 @@ import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.{FlowTransactionStream, _}
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
 
 import scala.util.Try
@@ -20,7 +20,7 @@ class TransactionOutbound(
   tMgr : FlowTransactionManager,
   dispatcherCfg : ResourceTypeRouterConfig,
   internalCf: IdAwareConnectionFactory,
-  transactionShard : Option[String],
+  streamsCfg : BlendedStreamsConfig,
   log: Logger
 )(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport {
 
@@ -29,7 +29,7 @@ class TransactionOutbound(
 
   private[builder] val jmsSource : Try[Source[FlowEnvelope, NotUsed]] = Try {
 
-    val transDest : JmsDestination = transactionShard match {
+    val transDest : JmsDestination = streamsCfg.transactionShard match {
       case None => config.get.transactions
       case Some(shard) =>
         val d = JmsDestination.asString(config.get.transactions)
@@ -94,7 +94,7 @@ class TransactionOutbound(
         headerCfg = headerConfig,
         internalCf = Some(internalCf),
         tMgr = tMgr,
-        streamLogger = log,
+        streamLogger = log
       ).build()
 
 
@@ -103,11 +103,10 @@ class TransactionOutbound(
       .via(sendCbe)
       .via(new AckProcessor("transactionOutbound").flow)
 
-    val streamCfg = StreamControllerConfig.fromConfig(dispatcherCfg.rawConfig).get
-      .copy(
-        name = "transactionOut"
-      )
-
-    system.actorOf(StreamController.props[FlowEnvelope, NotUsed](src, streamCfg)(onMaterialize = _ => ()))
+    system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+      streamName = "transactionOut",
+      src = src,
+      streamCfg = streamsCfg
+    )(onMaterialize = _ => ()))
   }
 }

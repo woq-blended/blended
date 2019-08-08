@@ -121,14 +121,17 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
       subscriberName = in.subscriberName,
       header = in.header,
       idSvc = Some(ctrlCfg.idSvc),
-      rawConfig = ctrlCfg.rawConfig,
       sessionRecreateTimeout = in.sessionRecreateTimeout
     )
 
     val builder = ctrlCfg.streamBuilderFactory(system)(materializer)(inCfg, ctrlCfg.streamsCfg)
-    val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](builder.stream, builder.streamCfg)(onMaterialize = _ => ()))
+    val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+      streamName = builder.streamId,
+      src = builder.stream,
+      streamCfg = ctrlCfg.streamsCfg
+    )(onMaterialize = _ => ()))
 
-    streams += (builder.streamCfg.name -> actor)
+    streams += (builder.streamId -> actor)
   }
 
   private[this] def createOutboundStream(cf : IdAwareConnectionFactory, internal : Boolean) : Unit = {
@@ -155,14 +158,17 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
       trackTransaction = TrackTransaction.FromMessage,
       subscriberName = None,
       header = List.empty,
-      rawConfig = ctrlCfg.rawConfig,
       sessionRecreateTimeout = 1.second
     )
 
     val builder = ctrlCfg.streamBuilderFactory(system)(materializer)(outCfg, ctrlCfg.streamsCfg)
-    val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](builder.stream, builder.streamCfg)(onMaterialize = _ => ()))
+    val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+      streamName = builder.streamId,
+      src = builder.stream,
+      streamCfg = ctrlCfg.streamsCfg
+    )(onMaterialize = _ => ()))
 
-    streams += (builder.streamCfg.name -> actor)
+    streams += (builder.streamId -> actor)
   }
 
   override def receive : Receive = {

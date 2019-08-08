@@ -12,6 +12,8 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
+import blended.streams.BlendedStreamsConfig
+import blended.streams.internal.BlendedStreamsConfigImpl
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.BlendedTestSupport
 import blended.util.logging.Logger
@@ -41,6 +43,8 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
   private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
   private val cf : BlendedSingleConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None).asInstanceOf[BlendedSingleConnectionFactory]
 
+  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfigImpl(idSvc)
+
   "The stream based keep alive producer should" - {
 
     "create a stream to send keep alives for a given connection factory" in {
@@ -49,7 +53,8 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
       system.eventStream.subscribe(probe.ref, classOf[MessageReceived])
       val factory : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
         log = bcf => Logger(s"blended.streams.jms.keepalive.${bcf.vendor}.${bcf.provider}"),
-        idSvc
+        idSvc = idSvc,
+        streamCfg = streamCfg
       )
 
       val p : Promise[MessageReceived] = Promise[MessageReceived]()

@@ -11,7 +11,7 @@ import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
-import blended.streams.{BlendedStreamsConfig, StreamController, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, StreamController}
 import blended.util.logging.Logger
 
 import scala.collection.mutable
@@ -91,7 +91,7 @@ class RunnableDispatcher(
       tMgr = tMgr,
       internalCf = cf,
       dispatcherCfg = routerCfg,
-      transactionShard = streamsCfg.transactionShard,
+      streamsCfg = streamsCfg,
       log = Logger(bs.headerConfig.prefix + ".transactions")
     ).build()
   }
@@ -175,12 +175,13 @@ class RunnableDispatcher(
         // Connect the consumer to a dispatcher
         val source : Source[FlowTransactionEvent, NotUsed] = bridgeSource(internalProvider, provider, dispLogger).via(dispatcher)
 
-        // Prepare and start the dispatcher
-        val streamCfg = StreamControllerConfig.fromConfig(routerCfg.rawConfig).get.copy(name = dispLogger.name)
-
         // Wrap the dispatcher into a stream controller and make sure, the generated transaction events are sent to
         // the proper JMS destination
-        val actor : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg)(onMaterialize = _ => ()))
+        val actor : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+          streamName = dispLogger.name,
+          src = source.via(transactionSend()),
+          streamCfg = streamsCfg
+        )(onMaterialize = _ => ()))
 
         bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
         startedDispatchers.put(provider.id, actor)

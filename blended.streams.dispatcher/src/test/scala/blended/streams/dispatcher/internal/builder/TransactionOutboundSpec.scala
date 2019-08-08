@@ -63,7 +63,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       tMgr = tMgr,
       dispatcherCfg = ctxt.cfg,
       internalCf = cf,
-      transactionShard = streamsCfg.transactionShard,
+      streamsCfg = ctxt.streamsCfg,
       ctxt.bs.streamLogger
     ).build()
   }

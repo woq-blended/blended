@@ -11,7 +11,7 @@ import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.{FlowHeaderConfig, TransactionWiretap}
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
 import blended.util.config.Implicits._
 import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
@@ -62,7 +62,10 @@ case class JmsRetryConfig(
     s"failedDestination=$failedDestName,retryInterval=$retryInterval,maxRetries=$maxRetries,retryTimeout=$retryTimeout)"
 }
 
-class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
+class JmsRetryProcessor(
+  streamsCfg : BlendedStreamsConfig,
+  retryCfg : JmsRetryConfig
+)(
   implicit system : ActorSystem, materializer : Materializer
 ) extends JmsStreamSupport {
 
@@ -135,7 +138,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
     )
 
     jmsProducer(
-      name = name + "routeSend",
+      name = id + ".routeSend",
       settings = producerSettings,
       autoAck = false
     )
@@ -152,7 +155,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
       log = retryLog
     )
 
-    Flow.fromGraph(FlowProcessor.fromFunction(name, retryLog)(router.validate))
+    Flow.fromGraph(FlowProcessor.fromFunction(id, retryLog)(router.validate))
       .via(FlowProcessor.log(LogLevel.Debug, retryLog, "Creating transaction failed event"))
       .via(wiretap.flow())
   }
@@ -206,7 +209,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
       // Acknowledge / Deny the result of the overall retry flow
       val ack = b.add(
         Flow.fromGraph(FlowProcessor.log(LogLevel.Debug, retryLog, "Before Acknowledge"))
-          .via(new AckProcessor(name + ".ack").flow)
+          .via(new AckProcessor(id + ".ack").flow)
       )
       transMerge.out ~> ack.in
 
@@ -219,20 +222,13 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
 
     actor.synchronized {
       if (actor.isEmpty) {
-        log.info(s"Starting Jms Retry processor [$name] with [$retryCfg]")
+        log.info(s"Starting Jms Retry processor [$id] with [$retryCfg]")
 
-        // TODO: Load from config
-        val streamCfg : StreamControllerConfig = StreamControllerConfig(
-          name = name,
-          //source = retrySource.via(retryGraph),
-          minDelay = 10.seconds,
-          maxDelay = 3.minutes,
-          exponential = true,
-          onFailureOnly = true,
-          random = 0.2
-        )
-
-        actor = Some(system.actorOf(StreamController.props[FlowEnvelope, NotUsed](retrySource.via(retryGraph), streamCfg)(onMaterialize = _ => () )))
+        actor = Some(system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+          streamName = id,
+          src = retrySource.via(retryGraph),
+          streamCfg = streamsCfg
+        )(onMaterialize = _ => () )))
       }
     }
   }

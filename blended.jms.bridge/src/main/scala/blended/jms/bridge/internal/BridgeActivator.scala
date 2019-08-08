@@ -1,20 +1,18 @@
 package blended.jms.bridge.internal
 
-import akka.actor.{ActorSystem, OneForOneStrategy, SupervisorStrategy}
-import akka.pattern.{Backoff, BackoffSupervisor}
+import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.BlendedStreamsConfig
+import blended.util.RichTry._
 import blended.util.logging.Logger
 import domino.DominoActivator
 import domino.service_watching.ServiceWatcherContext
 import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedService, RemovedService}
-import blended.util.RichTry._
 
 import scala.collection.JavaConverters._
-import scala.concurrent.duration._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -91,7 +89,10 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
                 cfg = osgiCfg.config.getConfig("retry")
               ).get
 
-              val processor = new JmsRetryProcessor(s"$internalVendor:$internalProvider", retryCfg)
+              val processor = new JmsRetryProcessor(
+                streamsCfg = streamsCfg,
+                retryCfg = retryCfg
+              )
 
               processor.start()
 
@@ -103,22 +104,6 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
           try {
             val bridgeProps = BridgeController.props(ctrlConfig)
-
-            val restartProps = BackoffSupervisor.props(
-              Backoff.onStop(
-                bridgeProps,
-                childName = "BridgeController",
-                minBackoff = 3.seconds,
-                maxBackoff = 1.minute,
-                randomFactor = 0.2,
-                maxNrOfRetries = -1
-              ).withAutoReset(30.seconds)
-                .withSupervisorStrategy(
-                  OneForOneStrategy() {
-                    case _ => SupervisorStrategy.Restart
-                  }
-                )
-            )
 
             log.info("Starting JMS bridge supervising actor.")
             val bridge = osgiCfg.system.actorOf(bridgeProps, "BridgeSupervisor")

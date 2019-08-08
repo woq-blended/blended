@@ -8,8 +8,9 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
+import blended.streams.BlendedStreamsConfig
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
-import blended.streams.internal.BlendedStreamsActivator
+import blended.streams.internal.{BlendedStreamsActivator, BlendedStreamsConfigImpl}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -30,7 +31,8 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     cfg : ResourceTypeRouterConfig,
     idSvc : ContainerIdentifierService,
     system : ActorSystem,
-    bs : DispatcherBuilderSupport
+    bs : DispatcherBuilderSupport,
+    streamsCfg : BlendedStreamsConfig
   )
 
   def country : String = "cc"
@@ -88,6 +90,9 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
       timeout = 3.seconds
     )
 
+    val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfigImpl(idSvc)
+    println(streamsCfg)
+
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
       clazz = ClassTag(classOf[ActorSystem]),
       timeout = 3.seconds
@@ -109,7 +114,7 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
       override val streamLogger : Logger = Logger(loggerName)
     }
 
-    DispatcherExecContext(cfg = cfg, idSvc = idSvc, system = system, bs = bs)
+    DispatcherExecContext(cfg = cfg, idSvc = idSvc, system = system, bs = bs, streamsCfg = streamsCfg)
   }
 
   def withDispatcherConfig[T](f : DispatcherExecContext => T) : T = f(createDispatcherExecContext())

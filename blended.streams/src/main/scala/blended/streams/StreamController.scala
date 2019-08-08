@@ -3,42 +3,9 @@ package blended.streams
 import akka.actor.{Actor, Props}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import blended.util.config.Implicits._
 import blended.util.logging.Logger
-import com.typesafe.config.Config
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{FiniteDuration, _}
-import scala.util.Try
-
-object StreamControllerConfig {
-
-  def fromConfig(cfg : Config) : Try[StreamControllerConfig] = Try {
-    val minDelay : FiniteDuration = cfg.getDuration("minDelay", 5.seconds)
-    val maxDelay : FiniteDuration = cfg.getDuration("maxDelay", 1.minute)
-    val exponential : Boolean = cfg.getBoolean("exponential", true)
-    val random : Double = cfg.getDouble("random", 0.2)
-    val onFailure : Boolean = cfg.getBoolean("onFailureOnly", true)
-
-    StreamControllerConfig(
-      name = "",
-      minDelay = minDelay,
-      maxDelay = maxDelay,
-      exponential = exponential,
-      onFailureOnly = onFailure,
-      random = random
-    )
-  }
-}
-
-case class StreamControllerConfig(
-  name : String,
-  minDelay : FiniteDuration,
-  maxDelay : FiniteDuration,
-  exponential : Boolean,
-  onFailureOnly : Boolean,
-  random : Double
-)
 
 object StreamController {
 
@@ -46,20 +13,24 @@ object StreamController {
   case object Stop
   case class Abort(t : Throwable)
   case class StreamTerminated(exception : Option[Throwable])
+  case object Reset
 
   def props[T, Mat](
+    streamName : String,
     src : Source[T, Mat],
-    streamCfg : StreamControllerConfig
+    streamCfg : BlendedStreamsConfig
   )(
     onMaterialize : Mat => Unit = { _ : Mat => () }
   )(implicit materializer : Materializer) : Props =
+
     Props(new AbstractStreamController[T, Mat](streamCfg) {
+      override def name: String = streamName
       override def source() : Source[T, Mat] = src
       override def materialized(m: Mat): Unit = onMaterialize(m)
     })
 }
 
-abstract class AbstractStreamController[T, Mat](streamCfg : StreamControllerConfig)(implicit materializer : Materializer)
+abstract class AbstractStreamController[T, Mat](streamCfg : BlendedStreamsConfig)(implicit materializer : Materializer)
   extends Actor
   with StreamControllerSupport[T, Mat] {
 

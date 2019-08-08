@@ -9,7 +9,7 @@ import blended.jms.utils.{BlendedSingleConnectionFactory, JmsDestination}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.FlowHeaderConfig
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
 
 import scala.concurrent.{Future, Promise}
@@ -17,7 +17,8 @@ import scala.util.Success
 
 class StreamKeepAliveProducerFactory(
   log : BlendedSingleConnectionFactory => Logger,
-  idSvc : ContainerIdentifierService
+  idSvc : ContainerIdentifierService,
+  streamCfg : BlendedStreamsConfig
 )(implicit system: ActorSystem, materializer : Materializer) extends KeepAliveProducerFactory with JmsStreamSupport {
 
   private var stream : Option[ActorRef] = None
@@ -74,18 +75,15 @@ class StreamKeepAliveProducerFactory(
     ).viaMat(Flow.fromSinkAndSourceCoupled(producer, consumer))(Keep.left)
     // scalastyle:on magic.number
 
-    val streamCfg: StreamControllerConfig = StreamControllerConfig(
-      name = s"KeepAlive-stream-${bcf.vendor}-${bcf.provider}",
-      minDelay = bcf.config.keepAliveInterval,
-      maxDelay = bcf.config.keepAliveInterval,
-      exponential = false,
-      onFailureOnly = true,
-      random = 0.2
-    )
-
     stream = Some(system.actorOf(
-      StreamController.props[FlowEnvelope, ActorRef](keepAliveSource, streamCfg)(onMaterialize = { actor =>
-        futMat.complete(Success(actor))
+      StreamController.props[FlowEnvelope, ActorRef](
+        s"KeepAlive-stream-${bcf.vendor}-${bcf.provider}",
+        keepAliveSource,
+        streamCfg
+      )(onMaterialize = { actor =>
+        if (!futMat.isCompleted) {
+          futMat.complete(Success(actor))
+        }
       })
     ))
 

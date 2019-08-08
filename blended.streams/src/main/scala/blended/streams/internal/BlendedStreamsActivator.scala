@@ -41,13 +41,15 @@ class BlendedStreamsActivator extends DominoActivator
 
       tMgr.providesService[FlowTransactionManager]("directory" -> tMgrConfig.dir.getAbsolutePath())
 
-      new BlendedStreamsConfigImpl(osgiCfg.idSvc, osgiCfg.config).providesService[BlendedStreamsConfig]
+      val streamsCfg : BlendedStreamsConfig = new BlendedStreamsConfigImpl(osgiCfg.idSvc, osgiCfg.config)
+      streamsCfg.providesService[BlendedStreamsConfig]
 
       // initialise the JMS keep alive streams
 
       val pf : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
         log = bcf => Logger(s"blended.streams.keepalive.${bcf.vendor}.${bcf.provider}"),
-        idSvc = osgiCfg.idSvc
+        idSvc = osgiCfg.idSvc,
+        streamCfg = streamsCfg
       )
 
       val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props(new JmsKeepAliveController(osgiCfg.idSvc, pf)))

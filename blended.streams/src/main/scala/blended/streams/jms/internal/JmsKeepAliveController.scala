@@ -2,7 +2,7 @@ package blended.streams.jms.internal
 
 import akka.actor
 import akka.actor.SupervisorStrategy.Stop
-import akka.actor.{Actor, ActorRef, Cancellable, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
+import akka.actor.{Actor, ActorRef, Cancellable, OneForOneStrategy, Props, SupervisorStrategy}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils._
@@ -66,6 +66,8 @@ object JmsKeepAliveActor {
     Props(new JmsKeepAliveActor(idSvc, cf, producer))
 }
 
+
+// TODO: Keep track of changing actor in case the keep alive stream restarts
 class JmsKeepAliveActor(
   idSvc : ContainerIdentifierService,
   cf : IdAwareConnectionFactory,
