@@ -209,16 +209,91 @@ jobs:
       - blended/deploy_gh_pages:
           dir: target/site
 
+  # -----------------------------------------------------------------------------------------------
+  # Checkout and build the integration test support
+  # -----------------------------------------------------------------------------------------------
+  itest-support:
+    shell: /bin/sh -leo pipefail
+    working_directory: /home/blended
+    docker:
+      - image: atooni/build-alpine:1.0
+        user: blended
+
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+
+      - run:
+          name: Extract Workspace
+          command: |
+            mkdir -p /home/blended/.ivy2/local
+            tar -C /home/blended/.ivy2/local -xzf /tmp/worksapce/ivylocal.tgz
+
+      - run:
+          name: Clone
+          command: |
+            git clone ssh://git@github.com/woq-blended/blended.itestsupport.git itest
+            cd itest
+
+      - run:
+          name: build
+          command: sbt clean test publishLocal
+
+      - blended/persist_dir_to_workspace:
+          workspace: /tmp/workspace
+          dir: /home/blended/.ivy2/local
+          file: ivylocal-itest.tgz
+
+  # -----------------------------------------------------------------------------------------------
+  # Checkout and build the management UI
+  # -----------------------------------------------------------------------------------------------
+  mgmt-ui:
+    shell: /bin/sh -leo pipefail
+    working_directory: /home/blended
+    docker:
+      - image: atooni/build-alpine:1.0
+        user: blended
+
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+
+      - run:
+          name: Extract Workspace
+          command: |
+            mkdir -p /home/blended/.ivy2/local
+            tar -C /home/blended/.ivy2/local -xzf /tmp/worksapce/ivylocal.tgz
+
+      - run:
+          name: Clone
+          command: |
+            git clone ssh://git@github.com:woq-blended/blended.mgmt.ui.git mgmtui
+            cd mgmtui
+
+      - run:
+          name: build
+          command: sbt clean test publishLocal
+
+      - blended/persist_dir_to_workspace:
+          workspace: /tmp/workspace
+          dir: /home/blended/.ivy2/local
+          file: ivylocal-ui.tgz
+
+# -----------------------------------------------------------------------------------------------
+# Put everything together in a workflow
+# -----------------------------------------------------------------------------------------------
 workflows:
   version: 2.1
   blended:
     jobs:
+      # -----------------------------------------------------------------------------------------
       - prepare:
           filters:
             branches:
               ignore:
                 - gh-pages
 
+      # -----------------------------------------------------------------------------------------
       - compile:
           filters:
             branches:
@@ -227,6 +302,7 @@ workflows:
           requires:
             - prepare
 
+      # -----------------------------------------------------------------------------------------
       - unit-test:
           filters:
             branches:
@@ -236,6 +312,7 @@ workflows:
           requires:
             - compile
 
+      # -----------------------------------------------------------------------------------------
       - site:
           filters:
             branches:
@@ -244,3 +321,23 @@ workflows:
           context: blended
           requires:
             - unit-test
+
+      # -----------------------------------------------------------------------------------------
+      - itest-support:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+          context: blended
+          requires:
+            - compile
+
+      # -----------------------------------------------------------------------------------------
+      - mgmt-ui:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+          context: blended
+          requires:
+            - compile
