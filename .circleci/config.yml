@@ -227,7 +227,7 @@ jobs:
           name: Extract Workspace
           command: |
             mkdir -p /home/blended/.ivy2/local
-            tar -C /home/blended/.ivy2/local -xzf /tmp/worksapce/ivylocal.tgz
+            tar -C /home/blended/.ivy2/local -xzf /tmp/workspace/ivylocal.tgz
 
       - run:
           name: Clone
@@ -262,7 +262,7 @@ jobs:
           name: Extract Workspace
           command: |
             mkdir -p /home/blended/.ivy2/local
-            tar -C /home/blended/.ivy2/local -xzf /tmp/worksapce/ivylocal.tgz
+            tar -C /home/blended/.ivy2/local -xzf /tmp/workspace/ivylocal.tgz
 
       - run:
           name: Clone
