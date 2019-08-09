@@ -241,5 +241,6 @@ workflows:
             branches:
               ignore:
                 - gh-pages
+          context: blended
           requires:
             - unit-test
