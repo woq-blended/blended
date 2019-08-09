@@ -88,6 +88,11 @@ orbs:
               fingerprints:
                 - "a2:b9:c0:32:b9:d8:24:95:4c:a2:7d:94:e6:6b:85:8e"
 
+          - restore_cache:
+              keys:
+                - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
+                - v3-blended-core-{{ arch }}
+
           - attach_workspace:
               at: /tmp/workspace
 
@@ -95,7 +100,7 @@ orbs:
               name: Extract Workspace
               command: |
                 mkdir -p /home/blended/.ivy2/local
-                tar -C /home/blended/.ivy2/local -xzf << parameters.src_archive >>
+                tar -C /home/blended/.ivy2/local -xzf /tmp/workspace/<< parameters.src_archive >>
 
           - run:
               name: Clone
@@ -180,6 +185,7 @@ jobs:
         user: blended
 
     steps:
+      - checkout
 
       - restore_cache:
           keys:
