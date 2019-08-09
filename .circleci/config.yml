@@ -65,10 +65,12 @@ orbs:
             type: string
           src_archive:
             type: string
-            default: /home/blended/.ivy2/local
+            default: ivylocal.tgz
           archive:
             type: string
         steps:
+          - checkout
+
           - add_ssh_keys:
               fingerprints:
                 - "a2:b9:c0:32:b9:d8:24:95:4c:a2:7d:94:e6:6b:85:8e"
