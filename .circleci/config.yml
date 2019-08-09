@@ -68,6 +68,9 @@ orbs:
             default: ivylocal.tgz
           archive:
             type: string
+          with_test:
+            type: string
+            default: true
         steps:
           - checkout
 
@@ -95,7 +98,9 @@ orbs:
               command: |
                 cd << parameters.dir >>
                 sbt clean publishLocal
-                sbt test
+                if [ "true" = "<< parameters.with_test >>" ]; then
+                  sbt test
+                fi
 
           - persist_dir_to_workspace:
               workspace: /tmp/workspace
@@ -289,22 +294,23 @@ jobs:
           dir: ui
           archive: ivylocal-ui.tgz
 
-# -----------------------------------------------------------------------------------------------
-# Build the demo container's
-# -----------------------------------------------------------------------------------------------
-demo-container:
-  shell: /bin/sh -leo pipefail
-  working_directory: /home/blended/container
-  docker:
-    - image: atooni/build-alpine:1.0
-      user: blended
+  # -----------------------------------------------------------------------------------------------
+  # Build the demo container's
+  # -----------------------------------------------------------------------------------------------
+  demo-container:
+    shell: /bin/sh -leo pipefail
+    working_directory: /home/blended/container
+    docker:
+      - image: atooni/build-alpine:1.0
+        user: blended
 
-  steps:
-    - blended/clone_and_build:
-        url: ssh://git@github.com/woq-blended/blended.container.git
-        dir: container
-        src_archive: ivylocal-ui.tgz
-        archive: ivylocal-ct.tgz
+    steps:
+      - blended/clone_and_build:
+          url: ssh://git@github.com/woq-blended/blended.container.git
+          dir: container
+          src_archive: ivylocal-ui.tgz
+          archive: ivylocal-ct.tgz
+          with_test: false
 
 # -----------------------------------------------------------------------------------------------
 # Put everything together in a workflow
