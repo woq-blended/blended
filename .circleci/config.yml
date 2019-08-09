@@ -18,8 +18,8 @@ orbs:
           - run:
               name: Package << parameters.dir >>
               command: |
-                mkdir -p << parameters.workspace >>
-                tar -C << parameters.dir >> -czf << parameters.workspace >>/<< parameters.file >> .
+                mkdir -p \<< parameters.workspace >>
+                tar -C \<< parameters.dir >> -czf \<< parameters.workspace >>/\<< parameters.file >> .
 
           - persist_to_workspace:
               root: << parameters.workspace >>
@@ -44,13 +44,13 @@ orbs:
           - run:
               name: Deploy Site
               command: |
-                git config user.email "${<< parameters.git_user_email>>}"
-                git config user.name "${<< parameters.git_user_name >>}"
+                git config user.email "${\<< parameters.git_user_email>>}"
+                git config user.name "${\<< parameters.git_user_name >>}"
                 git checkout --orphan gh-pages
                 git reset
                 git add -f << parameters.dir >>
                 git commit -m "[skip ci] Deploy Site, build number ${CIRCLE_BUILD_NUM}"
-                git filter-branch -f --prune-empty --subdirectory-filter << parameters.dir >>
+                git filter-branch -f --prune-empty --subdirectory-filter \<< parameters.dir >>
                 git clean -f -f -d
                 git push -f origin gh-pages
 
