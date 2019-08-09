@@ -89,11 +89,10 @@ orbs:
               name: Clone
               command: |
                 git clone << parameters.url >> << parameters.dir>>
-                cd << parameters.dir >>
 
           - run:
               name: Build
-              command: sbt clean test publishLocal
+              command: cd << parameters.dir >> ; sbt clean test publishLocal
 
           - persist_dir_to_workspace:
               workspace: /tmp/workspace
