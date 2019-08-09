@@ -70,7 +70,7 @@ orbs:
             type: string
           with_test:
             type: string
-            default: true
+            default: "true"
         steps:
           - checkout
 
@@ -310,7 +310,7 @@ jobs:
           dir: container
           src_archive: ivylocal-ui.tgz
           archive: ivylocal-ct.tgz
-          with_test: false
+          with_test: "false"
 
 # -----------------------------------------------------------------------------------------------
 # Put everything together in a workflow
