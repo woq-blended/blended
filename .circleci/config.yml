@@ -19,7 +19,7 @@ orbs:
               name: Package << parameters.dir >>
               command: |
                 mkdir -p << parameters.workspace >>
-                tar -C << parameters.dir >> -czf << parameters.workspace >>/<< parameters.file >> .
+                tar -C << parameters.dir >> -cvzf << parameters.workspace >>/<< parameters.file >> .
 
           - persist_to_workspace:
               root: << parameters.workspace >>
@@ -53,6 +53,49 @@ orbs:
                 git filter-branch -f --prune-empty --subdirectory-filter \<< parameters.dir >>
                 git clean -f -f -d
                 git push -f origin gh-pages
+
+      # ----------------------------------------------------------------------------------------
+      # Update gh-pages with the content of a given directory
+      # ----------------------------------------------------------------------------------------
+      clone_and_build:
+        parameters:
+          url:
+            type: string
+          dir:
+            type: string
+          src_archive:
+            type: string
+            default: /home/blended/.ivy2/local
+          archive:
+            type: string
+        steps:
+          - add_ssh_keys:
+              fingerprints:
+                - "a2:b9:c0:32:b9:d8:24:95:4c:a2:7d:94:e6:6b:85:8e"
+
+          - attach_workspace:
+              at: /tmp/workspace
+
+          - run:
+              name: Extract Workspace
+              command: |
+                mkdir -p /home/blended/.ivy2/local
+                tar -C /home/blended/.ivy2/local -xzf << parameters.src_archive >>
+
+          - run:
+              name: Clone
+              command: |
+                git clone << parameters.url >> << parameters.dir>>
+                cd << parameters.dir >>
+
+          - run:
+              name: Build
+              command: sbt clean test publishLocal
+
+          - blended/persist_dir_to_workspace:
+              workspace: /tmp/workspace
+              dir: /home/blended/.ivy2/local
+              file: << parameters.archive >>
 
 jobs:
   # -----------------------------------------------------------------------------------------------
@@ -200,7 +243,7 @@ jobs:
             mkdir -p /home/blended/.ivy2/local
             tar -C /home/blended/.ivy2/local -xzf /tmp/workspace/ivylocal.tgz
             mkdir -p /home/blended/blended/target
-            tar -C /home/blended/blended/target -xzf /tmp/workspace/unittest.tgz
+            tar -C /home/blended/blended/target -xvzf /tmp/workspace/unittest.tgz
 
       - run:
           name: Build docs
@@ -220,33 +263,10 @@ jobs:
         user: blended
 
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "a2:b9:c0:32:b9:d8:24:95:4c:a2:7d:94:e6:6b:85:8e"
-
-      - attach_workspace:
-          at: /tmp/workspace
-
-      - run:
-          name: Extract Workspace
-          command: |
-            mkdir -p /home/blended/.ivy2/local
-            tar -C /home/blended/.ivy2/local -xzf /tmp/workspace/ivylocal.tgz
-
-      - run:
-          name: Clone
-          command: |
-            git clone ssh://git@github.com/woq-blended/blended.itestsupport.git itest
-            cd itest
-
-      - run:
-          name: build
-          command: sbt clean test publishLocal
-
-      - blended/persist_dir_to_workspace:
-          workspace: /tmp/workspace
-          dir: /home/blended/.ivy2/local
-          file: ivylocal-itest.tgz
+      - blended/clone_and_build:
+          url: ssh://git@github.com/woq-blended/blended.itestsupport.git
+          dir: /home/blended/itest
+          archive: ivylocal-test.tgz
 
   # -----------------------------------------------------------------------------------------------
   # Checkout and build the management UI
@@ -259,33 +279,10 @@ jobs:
         user: blended
 
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "a2:b9:c0:32:b9:d8:24:95:4c:a2:7d:94:e6:6b:85:8e"
-
-      - attach_workspace:
-          at: /tmp/workspace
-
-      - run:
-          name: Extract Workspace
-          command: |
-            mkdir -p /home/blended/.ivy2/local
-            tar -C /home/blended/.ivy2/local -xzf /tmp/workspace/ivylocal.tgz
-
-      - run:
-          name: Clone
-          command: |
-            git clone ssh://git@github.com/woq-blended/blended.mgmt.ui.git mgmtui
-            cd mgmtui
-
-      - run:
-          name: build
-          command: sbt clean test publishLocal
-
-      - blended/persist_dir_to_workspace:
-          workspace: /tmp/workspace
-          dir: /home/blended/.ivy2/local
-          file: ivylocal-ui.tgz
+      - blended/clone_and_build:
+          url: ssh://git@github.com/woq-blended/blended.mgmt.ui.git mgmtui
+          dir: /home/blended/ui
+          archive: ivylocal-ui.tgz
 
 # -----------------------------------------------------------------------------------------------
 # Put everything together in a workflow
