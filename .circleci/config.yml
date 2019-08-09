@@ -3,6 +3,9 @@ version: 2.1
 orbs:
   blended:
     commands:
+      # ----------------------------------------------------------------------------------------
+      # persist a complete directory incl. sub directories to the workspace using a tar file
+      # ----------------------------------------------------------------------------------------
       persist_dir_to_workspace:
         parameters:
           workspace:
@@ -22,6 +25,34 @@ orbs:
               root: << parameters.workspace >>
               paths:
                 - << parameters.file >>
+
+      # ----------------------------------------------------------------------------------------
+      # Update gh-pages with the content of a given directory
+      # ----------------------------------------------------------------------------------------
+      deploy_gh_pages:
+        parameters:
+          dir:
+            type: string
+          git_user_name:
+            type: env_var_name
+            default: GIT_USER_NAME
+          git_user_mail:
+            type: env_var_name
+            default: GIT_USER_EMAIL
+
+        steps:
+          - run:
+              name: Deploy Site
+              command: |
+                git config user.email "<< git_user_email>>"
+                git config user.name "<< git_user_name >>"
+                git checkout --orphan gh-pages
+                git reset
+                git add -f << parameters.dir >>
+                git commit -m "[skip ci] Deploy Site, build number ${CIRCLE_BUILD_NUM}"
+                git filter-branch -f --prune-empty --subdirectory-filter << parameters.dir >>
+                git clean -f -f -d
+                git push -f origin gh-pages
 
 jobs:
   # -----------------------------------------------------------------------------------------------
@@ -151,6 +182,10 @@ jobs:
     steps:
       - checkout
 
+      - add_ssh_keys:
+          fingerprints:
+            - "a2:b9:c0:32:b9:d8:24:95:4c:a2:7d:94:e6:6b:85:8e"
+
       - restore_cache:
           keys:
             - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
@@ -171,17 +206,40 @@ jobs:
           name: Build docs
           command: sbt unidoc jbakeSite
 
+      - -blended/deploy_gh_pages:
+          dir: target/site
+
 workflows:
   version: 2.1
   blended:
     jobs:
-      - prepare
+      - prepare:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
 
       - compile:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
           requires:
             - prepare
+
       - unit-test:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
           context: blended
           requires:
             - compile
 
+      - site:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+          requires:
+            - unit-test
