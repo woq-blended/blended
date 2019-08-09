@@ -206,7 +206,7 @@ jobs:
           name: Build docs
           command: sbt unidoc jbakeSite
 
-      - -blended/deploy_gh_pages:
+      - blended/deploy_gh_pages:
           dir: target/site
 
 workflows:
