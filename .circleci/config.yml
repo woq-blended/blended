@@ -92,7 +92,10 @@ orbs:
 
           - run:
               name: Build
-              command: cd << parameters.dir >> ; sbt clean test publishLocal
+              command: |
+                cd << parameters.dir >>
+                sbt clean publishLocal
+                sbt test
 
           - persist_dir_to_workspace:
               workspace: /tmp/workspace
