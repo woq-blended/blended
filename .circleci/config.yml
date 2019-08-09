@@ -92,7 +92,7 @@ orbs:
               name: Build
               command: sbt clean test publishLocal
 
-          - blended/persist_dir_to_workspace:
+          - persist_dir_to_workspace:
               workspace: /tmp/workspace
               dir: /home/blended/.ivy2/local
               file: << parameters.archive >>
