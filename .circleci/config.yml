@@ -268,7 +268,7 @@ jobs:
     steps:
       - blended/clone_and_build:
           url: ssh://git@github.com/woq-blended/blended.itestsupport.git
-          dir: /home/blended/itest
+          dir: itest
           archive: ivylocal-test.tgz
 
   # -----------------------------------------------------------------------------------------------
@@ -284,7 +284,7 @@ jobs:
     steps:
       - blended/clone_and_build:
           url: ssh://git@github.com/woq-blended/blended.mgmt.ui.git
-          dir: /home/blended/ui
+          dir: ui
           archive: ivylocal-ui.tgz
 
 # -----------------------------------------------------------------------------------------------
