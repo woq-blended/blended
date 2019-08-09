@@ -44,8 +44,8 @@ orbs:
           - run:
               name: Deploy Site
               command: |
-                git config user.email "<< git_user_email>>"
-                git config user.name "<< git_user_name >>"
+                git config user.email "${<< parameters.git_user_email>>}"
+                git config user.name "<< ${<< parameters.git_user_name >>}"
                 git checkout --orphan gh-pages
                 git reset
                 git add -f << parameters.dir >>
