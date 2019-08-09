@@ -86,7 +86,9 @@ orbs:
               name: Extract Workspace
               command: |
                 mkdir -p /home/blended/.ivy2/local
-                tar -C /home/blended/.ivy2/local -xzf /tmp/workspace/<< parameters.src_archive >>
+                for n in << parameters.src_archive >> ; do
+                  tar -C /home/blended/.ivy2/local -xzf /tmp/workspace/$n
+                done
 
           - run:
               name: Clone
@@ -276,7 +278,7 @@ jobs:
       - blended/clone_and_build:
           url: ssh://git@github.com/woq-blended/blended.itestsupport.git
           dir: itest
-          archive: ivylocal-test.tgz
+          archive: ivylocal-itest.tgz
 
   # -----------------------------------------------------------------------------------------------
   # Checkout and build the management UI
@@ -308,7 +310,7 @@ jobs:
       - blended/clone_and_build:
           url: ssh://git@github.com/woq-blended/blended.container.git
           dir: container
-          src_archive: ivylocal-ui.tgz
+          src_archive: ivylocal-ui.tgz ivylocal-itest.tgz
           archive: ivylocal-ct.tgz
           with_test: "false"
 
@@ -384,3 +386,4 @@ workflows:
           context: blended
           requires:
             - mgmt-ui
+            - itest-support
