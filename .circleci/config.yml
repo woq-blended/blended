@@ -16,7 +16,7 @@ orbs:
               name: Package << parameters.dir >>
               command: |
                 mkdir -p << parameters.workspace >>
-                tar -C << parameters.dir >> -cvf << parameters.workspace >>/<< parameters.file >> .
+                tar -C << parameters.dir >> -czf << parameters.workspace >>/<< parameters.file >> .
 
           - persist_to_workspace:
               root: << parameters.workspace >>
@@ -89,6 +89,7 @@ jobs:
     docker:
       - image: atooni/build-alpine:1.0
         user: blended
+
     steps:
       - checkout
 
@@ -117,10 +118,6 @@ jobs:
             xunit-viewer --results=/home/blended/blended/target/test-results/junit --output=/home/blended/blended/target/test-results/junit.html
           when: always
 
-      - run:
-          name: Build docs
-          command: sbt unidoc jbakeSite
-
       - store_test_results:
           path: /home/blended/blended/target/test-results
 
@@ -139,7 +136,40 @@ jobs:
       - blended/persist_dir_to_workspace:
           workspace: /tmp/workspace
           dir: /home/blended/blended/target
-          file: target.tgz
+          file: unittest.tgz
+
+  # -----------------------------------------------------------------------------------------------
+  # Generate and deploy the current documentation
+  # -----------------------------------------------------------------------------------------------
+  site:
+    shell: /bin/sh -leo pipefail
+    working_directory: /home/blended/blended
+    docker:
+      - image: atooni/build-alpine:1.0
+        user: blended
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v3-blended-core-{{ arch }}-{{ checksum "build.sbt" }}
+            - v3-blended-core-{{ arch }}
+
+      - attach_workspace:
+          at: /tmp/workspace
+
+      - run:
+          name: Extract Workspace
+          command: |
+            mkdir -p /home/blended/.ivy2/local
+            tar -C /home/blended/.ivy2/local -xzf /tmp/worksapce/ivylocal.tgz
+            mkdir -p /home/blended/blended/target
+            tar -C /home/blended/blended/target -xzf /tmp/workspace/unittest.tgz
+
+      - run:
+          name: Build docs
+          command: sbt unidoc jbakeSite
 
 workflows:
   version: 2.1
