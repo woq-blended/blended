@@ -18,8 +18,8 @@ orbs:
           - run:
               name: Package << parameters.dir >>
               command: |
-                mkdir -p \<< parameters.workspace >>
-                tar -C \<< parameters.dir >> -czf \<< parameters.workspace >>/\<< parameters.file >> .
+                mkdir -p << parameters.workspace >>
+                tar -C << parameters.dir >> -czf << parameters.workspace >>/<< parameters.file >> .
 
           - persist_to_workspace:
               root: << parameters.workspace >>
