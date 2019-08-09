@@ -34,18 +34,18 @@ orbs:
           dir:
             type: string
           git_user_name:
-            type: env_var_name
-            default: GIT_USER_NAME
+            type: string
+            default: Blended CI
           git_user_mail:
-            type: env_var_name
-            default: GIT_USER_EMAIL
+            type: string
+            default: ci@wayofquality.de
 
         steps:
           - run:
               name: Deploy Site
               command: |
-                git config user.email "${\<< parameters.git_user_email>>}"
-                git config user.name "${\<< parameters.git_user_name >>}"
+                git config user.email "<< parameters.git_user_email >>"
+                git config user.name "<< parameters.git_user_name >>"
                 git checkout --orphan gh-pages
                 git reset
                 git add -f << parameters.dir >>
@@ -69,7 +69,27 @@ orbs:
           archive:
             type: string
         steps:
-          - checkout
+          - run:
+              name: Prepare SSH
+              command: |
+                if [ "${HOME}" = "/" ]
+                then
+                  export HOME=$(getent passwd $(id -un) | cut -d: -f6)
+                fi
+
+                mkdir -p ~/.ssh
+
+                echo 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' >> ~/.ssh/known_hosts
+
+                (umask 077; touch ~/.ssh/id_rsa)
+                chmod 0600 ~/.ssh/id_rsa
+                (cat <<EOF > ~/.ssh/id_rsa
+                $CHECKOUT_KEY
+                EOF
+                )
+
+                git config --global url."ssh://git@github.com".insteadOf "https://github.com" || true
+                git config --global gc.auto 0 || true
 
           - add_ssh_keys:
               fingerprints:
@@ -167,7 +187,6 @@ jobs:
         user: blended
 
     steps:
-      - checkout
 
       - restore_cache:
           keys:
@@ -225,8 +244,6 @@ jobs:
         user: blended
 
     steps:
-      - checkout
-
       - add_ssh_keys:
           fingerprints:
             - "a2:b9:c0:32:b9:d8:24:95:4c:a2:7d:94:e6:6b:85:8e"
@@ -259,7 +276,7 @@ jobs:
   # -----------------------------------------------------------------------------------------------
   itest-support:
     shell: /bin/sh -leo pipefail
-    working_directory: /home/blended
+    working_directory: /home/blended/itest
     docker:
       - image: atooni/build-alpine:1.0
         user: blended
@@ -275,7 +292,7 @@ jobs:
   # -----------------------------------------------------------------------------------------------
   mgmt-ui:
     shell: /bin/sh -leo pipefail
-    working_directory: /home/blended
+    working_directory: /home/blended/ui
     docker:
       - image: atooni/build-alpine:1.0
         user: blended
