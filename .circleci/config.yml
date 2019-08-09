@@ -220,6 +220,10 @@ jobs:
         user: blended
 
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "a2:b9:c0:32:b9:d8:24:95:4c:a2:7d:94:e6:6b:85:8e"
+
       - attach_workspace:
           at: /tmp/workspace
 
@@ -255,6 +259,10 @@ jobs:
         user: blended
 
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "a2:b9:c0:32:b9:d8:24:95:4c:a2:7d:94:e6:6b:85:8e"
+
       - attach_workspace:
           at: /tmp/workspace
 
@@ -267,7 +275,7 @@ jobs:
       - run:
           name: Clone
           command: |
-            git clone ssh://git@github.com:woq-blended/blended.mgmt.ui.git mgmtui
+            git clone ssh://git@github.com/woq-blended/blended.mgmt.ui.git mgmtui
             cd mgmtui
 
       - run:
