@@ -187,15 +187,16 @@ jobs:
 
       - run:
           name: Coverage
-          command: |
-            bash /home/blended/blended/scripts/batchTest.sh
+          command: sbt clean update coverageOn test
           environment:
             - TEST_ONLINE: true
-            - SBT_OPTS: -Xmx1024M -XX:MaxMetaspaceSize=512m
+            - SBT_OPTS: -Xmx3072m -XX:MaxMetaspaceSize=1536m
 
       - run:
           name: Coverage Report
           command: sbt coverageReport coverageAggregate codacyCoverage
+          environment:
+            - SBT_OPTS: -Xmx3072m -XX:MaxMetaspaceSize=1536m
 
       - run:
           name: Save test results

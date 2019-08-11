@@ -91,7 +91,6 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     )
 
     val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfigImpl(idSvc)
-    println(streamsCfg)
 
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
       clazz = ClassTag(classOf[ActorSystem]),
