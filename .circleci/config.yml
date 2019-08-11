@@ -87,7 +87,7 @@ orbs:
               command: |
                 mkdir -p /home/blended/.ivy2/local
                 for n in << parameters.src_archive >> ; do
-                  tar -C /home/blended/.ivy2/local -xzf /tmp/workspace/$n
+                  tar -C /home/blended/.ivy2/local -xvzf /tmp/workspace/$n
                 done
 
           - run:
@@ -99,7 +99,7 @@ orbs:
               name: Build
               command: |
                 cd << parameters.dir >>
-                sbt clean publishLocal
+                sbt clean update publishLocal
                 if [ "true" = "<< parameters.with_test >>" ]; then
                   sbt test
                 fi
@@ -118,7 +118,7 @@ jobs:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/blended
     docker:
-      - image: atooni/build-alpine:1.0
+      - image: atooni/build-alpine:1.0.1
         user: blended
     steps:
       - checkout
@@ -145,7 +145,7 @@ jobs:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/blended
     docker:
-      - image: atooni/build-alpine:1.0
+      - image: atooni/build-alpine:1.0.1
         user: blended
     steps:
       - checkout
@@ -173,7 +173,7 @@ jobs:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/blended
     docker:
-      - image: atooni/build-alpine:1.0
+      - image: atooni/build-alpine:1.0.1
         user: blended
 
     steps:
@@ -201,7 +201,6 @@ jobs:
           command: |
             mkdir -p /home/blended/blended/target/test-results/junit/
             find /home/blended/blended -type f -regex ".*/test-reports/.*xml" -exec cp {} /home/blended/blended/target/test-results/junit/ \;
-            xunit-viewer --results=/home/blended/blended/target/test-results/junit --output=/home/blended/blended/target/test-results/junit.html
           when: always
 
       - store_test_results:
@@ -231,7 +230,7 @@ jobs:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/blended
     docker:
-      - image: atooni/build-alpine:1.0
+      - image: atooni/build-alpine:1.0.1
         user: blended
 
     steps:
@@ -271,7 +270,7 @@ jobs:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/itest
     docker:
-      - image: atooni/build-alpine:1.0
+      - image: atooni/build-alpine:1.0.1
         user: blended
 
     steps:
@@ -287,7 +286,7 @@ jobs:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/ui
     docker:
-      - image: atooni/build-alpine:1.0
+      - image: atooni/build-alpine:1.0.1
         user: blended
 
     steps:
@@ -303,7 +302,7 @@ jobs:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/container
     docker:
-      - image: atooni/build-alpine:1.0
+      - image: atooni/build-alpine:1.0.1
         user: blended
 
     steps:
