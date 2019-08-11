@@ -172,6 +172,7 @@ jobs:
   unit-test:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/blended
+    resource_class: large
     docker:
       - image: atooni/build-alpine:1.0.1
         user: blended
