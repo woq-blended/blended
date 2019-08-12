@@ -172,7 +172,7 @@ jobs:
   unit-test:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/blended
-    resource_class: medium+
+    resource_class: large
     docker:
       - image: atooni/build-alpine:1.0.1
         user: blended
@@ -190,7 +190,7 @@ jobs:
           command: sbt clean update coverageOn test
           environment:
             - TEST_ONLINE: true
-            - SBT_OPTS: -Xmx3072m -XX:MaxMetaspaceSize=1536m
+            - SBT_OPTS: -Xmx4096m -XX:MaxMetaspaceSize=2048m
 
       - run:
           name: Coverage Report
