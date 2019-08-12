@@ -236,7 +236,7 @@ class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
   "The Transaction manager cleanup should" - {
 
     "Clean up completed and failed transactions correctly" in {
-      val tCount : Int = 50000
+      val tCount : Int = 20000
       val completeRate : Int = 3
       val openRate : Int = 1000
 
@@ -259,7 +259,7 @@ class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
         val env : FlowEnvelope = FlowEnvelope(FlowMessage.noProps)
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))){_ =>}
 
-        if (i % 5000 == 0) {
+        if (i % 2000 == 0) {
           val msg : String = openFiles.map(c => s"$i -- $c -- ${c - startOpen}").getOrElse("")
           println(msg)
           log.info(msg)

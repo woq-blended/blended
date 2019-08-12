@@ -172,7 +172,7 @@ jobs:
   unit-test:
     shell: /bin/sh -leo pipefail
     working_directory: /home/blended/blended
-    resource_class: large
+    resource_class: medium+
     docker:
       - image: atooni/build-alpine:1.0.1
         user: blended
@@ -326,15 +326,15 @@ workflows:
       - prepare:
           filters:
             branches:
-              ignore:
-                - gh-pages
+              only:
+                - master
 
       # -----------------------------------------------------------------------------------------
       - compile:
           filters:
             branches:
-              ignore:
-                - gh-pages
+              only:
+                - master
           requires:
             - prepare
 
@@ -342,8 +342,8 @@ workflows:
       - unit-test:
           filters:
             branches:
-              ignore:
-                - gh-pages
+              only:
+                - master
           context: blended
           requires:
             - compile
@@ -352,8 +352,8 @@ workflows:
       - site:
           filters:
             branches:
-              ignore:
-                - gh-pages
+              only:
+                - master
           context: blended
           requires:
             - unit-test
@@ -362,8 +362,8 @@ workflows:
       - itest-support:
           filters:
             branches:
-              ignore:
-                - gh-pages
+              only:
+                - master
           context: blended
           requires:
             - compile
@@ -372,8 +372,8 @@ workflows:
       - mgmt-ui:
           filters:
             branches:
-              ignore:
-                - gh-pages
+              only:
+                - master
           context: blended
           requires:
             - compile
@@ -382,8 +382,8 @@ workflows:
       - demo-container:
           filters:
             branches:
-              ignore:
-                - gh-pages
+              only:
+                - master
           context: blended
           requires:
             - mgmt-ui
