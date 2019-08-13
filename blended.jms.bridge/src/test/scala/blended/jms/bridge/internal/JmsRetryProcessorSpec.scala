@@ -10,11 +10,11 @@ import akka.stream.scaladsl.Flow
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.streams.FlowProcessor
+import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionFailed}
+import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}

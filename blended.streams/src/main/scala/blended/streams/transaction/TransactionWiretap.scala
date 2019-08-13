@@ -5,6 +5,7 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Zip}
 import akka.stream.{FlowShape, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.streams.FlowHeaderConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.worklist.WorklistStateCompleted

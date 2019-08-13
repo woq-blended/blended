@@ -9,7 +9,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwar
 import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
@@ -31,7 +31,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
   private val brokerName : String = "blended"
   private val consumerCount : Int = 5
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig(prefix = "Spec")
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(prefix = "Spec")
 
   private lazy val amqCf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
     vendor = "amq",

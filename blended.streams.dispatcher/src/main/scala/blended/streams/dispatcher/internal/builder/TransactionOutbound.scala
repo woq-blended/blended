@@ -10,7 +10,7 @@ import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.{FlowTransactionStream, _}
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams._
 import blended.util.logging.{LogLevel, Logger}
 
 import scala.util.Try

@@ -6,7 +6,7 @@ import akka.stream._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Zip}
 import akka.util.Timeout
 import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
-import blended.streams.FlowProcessor
+import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger

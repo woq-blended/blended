@@ -5,9 +5,9 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{GraphStage, GraphStageLogic}
-import blended.jms.utils.{JmsAckSession, JmsAckState, JmsDestination, Reconnect}
+import blended.jms.utils.{JmsAckSession, JmsAckState, JmsDestination}
+import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
 import javax.jms._
 
 import scala.concurrent.duration._

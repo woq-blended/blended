@@ -5,7 +5,7 @@ import java.util.UUID
 import blended.streams.dispatcher.internal.{OutboundRouteConfig, ResourceTypeConfig}
 import blended.streams.jms.JmsEnvelopeHeader
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.streams.worklist.{FlowWorklistItem, Worklist, WorklistItem}
 import blended.util.logging.Logger
 import com.typesafe.config.Config

@@ -15,7 +15,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwar
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}

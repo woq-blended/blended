@@ -12,9 +12,9 @@ import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.http.jmsqueue.BlendedAkkaHttpJmsqueueActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
+import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike

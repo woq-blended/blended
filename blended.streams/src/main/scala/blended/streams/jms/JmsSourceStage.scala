@@ -8,7 +8,7 @@ import akka.stream._
 import akka.stream.stage._
 import blended.jms.utils.{JmsConsumerSession, JmsDestination}
 import blended.streams.message._
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.util.logging.Logger
 import javax.jms._
 

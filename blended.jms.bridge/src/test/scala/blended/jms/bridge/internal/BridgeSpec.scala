@@ -10,12 +10,12 @@ import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.streams.BlendedStreamsConfig
-import blended.streams.internal.{BlendedStreamsActivator, BlendedStreamsConfigImpl}
+import blended.streams.internal.BlendedStreamsActivator
 import blended.streams.jms._
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionStarted, FlowTransactionUpdate}
+import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionStarted, FlowTransactionUpdate}
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
@@ -61,8 +61,6 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
 
   protected val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
 
-  protected val destinationName : String = destHeader(headerCfg.prefix)
-
   protected def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"
 
   protected def getConnectionFactories(sr: BlendedPojoRegistry)(implicit timeout : FiniteDuration) : (IdAwareConnectionFactory, IdAwareConnectionFactory) = {
@@ -106,6 +104,35 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
 }
 
 @RequiresForkedJVM
+class MapToExternalBridgeSpec extends BridgeSpecSupport {
+
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withoutTracking").getAbsolutePath()
+
+  "The outbound bridge should" - {
+
+    "Forward messages that are meant to an external provider even if send via the internal provider" in {
+      val msgCount : Int = 1
+
+      val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
+        env
+          .withHeader(headerCfg.headerBridgeVendor, "activemq").get
+          .withHeader(headerCfg.headerBridgeProvider, "external").get
+          .withHeader(destHeader(headerCfg.prefix), "sampleOut").get
+      }.get
+
+      val switch : KillSwitch = sendMessages("bridge.data.out", internal)(msgs:_*)
+
+      val messages : List[FlowEnvelope] =
+        consumeMessages(external, "sampleOut")(3.seconds, system, materializer).get
+
+      messages should have size(msgCount)
+
+      switch.shutdown()
+    }
+  }
+}
+
+@RequiresForkedJVM
 class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withoutTracking").getAbsolutePath()
@@ -113,7 +140,7 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
   private def sendInbound(msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
     }.get
 
 
@@ -187,7 +214,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
   private def sendInbound(msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
     }.get
 
 
@@ -225,7 +252,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
       val desc = "TestDesc"
 
       val env : FlowEnvelope = FlowEnvelope(FlowMessage("Header")(FlowMessage.props(
-        destinationName -> "SampleHeaderOut",
+        destHeader(headerCfg.prefix) -> "SampleHeaderOut",
         "Description" -> desc,
         headerCfg.headerTrack -> false
       ).get))
@@ -255,7 +282,7 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
   private def sendInbound(msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
     }.get
 
 
@@ -298,7 +325,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
         .withHeader(headerCfg.headerTrack, track).get
     }.get
 
@@ -359,7 +386,7 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
         .withHeader(headerCfg.headerTrack, track).get
     }.get
 
@@ -414,7 +441,7 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
         .withHeader(headerCfg.headerTrack, track).get
     }.get
 
@@ -465,7 +492,7 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
         .withHeader(headerCfg.headerTrack, track).get
     }.get
 
@@ -518,7 +545,7 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
-        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
         .withHeader(headerCfg.headerTrack, track).get
     }.get
 

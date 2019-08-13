@@ -8,7 +8,7 @@ import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.util.logging.Logger
 
 import scala.util.Try

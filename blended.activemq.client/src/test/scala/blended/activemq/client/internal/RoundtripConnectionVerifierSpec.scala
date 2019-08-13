@@ -3,16 +3,16 @@ package blended.activemq.client.internal
 import akka.actor.ActorSystem
 import blended.activemq.client.{ConnectionVerifier, RoundtripConnectionVerifier}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue, SimpleIdAwareConnectionFactory}
+import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.scalatest.{BeforeAndAfterAll, Matchers}
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 
 class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
   with Matchers
@@ -57,7 +57,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
         verify = env => true,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
-        headerConfig = FlowHeaderConfig(prefix = "App")
+        headerConfig = FlowHeaderConfig.create(prefix = "App")
       )
 
       val f = verifier.verifyConnection(cf)
@@ -70,7 +70,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
         verify = env => false,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
-        headerConfig = FlowHeaderConfig(prefix = "App")
+        headerConfig = FlowHeaderConfig.create(prefix = "App")
       )
 
       val f = verifier.verifyConnection(cf)
@@ -91,7 +91,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
         verify = env => false,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
-        headerConfig = FlowHeaderConfig(prefix = "App")
+        headerConfig = FlowHeaderConfig.create(prefix = "App")
       )
 
       val f = verifier.verifyConnection(ucf)

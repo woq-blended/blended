@@ -4,8 +4,8 @@ import java.io.File
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.ByteString
+import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
 import blended.testsupport.FileTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
@@ -24,7 +24,7 @@ class FileDropSpec extends LoggingFreeSpec
   private implicit val system : ActorSystem = ActorSystem(getClass().getSimpleName())
   private val to : FiniteDuration = 1.second
 
-  private val headerCfg = FlowHeaderConfig(prefix = "App")
+  private val headerCfg = FlowHeaderConfig.create(prefix = "App")
 
   private val dropCfg : FileDropConfig = FileDropConfig(
     dirHeader = "",

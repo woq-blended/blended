@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.util.{ByteString, Timeout}
 import blended.streams.jms.JmsEnvelopeHeader
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, TextFlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future, Promise}

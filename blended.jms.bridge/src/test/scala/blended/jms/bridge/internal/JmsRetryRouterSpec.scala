@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import blended.jms.utils.{IdAwareConnectionFactory, SimpleIdAwareConnectionFactory}
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.apache.activemq.ActiveMQConnectionFactory

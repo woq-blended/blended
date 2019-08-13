@@ -7,17 +7,17 @@ import akka.stream.scaladsl.{Keep, Sink}
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
+import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import javax.jms.ConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, FreeSpecLike, Matchers}
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 
 class HttpQueueServiceSpec extends FreeSpec
   with ScalatestRouteTest

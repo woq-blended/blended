@@ -9,10 +9,10 @@ import blended.jms.bridge.internal.TrackTransaction.TrackTransaction
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.{AckProcessor, HeaderProcessorConfig, HeaderTransformProcessor}
 import blended.streams.transaction._
-import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamControllerConfig}
+import blended.streams._
 import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
 
@@ -69,6 +69,32 @@ class BridgeStreamBuilder(
   streamsConfig : BlendedStreamsConfig
 )(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
+  private class BridgeDestinationResolver(settings : JmsProducerSettings) extends MessageDestinationResolver(settings) {
+    override def destination(flowMsg : FlowMessage) : Try[JmsDestination] = {
+
+      (flowMsg.header[String](headerConfig.headerBridgeVendor), flowMsg.header[String](headerConfig.headerBridgeProvider)) match {
+        case (Some(v), Some(p)) =>
+          // if the target connection factory is the connection factory targeted by the message, we will just
+          // resolve the destination, otherwise we will make another hop via an outbound bridge queue
+          if (v == bridgeCfg.toCf.vendor && p == bridgeCfg.toCf.provider) {
+            super.destination(flowMsg)
+          } else {
+            val result : Try[JmsDestination] = Try {
+              val intern : BridgeProviderConfig = bridgeCfg.registry.internalProvider.get
+              if (intern.vendor == v && intern.provider == p) {
+                intern.outbound
+              } else {
+                JmsDestination.create(s"${intern.outbound.asString}.$v.$p").get
+              }
+            }
+            log.debug(s"Rerouting outbound message [${flowMsg.header[String](headerConfig.headerTransId)}] via [$result]")
+            result
+          }
+        case _ => super.destination(flowMsg)
+      }
+    }
+  }
+
   // So that we find the stream in the logs
   protected val inId = s"${bridgeCfg.fromCf.vendor}:${bridgeCfg.fromCf.provider}:${bridgeCfg.fromDest.asString}"
   protected val outId = s"${bridgeCfg.toCf.vendor}:${bridgeCfg.toCf.provider}:${bridgeCfg.toDest.map(_.asString).getOrElse("out")}"
@@ -77,12 +103,13 @@ class BridgeStreamBuilder(
 
   protected val transShard : Option[String] = streamsConfig.transactionShard
 
-  protected val toSettings : IdAwareConnectionFactory => Option[JmsDestination] => JmsProducerSettings = cf => dest => {
+  protected def toSettings(
+    cf :IdAwareConnectionFactory,
+    dest : Option[JmsDestination]
+  ) : JmsProducerSettings = {
     val resolver : JmsProducerSettings => JmsDestinationResolver = dest match {
       case Some(_) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
-      case None => s : JmsProducerSettings => new MessageDestinationResolver(
-        settings = s
-      )
+      case None => s : JmsProducerSettings => new BridgeDestinationResolver(s)
     }
 
     JmsProducerSettings(
@@ -161,7 +188,7 @@ class BridgeStreamBuilder(
 
   // The jms producer for forwarding the messages to the target destination
   protected def jmsSend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
-    jmsProducer(name = streamId + "-sink", settings = toSettings(bridgeCfg.toCf)(bridgeCfg.toDest), autoAck = false)
+    jmsProducer(name = streamId + "-sink", settings = toSettings(bridgeCfg.toCf, bridgeCfg.toDest), autoAck = false)
   }
 
 
@@ -191,7 +218,7 @@ class BridgeStreamBuilder(
           .via(
             jmsProducer(
               name = streamId + "-retry",
-              settings = toSettings(bridgeCfg.fromCf)(Some(d)).copy(clearPreviousException = true),
+              settings = toSettings(bridgeCfg.fromCf, Some(d)).copy(clearPreviousException = true),
               autoAck = false
             )
           )

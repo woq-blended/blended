@@ -8,7 +8,7 @@ import akka.stream.scaladsl.Flow
 import akka.stream.{FlowShape, Graph}
 import blended.streams.FlowProcessor
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._

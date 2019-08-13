@@ -5,7 +5,6 @@ import akka.stream._
 import akka.stream.stage._
 import blended.jms.utils.{JmsDestination, JmsProducerSession}
 import blended.streams.message.FlowEnvelope
-import blended.util.logging.Logger
 import javax.jms.{Connection, Destination, JMSException, MessageProducer}
 
 import scala.concurrent.duration._

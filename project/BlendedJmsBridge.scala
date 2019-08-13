@@ -26,8 +26,8 @@ object BlendedJmsBridge extends ProjectFactory {
       Test / testlogLogPackages ++= Map("" +
         "App" -> "DEBUG",
         "blended" -> "DEBUG",
-        "spec" -> "DEBUG",
-        "blended.jms" -> "TRACE"
+        "spec" -> "DEBUG"
+        //"blended.jms" -> "TRACE"
       )
     )
   }

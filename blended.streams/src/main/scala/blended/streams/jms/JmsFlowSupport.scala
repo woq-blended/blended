@@ -9,7 +9,7 @@ import javax.jms._
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.Try
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 
 case class JmsAcknowledgeHandler(
   id : String,

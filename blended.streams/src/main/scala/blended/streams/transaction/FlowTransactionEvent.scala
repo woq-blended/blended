@@ -1,113 +1,11 @@
 package blended.streams.transaction
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.streams.FlowHeaderConfig
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty, TextFlowMessage}
 import blended.streams.worklist.WorklistState
-import blended.util.config.Implicits._
-import com.typesafe.config.Config
 
 import scala.util.Try
-
-object FlowHeaderConfig {
-
-  // these are the keys the we will look up in the config to potentially
-  // overwrite the default settings
-  private val prefixPath = "prefix"
-  private val transIdPath = "transactionId"
-  private val branchIdPath = "branchId"
-  private val statePath = "transactionState"
-  private val trackTransactionPath = "trackTransaction"
-  private val trackSourcePath = "trackSource"
-  private val retryCountPath = "retryCount"
-  private val maxRetriesPath = "maxRetries"
-  private val retryTimeoutPath = "retryTimeout"
-  private val retryDestPath = "retryDestination"
-  private val firstRetryPath = "firstRetry"
-  private val transShardPath = "transactionShard"
-
-  private val transId = "TransactionId"
-  private val transShard = "TransactionShard"
-  private val branchId = "BranchId"
-  private val transState = "TransactionState"
-  private val trackTrans = "TrackTransaction"
-  private val trackSource = "TrackSource"
-  private val retryCount = "RetryCount"
-  private val maxRetries = "MaxRetries"
-  private val retryTimeout = "RetryTimeout"
-  private val retryDest = "RetryDestination"
-  private val firstRetry = "FirstRetry"
-
-  val headerConfigPath : String = "blended.flow.header"
-  val header : String => String => String = prefix => name => prefix + name
-
-  def create(idSvc : ContainerIdentifierService) : FlowHeaderConfig = create(
-    idSvc.containerContext.getContainerConfig().getConfig(FlowHeaderConfig.headerConfigPath)
-  )
-
-  def create(prefix : String) : FlowHeaderConfig = FlowHeaderConfig(
-    prefix = prefix,
-    headerTransId = header(prefix)(transId),
-    headerTransShard = header(prefix)(transShard),
-    headerBranch = header(prefix)(branchId),
-    headerState = header(prefix)(transState),
-    headerTrack = header(prefix)(trackTrans),
-    headerTrackSource = header(prefix)(trackSource),
-    headerRetryCount = header(prefix)(retryCount),
-    headerMaxRetries = header(prefix)(maxRetries),
-    headerRetryTimeout = header(prefix)(retryTimeout),
-    headerRetryDestination = header(prefix)(retryDest),
-    headerFirstRetry = header(prefix)(firstRetry)
-  )
-
-  def create(cfg: Config): FlowHeaderConfig = {
-
-    val prefix = cfg.getString(prefixPath, "Blended")
-    val headerTransId = cfg.getString(transIdPath, transId)
-    val headerTransShard = cfg.getString(transShardPath, transShard)
-    val headerBranch = cfg.getString(branchIdPath, branchId)
-    val headerState = cfg.getString(statePath, transState)
-    val headerTrack = cfg.getString(trackTransactionPath, trackTrans)
-    val headerTrackSource = cfg.getString(trackSourcePath, trackSource)
-    val headerRetryCount = cfg.getString(retryCountPath, retryCount)
-    val headerMaxRetries = cfg.getString(maxRetriesPath, maxRetries)
-    val headerRetryTimeout = cfg.getString(retryTimeoutPath, retryTimeout)
-    val headerRetryDest = cfg.getString(retryDestPath, retryDest)
-    val headerFirstRetry = cfg.getString(firstRetryPath, firstRetry)
-
-    FlowHeaderConfig(
-      prefix = prefix,
-      headerTransId = header(prefix)(headerTransId),
-      headerTransShard = header(prefix)(headerTransShard),
-      headerBranch = header(prefix)(headerBranch),
-      headerState = header(prefix)(headerState),
-      headerTrack = header(prefix)(headerTrack),
-      headerTrackSource = header(prefix)(headerTrackSource),
-      headerRetryCount = header(prefix)(headerRetryCount),
-      headerMaxRetries = header(prefix)(headerMaxRetries),
-      headerRetryTimeout = header(prefix)(headerRetryTimeout),
-      headerRetryDestination = header(prefix)(headerRetryDest),
-      headerFirstRetry = header(prefix)(headerFirstRetry)
-    )
-  }
-}
-
-case class FlowHeaderConfig private (
-  prefix : String,
-  headerTransId : String = "TransactionId",
-  headerTransShard : String = "TransactionShard",
-  headerBranch : String = "BranchId",
-  headerState : String = "TransactionState",
-  headerTransCreated : String = "TransactionCreated",
-  headerTransUpdated : String = "TransactionUpdate",
-  headerTrack : String = "TrackTransaction",
-  headerTrackSource : String = "TrackSource",
-  headerRetryCount : String = "RetryCount",
-  headerMaxRetries : String = "MaxRetries",
-  headerRetryTimeout : String = "RetryTimeout",
-  headerRetryDestination : String = "RetryDestination",
-  headerFirstRetry : String = "FirstRetry"
-)
 
 object FlowTransactionEvent {
 
