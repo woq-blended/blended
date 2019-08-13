@@ -327,14 +327,14 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - publish
 
       # -----------------------------------------------------------------------------------------
       - compile:
           filters:
             branches:
               only:
-                - master
+                - publish
           requires:
             - prepare
 
@@ -343,7 +343,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - publish
           context: blended
           requires:
             - compile
@@ -353,7 +353,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - publish
           context: blended
           requires:
             - unit-test
@@ -363,7 +363,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - publish
           context: blended
           requires:
             - compile
@@ -373,7 +373,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - publish
           context: blended
           requires:
             - compile
@@ -383,7 +383,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - publish
           context: blended
           requires:
             - mgmt-ui
