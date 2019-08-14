@@ -41,6 +41,8 @@ private[bridge] object BridgeControllerConfig {
 
     val trackInbound : Boolean = cfg.getBoolean("trackInbound", true)
 
+    val alternates : Seq[String] = cfg.getStringListOption("outboundAlternateHeader").getOrElse(List.empty)
+
     providerList.filter(_.internal) match {
       case Nil => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
       case _ :: Nil =>
@@ -54,6 +56,7 @@ private[bridge] object BridgeControllerConfig {
       registry = registry,
       headerCfg = headerCfg,
       inbound = inboundList,
+      outboundAlternates = alternates,
       idSvc = idSvc,
       rawConfig = cfg,
       streamsCfg = streamsCfg,
@@ -68,6 +71,7 @@ private[bridge] case class BridgeControllerConfig(
   registry : BridgeProviderRegistry,
   headerCfg : FlowHeaderConfig,
   inbound : List[InboundConfig],
+  outboundAlternates : Seq[String],
   idSvc : ContainerIdentifierService,
   trackInbound : Boolean,
   streamsCfg : BlendedStreamsConfig,
@@ -108,6 +112,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       fromDest = in.from,
       toCf = ctrlCfg.internalCf,
       toDest = Some(toDest),
+      outboundAlternates = Seq.empty,
       listener = in.listener,
       selector = in.selector,
       registry = ctrlCfg.registry,
@@ -130,7 +135,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
     streams += (builder.streamCfg.name -> actor)
   }
 
-  private[this] def createOutboundStream(cf : IdAwareConnectionFactory, internal : Boolean) : Unit = {
+  private[this] def createOutboundStream(cf : IdAwareConnectionFactory, internal : Boolean, alternates : Seq[String]) : Unit = {
 
     val fromDest = if (internal) {
       JmsDestination.create(ctrlCfg.registry.internalProvider.get.outbound.asString).get
@@ -148,6 +153,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       fromDest = fromDest,
       toCf = cf,
       toDest = None,
+      outboundAlternates = alternates,
       listener = 3,
       selector = None,
       registry = ctrlCfg.registry,
@@ -180,7 +186,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
           log.debug(s"Creating Streams for inbound destinations : [${inbound.mkString(",")}]")
           inbound.foreach { in => createInboundStream(in, cf, internal) }
 
-          createOutboundStream(cf, internal)
+          createOutboundStream(cf, internal, ctrlCfg.outboundAlternates)
         case Failure(_) =>
           log.warn("No internal JMS provider found in config")
       }
