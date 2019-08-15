@@ -1,33 +1,38 @@
 package blended.jms.utils.internal
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
-import akka.pattern.ask
-import akka.util.Timeout
-import blended.jms.utils.{Connect, ConnectResult, ConnectionClosed, Disconnect}
+import blended.jms.utils._
+import blended.util.logging.Logger
 import javax.jms.Connection
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
-import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
 
 object JmsConnectionController {
-  def props(holder : ConnectionHolder) : Props = Props(new JmsConnectionController(holder))
+  def props(
+    holder: ConnectionHolder,
+    closer : Props
+  ) = Props(new JmsConnectionController(holder, closer))
 }
 
-class JmsConnectionController(holder : ConnectionHolder) extends Actor with ActorLogging {
+class JmsConnectionController(holder: ConnectionHolder, closer : Props) extends Actor {
 
-  private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
+  private val log : Logger = Logger(s"${getClass().getName()}.${holder.vendor}.${holder.provider}")
+  private implicit val eCtxt = context.system.dispatcher
+
+  private case object Tick
 
   override def receive : Receive = disconnected
 
-  def disconnected : Receive = LoggingReceive {
+  private def disconnected : Receive = LoggingReceive {
     case Connect(t, _) =>
       val caller = sender()
 
       try {
         val c = holder.connect()
+        log.debug(s"Successfully connected to [${holder.vendor}:${holder.provider}]")
         caller ! ConnectResult(t, Right(c))
         context.become(connected(c))
       } catch {
@@ -37,22 +42,32 @@ class JmsConnectionController(holder : ConnectionHolder) extends Actor with Acto
       sender() ! ConnectionClosed
   }
 
-  def connected(c : Connection) : Receive = LoggingReceive {
+  private def connected(c : Connection) : Receive = {
     case Connect(t, _) =>
       sender ! ConnectResult(t, Right(c))
     case Disconnect(t) =>
-      implicit val timeout : Timeout = Timeout(t + 1.second)
-      val caller = sender()
+      val timer : Cancellable = context.system.scheduler.scheduleOnce(t + 1.second, self, Tick)
 
-      val closer = context.actorOf(ConnectionCloseActor.props(holder))
-      closer.ask(Disconnect(t)).onComplete {
-        case Success(r) =>
-          context.become(disconnected)
-          caller ! r
-        case Failure(e) =>
-          val id : String = Option(holder).map(h => s"${h.vendor}:${h.provider}").getOrElse("Unknown")
-          log.warning(s"Unexpected exception closing connection for provider [$id] : [${e.getMessage()}]")
-      }
+      val closeActor = context.actorOf(closer)
+      closeActor ! Disconnect(t)
+
+      context.become(disconnecting(sender(), timer))
+  }
+
+  private def disconnecting(caller : ActorRef, timer : Cancellable) : Receive = {
+    case Tick =>
+      log.debug(s"Disconnect for [${holder.vendor}:${holder.provider}] timed out.")
+      caller ! CloseTimeout
+
+    case CloseTimeout =>
+      timer.cancel()
+      caller ! CloseTimeout
+      context.become(disconnected)
+
+    case ConnectionClosed =>
+      timer.cancel()
+      caller ! ConnectionClosed
+      context.become(disconnected)
   }
 
   override def toString : String = "JMSConnectionController(" + holder.toString() + ")"

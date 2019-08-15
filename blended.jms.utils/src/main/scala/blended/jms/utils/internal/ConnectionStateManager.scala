@@ -3,7 +3,7 @@ package blended.jms.utils.internal
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, Props}
 import akka.event.LoggingReceive
 import blended.jms.utils._
 import blended.util.logging.Logger
@@ -42,7 +42,7 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
    ConnectionState(vendor = vendor, provider = config.provider).copy(status = Disconnected)
 
   // To this actor we delegate all connect and close operations for the underlying JMS provider
-  private val controller : ActorRef = context.actorOf(JmsConnectionController.props(holder))
+  val controller = context.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
 
   // If something causes an unexpected restart, we want to know
   override def preRestart(reason : Throwable, message : Option[Any]) : Unit = {
@@ -72,6 +72,7 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
   def disconnected()(state : ConnectionState) : Receive = LoggingReceive {
     // Upon a CheckConnection message we will kick off initiating and monitoring the connection
     case cc : CheckConnection =>
+      log.debug(s"Trying to initialize connection [$vendor:$provider]")
       initConnection(state, cc.now)
   }
 

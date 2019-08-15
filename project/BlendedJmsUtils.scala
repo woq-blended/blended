@@ -1,6 +1,7 @@
-import blended.sbt.Dependencies
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import phoenix.ProjectFactory
 import sbt._
+import blended.sbt.Dependencies
 
 object BlendedJmsUtils extends ProjectFactory {
 
@@ -23,6 +24,15 @@ object BlendedJmsUtils extends ProjectFactory {
       Dependencies.akkaTestkit % Test,
       Dependencies.logbackCore % Test,
       Dependencies.logbackClassic % Test
+    )
+
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "App" -> "DEBUG",
+        "spec" -> "DEBUG",
+        "blended" -> "DEBUG"
+      )
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
