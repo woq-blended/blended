@@ -65,7 +65,6 @@ class JmsConnectionController(holder: ConnectionHolder, closer : Props) extends 
     case ConnectionClosed =>
       timer.cancel()
       caller ! ConnectionClosed
-      context.stop(self)
       context.become(disconnected)
   }
 

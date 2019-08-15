@@ -84,6 +84,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
     // Upon a CheckConnection message we will kick off initiating and monitoring the connection
     case cc : CheckConnection =>
       pingTimer = None
+      log.debug(s"Trying to initialize connection [$vendor:$provider]")
       initConnection(state, cc.now)
   }
 
