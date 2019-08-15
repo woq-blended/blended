@@ -1,3 +1,4 @@
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import sbt._
 import blended.sbt.Dependencies
 
@@ -18,7 +19,16 @@ object BlendedJmsUtils extends ProjectFactory {
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
     )
-  )
+  ) {
+    override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "App" -> "DEBUG",
+        "spec" -> "DEBUG",
+        "blended" -> "DEBUG"
+      )
+    )
+  }
 
   override val project = helper.baseProject.dependsOn(
     BlendedDomino.project,

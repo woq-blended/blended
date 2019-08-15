@@ -26,7 +26,7 @@ class ConnectionCloseActorSpec extends TestKit(ActorSystem("CloseActorSpec"))
 
     "answer with a CloseTimeout if the close does not succeed with in the specified timeout" in {
 
-      val timeout = 50.millis
+      val timeout = 100.millis
 
       val holder = new DummyHolder(() => new DummyConnection() {
         override def close(): Unit = {
@@ -61,5 +61,4 @@ class ConnectionCloseActorSpec extends TestKit(ActorSystem("CloseActorSpec"))
       assert(closeCount == 1)
     }
   }
-
 }

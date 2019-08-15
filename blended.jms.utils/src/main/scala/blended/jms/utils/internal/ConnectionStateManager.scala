@@ -53,7 +53,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   var pingTimer : Option[Cancellable] = None
 
   // To this actor we delegate all connect and close operations for the underlying JMS provider
-  val controller = context.actorOf(JmsConnectionController.props(holder))
+  val controller = context.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
 
   // If something causes an unexpected restart, we want to know
   override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
