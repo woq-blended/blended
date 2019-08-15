@@ -28,7 +28,7 @@ class ServiceJmxCollector(cfg : OSGIActorConfig, svcConfig : ServiceJmxConfig, s
   override def receive : Receive = {
     case Tick =>
       log.debug("Refreshing Service Information from JMX")
-      analyser.analyse().foreach(info => cfg.system.eventStream.publish(info))
+      analyser.anaºlyse().foreach(info => cfg.system.eventStream.publish(info))
       context.system.scheduler.scheduleOnce(svcConfig.interval.seconds, self, Tick)
   }
 
