@@ -1,8 +1,8 @@
 package blended.streams.jms
 
 import blended.jms.utils.JmsDestination
-import blended.streams.message._
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage, UnitMsgProperty}
+import blended.streams.FlowHeaderConfig
 import blended.util.logging.Logger
 import javax.jms.{Destination, JMSException, Message, Session}
 
@@ -82,7 +82,7 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
   }
 
   // Get the destination from the message
-  val destination : FlowMessage => Try[JmsDestination] = { flowMsg =>
+  def destination(flowMsg : FlowMessage) : Try[JmsDestination] = {
     Try {
 
       val id : String = flowMsg.header[String](headerConfig.headerTransId).getOrElse("UNKNOWN")
@@ -102,7 +102,7 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
           }
       }
 
-      log.trace(s"Resolved destination for [${flowMsg.header[String](headerConfig.headerTransId)}] to [${d.asString}]")
+      log.debug(s"Resolved destination for [$id] to [${d.asString}]")
       d
     }
   }

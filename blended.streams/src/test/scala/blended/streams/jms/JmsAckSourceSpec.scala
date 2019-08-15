@@ -11,7 +11,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, MessageRecei
 import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger

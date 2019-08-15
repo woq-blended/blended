@@ -15,8 +15,8 @@ import blended.streams.internal.BlendedStreamsConfigImpl
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionFailed}
-import blended.streams.{BlendedStreamsConfig, FlowProcessor}
+import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed}
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}

@@ -3,6 +3,7 @@ package blended.streams.transaction
 import akka.actor.ActorSystem
 import akka.serialization.SerializationExtension
 import akka.testkit.TestKit
+import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowTransactionEvent.{envelope2event, event2envelope}
 import blended.streams.worklist._

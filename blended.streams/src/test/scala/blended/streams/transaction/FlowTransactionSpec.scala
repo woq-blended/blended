@@ -3,7 +3,7 @@ package blended.streams.transaction
 import java.util.Date
 
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction
+import blended.streams.{FlowHeaderConfig, transaction}
 import blended.streams.transaction.FlowTransaction.{envelope2Transaction, transaction2envelope}
 import blended.streams.worklist._
 import blended.testsupport.scalatest.LoggingFreeSpec

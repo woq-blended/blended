@@ -4,7 +4,7 @@ import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.JmsDestination
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import javax.jms.Session
 
 import scala.concurrent.duration._

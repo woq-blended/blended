@@ -8,6 +8,7 @@ import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
+import blended.streams.FlowHeaderConfig
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{CollectingActor, Collector}
 import blended.streams.transaction.internal.FileFlowTransactionManager

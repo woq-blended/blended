@@ -7,7 +7,7 @@ import akka.stream._
 import akka.stream.stage.{AsyncCallback, GraphStage, GraphStageLogic}
 import blended.jms.utils.{JmsDestination, JmsSession, MessageReceived}
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
 import blended.util.RichTry._
 import blended.util.logging.LogLevel.LogLevel

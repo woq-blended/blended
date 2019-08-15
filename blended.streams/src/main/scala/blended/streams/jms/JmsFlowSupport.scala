@@ -1,9 +1,9 @@
 package blended.streams.jms
 
 import blended.jms.utils.JmsDestination
+import blended.streams.FlowHeaderConfig
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message._
-import blended.streams.transaction.FlowHeaderConfig
 import blended.util.RichTry._
 import javax.jms._
 

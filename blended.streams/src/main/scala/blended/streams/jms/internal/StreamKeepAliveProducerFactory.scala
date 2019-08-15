@@ -8,7 +8,7 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{BlendedSingleConnectionFactory, JmsDestination}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
 

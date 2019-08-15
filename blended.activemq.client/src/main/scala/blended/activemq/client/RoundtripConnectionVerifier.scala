@@ -9,7 +9,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms.{JmsEnvelopeHeader, JmsProducerSettings, JmsStreamSupport, MessageDestinationResolver}
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._

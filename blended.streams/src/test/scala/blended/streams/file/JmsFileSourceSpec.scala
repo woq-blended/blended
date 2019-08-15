@@ -15,8 +15,7 @@ import blended.streams.internal.BlendedStreamsConfigImpl
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
-import blended.streams.transaction.FlowHeaderConfig
-import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike

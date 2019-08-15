@@ -8,7 +8,7 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils._
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}

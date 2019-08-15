@@ -6,9 +6,9 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.stream.scaladsl.{Keep, Sink}
 import akka.util.ByteString
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
+import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import javax.jms.ConnectionFactory

@@ -8,8 +8,9 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.internal.TrackTransaction.TrackTransaction
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.streams._
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.{AckProcessor, HeaderProcessorConfig, HeaderTransformProcessor}
 import blended.streams.transaction._
 import blended.streams.{BlendedStreamsConfig, FlowProcessor}
@@ -37,6 +38,9 @@ case class BridgeStreamConfig(
   // optional destination to forward the messages to. If None, the target destination
   // must be set in the message
   toDest : Option[JmsDestination],
+  // outbound alternate headers - if given the values will be tried as alternative headers
+  // in place of ${headerCfg.prefix}JMSDestination
+  outboundAlternates : Seq[String],
   // the number of consumers consuming in parallel from the source destination
   listener : Int,
   // An optional selector to consume the messages
@@ -71,15 +75,64 @@ class BridgeStreamBuilder(
   protected val outId = s"${bridgeCfg.toCf.vendor}:${bridgeCfg.toCf.provider}:${bridgeCfg.toDest.map(_.asString).getOrElse("out")}"
   val streamId = s"${bridgeCfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
   protected val bridgeLogger = Logger(streamId)
-
   protected val transShard : Option[String] = streamsConfig.transactionShard
 
-  protected val toSettings : IdAwareConnectionFactory => Option[JmsDestination] => JmsProducerSettings = cf => dest => {
+  private class BridgeDestinationResolver(settings : JmsProducerSettings) extends MessageDestinationResolver(settings) {
+    override def destination(flowMsg : FlowMessage) : Try[JmsDestination] = {
+
+      val transId : String = flowMsg.header[String](headerConfig.headerTransId).getOrElse("UNNKNOWN")
+
+      val dest : Try[JmsDestination] = (flowMsg.header[String](headerConfig.headerBridgeVendor), flowMsg.header[String](headerConfig.headerBridgeProvider)) match {
+        case (Some(v), Some(p)) =>
+          // if the target connection factory is the connection factory targeted by the message, we will just
+          // resolve the destination, otherwise we will make another hop via an outbound bridge queue
+          if (v == bridgeCfg.toCf.vendor && p == bridgeCfg.toCf.provider) {
+            val result = super.destination(flowMsg)
+            bridgeLogger.debug(s"Routing message to [$v:$p][$result]")
+            result
+          } else {
+            val result : Try[JmsDestination] = Try {
+              val intern : BridgeProviderConfig = bridgeCfg.registry.internalProvider.get
+              if (intern.vendor == v && intern.provider == p) {
+                intern.outbound
+              } else {
+                JmsDestination.create(s"${intern.outbound.asString}.$v.$p").get
+              }
+            }
+            bridgeLogger.debug(s"Rerouting outbound message [$transId] via [$result]")
+            result
+          }
+        case _ =>
+          val result = super.destination(flowMsg)
+          bridgeLogger.debug(s"Routing message to [${settings.connectionFactory.vendor}:${settings.connectionFactory.provider}][$result]")
+          result
+      }
+
+      dest match {
+        case Success(d) =>
+          Success(d)
+        case Failure(t) =>
+          log.debug(s"Failed to resolve target destination for [$transId] from [${destHeader(headerConfig.prefix)}] ")
+          bridgeCfg.outboundAlternates.find{ s => flowMsg.header[String](s).isDefined } match {
+            case None =>
+              log.warn(s"Failed to resolve alternative destination for [$transId] from [${bridgeCfg.outboundAlternates.mkString(",")}]")
+              throw t
+            case Some(d) =>
+              val dest : String = flowMsg.header[String](d).get
+              log.warn(s"Resolved destination for [$transId] to [$dest] from property[$d]")
+              JmsDestination.create(dest)
+          }
+      }
+    }
+  }
+
+  protected def toSettings(
+    cf :IdAwareConnectionFactory,
+    dest : Option[JmsDestination]
+  ) : JmsProducerSettings = {
     val resolver : JmsProducerSettings => JmsDestinationResolver = dest match {
       case Some(_) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
-      case None => s : JmsProducerSettings => new MessageDestinationResolver(
-        settings = s
-      )
+      case None => s : JmsProducerSettings => new BridgeDestinationResolver(s)
     }
 
     JmsProducerSettings(
@@ -158,7 +211,7 @@ class BridgeStreamBuilder(
 
   // The jms producer for forwarding the messages to the target destination
   protected def jmsSend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
-    jmsProducer(name = streamId + "-sink", settings = toSettings(bridgeCfg.toCf)(bridgeCfg.toDest), autoAck = false)
+    jmsProducer(name = streamId + "-sink", settings = toSettings(bridgeCfg.toCf, bridgeCfg.toDest), autoAck = false)
   }
 
   // The producer to send the current envelope to the retry queue in case of an error
@@ -187,7 +240,7 @@ class BridgeStreamBuilder(
           .via(
             jmsProducer(
               name = streamId + "-retry",
-              settings = toSettings(bridgeCfg.fromCf)(Some(d)).copy(clearPreviousException = true),
+              settings = toSettings(bridgeCfg.fromCf, Some(d)).copy(clearPreviousException = true),
               autoAck = false
             )
           )
@@ -267,7 +320,7 @@ class BridgeStreamBuilder(
       import GraphDSL.Implicits._
 
       // We will forward the message to the target destination
-      val forward = b.add(jmsSend.via(logEnvelope("After Send")))
+      val forward = b.add(jmsSend)
 
       // Then we have a path where the send is successfull and one where the send has failed
       val sendError = b.add(FlowProcessor.partition[FlowEnvelope] {

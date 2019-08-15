@@ -1,7 +1,7 @@
 package blended.streams.jms
 
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue, JmsTopic}
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.{LogLevel, Logger}
 import javax.jms

@@ -10,8 +10,8 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
-import blended.streams.transaction.{FlowHeaderConfig, TransactionWiretap}
-import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
+import blended.streams.transaction.TransactionWiretap
+import blended.streams._
 import blended.util.config.Implicits._
 import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
