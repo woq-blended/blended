@@ -73,7 +73,7 @@ final class JmsConsumerStage(
     }
   }
 
-  private class JmsSourceLogic() extends AckSourceLogic[JmsAckContext](shape, out) {
+  private class JmsSourceLogic() extends AckSourceLogic[JmsAckContext](shape, out) with JmsEnvelopeHeader {
 
     /** The id to identify the instance in the log files */
     override protected val id: String = name
@@ -213,6 +213,16 @@ final class JmsConsumerStage(
           receive(s).unwrap
             .map{ m =>
               val e : FlowEnvelope = createEnvelope(m, ackHandler).unwrap
+
+              val now : Long = System.currentTimeMillis()
+
+              val msgAge : Long = now - e.header[Long](timestampHeader(headerConfig.prefix)).getOrElse(now)
+
+              consumerSettings.log.log(
+                consumerSettings.receiveLogLevel,
+                s"Message received [${e.id}][${consumerSettings.jmsDestination.map(_.asString)}] after " +
+                  s"[$msgAge]ms in [${s.sessionId}] : ${e.flowMessage}"
+              )
 
               // We signal that we have received a message for the underlying connection factory
               actorSystem.eventStream.publish(MessageReceived(vendor, provider, e.id))
