@@ -1,9 +1,7 @@
 package blended.jms.utils.internal
 
-import akka.actor.{Actor, ActorLogging, Props}
-import akka.event.LoggingReceive
-import blended.jms.utils.RestartContainer
-import blended.jms.utils.ConnectionStateChanged
+import akka.actor.{Actor, Props}
+import blended.jms.utils.{ConnectionStateChanged, RestartContainer}
 import blended.mgmt.base.FrameworkService
 import blended.util.logging.Logger
 import domino.service_consuming.ServiceConsuming
@@ -45,7 +43,7 @@ class ConnectionStateMonitor(
     self ! Tick
   }
 
-  override def receive : Receive = LoggingReceive {
+  override def receive : Receive = {
 
     case ConnectionStateChanged(state) if state.vendor == vendor && state.provider == provider =>
       state.status match {

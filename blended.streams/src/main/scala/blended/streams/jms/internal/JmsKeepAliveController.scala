@@ -1,18 +1,16 @@
 package blended.streams.jms.internal
 
-import akka.actor
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, ActorRef, Cancellable, OneForOneStrategy, Props, SupervisorStrategy}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils._
+import blended.streams.FlowHeaderConfig
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.FlowHeaderConfig
 import blended.util.logging.Logger
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
 
 object JmsKeepAliveController{
   def props(idSvc : ContainerIdentifierService, producer : KeepAliveProducerFactory) : Props =
@@ -57,21 +55,19 @@ class JmsKeepAliveController(
 }
 
 trait KeepAliveProducerFactory {
-  val createProducer : BlendedSingleConnectionFactory => Future[ActorRef]
+  def start(bcf : BlendedSingleConnectionFactory) : Unit = ()
   def stop() : Unit = ()
 }
 
 object JmsKeepAliveActor {
-  def props(idSvc : ContainerIdentifierService, cf : IdAwareConnectionFactory, producer : KeepAliveProducerFactory) : Props =
-    Props(new JmsKeepAliveActor(idSvc, cf, producer))
+  def props(idSvc : ContainerIdentifierService, cf : IdAwareConnectionFactory, prodFactory : KeepAliveProducerFactory) : Props =
+    Props(new JmsKeepAliveActor(idSvc, cf, prodFactory))
 }
 
-
-// TODO: Keep track of changing actor in case the keep alive stream restarts
 class JmsKeepAliveActor(
   idSvc : ContainerIdentifierService,
   cf : IdAwareConnectionFactory,
-  producer : KeepAliveProducerFactory
+  prodFactory : KeepAliveProducerFactory
 ) extends Actor
   with JmsStreamSupport {
 
@@ -86,18 +82,16 @@ class JmsKeepAliveActor(
     cf match {
       case bcf : BlendedSingleConnectionFactory =>
         if (bcf.config.keepAliveEnabled) {
-          producer.createProducer(bcf).onComplete{
-            case Success(a) =>
-              val timer : actor.Cancellable = context.system.scheduler.scheduleOnce(bcf.config.keepAliveInterval, self, Tick)
 
-              context.system.eventStream.subscribe(self, classOf[MessageReceived])
-              context.system.eventStream.subscribe(self, classOf[ConnectionStateChanged])
+          context.system.eventStream.subscribe(self, classOf[ProducerMaterialized])
+          context.system.eventStream.subscribe(self, classOf[MessageReceived])
+          context.system.eventStream.subscribe(self, classOf[ConnectionStateChanged])
 
-              setCounter(bcf.config, a, 0)
-            case Failure(t) =>
-              log.warn(s"Failed to create Keep Alive producer stream [${t.getMessage()}]")
-          }
+          prodFactory.start(bcf)
+          // We start in idle state
+          context.become(idle(bcf.config))
         } else {
+          log.info(s"KeepAlive for [${bcf.vendor}:${bcf.provider}] is disabled.")
           context.stop(self)
         }
 
@@ -107,21 +101,26 @@ class JmsKeepAliveActor(
     }
   }
 
-  override def postStop(): Unit = producer.stop()
+  override def postStop(): Unit = prodFactory.stop()
 
   override def receive: Receive = Actor.emptyBehavior
 
   private def setCounter(cfg : ConnectionConfig, actor : ActorRef, newCnt : Int, oldCnt : Option[Int] = None) : Unit = {
     if (oldCnt.isEmpty || !oldCnt.contains(newCnt)) {
       context.system.eventStream.publish(KeepAliveMissed(cf.vendor, cf.provider, newCnt))
+      log.debug(s"New Keep Alive missed counter for [${cf.vendor}:${cf.provider}] is [$newCnt]")
       val newTimer = context.system.scheduler.scheduleOnce(cfg.keepAliveInterval, self, Tick)
       context.become(running(newTimer, cfg, actor, newCnt))
     }
   }
 
-  private def idle(cfg : ConnectionConfig, actor : ActorRef) : Receive = {
-    case ConnectionStateChanged(state) if state.status == Connected =>
-      setCounter(cfg, actor, 0)
+  private def idle(cfg : ConnectionConfig) : Receive = {
+    // we need a materialized producer to start tracking keep alives
+    case ProducerMaterialized(v,p,a) =>
+      if (v == cfg.vendor && p == cfg.provider) {
+        setCounter(cfg, a, 0)
+      }
+    case _ => // do nothing
   }
 
   private def running(timer: Cancellable, cfg : ConnectionConfig, actor : ActorRef, cnt : Int) : Receive = {
@@ -144,6 +143,6 @@ class JmsKeepAliveActor(
 
     case ConnectionStateChanged(state) if state.status != Connected =>
       timer.cancel()
-      context.become(idle(cfg, actor))
+      context.become(idle(cfg))
   }
 }

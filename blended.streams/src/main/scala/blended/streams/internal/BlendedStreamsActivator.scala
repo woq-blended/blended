@@ -49,7 +49,7 @@ class BlendedStreamsActivator extends DominoActivator
       val pf : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
         log = bcf => Logger(s"blended.streams.keepalive.${bcf.vendor}.${bcf.provider}"),
         idSvc = osgiCfg.idSvc,
-        streamCfg = streamsCfg
+        streamsCfg = streamsCfg
       )
 
       val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props(new JmsKeepAliveController(osgiCfg.idSvc, pf)))

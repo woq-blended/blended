@@ -54,14 +54,21 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
 
     val keepAliveEvents : mutable.ListBuffer[FlowEnvelope] = mutable.ListBuffer.empty
 
-    override val createProducer: BlendedSingleConnectionFactory => Future[ActorRef] = { _ => Future {
-      system.actorOf(Props(new Actor() {
+    private var prodActor : Option[ActorRef] = None
+
+    override def start(bcf : BlendedSingleConnectionFactory): Unit = {
+      val actor : ActorRef = system.actorOf(Props(new Actor() {
         override def receive: Receive = {
           case env : FlowEnvelope =>
             keepAliveEvents.append(env)
         }
       }))
-    }}
+
+      prodActor = Some(actor)
+      system.eventStream.publish(ProducerMaterialized(cf.vendor, cf.provider, actor))
+    }
+
+    override def stop(): Unit = prodActor.foreach(system.stop)
   }
 
   "The JmsKeepAliveActor should" - {
@@ -70,7 +77,6 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
 
       val probe : TestProbe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[KeepAliveEvent])
-      system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
 
       val prod : DummyKeepAliveProducer = new DummyKeepAliveProducer()
 
@@ -96,6 +102,14 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
       }
 
       ctrl ! RemovedConnectionFactory(cf)
+
+      system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+      probe.fishForMessage(3.seconds){
+        case ConnectionStateChanged(s) if s.status == Connected => true
+        case _ => false
+      }
+
+      system.stop(probe.ref)
       system.stop(ctrl)
     }
 
@@ -116,7 +130,7 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
       // scalastyle:on magic.number
 
       val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
-      assert(envelopes.size == 2)
+      assert(envelopes.size == 1)
       assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(idSvc.uuid)))
 
       probe.fishForMessage(3.seconds){
@@ -124,6 +138,7 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
       }
 
       ctrl ! RemovedConnectionFactory(cf)
+      system.stop(probe.ref)
       system.stop(ctrl)
     }
 
@@ -132,8 +147,8 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
       system.eventStream.subscribe(probe.ref, classOf[KeepAliveMissed])
       system.eventStream.subscribe(probe.ref, classOf[MaxKeepAliveExceeded])
 
-      val prod : DummyKeepAliveProducer = new DummyKeepAliveProducer()
       val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
+      val prod : DummyKeepAliveProducer = new DummyKeepAliveProducer()
 
       val cfg : ConnectionConfig = cf.asInstanceOf[BlendedSingleConnectionFactory].config
       val ctrl : ActorRef = system.actorOf(JmsKeepAliveController.props(idSvc, prod))
@@ -161,6 +176,7 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
       }
 
       ctrl ! RemovedConnectionFactory(cf)
+      system.stop(probe.ref)
       system.stop(ctrl)
     }
   }

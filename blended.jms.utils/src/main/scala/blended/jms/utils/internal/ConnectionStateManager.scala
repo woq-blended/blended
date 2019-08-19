@@ -4,7 +4,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import akka.actor.{Actor, Props}
-import akka.event.LoggingReceive
 import blended.jms.utils._
 import blended.util.logging.Logger
 
@@ -65,15 +64,17 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
     switchState(disconnected(), currentState)
     context.system.eventStream.subscribe(self, classOf[ConnectionCommand])
     context.system.eventStream.subscribe(self, classOf[Reconnect])
-    context.system.eventStream.subscribe(self, classOf[MaxKeepAliveExceeded])
+    context.system.eventStream.subscribe(self, classOf[KeepAliveEvent])
   }
 
   // ---- State: Disconnected
-  def disconnected()(state : ConnectionState) : Receive = LoggingReceive {
+  def disconnected()(state : ConnectionState) : Receive = {
     // Upon a CheckConnection message we will kick off initiating and monitoring the connection
     case cc : CheckConnection =>
       log.debug(s"Trying to initialize connection [$vendor:$provider]")
       initConnection(state, cc.now)
+
+    case _ : KeepAliveEvent => // do nothing
   }
 
   // ---- State: Connected
@@ -86,11 +87,19 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
     // For a disconnect we initiate to close the underlying connection
     case Disconnect(_) => disconnect(state)
 
+    case KeepAliveMissed(v,p,n) =>
+      if(vendor == v && provider == p) {
+        log.debug(s"Updating missed KeepAlives for [$vendor:$provider] to [$n]")
+        switchState(connected(), state.copy(missedKeepAlives = n))
+      }
+
     case MaxKeepAliveExceeded(v, p) =>
       if (vendor == v && provider == p) {
         log.warn(s"Maximum number of missed keep alives has been reached [${vendor}:${provider}] : [${config.maxKeepAliveMissed}]")
         reconnect(state)
       }
+
+    case _ : KeepAliveEvent => // do nothing
   }
 
   // ---- State: Connecting
@@ -115,7 +124,7 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
           status = Connected,
           firstReconnectAttempt = None,
           lastConnect = Some(new Date()),
-          failedPings = 0
+          missedKeepAlives = 0
         ))
       }
 
@@ -124,12 +133,14 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
         switchState(disconnected(), state.copy(status = Disconnected))
         checkConnection(config.minReconnect)
       }
+
+    case _ : KeepAliveEvent => // do nothing
   }
 
   // State: Closing
   def closing()(state : ConnectionState) : Receive = {
 
-    case _ : CheckConnection =>
+    case _ : CheckConnection => // do nothing
 
     // All good, happily disconnected
     case ConnectionClosed =>
@@ -145,6 +156,8 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
     case CloseTimeout =>
       val msg : String = s"Unable to close connection for provider [$vendor:$provider] in [${config.minReconnect}]s]. Restarting container ..."
       switchState(restarting(), state.copy(status = RestartContainer(new Exception(msg))))
+
+    case _ : KeepAliveEvent => // do nothing
   }
 
   // Container restart is pending
@@ -185,17 +198,16 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
     currentReceive = rec
     currentState = nextState
 
-    context.become(LoggingReceive(
-      rec(nextState)
-        .orElse(jmxOperations(nextState))
-        .orElse(handleReconnectRequest(nextState))
-        .orElse(unhandled)
-    ))
+    context.become(rec(nextState)
+      .orElse(jmxOperations(nextState))
+      .orElse(handleReconnectRequest(nextState))
+      .orElse(unhandled)
+    )
   }
 
   // A convenience method to capture unhandled messages
   def unhandled : Receive = {
-    case m => log.debug(s"received unhandled message for [$vendor:$provider] : ${m.toString()}")
+    case m => log.debug(s"received unhandled message for [$vendor:$provider] in state [${currentState.status}] : ${m.toString()}")
   }
 
   // We simply stay in the same state and maintain the list of events

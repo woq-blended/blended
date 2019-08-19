@@ -7,7 +7,7 @@ trait ConnectionMonitorMXBean {
   def getStatus() : String
   def getLastConnect() : String
   def getLastDisconnect() : String
-  def getFailedPings() : Int
+  def getMissedKeepAlives() : Int
 
   def getClientId() : String
 

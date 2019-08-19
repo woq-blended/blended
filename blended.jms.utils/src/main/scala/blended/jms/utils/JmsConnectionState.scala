@@ -20,7 +20,7 @@ case class ConnectionState(
   status : JmsConnectionState = Disconnected,
   lastConnect : Option[Date] = None,
   lastDisconnect : Option[Date] = None,
-  failedPings : Int = 0,
+  missedKeepAlives : Int = 0,
   maxEvents : Int = 20,
   events : List[String] = List.empty,
   firstReconnectAttempt : Option[Date] = None,

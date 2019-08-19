@@ -32,7 +32,7 @@ class ConnectionMonitor(vendor : String, provider : String, clientId : String) e
     case Some(d) => df.format(d)
   }
 
-  override def getFailedPings() : Int = state.failedPings
+  override def getMissedKeepAlives() : Int = state.missedKeepAlives
 
   override def getMaxEvents() : Int = state.maxEvents
 

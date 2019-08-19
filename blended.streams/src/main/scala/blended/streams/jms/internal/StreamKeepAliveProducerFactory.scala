@@ -5,89 +5,79 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{Materializer, OverflowStrategy}
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.utils.{BlendedSingleConnectionFactory, JmsDestination}
+import blended.jms.utils.{BlendedSingleConnectionFactory, JmsDestination, ProducerMaterialized}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.FlowHeaderConfig
-import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
 
-import scala.concurrent.{Future, Promise}
-import scala.util.Success
+import scala.concurrent.Future
 
 class StreamKeepAliveProducerFactory(
   log : BlendedSingleConnectionFactory => Logger,
   idSvc : ContainerIdentifierService,
-  streamCfg : BlendedStreamsConfig
+  streamsCfg : BlendedStreamsConfig
 )(implicit system: ActorSystem, materializer : Materializer) extends KeepAliveProducerFactory with JmsStreamSupport {
 
   private var stream : Option[ActorRef] = None
 
-  private val producerSettings : BlendedSingleConnectionFactory => JmsProducerSettings = bcf =>
-    JmsProducerSettings(
-      log = log(bcf),
-      headerCfg = FlowHeaderConfig.create(idSvc),
-      connectionFactory = bcf,
-      jmsDestination = Some(JmsDestination.create(bcf.config.pingDestination).get),
-      timeToLive = Some(bcf.config.keepAliveInterval)
-    )
+  private val producerSettings : BlendedSingleConnectionFactory => JmsProducerSettings = bcf => JmsProducerSettings(
+    log = log(bcf),
+    headerCfg = FlowHeaderConfig.create(idSvc),
+    connectionFactory = bcf,
+    jmsDestination = Some(JmsDestination.create(bcf.config.pingDestination).get),
+    timeToLive = Some(bcf.config.keepAliveInterval)
+  )
 
-  private val consumerSettings : BlendedSingleConnectionFactory => JMSConsumerSettings = bcf =>
-    JMSConsumerSettings(
-      log = log(bcf),
-      headerCfg = FlowHeaderConfig.create(idSvc),
-      connectionFactory = bcf,
-      jmsDestination = Some(JmsDestination.create(bcf.config.pingDestination).get),
-      receiveLogLevel = LogLevel.Debug,
-      acknowledgeMode = AcknowledgeMode.AutoAcknowledge,
-      selector = Some(s"JMSCorrelationID = '${idSvc.uuid}'")
-    )
+  private val consumerSettings : BlendedSingleConnectionFactory => JMSConsumerSettings = bcf => JMSConsumerSettings(
+    log = log(bcf),
+    headerCfg = FlowHeaderConfig.create(idSvc),
+    connectionFactory = bcf,
+    jmsDestination = Some(JmsDestination.create(bcf.config.pingDestination).get),
+    receiveLogLevel = LogLevel.Debug,
+    acknowledgeMode = AcknowledgeMode.AutoAcknowledge,
+    selector = Some(s"JMSCorrelationID = '${idSvc.uuid}'")
+  )
 
-
-  override val createProducer: BlendedSingleConnectionFactory => Future[ActorRef] = { bcf =>
-
-    val futMat : Promise[ActorRef] = Promise[ActorRef]
-
-    val setHeader : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(
-      FlowProcessor.fromFunction("setHeader", log(bcf)){ env => {
+  private val setHeader : BlendedSingleConnectionFactory => Flow[FlowEnvelope, FlowEnvelope, NotUsed] = bcf => Flow.fromGraph(
+    FlowProcessor.fromFunction("setHeader", log(bcf)){ env => {
       env.withHeader("JMSCorrelationID", idSvc.uuid)
-    }})
+    }}
+  )
 
-    val producer: Sink[FlowEnvelope, NotUsed] = setHeader
-      .via(
-        jmsProducer(
-          name = s"KeepAlive-send-${bcf.vendor}-${bcf.provider}",
-          settings = producerSettings(bcf),
-          autoAck = true
-        )
+  private val producer : BlendedSingleConnectionFactory => Sink[FlowEnvelope, NotUsed] = bcf => setHeader(bcf)
+    .via(
+      jmsProducer(
+        name = s"KeepAlive-send-${bcf.vendor}-${bcf.provider}",
+        settings = producerSettings(bcf),
+        autoAck = true
       )
-      .to(Sink.ignore)
-
-    val consumer: Source[FlowEnvelope, NotUsed] = jmsConsumer(
-      name = s"KeepAlive-Rec-${bcf.vendor}-${bcf.provider}",
-      settings = consumerSettings(bcf),
-      minMessageDelay = None
     )
+    .to(Sink.ignore)
 
-    // scalastyle:off magic.number
-    val keepAliveSource: Source[FlowEnvelope, ActorRef] = Source.actorRef(
-      10, OverflowStrategy.dropBuffer
-    ).viaMat(Flow.fromSinkAndSourceCoupled(producer, consumer))(Keep.left)
-    // scalastyle:on magic.number
+  private val consumer: BlendedSingleConnectionFactory => Source[FlowEnvelope, NotUsed] = bcf => jmsConsumer(
+    name = s"KeepAlive-Rec-${bcf.vendor}-${bcf.provider}",
+    settings = consumerSettings(bcf),
+    minMessageDelay = None
+  )
 
+  // scalastyle:off magic.number
+  val keepAliveSource: BlendedSingleConnectionFactory => Source[FlowEnvelope, ActorRef] = bcf => Source.actorRef(
+    10, OverflowStrategy.dropBuffer
+  ).viaMat(Flow.fromSinkAndSourceCoupled(producer(bcf), consumer(bcf)))(Keep.left)
+  // scalastyle:on magic.number
+
+  override def start(bcf : BlendedSingleConnectionFactory): Unit = {
     stream = Some(system.actorOf(
       StreamController.props[FlowEnvelope, ActorRef](
         s"KeepAlive-stream-${bcf.vendor}-${bcf.provider}",
-        keepAliveSource,
-        streamCfg
+        keepAliveSource(bcf),
+        streamsCfg
       )(onMaterialize = { actor =>
-        if (!futMat.isCompleted) {
-          futMat.complete(Success(actor))
-        }
+        log(bcf).debug(s"Keep alive Stream for [${bcf.vendor}:${bcf.provider}] materialized.")
+        system.eventStream.publish(ProducerMaterialized(bcf.vendor, bcf.provider, actor))
       })
     ))
-
-    futMat.future
   }
 
   override def stop(): Unit = stream.foreach(system.stop)

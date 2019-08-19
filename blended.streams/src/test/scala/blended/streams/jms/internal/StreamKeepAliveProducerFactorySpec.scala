@@ -6,7 +6,7 @@ import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import org.scalatest.Matchers
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory, MessageReceived}
+import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory, MessageReceived, ProducerMaterialized}
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
@@ -51,25 +51,26 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
 
       val probe : TestProbe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[MessageReceived])
+      system.eventStream.subscribe(probe.ref, classOf[ProducerMaterialized])
+
       val factory : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
         log = bcf => Logger(s"blended.streams.jms.keepalive.${bcf.vendor}.${bcf.provider}"),
         idSvc = idSvc,
-        streamCfg = streamCfg
+        streamsCfg = streamCfg
       )
+
+      factory.start(cf)
 
       val p : Promise[MessageReceived] = Promise[MessageReceived]()
 
-      factory.createProducer(cf).onComplete {
-        case Failure(t) =>
-          fail(t)
+      val pm = probe.fishForMessage(3.seconds){
+        case pm : ProducerMaterialized => true
+        case _ => false
+      }.asInstanceOf[ProducerMaterialized]
 
-        case Success(actor) =>
-          val env : FlowEnvelope = FlowEnvelope()
-
-          actor ! env
-
-          p.complete(Success(probe.expectMsgType[MessageReceived]))
-      }
+      val env : FlowEnvelope = FlowEnvelope()
+      pm.prod ! env
+      p.complete(Success(probe.expectMsgType[MessageReceived]))
 
       Await.result(p.future, 3.seconds)
     }
