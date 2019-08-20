@@ -1,8 +1,8 @@
 #!/usr/bin/env groovy
 pipeline {
   agent any
-  ansiColor('xterm') {
-    stages {
+  stages {
+    ansiColor('xterm') {
       stage('Prepare') {
         steps {
           sh '''
