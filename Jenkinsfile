@@ -1,12 +1,15 @@
 #!/usr/bin/env groovy
 pipeline {
   agent {
-    docker { image 'node:7-alpine' }
+    docker {
+      image 'atooni/build-alpine:1.0.1'
+      args '-u blended -v .:/home/blended/project'
+    }
   }
   stages {
     stage('Prepare') {
       steps {
-        sh 'node --version'
+        sh 'java -version'
       }
     }
   }
