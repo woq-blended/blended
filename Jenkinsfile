@@ -3,7 +3,8 @@ pipeline {
   stages {
     stage('Stage 1') {
       steps {
-        echo 'Hello Andreas'
+        echo 'Pfad : $(pwd)'
+        echo $(git describe --tags)
       }
     }
   }
