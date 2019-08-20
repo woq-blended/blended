@@ -9,7 +9,7 @@ import blended.util.RichTry._
 import prickle._
 import blended.jmx.json.PrickleProtocol._
 
-class JmxAttributeComanionSpec extends LoggingFreeSpec
+class JmxAttributeCompanionSpec extends LoggingFreeSpec
   with Matchers {
 
   private val mbf : BlendedMBeanServerFacade = new BlendedMBeanServerFacadeImpl(

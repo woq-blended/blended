@@ -11,8 +11,6 @@ import blended.streams.message.FlowEnvelope
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
 
-import scala.concurrent.Future
-
 class StreamKeepAliveProducerFactory(
   log : BlendedSingleConnectionFactory => Logger,
   idSvc : ContainerIdentifierService,
@@ -20,6 +18,8 @@ class StreamKeepAliveProducerFactory(
 )(implicit system: ActorSystem, materializer : Materializer) extends KeepAliveProducerFactory with JmsStreamSupport {
 
   private var stream : Option[ActorRef] = None
+
+  private val corrId : BlendedSingleConnectionFactory => String = bcf => s"${idSvc.uuid}-${bcf.vendor}-${bcf.provider}"
 
   private val producerSettings : BlendedSingleConnectionFactory => JmsProducerSettings = bcf => JmsProducerSettings(
     log = log(bcf),
@@ -36,12 +36,12 @@ class StreamKeepAliveProducerFactory(
     jmsDestination = Some(JmsDestination.create(bcf.config.pingDestination).get),
     receiveLogLevel = LogLevel.Debug,
     acknowledgeMode = AcknowledgeMode.AutoAcknowledge,
-    selector = Some(s"JMSCorrelationID = '${idSvc.uuid}'")
+    selector = Some(s"JMSCorrelationID = '${corrId(bcf)}'")
   )
 
   private val setHeader : BlendedSingleConnectionFactory => Flow[FlowEnvelope, FlowEnvelope, NotUsed] = bcf => Flow.fromGraph(
     FlowProcessor.fromFunction("setHeader", log(bcf)){ env => {
-      env.withHeader("JMSCorrelationID", idSvc.uuid)
+      env.withHeader("JMSCorrelationID", corrId(bcf))
     }}
   )
 
@@ -74,7 +74,6 @@ class StreamKeepAliveProducerFactory(
         keepAliveSource(bcf),
         streamsCfg
       )(onMaterialize = { actor =>
-        log(bcf).debug(s"Keep alive Stream for [${bcf.vendor}:${bcf.provider}] materialized.")
         system.eventStream.publish(ProducerMaterialized(bcf.vendor, bcf.provider, actor))
       })
     ))

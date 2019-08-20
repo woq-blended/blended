@@ -109,15 +109,17 @@ class JmsKeepAliveActor(
     if (oldCnt.isEmpty || !oldCnt.contains(newCnt)) {
       context.system.eventStream.publish(KeepAliveMissed(cf.vendor, cf.provider, newCnt))
       log.debug(s"New Keep Alive missed counter for [${cf.vendor}:${cf.provider}] is [$newCnt]")
-      val newTimer = context.system.scheduler.scheduleOnce(cfg.keepAliveInterval, self, Tick)
-      context.become(running(newTimer, cfg, actor, newCnt))
     }
+
+    val newTimer = context.system.scheduler.scheduleOnce(cfg.keepAliveInterval, self, Tick)
+    context.become(running(newTimer, cfg, actor, newCnt))
   }
 
   private def idle(cfg : ConnectionConfig) : Receive = {
     // we need a materialized producer to start tracking keep alives
     case ProducerMaterialized(v,p,a) =>
       if (v == cfg.vendor && p == cfg.provider) {
+        log.debug(s"Keep alive Stream for [$v:$p] materialized, keep alive interval is [${cfg.keepAliveInterval}]")
         setCounter(cfg, a, 0)
       }
     case _ => // do nothing
@@ -133,8 +135,8 @@ class JmsKeepAliveActor(
         headerConfig.headerKeepAlivesMissed -> (cnt + 1)
       ).get)
 
+      log.debug(s"Scheduling keep alive message for [${cf.vendor}:${cf.provider}] : [$env]")
       actor ! env
-
       setCounter(cfg, actor, cnt + 1, Some(cnt))
 
     case MessageReceived(v, p, _) if v == cf.vendor && p == cf.provider =>
@@ -144,5 +146,11 @@ class JmsKeepAliveActor(
     case ConnectionStateChanged(state) if state.status != Connected =>
       timer.cancel()
       context.become(idle(cfg))
+
+    case ProducerMaterialized(v, p, a) =>
+      if (v == cfg.vendor && p == cfg.provider) {
+        log.debug(s"Keep alive Stream for [$v:$p] materialized, keep alive interval is [${cfg.keepAliveInterval}]")
+        setCounter(cfg, a, 0)
+      }
   }
 }

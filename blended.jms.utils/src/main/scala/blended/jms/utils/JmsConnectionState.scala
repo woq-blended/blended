@@ -25,5 +25,9 @@ case class ConnectionState(
   events : List[String] = List.empty,
   firstReconnectAttempt : Option[Date] = None,
   lastConnectAttempt : Option[Date] = None
-)
+) {
+  override def toString: String = s"${getClass().getSimpleName()}(vendor=$vendor, provider=$provider, status=$status," +
+    s" lastConnect=$lastConnect, lastDisconnect=$lastDisconnect, missedKeepAlives=$missedKeepAlives," +
+    s" firstReconnectAttempt=$firstReconnectAttempt, lastConnectAttempt=$lastConnectAttempt)"
+}
 //scalastyle:on magic.number

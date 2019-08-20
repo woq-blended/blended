@@ -77,5 +77,4 @@ class ConnectionStateMonitor(
       case Some(s) => s.restartContainer(reason = msg, saveLogs = true)
     }
   }
-
 }
