@@ -1,12 +1,11 @@
 #!/usr/bin/env groovy
 pipeline {
   agent {
-    docker { image 'atooni/build-alpine:1.0.1'}
+    docker { image 'node:7-alpine' }
   }
   stages {
     stage('Prepare') {
       steps {
-        sh 'java -version'
         sh 'node --version'
       }
     }
