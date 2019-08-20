@@ -9,7 +9,9 @@ pipeline {
   stages {
     stage('Prepare') {
       steps {
-        sh 'java -version'
+        sh '''
+          docker images
+        '''
       }
     }
   }
