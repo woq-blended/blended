@@ -23,6 +23,7 @@ object BlendedJMSConnectionConfig {
     retryInterval = 5.seconds,
     minReconnect = 5.minutes,
     maxReconnectTimeout = None,
+    connectTimeout = 30.seconds,
     clientId = "$[[" + ContainerIdentifierService.containerId + "]]",
     defaultUser = None,
     defaultPassword  = None,
@@ -47,6 +48,7 @@ object BlendedJMSConnectionConfig {
     val retryInterval : Config => FiniteDuration = cfg => cfg.getDuration("retryInterval", defaultConfig.retryInterval)
     val minReconnect : Config => FiniteDuration = cfg => cfg.getDuration("minReconnect", defaultConfig.minReconnect)
     val maxReconnectTimeout : Config => Option[FiniteDuration] = cfg => cfg.getDurationOption("maxReconnectTimeout")
+    val connectTimeout : Config => FiniteDuration = cfg => cfg.getDuration("connectTimeout", defaultConfig.connectTimeout)
 
     val defaultUser : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_USER).map{ u => stringResolver(u).get }.map(_.toString)
     val defaultPasswd : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_PWD).map{ p => stringResolver(p).get }.map(_.toString)
@@ -84,6 +86,7 @@ object BlendedJMSConnectionConfig {
       retryInterval = retryInterval(cfg),
       minReconnect = minReconnect(cfg),
       maxReconnectTimeout = maxReconnectTimeout(cfg),
+      connectTimeout = connectTimeout(cfg),
       clientId = clientId(cfg).get,
       defaultUser = defaultUser(cfg),
       defaultPassword = defaultPasswd(cfg),
@@ -110,6 +113,7 @@ case class BlendedJMSConnectionConfig(
   override val pingTimeout : FiniteDuration,
   override val retryInterval : FiniteDuration,
   override val minReconnect : FiniteDuration,
+  override val connectTimeout: FiniteDuration,
   override val maxReconnectTimeout: Option[FiniteDuration],
   override val clientId : String,
   override val defaultUser : Option[String],

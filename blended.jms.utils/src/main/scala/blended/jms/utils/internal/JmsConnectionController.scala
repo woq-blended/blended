@@ -57,6 +57,11 @@ class JmsConnectionController(holder: ConnectionHolder, closer : Props) extends 
       log.debug(s"Disconnect for [${holder.vendor}:${holder.provider}] timed out.")
       caller ! CloseTimeout
 
+    case Connect(t, _) =>
+      val msg : String = s"ConnectionHolder [${holder.vendor}:${holder.provider}] is currently disconnecting"
+      log.debug(msg)
+      caller ! ConnectResult(t, Left(new Exception(msg)))
+
     case CloseTimeout =>
       timer.cancel()
       caller ! CloseTimeout

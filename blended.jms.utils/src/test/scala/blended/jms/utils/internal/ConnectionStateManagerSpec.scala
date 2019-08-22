@@ -3,11 +3,13 @@ package blended.jms.utils.internal
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import blended.jms.utils.BlendedJMSConnectionConfig
-import org.scalatest.FreeSpecLike
+import blended.testsupport.scalatest.LoggingFreeSpecLike
+import javax.jms.Connection
+
 import scala.concurrent.duration._
 
 class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger"))
-  with FreeSpecLike
+  with LoggingFreeSpecLike
   with ImplicitSender {
 
   val cfg = BlendedJMSConnectionConfig.defaultConfig.copy(
@@ -15,7 +17,7 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
     provider = "csm"
   )
 
-  val holder = new DummyHolder(() => new DummyConnection()) {
+  private val holder : ConnectionHolder = new DummyHolder(() => new DummyConnection()) {
     override val vendor: String = cfg.vendor
     override val provider: String = cfg.provider
   }
@@ -100,6 +102,105 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       assert(holder.getConnection().isDefined)
     }
 
-    
+    "should issue another connect in case the first connect times out" in {
+
+      val delayedFirstConnect = new DummyHolder(() => new DummyConnection()) {
+        private var firstTry : Boolean = true
+        override val vendor: String = cfg.vendor
+        override val provider: String = cfg.provider
+
+        override def connect(): Connection = {
+          if (firstTry) {
+            Thread.sleep(5000)
+            firstTry = false
+          }
+          super.connect()
+        }
+      }
+
+      val probe = TestProbe()
+
+      val props = ConnectionStateManager.props(
+        cfg.copy(
+          connectTimeout = 1.second,
+          minReconnect = 3.seconds
+        ),
+        probe.ref,
+        delayedFirstConnect
+      )
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTING
+        case _ => false
+      }
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTING
+        case _ => false
+      }
+
+      probe.fishForMessage(10.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
+        case _ => false
+      }
+    }
+
+    "should initiate a container restart if the connection can't be established from connecting state" in {
+      val onlyConnectOnce = new DummyHolder(() => new DummyConnection()) {
+        private var first : Boolean = true
+        override val vendor: String = cfg.vendor
+        override val provider: String = cfg.provider
+
+        override def connect(): Connection = {
+          if (!first) {
+            Thread.sleep(60000)
+          }
+          first = false
+          super.connect()
+        }
+      }
+
+      val probe = TestProbe()
+
+      val props = ConnectionStateManager.props(
+        cfg.copy(
+          connectTimeout = 1.second,
+          minReconnect = 2.seconds,
+          maxReconnectTimeout = Some(10.seconds)
+        ),
+        probe.ref,
+        onlyConnectOnce
+      )
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTING
+        case _ => false
+      }
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
+        case _ => false
+      }
+
+      csm ! Disconnect(1.second)
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.DISCONNECTED
+        case _ => false
+      }
+
+      probe.fishForMessage(20.seconds) {
+        case _ : RestartContainer => true
+        case _ => false
+      }
+    }
   }
 }

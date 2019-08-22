@@ -19,6 +19,7 @@ case class BrokerConfig (
   override val pingDestination : String,
   override val pingInterval : FiniteDuration,
   override val pingTimeout : FiniteDuration,
+  override val connectTimeout : FiniteDuration,
   override val minReconnect : FiniteDuration,
   override val maxReconnectTimeout : Option[FiniteDuration],
   override val properties : Map[String, String],
@@ -79,6 +80,7 @@ object BrokerConfig {
       maxReconnectTimeout = jmsConfig.maxReconnectTimeout,
       properties = jmsConfig.properties,
       retryInterval = jmsConfig.retryInterval,
+      connectTimeout = jmsConfig.connectTimeout,
 
       brokerName = name(resolve)(cfg).getOrElse(brokerName),
       file = file(resolve)(cfg).getOrElse(s"$brokerName.amq"),

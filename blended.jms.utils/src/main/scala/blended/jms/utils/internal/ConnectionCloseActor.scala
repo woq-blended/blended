@@ -25,7 +25,9 @@ class ConnectionCloseActor(holder: ConnectionHolder, retryInterval: FiniteDurati
   private[this] def doClose() : Unit = {
     Future {
       holder.close() match {
-        case Success(_) => self ! ConnectionClosed
+        case Success(_) =>
+          log.debug(s"Connection [${holder.vendor}:${holder.provider}] successfully closed.")
+          self ! ConnectionClosed
         case Failure(t) =>
           log.warning(s"Error closing connection [${holder.vendor}:${holder.provider}] : [${t.getMessage()}] -- Assuming the connection is dead")
           self ! ConnectionClosed

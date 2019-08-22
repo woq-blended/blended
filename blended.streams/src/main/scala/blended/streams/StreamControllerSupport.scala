@@ -73,7 +73,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
       log.info(s"Stream [${streamCfg.name}] terminated ...")
       if (t.isDefined || (!streamCfg.onFailureOnly)) {
         t.foreach { e =>
-          log.error(e)(e.getMessage)
+          log.error(e.getMessage)
         }
 
         val nextStart : FiniteDuration = if (System.currentTimeMillis() - startedAt < streamCfg.maxDelay.toMillis) {

@@ -15,6 +15,7 @@ trait ConnectionConfig {
   val retryInterval : FiniteDuration
   val minReconnect : FiniteDuration
   val maxReconnectTimeout: Option[FiniteDuration]
+  val connectTimeout : FiniteDuration
   val clientId : String
   val defaultUser : Option[String]
   val defaultPassword : Option[String]
