@@ -3,7 +3,7 @@ package blended.jms.utils.internal
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import blended.jms.utils._
 import blended.util.logging.Logger
 
@@ -26,9 +26,9 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
 
   val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
 
-  private implicit val eCtxt : ExecutionContext = context.system.dispatcher
-  private val vendor : String = config.vendor
-  private val provider : String = config.provider
+  implicit val eCtxt : ExecutionContext = context.system.dispatcher
+  val provider : String = config.provider
+  val vendor : String = config.vendor
 
   private val log : Logger = Logger(s"${getClass().getName()}.$vendor.$provider")
 
@@ -41,7 +41,7 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
    ConnectionState(vendor = vendor, provider = config.provider).copy(status = Disconnected)
 
   // To this actor we delegate all connect and close operations for the underlying JMS provider
-  val controller = context.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
+  val controller : ActorRef = context.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
 
   // If something causes an unexpected restart, we want to know
   override def preRestart(reason : Throwable, message : Option[Any]) : Unit = {
@@ -84,8 +84,9 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
     // connect attempts
     case ConnectTimeout(_) => // do nothing, this will just get rid of irrelevant warnings in the log
 
-    // For a disconnect we initiate to close the underlying connection
-    case Disconnect(_) => disconnect(state)
+    case cc : CheckConnection => // do nothing
+
+    case d @ Disconnect(_) => disconnect(state)
 
     case KeepAliveMissed(v,p,n) =>
       if(vendor == v && provider == p) {
@@ -108,11 +109,11 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
     case _ : CheckConnection =>
 
     case ConnectResult(t, Left(e)) =>
-      if (t == state.lastConnectAttempt.getOrElse(0L)) {
+      if (t == state.lastConnectAttempt.getOrElse(new Date())) {
         switchState(disconnected(), state.copy(status = Disconnected))
-        if (!checkRestartForFailedReconnect(state, e)) {
-          checkConnection(config.minReconnect)
-        }
+      }
+      if (!checkRestartForFailedReconnect(state, Some(e))) {
+        checkConnection(config.minReconnect)
       }
 
     // We successfully connected, record the connection and timestamps
@@ -129,9 +130,9 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
       }
 
     case ConnectTimeout(t) =>
-      if (t == state.lastConnectAttempt.getOrElse(0L)) {
-        switchState(disconnected(), state.copy(status = Disconnected))
-        checkConnection(config.minReconnect)
+      log.debug(s"Encountered Connection timeout (connectAttempt:$t), firstConnectAttempt: ${state.firstReconnectAttempt}, lastConnectAttempt: ${state.lastConnectAttempt}")
+      if (!checkRestartForFailedReconnect(state, None)) {
+        switchState(connecting(), connect(state))
       }
 
     case _ : KeepAliveEvent => // do nothing
@@ -264,7 +265,7 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
 
     val lastConnectAttempt = new Date()
 
-    context.system.scheduler.scheduleOnce(config.connectTimeout, self, ConnectTimeout(lastConnectAttempt.getTime()))
+    context.system.scheduler.scheduleOnce(config.connectTimeout, self, ConnectTimeout(lastConnectAttempt))
 
     // This only happens if we have configured a maximum reconnect timeout in the config and we ever
     // had a connection since this container was last restarted and we haven't started the timer yet
@@ -286,11 +287,13 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
     )
   }
 
-  private[this] def checkRestartForFailedReconnect(s : ConnectionState, e : Throwable) : Boolean = {
+  private[this] def checkRestartForFailedReconnect(s: ConnectionState, e: Option[Throwable]): Boolean = {
 
     var result = false
 
-    log.error(e)(s"Error connecting to JMS provider [$vendor:$provider].")
+    e.foreach{ t =>
+      log.error(t)(s"Error connecting to JMS provider [$vendor:$provider].")
+    }
 
     if (config.maxReconnectTimeout.isDefined && s.firstReconnectAttempt.isDefined) {
       s.firstReconnectAttempt.foreach { t =>
@@ -300,9 +303,9 @@ class ConnectionStateManager(config : ConnectionConfig, holder : ConnectionHolde
         }
 
         if (restart) {
-          val e : Throwable =
-            new Exception(s"Unable to reconnect to JMS provider [$vendor:$provider] in [${config.maxReconnectTimeout}]s. Restarting container ...")
-          switchState(restarting(), s.copy(status = RestartContainer(e)))
+          val msg : String = s"Unable to reconnect to JMS provider [$vendor:$provider] in [${config.maxReconnectTimeout}]s. Restarting container ..."
+          log.warn(msg)
+          context.system.eventStream.publish(ConnectionStateChanged(s.copy(status = RestartContainer(new Exception(msg)))))
           result = true
         }
       }

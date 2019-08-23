@@ -3,13 +3,14 @@ package blended.jms.utils.internal
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import blended.jms.utils._
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
-import org.scalatest.FreeSpecLike
+import javax.jms.Connection
 
 import scala.concurrent.duration._
 
 class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger"))
-  with FreeSpecLike
+  with LoggingFreeSpecLike
   with ImplicitSender {
 
   private val log : Logger = Logger[ConnectionStateManagerSpec]
@@ -27,7 +28,7 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
     override val provider : String = cfg.provider
   }
 
-  private def fishForState(probe : TestProbe, duration: FiniteDuration = 3.seconds)(state : JmsConnectionState) = {
+  private def fishForState(probe : TestProbe, duration: FiniteDuration = 3.seconds)(state : JmsConnectionState): ConnectionStateChanged = {
     val msg : Any = probe.fishForMessage(duration){
       case changed : ConnectionStateChanged =>
         log.info(changed.toString())
@@ -111,6 +112,107 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       fishForState(probe, 5.seconds)(Connected)
 
       assert(holder.getConnection().isDefined)
+    }
+
+    "should issue another connect in case the first connect times out" in {
+
+      val delayedFirstConnect : ConnectionHolder = new DummyHolder(() => new DummyConnection()) {
+        private var firstTry : Boolean = true
+        override val vendor: String = cfg.vendor
+        override val provider: String = cfg.provider
+
+        override def connect(): Connection = {
+          if (firstTry) {
+            Thread.sleep(5000)
+            firstTry = false
+          }
+          super.connect()
+        }
+      }
+
+      val probe = TestProbe()
+      system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+
+      val props = ConnectionStateManager.props(
+        cfg.copy(
+          connectTimeout = 1.second,
+          minReconnect = 3.seconds
+        ),
+        delayedFirstConnect
+      )
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == Connecting
+        case _ => false
+      }
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == Connecting
+        case _ => false
+      }
+
+      probe.fishForMessage(10.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == Connected
+        case _ => false
+      }
+    }
+
+    "should initiate a container restart if the connection can't be established from connecting state" in {
+      val onlyConnectOnce : ConnectionHolder = new DummyHolder(() => new DummyConnection()) {
+        private var first : Boolean = true
+        override val vendor: String = cfg.vendor
+        override val provider: String = cfg.provider
+
+        override def connect(): Connection = {
+          if (!first) {
+            Thread.sleep(60000)
+          }
+          first = false
+          super.connect()
+        }
+      }
+
+      val probe = TestProbe()
+      system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+
+      val props = ConnectionStateManager.props(
+        cfg.copy(
+          connectTimeout = 1.second,
+          minReconnect = 2.seconds,
+          maxReconnectTimeout = Some(10.seconds)
+        ),
+        onlyConnectOnce
+      )
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == Connecting
+        case _ => false
+      }
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == Connected
+        case _ => false
+      }
+
+      csm ! Disconnect(1.second)
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == Disconnected
+        case _ => false
+      }
+
+      probe.fishForMessage(20.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status.isInstanceOf[RestartContainer]
+        case _ => false
+      }
     }
 
     "should initiate a container restart if it can't reconnect within the maxReconnectInterval" in {

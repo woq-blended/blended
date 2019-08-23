@@ -124,7 +124,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
       log.info(s"Stream [${name}] terminated ...")
       if (t.isDefined || (!streamCfg.onFailureOnly)) {
         t.foreach { e =>
-          log.error(e)(e.getMessage)
+          log.error(e.getMessage)
         }
 
         resetTimer.foreach(_.cancel())

@@ -3,15 +3,15 @@ package blended.jms.utils
 import java.util.Date
 
 sealed trait JmsConnectionState {
-  val name : String
+  val name : String = getClass().getSimpleName()
   override def toString: String = name
 }
 
-case object Connected extends JmsConnectionState{ override val name : String = "Connected" }
-case object Connecting extends JmsConnectionState { override val name : String = "Connecting" }
-case object Closing extends JmsConnectionState { override val name : String = "Closing" }
-case object Disconnected extends JmsConnectionState { override val name : String = "Disonnected" }
-case class RestartContainer(reason : Throwable) extends JmsConnectionState { override val name = "RestartContainer"}
+case object Connected extends JmsConnectionState
+case object Connecting extends JmsConnectionState
+case object Closing extends JmsConnectionState
+case object Disconnected extends JmsConnectionState
+case class RestartContainer(reason : Throwable) extends JmsConnectionState
 
 //scalastyle:off magic.number
 case class ConnectionState(

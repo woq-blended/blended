@@ -10,7 +10,7 @@ import scala.concurrent.duration.FiniteDuration
 case class CheckConnection(now : Boolean)
 case object ConnectionClosed
 case object CloseTimeout
-case class ConnectTimeout(t : Long)
+case class ConnectTimeout(t : Date)
 
 sealed trait KeepAliveEvent
 case class AddedConnectionFactory(cfg : IdAwareConnectionFactory) extends KeepAliveEvent
