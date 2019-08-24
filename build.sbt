@@ -12,7 +12,7 @@ val travisBuildNumber = sys.env.getOrElse("TRAVIS_BUILD_NUMBER", "Not on Travis"
 addCommandAlias("ciBuild", "; clean ; test ")
 
 // A convenience to push SNAPSHOT to sonatype Snapshots
-addCommandAlias(name = "ciPublish", value="; clean ; packageBin ; publishSigned ")
+addCommandAlias(name = "ciPublish", value="; clean ; packageBin ; publish ")
 
 // A convenience to package everything, sign it and push it to maven central
 addCommandAlias(
