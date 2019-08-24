@@ -5,8 +5,9 @@ pipeline {
     stage('Prepare') {
       steps {
         ansiColor('xterm') {
+          sbt update 
           sh '''
-            docker run -u blended -v ${WORKSPACE}:/home/blended/project -v $HOME/.ivy2:/home/blended/.ivy2 atooni/build-alpine:1.0.1 /bin/bash -l -c "cd ~/project ; SBT_OPTS='-Xmx3072m -XX:MaxMetaspaceSize=1536m' sbt update"
+            sbt update
           '''
         }
       }
@@ -15,7 +16,7 @@ pipeline {
       steps {
         ansiColor('xterm') {
           sh '''
-            docker run -u blended -v ${WORKSPACE}:/home/blended/project -v $HOME/.ivy2:/home/blended/.ivy2 atooni/build-alpine:1.0.1 /bin/bash -l -c "cd ~/project ; SBT_OPTS='-Xmx3072m -XX:MaxMetaspaceSize=1536m' sbt clean publishLocal"
+             sbt clean publishLocal"
           '''
         }
       }
@@ -24,7 +25,7 @@ pipeline {
       steps {
         ansiColor('xterm') {
           sh '''
-            docker run -u blended -v ${WORKSPACE}:/home/blended/project -v $HOME/.ivy2:/home/blended/.ivy2 atooni/build-alpine:1.0.1 /bin/bash -l -c "cd ~/project ; SBT_OPTS='-Xmx3072m -XX:MaxMetaspaceSize=1536m' sbt clean update coverageOn test"
+            sbt clean update coverageOn test"
           '''
         }
       }
