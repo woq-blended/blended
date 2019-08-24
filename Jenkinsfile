@@ -6,7 +6,7 @@ pipeline {
       steps {
         ansiColor('xterm') {
           sbt update 
-          sh '''
+          sh '''#!/bin/bash -l
             sbt update
           '''
         }
@@ -15,7 +15,7 @@ pipeline {
     stage('Compile') {
       steps {
         ansiColor('xterm') {
-          sh '''
+          sh '''#!/bin/bash -l
              sbt clean publishLocal"
           '''
         }
@@ -24,7 +24,7 @@ pipeline {
     stage('Unit-Test') {
       steps {
         ansiColor('xterm') {
-          sh '''
+          sh '''#!/bin/bash -l
             sbt clean update coverageOn test"
           '''
         }
