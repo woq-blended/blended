@@ -17,10 +17,10 @@ addCommandAlias(name = "ciPublish", value="; clean ; packageBin ; publishSigned 
 // A convenience to package everything, sign it and push it to maven central
 addCommandAlias(
   "ciRelease",
-  s"""; clean; packageBin ; sonatypeOpen "Auto Release via Travis ($travisBuildNumber)" ; publishSigned ; sonatypeClose ; sonatypeRelease"""
+  s"""; clean; packageBin ; sonatypeOpen "Auto Release via Travis ($travisBuildNumber)" ; publish ; sonatypeClose ; sonatypeRelease"""
 )
 
-addCommandAlias("cleanPublish", "; coverageOff ; clean ; publishM2")
+addCommandAlias("cleanPublish", "; coverageOff ; clean ; publishLocal")
 addCommandAlias("cleanCoverage", "; coverage ; clean ; test ; coverageReport ; coverageAggregate ; coverageOff")
 
 addCommandAlias(name = "siteComplete", "; cleanCoverage ; unidoc ; jbakeSite")
@@ -28,12 +28,7 @@ addCommandAlias(name = "siteComplete", "; cleanCoverage ; unidoc ; jbakeSite")
 inThisBuild(BuildHelper.readVersion(file("version.txt")))
 
 lazy val global = Def.settings(
-  Global/testlogDirectory := target.value / "testlog",
-
-  Global/useGpg := false,
-  Global/pgpPublicRing := baseDirectory.value / "project" / ".gnupg" / "pubring.gpg",
-  Global/pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg",
-  Global/pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray)
+  Global/testlogDirectory := target.value / "testlog"
 )
 
 // TODO: Can we get rid of these ?

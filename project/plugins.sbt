@@ -12,8 +12,8 @@ addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.13.1")
 // Build assembly artifacts (zip,gz,tgz)
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.9")
 //addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.3")
-// Support for artifact signing with pgp
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")
+// Support for artifact signing with gpg
+addSbtPlugin("io.crashbox" % "sbt-gpg" % "0.2.0")
 // Export test coveragt to codacy
 addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "2.112")
 
