@@ -15,7 +15,7 @@ pipeline {
       steps {
         ansiColor('xterm') {
           sh '''#!/bin/bash -l
-             sbt clean publishLocal"
+             sbt clean publishLocal
           '''
         }
       }
@@ -24,7 +24,7 @@ pipeline {
       steps {
         ansiColor('xterm') {
           sh '''#!/bin/bash -l
-            sbt clean update coverageOn test"
+            sbt clean update coverageOn test
           '''
         }
       }
