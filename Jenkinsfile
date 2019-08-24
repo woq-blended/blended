@@ -20,7 +20,7 @@ pipeline {
             git reset
             git add -f target/site
             git commit -m "Deploy Site, build number ${BUILD_NUMBER}"
-            git filter-branch -f --prune-empty --subdirectory-filter << parameters.dir >>
+            git filter-branch -f --prune-empty --subdirectory-filter target/site
             git clean -f -f -d
             git push -f origin gh-pages
           '''
