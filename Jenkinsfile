@@ -5,7 +5,6 @@ pipeline {
     stage('Prepare') {
       steps {
         ansiColor('xterm') {
-          sbt update 
           sh '''#!/bin/bash -l
             sbt update
           '''
