@@ -7,13 +7,9 @@ import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FreeSpec, Matchers}
 import prickle._
 
-import scala.util.Random
-
 class JmxObjectJsonSpec extends FreeSpec
   with Matchers
   with PropertyChecks {
-
-  private val rnd : Random = new Random()
 
   private val words : Seq[String] = Seq(
     "chemical", "meaty", "start", "atten", "tub", "four", "nut", "tread", "immolate", "straw", "toothpaste",
@@ -51,17 +47,17 @@ class JmxObjectJsonSpec extends FreeSpec
     def byteGen : Gen[Byte] = Gen.chooseNum[Byte](Byte.MinValue, Byte.MaxValue)
 
     def unitAttr : Gen[AttributeValue] = Gen.const(UnitAttributeValue())
-    def intAttr : Gen[AttributeValue] = intGen.map(IntAttributeValue(_))
-    def shortAttr : Gen[AttributeValue] = shortGen.map(ShortAttributeValue(_))
-    def longAttr : Gen[AttributeValue] = longGen.map(LongAttributeValue(_))
-    def byteAttr : Gen[AttributeValue] = byteGen.map(ByteAttributeValue(_))
-    def floatAttr : Gen[AttributeValue] = floatGen.map(FloatAttributeValue(_))
-    def dblAttr : Gen[AttributeValue] = dblGen.map(DoubleAttributeValue(_))
-    def bigIntAttr : Gen[AttributeValue] = bigIntGen.map(BigIntegerAtrributeValue(_))
-    def bigDecAttr : Gen[AttributeValue] = bigDecGen.map(BigDecimalAtrributeValue(_))
-    def stringAttr : Gen[AttributeValue] = stringGen.map(StringAttributeValue(_))
-    def booleanAttr : Gen[AttributeValue] = Gen.oneOf(Gen.const(true), Gen.const(false)).map(BooleanAttributeValue(_))
-    def objNameAttr : Gen[AttributeValue] = objNameGen.map(ObjectNameAttributeValue(_))
+    def intAttr : Gen[AttributeValue] = intGen.map(IntAttributeValue)
+    def shortAttr : Gen[AttributeValue] = shortGen.map(ShortAttributeValue)
+    def longAttr : Gen[AttributeValue] = longGen.map(LongAttributeValue)
+    def byteAttr : Gen[AttributeValue] = byteGen.map(ByteAttributeValue)
+    def floatAttr : Gen[AttributeValue] = floatGen.map(FloatAttributeValue)
+    def dblAttr : Gen[AttributeValue] = dblGen.map(DoubleAttributeValue)
+    def bigIntAttr : Gen[AttributeValue] = bigIntGen.map(BigIntegerAtrributeValue)
+    def bigDecAttr : Gen[AttributeValue] = bigDecGen.map(BigDecimalAtrributeValue)
+    def stringAttr : Gen[AttributeValue] = stringGen.map(StringAttributeValue)
+    def booleanAttr : Gen[AttributeValue] = Gen.oneOf(Gen.const(true), Gen.const(false)).map(BooleanAttributeValue)
+    def objNameAttr : Gen[AttributeValue] = objNameGen.map(ObjectNameAttributeValue)
 
     def simpleAttr : Gen[AttributeValue] = Gen.oneOf(
       unitAttr, intAttr, shortAttr, longAttr, byteAttr, floatAttr, dblAttr,
