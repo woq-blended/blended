@@ -1,6 +1,6 @@
 package blended.streams.file
 
-import java.io.{File, FileOutputStream}
+import java.io.File
 
 import akka.NotUsed
 import akka.actor.ActorSystem
@@ -17,7 +17,6 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, FileTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import com.typesafe.config.Config
-import org.apache.commons.io.FileUtils
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
@@ -115,7 +114,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t){ env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t){ _ => }
 
       val result : List[FlowEnvelope] = Await.result(collector.result, t + 100.millis)
 
@@ -137,7 +136,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
           }})
           .via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ _ => }
       Await.result(collector.result, timeout + 100.millis)
 
       getFiles(pollCfg.sourceDir, pattern = ".*", recursive = false).map(_.getName()) should be (List("test.txt"))
@@ -155,7 +154,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ _ => }
       Await.result(collector.result, timeout + 100.millis)
 
       getFiles(pollCfg.backup.get, pattern = ".*", recursive = false).map(_.getName()) should have size(1)
@@ -187,25 +186,46 @@ class FileSourceSpec extends SimplePojoContainerSpec
     }
 
     "allow to FileAckSources to process files in parallel" in {
-      val numMsg : Int = 5000
+
+      val numSrc : Int = 5
+      val numMsg : Int = 10000
       val t : FiniteDuration = 5.seconds
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc)
         .copy(sourceDir = BlendedTestSupport.projectTestOutput + "/parallel" )
 
+      def countWords(l : Seq[String]) : Map[String, Int] = l.foldLeft(Map.empty[String, Int]){ (current, s) =>
+        current.get(s) match {
+          case None => current + (s -> 1)
+          case Some(v) => current.filterKeys(_ != s) + (s -> (v + 1))
+        }
+      }
+
+      def createCollector(subId : Int, startDelay : Option[FiniteDuration] = None) : Collector[FlowEnvelope] = {
+        val src : Source[FlowEnvelope, NotUsed] =
+          Source.fromGraph(new FileAckSource(
+            pollCfg.copy(id = s"poller$subId", interval = 100.millis)
+          )).async.via(new AckProcessor(s"simplePoll$subId.ack").flow)
+
+        startDelay.foreach(d => Thread.sleep(d.toMillis))
+        StreamFactories.runSourceWithTimeLimit("parallel1", src, t){ _ => }
+      }
+
       prepareDirectory(pollCfg.sourceDir)
       1.to(numMsg).foreach{ i => genFile(new File(pollCfg.sourceDir, s"test_$i.txt")) }
 
-      val src : Source[FlowEnvelope, NotUsed] =
-        Source.fromGraph(new FileAckSource(pollCfg)).async.via(new AckProcessor("simplePoll.ack").flow)
+      val results : Seq[Future[List[FlowEnvelope]]] = 0.until(numSrc).map{ i=>
+        val coll : Collector[FlowEnvelope] = createCollector(i, if (i == 0) None else Some(20.millis))
+        coll.result
+      }
 
-      val collector1 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel1", src, 200.millis){ _ => }
-      val collector2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel2", src, t){ _ => }
+      val combined : Future[Seq[List[FlowEnvelope]]] = Future.sequence(results)
+      val allResults : Seq[String] = Await.result(combined, t + 100.millis).flatten.map(_.header[String]("BlendedFileName").get)
 
-      val result1 : List[FlowEnvelope] = Await.result(collector1.result, 300.millis)
-      val result2 : List[FlowEnvelope] = Await.result(collector2.result, t + 100.millis)
+      val dups : Map[String, Int] = countWords(allResults).filter{ case (_, v) => v > 1 }
+      dups should be (empty)
 
-      assert(result1.size + result2.size >= numMsg)
+      assert(allResults.size == numMsg)
 
       getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)
     }
