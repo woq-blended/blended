@@ -56,7 +56,7 @@ class DirectorySource(pollCfg : FilePollConfig) {
   }
 
   private def scanDirectory() : Unit = {
-    log.info(s"Executing directory scan for [${pollCfg.id}] for directory [${pollCfg.sourceDir}] with pattern [${pollCfg.pattern}]")
+    log.info(s"Executing directory scan for directory [${pollCfg.sourceDir}] with pattern [${pollCfg.pattern}]")
 
     val filter : DirectoryStream.Filter[Path] = new DirectoryStream.Filter[Path] {
       override def accept(entry: Path): Boolean = {

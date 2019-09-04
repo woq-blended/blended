@@ -12,17 +12,12 @@ import scala.util.{Failure, Success}
 
 /**
   * The Filedrop Stream consumes messages from a given upstream producing
-  * FlowEnvelope. Each FlowEnvelope will by writen to the designated file
+  * FlowEnvelope. Each FlowEnvelope will by written to the designated file
   * drop location using an instance of a file drop actor. The file actor
   * responds with a FileDropResult, which is passed further downstream.
   *
   * Users of the Filedrop Stage must implement the logic of handling FileDropResults
   * if required.
-  *
-  * @param name
-  * @param config
-  * @param log
-  * @param system
   */
 class FileDropStage(
   name : String,
