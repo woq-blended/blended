@@ -183,5 +183,7 @@ class FileDropSpec extends LoggingFreeSpec
 
       files.forall { f => verifyTargetFile(f, content) } should be(true)
     }
+
+    "drop files if the FileDropActor is used from several sources" in pending
   }
 }
