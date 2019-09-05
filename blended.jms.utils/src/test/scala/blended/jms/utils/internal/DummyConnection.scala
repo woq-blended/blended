@@ -40,22 +40,8 @@ class DummyHolder(f : () => Connection)(implicit system: ActorSystem)
   override val vendor: String = "dummy"
   override val provider: String = "dummy"
 
-  override def getConnectionFactory(): ConnectionFactory = ???
-
-  private[this] var conn : Option[BlendedJMSConnection] = None
-
-  override def getConnection(): Option[BlendedJMSConnection] = conn
-
-  override def connect(): Connection = conn match {
-    case Some(c) => c
-    case None =>
-      val c = new BlendedJMSConnection(f())
-      conn = Some(c)
-      c
-  }
-
-  override def close(): Try[Unit] = Try {
-    conn.foreach{ c => c.connection.close() }
-    conn = None
+  override def getConnectionFactory(): ConnectionFactory = new ConnectionFactory {
+    override def createConnection(): Connection = f()
+    override def createConnection(userName: String, password: String): Connection = createConnection()
   }
 }

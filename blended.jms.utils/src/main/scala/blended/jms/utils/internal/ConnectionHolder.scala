@@ -71,8 +71,11 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: Acto
 
             wrappedConnection
           } catch {
-            case e : JMSException =>
-              log.warn(s"Error creating connection [$vendor:$provider] : [${e.getMessage()}] ")
+            case NonFatal(t) =>
+              val msg : String = s"Error creating connection [$vendor:$provider] : [${t.getMessage()}]"
+              log.warn(msg)
+              val e : JMSException = new JMSException(msg)
+              e.setLinkedException(new Exception(t))
               throw e
           } finally {
             connecting.set(false)

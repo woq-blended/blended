@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import blended.jms.utils.BlendedJMSConnectionConfig
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import javax.jms.Connection
+import javax.jms.{Connection, ConnectionFactory}
 
 import scala.concurrent.duration._
 
@@ -180,6 +180,78 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
 
       probe.fishForMessage(10.seconds) {
         case _ : RestartContainer => true
+        case _ => false
+      }
+    }
+
+    "should successfully connect even in cases the connection holder throws unexpected exceptions" in {
+      val failFirst : ConnectionHolder = new DummyHolder(() => new DummyConnection()) {
+        private var first : Boolean = true
+        override val vendor: String = cfg.vendor
+        override val provider: String = cfg.provider
+
+        override def getConnectionFactory(): ConnectionFactory = {
+          if (first) {
+            first = false
+            throw new NullPointerException()
+          } else {
+            super.getConnectionFactory()
+          }
+        }
+      }
+
+      val probe = TestProbe()
+
+      val props = ConnectionStateManager.props(
+        cfg.copy(
+          connectTimeout = 1.second,
+          minReconnect = 2.seconds,
+          maxReconnectTimeout = Some(10.seconds)
+        ),
+        probe.ref,
+        failFirst
+      )
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTING
+        case _ => false
+      }
+
+      probe.fishForMessage(10.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
+        case _ => false
+      }
+    }
+
+    "should disconnect if the current connection controller dies" in {
+      val probe = TestProbe()
+      val props = ConnectionStateManager.props(cfg.copy(
+        connectTimeout = 1.seconds,
+        minReconnect = 2.seconds
+      ), probe.ref, holder)
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
+        case _ => false
+      }
+      assert(holder.getConnection().isDefined)
+
+      csm.underlyingActor.currentState.controller.foreach(system.stop)
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.DISCONNECTED
+        case _ => false
+      }
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
         case _ => false
       }
     }

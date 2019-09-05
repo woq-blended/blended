@@ -2,6 +2,8 @@ package blended.jms.utils.internal
 
 import java.util.Date
 
+import akka.actor.ActorRef
+
 object ConnectionState {
 
   val CONNECTED = "connected"
@@ -19,5 +21,6 @@ case class ConnectionState(
   maxEvents: Int = 20,
   events: List[String] = List.empty,
   firstReconnectAttempt : Option[Date] = None,
-  lastConnectAttempt: Option[Date] = None
+  lastConnectAttempt: Option[Date] = None,
+  controller : Option[ActorRef] = None
 )

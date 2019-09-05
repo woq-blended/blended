@@ -1,10 +1,10 @@
 package blended.jms.utils.internal
 
 import akka.actor.{Actor, ActorRef, Cancellable, Props}
-import akka.event.LoggingReceive
 import blended.util.logging.Logger
 import javax.jms.Connection
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
@@ -18,13 +18,13 @@ object JmsConnectionController {
 class JmsConnectionController(holder: ConnectionHolder, closer : Props) extends Actor {
 
   private val log : Logger = Logger(s"${getClass().getName()}.${holder.vendor}.${holder.provider}")
-  private implicit val eCtxt = context.system.dispatcher
+  private implicit val eCtxt : ExecutionContext = context.system.dispatcher
 
   private case object Tick
 
   override def receive: Receive = disconnected
 
-  private def disconnected : Receive = LoggingReceive {
+  private def disconnected : Receive = {
     case Connect(t, _) =>
       val caller = sender()
 
