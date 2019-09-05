@@ -132,7 +132,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   // ---- State: Connecting
   def connecting()(state: ConnectionState) : Receive = {
 
-    case cc : CheckConnection =>
+    case _ : CheckConnection =>
       pingTimer = None
 
     case ConnectResult(t, Left(e)) =>
@@ -291,7 +291,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
 
     // This only happens if we have configured a maximum reconnect timeout in the config and we ever
     // had a connection since this container was last restarted and we haven't started the timer yet
-    val newState = if (config.maxReconnectTimeout.isDefined && state.firstReconnectAttempt.isEmpty && state.lastDisconnect.isDefined) {
+    val newState = if (config.maxReconnectTimeout.isDefined && state.firstReconnectAttempt.isEmpty) {
       events = (s"Starting max reconnect timeout monitor for provider [$vendor:$provider] with [${config.maxReconnectTimeout}]s") :: events
       state.copy(firstReconnectAttempt = Some(lastConnectAttempt))
     } else {

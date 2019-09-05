@@ -87,7 +87,7 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
         case _ => false
       }
 
-      (1.to(cfg.pingTolerance)).foreach { _ => csm ! PingFailed(new Exception("Boom")) }
+      1.to(cfg.pingTolerance).foreach { _ => csm ! PingFailed(new Exception("Boom")) }
       probe.fishForMessage(3.seconds) {
         case sc : ConnectionStateChanged => sc.state.status == ConnectionState.DISCONNECTED
         case _ => false
@@ -145,6 +145,41 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
 
       probe.fishForMessage(10.seconds) {
         case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
+        case _ => false
+      }
+    }
+
+    "should initiate a container restart if the initial JMS connection can't be established" in {
+      val neverConnect : ConnectionHolder = new DummyHolder(() => new DummyConnection()) {
+        override val vendor: String = cfg.vendor
+        override val provider: String = cfg.provider
+
+        override def connect(): Connection = {
+          // scalastyle:off magic.number
+          Thread.sleep(60000)
+          // scalastyle:on magic.number
+          super.connect()
+        }
+      }
+
+      val probe = TestProbe()
+
+      val props = ConnectionStateManager.props(
+        cfg.copy(
+          connectTimeout = 1.second,
+          minReconnect = 1.seconds,
+          maxReconnectTimeout = Some(5.seconds)
+        ),
+        probe.ref,
+        neverConnect
+      )
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+
+      probe.fishForMessage(10.seconds) {
+        case _ : RestartContainer => true
         case _ => false
       }
     }
