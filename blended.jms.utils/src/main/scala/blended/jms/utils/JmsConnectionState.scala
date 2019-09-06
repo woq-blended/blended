@@ -9,11 +9,11 @@ sealed trait JmsConnectionState {
   override def toString: String = name
 }
 
-case object Connected extends JmsConnectionState
-case object Connecting extends JmsConnectionState
-case object Closing extends JmsConnectionState
-case object Disconnected extends JmsConnectionState
-case class RestartContainer(reason : Throwable) extends JmsConnectionState
+case object Connected extends JmsConnectionState { override val name: String = "Connected" }
+case object Connecting extends JmsConnectionState { override val name: String = "Connecting"}
+case object Closing extends JmsConnectionState { override val name : String = "Closing"}
+case object Disconnected extends JmsConnectionState { override val name: String = "Disconnected" }
+case class RestartContainer(reason : Throwable) extends JmsConnectionState { override val name : String = "RestartContainer" }
 
 //scalastyle:off magic.number
 case class ConnectionState(
