@@ -4,16 +4,15 @@ import java.util.Date
 
 import akka.actor.ActorRef
 
-sealed trait JmsConnectionState {
-  val name : String = getClass().getSimpleName()
-  override def toString: String = name
-}
+sealed trait JmsConnectionState
 
-case object Connected extends JmsConnectionState { override val name: String = "Connected" }
-case object Connecting extends JmsConnectionState { override val name: String = "Connecting"}
-case object Closing extends JmsConnectionState { override val name : String = "Closing"}
-case object Disconnected extends JmsConnectionState { override val name: String = "Disconnected" }
-case class RestartContainer(reason : Throwable) extends JmsConnectionState { override val name : String = "RestartContainer" }
+case object Connected extends JmsConnectionState { override def toString : String = "Connected" }
+case object Connecting extends JmsConnectionState { override def toString : String = "Connecting"}
+case object Closing extends JmsConnectionState { override def toString  : String = "Closing"}
+case object Disconnected extends JmsConnectionState { override def toString : String = "Disconnected" }
+case class RestartContainer(reason : Throwable) extends JmsConnectionState {
+  override def toString : String = s"RestartContainer(${reason.getMessage()})"
+}
 
 //scalastyle:off magic.number
 case class ConnectionState(
