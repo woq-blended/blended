@@ -22,7 +22,6 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : Act
   private[this] val log = Logger[ConnectionHolder]
   private[this] var conn : Option[BlendedJMSConnection] = None
   private[this] var connecting : AtomicBoolean = new AtomicBoolean(false)
-  private[this] var reconnect : AtomicBoolean = new AtomicBoolean(false)
 
   def getConnectionFactory() : ConnectionFactory
 
@@ -65,7 +64,6 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : Act
             }
 
             c.start()
-            reconnect.set(false)
 
             log.info(s"Successfully connected to [$vendor:$provider] with clientId [${config.clientId}]")
             val wrappedConnection = new BlendedJMSConnection(c)
@@ -73,15 +71,18 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : Act
 
             wrappedConnection
           } catch {
-            case e : JMSException =>
-              log.warn(s"Error creating connection [$vendor:$provider] : [${e.getMessage()}] ")
+            case NonFatal(t) =>
+              val msg : String = s"Error creating connection [$vendor:$provider] : [${t.getMessage()}]"
+              log.warn(msg)
+              val e : JMSException = new JMSException(msg)
+              e.setLinkedException(new Exception(t))
               throw e
           } finally {
             connecting.set(false)
           }
 
         } else {
-          throw new JMSException(s"Connection Factory for provider [$provider] is still connecting.")
+          throw new JMSException(s"Connection Factory for provider [$vendor:$provider] is still connecting.")
         }
     }
   }

@@ -50,27 +50,15 @@ class DummyHolder(f : () => Connection, maxConnects : Int = Int.MaxValue)(implic
   override val vendor : String = "dummy"
   override val provider : String = "dummy"
 
-  override def getConnectionFactory() : ConnectionFactory = ???
-
-  private[this] var conn : Option[BlendedJMSConnection] = None
-
-  override def getConnection() : Option[BlendedJMSConnection] = conn
-
-  override def connect() : Connection = conn match {
-    case Some(c) => c
-    case None =>
+  override def getConnectionFactory(): ConnectionFactory = new ConnectionFactory {
+    override def createConnection(): Connection = {
       if (conCount.get() < maxConnects) {
         conCount.incrementAndGet()
-        val c = new BlendedJMSConnection(f())
-        conn = Some(c)
-        c
-      }else {
+        f()
+      } else {
         throw new Exception("Max connects exceeded")
       }
-  }
-
-  override def close() : Try[Unit] = Try {
-    conn.foreach { c => c.connection.close() }
-    conn = None
+    }
+    override def createConnection(userName: String, password: String): Connection = createConnection()
   }
 }

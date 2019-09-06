@@ -185,5 +185,34 @@ class FileDropSpec extends LoggingFreeSpec
 
       files.forall { f => verifyTargetFile(f, content) } should be(true)
     }
+
+    "drop files if the FileDropActor is used from several sources" in {
+      val cfg: FileDropConfig = prepareDropper(dropCfg.copy(dropTimeout = 10.seconds))("multiple")
+      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+      val content: ByteString = ByteString("Hello Blended" * 1000000)
+
+      val env1: FlowEnvelope = FlowEnvelope(FlowMessage(content)(FlowMessage.props(
+        cfg.fileHeader -> "header1.txt"
+      ).get))
+
+      val env2: FlowEnvelope = FlowEnvelope(FlowMessage(content)(FlowMessage.props(
+        cfg.fileHeader -> "header2.txt"
+      ).get))
+
+      val (_, r1Fut) = dropper.dropEnvelope(env1)
+      val (_, r2Fut) = dropper.dropEnvelope(env2)
+
+      val r1 : FileDropResult = Await.result(r1Fut, cfg.dropTimeout)
+      r1.error should be(empty)
+
+      val r2 : FileDropResult = Await.result(r2Fut, cfg.dropTimeout)
+      r2.error should be(empty)
+
+      val files: List[File] = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
+      files should have size 2
+
+      assert(verifyTargetFile(new File(cfg.defaultDir, "header1.txt"), content))
+      assert(verifyTargetFile(new File(cfg.defaultDir, "header2.txt"), content))
+    }
   }
 }

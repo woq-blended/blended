@@ -62,8 +62,8 @@ class EnvelopeFileDropper(
 
   private[this] def handleError(env : FlowEnvelope, error : Throwable) : FileDropResult = {
     log.error(s"Error dropping envelope [${env.id}] to file : [${error.getMessage()}]")
-    val cmd = dropCmd(env)(_ => Success(ByteString(""))).unwrap
-    dropActor ! FileDropAbort(error)
+    val cmd = dropCmd(env)(e => Success(ByteString(""))).get
+    dropActor ! FileDropAbort(env.id, error)
     FileDropResult(cmd, Some(error))
   }
 
@@ -77,7 +77,10 @@ class EnvelopeFileDropper(
         implicit val eCtxt : ExecutionContext = system.dispatcher
 
         (dropActor ? cmd).mapTo[FileDropResult].onComplete {
-          case Success(r) => p.complete(Success(r))
+          case Success(r) => r.error match {
+            case None => p.complete(Success(r))
+            case Some(t) => p.complete(Success(handleError(env, t)))
+          }
           case Failure(t) => p.complete(Success(handleError(env, t)))
         }
 

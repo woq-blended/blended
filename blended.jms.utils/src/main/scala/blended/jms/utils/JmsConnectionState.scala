@@ -2,6 +2,8 @@ package blended.jms.utils
 
 import java.util.Date
 
+import akka.actor.ActorRef
+
 sealed trait JmsConnectionState {
   val name : String = getClass().getSimpleName()
   override def toString: String = name
@@ -24,7 +26,8 @@ case class ConnectionState(
   maxEvents : Int = 20,
   events : List[String] = List.empty,
   firstReconnectAttempt : Option[Date] = None,
-  lastConnectAttempt : Option[Date] = None
+  lastConnectAttempt : Option[Date] = None,
+  controller : Option[ActorRef] = None
 ) {
   override def toString: String = s"${getClass().getSimpleName()}(vendor=$vendor, provider=$provider, status=$status," +
     s" lastConnect=$lastConnect, lastDisconnect=$lastDisconnect, missedKeepAlives=$missedKeepAlives," +
