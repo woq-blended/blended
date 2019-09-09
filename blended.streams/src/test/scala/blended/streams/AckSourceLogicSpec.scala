@@ -179,9 +179,9 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
 
       val s : Source[FlowEnvelope, NotUsed] = Source.fromGraph(ackSource)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout) { _ => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout - 1.second) { _ => }
 
-      Await.result(collector.result, timeout + 100.millis) should have size 1
+      Await.result(collector.result, timeout) should have size 1
 
       // The last batch of numSlots will not necessarily be acknowledged yet
       ack.get() should be(0L)
