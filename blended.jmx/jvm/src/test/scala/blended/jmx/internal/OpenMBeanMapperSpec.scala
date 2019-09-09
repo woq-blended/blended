@@ -17,7 +17,7 @@ import org.scalacheck.Arbitrary
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 
-class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with PropertyChecks with Matchers {
+class OpenMBeanMapperSpec extends LoggingFreeSpec with PropertyChecks with Matchers {
 
   import OpenMBeanMapperSpec._
   import blended.jmx.internal.TestData._
@@ -61,7 +61,7 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
     }
 
     "map Java arrays" - {
-      def testMapping[T: ClassTag : Arbitrary](type0: SimpleType[_]): Unit = {
+      def testMapping[T: ClassTag: Arbitrary](type0: SimpleType[_]): Unit = {
         val rcClass = classTag[T].runtimeClass
         val isPrim = rcClass.isPrimitive()
         s"of ${if (isPrim) "privitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
@@ -98,7 +98,7 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
     }
 
     "map Scala seqs" - {
-      def testMapping[T: ClassTag : Arbitrary](type0: SimpleType[_]): Unit = {
+      def testMapping[T: ClassTag: Arbitrary](type0: SimpleType[_]): Unit = {
         val rcClass = classTag[T].runtimeClass
         val isPrim = rcClass.isPrimitive()
         s"of ${if (isPrim) "primitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
@@ -134,9 +134,8 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
       pending
     }
 
-
     "map Java collections" - {
-      def testMapping[T: ClassTag : Arbitrary](type0: SimpleType[_]): Unit = {
+      def testMapping[T: ClassTag: Arbitrary](type0: SimpleType[_]): Unit = {
         val rcClass = classTag[T].runtimeClass
         val isPrim = rcClass.isPrimitive()
         s"of ${if (isPrim) "primitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
@@ -155,6 +154,7 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
           }
         }
       }
+
       testMapping[jl.Boolean](SimpleType.BOOLEAN)
       testMapping[jl.Byte](SimpleType.BYTE)
       testMapping[jl.Short](SimpleType.SHORT)
@@ -172,43 +172,25 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
       pending
     }
 
-  }
+    "test with blended.jmx" in {
+      val unmapper = JmxAttributeCompanion
+      val mapped = mapper.mapProduct(caseClass1)
+      mapped.getMBeanInfo.getAttributes.map { ai =>
+        log.info(ai.getName + " => " + unmapper.lift(mapped.getAttribute(ai.getName)))
+      }
 
-  "Create mapping, export and read attributes" in {
-    withMappedExport(caseClass1) {
-      assert(attribute[CaseClass1]("aString") === caseClass1.aString)
-      assert(attribute[CaseClass1]("aInt") === caseClass1.aInt)
-
-      val stringArrayAttr = attribute[CaseClass1]("aStringArray")
-      assert(stringArrayAttr === caseClass1.aStringArray)
-
-      val stringSeqAttr = attribute[CaseClass1]("aStringSeq")
-      assert(stringSeqAttr.isInstanceOf[TabularData])
-      //      assert(stringSeqAttr.size() === 1)
-      val data = stringSeqAttr.asInstanceOf[TabularData].values()
-      assert(data.size() === 1)
-      assert(data.iterator().next().isInstanceOf[CompositeData])
     }
   }
-
-  "test with blended.jmx" in {
-    val unmapper = JmxAttributeCompanion
-    val mapped = mapper.mapProduct(caseClass1)
-    mapped.getMBeanInfo.getAttributes.map { ai =>
-      log.info(ai.getName + " => " + unmapper.lift(mapped.getAttribute(ai.getName)))
-    }
-  }
-
 }
 
 object OpenMBeanMapperSpec {
 
   case class CaseClass1(
-                         aString: String,
-                         aInt: Int,
-                         aStringArray: Array[String],
-                         aStringSeq: Seq[String]
-                       )
+    aString: String,
+    aInt: Int,
+    aStringArray: Array[String],
+    aStringSeq: Seq[String]
+  )
 
   val caseClass1 = CaseClass1(
     aString = "aString",
@@ -218,20 +200,8 @@ object OpenMBeanMapperSpec {
   )
 
   case class CaseClass2(
-                         name: String,
-                         cc1: CaseClass1
-                       )
+    name: String,
+    cc1: CaseClass1
+  )
 
-  def main(args: Array[String]): Unit = {
-
-    val support = new MBeanTestSupport {}
-
-    support.withMappedExport(caseClass1) {
-      support.withMappedExport(CaseClass2("cc2", caseClass1)) {
-        println("Press any key...")
-        System.in.read()
-      }
-
-    }
-  }
 }
