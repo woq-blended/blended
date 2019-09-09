@@ -8,7 +8,7 @@ import scala.collection.JavaConverters._
 import blended.jmx.OpenMBeanMapper
 
 import javax.management.{DynamicMBean, MBeanNotificationInfo, ObjectName}
-import javax.management.openmbean.{ArrayType, CompositeData, CompositeDataSupport, CompositeType, OpenMBeanAttributeInfo, OpenMBeanAttributeInfoSupport, OpenMBeanConstructorInfo, OpenMBeanInfoSupport, OpenMBeanOperationInfo, OpenType, SimpleType, TabularDataSupport, TabularType}
+import javax.management.openmbean.{ArrayType, CompositeDataSupport, CompositeType, OpenMBeanAttributeInfo, OpenMBeanAttributeInfoSupport, OpenMBeanConstructorInfo, OpenMBeanInfoSupport, OpenMBeanOperationInfo, OpenType, SimpleType, TabularDataSupport, TabularType}
 
 class OpenMBeanMapperImpl() extends OpenMBeanMapper {
   import OpenMBeanMapperImpl._
@@ -16,7 +16,7 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
   def mapProduct(cc: Product): DynamicMBean = {
     val elements = productToMap(cc)
 
-    println(s"Case class: ${cc} ==> ${elements}")
+    // println(s"Case class: ${cc} ==> ${elements}")
 
     val openAttributes: Array[OpenMBeanAttributeInfo] = elements.map { e =>
       new OpenMBeanAttributeInfoSupport(e._1, e._1, e._2._2, true, false, false)
@@ -40,7 +40,7 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
 
   def productToMap(cc: Product): Map[String, Element] = {
     val values: Iterator[Any] = cc.productIterator
-    cc.getClass.getDeclaredFields.filter { f =>
+    cc.getClass().getDeclaredFields().filter { f =>
       f.getName != "$outer"
     }.map { f =>
 //      println(s"processing field of [${cc}]: ${f}")
@@ -143,14 +143,13 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
         val tabularType = new TabularType(name, name, rowType, Array(indexName))
 
         val value = new TabularDataSupport(tabularType)
-        val allValues = x.zipWithIndex.foreach { case (e, index) =>
+        x.zipWithIndex.foreach { case (e, index) =>
           val (eData, _) = fieldToElement(name, e)
           val itemValues =Array[AnyRef](Int.box(index), eData)
           val cData = new CompositeDataSupport(rowType, itemNames, itemValues)
           // println(s"Created a comp data support with compositeType=${rowType}, itemNames=${itemNames}, itemValues=${itemValues}")
           value.put(cData)
         }
-        // value.putAll(allValues.toArray[CompositeData])
 
         value -> tabularType
 

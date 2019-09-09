@@ -5,16 +5,17 @@ import java.lang.management.ManagementFactory
 import scala.reflect.ClassTag
 import scala.reflect.classTag
 
-import javax.management.ObjectName
+import blended.jmx.MBeanRegistrationSupport
+import javax.management.{MBeanServer, ObjectName}
 
-trait MBeanTestSupport {
+trait MBeanTestSupport extends MBeanRegistrationSupport {
 
   lazy val mapper = new OpenMBeanMapperImpl()
 
-  def server = ManagementFactory.getPlatformMBeanServer();
+  override def mbeanServer: MBeanServer = ManagementFactory.getPlatformMBeanServer();
 
   def attribute[T: ClassTag](name: String): AnyRef = {
-    server.getAttribute(objectName[T], name)
+    mbeanServer.getAttribute(objectName[T], name)
   }
 
   def objectName[T: ClassTag]: ObjectName = {
@@ -22,16 +23,13 @@ trait MBeanTestSupport {
     new ObjectName(s"${runtimeClass.getPackage().getName()}:type=${runtimeClass.getSimpleName()}")
   }
 
-  def withExport[T: ClassTag](mbean: T, objectName: ObjectName = null, replaceExisting: Boolean = true)(f: => Unit) = {
+  def withExport[T <: AnyRef : ClassTag ](mbean: T, objectName: ObjectName = null, replaceExisting: Boolean = true)(f: => Unit) = {
     val name = Option(objectName).getOrElse(this.objectName[T])
-    if (replaceExisting && server.isRegistered(name)) {
-      server.unregisterMBean(name)
-    }
-    server.registerMBean(mbean, name)
+    registerMBean(mbean, name, replaceExisting).get
     try {
       f
     } finally {
-      server.unregisterMBean(name)
+      unregisterMBean(name)
     }
   }
 

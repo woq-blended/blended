@@ -2,19 +2,17 @@ package blended.jmx.impl
 
 import java.util.Date
 import java.{lang => jl}
-import java.{util => ju}
 import java.{math => jm}
 
 import scala.reflect.ClassTag
 import scala.reflect.classTag
-import scala.util.control.NonFatal
 import scala.collection.JavaConverters._
 
 import blended.jmx.JmxAttributeCompanion
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import javax.management.ObjectName
-import javax.management.openmbean.{ArrayType, CompositeData, OpenType, SimpleType, TabularData}
+import javax.management.openmbean.{ArrayType, CompositeData, SimpleType, TabularData}
 import org.scalacheck.Arbitrary
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
