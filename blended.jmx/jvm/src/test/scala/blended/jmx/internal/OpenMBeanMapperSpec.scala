@@ -6,12 +6,14 @@ import java.{math => jm}
 
 import scala.reflect.ClassTag
 import scala.reflect.classTag
+import scala.util.control.NonFatal
 
 import blended.jmx.JmxAttributeCompanion
 import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.util.logging.Logger
 import javax.management.ObjectName
 import javax.management.openmbean.{ArrayType, CompositeData, OpenType, SimpleType, TabularData}
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.Arbitrary
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 
@@ -19,6 +21,8 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
 
   import OpenMBeanMapperSpec._
   import blended.jmx.internal.TestData._
+
+  val log = Logger[this.type]
 
   "The OpenMBeanMapperImpl should" - {
 
@@ -29,18 +33,16 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
         val rcClass = classTag[T].runtimeClass
         s"of type ${`type`} (classTag: ${rcClass.getName()})" in {
           forAll { d: T =>
-            if(testUnboxed) {
-              assert(mapper.fieldToElement("prim", d) === (d, `type`))
+            if (testUnboxed) {
+              assert(mapper.fieldToElement("prim", d) === (d -> `type`))
             }
             Option(box).foreach { b =>
               val boxed = b(d)
-              assert(mapper.fieldToElement("boxed", boxed) === (boxed, `type`))
+              assert(mapper.fieldToElement("boxed", boxed) === (boxed -> `type`))
             }
           }
         }
       }
-
-//      testMapping[Void](SimpleType.VOID, (x:Void) => null, false)
 
       testMapping(SimpleType.BOOLEAN, Boolean.box)
       testMapping(SimpleType.BYTE, Byte.box)
@@ -62,10 +64,10 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
       def testMapping[T: ClassTag : Arbitrary](type0: SimpleType[_]): Unit = {
         val rcClass = classTag[T].runtimeClass
         val isPrim = rcClass.isPrimitive()
-        s"of ${if(isPrim) "privitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
-          val expectedType = new ArrayType( type0, isPrim)
+        s"of ${if (isPrim) "privitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
+          val expectedType = new ArrayType(type0, isPrim)
           forAll { d: Array[T] =>
-            assert(mapper.fieldToElement("d", d) === (d, expectedType))
+            assert(mapper.fieldToElement("d", d) === (d -> expectedType))
           }
         }
       }
@@ -93,42 +95,52 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
       testMapping[jm.BigInteger](SimpleType.BIGINTEGER)
       testMapping[Date](SimpleType.DATE)
 
-
-      //      testMapping(SimpleType.BOOLEAN, Boolean.box)
-      //      testMapping(SimpleType.BYTE, Byte.box)
-      //      testMapping(SimpleType.SHORT, Short.box)
-      //      testMapping(SimpleType.INTEGER, Int.box)
-      //      testMapping(SimpleType.LONG, Long.box)
-      //      testMapping(SimpleType.FLOAT, Float.box)
-      //      testMapping(SimpleType.DOUBLE, Double.box)
-      //      testMapping[jm.BigDecimal, jm.BigDecimal](SimpleType.BIGDECIMAL)
-      //      testMapping[jm.BigInteger](SimpleType.BIGINTEGER)
-      //      testMapping[ObjectName, ObjectName](SimpleType.OBJECTNAME)
     }
 
     "map Scala seqs" - {
-      def testMapping[T: ClassTag](`type`: OpenType[_])(implicit arb: Arbitrary[T]): Unit = {
-        s"of ${`type`}" in {
+
+      //      def testMapping[T: ClassTag](`type`: OpenType[_])(implicit arb: Arbitrary[T]): Unit = {
+      //        s"of ${`type`}" in {
+      //          forAll { d: Seq[T] =>
+      //            println(s"${`type`} -> ${d}")
+      //            if (d.isEmpty) {
+      //              // we do not infer types for empty Seq's
+      //              assert(mapper.fieldToElement("prim", d) === (Void.TYPE, SimpleType.VOID))
+      //            } else {
+      //              assert(mapper.fieldToElement("prim", d) === (d, `type`))
+      //            }
+      //          }
+      //        }
+      //      }
+
+      def testMapping[T: ClassTag : Arbitrary](type0: SimpleType[_]): Unit = {
+        val rcClass = classTag[T].runtimeClass
+        val isPrim = rcClass.isPrimitive()
+        s"of ${if (isPrim) "privitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
+          //          val expectedType = new ArrayType( type0, isPrim)
           forAll { d: Seq[T] =>
-            println(s"${`type`} -> ${d}")
+            val (value, mappedType) = mapper.fieldToElement("d", d)
             if (d.isEmpty) {
-              // we do not infer types for empty Seq's
-              assert(mapper.fieldToElement("prim", d) === (Void.TYPE, SimpleType.VOID))
+              assert(mappedType === SimpleType.VOID)
+              assert(value === null)
             } else {
-              assert(mapper.fieldToElement("prim", d) === (d, `type`))
-            }
+              assert(value.isInstanceOf[TabularData])
+              }
           }
         }
       }
 
-      //            testMapping[Boolean](SimpleType.BOOLEAN)
-      pending
-      //      testMapping(Byte.box, SimpleType.BYTE)
-      //      testMapping(Short.box, SimpleType.SHORT)
-      //      testMapping(Int.box, SimpleType.INTEGER)
-      //      testMapping(Long.box, SimpleType.LONG)
-      //      testMapping(Float.box, SimpleType.FLOAT)
-      //      testMapping(Double.box, SimpleType.DOUBLE)
+      testMapping[jl.Boolean](SimpleType.BOOLEAN)
+      testMapping[jl.Byte](SimpleType.BYTE)
+      testMapping[jl.Short](SimpleType.SHORT)
+      testMapping[jl.Integer](SimpleType.INTEGER)
+      testMapping[jl.Long](SimpleType.LONG)
+      testMapping[jl.Float](SimpleType.FLOAT)
+      testMapping[jl.Double](SimpleType.DOUBLE)
+      testMapping[Date](SimpleType.DATE)
+      testMapping[ObjectName](SimpleType.OBJECTNAME)
+      testMapping[jm.BigDecimal](SimpleType.BIGDECIMAL)
+      testMapping[jm.BigInteger](SimpleType.BIGINTEGER)
     }
 
     "map Scala maps" in {
@@ -167,7 +179,7 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
     val unmapper = JmxAttributeCompanion
     val mapped = mapper.mapProduct(caseClass1)
     mapped.getMBeanInfo.getAttributes.map { ai =>
-      println(ai.getName + " => " + unmapper.lift(mapped.getAttribute(ai.getName)))
+      log.info(ai.getName + " => " + unmapper.lift(mapped.getAttribute(ai.getName)))
     }
   }
 

@@ -41,7 +41,8 @@ trait CommonSettings extends ProjectConfig {
     ),
 
     scalaVersion := blended.sbt.Dependencies.scalaVersion,
-    scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override")
+    scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
 
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oF")
   )
 }
