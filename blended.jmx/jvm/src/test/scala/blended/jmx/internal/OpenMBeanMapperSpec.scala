@@ -12,7 +12,7 @@ import blended.jmx.JmxAttributeCompanion
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import javax.management.ObjectName
-import javax.management.openmbean.{ArrayType, CompositeData, SimpleType, TabularData}
+import javax.management.openmbean.{ArrayType, SimpleType, TabularData}
 import org.scalacheck.Arbitrary
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
