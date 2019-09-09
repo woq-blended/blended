@@ -315,7 +315,10 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
 
       assert(csm.underlyingActor.currentState.lastDisconnect.isDefined)
       assert(holder.getConnection().isEmpty)
-      fishForState(probe, 5.seconds)(RestartContainer(new Exception("Max connects exceeded")))
+      probe.fishForMessage(5.seconds){
+        case m : ConnectionStateChanged if m.state.status.isInstanceOf[RestartContainer] => true
+        case _ => false
+      }
 
       assert(holder.getConnection().isEmpty)
     }
