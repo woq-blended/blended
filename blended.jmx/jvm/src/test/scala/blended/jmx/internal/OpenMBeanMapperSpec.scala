@@ -98,21 +98,6 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
     }
 
     "map Scala seqs" - {
-
-      //      def testMapping[T: ClassTag](`type`: OpenType[_])(implicit arb: Arbitrary[T]): Unit = {
-      //        s"of ${`type`}" in {
-      //          forAll { d: Seq[T] =>
-      //            println(s"${`type`} -> ${d}")
-      //            if (d.isEmpty) {
-      //              // we do not infer types for empty Seq's
-      //              assert(mapper.fieldToElement("prim", d) === (Void.TYPE, SimpleType.VOID))
-      //            } else {
-      //              assert(mapper.fieldToElement("prim", d) === (d, `type`))
-      //            }
-      //          }
-      //        }
-      //      }
-
       def testMapping[T: ClassTag : Arbitrary](type0: SimpleType[_]): Unit = {
         val rcClass = classTag[T].runtimeClass
         val isPrim = rcClass.isPrimitive()
@@ -125,7 +110,8 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
               assert(value === null)
             } else {
               assert(value.isInstanceOf[TabularData])
-              }
+              assert(value.asInstanceOf[TabularData].size() === d.size)
+            }
           }
         }
       }
@@ -149,6 +135,23 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
 
 
     "map Java collections" in {
+      def testMapping[T: ClassTag : Arbitrary](type0: SimpleType[_]): Unit = {
+        val rcClass = classTag[T].runtimeClass
+        val isPrim = rcClass.isPrimitive()
+        s"of ${if (isPrim) "privitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
+          //          val expectedType = new ArrayType( type0, isPrim)
+          forAll { d: Seq[T] =>
+            val (value, mappedType) = mapper.fieldToElement("d", d)
+            if (d.isEmpty) {
+              assert(mappedType === SimpleType.VOID)
+              assert(value === null)
+            } else {
+              assert(value.isInstanceOf[TabularData])
+              assert(value.asInstanceOf[TabularData].size() === d.size)
+            }
+          }
+        }
+      }
       pending
     }
 

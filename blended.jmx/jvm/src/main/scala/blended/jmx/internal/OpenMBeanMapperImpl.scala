@@ -42,9 +42,9 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
     cc.getClass.getDeclaredFields.filter { f =>
       f.getName != "$outer"
     }.map { f =>
-      println(s"processing field of [${cc}]: ${f}")
+//      println(s"processing field of [${cc}]: ${f}")
       val value = values.next()
-      println(s"    value of field [${f}]: [${value}]")
+//      println(s"    value of field [${f}]: [${value}]")
       val element = fieldToElement(f.getName, value)
       f.getName -> element
     }.toMap
