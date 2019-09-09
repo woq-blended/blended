@@ -12,7 +12,7 @@ class OpenMBeanExporterImpl(openMbeanMapper: OpenMBeanMapper) extends OpenMBeanE
   private[this] lazy val _mbeanServer: MBeanServer = ManagementFactory.getPlatformMBeanServer()
   override protected def mbeanServer: MBeanServer = _mbeanServer
 
-  def export(product: Product, objectName: ObjectName, replaceExisting: Boolean): Try[Unit] = Try {
+  def export(product: Product, objectName: ObjectName, replaceExisting: Boolean): Try[Unit] = {
     val mbean = openMbeanMapper.mapProduct(product)
     registerMBean(mbean, objectName, replaceExisting)
   }

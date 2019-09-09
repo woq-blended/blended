@@ -23,7 +23,7 @@ trait MBeanRegistrationSupport {
    *                        If `false`, this method will result with a [[scala.util.Failure]] containing a [[javax.management.InstanceAlreadyExistsException]]
    */
   def registerMBean(mbean: AnyRef, name: ObjectName, replaceExisting: Boolean = false): Try[Unit] = Try {
-    if(mbeanServer.isRegistered(name)) {
+    if(replaceExisting && mbeanServer.isRegistered(name)) {
       unregisterMBean(name).recover{ case e: InstanceNotFoundException =>
         log.debug(e)(s"Could not unregister existing mbean with name [${name}]")
       }

@@ -2,7 +2,7 @@ package blended.jmx
 
 import scala.util.Try
 
-import javax.management.ObjectName
+import javax.management.{InstanceAlreadyExistsException, ObjectName}
 
 /**
  * MBean registry (server facade) that supports exporting and removal of scala products and therefore scala case classes.
@@ -15,7 +15,7 @@ trait OpenMBeanExporter {
    * @param product The product
    * @param replaceExisting If `true`, an already registered MBean with the same ObjectName will removed before the registration.
    * @param namingStrategy Used to automatically decide which ObjectName should be used to register the product.
-   * @return
+   * @return In case of error, a [[Failure]] of [[InstanceAlreadyExistsException]]
    */
   def export(product: Product, replaceExisting: Boolean = false)(implicit namingStrategy: NamingStrategy): Try[Unit] = {
     export(product, namingStrategy(product), replaceExisting)
@@ -28,6 +28,8 @@ trait OpenMBeanExporter {
    * @param replaceExisting If `true`, an already registered MBean with the same ObjectName will removed before the registration.
    */
   def export(product: Product, objectName: ObjectName, replaceExisting: Boolean): Try[Unit]
+
+  def objectName(product: Product)(implicit namingStrategy: NamingStrategy): ObjectName = namingStrategy(product)
 
   /**
    * Removes a previously registered product or MBean with the given ÒbjectName.
