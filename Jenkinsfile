@@ -16,6 +16,9 @@ pipeline {
         ansiColor('xterm') {
           sh '''#!/bin/bash -l
             sbt -J-Xmx4096m -J-XX:MaxMetaspaceSize=1536m siteComplete
+          '''
+          junit allowEmptyResults: true, healthScaleFactor: 0.0, keepLongStdio: true, testResults: '**/target/test-reports/TEST*.xml'
+          sh '''#!/bin/bash -l
             git checkout --orphan gh-pages
             git reset
             git add -f target/site

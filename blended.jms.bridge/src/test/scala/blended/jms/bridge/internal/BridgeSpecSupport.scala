@@ -72,7 +72,7 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   ) : Try[List[FlowEnvelope]] = Try {
 
     val coll : Collector[FlowEnvelope] = receiveMessages(headerCfg, cf, JmsDestination.create(destName).get, log)
-    Await.result(coll.result, timeout + 100.millis)
+    Await.result(coll.result, timeout * 1.5)
   }
 
   protected def consumeEvents()(implicit timeout : FiniteDuration, system : ActorSystem, materializer: Materializer) : Try[List[FlowTransactionEvent]] = Try {
