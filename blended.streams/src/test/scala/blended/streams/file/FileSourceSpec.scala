@@ -47,7 +47,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
     "perform a regular file poll from a given directory(bulk)" in {
 
       val numMsg : Int = 5000
-      val t : FiniteDuration = 5.seconds
+      val t : FiniteDuration = 10.seconds
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/bulkPoll")
       prepareDirectory(pollCfg.sourceDir)
