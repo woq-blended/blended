@@ -6,7 +6,7 @@ pipeline {
       steps {
         ansiColor('xterm') {
           sh '''#!/bin/bash -l
-            sbt clean update
+            sbt -J-Xmx4096m -J-XX:MaxMetaspaceSize=1536m clean update
           '''
         }
       }
@@ -15,7 +15,7 @@ pipeline {
       steps {
         ansiColor('xterm') {
           sh '''#!/bin/bash -l
-            sbt siteComplete
+            sbt -J-Xmx4096m -J-XX:MaxMetaspaceSize=1536m siteComplete
             git checkout --orphan gh-pages
             git reset
             git add -f target/site
@@ -31,7 +31,7 @@ pipeline {
       steps {
         ansiColor('xterm') {
           sh '''#!/bin/bash -l
-             sbt clean publishLocal
+             sbt -J-Xmx4096m -J-XX:MaxMetaspaceSize=1536m clean publishLocal
           '''
         }
       }
