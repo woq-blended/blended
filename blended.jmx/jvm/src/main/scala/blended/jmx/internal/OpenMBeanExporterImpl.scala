@@ -9,7 +9,8 @@ import javax.management.{MBeanServer, ObjectName}
 
 class OpenMBeanExporterImpl(openMbeanMapper: OpenMBeanMapper) extends OpenMBeanExporter with MBeanRegistrationSupport {
 
-  override protected val mbeanServer: MBeanServer = ManagementFactory.getPlatformMBeanServer()
+  private[this] lazy val _mbeanServer: MBeanServer = ManagementFactory.getPlatformMBeanServer()
+  override protected def mbeanServer: MBeanServer = _mbeanServer
 
   def export(product: Product, objectName: ObjectName, replaceExisting: Boolean): Try[Unit] = Try {
     val mbean = openMbeanMapper.mapProduct(product)
