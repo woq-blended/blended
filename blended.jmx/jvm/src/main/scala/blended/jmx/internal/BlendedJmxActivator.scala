@@ -2,7 +2,8 @@ package blended.jmx.internal
 
 import java.lang.management.ManagementFactory
 
-import blended.jmx.BlendedMBeanServerFacade
+import blended.jmx.{BlendedMBeanServerFacade, OpenMBeanMapper}
+import blended.jmx.impl.OpenMBeanMapperImpl
 import domino.DominoActivator
 import javax.management.MBeanServer
 
@@ -14,6 +15,9 @@ class BlendedJmxActivator extends DominoActivator {
 
     val facade : BlendedMBeanServerFacade = new BlendedMBeanServerFacadeImpl(mbeanServer)
     facade.providesService[BlendedMBeanServerFacade]
+
+    val mbeanMapper = new OpenMBeanMapperImpl()
+    mbeanMapper.providesService[OpenMBeanMapper]
   }
 
 }
