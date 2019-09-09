@@ -2,11 +2,13 @@ package blended.jmx.impl
 
 import java.util.Date
 import java.{lang => jl}
+import java.{util => ju}
 import java.{math => jm}
 
 import scala.reflect.ClassTag
 import scala.reflect.classTag
 import scala.util.control.NonFatal
+import scala.collection.JavaConverters._
 
 import blended.jmx.JmxAttributeCompanion
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -101,7 +103,7 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
       def testMapping[T: ClassTag : Arbitrary](type0: SimpleType[_]): Unit = {
         val rcClass = classTag[T].runtimeClass
         val isPrim = rcClass.isPrimitive()
-        s"of ${if (isPrim) "privitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
+        s"of ${if (isPrim) "primitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
           //          val expectedType = new ArrayType( type0, isPrim)
           forAll { d: Seq[T] =>
             val (value, mappedType) = mapper.fieldToElement("d", d)
@@ -110,6 +112,7 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
               assert(value === null)
             } else {
               assert(value.isInstanceOf[TabularData])
+              assert(value.asInstanceOf[TabularData].getTabularType().getIndexNames().asScala === List("index"))
               assert(value.asInstanceOf[TabularData].size() === d.size)
             }
           }
@@ -134,25 +137,37 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with MBeanTestSupport with Pro
     }
 
 
-    "map Java collections" in {
+    "map Java collections" - {
       def testMapping[T: ClassTag : Arbitrary](type0: SimpleType[_]): Unit = {
         val rcClass = classTag[T].runtimeClass
         val isPrim = rcClass.isPrimitive()
-        s"of ${if (isPrim) "privitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
+        s"of ${if (isPrim) "primitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
           //          val expectedType = new ArrayType( type0, isPrim)
-          forAll { d: Seq[T] =>
-            val (value, mappedType) = mapper.fieldToElement("d", d)
-            if (d.isEmpty) {
+          forAll { d: List[T] =>
+            val col = d.asJava
+            val (value, mappedType) = mapper.fieldToElement("d", col)
+            if (col.isEmpty) {
               assert(mappedType === SimpleType.VOID)
               assert(value === null)
             } else {
               assert(value.isInstanceOf[TabularData])
-              assert(value.asInstanceOf[TabularData].size() === d.size)
+              assert(value.asInstanceOf[TabularData].getTabularType().getIndexNames().asScala === List("index"))
+              assert(value.asInstanceOf[TabularData].size() === col.size)
             }
           }
         }
       }
-      pending
+      testMapping[jl.Boolean](SimpleType.BOOLEAN)
+      testMapping[jl.Byte](SimpleType.BYTE)
+      testMapping[jl.Short](SimpleType.SHORT)
+      testMapping[jl.Integer](SimpleType.INTEGER)
+      testMapping[jl.Long](SimpleType.LONG)
+      testMapping[jl.Float](SimpleType.FLOAT)
+      testMapping[jl.Double](SimpleType.DOUBLE)
+      testMapping[Date](SimpleType.DATE)
+      testMapping[ObjectName](SimpleType.OBJECTNAME)
+      testMapping[jm.BigDecimal](SimpleType.BIGDECIMAL)
+      testMapping[jm.BigInteger](SimpleType.BIGINTEGER)
     }
 
     "map Java maps" in {

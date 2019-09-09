@@ -46,7 +46,6 @@ trait TestData {
     Gen.const(null)
   }
 
-
 }
 
 object TestData extends TestData

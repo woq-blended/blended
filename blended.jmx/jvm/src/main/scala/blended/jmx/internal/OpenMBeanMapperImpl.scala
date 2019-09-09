@@ -2,6 +2,7 @@ package blended.jmx.impl
 
 import java.util.Date
 import java.{lang => jl}
+import java.{util => ju}
 import java.{math => jm}
 import scala.collection.JavaConverters._
 import blended.jmx.OpenMBeanMapper
@@ -57,6 +58,7 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
         case x: Seq[_] => Some(x)
         case x: Set[_] => Some(x)
         case x: Array[_] => Some(x.toSeq)
+        case x: ju.Collection[_] => Some(x.asScala)
         case _ => None
       }
     }
