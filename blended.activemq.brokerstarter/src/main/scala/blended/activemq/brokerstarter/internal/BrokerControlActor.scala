@@ -13,7 +13,7 @@ import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
 import domino.service_providing.ServiceProviding
 import javax.jms.ConnectionFactory
 import javax.net.ssl.SSLContext
-import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFactory}
+import org.apache.activemq.broker.{BrokerFactory, BrokerPlugin, BrokerService, DefaultBrokerFactory}
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
 
@@ -105,8 +105,15 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
       BrokerFactory.setStartDefault(false)
       val brokerFactory = new XBeanBrokerFactory()
 
-      val b = brokerFactory.createBroker(new URI(uri))
+      val b : BrokerService = brokerFactory.createBroker(new URI(uri))
       broker = Some(b)
+
+      if (brokerCfg.withAuthentication) {
+        val plugins : List[BrokerPlugin] = new JaasAuthenticationPlugin() :: Option(b.getPlugins()).map(_.toList).getOrElse(List.empty)
+        b.setPlugins(plugins.toArray)
+      } else {
+        log.info(s"The broker [${brokerCfg.brokerName}] will start without authentication")
+      }
 
       sslCtxt.foreach { ctxt =>
         val amqSslContext = new org.apache.activemq.broker.SslContext()
@@ -194,7 +201,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
     b.waitUntilStopped()
   }
 
-  private val jvmId = ManagementFactory.getRuntimeMXBean().getName()
+  private val jvmId : String = ManagementFactory.getRuntimeMXBean().getName()
 
   override def receive : Receive = {
     case BrokerControlActor.StartBroker =>

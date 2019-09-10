@@ -2,11 +2,14 @@ package blended.activemq.brokerstarter.internal
 
 import java.io.File
 
+import akka.actor.ActorSystem
+import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
-import blended.jms.utils.IdAwareConnectionFactory
+import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
+import javax.jms.Connection
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
@@ -25,13 +28,28 @@ class BrokerActivatorSpec extends SimplePojoContainerSpec
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
+  private implicit val timeout : FiniteDuration = 10.seconds
+  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+
   "The BrokerActivator should" - {
 
     "start the configured brokers correctly" in {
-      implicit val timeout = 10.seconds
-      waitOnService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=blended))")) should be(defined)
-      waitOnService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=broker2))")) should be(defined)
+
+      var connected : List[String] = List.empty
+
+      val probe : TestProbe = TestProbe()
+      system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+
+      1.to(2).foreach{ _ =>
+        probe.fishForMessage(timeout){
+          case s : ConnectionStateChanged if s.state.status == Connected =>
+            connected = (s.state.provider :: connected).distinct
+            true
+          case _ => false
+        }
+      }
+
+      connected should have size 2
     }
   }
-
 }

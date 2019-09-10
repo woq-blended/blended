@@ -238,7 +238,6 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
     }
 
     val newState : ConnectionState = s.copy(events = newEvents.toList)
-    context.system.eventStream.publish(ConnectionStateChanged(newState))
     newState
   }
 

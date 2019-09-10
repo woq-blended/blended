@@ -25,7 +25,8 @@ case class BrokerConfig(
   override val properties : Map[String, String],
   brokerName : String,
   file : String,
-  withSsl : Boolean
+  withSsl : Boolean,
+  withAuthentication : Boolean
 ) extends ConnectionConfig {
   override val enabled : Boolean = true
   override val defaultUser : Option[String] = None
@@ -56,6 +57,8 @@ object BrokerConfig {
 
   val ssl : Config => Boolean = cfg => cfg.getBoolean("withSsl", true)
 
+  val authenticate : Config => Boolean = cfg => cfg.getBoolean("withAuthentication", false)
+
   def create(brokerName : String, idSvc : ContainerIdentifierService, cfg : Config) : Try[BrokerConfig] = Try {
 
     val resolve : String => Try[Any] = value => idSvc.resolvePropertyString(value)
@@ -81,7 +84,8 @@ object BrokerConfig {
       properties = jmsConfig.properties,
       brokerName = name(resolve)(cfg).getOrElse(brokerName),
       file = file(resolve)(cfg).getOrElse(s"$brokerName.amq"),
-      withSsl = ssl(cfg)
+      withSsl = ssl(cfg),
+      withAuthentication = authenticate(cfg)
     )
   }
 }
