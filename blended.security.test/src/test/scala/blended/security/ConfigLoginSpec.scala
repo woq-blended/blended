@@ -8,8 +8,8 @@ import scala.concurrent.duration._
 
 class ConfigLoginSpec extends AbstractLoginSpec {
 
-  private implicit val timeout = 3.seconds
-  override val baseDir = new File(BlendedTestSupport.projectTestOutput, "simple").getAbsolutePath()
+  private implicit val timeout : FiniteDuration = 3.seconds
+  override val baseDir : String = new File(BlendedTestSupport.projectTestOutput, "simple").getAbsolutePath()
 
   "The Simple Login Module should" - {
 
@@ -21,8 +21,8 @@ class ConfigLoginSpec extends AbstractLoginSpec {
       val groups = mgr.permissions(sub.get)
 
       groups.granted.size should be(2)
-      assert(groups.granted.exists(_.permissionClass == Some("admins")))
-      assert(groups.granted.exists(_.permissionClass == Some("blended")))
+      assert(groups.granted.exists(_.permissionClass.contains("admins")))
+      assert(groups.granted.exists(_.permissionClass.contains("blended")))
     }
 
     "deny a login for an unknown user" in {

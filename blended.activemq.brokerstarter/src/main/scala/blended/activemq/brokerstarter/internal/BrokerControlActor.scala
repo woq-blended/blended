@@ -88,7 +88,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
   private[this] var svcReg : Option[ServiceRegistration[_]] = None
   private[this] val uuid = UUID.randomUUID().toString()
 
-  override def toString : String = s"BrokerControlActor(${brokerCfg})"
+  override def toString : String = s"BrokerControlActor($brokerCfg)"
 
   private[this] def startBroker() : Unit = {
 
@@ -109,7 +109,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
       broker = Some(b)
 
       if (brokerCfg.withAuthentication) {
-        val plugins : List[BrokerPlugin] = new JaasAuthenticationPlugin() :: Option(b.getPlugins()).map(_.toList).getOrElse(List.empty)
+        val plugins : List[BrokerPlugin] = new JaasAuthenticationPlugin(brokerCfg) :: Option(b.getPlugins()).map(_.toList).getOrElse(List.empty)
         b.setPlugins(plugins.toArray)
       } else {
         log.info(s"The broker [${brokerCfg.brokerName}] will start without authentication")

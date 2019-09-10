@@ -38,7 +38,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : Act
 
         if (!connecting.getAndSet(true)) {
           try {
-            log.info(s"Creating underlying connection for provider [$vendor:$provider] with client id [${config.clientId}]")
+            log.info(s"Creating underlying connection for provider [$vendor:$provider] as user [${config.defaultUser}] with client id [${config.clientId}]")
 
             val cf : ConnectionFactory = getConnectionFactory()
 
@@ -116,7 +116,7 @@ class JndiConnectionHolder(
     val envMap = new util.Hashtable[String, Object]()
 
     val cfgMap : Map[String, String] =
-      config.properties ++ config.ctxtClassName.map(c => (Context.INITIAL_CONTEXT_FACTORY -> c)).toMap
+      config.properties ++ config.ctxtClassName.map(c => Context.INITIAL_CONTEXT_FACTORY -> c).toMap
 
     cfgMap.foreach {
       case (k, v) =>

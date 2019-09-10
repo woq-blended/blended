@@ -2,6 +2,7 @@ import blended.sbt.Dependencies
 import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 object BlendedActivemqBrokerstarter extends ProjectFactory {
 
@@ -30,9 +31,20 @@ object BlendedActivemqBrokerstarter extends ProjectFactory {
       bundleActivator = s"$projectName.internal.BrokerActivator"
     )
 
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "App" -> "Debug",
+        "spec" -> "Debug",
+        "blended" -> "Debug"
+      )
+    )
+
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project,
       BlendedJmsUtils.project,
+      BlendedSecurityBoot.project,
+      BlendedSecurityJvm.project,
       BlendedTestsupport.project % Test,
       BlendedTestsupportPojosr.project % Test
     )

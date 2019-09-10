@@ -91,6 +91,7 @@ abstract class AbstractLoginModule extends LoginModule {
     loggedInUser match {
       case None => false
       case Some(u) =>
+        log.debug(s"User [$u] logged in successfully")
         subject.foreach { s =>
           s.getPrincipals().add(new UserPrincipal(u))
           val groups = getGroups(u)

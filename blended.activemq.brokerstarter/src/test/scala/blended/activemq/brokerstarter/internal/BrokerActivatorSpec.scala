@@ -6,10 +6,10 @@ import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory}
+import blended.security.internal.SecurityActivator
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
-import javax.jms.Connection
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
@@ -25,10 +25,11 @@ class BrokerActivatorSpec extends SimplePojoContainerSpec
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.security" -> new SecurityActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
-  private implicit val timeout : FiniteDuration = 10.seconds
+  private implicit val timeout : FiniteDuration = 5.seconds
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
 
   "The BrokerActivator should" - {

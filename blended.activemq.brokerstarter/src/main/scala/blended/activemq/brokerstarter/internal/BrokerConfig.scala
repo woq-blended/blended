@@ -5,7 +5,7 @@ import blended.jms.utils.{BlendedJMSConnectionConfig, ConnectionConfig}
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 import org.apache.activemq.ActiveMQConnectionFactory
-
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
@@ -23,14 +23,16 @@ case class BrokerConfig(
   override val minReconnect : FiniteDuration,
   override val maxReconnectTimeout : Option[FiniteDuration],
   override val properties : Map[String, String],
+  override val defaultUser : Option[String],
+  override val defaultPassword : Option[String],
   brokerName : String,
   file : String,
   withSsl : Boolean,
-  withAuthentication : Boolean
+  withAuthentication : Boolean,
+  anonymousUser : Option[String],
+  anonymousGroups : List[String]
 ) extends ConnectionConfig {
   override val enabled : Boolean = true
-  override val defaultUser : Option[String] = None
-  override val defaultPassword : Option[String] = None
   override val useJndi : Boolean = false
   override val cfEnabled : Option[ConnectionConfig => Boolean] = None
   override val cfClassName : Option[String] = Some(classOf[ActiveMQConnectionFactory].getName())
@@ -59,6 +61,10 @@ object BrokerConfig {
 
   val authenticate : Config => Boolean = cfg => cfg.getBoolean("withAuthentication", false)
 
+  val anonymous : Config => Option[String] = cfg => cfg.getStringOption("anonymousUser")
+
+  val anonymousGroups : Config => List[String] = cfg => cfg.getStringList("anonymousGroups", List.empty)
+
   def create(brokerName : String, idSvc : ContainerIdentifierService, cfg : Config) : Try[BrokerConfig] = Try {
 
     val resolve : String => Try[Any] = value => idSvc.resolvePropertyString(value)
@@ -71,6 +77,8 @@ object BrokerConfig {
     BrokerConfig(
       vendor = jmsConfig.vendor,
       provider = jmsConfig.provider,
+      defaultUser = jmsConfig.defaultUser,
+      defaultPassword = jmsConfig.defaultPassword,
       clientId = jmsConfig.clientId,
       jmxEnabled = jmsConfig.jmxEnabled,
       keepAliveEnabled = jmsConfig.keepAliveEnabled,
@@ -85,7 +93,9 @@ object BrokerConfig {
       brokerName = name(resolve)(cfg).getOrElse(brokerName),
       file = file(resolve)(cfg).getOrElse(s"$brokerName.amq"),
       withSsl = ssl(cfg),
-      withAuthentication = authenticate(cfg)
+      withAuthentication = authenticate(cfg),
+      anonymousUser = anonymous(cfg),
+      anonymousGroups = anonymousGroups(cfg)
     )
   }
 }
