@@ -3,10 +3,8 @@ package blended.jms.utils.internal
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
-import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
+import blended.jms.utils.BlendedJMSConnectionConfig
 import javax.jms._
-
-import scala.util.Try
 
 class DummyConnection extends Connection {
 
