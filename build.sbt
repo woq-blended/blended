@@ -57,7 +57,6 @@ lazy val blendedContainerContextImpl = BlendedContainerContextImpl.project
 lazy val blendedJmxJvm = BlendedJmxJvm.project
 lazy val blendedJmxJs = BlendedJmxJs.project
 lazy val blendedJettyBoot = BlendedJettyBoot.project
-lazy val blendedJmsSampler = BlendedJmsSampler.project
 lazy val blendedTestsupportPojosr = BlendedTestsupportPojosr.project
 lazy val blendedAkkaHttpApi = BlendedAkkaHttpApi.project
 lazy val blendedAkkaHttp = BlendedAkkaHttp.project
@@ -120,7 +119,6 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedContainerContextImpl,
   blendedJmxJvm,
   blendedJettyBoot,
-  blendedJmsSampler,
   blendedTestsupportPojosr,
   blendedAkkaHttpApi,
   blendedAkkaHttp,

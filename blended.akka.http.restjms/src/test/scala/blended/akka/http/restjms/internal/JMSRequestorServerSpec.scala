@@ -13,7 +13,7 @@ import com.softwaremill.sttp._
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
 import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 
 class JMSRequestorServerSpec extends TestKit(ActorSystem("jmsRequestor"))
@@ -21,15 +21,15 @@ class JMSRequestorServerSpec extends TestKit(ActorSystem("jmsRequestor"))
   with BeforeAndAfterAll
   with JMSRequestorSetup {
 
-  implicit val actorSystem = system
-  implicit val materializer = ActorMaterializer()
-  implicit val backend = AkkaHttpBackend.usingActorSystem(system)
-  implicit val executionContext = system.dispatcher
+  implicit val actorSystem : ActorSystem = system
+  implicit val materializer : ActorMaterializer = ActorMaterializer()
+  implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend.usingActorSystem(system)
+  implicit val executionContext : ExecutionContext = system.dispatcher
 
   private[this] var svrBinding : Option[ServerBinding] = None
   private[this] val port = 9999
 
-  val svc = new SimpleRestJmsService(restJmsConfig.operations, camelContext, materializer, system.dispatcher)
+  val svc = new SimpleRestJmsService(restJmsConfig.operations, materializer, system.dispatcher)
 
   override protected def beforeAll() : Unit = {
     val binding = Http().bindAndHandle(svc.httpRoute, "localhost", port)

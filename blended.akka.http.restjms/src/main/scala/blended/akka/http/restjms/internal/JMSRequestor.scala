@@ -6,15 +6,10 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Sink
 import akka.util.ByteString
 import blended.util.logging.Logger
-import org.apache.camel.impl.{DefaultExchange, DefaultMessage}
-import org.apache.camel.{CamelContext, Exchange, ExchangePattern}
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.ExecutionContext
 
 trait JMSRequestor {
 
@@ -26,13 +21,12 @@ trait JMSRequestor {
   implicit val materializer : ActorMaterializer
 
   val operations : Map[String, JmsOperationConfig]
-  val camelContext : CamelContext
 
   val httpRoute : Route = {
     path(RemainingPath) { path =>
       post {
         entity(as[HttpRequest]) { request =>
-          log.debug(s"Http operation request received at [$path] : $request")
+          log.info(s"Http operation request received at [$path] : $request")
 
           val cType = request.entity.contentType
 
@@ -67,15 +61,22 @@ trait JMSRequestor {
                   )
 
                 case _ :: _ =>
-                  complete {
-                    val f = requestReply(path.toString(), opCfg, cType, request)
-
-                    f.onComplete {
-                      r => log.debug(s"HttpResponse is [$r]")
-                    }
-
-                    f
-                  }
+                  complete(
+                    HttpResponse(
+                      status = StatusCodes.InternalServerError,
+                      entity = HttpEntity(cType, ByteString("")),
+                      headers = request.headers
+                    )
+                  )
+//                  complete {
+//                    val f = requestReply(path.toString(), opCfg, cType, request)
+//
+//                    f.onComplete {
+//                      r => log.debug(s"HttpResponse is [$r]")
+//                    }
+//
+//                    f
+//                  }
               }
           }
         }
@@ -83,90 +84,90 @@ trait JMSRequestor {
     }
   }
 
-  private[this] def executeCamel(operation : String, opCfg : JmsOperationConfig, cType : ContentType, content : Array[Byte]) : Try[Exchange] = {
-
-    val producer = camelContext.createProducerTemplate()
-    val exchange = new DefaultExchange(camelContext)
-
-    exchange.setPattern(if (opCfg.jmsReply) ExchangePattern.InOut else ExchangePattern.InOnly)
-
-    val msg = new DefaultMessage()
-
-    msg.setBody(content)
-    opCfg.header.foreach { case (k, v) => msg.setHeader(k, v) }
-
-    val requestContentType = cType.mediaType.value
-    log.debug(s"Request Content Type for JMS Request is [$requestContentType]")
-
-    msg.setHeader("Content-Type", cType.mediaType.value)
-    exchange.setIn(msg)
-
-    val baseUri = s"jms:${opCfg.destination}?jmsKeyFormatStrategy=passthrough&disableTimeToLive=true&requestTimeout=${opCfg.timeout}&replyTo=restJMS.$operation"
-
-    val uri : String = if (opCfg.receivetimeout > 0) {
-      baseUri + s"&receiveTimeout=${opCfg.receivetimeout}"
-    } else {
-      baseUri
-    }
-
-    log.info(s"Using request/reply uri [$uri] with content type [$requestContentType]")
-
-    try {
-      val result = producer.send(uri, exchange)
-      Option(result.getException()) match {
-        case None    => Success(result)
-        case Some(e) => Failure(e)
-      }
-    } catch {
-      case NonFatal(e) => Failure(e)
-    } finally {
-      producer.stop()
-    }
-  }
-
-  private[this] def requestReply(operation : String, opCfg : JmsOperationConfig, cType : ContentType, request : HttpRequest) : Future[HttpResponse] = {
-
-    val opNum = opCounter.incrementAndGet()
-    val data = request.entity.getDataBytes().runWith(Sink.seq[ByteString], materializer)
-
-    def filterHeaders(headers : Seq[HttpHeader]) : collection.immutable.Seq[HttpHeader] = {
-      val notAllowedInResponses : Seq[String] = Seq("Host", "Accept-Encoding", "User-Agent", "Timeout-Access")
-      headers.filterNot(h => notAllowedInResponses.contains(h.name())).to[collection.immutable.Seq]
-    }
-
-    data.map { result =>
-
-      val content : Array[Byte] = result.flatten.toArray
-      log.debug(s"Received request [$opNum] of length [${content.length}] encoding [${opCfg.encoding}], [${new String(content, opCfg.encoding)}]")
-
-      executeCamel(operation, opCfg, cType, content) match {
-        case Success(exchange) =>
-
-          if (opCfg.jmsReply) {
-            val body = exchange.getOut().getBody(classOf[Array[Byte]])
-            log.info(s"Received response [$opNum] of length [${body.length}] encoding [${opCfg.encoding}], [${new String(body, opCfg.encoding)}]")
-
-            HttpResponse(
-              status = StatusCodes.OK,
-              entity = HttpEntity.Strict(cType, ByteString(body)),
-              headers = filterHeaders(request.headers)
-            )
-          } else {
-            HttpResponse(
-              status = if (opCfg.isSoap) StatusCodes.Accepted else StatusCodes.OK,
-              entity = HttpEntity.Strict(cType, ByteString("")),
-              headers = filterHeaders(request.headers)
-            )
-          }
-        case Failure(e) =>
-          log.warn(s"Error performing JMS request/reply [${e.getMessage()}]")
-          HttpResponse(
-            status = StatusCodes.InternalServerError,
-            entity = HttpEntity.Strict(cType, ByteString("")),
-            headers = filterHeaders(request.headers)
-          )
-      }
-    }
-  }
+//  private[this] def executeCamel(operation : String, opCfg : JmsOperationConfig, cType : ContentType, content : Array[Byte]) : Try[Exchange] = {
+//
+//    val producer = camelContext.createProducerTemplate()
+//    val exchange = new DefaultExchange(camelContext)
+//
+//    exchange.setPattern(if (opCfg.jmsReply) ExchangePattern.InOut else ExchangePattern.InOnly)
+//
+//    val msg = new DefaultMessage()
+//
+//    msg.setBody(content)
+//    opCfg.header.foreach { case (k, v) => msg.setHeader(k, v) }
+//
+//    val requestContentType = cType.mediaType.value
+//    log.debug(s"Request Content Type for JMS Request is [$requestContentType]")
+//
+//    msg.setHeader("Content-Type", cType.mediaType.value)
+//    exchange.setIn(msg)
+//
+//    val baseUri = s"jms:${opCfg.destination}?jmsKeyFormatStrategy=passthrough&disableTimeToLive=true&requestTimeout=${opCfg.timeout}&replyTo=restJMS.$operation"
+//
+//    val uri : String = if (opCfg.receivetimeout > 0) {
+//      baseUri + s"&receiveTimeout=${opCfg.receivetimeout}"
+//    } else {
+//      baseUri
+//    }
+//
+//    log.info(s"Using request/reply uri [$uri] with content type [$requestContentType]")
+//
+//    try {
+//      val result = producer.send(uri, exchange)
+//      Option(result.getException()) match {
+//        case None    => Success(result)
+//        case Some(e) => Failure(e)
+//      }
+//    } catch {
+//      case NonFatal(e) => Failure(e)
+//    } finally {
+//      producer.stop()
+//    }
+//  }
+//
+//  private[this] def requestReply(operation : String, opCfg : JmsOperationConfig, cType : ContentType, request : HttpRequest) : Future[HttpResponse] = {
+//
+//    val opNum = opCounter.incrementAndGet()
+//    val data = request.entity.getDataBytes().runWith(Sink.seq[ByteString], materializer)
+//
+//    def filterHeaders(headers : Seq[HttpHeader]) : collection.immutable.Seq[HttpHeader] = {
+//      val notAllowedInResponses : Seq[String] = Seq("Host", "Accept-Encoding", "User-Agent", "Timeout-Access")
+//      headers.filterNot(h => notAllowedInResponses.contains(h.name())).to[collection.immutable.Seq]
+//    }
+//
+//    data.map { result =>
+//
+//      val content : Array[Byte] = result.flatten.toArray
+//      log.debug(s"Received request [$opNum] of length [${content.length}] encoding [${opCfg.encoding}], [${new String(content, opCfg.encoding)}]")
+//
+//      executeCamel(operation, opCfg, cType, content) match {
+//        case Success(exchange) =>
+//
+//          if (opCfg.jmsReply) {
+//            val body = exchange.getOut().getBody(classOf[Array[Byte]])
+//            log.info(s"Received response [$opNum] of length [${body.length}] encoding [${opCfg.encoding}], [${new String(body, opCfg.encoding)}]")
+//
+//            HttpResponse(
+//              status = StatusCodes.OK,
+//              entity = HttpEntity.Strict(cType, ByteString(body)),
+//              headers = filterHeaders(request.headers)
+//            )
+//          } else {
+//            HttpResponse(
+//              status = if (opCfg.isSoap) StatusCodes.Accepted else StatusCodes.OK,
+//              entity = HttpEntity.Strict(cType, ByteString("")),
+//              headers = filterHeaders(request.headers)
+//            )
+//          }
+//        case Failure(e) =>
+//          log.warn(s"Error performing JMS request/reply [${e.getMessage()}]")
+//          HttpResponse(
+//            status = StatusCodes.InternalServerError,
+//            entity = HttpEntity.Strict(cType, ByteString("")),
+//            headers = filterHeaders(request.headers)
+//          )
+//      }
+//    }
+//  }
 }
 
