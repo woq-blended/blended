@@ -11,7 +11,6 @@ trait Dependencies {
   val activeMqVersion = "5.15.6"
   val akkaVersion = "2.5.21"
   val akkaHttpVersion = "10.1.7"
-  val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.18.v20190429"
   val jolokiaVersion = "1.6.1"
@@ -32,8 +31,8 @@ trait Dependencies {
   val activeMqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
   val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % activeMqVersion
   val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
+
   val akkaActor = akka("actor")
-  val akkaCamel = akka("camel")
   val akkaHttp = akkaHttpModule("http")
   val akkaHttpCore = akkaHttpModule("http-core")
   val akkaHttpTestkit = akkaHttpModule("http-testkit")
@@ -49,9 +48,6 @@ trait Dependencies {
 
   val bouncyCastleBcprov = "org.bouncycastle" % "bcprov-jdk15on" % "1.60"
   val bouncyCastlePkix = "org.bouncycastle" % "bcpkix-jdk15on" % "1.60"
-
-  val camelCore = "org.apache.camel" % "camel-core" % camelVersion
-  val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
 
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
   val commonsBeanUtils = "commons-beanutils" % "commons-beanutils" % "1.9.3"

@@ -17,7 +17,6 @@ object BlendedActivemqBrokerstarter extends ProjectFactory {
       """.stripMargin
 
     override def deps : Seq[ModuleID] = Seq(
-      Dependencies.camelJms,
       Dependencies.activeMqBroker,
       Dependencies.activeMqSpring,
 

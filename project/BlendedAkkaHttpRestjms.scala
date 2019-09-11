@@ -15,8 +15,6 @@ object BlendedAkkaHttpRestjms extends ProjectFactory {
       Dependencies.akkaStream,
       Dependencies.akkaHttp,
       Dependencies.akkaActor,
-      Dependencies.camelCore,
-      Dependencies.camelJms,
       Dependencies.jms11Spec,
       Dependencies.sttp % Test,
       Dependencies.sttpAkka % Test,
@@ -31,7 +29,6 @@ object BlendedAkkaHttpRestjms extends ProjectFactory {
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
-      BlendedCamelUtils.project,
       BlendedDomino.project,
       BlendedContainerContextApi.project,
       BlendedAkka.project,
