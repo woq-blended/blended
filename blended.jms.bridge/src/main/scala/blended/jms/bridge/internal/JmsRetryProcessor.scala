@@ -111,7 +111,7 @@ class JmsRetryProcessor(
   }
 
   protected def retrySource : Source[FlowEnvelope, NotUsed] = {
-    val settings = JMSConsumerSettings(
+    val settings = JmsConsumerSettings(
       log = retryLog,
       headerCfg = retryCfg.headerCfg,
       connectionFactory = retryCfg.cf,

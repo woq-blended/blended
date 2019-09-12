@@ -36,7 +36,7 @@ class TransactionOutbound(
         JmsDestination.create(d + "." + shard).get
     }
 
-    val srcSettings = JMSConsumerSettings(
+    val srcSettings = JmsConsumerSettings(
       log = log,
       receiveLogLevel = LogLevel.Debug,
       headerCfg = headerConfig,

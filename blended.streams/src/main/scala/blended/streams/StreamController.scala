@@ -3,7 +3,6 @@ package blended.streams
 import akka.actor.{Actor, Props}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import blended.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 
@@ -34,7 +33,6 @@ abstract class AbstractStreamController[T, Mat](streamCfg : BlendedStreamsConfig
   extends Actor
   with StreamControllerSupport[T, Mat] {
 
-  private[this] val log = Logger(getClass().getName())
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
 
   override def preStart() : Unit = self ! StreamController.Start

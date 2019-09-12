@@ -6,10 +6,11 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Sink
 import akka.util.ByteString
 import blended.util.logging.Logger
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 trait JMSRequestor {
 
@@ -61,22 +62,15 @@ trait JMSRequestor {
                   )
 
                 case _ :: _ =>
-                  complete(
-                    HttpResponse(
-                      status = StatusCodes.InternalServerError,
-                      entity = HttpEntity(cType, ByteString("")),
-                      headers = request.headers
-                    )
-                  )
-//                  complete {
-//                    val f = requestReply(path.toString(), opCfg, cType, request)
-//
-//                    f.onComplete {
-//                      r => log.debug(s"HttpResponse is [$r]")
-//                    }
-//
-//                    f
-//                  }
+                  complete {
+                    val f = requestReply(path.toString(), opCfg, cType, request)
+
+                    f.onComplete {
+                      r => log.debug(s"HttpResponse is [$r]")
+                    }
+
+                    f
+                  }
               }
           }
         }
@@ -125,20 +119,27 @@ trait JMSRequestor {
 //    }
 //  }
 //
-//  private[this] def requestReply(operation : String, opCfg : JmsOperationConfig, cType : ContentType, request : HttpRequest) : Future[HttpResponse] = {
-//
-//    val opNum = opCounter.incrementAndGet()
-//    val data = request.entity.getDataBytes().runWith(Sink.seq[ByteString], materializer)
-//
-//    def filterHeaders(headers : Seq[HttpHeader]) : collection.immutable.Seq[HttpHeader] = {
-//      val notAllowedInResponses : Seq[String] = Seq("Host", "Accept-Encoding", "User-Agent", "Timeout-Access")
-//      headers.filterNot(h => notAllowedInResponses.contains(h.name())).to[collection.immutable.Seq]
-//    }
-//
-//    data.map { result =>
-//
-//      val content : Array[Byte] = result.flatten.toArray
-//      log.debug(s"Received request [$opNum] of length [${content.length}] encoding [${opCfg.encoding}], [${new String(content, opCfg.encoding)}]")
+private[this] def requestReply(operation : String, opCfg : JmsOperationConfig, cType : ContentType, request : HttpRequest) : Future[HttpResponse] = {
+
+  def filterHeaders(headers : Seq[HttpHeader]) : collection.immutable.Seq[HttpHeader] = {
+    val notAllowedInResponses : Seq[String] = Seq("Host", "Accept-Encoding", "User-Agent", "Timeout-Access")
+    headers.filterNot(h => notAllowedInResponses.contains(h.name())).to[collection.immutable.Seq]
+  }
+
+  val opNum = opCounter.incrementAndGet()
+  val data = request.entity.getDataBytes().runWith(Sink.seq[ByteString], materializer)
+
+  data.map { result =>
+    val content : Array[Byte] = result.flatten.toArray
+    log.debug(s"Received request [$opNum] of length [${content.length}] encoding [${opCfg.encoding}], [${new String(content, opCfg.encoding)}]")
+    HttpResponse(
+      status = StatusCodes.InternalServerError,
+      entity = HttpEntity.Strict(cType, ByteString("")),
+      headers = filterHeaders(request.headers)
+    )
+  }
+}
+
 //
 //      executeCamel(operation, opCfg, cType, content) match {
 //        case Success(exchange) =>

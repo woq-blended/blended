@@ -42,7 +42,7 @@ import scala.util.{Failure, Success, Try}
  */
 final class JmsConsumerStage(
   name : String,
-  consumerSettings : JMSConsumerSettings,
+  consumerSettings : JmsConsumerSettings,
   minMessageDelay : Option[FiniteDuration] = None
 )(implicit actorSystem : ActorSystem)
   extends GraphStage[SourceShape[FlowEnvelope]] {

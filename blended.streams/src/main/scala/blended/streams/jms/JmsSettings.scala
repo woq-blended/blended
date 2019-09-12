@@ -84,7 +84,7 @@ sealed trait JmsSettings {
   val log : Logger
 }
 
-final case class JMSConsumerSettings(
+final case class JmsConsumerSettings(
   override val log : Logger,
   override val headerCfg : FlowHeaderConfig,
   connectionFactory : IdAwareConnectionFactory,
@@ -100,26 +100,26 @@ final case class JMSConsumerSettings(
   durableName: Option[String] = None
 ) extends JmsSettings {
 
-  def withDestination(dest : Option[JmsDestination]) : JMSConsumerSettings = copy(jmsDestination = dest)
-  def withQueue(name : String) : JMSConsumerSettings = copy(jmsDestination = Some(JmsQueue(name)))
-  def withTopic(name : String) : JMSConsumerSettings = copy(jmsDestination = Some(JmsTopic(name)))
+  def withDestination(dest : Option[JmsDestination]) : JmsConsumerSettings = copy(jmsDestination = dest)
+  def withQueue(name : String) : JmsConsumerSettings = copy(jmsDestination = Some(JmsQueue(name)))
+  def withTopic(name : String) : JmsConsumerSettings = copy(jmsDestination = Some(JmsTopic(name)))
 
-  def withAcknowledgeMode(m : AcknowledgeMode) : JMSConsumerSettings = copy(acknowledgeMode = m)
-  def withSessionCount(c : Int) : JMSConsumerSettings = copy(sessionCount = c)
-  def withSelector(s : Option[String]) : JMSConsumerSettings = copy(selector = s)
-  def withAckTimeout(d : FiniteDuration) : JMSConsumerSettings = copy(ackTimeout = d)
-  def withConnectionTimeout(d : FiniteDuration) : JMSConsumerSettings = copy(connectionTimeout = d)
+  def withAcknowledgeMode(m : AcknowledgeMode) : JmsConsumerSettings = copy(acknowledgeMode = m)
+  def withSessionCount(c : Int) : JmsConsumerSettings = copy(sessionCount = c)
+  def withSelector(s : Option[String]) : JmsConsumerSettings = copy(selector = s)
+  def withAckTimeout(d : FiniteDuration) : JmsConsumerSettings = copy(ackTimeout = d)
+  def withConnectionTimeout(d : FiniteDuration) : JmsConsumerSettings = copy(connectionTimeout = d)
 
-  def withSubScriberName(name : Option[String]) : JMSConsumerSettings = copy(durableName = name)
+  def withSubScriberName(name : Option[String]) : JmsConsumerSettings = copy(durableName = name)
 }
 
-object JMSConsumerSettings {
+object JmsConsumerSettings {
   def create(
     log : Logger,
     cf : IdAwareConnectionFactory,
     headerConfig : FlowHeaderConfig
-  ) : JMSConsumerSettings =
-    JMSConsumerSettings(
+  ) : JmsConsumerSettings =
+    JmsConsumerSettings(
       log = log, headerCfg = headerConfig, connectionFactory = cf
     )
 }

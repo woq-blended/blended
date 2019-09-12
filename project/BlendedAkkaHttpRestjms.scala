@@ -1,6 +1,7 @@
 import blended.sbt.Dependencies
 import phoenix.ProjectFactory
 import sbt._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 object BlendedAkkaHttpRestjms extends ProjectFactory {
 
@@ -28,10 +29,20 @@ object BlendedAkkaHttpRestjms extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "App" -> "DEBUG",
+        "spec" -> "DEBUG",
+        "blended" -> "DEBUG"
+      )
+    )
+
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedContainerContextApi.project,
       BlendedAkka.project,
+      BlendedStreams.project,
       BlendedAkkaHttp.project,
       BlendedUtil.project,
       BlendedTestsupportPojosr.project % Test

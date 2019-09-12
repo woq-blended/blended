@@ -124,7 +124,7 @@ trait JmsStreamSupport {
     val source : Source[FlowEnvelope, NotUsed] = jmsConsumer(
       name = dest.asString,
       settings =
-        JMSConsumerSettings(log = log, headerCfg = headerCfg, connectionFactory = cf)
+        JmsConsumerSettings(log = log, headerCfg = headerCfg, connectionFactory = cf)
           .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
           .withSessionCount(listenerCount)
           .withDestination(Some(dest))
@@ -152,7 +152,7 @@ trait JmsStreamSupport {
 
   def jmsConsumer(
     name : String,
-    settings : JMSConsumerSettings,
+    settings : JmsConsumerSettings,
     minMessageDelay : Option[FiniteDuration]
   )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] =
     Source.fromGraph(new JmsConsumerStage(name, settings, minMessageDelay))

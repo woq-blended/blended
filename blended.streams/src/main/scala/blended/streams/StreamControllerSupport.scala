@@ -64,7 +64,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
       context.stop(self)
 
     case StreamController.Start =>
-      log.debug(s"Initializing StreamController [${name}] with config [$streamCfg]")
+      log.info(s"Initializing StreamController [${name}] with config [$streamCfg]")
 
       startStream() match {
         case Success( (mat, killswitch, done) ) =>
@@ -108,6 +108,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
       context.become(stopping)
 
     case StreamController.Reset =>
+      log.debug(s"Resetting timer for stream controller [$name]")
       context.become(running(
         streamCfg = streamCfg,
         killSwitch = killSwitch,
