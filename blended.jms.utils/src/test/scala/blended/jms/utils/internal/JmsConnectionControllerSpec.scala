@@ -28,7 +28,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
   "The JMS Connection Controller" - {
 
-    "should answer with a positive ConnectResult message in case of a succesful connect" in {
+    "should answer with a positive ConnectResult message in case of a successful connect" in {
 
       val holder = new DummyHolder(() => new DummyConnection())
       val testActor = system.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))

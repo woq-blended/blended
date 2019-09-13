@@ -71,7 +71,7 @@ case class DefaultAcknowledgeContext(
   * - map the inbound data to a FlowEnvelope
   * - implement the concrete actions for acknowledgement and denial
   *
-  * We will use an AcknowledgeContext to hold an inflight envelope and the id of the infliht slot
+  * We will use an AcknowledgeContext to hold an inflight envelope and the id of the inflight slot
   * it is using along with any additional that might be required to perform an acknowledge or denial.
   *
   * As a result, each poll of the external system will produce an Option[AcknowledgeContext] which
