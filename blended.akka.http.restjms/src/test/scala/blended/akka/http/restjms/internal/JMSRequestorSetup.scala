@@ -73,7 +73,7 @@ class JMSResponder(cf : IdAwareConnectionFactory)(implicit system : ActorSystem,
 trait JMSRequestorSetup {
 
   val amqCF : ConnectionFactory = new ActiveMQConnectionFactory("vm://dispatcher?broker.useJmx=false&broker.persistent=false&create=true")
-  val cfg : Config = ConfigFactory.load("restjms.conf")
+  val cfg : Config = ConfigFactory.load("container/etc/restjms.conf")
   val restJmsConfig : RestJMSConfig = RestJMSConfig.fromConfig(cfg)
 
 //  val camelContext : CamelContext = {

@@ -21,10 +21,11 @@ object BlendedAkkaHttpRestjms extends ProjectFactory {
       Dependencies.sttpAkka % Test,
       Dependencies.activeMqBroker % Test,
       Dependencies.activeMqClient % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test,
       Dependencies.akkaSlf4j % Test,
       Dependencies.akkaTestkit % Test,
       Dependencies.scalatest % Test,
-      Dependencies.akkaHttpTestkit % Test,
       Dependencies.logbackCore % Test,
       Dependencies.logbackClassic % Test
     )
@@ -45,6 +46,8 @@ object BlendedAkkaHttpRestjms extends ProjectFactory {
       BlendedStreams.project,
       BlendedAkkaHttp.project,
       BlendedUtil.project,
+      BlendedTestsupport.project % Test,
+      BlendedActivemqBrokerstarter.project % Test,
       BlendedTestsupportPojosr.project % Test
     )
   }

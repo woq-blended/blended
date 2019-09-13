@@ -5,8 +5,8 @@ import akka.stream.ActorMaterializer
 import blended.akka.ActorSystemWatching
 import blended.akka.http.restjms.internal.{RestJMSConfig, SimpleRestJmsService}
 import blended.akka.http.{HttpContext, SimpleHttpContext}
+import blended.jms.utils.IdAwareConnectionFactory
 import domino.DominoActivator
-import javax.jms.ConnectionFactory
 
 class AkkaHttpRestJmsActivator extends DominoActivator with ActorSystemWatching {
 
@@ -16,14 +16,20 @@ class AkkaHttpRestJmsActivator extends DominoActivator with ActorSystemWatching 
       val vendor = cfg.config.getString("vendor")
       val provider = cfg.config.getString("provider")
 
-      whenAdvancedServicePresent[ConnectionFactory](s"(&(vendor=$vendor)(provider=$provider))") { cf =>
+      whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=$vendor)(provider=$provider))") { cf =>
 
         implicit val as : ActorSystem = cfg.system
         val materializer = ActorMaterializer()
         val eCtxt = cfg.system.dispatcher
 
         val operations = RestJMSConfig.fromConfig(cfg.config).operations
-        val svc = new SimpleRestJmsService(operations, materializer, eCtxt)
+        val svc = new SimpleRestJmsService(
+          operations = operations,
+          idService = cfg.idSvc,
+          cf = cf,
+          materializer = materializer,
+          eCtxt = eCtxt
+        )
 
         SimpleHttpContext(cfg.config.getString("webcontext"), svc.httpRoute).providesService[HttpContext]
       }

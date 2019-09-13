@@ -1,54 +1,66 @@
 package blended.akka.http.restjms.internal
 
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
-import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
-import blended.jms.utils.{IdAwareConnectionFactory, SimpleIdAwareConnectionFactory}
-import com.typesafe.config.{Config, ConfigFactory}
-import javax.jms.ConnectionFactory
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
+import java.io.File
+import java.net.URI
 
-import scala.concurrent.Await
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import blended.activemq.brokerstarter.internal.BrokerActivator
+import blended.akka.http.internal.BlendedAkkaHttpActivator
+import blended.akka.http.restjms.AkkaHttpRestJmsActivator
+import blended.akka.internal.BlendedAkkaActivator
+import blended.jms.utils._
+import blended.testsupport.BlendedTestSupport
+import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
+import com.softwaremill.sttp._
+import com.softwaremill.sttp.{StatusCodes => SttpStatusCodes}
+import org.osgi.framework.BundleActivator
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+
 import scala.concurrent.duration._
 
-class JMSRequestorSpec extends WordSpec
+class JMSRequestorSpec extends SimplePojoContainerSpec
+  with WordSpecLike
   with Matchers
-  with ScalatestRouteTest
+  with PojoSrTestHelper
   with BeforeAndAfterAll {
 
-  private val cfg : Config = ConfigFactory.load("restjms.conf")
-  private val restJmsConfig : RestJMSConfig = RestJMSConfig.fromConfig(cfg)
-  private val amqCF : ConnectionFactory = new ActiveMQConnectionFactory("vm://dispatcher?broker.useJmx=false&broker.persistent=false&create=true")
-  private val cf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory("amq", "amq", "requestor", amqCF, 5.seconds)
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.activemq.brokerstarter" -> new BrokerActivator(),
+    "blended.akka.http" -> new BlendedAkkaHttpActivator(),
+    "blended.akka.http.restjms" -> new AkkaHttpRestJmsActivator()
+  )
+
+  private val svcUrlBase : String = "http://localhost:9995/restjms"
+
+  private implicit val backend : SttpBackend[Id, _] = HttpURLConnectionBackend()
+  private implicit val timeout : FiniteDuration = 3.seconds
+
+  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+  private implicit val materializer : ActorMaterializer = ActorMaterializer()
+
+  private val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
+
   private val responder : JMSResponder = new JMSResponder(cf)
   responder.start()
 
-  private val svc = new SimpleRestJmsService(restJmsConfig.operations, ActorMaterializer(), system.dispatcher)
-
-
-  override protected def beforeAll(): Unit = {
-    Thread.sleep(5000)
+  def performRequest(uri : String, cType : String, body : String) : RequestT[Id, String, Nothing] = {
+    sttp.post(Uri(new URI(s"$svcUrlBase/$uri")))
+      .body(body)
+      .header("Content-Type", cType, true)
   }
-
-  def requestEntity(cType : ContentType, body : String) : RequestEntity =
-    HttpEntity.Default(cType, body.length(), Source.single(ByteString(body)))
 
   "The JMSRequestor" should {
 
     "respond to a posted message if the operation is configured [json]" in {
+      val response = performRequest("leergut.redeem", "application/json", "test" * 1000).send()
 
-      HttpRequest(
-        method = HttpMethods.POST,
-        uri = "/leergut.redeem",
-        entity = requestEntity(ContentTypes.`application/json`, "test" * 1000)
-      ) ~> svc.httpRoute ~> check {
-        status should be(StatusCodes.OK)
-        contentType should be(ContentTypes.`application/json`)
-        responseAs[String] should be(MockResponses.json)
-      }
+      response.code should be (SttpStatusCodes.Ok)
+      response.unsafeBody should be (MockResponses.json)
+      response.header("Content-Type") should be (Some("application/json"))
     }
 
     "respond to a posted message if the operation is configured [xml]" in {
@@ -64,20 +76,12 @@ class JMSRequestorSpec extends WordSpec
 //          status should be(StatusCodes.OK)
 //        }
     }
-//
+
     "respond with a not found return code if the operation is not configured" in {
-      pending
-//
-//      HttpRequest(
-//        method = HttpMethods.POST,
-//        uri = "/noop",
-//        entity = requestEntity(ContentTypes.`application/json`, "test")
-//      ) ~> svc.httpRoute ~> check {
-//          contentType should be(ContentTypes.`application/json`)
-//          status should be(StatusCodes.NotFound)
-//        }
+      val response = performRequest("dummy", "application/json", "test" * 1000).send()
+      response.code should be (SttpStatusCodes.NotFound)
     }
-//
+
     "respond with a server error if the JMS request times out" in {
       pending
 //      implicit val timeout : RouteTestTimeout = RouteTestTimeout(3.seconds)
@@ -91,18 +95,12 @@ class JMSRequestorSpec extends WordSpec
 //          status should be(StatusCodes.InternalServerError)
 //        }
     }
-//
+
     "respond with a server error if the Content Type is invalid" in {
-      pending
-//      HttpRequest(
-//        method = HttpMethods.POST,
-//        uri = "/leergut.redeem",
-//        entity = requestEntity(ContentTypes.`text/plain(UTF-8)`, "test")
-//      ) ~> svc.httpRoute ~> check {
-//          status should be(StatusCodes.InternalServerError)
-//        }
+      val response = performRequest("leergut.redeem", "text/plain", "test" * 1000).send()
+      response.code should be (com.softwaremill.sttp.StatusCodes.InternalServerError)
     }
-//
+
     "respond directly with OK and an empty body if 'jmsreply' is set to false in the config" in {
       pending
 //      HttpRequest(
@@ -132,9 +130,32 @@ class JMSRequestorSpec extends WordSpec
 //          status should be(StatusCodes.Accepted)
 //        }
     }
-  }
 
-  override def cleanUp() : Unit = {
-    Await.result(system.terminate(), 10.seconds)
+    "behave correctly with streamed or chunked bodies" in {
+      pending
+      //      val uri = Uri(new URI(s"http://localhost:$port/leergut.redeem"))
+      //      val request = sttp
+      //        .streamBody(Source.single(ByteString("test")))
+      //        //.body("test")
+      //        .contentType("application/json")
+      //        .post(uri)
+      //
+      //      val response = Await.result(request.send(), 3.seconds)
+      //
+      //      assert(response.code == StatusCodes.Ok)
+    }
+
+    "behave correctly with non-streamed bodies" in {
+      pending
+      //      val uri = Uri(new URI(s"http://localhost:$port/leergut.redeem"))
+      //      val request = sttp
+      //        .body("test")
+      //        .contentType("application/json")
+      //        .post(uri)
+      //
+      //      val response = Await.result(request.send(), 3.seconds)
+      //
+      //      assert(response.code == StatusCodes.Ok)
+    }
   }
 }

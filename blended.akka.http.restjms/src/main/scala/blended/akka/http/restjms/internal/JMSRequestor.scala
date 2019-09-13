@@ -8,7 +8,11 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
 import akka.util.ByteString
+import blended.container.context.api.ContainerIdentifierService
+import blended.jms.utils.IdAwareConnectionFactory
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.util.logging.Logger
+import javax.jms.ConnectionFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -21,13 +25,15 @@ trait JMSRequestor {
   implicit val eCtxt : ExecutionContext
   implicit val materializer : ActorMaterializer
 
+  val cf : IdAwareConnectionFactory
+  val idService : ContainerIdentifierService
   val operations : Map[String, JmsOperationConfig]
 
   val httpRoute : Route = {
     path(RemainingPath) { path =>
       post {
         entity(as[HttpRequest]) { request =>
-          log.info(s"Http operation request received at [$path] : $request")
+          log.info(s"Http operation request received at [$path] with headers [${request.headers}]")
 
           val cType = request.entity.contentType
 
@@ -39,7 +45,7 @@ trait JMSRequestor {
                 HttpResponse(
                   status = StatusCodes.NotFound,
                   entity = HttpEntity.Strict(cType, ByteString("")),
-                  headers = request.headers
+                  headers = filterHeaders(request.headers)
                 )
               )
 
@@ -57,7 +63,7 @@ trait JMSRequestor {
                     HttpResponse(
                       status = StatusCodes.InternalServerError,
                       entity = HttpEntity(cType, ByteString("")),
-                      headers = request.headers
+                      headers = filterHeaders(request.headers)
                     )
                   )
 
@@ -78,7 +84,12 @@ trait JMSRequestor {
     }
   }
 
-//  private[this] def executeCamel(operation : String, opCfg : JmsOperationConfig, cType : ContentType, content : Array[Byte]) : Try[Exchange] = {
+  private def filterHeaders(headers : Seq[HttpHeader]) : collection.immutable.Seq[HttpHeader] = {
+    val notAllowedInResponses : Seq[String] = Seq("Host", "Accept-Encoding", "User-Agent", "Timeout-Access")
+    headers.filterNot(h => notAllowedInResponses.contains(h.name())).to[collection.immutable.Seq]
+  }
+
+  //  private[this] def executeCamel(operation : String, opCfg : JmsOperationConfig, cType : ContentType, content : Array[Byte]) : Try[Exchange] = {
 //
 //    val producer = camelContext.createProducerTemplate()
 //    val exchange = new DefaultExchange(camelContext)
@@ -119,26 +130,28 @@ trait JMSRequestor {
 //    }
 //  }
 //
-private[this] def requestReply(operation : String, opCfg : JmsOperationConfig, cType : ContentType, request : HttpRequest) : Future[HttpResponse] = {
+  private[this] def requestReply(operation : String, opCfg : JmsOperationConfig, cType : ContentType, request : HttpRequest) : Future[HttpResponse] = {
 
-  def filterHeaders(headers : Seq[HttpHeader]) : collection.immutable.Seq[HttpHeader] = {
-    val notAllowedInResponses : Seq[String] = Seq("Host", "Accept-Encoding", "User-Agent", "Timeout-Access")
-    headers.filterNot(h => notAllowedInResponses.contains(h.name())).to[collection.immutable.Seq]
+
+    val opNum = opCounter.incrementAndGet()
+    val data = request.entity.getDataBytes().runWith(Sink.seq[ByteString], materializer)
+
+    data.map { result =>
+      val content : Array[Byte] = result.flatten.toArray
+      log.debug(s"Received request [$opNum] of length [${content.length}], encoding [${opCfg.encoding}], content type [${cType.mediaType}]")
+      val env : FlowEnvelope = FlowEnvelope(FlowMessage(content)(FlowMessage.noProps))
+      log.debug(s"$env")
+      HttpResponse(
+        status = StatusCodes.InternalServerError,
+        entity = HttpEntity.Strict(cType, ByteString("")),
+        headers = filterHeaders(request.headers)
+      )
+    }
   }
 
-  val opNum = opCounter.incrementAndGet()
-  val data = request.entity.getDataBytes().runWith(Sink.seq[ByteString], materializer)
-
-  data.map { result =>
-    val content : Array[Byte] = result.flatten.toArray
-    log.debug(s"Received request [$opNum] of length [${content.length}] encoding [${opCfg.encoding}], [${new String(content, opCfg.encoding)}]")
-    HttpResponse(
-      status = StatusCodes.InternalServerError,
-      entity = HttpEntity.Strict(cType, ByteString("")),
-      headers = filterHeaders(request.headers)
-    )
+  private def executeRequest(): Unit = {
   }
-}
+
 
 //
 //      executeCamel(operation, opCfg, cType, content) match {
