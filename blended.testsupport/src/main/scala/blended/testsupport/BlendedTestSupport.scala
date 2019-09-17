@@ -2,5 +2,5 @@ package blended.testsupport
 
 object BlendedTestSupport {
 
-  val projectTestOutput = System.getProperty("projectTestOutput", "")
+  val projectTestOutput : String  = System.getProperty("projectTestOutput", "")
 }

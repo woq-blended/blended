@@ -1,6 +1,7 @@
 import blended.sbt.Dependencies
 import phoenix.ProjectFactory
 import sbt._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 object BlendedAkkaHttpProxy extends ProjectFactory {
 
@@ -22,7 +23,21 @@ object BlendedAkkaHttpProxy extends ProjectFactory {
       Dependencies.akkaStreamTestkit % Test,
       Dependencies.akkaHttpTestkit % Test,
       Dependencies.logbackCore % Test,
-      Dependencies.logbackClassic % Test
+      Dependencies.logbackClassic % Test,
+      Dependencies.springCore % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test,
+      Dependencies.springExpression % Test,
+      Dependencies.commonsLogging % Test
+    )
+
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "App" -> "DEBUG",
+        "spec" -> "DEBUG",
+        "blended" -> "DEBUG"
+      )
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(

@@ -29,7 +29,7 @@ class StreamKeepAliveProducerFactory(
     timeToLive = Some(bcf.config.keepAliveInterval)
   )
 
-  private val consumerSettings : BlendedSingleConnectionFactory => JMSConsumerSettings = bcf => JMSConsumerSettings(
+  private val consumerSettings : BlendedSingleConnectionFactory => JmsConsumerSettings = bcf => JmsConsumerSettings(
     log = log(bcf),
     headerCfg = FlowHeaderConfig.create(idSvc),
     connectionFactory = bcf,

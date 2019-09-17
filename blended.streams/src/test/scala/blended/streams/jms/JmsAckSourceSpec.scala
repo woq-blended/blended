@@ -77,11 +77,11 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
     system.terminate()
   }
 
-  private val consumerSettings : String => JMSConsumerSettings = destName => {
+  private val consumerSettings : String => JmsConsumerSettings = destName => {
 
     val dest = JmsDestination.create(destName).unwrap
 
-    JMSConsumerSettings(
+    JmsConsumerSettings(
       log = log,
       headerCfg = headerCfg,
       connectionFactory = amqCf,
@@ -98,7 +98,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
     jmsDestination = Some(JmsDestination.create(destName).get)
   )
 
-  private val consumer : JMSConsumerSettings => Option[FiniteDuration] => Source[FlowEnvelope, NotUsed] =
+  private val consumer : JmsConsumerSettings => Option[FiniteDuration] => Source[FlowEnvelope, NotUsed] =
     cSettings => minMessageDelay => jmsConsumer(
       name = "test",
       settings = cSettings,
@@ -123,7 +123,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       val msgCount : Int = 100
       val destName : String = "noDelay"
 
-      val cSettings : JMSConsumerSettings = consumerSettings(destName)
+      val cSettings : JmsConsumerSettings = consumerSettings(destName)
       val pSettings : JmsProducerSettings = producerSettings(destName)
 
       val msgConsumer : Source[FlowEnvelope, NotUsed] = consumer(cSettings)(None)
@@ -159,7 +159,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       val destName : String = "delayed"
       val minDelay : FiniteDuration = 3.seconds
 
-      val cSettings : JMSConsumerSettings = consumerSettings(destName)
+      val cSettings : JmsConsumerSettings = consumerSettings(destName)
       val pSettings : JmsProducerSettings = producerSettings(destName)
 
       val msgConsumer : Source[FlowEnvelope, NotUsed] = consumer(cSettings)(Some(minDelay))

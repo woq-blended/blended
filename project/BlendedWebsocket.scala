@@ -75,7 +75,12 @@ object BlendedWebsocketJvm extends ProjectFactory {
       Dependencies.scalatest % Test,
       Dependencies.logbackClassic % Test,
       Dependencies.logbackCore % Test,
-      Dependencies.jclOverSlf4j % Test
+      Dependencies.jclOverSlf4j % Test,
+      Dependencies.springCore % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test,
+      Dependencies.springExpression % Test,
+      Dependencies.commonsLogging % Test
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(

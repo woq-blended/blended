@@ -18,8 +18,6 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 
   def createJmsMessage(session : Session, env : FlowEnvelope) : Try[Message] = Try {
 
-    import JmsFlowSupport.{dot, dot_repl, hyphen, hyphen_repl}
-
     val flowMsg = env.flowMessage
 
     val msg = flowMsg match {
@@ -40,7 +38,7 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
       case (k, _) => !k.startsWith("JMS")
     }.foreach {
       case (k, v) =>
-        val propName = k.replaceAll("\\" + dot, dot_repl).replaceAll(hyphen, hyphen_repl)
+        val propName = settings.keyFormatStrategy.handleSendKey(k)
         v match {
           // scalastyle:off null
           case _ : UnitMsgProperty => msg.setObjectProperty(propName, null)
@@ -82,27 +80,28 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
   }
 
   // Get the destination from the message
-  def destination(flowMsg : FlowMessage) : Try[JmsDestination] = {
+  def destination(env : FlowEnvelope) : Try[JmsDestination] = {
+
+    val flowMsg : FlowMessage = env.flowMessage
+
     Try {
 
-      val id : String = flowMsg.header[String](headerConfig.headerTransId).getOrElse("UNKNOWN")
-
-      log.trace(s"Trying to resolve destination for [$id] from header [${destHeader(headerConfig.prefix)}]")
+      log.trace(s"Trying to resolve destination for [${env.id}] from header [${destHeader(headerConfig.prefix)}]")
 
       val d = flowMsg.header[String](s"${destHeader(headerConfig.prefix)}") match {
         case Some(s) =>
           JmsDestination.create(s).get
 
         case None =>
-          log.trace(s"Trying to resolve destination for [$id] from settings.")
+          log.trace(s"Trying to resolve destination for [${env.id}] from settings.")
           settings.jmsDestination match {
             case Some(dest) => dest
             case None =>
-              throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
+              throw new JMSException(s"Could not resolve JMS destination for [${env.id}]")
           }
       }
 
-      log.debug(s"Resolved destination for [$id] to [${d.asString}]")
+      log.debug(s"Resolved destination for [${env.id}] to [${d.asString}]")
       d
     }
   }
@@ -171,7 +170,7 @@ class MessageDestinationResolver(
     val msg = createJmsMessage(session, env).get
 
     // Get the destination
-    val dest : JmsDestination = destination(flowMsg).get
+    val dest : JmsDestination = destination(env).get
 
     // Get the priority
     val prio : Int = priority(flowMsg)

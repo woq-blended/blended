@@ -51,14 +51,12 @@ lazy val blendedUpdater = BlendedUpdater.project
 lazy val blendedUpdaterTools = BlendedUpdaterTools.project
 lazy val blendedPersistence = BlendedPersistence.project
 lazy val blendedUpdaterRemote = BlendedUpdaterRemote.project
-lazy val blendedCamelUtils = BlendedCamelUtils.project
 lazy val blendedJmsUtils = BlendedJmsUtils.project
 lazy val blendedActivemqBrokerstarter = BlendedActivemqBrokerstarter.project
 lazy val blendedContainerContextImpl = BlendedContainerContextImpl.project
 lazy val blendedJmxJvm = BlendedJmxJvm.project
 lazy val blendedJmxJs = BlendedJmxJs.project
 lazy val blendedJettyBoot = BlendedJettyBoot.project
-lazy val blendedJmsSampler = BlendedJmsSampler.project
 lazy val blendedTestsupportPojosr = BlendedTestsupportPojosr.project
 lazy val blendedAkkaHttpApi = BlendedAkkaHttpApi.project
 lazy val blendedAkkaHttp = BlendedAkkaHttp.project
@@ -83,8 +81,6 @@ lazy val blendedSecurityTest = BlendedSecurityTest.project
 lazy val blendedSecuritySsl = BlendedSecuritySsl.project
 lazy val blendedHawtioLogin = BlendedHawtioLogin.project
 lazy val blendedJolokia = BlendedJolokia.project
-lazy val blendedSamplesCamel = BlendedSamplesCamel.project
-lazy val blendedSamplesJms = BlendedSamplesJms.project
 lazy val blendedAkkaHttpSampleHelloworld = BlendedAkkaHttpSampleHelloworld.project
 lazy val blendedSecurityCrypto = BlendedSecurityCrypto.project
 // Referenced in adoc file: doc/content/BUILDING.adoc
@@ -118,13 +114,11 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedUpdaterTools,
   blendedPersistence,
   blendedUpdaterRemote,
-  blendedCamelUtils,
   blendedJmsUtils,
   blendedActivemqBrokerstarter,
   blendedContainerContextImpl,
   blendedJmxJvm,
   blendedJettyBoot,
-  blendedJmsSampler,
   blendedTestsupportPojosr,
   blendedAkkaHttpApi,
   blendedAkkaHttp,
@@ -152,8 +146,6 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedSecurityScepStandalone,
   blendedHawtioLogin,
   blendedJolokia,
-  blendedSamplesCamel,
-  blendedSamplesJms,
   blendedAkkaHttpSampleHelloworld,
   blendedActivemqClient,
   blendedJmsBridge,

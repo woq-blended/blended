@@ -14,7 +14,6 @@ object BlendedJmsUtils extends ProjectFactory {
       "A bundle to provide a ConnectionFactory wrapper that monitors a single connection and is able to monitor the connection via an active ping."
 
     override def deps : Seq[ModuleID] = Seq(
-      Dependencies.camelJms,
       Dependencies.jms11Spec,
       Dependencies.scalatest % Test,
       Dependencies.akkaSlf4j % Test,
@@ -43,7 +42,6 @@ object BlendedJmsUtils extends ProjectFactory {
       BlendedUtilLogging.project,
       BlendedAkka.project,
 
-      BlendedCamelUtils.project % Test,
       BlendedTestsupport.project % Test
     )
   }

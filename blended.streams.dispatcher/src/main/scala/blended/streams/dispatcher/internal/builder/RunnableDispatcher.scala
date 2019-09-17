@@ -109,7 +109,7 @@ class RunnableDispatcher(
   ) : Source[FlowEnvelope, NotUsed] = {
 
     // todo : stick into config
-    val settings = JMSConsumerSettings(
+    val settings = JmsConsumerSettings(
       log = bs.streamLogger,
       headerCfg = bs.headerConfig,
       connectionFactory = cf,

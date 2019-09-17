@@ -44,11 +44,6 @@ trait JmsEnvelopeHeader {
 
 object JmsFlowSupport extends JmsEnvelopeHeader {
 
-  val hyphen : String = "-"
-  val dot : String = "."
-  val hyphen_repl : String = "_HYPHEN_"
-  val dot_repl : String = "_DOT_"
-
   // Convert a JMS message into a FlowMessage. This is normally used in JMS Sources
   val jms2flowMessage : FlowHeaderConfig => JmsSettings => Message => Try[FlowMessage] = headerConfig => settings => msg => Try {
 
@@ -95,9 +90,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
 
       val props : Map[String, MsgProperty] = msg.getPropertyNames().asScala.map { name =>
 
-        val propName = name.toString()
-          .replaceAll(hyphen_repl, hyphen)
-          .replaceAll(dot_repl, dot)
+        val propName = settings.keyFormatStrategy.handleReceivedKey(name.toString())
 
         propName -> MsgProperty(msg.getObjectProperty(name.toString())).unwrap
       }.toMap

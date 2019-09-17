@@ -99,7 +99,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
     val dest = JmsDestination.create(destName).unwrap
 
-    val settings : JMSConsumerSettings = JMSConsumerSettings(
+    val settings : JmsConsumerSettings = JmsConsumerSettings(
       log = log,
       headerCfg = headerCfg,
       connectionFactory = cf,
