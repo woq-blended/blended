@@ -14,7 +14,12 @@ object BlendedActivemqClient extends ProjectFactory {
     override def deps : Seq[ModuleID] = Seq(
       Dependencies.activeMqClient,
       Dependencies.activeMqBroker % Test,
-      Dependencies.activeMqKahadbStore % Test
+      Dependencies.activeMqKahadbStore % Test,
+      Dependencies.springCore % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test,
+      Dependencies.springExpression % Test,
+      Dependencies.commonsLogging % Test
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(

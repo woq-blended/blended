@@ -23,7 +23,9 @@ object BlendedAkkaHttpJmsqueue extends ProjectFactory {
       Dependencies.logbackCore % Test,
       Dependencies.logbackClassic % Test,
       Dependencies.activeMqBroker % Test,
-      Dependencies.activeMqKahadbStore % Test
+      Dependencies.activeMqKahadbStore % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(

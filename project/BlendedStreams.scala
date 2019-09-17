@@ -27,7 +27,12 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.activeMqBroker % Test,
       Dependencies.activeMqKahadbStore % Test,
       Dependencies.logbackCore % Test,
-      Dependencies.logbackClassic % Test
+      Dependencies.logbackClassic % Test,
+      Dependencies.springCore % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test,
+      Dependencies.springExpression % Test,
+      Dependencies.commonsLogging % Test
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(

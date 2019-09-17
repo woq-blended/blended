@@ -55,6 +55,7 @@ trait Dependencies {
   val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
   val commonsIo = "commons-io" % "commons-io" % "2.6"
   val commonsLang2 = "commons-lang" % "commons-lang" % "2.6"
+  val commonsLogging = "commons-logging" % "commons-logging" % "1.2"
   val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
   val dockerJava = "com.github.docker-java" % "docker-java" % "3.0.13"

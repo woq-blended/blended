@@ -26,7 +26,12 @@ object BlendedUpdaterRemote extends ProjectFactory {
       Dependencies.felixGogoShell % Test,
       Dependencies.felixGogoCommand % Test,
       Dependencies.felixFileinstall % Test,
-      Dependencies.mockitoAll % Test
+      Dependencies.mockitoAll % Test,
+      Dependencies.springCore % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test,
+      Dependencies.springExpression % Test,
+      Dependencies.commonsLogging % Test
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(
