@@ -69,6 +69,10 @@ sealed trait JmsSettings {
   // specified timeout
   val connectionTimeout : FiniteDuration
 
+  // A key handler strategy that can translate property names in JMS messages
+  // if required
+  val keyFormatStrategy : JmsKeyFormatStrategy
+
   // An optional JMS Destination, it depends on the Jms Stage how this destination
   // is used
   val jmsDestination : Option[JmsDestination]
@@ -87,6 +91,7 @@ sealed trait JmsSettings {
 final case class JmsConsumerSettings(
   override val log : Logger,
   override val headerCfg : FlowHeaderConfig,
+  override val keyFormatStrategy: JmsKeyFormatStrategy = new DefaultKeyFormatStrategy(),
   connectionFactory : IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination : Option[JmsDestination] = None,
@@ -127,6 +132,7 @@ object JmsConsumerSettings {
 final case class JmsProducerSettings(
   override val log : Logger,
   override val headerCfg : FlowHeaderConfig,
+  override val keyFormatStrategy: JmsKeyFormatStrategy = new DefaultKeyFormatStrategy(),
   connectionFactory : IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination : Option[JmsDestination] = None,

@@ -1,11 +1,10 @@
 package blended.akka.http.restjms
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import blended.akka.ActorSystemWatching
-import blended.akka.http.restjms.internal.{RestJMSConfig, SimpleRestJmsService}
+import blended.akka.http.restjms.internal.SimpleRestJmsService
 import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.jms.utils.IdAwareConnectionFactory
+import blended.streams.BlendedStreamsConfig
 import domino.DominoActivator
 
 class AkkaHttpRestJmsActivator extends DominoActivator with ActorSystemWatching {
@@ -16,22 +15,26 @@ class AkkaHttpRestJmsActivator extends DominoActivator with ActorSystemWatching 
       val vendor = cfg.config.getString("vendor")
       val provider = cfg.config.getString("provider")
 
-      whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=$vendor)(provider=$provider))") { cf =>
+      val webContext : String = cfg.config.getString("webcontext")
 
-        implicit val as : ActorSystem = cfg.system
-        val materializer = ActorMaterializer()
-        val eCtxt = cfg.system.dispatcher
+      whenServicePresent[BlendedStreamsConfig]{ streamsCfg =>
+        whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=$vendor)(provider=$provider))") { cf =>
 
-        val operations = RestJMSConfig.fromConfig(cfg.config).operations
-        val svc = new SimpleRestJmsService(
-          operations = operations,
-          idService = cfg.idSvc,
-          cf = cf,
-          materializer = materializer,
-          eCtxt = eCtxt
-        )
+          val svc = new SimpleRestJmsService(
+            name = webContext,
+            osgiCfg = cfg,
+            streamsConfig = streamsCfg,
+            cf = cf
+          )
 
-        SimpleHttpContext(cfg.config.getString("webcontext"), svc.httpRoute).providesService[HttpContext]
+          svc.start()
+
+          onStop{
+            svc.stop()
+          }
+
+          SimpleHttpContext(webContext, svc.httpRoute).providesService[HttpContext]
+        }
       }
     }
   }
