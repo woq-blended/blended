@@ -19,6 +19,7 @@ pipeline {
           '''
           junit allowEmptyResults: true, healthScaleFactor: 0.0, keepLongStdio: true, testResults: '**/target/test-reports/TEST*.xml'
           sh '''#!/bin/bash -l
+            git remote set-url origin git@github.com:woq-blended/blended.git
             git checkout --orphan gh-pages
             git reset
             git add -f target/site
