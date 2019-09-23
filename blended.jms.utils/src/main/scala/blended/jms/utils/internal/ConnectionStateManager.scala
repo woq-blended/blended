@@ -182,11 +182,11 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
   }
 
   def handleReconnectRequest(state : ConnectionState) : Receive = {
-    case Reconnect(v, p, None) => if (v == config.vendor && p == config.provider) {
-      log.info(s"Initiating JMS reconnect for")
+    case Reconnect(v, p, None) => if (v == config.vendor && p == config.provider && state.status == Connected) {
+      log.info(s"Initiating JMS reconnect")
       reconnect(state)
     }
-    case Reconnect(v, p, Some(r)) => if (v == config.vendor && p == config.provider) {
+    case Reconnect(v, p, Some(r)) => if (v == config.vendor && p == config.provider && state.status == Connected) {
       log.info(s"Initiating JMS reconnect after connection exception [${r.getMessage()}]")
       reconnect(state)
     }

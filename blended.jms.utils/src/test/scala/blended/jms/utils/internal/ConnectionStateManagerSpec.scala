@@ -245,6 +245,52 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       fishForState(probe)(Connected)
     }
 
+    "should successfully reconnect if a connection level exception is encountered in disconnected state" in {
+      val holder : ConnectionHolder = connHolder(Int.MaxValue)
+      val probe = TestProbe()
+      system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+      val props = ConnectionStateManager.props(cfg.copy(
+        connectTimeout = 5.seconds,
+        minReconnect = 5.seconds
+      ), holder)
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+      fishForState(probe, 3.seconds)(Connected)
+      assert(holder.getConnection().isDefined)
+
+      csm ! Disconnect(1.second)
+
+      fishForState(probe, 3.seconds)(Disconnected)
+
+      csm ! Reconnect(cfg.vendor, cfg.provider, Some(new Exception("Boom")))
+
+      fishForState(probe, 10.seconds)(Connected)
+    }
+
+    "should successfully reconnect in case a connection level exception is thrown" in {
+      val holder : ConnectionHolder = connHolder(Int.MaxValue)
+      val probe = TestProbe()
+      system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+
+      val props = ConnectionStateManager.props(cfg.copy(
+        connectTimeout = 5.seconds,
+        minReconnect = 5.seconds
+      ), holder)
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+      fishForState(probe, 3.seconds)(Connected)
+      assert(holder.getConnection().isDefined)
+
+      csm ! Reconnect(cfg.vendor, cfg.provider, Some(new Exception("Boom")))
+
+      fishForState(probe, 3.seconds)(Disconnected)
+      fishForState(probe, 10.seconds)(Connected)
+    }
+
     "should initiate a container restart if the connection can't be established from connecting state" in {
       val onlyConnectOnce : ConnectionHolder = new DummyHolder(() => new DummyConnection()) {
         private var first : Boolean = true
