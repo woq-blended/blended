@@ -162,7 +162,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
 
       assert(Await.result(result, bulkTimeout))
       Thread.sleep(10000)
-      assert(threadCount() <= 100)
+      assert(threadCount() <= 150)
     }
 
     "does not leak threads on failed ping inits" in {
@@ -180,7 +180,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
 
       assert(Await.result(result, bulkTimeout * 2))
       Thread.sleep(10000)
-      assert(threadCount() <= 100)
+      assert(threadCount() <= 150)
     }
 
     "does not leak threads on failed ping probes" in {

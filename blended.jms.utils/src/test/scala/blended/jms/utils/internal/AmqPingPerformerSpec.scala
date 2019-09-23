@@ -13,7 +13,6 @@ class AmqPingPerformerSpec extends JMSPingPerformerSpec with BeforeAndAfterAll w
 
   override val bulkCount: Int = 10000
 
-
   override val pingQueue: String = "pingQueue"
   override val pingTopic: String = "pingTopic"
 
