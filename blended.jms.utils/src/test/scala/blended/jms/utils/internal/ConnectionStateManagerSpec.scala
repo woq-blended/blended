@@ -2,7 +2,7 @@ package blended.jms.utils.internal
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
-import blended.jms.utils.BlendedJMSConnectionConfig
+import blended.jms.utils.{BlendedJMSConnectionConfig, Reconnect}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.jms.{Connection, ConnectionFactory}
 
@@ -251,6 +251,65 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       }
 
       probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
+        case _ => false
+      }
+    }
+
+    "should successfully reconnect if a connection level exception is encountered in disconnected state" in {
+      val probe = TestProbe()
+      val props = ConnectionStateManager.props(cfg.copy(
+        connectTimeout = 5.seconds,
+        minReconnect = 5.seconds
+      ), probe.ref, holder)
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
+        case _ => false
+      }
+      assert(holder.getConnection().isDefined)
+
+      csm ! Disconnect(1.second)
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.DISCONNECTED
+        case _ => false
+      }
+
+      csm ! Reconnect(cfg.vendor, cfg.provider, Some(new Exception("Boom")))
+
+      probe.fishForMessage(10.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
+        case _ => false
+      }
+    }
+
+    "should successfully reconnect in case a connection level exception is thrown" in {
+      val probe = TestProbe()
+      val props = ConnectionStateManager.props(cfg.copy(
+        connectTimeout = 5.seconds,
+        minReconnect = 5.seconds
+      ), probe.ref, holder)
+
+      val csm = TestActorRef[ConnectionStateManager](props)
+
+      csm ! CheckConnection(false)
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
+        case _ => false
+      }
+      assert(holder.getConnection().isDefined)
+
+      csm ! Reconnect(cfg.vendor, cfg.provider, Some(new Exception("Boom")))
+
+      probe.fishForMessage(3.seconds) {
+        case sc : ConnectionStateChanged => sc.state.status == ConnectionState.DISCONNECTED
+        case _ => false
+      }
+
+      probe.fishForMessage(10.seconds) {
         case sc : ConnectionStateChanged => sc.state.status == ConnectionState.CONNECTED
         case _ => false
       }

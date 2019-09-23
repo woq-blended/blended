@@ -199,11 +199,11 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
   }
 
   def handleReconnectRequest(state : ConnectionState) : Receive = {
-    case Reconnect(v, p, None) => if (v == vendor && p == provider) {
+    case Reconnect(v, p, None) => if (v == vendor && p == provider && state.status == CONNECTED) {
       log.info(s"Initiating reconnect for [$vendor:$provider]")
       reconnect(state)
     }
-    case Reconnect(v, p, Some(r)) => if (v == vendor && p == provider) {
+    case Reconnect(v, p, Some(r)) => if (v == vendor && p == provider && state.status == CONNECTED) {
       log.info(s"Initiating reconnect for [$vendor:$provider] after connection exception [${r.getMessage()}]")
       reconnect(state)
     }
@@ -412,7 +412,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
           log.debug(s"Ignoring ping request for provider [$provider] as one pinger is already active.")
       }
     } else {
-      log.info(s"Ping is disabled for connection factory [${config.vendor}:${config.provider}]")
+      log.debug(s"Ping is disabled for connection factory [${config.vendor}:${config.provider}]")
     }
   }
 }
