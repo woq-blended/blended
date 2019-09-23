@@ -236,7 +236,7 @@ final class JmsAckSourceStage(
                 scheduleOnce(Poll(sid), nextPoll)
             }
           } catch {
-            case e: JMSException =>
+            case NonFatal(e) =>
               settings.log.warn(s"Error receiving message : [${e.getMessage()}]")
               closeSession(session)
           }
