@@ -3,7 +3,7 @@ package blended.jmx.internal
 import java.lang.management.ManagementFactory
 
 import blended.jmx.{BlendedMBeanServerFacade, OpenMBeanExporter, OpenMBeanMapper}
-import blended.jmx.impl.OpenMBeanMapperImpl
+import blended.jmx.internal.OpenMBeanMapperImpl
 import domino.DominoActivator
 import javax.management.MBeanServer
 

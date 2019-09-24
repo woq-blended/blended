@@ -1,4 +1,4 @@
-package blended.jmx.impl
+package blended.jmx.internal
 
 import javax.management.openmbean.OpenType
 import javax.management.{Attribute, AttributeList, AttributeNotFoundException, DynamicMBean, MBeanInfo}

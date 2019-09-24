@@ -1,4 +1,4 @@
-package blended.jmx.impl
+package blended.jmx.internal
 
 import java.util.Date
 import java.{lang => jl}
