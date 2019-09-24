@@ -4,6 +4,7 @@ felix-cache
 *.backup
 *~
 *.swp
+*.asc
 libs/
 3rdparty
 package-lock.json
