@@ -39,16 +39,23 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
   }
 
   def productToMap(cc: Product): Map[String, Element] = {
-    val values: Iterator[Any] = cc.productIterator
-    cc.getClass().getDeclaredFields().filter { f =>
-      f.getName != "$outer"
-    }.map { f =>
-//      println(s"processing field of [${cc}]: ${f}")
-      val value = values.next()
-//      println(s"    value of field [${f}]: [${value}]")
-      val element = fieldToElement(f.getName, value)
-      f.getName -> element
-    }.toMap
+    if(cc.productArity == 0) {
+      // an object?
+      // just store the name
+      Map("object" -> fieldToElement("name", cc.getClass().getName()))
+    }
+    else {
+      val values: Iterator[Any] = cc.productIterator
+      cc.getClass().getDeclaredFields().filter { f =>
+        f.getName != "$outer"
+      }.map { f =>
+        //      println(s"processing field of [${cc}]: ${f}")
+        val value = values.next()
+        //      println(s"    value of field [${f}]: [${value}]")
+        val element = fieldToElement(f.getName, value)
+        f.getName -> element
+      }.toMap
+    }
   }
 
   def fieldToElement(name: String, field: Any): Element = {
@@ -59,6 +66,14 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
         case x: Set[_] => Some(x)
         case x: Array[_] => Some(x.toSeq)
         case x: ju.Collection[_] => Some(x.asScala)
+        case _ => None
+      }
+    }
+
+    object MapMatcher {
+      def unapply(arg: Any): Option[Map[_, _]] = arg match {
+        case x: Map[_, _] => Some(x)
+        case x: ju.Map[_, _] => Some(x.asScala.toMap)
         case _ => None
       }
     }
@@ -122,13 +137,14 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
 
       // we are empty and readonly, so the element type doesn't matter
       case SeqMatcher(x) if x.isEmpty => (null: Void) -> SimpleType.VOID
+      case MapMatcher(x) if x.isEmpty => (null: Void) -> SimpleType.VOID
 
       // inspect first element
       case SeqMatcher(x) if !x.isEmpty =>
         // Note to myself: If I understand correctly, the tabulardata concept need to refer to some kind of "index"
-        // in the same sence as an index in a SQL table, which must contain of at least one iten name.
+        // in the same sence as an index in a SQL table, which must contain of at least one item name.
         // These index items must be items of the composite type and IIUC unique in the same tabular data.
-        // Because of that that uniqueness constraint (which I inferrer from the fact that putting two elements with the same data gives
+        // Because of that that uniqueness constraint (which I inferred from the fact that putting two elements with the same data gives
         // me a KeyAlreadyExistsException) I add a generic index to the compositetype, which simply increments by one.
 
         val (_, elementType) = fieldToElement(name, x.head)
@@ -145,13 +161,40 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
         val value = new TabularDataSupport(tabularType)
         x.zipWithIndex.foreach { case (e, index) =>
           val (eData, _) = fieldToElement(name, e)
-          val itemValues =Array[AnyRef](Int.box(index), eData)
+          val itemValues = Array[AnyRef](Int.box(index), eData)
           val cData = new CompositeDataSupport(rowType, itemNames, itemValues)
           // println(s"Created a comp data support with compositeType=${rowType}, itemNames=${itemNames}, itemValues=${itemValues}")
           value.put(cData)
         }
 
         value -> tabularType
+
+      case MapMatcher(x) =>
+        //
+        val (_, keyType) = fieldToElement("key", x.toSeq.head._1)
+        val (_, valueType) = fieldToElement("value", x.toSeq.head._2)
+        val indexName = "index"
+        val itemNames = Array(indexName, "key", "value")
+        val rowType = new CompositeType(
+          /*typename*/ name,
+          /*description*/ name,
+          /*itemNames*/ itemNames,
+          /*itemDescrptions*/ Array("Row-Index", "key", "value"),
+          /*itemTypes*/Array(SimpleType.INTEGER, keyType, valueType))
+        val tabularType = new TabularType(name, name, rowType, Array(indexName))
+
+        val value = new TabularDataSupport(tabularType)
+        x.toSeq.zipWithIndex.foreach { case (e, index) =>
+          val (eKeyData, _) = fieldToElement("key", e._1)
+          val (eValueData, _) = fieldToElement("value", e._2)
+          val itemValues = Array[AnyRef](Int.box(index), eKeyData, eValueData)
+          val cData = new CompositeDataSupport(rowType, itemNames, itemValues)
+          // println(s"Created a comp data support with compositeType=${rowType}, itemNames=${itemNames}, itemValues=${itemValues}")
+          value.put(cData)
+        }
+
+        value -> tabularType
+
 
       // map case classes
       case x: Product =>

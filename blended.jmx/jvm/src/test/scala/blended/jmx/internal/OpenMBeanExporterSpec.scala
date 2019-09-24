@@ -2,7 +2,6 @@ package blended.jmx.internal
 
 import java.lang.management.ManagementFactory
 
-import blended.jmx.internal.OpenMBeanMapperImpl
 import blended.jmx.OpenMBeanExporter._
 import blended.testsupport.scalatest.LoggingFreeSpec
 import javax.management.{InstanceAlreadyExistsException, MBeanServer}
