@@ -19,6 +19,7 @@ class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
   override def preStart(): Unit = {
     super.preStart()
     // register event handler
+    log.debug(s"Subscribing self [${self}] to StatisticData from system.eventStream")
     context.system.eventStream.subscribe(self, classOf[StatisticData])
   }
 
@@ -27,6 +28,7 @@ class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
   }
 
   def updateJmxRegistration(entry: Entry) = {
+    log.debug(s"Exporting/updating JMX entry [${entry.name}]")
     mbeanExporter.export(entry, new ObjectName(entry.name), replaceExisting = true).recover {
       case NonFatal(e) =>
         log.warn(e)(s"Could not register mbean with name [${entry.name}]")
