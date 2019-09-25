@@ -63,14 +63,15 @@ class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
         case (ServiceState.Failed, Some(e)) => entry.copy(
           failedCount = entry.failedCount + 1,
           aggregateFailedMsec = entry.aggregateFailedMsec + math.max(0, timeStamp - e.timeStamp),
-          unfinishedData = entry.unfinishedData - id
+          unfinishedData = entry.unfinishedData - id,
+          lastFailed = timeStamp
         )
         case (ServiceState.Failed, None) =>
           log.warn(s"Got a failed event without a previous started event: [${newData}]")
           entry.copy(
-            failedCount = entry.failedCount + 1
+            failedCount = entry.failedCount + 1,
+            lastFailed = timeStamp
           )
-
       }
       collectedData += name -> updatedEntry
       if (entry != updatedEntry) {
@@ -102,7 +103,8 @@ object StatisticsActor {
     aggregateSuccessMsec: Long = 0,
     failedCount: Long = 0,
     aggregateFailedMsec: Long = 0,
-    unfinishedData: Map[String, StatisticData] = Map()
+    unfinishedData: Map[String, StatisticData] = Map(),
+    lastFailed: Long = -1L
   )
 
   def props(mbeanExporter: OpenMBeanExporter): Props = Props(new StatisticsActor(mbeanExporter))

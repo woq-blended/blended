@@ -79,6 +79,32 @@ class StatisticsActorSpec
 
     }
 
+    "should update and record last failed" in {
+      val name = "blended.example:name=Data3"
+
+      val statisticsActor = system.actorOf(StatisticsActor.props(exporter))
+
+      val id = nextId()
+      system.eventStream.publish(StatisticsActor.StatisticData(name, id, StatisticsActor.ServiceState.Started))
+      val on = new ObjectName(name)
+      Retry.unsafeRetry(10.milliseconds, 5) {
+        val instance = server.getObjectInstance(on)
+        assert(instance != null)
+        assert(server.getAttribute(on, "successCount") === 0L)
+        assert(server.getAttribute(on, "lastFailed") === -1L)
+      }
+
+      system.eventStream.publish(StatisticsActor.StatisticData(name, id, StatisticsActor.ServiceState.Failed))
+      Retry.unsafeRetry(10.milliseconds, 5) {
+        val instance = server.getObjectInstance(on)
+        assert(instance != null)
+        assert(server.getAttribute(on, "successCount") === 0L)
+        assert(server.getAttribute(on, "failedCount") === 1L)
+        assert(server.getAttribute(on, "lastFailed").asInstanceOf[Long] > 0L)
+      }
+
+    }
+
   }
 
 }
