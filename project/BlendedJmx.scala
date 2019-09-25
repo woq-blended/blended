@@ -61,7 +61,8 @@ object BlendedJmxJvm extends ProjectFactory {
       bundleActivator = s"$projectName.internal.BlendedJmxActivator",
       exportPackage = Seq(
         projectName,
-        s"$projectName.json"
+        s"$projectName.json",
+        s"$projectName.statistics"
       )
     )
 
