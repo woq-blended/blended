@@ -9,8 +9,10 @@ import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
-
 import scala.util.{Failure, Success, Try}
+
+import blended.jmx.BlendedJmx
+import blended.jmx.statistics.StatisticsActor
 
 /**
   * Consume transaction events from JMS and produce appropiate logging entries.
@@ -19,7 +21,7 @@ import scala.util.{Failure, Success, Try}
   * within a [[FlowEnvelope]]. The transformation between transaction events and
   * envelopes is encapsulated in the companion object of [[FlowTransactionEvent]].
   *
-  * When a transaction event is received in it's envelope, the fthe following steps
+  * When a transaction event is received in it's envelope, the following steps
   * will be executed:
   *
   * 1) forward the envelope unmodified to a JMS topic. This is an optional step
@@ -116,6 +118,34 @@ class FlowTransactionStream(
     }
   }
 
+  private val logStatistics: Graph[FlowShape[Try[FlowTransactionEvent], Try[FlowTransactionEvent]], NotUsed] = {
+    GraphDSL.create() { implicit b =>
+      val f = b.add(Flow.fromFunction[Try[FlowTransactionEvent], Try[FlowTransactionEvent]] {
+        case r @ Success(e) =>
+          val eventType: Option[StatisticsActor.ServiceState] = e.state match {
+            case FlowTransactionStateFailed => Some(StatisticsActor.ServiceState.Started)
+            case FlowTransactionStateFailed => Some(StatisticsActor.ServiceState.Failed)
+            case FlowTransactionStateCompleted => Some(StatisticsActor.ServiceState.Completed)
+            case _ => None
+          }
+          eventType.foreach { eventType =>
+            val resourceType: String = e.properties.get("ResourceType").map(_.toString).getOrElse("Unknown")
+            val `type` = "Dispatcher"
+            system.eventStream.publish(StatisticsActor.StatisticData(
+              name = s"${BlendedJmx.domain}:type=${`type`},resourceType=${resourceType}",
+              id = e.transactionId,
+              state = eventType
+            ))
+          }
+
+          r
+        case x => x
+      })
+
+      FlowShape(f.in, f.out)
+    }
+  }
+
   private val createResult : ((FlowEnvelope, Try[FlowEnvelope])) => FlowEnvelope = { case (orig, env) =>
     env match {
       case Success(e) =>
@@ -133,7 +163,10 @@ class FlowTransactionStream(
       import GraphDSL.Implicits._
 
       // decode the incoming FlowEvent
-      val decode = b.add(Flow.fromFunction(updateEvent).named("updateEvent"))
+      val update = b.add(Flow.fromFunction(updateEvent).named("updateEvent"))
+
+      // publish some service statistics to system event stream
+      val publishStatistics = b.add(Flow.fromGraph(logStatistics).named("logStatistics"))
 
       // update the persisted transaction
       val record = b.add(Flow.fromGraph(recordTransaction).named("recordTransaction"))
@@ -151,10 +184,10 @@ class FlowTransactionStream(
 
       internalCf match {
         case None =>
-          split.out(1) ~> decode ~> record ~> logTrans
+          split.out(1) ~> update ~> publishStatistics ~> record ~> logTrans
         case Some(cf) =>
           val logToJms = b.add(logEventToJms(cf).named("logToJms"))
-          split.out(1) ~> logToJms ~> decode ~> record ~> logTrans
+          split.out(1) ~> logToJms ~> update ~> publishStatistics ~> record ~> logTrans
       }
 
       logTrans.out ~> join.in1
