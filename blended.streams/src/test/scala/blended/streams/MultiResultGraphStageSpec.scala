@@ -1,17 +1,18 @@
 package blended.streams
 
-import akka.{Done, NotUsed}
+import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.{ActorMaterializer, OverflowStrategy}
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.stream.scaladsl.{Flow, Source}
 import akka.testkit.TestKit
 import blended.streams.message.FlowEnvelope
+import blended.streams.processor.Collector
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 
 class MultiResultGraphStageSpec extends TestKit(ActorSystem("multiresult"))
   with LoggingFreeSpecLike
@@ -36,21 +37,21 @@ class MultiResultGraphStageSpec extends TestKit(ActorSystem("multiresult"))
         new MultipleResultGraphStage[FlowEnvelope, FlowEnvelope](createCopies)
       )
 
-      val source : Source[FlowEnvelope, ActorRef] = Source.actorRef[FlowEnvelope](numMsg, OverflowStrategy.fail)
+      val envelopes : Iterator[FlowEnvelope] = 1.to(numMsg).map(_ => FlowEnvelope()).toIterator
 
-      val (actor, copiesFut) : (ActorRef, Future[Seq[FlowEnvelope]]) = source
-        .viaMat(copy)(Keep.left)
-        .toMat(Sink.seq)(Keep.both)
-        .run()
+      val source : Source[FlowEnvelope, ActorRef] =
+        Source.actorRef[FlowEnvelope](bufferSize = numMsg * numCopies, overflowStrategy = OverflowStrategy.fail).via(copy)
 
-      akka.pattern.after(timeout, system.scheduler){
-        system.stop(actor)
-        Future { Done }
-      }
+      val (actor, collector) = StreamFactories.runMatSourceWithTimeLimit[FlowEnvelope, ActorRef](
+        name = "multiResult",
+        source = source,
+        timeout = timeout,
+        completeOn = Some({s : Seq[FlowEnvelope] => s.size == numCopies * numMsg})
+      )
 
       1.to(numMsg).foreach(_ => actor ! FlowEnvelope())
 
-      val copies : Seq[FlowEnvelope] = Await.result(copiesFut, timeout + 500.millis)
+      val copies : Seq[FlowEnvelope] = Await.result(collector.result, timeout + 500.millis)
 
       copies should have size (numMsg * numCopies)
     }

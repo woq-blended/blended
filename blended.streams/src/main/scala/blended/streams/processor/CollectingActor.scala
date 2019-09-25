@@ -85,6 +85,7 @@ class CollectingActor[T](
       collected(msg)
 
       if (isComplete(newSeq)) {
+        log.info(s"Complete condition for [$name] is satisfied.")
         complete(newSeq)
       } else {
         context.become(working(newSeq, isComplete))

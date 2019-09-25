@@ -20,7 +20,16 @@ object StreamFactories {
     timeout : FiniteDuration,
     onCollected : Option[T => Unit] = None,
     completeOn : Option[Seq[T] => Boolean] = None
-  )(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : Collector[T] = {
+  )(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : Collector[T] =
+    runMatSourceWithTimeLimit(name, source, timeout, onCollected, completeOn)._2
+
+  def runMatSourceWithTimeLimit[T, Mat](
+    name : String,
+    source : Source[T, Mat],
+    timeout : FiniteDuration,
+    onCollected : Option[T => Unit] = None,
+    completeOn : Option[Seq[T] => Boolean] = None
+  )(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : (Mat, Collector[T]) = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
     val stopped = new AtomicBoolean(false)
@@ -29,8 +38,8 @@ object StreamFactories {
 
     val sink = Sink.actorRef(collector.actor, CollectingActor.Completed)
 
-    val (killswitch, done) = source
-      .viaMat(KillSwitches.single)(Keep.right)
+    val ((mat, killswitch), done) = source
+      .viaMat(KillSwitches.single)(Keep.both)
       .watchTermination()(Keep.both)
       .toMat(sink)(Keep.left)
       .run()
@@ -46,7 +55,7 @@ object StreamFactories {
       Future { Done }
     }
 
-    collector
+    (mat, collector)
   }
 
   def keepAliveSource[T](bufferSize : Int)(implicit system : ActorSystem, materializer : Materializer) : Source[T, (ActorRef, KillSwitch)] = {
