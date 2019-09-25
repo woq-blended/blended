@@ -31,7 +31,7 @@ class CbeSendFlow(
       bs = bs
     )
 
-    val sinkSettings = JmsProducerSettings(
+    val sinkSettings : JmsProducerSettings = JmsProducerSettings(
       log = log,
       headerCfg = headerConfig,
       connectionFactory = internalCf,
