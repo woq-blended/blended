@@ -26,7 +26,9 @@ class MultiResultGraphStageSpec extends TestKit(ActorSystem("multiresult"))
     "create copies of the inbound message according to the provided function" in {
 
       val timeout : FiniteDuration = 3.seconds
+
       val numCopies : Int = 5
+      val numMsg : Int = 3
 
       val createCopies : FlowEnvelope => List[FlowEnvelope] = env => List.fill(numCopies)(env)
 
@@ -34,9 +36,7 @@ class MultiResultGraphStageSpec extends TestKit(ActorSystem("multiresult"))
         new MultipleResultGraphStage[FlowEnvelope, FlowEnvelope](createCopies)
       )
 
-      val env : FlowEnvelope = FlowEnvelope()
-
-      val source : Source[FlowEnvelope, ActorRef] = Source.actorRef[FlowEnvelope](10, OverflowStrategy.fail)
+      val source : Source[FlowEnvelope, ActorRef] = Source.actorRef[FlowEnvelope](numMsg, OverflowStrategy.fail)
 
       val (actor, copiesFut) : (ActorRef, Future[Seq[FlowEnvelope]]) = source
         .viaMat(copy)(Keep.left)
@@ -48,11 +48,11 @@ class MultiResultGraphStageSpec extends TestKit(ActorSystem("multiresult"))
         Future { Done }
       }
 
-      actor ! env
+      1.to(numMsg).foreach(_ => actor ! FlowEnvelope())
 
       val copies : Seq[FlowEnvelope] = Await.result(copiesFut, timeout + 500.millis)
 
-      copies should have size numCopies
+      copies should have size (numMsg * numCopies)
     }
   }
 }
