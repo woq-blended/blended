@@ -6,7 +6,6 @@ import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Source}
 import akka.testkit.TestKit
 import blended.streams.message.FlowEnvelope
-import blended.streams.processor.Collector
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.scalatest.Matchers

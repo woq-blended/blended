@@ -8,15 +8,13 @@ import scala.collection.JavaConverters._
 import blended.jmx.OpenMBeanMapper
 
 import javax.management.{DynamicMBean, MBeanNotificationInfo, ObjectName}
-import javax.management.openmbean.{ArrayType, CompositeDataSupport, CompositeType, OpenMBeanAttributeInfo, OpenMBeanAttributeInfoSupport, OpenMBeanConstructorInfo, OpenMBeanInfoSupport, OpenMBeanOperationInfo, OpenType, SimpleType, TabularDataSupport, TabularType}
+import javax.management.openmbean._
 
 class OpenMBeanMapperImpl() extends OpenMBeanMapper {
   import OpenMBeanMapperImpl._
 
   def mapProduct(cc: Product): DynamicMBean = {
     val elements = productToMap(cc)
-
-    // println(s"Case class: ${cc} ==> ${elements}")
 
     val openAttributes: Array[OpenMBeanAttributeInfo] = elements.map { e =>
       new OpenMBeanAttributeInfoSupport(e._1, e._1, e._2._2, true, false, false)
@@ -49,9 +47,7 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
       cc.getClass().getDeclaredFields().filter { f =>
         f.getName != "$outer"
       }.map { f =>
-        //      println(s"processing field of [${cc}]: ${f}")
         val value = values.next()
-        //      println(s"    value of field [${f}]: [${value}]")
         val element = fieldToElement(f.getName, value)
         f.getName -> element
       }.toMap
@@ -216,7 +212,6 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
     }
 
   }
-
 }
 
 object OpenMBeanMapperImpl {
