@@ -7,7 +7,7 @@ import akka.testkit.TestKit
 import blended.jmx.internal.{OpenMBeanExporterImpl, OpenMBeanMapperImpl}
 import blended.testsupport.retry.Retry
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import javax.management.{DynamicMBean, InstanceNotFoundException, MBeanServer, ObjectName}
+import javax.management.{InstanceNotFoundException, MBeanServer, ObjectName}
 import scala.concurrent.duration._
 
 class StatisticsActorSpec
@@ -35,6 +35,8 @@ class StatisticsActorSpec
   s"The ${classOf[StatisticsActor]}" - {
 
     "should export a JMX bean for each name received via EventStream" in {
+      system.actorOf(StatisticsActor.props(exporter))
+
       val names = Seq("blended.example:name=Data1", "org.example:name=Data2")
 
       names.foreach { name =>
@@ -44,9 +46,8 @@ class StatisticsActorSpec
         }
       }
 
-      val statisticsActor = system.actorOf(StatisticsActor.props(exporter))
       names.foreach { name =>
-        system.eventStream.publish(StatisticsActor.StatisticData(name, nextId(), StatisticsActor.ServiceState.Started))
+        system.eventStream.publish(StatisticData(name, nextId(), ServiceState.Started))
         Retry.unsafeRetry(10.milliseconds, 5) {
           val on = new ObjectName(name)
           assert(server.getObjectInstance(on) != null)
@@ -57,20 +58,20 @@ class StatisticsActorSpec
     }
 
     "should update an exported JMX bean" in {
+      system.actorOf(StatisticsActor.props(exporter))
       val name = "blended.example:name=Data2"
 
-      val statisticsActor = system.actorOf(StatisticsActor.props(exporter))
-
       val id = nextId()
-      system.eventStream.publish(StatisticsActor.StatisticData(name, id, StatisticsActor.ServiceState.Started))
+      system.eventStream.publish(StatisticData(name, id, ServiceState.Started))
       val on = new ObjectName(name)
+
       Retry.unsafeRetry(10.milliseconds, 5) {
         val instance = server.getObjectInstance(on)
         assert(instance != null)
         assert(server.getAttribute(on, "successCount") === 0L)
       }
 
-      system.eventStream.publish(StatisticsActor.StatisticData(name, id, StatisticsActor.ServiceState.Completed))
+      system.eventStream.publish(StatisticData(name, id, ServiceState.Completed))
       Retry.unsafeRetry(10.milliseconds, 5) {
         val instance = server.getObjectInstance(on)
         assert(instance != null)
@@ -80,12 +81,11 @@ class StatisticsActorSpec
     }
 
     "should update and record last failed" in {
+      system.actorOf(StatisticsActor.props(exporter))
       val name = "blended.example:name=Data3"
 
-      val statisticsActor = system.actorOf(StatisticsActor.props(exporter))
-
       val id = nextId()
-      system.eventStream.publish(StatisticsActor.StatisticData(name, id, StatisticsActor.ServiceState.Started))
+      system.eventStream.publish(StatisticData(name, id, ServiceState.Started))
       val on = new ObjectName(name)
       Retry.unsafeRetry(10.milliseconds, 5) {
         val instance = server.getObjectInstance(on)
@@ -94,7 +94,7 @@ class StatisticsActorSpec
         assert(server.getAttribute(on, "lastFailed") === -1L)
       }
 
-      system.eventStream.publish(StatisticsActor.StatisticData(name, id, StatisticsActor.ServiceState.Failed))
+      system.eventStream.publish(StatisticData(name, id, ServiceState.Failed))
       Retry.unsafeRetry(10.milliseconds, 5) {
         val instance = server.getObjectInstance(on)
         assert(instance != null)

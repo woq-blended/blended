@@ -1,18 +1,18 @@
 package blended.streams.transaction
 
+import scala.util.{Failure, Success, Try}
+
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Zip}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
-import blended.streams.{FlowHeaderConfig, FlowProcessor}
+import blended.jmx.BlendedJmx
+import blended.jmx.statistics.{ServiceState, StatisticData}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
+import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.util.logging.Logger
-import scala.util.{Failure, Success, Try}
-
-import blended.jmx.BlendedJmx
-import blended.jmx.statistics.StatisticsActor
 
 /**
   * Consume transaction events from JMS and produce appropiate logging entries.
@@ -122,20 +122,22 @@ class FlowTransactionStream(
     GraphDSL.create() { implicit b =>
       val f = b.add(Flow.fromFunction[Try[FlowTransactionEvent], Try[FlowTransactionEvent]] {
         case r @ Success(e) =>
-          val eventType: Option[StatisticsActor.ServiceState] = e.state match {
-            case FlowTransactionStateFailed => Some(StatisticsActor.ServiceState.Started)
-            case FlowTransactionStateFailed => Some(StatisticsActor.ServiceState.Failed)
-            case FlowTransactionStateCompleted => Some(StatisticsActor.ServiceState.Completed)
+          val eventType = e.state match {
+            case FlowTransactionStateStarted => Some(ServiceState.Started)
+            case FlowTransactionStateFailed => Some(ServiceState.Failed)
+            case FlowTransactionStateCompleted => Some(ServiceState.Completed)
             case _ => None
           }
           eventType.foreach { eventType =>
             val resourceType: String = e.properties.get("ResourceType").map(_.toString).getOrElse("Unknown")
             val `type` = "Dispatcher"
-            system.eventStream.publish(StatisticsActor.StatisticData(
+            val event = StatisticData(
               name = s"${BlendedJmx.domain}:type=${`type`},resourceType=${resourceType}",
               id = e.transactionId,
               state = eventType
-            ))
+            )
+            streamLogger.debug(s"Publish to system event stream: [${event}]")
+            system.eventStream.publish(event)
           }
 
           r

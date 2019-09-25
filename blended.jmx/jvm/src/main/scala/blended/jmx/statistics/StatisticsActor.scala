@@ -85,20 +85,6 @@ class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
 
 object StatisticsActor {
 
-  sealed trait ServiceState
-  object ServiceState {
-    final case object Started extends ServiceState
-    final case object Completed extends ServiceState
-    final case object Failed extends ServiceState
-  }
-
-  case class StatisticData(
-    name: String,
-    id: String,
-    state: ServiceState,
-    timeStamp: Long = System.currentTimeMillis()
-  )
-
   case class Entry(
     name: String,
     successCount: Long = 0,

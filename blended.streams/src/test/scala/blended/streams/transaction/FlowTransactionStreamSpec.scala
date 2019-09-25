@@ -2,16 +2,20 @@ package blended.streams.transaction
 
 import java.io.File
 
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
+
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.streams.FlowHeaderConfig
+import blended.jmx.statistics.StatisticData
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{CollectingActor, Collector}
 import blended.streams.transaction.internal.FileFlowTransactionManager
+import blended.streams.{FlowHeaderConfig, StreamFactories}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
@@ -19,9 +23,6 @@ import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
-
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
 
 @RequiresForkedJVM
 class FlowTransactionStreamSpec extends SimplePojoContainerSpec
@@ -56,9 +57,20 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
 
         val transColl = Collector[FlowEnvelope](name = "trans", onCollected = Some({ e : FlowEnvelope => e.acknowledge() }))
 
+        val statSrc : Source[StatisticData, ActorRef] = Source.actorRef(10, OverflowStrategy.fail)
+        val (statActor, dataColl) = StreamFactories.runMatSourceWithTimeLimit[StatisticData, ActorRef](
+          name = "statColl",
+          source = statSrc,
+          timeout = 3.seconds,
+          completeOn = Some(s => s.size == 1)
+        )
+
         val cfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
 
         try {
+
+          system.eventStream.subscribe(statActor, classOf[StatisticData])
+
           val envelope = FlowTransactionEvent.event2envelope(cfg)(event)
           val source = Source.single[FlowEnvelope](envelope)
 
@@ -76,6 +88,11 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
             .run()
 
           Await.result(transColl.result.map(t => f(t)), 3.seconds)
+
+          val data = Await.result(dataColl.result, 1.seconds)
+          data should have size 1
+
+
         } finally {
           system.stop(transColl.actor)
         }
