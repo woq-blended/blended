@@ -5,6 +5,7 @@ import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.{GraphDSL, Keep, RunnableGraph, Source}
 import blended.streams.dispatcher.internal.OutboundRouteConfig
+import blended.streams.message
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.worklist.{WorklistEvent, WorklistStateStarted}
@@ -87,8 +88,10 @@ class FanoutSpec extends DispatcherSpecSupport
         RunnableGraph[T]
       ) = {
 
-        val envColl : Collector[FlowEnvelope] = Collector[FlowEnvelope]("envelopes")(_.acknowledge())
-        val wlColl : Collector[WorklistEvent] = Collector[WorklistEvent]("worklists")(_ => {})
+        val envColl : Collector[FlowEnvelope] =
+          Collector[FlowEnvelope](name = "envelopes", onCollected = Some( { e : FlowEnvelope => e.acknowledge() }))
+
+        val wlColl : Collector[WorklistEvent] = Collector[WorklistEvent]("worklists")
 
         val sinkGraph : Graph[SinkShape[FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
           import GraphDSL.Implicits._

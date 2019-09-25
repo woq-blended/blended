@@ -29,7 +29,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout) { _ => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout)
 
       val result : List[FlowEnvelope] = Await.result(collector.result, timeout + 100.millis)
 
@@ -56,7 +56,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t){ _ => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t)
 
       val result : List[FlowEnvelope] = Await.result(collector.result, t + 100.millis)
 
@@ -80,7 +80,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
           })
           .via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ _ => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout)
       Await.result(collector.result, timeout + 100.millis)
 
       getFiles(pollCfg.sourceDir, pattern = ".*", recursive = false).map(_.getName()) should be(List("test.txt"))
@@ -98,7 +98,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ _ => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout)
       Await.result(collector.result, timeout + 100.millis)
 
       getFiles(pollCfg.backup.get, pattern = ".*", recursive = false).map(_.getName()) should have size 1

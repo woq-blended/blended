@@ -2,7 +2,6 @@ package blended.streams.processor
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.scaladsl.Sink
-import blended.streams.processor.CollectingActor.CompleteOn
 import blended.util.logging.Logger
 
 import scala.concurrent.{Future, Promise}
@@ -11,10 +10,24 @@ import scala.util.Success
 
 object Collector {
 
-  def apply[T](name : String)(collected : T => Unit)(implicit system : ActorSystem, clazz : ClassTag[T]) : Collector[T] = {
-    val p = Promise[List[T]]
-    val actor = system.actorOf(CollectingActor.props[T](name, p)(collected))
-    Collector(name = name, result = p.future, sink = Sink.actorRef[T](actor, CollectingActor.Completed), actor = actor)
+  def apply[T](
+    name : String,
+    onCollected : Option[T => Unit] = None,
+    completeOn : Option[Seq[T] => Boolean] = None
+  )(
+    implicit system : ActorSystem, clazz : ClassTag[T]
+  ) : Collector[T] = {
+
+    val result : Promise[List[T]] = Promise[List[T]]
+
+    val actor = system.actorOf(CollectingActor.props[T](
+      name = name,
+      promise = result,
+      onCollected = onCollected.getOrElse(_ => {}),
+      completeOn = completeOn.getOrElse(_ => false)
+    ))
+
+    Collector(name = name, result = result.future, sink = Sink.actorRef[T](actor, CollectingActor.Completed), actor = actor)
   }
 }
 
@@ -28,24 +41,26 @@ case class Collector[T](
 object CollectingActor {
   object Completed
   object GetMessages
-  case class CompleteOn[T](f : Seq[T] => Boolean)
 
   def props[T](
-    name : String, promise : Promise[List[T]]
-  )(collected : T => Unit)(implicit clazz : ClassTag[T]) : Props =
-    Props(new CollectingActor[T](name, promise)(collected))
+    name : String,
+    promise : Promise[List[T]],
+    completeOn : Seq[T] => Boolean,
+    onCollected : T => Unit
+  )(implicit clazz : ClassTag[T]) : Props =
+    Props(new CollectingActor[T](name, promise, completeOn, onCollected))
 }
 
 class CollectingActor[T](
   name : String,
-  promise : Promise[List[T]]
-)(
+  promise : Promise[List[T]],
+  completeOn : Seq[T] => Boolean,
   collected : T => Unit
 )(implicit clazz : ClassTag[T]) extends Actor {
 
   private val log = Logger(getClass().getName())
 
-  override def preStart(): Unit = context.become(working(Seq.empty, _ => false))
+  override def preStart(): Unit = context.become(working(Seq.empty, completeOn))
 
   override def receive: Receive = Actor.emptyBehavior
 
@@ -56,9 +71,6 @@ class CollectingActor[T](
   }
 
   private def working(msgs : Seq[T], isComplete : Seq[T] => Boolean) : Receive = {
-
-    case c : CompleteOn[T] =>
-      context.become(working(msgs, c.f))
 
     case CollectingActor.GetMessages =>
       sender() ! msgs.toList

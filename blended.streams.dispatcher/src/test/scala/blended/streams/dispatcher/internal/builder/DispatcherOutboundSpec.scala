@@ -28,8 +28,8 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
     implicit val system : ActorSystem = ctxt.system
 
-    val outColl = Collector[WorklistEvent]("out")(_ => {})
-    val errColl = Collector[FlowEnvelope]("err")(_.acknowledge())
+    val outColl = Collector[WorklistEvent]("out")
+    val errColl = Collector[FlowEnvelope]("err", onCollected = Some({ e : FlowEnvelope => e.acknowledge()}))
 
     val source = Source.single[FlowEnvelope](testMsg)
 

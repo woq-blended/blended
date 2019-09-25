@@ -28,7 +28,7 @@ class DispatcherSpec extends DispatcherSpecSupport
     implicit val system : ActorSystem = ctxt.system
     implicit val materializer : Materializer = ActorMaterializer()
 
-    val transColl = Collector[FlowTransactionEvent]("trans")(_ => {})
+    val transColl = Collector[FlowTransactionEvent]("trans")
 
     val source = Source.actorRef[FlowEnvelope](defaultBufferSize, OverflowStrategy.fail)
 

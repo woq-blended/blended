@@ -51,9 +51,11 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
   )= {
     implicit val materializer : Materializer = ActorMaterializer()
 
-    val jmsCollector = Collector[FlowEnvelope]("jms")(_.acknowledge())
-    val errCollector = Collector[FlowEnvelope]("error")(_.acknowledge())
-    val wlCollector = Collector[WorklistEvent]("worklist")(_ => {})
+    val ack : FlowEnvelope => Unit = _.acknowledge()
+
+    val jmsCollector = Collector[FlowEnvelope]("jms", onCollected = Some(ack))
+    val errCollector = Collector[FlowEnvelope]("error", onCollected = Some(ack))
+    val wlCollector = Collector[WorklistEvent]("worklist")
 
     val source : Source[FlowEnvelope, (ActorRef, KillSwitch)]
       = StreamFactories.keepAliveSource[FlowEnvelope](bufferSize)

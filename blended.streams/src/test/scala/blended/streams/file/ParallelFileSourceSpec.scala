@@ -40,7 +40,7 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
           )).async.via(new AckProcessor(s"simplePoll$subId.ack").flow)
 
         startDelay.foreach(d => Thread.sleep(d.toMillis))
-        StreamFactories.runSourceWithTimeLimit("parallel1", src, t){ _ => }
+        StreamFactories.runSourceWithTimeLimit("parallel1", src, t)
       }
 
       prepareDirectory(pollCfg.sourceDir)

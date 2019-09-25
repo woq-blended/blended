@@ -59,7 +59,7 @@ abstract class AbstractFileSourceSpec extends SimplePojoContainerSpec
           }})
           .via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t){ _ => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t)
       Await.result(collector.result, t + 100.millis)
     }
 

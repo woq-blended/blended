@@ -6,7 +6,6 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.{Done, NotUsed}
-import blended.streams.processor.CollectingActor.CompleteOn
 import blended.streams.processor.{CollectingActor, Collector}
 
 import scala.concurrent.duration.FiniteDuration
@@ -19,14 +18,15 @@ object StreamFactories {
     name : String,
     source : Source[T, NotUsed],
     timeout : FiniteDuration,
+    onCollected : Option[T => Unit] = None,
     completeOn : Option[Seq[T] => Boolean] = None
-  )(collected : T => Unit)(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : Collector[T] = {
+  )(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : Collector[T] = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
     val stopped = new AtomicBoolean(false)
 
-    val collector = Collector[T](name)(collected)
-    completeOn.foreach(f => collector.actor ! CompleteOn(f))
+    val collector = Collector[T](name = name, onCollected = onCollected, completeOn = completeOn)
+
     val sink = Sink.actorRef(collector.actor, CollectingActor.Completed)
 
     val (killswitch, done) = source

@@ -6,7 +6,7 @@ import akka.NotUsed
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, Materializer}
-import akka.testkit.{TestKit, TestProbe}
+import akka.testkit.TestKit
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, MessageReceived, SimpleIdAwareConnectionFactory}
 import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
@@ -137,8 +137,9 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
           val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
             name = "ackConsumer",
             source = msgConsumer,
-            timeout = 5.seconds
-          )(e => e.acknowledge())
+            timeout = 5.seconds,
+            onCollected = Some({e : FlowEnvelope => e.acknowledge()})
+          )
 
           val result : List[Int] = Await.result(coll.result, 6.seconds).map { env => env.header[Int]("msgNo").get }
           val missing : List[Int] = 1.to(msgCount).filter(i => !result.contains(i)).toList
@@ -173,8 +174,9 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
             val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
               name = "delayedConsumer",
               source = msgConsumer,
-              timeout = minDelay - 1.seconds
-            )(e => e.acknowledge())
+              timeout = minDelay - 1.seconds,
+              onCollected = Some({e : FlowEnvelope => e.acknowledge()})
+            )
 
             val result : List[Int] = Await.result(coll.result, minDelay + 1.second).map { env => env.header[Int]("msgNo").get }
             result should be(empty)
@@ -184,8 +186,9 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
             val coll2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
               name = "delayedConsumer2",
               source = msgConsumer,
-              timeout = minDelay + 500.millis
-            )(e => e.acknowledge())
+              timeout = minDelay + 500.millis,
+              onCollected = Some({e : FlowEnvelope => e.acknowledge()})
+            )
 
             val result2 : List[Int] = Await.result(coll2.result, minDelay + 1.seconds).map { env => env.header[Int]("msgNo").get }
             result2 should have size msgCount

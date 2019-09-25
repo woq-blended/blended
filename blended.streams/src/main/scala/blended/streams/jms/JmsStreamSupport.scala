@@ -132,7 +132,13 @@ trait JmsStreamSupport {
       minMessageDelay = minMessageDelay
     )
 
-    StreamFactories.runSourceWithTimeLimit(dest.asString, source, timeout, completeOn)(collected)
+    StreamFactories.runSourceWithTimeLimit(
+      name = dest.asString,
+      source = source,
+      timeout = timeout,
+      onCollected = Some(collected),
+      completeOn = completeOn
+    )
   }
 
   def jmsProducer(

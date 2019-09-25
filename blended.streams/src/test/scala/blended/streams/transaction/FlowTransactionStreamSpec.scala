@@ -54,9 +54,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
 
       def singleTest(event : FlowTransactionEvent)(f : List[FlowEnvelope] => Unit) : Unit = {
 
-        val transColl = Collector[FlowEnvelope]("trans"){ e =>
-          e.acknowledge()
-        }
+        val transColl = Collector[FlowEnvelope](name = "trans", onCollected = Some({ e : FlowEnvelope => e.acknowledge() }))
 
         val cfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
 
