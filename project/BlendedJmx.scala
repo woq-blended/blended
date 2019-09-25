@@ -68,6 +68,7 @@ object BlendedJmxJvm extends ProjectFactory {
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtil.project,
       BlendedUtilLogging.project,
+      BlendedAkka.project,
 
       BlendedTestsupport.project % Test,
       BlendedTestsupportPojosr.project % Test

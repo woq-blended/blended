@@ -2,11 +2,14 @@ package blended.jmx.internal
 
 import java.lang.management.ManagementFactory
 
+import blended.akka.ActorSystemWatching
+import blended.akka.internal.ActorSystemCapsule
+import blended.jmx.statistics.StatisticsActor
 import blended.jmx.{BlendedMBeanServerFacade, OpenMBeanExporter, OpenMBeanMapper}
 import domino.DominoActivator
 import javax.management.MBeanServer
 
-class BlendedJmxActivator extends DominoActivator {
+class BlendedJmxActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
     val mbeanServer : MBeanServer = ManagementFactory.getPlatformMBeanServer()
@@ -22,6 +25,11 @@ class BlendedJmxActivator extends DominoActivator {
       override protected def mbeanServer: MBeanServer = mbeanServer
     }
     mbeanExporter.providesService[OpenMBeanExporter]
+
+    whenActorSystemAvailable { osgiConfig =>
+      osgiConfig.system.actorOf(StatisticsActor.props(mbeanExporter))
+    }
+
   }
 
 }
