@@ -130,8 +130,37 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with PropertyChecks with Match
       testMapping[jm.BigInteger](SimpleType.BIGINTEGER)
     }
 
-    "map Scala maps" in {
-      pending
+    "map Scala maps" - {
+      def testMapping[T: ClassTag: Arbitrary](type0: SimpleType[_]): Unit = {
+        val rcClass = classTag[T].runtimeClass
+        val isPrim = rcClass.isPrimitive()
+        s"of ${if (isPrim) "primitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
+          //          val expectedType = new ArrayType( type0, isPrim)
+          forAll { d: Map[T, T] =>
+            val (value, mappedType) = mapper.fieldToElement("d", d)
+            if (d.isEmpty) {
+              assert(mappedType === SimpleType.VOID)
+              assert(value === null)
+            } else {
+              assert(value.isInstanceOf[TabularData])
+              assert(value.asInstanceOf[TabularData].getTabularType().getIndexNames().asScala === List("index"))
+              assert(value.asInstanceOf[TabularData].size() === d.size)
+            }
+          }
+        }
+      }
+
+      testMapping[jl.Boolean](SimpleType.BOOLEAN)
+      testMapping[jl.Byte](SimpleType.BYTE)
+      testMapping[jl.Short](SimpleType.SHORT)
+      testMapping[jl.Integer](SimpleType.INTEGER)
+      testMapping[jl.Long](SimpleType.LONG)
+      testMapping[jl.Float](SimpleType.FLOAT)
+      testMapping[jl.Double](SimpleType.DOUBLE)
+      testMapping[Date](SimpleType.DATE)
+      testMapping[ObjectName](SimpleType.OBJECTNAME)
+      testMapping[jm.BigDecimal](SimpleType.BIGDECIMAL)
+      testMapping[jm.BigInteger](SimpleType.BIGINTEGER)
     }
 
     "map Java collections" - {
@@ -168,8 +197,38 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with PropertyChecks with Match
       testMapping[jm.BigInteger](SimpleType.BIGINTEGER)
     }
 
-    "map Java maps" in {
-      pending
+    "map Java maps" - {
+      def testMapping[T: ClassTag: Arbitrary](type0: SimpleType[_]): Unit = {
+        val rcClass = classTag[T].runtimeClass
+        val isPrim = rcClass.isPrimitive()
+        s"of ${if (isPrim) "primitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
+          //          val expectedType = new ArrayType( type0, isPrim)
+          forAll { d: Map[T, T] =>
+            val col = d.asJava
+            val (value, mappedType) = mapper.fieldToElement("d", col)
+            if (col.isEmpty) {
+              assert(mappedType === SimpleType.VOID)
+              assert(value === null)
+            } else {
+              assert(value.isInstanceOf[TabularData])
+              assert(value.asInstanceOf[TabularData].getTabularType().getIndexNames().asScala === List("index"))
+              assert(value.asInstanceOf[TabularData].size() === col.size)
+            }
+          }
+        }
+      }
+
+      testMapping[jl.Boolean](SimpleType.BOOLEAN)
+      testMapping[jl.Byte](SimpleType.BYTE)
+      testMapping[jl.Short](SimpleType.SHORT)
+      testMapping[jl.Integer](SimpleType.INTEGER)
+      testMapping[jl.Long](SimpleType.LONG)
+      testMapping[jl.Float](SimpleType.FLOAT)
+      testMapping[jl.Double](SimpleType.DOUBLE)
+      testMapping[Date](SimpleType.DATE)
+      testMapping[ObjectName](SimpleType.OBJECTNAME)
+      testMapping[jm.BigDecimal](SimpleType.BIGDECIMAL)
+      testMapping[jm.BigInteger](SimpleType.BIGINTEGER)
     }
 
     "test with blended.jmx" in {
@@ -189,14 +248,17 @@ object OpenMBeanMapperSpec {
     aString: String,
     aInt: Int,
     aStringArray: Array[String],
-    aStringSeq: Seq[String]
+    aStringSeq: Seq[String],
+    aStringMap: Map[String, String]
+
   )
 
   val caseClass1 = CaseClass1(
     aString = "aString",
     aInt = 1,
     aStringArray = Array("s"),
-    aStringSeq = Seq("s")
+    aStringSeq = Seq("s"),
+    aStringMap = Map("1" -> "One", "2" -> "Two")
   )
 
   case class CaseClass2(

@@ -47,7 +47,7 @@ class StatisticsActorSpec
       val statisticsActor = system.actorOf(StatisticsActor.props(exporter))
       names.foreach { name =>
         system.eventStream.publish(StatisticsActor.StatisticData(name, nextId(), StatisticsActor.ServiceState.Started))
-        Retry.unsafeRetry(1.milliseconds, 1) {
+        Retry.unsafeRetry(10.milliseconds, 5) {
           val on = new ObjectName(name)
           assert(server.getObjectInstance(on) != null)
           assert(server.getAttribute(on, "successCount") === 0L)

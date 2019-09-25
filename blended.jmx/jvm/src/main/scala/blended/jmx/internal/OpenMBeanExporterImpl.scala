@@ -13,8 +13,8 @@ class OpenMBeanExporterImpl(openMbeanMapper: OpenMBeanMapper) extends OpenMBeanE
   override protected def mbeanServer: MBeanServer = _mbeanServer
 
   def export(product: Product, objectName: ObjectName, replaceExisting: Boolean): Try[Unit] = {
-    val mbean = openMbeanMapper.mapProduct(product)
-    registerMBean(mbean, objectName, replaceExisting)
+    Try { openMbeanMapper.mapProduct(product) }
+      .flatMap{ mbean => registerMBean(mbean, objectName, replaceExisting) }
   }
 
   override def remove(objectName: ObjectName): Try[Unit] = {
