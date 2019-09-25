@@ -16,10 +16,10 @@ case object FlowTransactionStateFailed extends FlowTransactionState { override v
 object FlowTransactionState {
   def apply(s: String): Try[FlowTransactionState] = Try {
     s match {
-      case "Started" => FlowTransactionStateStarted
-      case "Updated" => FlowTransactionStateUpdated
-      case "Completed" => FlowTransactionStateCompleted
-      case "Failed" => FlowTransactionStateFailed
+      case FlowTransactionStateStarted.name => FlowTransactionStateStarted
+      case FlowTransactionStateUpdated.name => FlowTransactionStateUpdated
+      case FlowTransactionStateCompleted.name => FlowTransactionStateCompleted
+      case FlowTransactionStateFailed.name => FlowTransactionStateFailed
       case _ => throw new IllegalArgumentException(s"[$s] is not a valid TransactionState")
     }
   }
