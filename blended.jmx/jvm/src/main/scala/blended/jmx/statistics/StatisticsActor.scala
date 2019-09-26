@@ -1,11 +1,12 @@
 package blended.jmx.statistics
 
 import scala.util.control.NonFatal
-
 import akka.actor.{Actor, Props}
-import blended.jmx.OpenMBeanExporter
+import blended.jmx.{JmxObjectName, OpenMBeanExporter}
 import blended.util.logging.Logger
 import javax.management.ObjectName
+
+import scala.util.Try
 
 class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
   import StatisticsActor._
@@ -27,19 +28,27 @@ class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
     case sd: StatisticData => handleStatisticsData(sd)
   }
 
-  def updateJmxRegistration(entry: Entry) = {
-    log.debug(s"Exporting/updating JMX entry [${entry.name}]")
-    mbeanExporter.export(entry, new ObjectName(entry.name), replaceExisting = true).recover {
+  private def updateJmxRegistration(entry: Entry) : Try[Unit] = {
+    val toPublish : PublishEntry = PublishEntry(entry)
+    log.debug(s"Exporting/updating JMX entry [${toPublish.name}]")
+    mbeanExporter.export(toPublish, toPublish.name, replaceExisting = true).recover {
       case NonFatal(e) =>
-        log.warn(e)(s"Could not register mbean with name [${entry.name}]")
+        log.warn(e)(s"Could not register mbean with name [${toPublish.name}]")
     }
   }
 
-  def handleStatisticsData(value: StatisticData) = value match {
-    case newData @ StatisticData(name, id, newState, timeStamp) =>
-      val entry = collectedData.getOrElse(name, Entry(name))
-      val existing = entry.unfinishedData.get(id)
-      val updatedEntry = (newState, existing) match {
+  private val datakey : StatisticData => String = sd => sd.component + "-" + sd.subComponent
+
+  private def handleStatisticsData(value: StatisticData) : Unit = value match {
+    case newData @ StatisticData(component, subComponent, id, newState, timeStamp) =>
+
+      log.debug(s"Processing statistical data [$newData]")
+
+      val entry : Entry = collectedData.getOrElse(datakey(newData), Entry(component, subComponent))
+
+      val existing : Option[StatisticData] = entry.unfinishedData.get(id)
+
+      val updatedEntry : Entry = (newState, existing) match {
 
         case (ServiceState.Started, None) => entry.copy(
           unfinishedData = entry.unfinishedData + (id -> newData)
@@ -75,7 +84,7 @@ class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
             lastFailed = timeStamp
           )
       }
-      collectedData += name -> updatedEntry
+      collectedData += datakey(newData) -> updatedEntry
       if (entry != updatedEntry) {
         updateJmxRegistration(updatedEntry)
       }
@@ -86,13 +95,38 @@ class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
 object StatisticsActor {
 
   case class Entry(
-    name: String,
+    component : String,
+    subComponent : Option[String],
     successCount: Long = 0,
     aggregateSuccessMsec: Long = 0,
     failedCount: Long = 0,
     aggregateFailedMsec: Long = 0,
     unfinishedData: Map[String, StatisticData] = Map(),
     lastFailed: Long = -1L
+  )
+
+  object PublishEntry {
+    def apply(e : Entry) : PublishEntry = {
+
+      val objectName : ObjectName = new ObjectName(JmxObjectName(properties =
+        Map("component" -> e.component) ++
+        e.subComponent.map(s => Map("subcomponent" -> s)).getOrElse(Map.empty)
+      ).objectName)
+
+      PublishEntry(
+        objectName, e.successCount, e.aggregateSuccessMsec, e.failedCount, e.aggregateFailedMsec, e.unfinishedData.size, e.lastFailed
+      )
+    }
+  }
+
+  case class PublishEntry(
+    name : ObjectName,
+    successCount : Long,
+    aggregateSuccessMsec : Long = 0,
+    failedCount : Long,
+    aggregateFailedMsec : Long,
+    inflight : Long,
+    lastFailed : Long
   )
 
   def props(mbeanExporter: OpenMBeanExporter): Props = Props(new StatisticsActor(mbeanExporter))

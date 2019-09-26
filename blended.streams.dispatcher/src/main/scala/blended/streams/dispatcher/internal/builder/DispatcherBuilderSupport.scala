@@ -19,7 +19,7 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
   def headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(containerConfig.getConfig(FlowHeaderConfig.headerConfigPath))
 
   private val headerCfg = headerConfig
-  val header = FlowHeaderConfig.header(headerCfg.prefix)
+  private val header : String => String = FlowHeaderConfig.header(headerCfg.prefix)
 
   val streamLogger : Logger
 
@@ -30,7 +30,7 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
   val rtConfigKey : String = classOf[ResourceTypeConfig].getSimpleName
   val outboundCfgKey : String = classOf[OutboundRouteConfig].getSimpleName
 
-  val headerResourceType = "ResourceType"
+  val headerResourceType = headerConfig.headerResourceType
 
   def headerBridgeVendor : String = header("BridgeVendor")
   def headerBridgeProvider : String = header("BridgeProvider")
@@ -47,7 +47,7 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
 
   /**
    * Access a typed object in the given envelope and the given key. If an object
-   * for the key with the propert type is present, the given function will be applied
+   * for the key with the property type is present, the given function will be applied
    * and the result of the function will be returned.
    * If the object is not present in the envelope or has the wrong type, an exception
    * will be returned.

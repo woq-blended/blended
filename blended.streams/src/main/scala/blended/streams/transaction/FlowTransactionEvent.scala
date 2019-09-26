@@ -101,7 +101,7 @@ sealed trait FlowTransactionEvent {
 
 case class FlowTransactionStarted(
   override val transactionId : String,
-  override val properties : Map[String, MsgProperty]
+  override val properties : Map[String, MsgProperty],
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionStateStarted
 }
@@ -129,7 +129,7 @@ case class FlowTransactionFailed(
 
 final case class FlowTransactionCompleted(
   override val transactionId : String,
-  override val properties : FlowMessageProps
+  override val properties : FlowMessageProps,
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionStateCompleted
 }

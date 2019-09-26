@@ -128,6 +128,7 @@ class FlowTransactionStream(
             case FlowTransactionStateCompleted => Some(ServiceState.Completed)
             case _ => None
           }
+          streamLogger.debug(s"StatisticsData state for event [$e] is [$eventType]")
           eventType.foreach { eventType =>
             val resourceType: String = e.properties.get("ResourceType").map(_.toString).getOrElse("Unknown")
             val `type` = "Dispatcher"

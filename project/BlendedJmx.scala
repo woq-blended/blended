@@ -8,6 +8,7 @@ import sbtcrossproject.CrossProject
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 import scoverage.ScoverageKeys._
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 private object BlendedJmxCross {
 
@@ -63,6 +64,15 @@ object BlendedJmxJvm extends ProjectFactory {
         projectName,
         s"$projectName.json",
         s"$projectName.statistics"
+      )
+    )
+
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "App" -> "Debug",
+        "spec" -> "Debug",
+        "blended" -> "Debug"
       )
     )
 

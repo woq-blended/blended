@@ -42,6 +42,7 @@ object FlowHeaderConfig {
   private val bridgeVendor = "BridgeVendor"
   private val bridgeProvider = "BridgeProvider"
   private val keepAlivesMissed = "KeepAlivesMissed"
+  private val resourceType = "ResourceType"
 
   val headerConfigPath : String = "blended.flow.header"
   val header : String => String => String = prefix => name => prefix + name
@@ -52,6 +53,7 @@ object FlowHeaderConfig {
 
   def create(prefix : String) : FlowHeaderConfig = FlowHeaderConfig(
     prefix = prefix,
+    headerResourceType = resourceType,
     headerTransId = header(prefix)(transId),
     headerTransShard = header(prefix)(transShard),
     headerBranch = header(prefix)(branchId),
@@ -92,6 +94,7 @@ object FlowHeaderConfig {
 
     FlowHeaderConfig(
       prefix = prefix,
+      headerResourceType = resourceType,
       headerTransId = header(prefix)(headerTransId),
       headerTransShard = header(prefix)(headerTransShard),
       headerBranch = header(prefix)(headerBranch),
@@ -114,6 +117,7 @@ object FlowHeaderConfig {
 
 case class FlowHeaderConfig private (
   prefix : String,
+  headerResourceType : String,
   headerTransId : String,
   headerTransShard : String,
   headerBranch : String,

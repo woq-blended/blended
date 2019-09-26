@@ -1,16 +1,13 @@
 package blended.streams.transaction
 
-import blended.util.logging.Logger
-
 import scala.concurrent.Future
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 /**
   * Manage the flow transactions known within the container.
   */
 trait FlowTransactionManager {
 
-  private val log : Logger = Logger[FlowTransactionManager]
   val config : FlowTransactionManagerConfig
 
   /**

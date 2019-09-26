@@ -6,6 +6,8 @@ class InvalidObjectNameFormatException(name : String) extends Exception(s"Value 
 
 object JmxObjectName {
 
+  val defaultDomain = "blended"
+
   private def parseMap(s : String)(objName : String) : Try[Map[String, String]] = Try {
     val props : Array[(String, String)] = s.split(",")
       .map{ p =>
@@ -37,7 +39,7 @@ object JmxObjectName {
 }
 
 case class JmxObjectName (
-  domain : String,
+  domain : String = JmxObjectName.defaultDomain,
   properties : Map[String,String]
 ) {
 
