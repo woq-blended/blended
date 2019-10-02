@@ -8,13 +8,15 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.internal.TrackTransaction.TrackTransaction
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.jmx.statistics.ServiceInvocationReporter
 import blended.streams._
 import blended.streams.jms._
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{AckProcessor, HeaderProcessorConfig, HeaderTransformProcessor}
 import blended.streams.transaction._
 import blended.streams.{BlendedStreamsConfig, FlowProcessor}
 import blended.util.logging.{LogLevel, Logger}
+import blended.util.RichTry._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
@@ -50,7 +52,7 @@ case class BridgeStreamConfig(
   // a Bridge provider registry which contains all currently available JMS connection
   // factories within the container
   registry : BridgeProviderRegistry,
-  // The header confirguration of the container (effectively provides headernames with
+  // The header configuration of the container (effectively provides headernames with
   // customized prefixes)
   headerCfg : FlowHeaderConfig,
   // A subscriber name that must be used when the source destination is a topic
@@ -76,6 +78,8 @@ class BridgeStreamBuilder(
   val streamId = s"${bridgeCfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
   protected val bridgeLogger = Logger(streamId)
   protected val transShard : Option[String] = streamsConfig.transactionShard
+
+  protected val jmxComponent : String = "bridge"
 
   private class BridgeDestinationResolver(settings : JmsProducerSettings) extends MessageDestinationResolver(settings) {
     override def destination(env : FlowEnvelope) : Try[JmsDestination] = {
@@ -168,16 +172,28 @@ class BridgeStreamBuilder(
     val srcSettings = JmsConsumerSettings(log = bridgeLogger, connectionFactory = bridgeCfg.fromCf, headerCfg = bridgeCfg.headerCfg)
       .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
       .withDestination(Some(bridgeCfg.fromDest))
-
       .withSessionCount(bridgeCfg.listener)
       .withSelector(bridgeCfg.selector)
       .withSubScriberName(bridgeCfg.subscriberName)
+
+    val stats : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.startStats(
+      name = streamId + "-stats",
+      log = bridgeLogger,
+      component = jmxComponent,
+      subComp = Map(
+        "direction" -> (if (isInbound) "inbound" else "outbound"),
+        "jmsvendor" -> bridgeCfg.fromCf.vendor,
+        "provider" -> bridgeCfg.fromCf.provider,
+        "srcdest" -> bridgeCfg.fromDest.asString
+      ) ++ bridgeCfg.toDest.map(d => "to" -> d.asString).toMap,
+      headerCfg = bridgeCfg.headerCfg
+    )
 
     val src : Source[FlowEnvelope, NotUsed] = {
       val result : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new JmsConsumerStage(
         name = streamId + "-source",
         consumerSettings = srcSettings
-      ))
+      )).via(stats)
 
       // set the transaction from a the system property blended.streams.transactionShard
       // Maintaining the transaction shard in the message will ensure that all transaction events
@@ -189,6 +205,7 @@ class BridgeStreamBuilder(
         })
       }
     }
+
 
     // If we need to transform additional headers on the inbound leg
     if (bridgeCfg.inbound && bridgeCfg.header.nonEmpty) {
@@ -321,12 +338,13 @@ class BridgeStreamBuilder(
 
       // We will forward the message to the target destination
       val forward = b.add(jmsSend)
+      val complete = b.add(FlowProcessor.completeStats(streamId + "completeStats", bridgeLogger, bridgeCfg.headerCfg))
 
-      // Then we have a path where the send is successfull and one where the send has failed
+      // Then we have a path where the send is successful and one where the send has failed
       val sendError = b.add(FlowProcessor.partition[FlowEnvelope] {
         _.exception.isEmpty
       })
-      forward ~> sendError.in
+      forward ~> complete ~> sendError.in
 
       val merge = b.add(Merge[FlowEnvelope](2))
 

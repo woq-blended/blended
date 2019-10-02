@@ -26,12 +26,9 @@ case class ServiceInvocationFailed(
   override val timestamp : Long = System.currentTimeMillis(),
 ) extends ServiceInvocationEvent
 
-class ServiceInvocationReporter(
-  component : String,
-  subComponents : Map[String, String]
-)(implicit system : ActorSystem) {
+object ServiceInvocationReporter {
 
-  def invoked() : String = {
+  def invoked(component : String, subComponents : Map[String, String])(implicit system: ActorSystem) : String = {
     val id : String = UUID.randomUUID().toString()
 
     val event : ServiceInvocationEvent = ServiceInvocationStarted(
@@ -45,13 +42,13 @@ class ServiceInvocationReporter(
     id
   }
 
-  def completed(id : String) : Unit = {
+  def completed(id : String)(implicit system: ActorSystem) : Unit = {
     system.eventStream.publish(
       ServiceInvocationCompleted(id)
     )
   }
 
-  def failed(id : String) : Unit = {
+  def failed(id : String)(implicit system: ActorSystem) : Unit = {
     system.eventStream.publish(
       ServiceInvocationFailed(id)
     )

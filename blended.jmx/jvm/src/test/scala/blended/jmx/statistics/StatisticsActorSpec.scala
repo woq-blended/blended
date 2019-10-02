@@ -55,8 +55,7 @@ class StatisticsActorSpec
 
       names.foreach { case (comp, subComp) =>
 
-        val reporter : ServiceInvocationReporter = new ServiceInvocationReporter(comp, subComp)
-        reporter.invoked()
+        ServiceInvocationReporter.invoked(comp, subComp)
 
         Retry.unsafeRetry(retryDelay, retries) {
           val on : ObjectName = objName(comp, subComp)
@@ -72,10 +71,9 @@ class StatisticsActorSpec
     "should update an exported JMX bean" in {
       val actor = system.actorOf(StatisticsActor.props(exporter))
       val (comp, subComp) = ("foo", Map("type" -> "bar"))
-      val reporter = new ServiceInvocationReporter(comp, subComp)
 
       Thread.sleep(100)
-      val id = reporter.invoked()
+      val id : String = ServiceInvocationReporter.invoked(comp, subComp)
 
       val on : ObjectName = objName(comp, subComp)
 
@@ -85,7 +83,7 @@ class StatisticsActorSpec
         assert(server.getAttribute(on, "successCount") === 0L)
       }
 
-      reporter.completed(id)
+      ServiceInvocationReporter.completed(id)
 
       Retry.unsafeRetry(retryDelay, retries) {
         val instance = server.getObjectInstance(on)
@@ -102,11 +100,10 @@ class StatisticsActorSpec
     "should update and record last failed" in {
       val actor = system.actorOf(StatisticsActor.props(exporter))
       val (comp, subComp) : (String, Map[String, String]) = ("failing", Map.empty)
-      val reporter = new ServiceInvocationReporter(comp, subComp)
 
       Thread.sleep(100)
 
-      val id : String = reporter.invoked()
+      val id : String = ServiceInvocationReporter.invoked(comp, subComp)
       val on : ObjectName = objName(comp, subComp)
 
       Retry.unsafeRetry(retryDelay, retries) {
@@ -116,7 +113,7 @@ class StatisticsActorSpec
         assert(server.getAttribute(on, "lastFailed") === "")
       }
 
-      reporter.failed(id)
+      ServiceInvocationReporter.failed(id)
 
       Retry.unsafeRetry(retryDelay, retries) {
         val instance = server.getObjectInstance(on)

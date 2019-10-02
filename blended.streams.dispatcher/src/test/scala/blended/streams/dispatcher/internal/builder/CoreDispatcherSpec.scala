@@ -147,9 +147,9 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
           goodFlow
         )(ctxt.bs)
 
-        val core = builder.core()
+        val core = builder.core()(ctxt.system)
         val event = builder.worklistEventHandler()
-        val dispatcher = builder.dispatcher()
+        val dispatcher = builder.dispatcher()(ctxt.system)
 
         // TODO: Review for more meaningfull graphs
         travesty.toFile(core, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_core.svg").getAbsolutePath())

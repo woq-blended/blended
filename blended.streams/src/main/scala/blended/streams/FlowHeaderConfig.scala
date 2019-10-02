@@ -25,6 +25,7 @@ object FlowHeaderConfig {
   private val bridgeVendorPath = "bridgeVendor"
   private val bridgeProviderPath = "bridgeProvider"
   private val keepAlivesMissedPath = "keepAlivesMissed"
+  private val statsIdPath = "statisticId"
 
   private val transId = "TransactionId"
   private val transShard = "TransactionShard"
@@ -43,6 +44,7 @@ object FlowHeaderConfig {
   private val bridgeProvider = "BridgeProvider"
   private val keepAlivesMissed = "KeepAlivesMissed"
   private val resourceType = "ResourceType"
+  private val statsId = "StatisticsId"
 
   val headerConfigPath : String = "blended.flow.header"
   val header : String => String => String = prefix => name => prefix + name
@@ -69,7 +71,8 @@ object FlowHeaderConfig {
     headerFirstRetry = header(prefix)(firstRetry),
     headerBridgeVendor = header(prefix)(bridgeVendor),
     headerBridgeProvider = header(prefix)(bridgeProvider),
-    headerKeepAlivesMissed = header(prefix)(keepAlivesMissed)
+    headerKeepAlivesMissed = header(prefix)(keepAlivesMissed),
+    headerStatsId = header(prefix)(statsId)
   )
 
   def create(cfg: Config): FlowHeaderConfig = {
@@ -91,6 +94,7 @@ object FlowHeaderConfig {
     val headerBridgeVendor = cfg.getString(bridgeVendorPath, bridgeVendor)
     val headerBridgeProvider = cfg.getString(bridgeProviderPath, bridgeProvider)
     val headerKeepAlivesMissed = cfg.getString(keepAlivesMissedPath, keepAlivesMissed)
+    val headerStatsId = cfg.getString(statsIdPath, statsId)
 
     FlowHeaderConfig(
       prefix = prefix,
@@ -110,7 +114,8 @@ object FlowHeaderConfig {
       headerFirstRetry = header(prefix)(headerFirstRetry),
       headerBridgeVendor = header(prefix)(headerBridgeVendor),
       headerBridgeProvider = header(prefix)(headerBridgeProvider),
-      headerKeepAlivesMissed = header(prefix)(headerKeepAlivesMissed)
+      headerKeepAlivesMissed = header(prefix)(headerKeepAlivesMissed),
+      headerStatsId = header(prefix)(headerStatsId)
     )
   }
 }
@@ -133,5 +138,6 @@ case class FlowHeaderConfig private (
   headerFirstRetry : String,
   headerBridgeVendor : String,
   headerBridgeProvider : String,
-  headerKeepAlivesMissed : String
+  headerKeepAlivesMissed : String,
+  headerStatsId : String
 )

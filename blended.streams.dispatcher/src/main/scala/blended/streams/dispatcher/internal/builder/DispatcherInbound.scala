@@ -1,6 +1,7 @@
 package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
+import akka.actor.ActorSystem
 import akka.stream.scaladsl.Flow
 import akka.stream.{FlowShape, Graph}
 import blended.container.context.api.ContainerIdentifierService
@@ -17,7 +18,7 @@ object DispatcherInbound {
   def apply(
     dispatcherCfg : ResourceTypeRouterConfig,
     idSvc : ContainerIdentifierService
-  )(implicit bs : DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+  )(implicit bs : DispatcherBuilderSupport, system : ActorSystem) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
     /*-------------------------------------------------------------------------------------------------*/
     /* Populate the message with the configured default headers                                        */

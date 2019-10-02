@@ -7,12 +7,14 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Source}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.jmx.statistics.ServiceInvocationReporter
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
-import blended.streams.{BlendedStreamsConfig, StreamController}
+import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
 import blended.util.logging.Logger
+import blended.util.RichTry._
 
 import scala.collection.mutable
 import scala.util.Try
@@ -172,8 +174,24 @@ class RunnableDispatcher(
         // Create a specific logger for each Dispatcher instance
         val dispLogger = Logger(bs.streamLogger.name + "." + provider.vendor + "." + provider.provider)
 
+        val startStats : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.fromFunction("startStats", bs.streamLogger){ env => Try {
+          val resType : String = env.header[String](bs.headerConfig.headerResourceType).getOrElse("UNKNOWN")
+          val id : String = ServiceInvocationReporter.invoked(
+            component = "dispatcher",
+            subComponents = Map(
+              "jmsvendor" -> provider.vendor,
+              "provider" -> provider.provider,
+              "resourcetype" -> resType
+            )
+          )
+          env.withHeader(bs.headerConfig.headerStatsId, id).unwrap
+        }}
+
         // Connect the consumer to a dispatcher
-        val source : Source[FlowTransactionEvent, NotUsed] = bridgeSource(internalProvider, provider, dispLogger).via(dispatcher)
+        val source : Source[FlowTransactionEvent, NotUsed] =
+          bridgeSource(internalProvider, provider, dispLogger)
+            .via(startStats)
+            .via(dispatcher)
 
         // Wrap the dispatcher into a stream controller and make sure, the generated transaction events are sent to
         // the proper JMS destination
