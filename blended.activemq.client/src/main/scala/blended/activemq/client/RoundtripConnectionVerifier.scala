@@ -65,7 +65,7 @@ class RoundtripConnectionVerifier(
 
     sendMessages(pSettings, log, probeEnv) match {
       case Success(s) =>
-        log.info(s"Request message sent successfully to [${requestDest.asString}]")
+        log.info(s"Request message sent successfully to [${requestDest.asString}] : [$probeEnv]")
         s.shutdown()
 
         implicit val to : FiniteDuration = receiveTimeout

@@ -20,20 +20,14 @@ class StatisticsActorSpec
   private implicit val scheduler : Scheduler = system.scheduler
   private implicit val executionContext: ExecutionContext = system.dispatcher
 
-  val server : MBeanServer = ManagementFactory.getPlatformMBeanServer()
-  val mapper : OpenMBeanMapper = new OpenMBeanMapperImpl()
-  val exporter : OpenMBeanExporter = new OpenMBeanExporterImpl(mapper) {
+  private val server : MBeanServer = ManagementFactory.getPlatformMBeanServer()
+  private val mapper : OpenMBeanMapper = new OpenMBeanMapperImpl()
+  private val exporter : OpenMBeanExporter = new OpenMBeanExporterImpl(mapper) {
     override def mbeanServer: MBeanServer = server
   }
 
-  object nextId {
-    private[this] var _id : Int = 0
-
-    def apply(): String = {
-      _id += 1
-      s"${_id}"
-    }
-  }
+  private val retryDelay : FiniteDuration = 100.milliseconds
+  private val retries : Int = 5
 
   private val objName : (String, Option[String]) => ObjectName = (comp, subComp) => {
     new ObjectName(JmxObjectName(properties =
@@ -45,7 +39,7 @@ class StatisticsActorSpec
   s"The ${classOf[StatisticsActor]}" - {
 
     "should export a JMX bean for each name received via EventStream" in {
-      system.actorOf(StatisticsActor.props(exporter))
+      val actor = system.actorOf(StatisticsActor.props(exporter))
 
       val names : Seq[(String, Option[String])] = Seq(("dispatcher", None), ("httproute", Some("foo")))
 
@@ -57,65 +51,80 @@ class StatisticsActorSpec
       }
 
       names.foreach { case (comp, subComp) =>
-        system.eventStream.publish(StatisticData(comp, subComp, nextId(), ServiceState.Started))
-        Retry.unsafeRetry(10.milliseconds, 5) {
+
+        val reporter : ServiceInvocationReporter = new ServiceInvocationReporter(comp, subComp)
+        reporter.invoked()
+
+        Retry.unsafeRetry(retryDelay, retries) {
           val on : ObjectName = objName(comp, subComp)
           assert(server.getObjectInstance(on) != null)
           assert(server.getAttribute(on, "successCount") === 0L)
+          assert(server.getAttribute(on, "inflight") === 1L)
         }
       }
 
+      system.stop(actor)
     }
 
     "should update an exported JMX bean" in {
-      system.actorOf(StatisticsActor.props(exporter))
-      val (comp, subComp) : (String, Option[String]) = ("foo", Some("bar"))
+      val actor = system.actorOf(StatisticsActor.props(exporter))
+      val (comp, subComp) = ("foo", Some("bar"))
+      val reporter = new ServiceInvocationReporter(comp, subComp)
 
-      val id = nextId()
-      system.eventStream.publish(StatisticData(comp, subComp, id, ServiceState.Started))
+      Thread.sleep(100)
+      val id = reporter.invoked()
+
       val on : ObjectName = objName(comp, subComp)
 
-      Retry.unsafeRetry(10.milliseconds, 5) {
+      Retry.unsafeRetry(retryDelay, retries) {
         val instance = server.getObjectInstance(on)
         assert(instance != null)
         assert(server.getAttribute(on, "successCount") === 0L)
       }
 
-      system.eventStream.publish(StatisticData(comp, subComp, id, ServiceState.Completed))
-      Retry.unsafeRetry(10.milliseconds, 5) {
+      reporter.completed(id)
+
+      Retry.unsafeRetry(retryDelay, retries) {
         val instance = server.getObjectInstance(on)
         assert(instance != null)
         assert(server.getAttribute(on, "successCount") === 1L)
+        assert(server.getAttribute(on, "failedCount") === 0L)
+        assert(server.getAttribute(on, "inflight") === 0L)
+        assert(server.getAttribute(on, "lastFailed") === "")
       }
 
+      system.stop(actor)
     }
 
     "should update and record last failed" in {
-      system.actorOf(StatisticsActor.props(exporter))
-      val (comp, subComp) : (String, Option[String]) = ("dispatcher", None)
+      val actor = system.actorOf(StatisticsActor.props(exporter))
+      val (comp, subComp) : (String, Option[String]) = ("failing", None)
+      val reporter = new ServiceInvocationReporter(comp, subComp)
 
-      val id : String = nextId()
-      system.eventStream.publish(StatisticData(comp, subComp, id, ServiceState.Started))
+      Thread.sleep(100)
+
+      val id : String = reporter.invoked()
       val on : ObjectName = objName(comp, subComp)
-      Retry.unsafeRetry(10.milliseconds, 5) {
+
+      Retry.unsafeRetry(retryDelay, retries) {
         val instance = server.getObjectInstance(on)
         assert(instance != null)
         assert(server.getAttribute(on, "successCount") === 0L)
-        assert(server.getAttribute(on, "lastFailed") === -1L)
+        assert(server.getAttribute(on, "lastFailed") === "")
       }
 
-      system.eventStream.publish(StatisticData(comp, subComp, id, ServiceState.Failed))
+      reporter.failed(id)
 
-      Retry.unsafeRetry(10.milliseconds, 5) {
+      Retry.unsafeRetry(retryDelay, retries) {
         val instance = server.getObjectInstance(on)
         assert(instance != null)
         assert(server.getAttribute(on, "successCount") === 0L)
+        assert(server.getAttribute(on, "inflight") === 0L)
         assert(server.getAttribute(on, "failedCount") === 1L)
-        assert(server.getAttribute(on, "lastFailed").asInstanceOf[Long] > 0L)
+        assert(server.getAttribute(on, "lastFailed").asInstanceOf[String].length() > 0L)
       }
 
+      system.stop(actor)
     }
-
   }
-
 }

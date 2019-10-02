@@ -7,8 +7,6 @@ import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Zip}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
-import blended.jmx.BlendedJmx
-import blended.jmx.statistics.{ServiceState, StatisticData}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
 import blended.streams.{FlowHeaderConfig, FlowProcessor}
@@ -118,37 +116,6 @@ class FlowTransactionStream(
     }
   }
 
-  private val logStatistics: Graph[FlowShape[Try[FlowTransactionEvent], Try[FlowTransactionEvent]], NotUsed] = {
-    GraphDSL.create() { implicit b =>
-      val f = b.add(Flow.fromFunction[Try[FlowTransactionEvent], Try[FlowTransactionEvent]] {
-        case r @ Success(e) =>
-          val eventType = e.state match {
-            case FlowTransactionStateStarted => Some(ServiceState.Started)
-            case FlowTransactionStateFailed => Some(ServiceState.Failed)
-            case FlowTransactionStateCompleted => Some(ServiceState.Completed)
-            case _ => None
-          }
-          streamLogger.debug(s"StatisticsData state for event [$e] is [$eventType]")
-          eventType.foreach { eventType =>
-            val resourceType: String = e.properties.get("ResourceType").map(_.toString).getOrElse("Unknown")
-            val `type` = "Dispatcher"
-            val event = StatisticData(
-              name = s"${BlendedJmx.domain}:type=${`type`},resourceType=${resourceType}",
-              id = e.transactionId,
-              state = eventType
-            )
-            streamLogger.debug(s"Publish to system event stream: [${event}]")
-            system.eventStream.publish(event)
-          }
-
-          r
-        case x => x
-      })
-
-      FlowShape(f.in, f.out)
-    }
-  }
-
   private val createResult : ((FlowEnvelope, Try[FlowEnvelope])) => FlowEnvelope = { case (orig, env) =>
     env match {
       case Success(e) =>
@@ -168,9 +135,6 @@ class FlowTransactionStream(
       // decode the incoming FlowEvent
       val update = b.add(Flow.fromFunction(updateEvent).named("updateEvent"))
 
-      // publish some service statistics to system event stream
-      val publishStatistics = b.add(Flow.fromGraph(logStatistics).named("logStatistics"))
-
       // update the persisted transaction
       val record = b.add(Flow.fromGraph(recordTransaction).named("recordTransaction"))
 
@@ -187,10 +151,10 @@ class FlowTransactionStream(
 
       internalCf match {
         case None =>
-          split.out(1) ~> update ~> publishStatistics ~> record ~> logTrans
+          split.out(1) ~> update ~> record ~> logTrans
         case Some(cf) =>
           val logToJms = b.add(logEventToJms(cf).named("logToJms"))
-          split.out(1) ~> logToJms ~> update ~> publishStatistics ~> record ~> logTrans
+          split.out(1) ~> logToJms ~> update ~> record ~> logTrans
       }
 
       logTrans.out ~> join.in1
