@@ -13,7 +13,7 @@ case class ServiceInvocationStarted(
   override val id : String,
   override val timestamp : Long = System.currentTimeMillis(),
   component : String,
-  subComponent : Option[String] = None
+  subComponents : Map[String, String] = Map.empty
 ) extends ServiceInvocationEvent
 
 case class ServiceInvocationCompleted(
@@ -28,7 +28,7 @@ case class ServiceInvocationFailed(
 
 class ServiceInvocationReporter(
   component : String,
-  subComponent : Option[String]
+  subComponents : Map[String, String]
 )(implicit system : ActorSystem) {
 
   def invoked() : String = {
@@ -37,7 +37,7 @@ class ServiceInvocationReporter(
     val event : ServiceInvocationEvent = ServiceInvocationStarted(
       id = id,
       component = component,
-      subComponent = subComponent
+      subComponents = subComponents
     )
 
     system.eventStream.publish(event)

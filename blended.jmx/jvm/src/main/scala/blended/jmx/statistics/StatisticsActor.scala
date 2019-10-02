@@ -29,7 +29,7 @@ case class Accumulator(
 
 case class Entry(
   component : String,
-  subComponent : Option[String],
+  subComponents : Map[String, String],
   success : Accumulator = Accumulator(),
   failed : Accumulator = Accumulator(),
   lastFailed: Long = -1L,
@@ -56,8 +56,7 @@ case class StatisticsState(
 ) {
 
   private val log : Logger = Logger[StatisticsState]
-  private val datakey : ServiceInvocationStarted => String = s => s"${s.component}-${s.subComponent}"
-
+  private val datakey : ServiceInvocationStarted => String = s => s"${s.component}-${s.subComponents.mkString(",")}"
 
   override def toString: String =
     s"${getClass().getSimpleName()}(${invocations.keys.mkString("(", ",", ")")}, ${entries.keys.mkString("(", ",", ")")})"
@@ -113,7 +112,7 @@ case class StatisticsState(
       case None =>
         log.debug(s"Recording Service invocation start [$evt]")
         val key : String = datakey(evt)
-        val newEntry : Entry = entries.getOrElse(key, Entry(evt.component, evt.subComponent)).update(evt, evt)
+        val newEntry : Entry = entries.getOrElse(key, Entry(evt.component, evt.subComponents)).update(evt, evt)
 
         val newState : StatisticsState = copy(
           invocations = invocations + (evt.id -> evt),

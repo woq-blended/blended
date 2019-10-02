@@ -17,7 +17,8 @@ case class PublishEntry private (
   inflight : Long,
   lastFailed : String
 ) {
-  override def toString: String = s"${getClass().getSimpleName()}(name=$name, successCount=$successCount, failedCount=$failedCount, inflight=$inflight, lastFailed=$lastFailed)"
+  override def toString: String =
+    s"${getClass().getSimpleName()}(name='${name}', successCount=$successCount, failedCount=$failedCount, inflight=$inflight, lastFailed=$lastFailed)"
 
 }
 
@@ -28,8 +29,7 @@ object PublishEntry {
   def create(e : Entry) : PublishEntry = {
 
     val objectName : ObjectName = new ObjectName(JmxObjectName(properties =
-      Map("component" -> e.component) ++
-        e.subComponent.map(s => Map("subcomponent" -> s)).getOrElse(Map.empty)
+      Map("component" -> e.component) ++ e.subComponents
     ).objectName)
 
     PublishEntry(

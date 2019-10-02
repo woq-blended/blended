@@ -29,10 +29,9 @@ class StatisticsActorSpec
   private val retryDelay : FiniteDuration = 100.milliseconds
   private val retries : Int = 5
 
-  private val objName : (String, Option[String]) => ObjectName = (comp, subComp) => {
+  private val objName : (String, Map[String, String]) => ObjectName = (comp, subComp) => {
     new ObjectName(JmxObjectName(properties =
-      Map("component" -> comp) ++
-        subComp.map(s => Map("subcomponent" -> s)).getOrElse(Map.empty)
+      Map("component" -> comp) ++ subComp
     ).objectName)
   }
 
@@ -41,7 +40,11 @@ class StatisticsActorSpec
     "should export a JMX bean for each name received via EventStream" in {
       val actor = system.actorOf(StatisticsActor.props(exporter))
 
-      val names : Seq[(String, Option[String])] = Seq(("dispatcher", None), ("httproute", Some("foo")))
+      val names : Seq[(String, Map[String, String])] =
+        Seq(
+          ("dispatcher", Map.empty),
+          ("httproute", Map("context" -> "foo"))
+        )
 
       names.foreach { case (comp, subComp) =>
         val on : ObjectName = objName(comp, subComp)
@@ -68,7 +71,7 @@ class StatisticsActorSpec
 
     "should update an exported JMX bean" in {
       val actor = system.actorOf(StatisticsActor.props(exporter))
-      val (comp, subComp) = ("foo", Some("bar"))
+      val (comp, subComp) = ("foo", Map("type" -> "bar"))
       val reporter = new ServiceInvocationReporter(comp, subComp)
 
       Thread.sleep(100)
@@ -98,7 +101,7 @@ class StatisticsActorSpec
 
     "should update and record last failed" in {
       val actor = system.actorOf(StatisticsActor.props(exporter))
-      val (comp, subComp) : (String, Option[String]) = ("failing", None)
+      val (comp, subComp) : (String, Map[String, String]) = ("failing", Map.empty)
       val reporter = new ServiceInvocationReporter(comp, subComp)
 
       Thread.sleep(100)
