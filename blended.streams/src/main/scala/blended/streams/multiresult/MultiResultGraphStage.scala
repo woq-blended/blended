@@ -1,7 +1,7 @@
-package blended.streams
+package blended.streams.multiresult
 
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
+import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import blended.util.logging.Logger
 
 // A stage that may generate multiple responses from one incoming message

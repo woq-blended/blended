@@ -3,14 +3,12 @@ package blended.jms.utils
 import java.lang.management.ManagementFactory
 
 import akka.actor.ActorSystem
-import akka.util.Timeout
 import blended.jms.utils.internal._
 import blended.util.logging.Logger
 import javax.jms.{Connection, ConnectionFactory, JMSException}
 import javax.management.ObjectName
 import org.osgi.framework.BundleContext
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
@@ -27,8 +25,6 @@ class BlendedSingleConnectionFactory(
   override val vendor : String = config.vendor
   override val provider : String = config.provider
 
-  private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
-  private[this] implicit val timeout : Timeout = Timeout(100.millis)
   private[this] val log : Logger = Logger[BlendedSingleConnectionFactory]
 
   private[this] val monitorName = s"Monitor-$vendor-$provider"
@@ -76,7 +72,8 @@ class BlendedSingleConnectionFactory(
         None
       }
 
-      val monitor = system.actorOf(ConnectionStateMonitor.props(vendor, provider, bundleContext, mbean), monitorName)
+      // Simply create the state monitor for that particular connection
+      system.actorOf(ConnectionStateMonitor.props(vendor, provider, bundleContext, mbean), monitorName)
       log.info(s"Connection State Monitor [$stateMgrName] created.")
       Some(system.actorOf(ConnectionStateManager.props(config, holder), stateMgrName))
     } else {

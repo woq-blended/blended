@@ -1,10 +1,11 @@
-package blended.streams
+package blended.streams.multiresult
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Source}
+import akka.stream.{ActorMaterializer, OverflowStrategy}
 import akka.testkit.TestKit
+import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
@@ -35,8 +36,6 @@ class MultiResultGraphStageSpec extends TestKit(ActorSystem("multiresult"))
       val copy : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(
         new MultipleResultGraphStage[FlowEnvelope, FlowEnvelope]("test")(createCopies)
       )
-
-      val envelopes : Iterator[FlowEnvelope] = 1.to(numMsg).map(_ => FlowEnvelope()).toIterator
 
       val source : Source[FlowEnvelope, ActorRef] =
         Source.actorRef[FlowEnvelope](bufferSize = numMsg * numCopies, overflowStrategy = OverflowStrategy.fail).via(copy)

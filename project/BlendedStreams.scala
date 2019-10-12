@@ -43,6 +43,7 @@ object BlendedStreams extends ProjectFactory {
         s"$projectName.jms",
         s"$projectName.json",
         s"$projectName.message",
+        s"$projectName.multiresult",
         s"$projectName.processor",
         s"$projectName.transaction",
         s"$projectName.worklist"
