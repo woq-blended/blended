@@ -6,8 +6,6 @@ import akka.stream.KillSwitch
 import blended.streams.message.FlowEnvelope
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 
-import scala.concurrent.duration._
-
 @RequiresForkedJVM
 class MapToExternalBridgeSpec extends BridgeSpecSupport {
 
@@ -28,7 +26,7 @@ class MapToExternalBridgeSpec extends BridgeSpecSupport {
       val switch : KillSwitch = sendMessages("bridge.data.out", internal)(msgs:_*)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(external, "sampleOut")(3.seconds, system, materializer).get
+        consumeMessages(external, "sampleOut", to)(system, materializer).get
 
       messages should have size(msgCount)
 

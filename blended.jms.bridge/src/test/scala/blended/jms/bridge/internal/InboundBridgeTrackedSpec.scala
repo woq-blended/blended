@@ -26,13 +26,13 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
 
     // We only test for tracked transactions as all bridge inbound streams generate transaction started events by design
     "process normal inbound messages with tracked transactions" in {
-      implicit val timeout : FiniteDuration = 1.second
+      val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
       val switch = sendInbound(msgCount)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
+        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(system, materializer).get
 
       messages should have size(msgCount)
 
@@ -40,7 +40,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be (Some(()))
       }
 
-      val envelopes : List[FlowTransactionEvent] = consumeEvents().get
+      val envelopes : List[FlowTransactionEvent] = consumeEvents(timeout).get
 
       envelopes should have size(msgCount)
       assert(envelopes.forall(_.isInstanceOf[FlowTransactionStarted]))
@@ -67,7 +67,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
 
       val switch : KillSwitch = sendMessages(pSettings, log, env).get
 
-      val result : List[FlowEnvelope] = consumeMessages(internal, "bridge.data.in.activemq.external").get
+      val result : List[FlowEnvelope] = consumeMessages(internal, "bridge.data.in.activemq.external", 5.seconds).get
 
       result should have size 1
       result.head.header[String]("ResourceType") should be (Some(desc))

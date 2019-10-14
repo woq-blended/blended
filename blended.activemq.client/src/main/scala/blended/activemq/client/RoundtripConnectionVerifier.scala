@@ -68,15 +68,14 @@ class RoundtripConnectionVerifier(
         log.info(s"Request message sent successfully to [${requestDest.asString}] : [$probeEnv]")
         s.shutdown()
 
-        implicit val to : FiniteDuration = receiveTimeout
-
         val collector : Collector[FlowEnvelope] = receiveMessages(
           headerCfg = headerConfig,
           cf = cf,
           dest = responseDest,
           log = log,
           listener = 1,
-          selector = Some(s"JMSCorrelationID='$id'")
+          selector = Some(s"JMSCorrelationID='$id'"),
+          timeout = Some(receiveTimeout)
         )
 
         collector.result.onComplete {

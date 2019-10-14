@@ -43,17 +43,17 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
   "The outbound bridge should " - {
 
     "reject envelopes if the send of the transaction event fails and retry is disabled" in {
-      implicit val timeout : FiniteDuration = 1.second
+      val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
       val switch = sendOutbound(msgCount, true)
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries", timeout).get
       retried should be (empty)
 
-      consumeEvents().get should be (empty)
+      consumeEvents(timeout).get should be (empty)
 
-      consumeMessages(internal, "bridge.data.out.activemq.external").get should have size(2)
+      consumeMessages(internal, "bridge.data.out.activemq.external", timeout).get should have size(2)
 
       switch.shutdown()
     }

@@ -137,7 +137,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
           val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
             name = "ackConsumer",
             source = msgConsumer,
-            timeout = 5.seconds,
+            timeout = Some(5.seconds),
             onCollected = Some({e : FlowEnvelope => e.acknowledge()})
           )
 
@@ -174,7 +174,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
             val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
               name = "delayedConsumer",
               source = msgConsumer,
-              timeout = minDelay - 1.seconds,
+              timeout = Some(minDelay - 1.second),
               onCollected = Some({e : FlowEnvelope => e.acknowledge()})
             )
 
@@ -186,7 +186,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
             val coll2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
               name = "delayedConsumer2",
               source = msgConsumer,
-              timeout = minDelay + 500.millis,
+              timeout = Some(minDelay + 500.millis),
               onCollected = Some({e : FlowEnvelope => e.acknowledge()})
             )
 

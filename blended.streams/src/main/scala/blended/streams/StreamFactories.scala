@@ -20,7 +20,7 @@ object StreamFactories {
   def runSourceWithTimeLimit[T](
     name : String,
     source : Source[T, NotUsed],
-    timeout : FiniteDuration,
+    timeout : Option[FiniteDuration],
     onCollected : Option[T => Unit] = None,
     completeOn : Option[Seq[T] => Boolean] = None
   )(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : Collector[T] =
@@ -29,7 +29,7 @@ object StreamFactories {
   def runMatSourceWithTimeLimit[T, Mat](
     name : String,
     source : Source[T, Mat],
-    timeout : FiniteDuration,
+    timeout : Option[FiniteDuration],
     onCollected : Option[T => Unit] = None,
     completeOn : Option[Seq[T] => Boolean] = None
   )(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : (Mat, Collector[T]) = {
@@ -51,12 +51,14 @@ object StreamFactories {
       case _ => stopped.set(true)
     }
 
-    akka.pattern.after(timeout, system.scheduler) {
-      if (!stopped.get()) {
-        log.info(s"Stopping collector [$name] after [${timeout}]")
-        killswitch.shutdown()
+    timeout.foreach{ t =>
+      akka.pattern.after(t, system.scheduler) {
+        if (!stopped.get()) {
+          log.info(s"Stopping collector [$name] after [${timeout}]")
+          killswitch.shutdown()
+        }
+        Future { Done }
       }
-      Future { Done }
     }
 
     (mat, collector)

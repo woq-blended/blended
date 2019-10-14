@@ -7,7 +7,6 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge}
 import akka.stream.{FlowShape, Graph, KillSwitch, Materializer}
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionStateCompleted, FlowTransactionStateUpdated}
 import blended.streams.{BlendedStreamsConfig, FlowProcessor}
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 
@@ -75,7 +74,7 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
   "The outbound bridge should " - {
 
     "correctly route outbound messages after one or more retries" in {
-      implicit val timeout : FiniteDuration = 1.second
+      val timeout : FiniteDuration = 1.second
       val msgCount = 1
 
       val switch = sendOutbound(msgCount, true)
@@ -87,12 +86,12 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
       }
       println()
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries", timeout).get
       retried should be (empty)
 
-      consumeEvents().get should not be empty
+      consumeEvents(timeout).get should not be empty
 
-      consumeMessages(external, "sampleOut").get should have size(msgCount)
+      consumeMessages(external, "sampleOut", timeout).get should have size(msgCount)
 
       switch.shutdown()
     }

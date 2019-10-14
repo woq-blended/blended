@@ -43,7 +43,7 @@ class MultiResultGraphStageSpec extends TestKit(ActorSystem("multiresult"))
       val (actor, collector) = StreamFactories.runMatSourceWithTimeLimit[FlowEnvelope, ActorRef](
         name = "multiResult",
         source = source,
-        timeout = timeout,
+        timeout = Some(timeout),
         completeOn = Some({s : Seq[FlowEnvelope] => s.size == numCopies * numMsg})
       )
 

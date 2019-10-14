@@ -41,12 +41,12 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
   "The outbound bridge should " - {
 
     "pass the message to the retry destination and not generate a transaction event if the forwarding of the message fails" in {
-      implicit val timeout : FiniteDuration = 1.second
+      val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
       val switch = sendOutbound(msgCount, true)
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries", timeout).get
 
       retried should have size(msgCount)
 
@@ -55,8 +55,8 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
         env.header[String](headerCfg.headerRetryDestination) should be (Some("bridge.data.out.activemq.external"))
       }
 
-      consumeEvents().get should be (empty)
-      consumeMessages(external, "sampleOut").get should be (empty)
+      consumeEvents(timeout).get should be (empty)
+      consumeMessages(external, "sampleOut", timeout).get should be (empty)
 
       switch.shutdown()
     }

@@ -34,7 +34,7 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   with JmsEnvelopeHeader
   with PropertyChecks {
 
-  protected implicit val timeout : FiniteDuration = 5.seconds
+  protected implicit val to : FiniteDuration = 5.seconds
   protected val log = Logger(getClass().getName())
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withRetries").getAbsolutePath()
@@ -61,22 +61,32 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
 
   protected def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"
 
-  protected def getConnectionFactories(sr: BlendedPojoRegistry)(implicit timeout : FiniteDuration) : (IdAwareConnectionFactory, IdAwareConnectionFactory) = {
+  protected def getConnectionFactories(sr: BlendedPojoRegistry) : (IdAwareConnectionFactory, IdAwareConnectionFactory) = {
     val cf1 = mandatoryService[IdAwareConnectionFactory](sr)(Some(brokerFilter("internal")))
     val cf2 = mandatoryService[IdAwareConnectionFactory](sr)(Some(brokerFilter("external")))
     (cf1, cf2)
   }
 
-  protected def consumeMessages(cf: IdAwareConnectionFactory, destName : String)(
-    implicit timeout : FiniteDuration, system : ActorSystem, materializer: Materializer
-  ) : Try[List[FlowEnvelope]] = Try {
+  protected def consumeMessages(
+    cf: IdAwareConnectionFactory,
+    destName : String,
+    timeout : FiniteDuration
+  )(implicit system : ActorSystem, materializer: Materializer) : Try[List[FlowEnvelope]] = Try {
 
-    val coll : Collector[FlowEnvelope] = receiveMessages(headerCfg, cf, JmsDestination.create(destName).get, log)
-    Await.result(coll.result, timeout * 1.5)
+    val coll : Collector[FlowEnvelope] = receiveMessages(
+      headerCfg = headerCfg,
+      cf = cf,
+      dest = JmsDestination.create(destName).get,
+      log = log,
+      timeout = Some(timeout)
+    )
+    Await.result(coll.result, to * 1.5)
   }
 
-  protected def consumeEvents()(implicit timeout : FiniteDuration, system : ActorSystem, materializer: Materializer) : Try[List[FlowTransactionEvent]] = Try {
-    consumeMessages(internal, "internal.transactions").get.map{ env =>
+  protected def consumeEvents(
+    timeout : FiniteDuration
+  )(implicit system : ActorSystem, materializer: Materializer) : Try[List[FlowTransactionEvent]] = Try {
+    consumeMessages(cf = internal, destName = "internal.transactions", timeout = timeout).get.map{ env : FlowEnvelope =>
       FlowTransactionEvent.envelope2event(headerCfg)(env).get
     }
   }

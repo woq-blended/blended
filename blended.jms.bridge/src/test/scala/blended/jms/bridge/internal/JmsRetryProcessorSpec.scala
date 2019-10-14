@@ -132,7 +132,8 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
       dest = JmsDestination.create(dest).unwrap,
       log = log,
       listener = 1,
-      completeOn = Some(f)
+      completeOn = Some(f),
+      timeout = Some(timeout)
     )
 
     Await.result(coll.result, timeout + 100.millis)

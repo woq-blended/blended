@@ -107,8 +107,9 @@ trait JmsStreamSupport {
     listener : Integer = 2,
     minMessageDelay : Option[FiniteDuration] = None,
     selector : Option[String] = None,
-    completeOn : Option[Seq[FlowEnvelope] => Boolean] = None
-  )(implicit timeout : FiniteDuration, system : ActorSystem, materializer : Materializer) : Collector[FlowEnvelope] = {
+    completeOn : Option[Seq[FlowEnvelope] => Boolean] = None,
+    timeout : Option[FiniteDuration]
+  )(implicit system : ActorSystem, materializer : Materializer) : Collector[FlowEnvelope] = {
 
     val listenerCount : Int = if (dest.isInstanceOf[JmsQueue]) {
       listener

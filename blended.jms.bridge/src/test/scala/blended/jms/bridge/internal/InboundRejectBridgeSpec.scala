@@ -37,15 +37,15 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
   "The inbound bridge should" - {
 
     "reject messages in case the send forward fails" in {
-      implicit val timeout : FiniteDuration = 1.second
+      val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
       val switch = sendInbound(msgCount)
 
-      consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get should be (empty)
-      consumeEvents().get should be (empty)
+      consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(system, materializer).get should be (empty)
+      consumeEvents(timeout).get should be (empty)
 
-      consumeMessages(external, "sampleIn").get should have size(msgCount)
+      consumeMessages(external, "sampleIn", timeout).get should have size(msgCount)
 
       switch.shutdown()
     }

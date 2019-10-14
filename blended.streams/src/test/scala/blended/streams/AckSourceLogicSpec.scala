@@ -108,7 +108,7 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
         Source.fromGraph(ackSource)
           .via(new AckProcessor("AckCounter-ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout)
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, Some(timeout))
 
       Await.result(collector.result, timeout + 100.millis) should have size expectedCnt
 
@@ -132,7 +132,7 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
         Source.fromGraph(ackSource)
           .via(new AckProcessor("AckCounter-ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout)
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, Some(timeout))
 
       Await.result(collector.result, timeout + 100.millis) should have size expectedCnt
 
@@ -157,7 +157,7 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
           .via(FlowProcessor.fromFunction("deny", log) { _ => Try { throw new Exception("Boom") } })
           .via(new AckProcessor("DenyCounter-ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout)
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, Some(timeout))
 
       Await.result(collector.result, timeout + 100.millis) should have size expectedCnt
 
@@ -179,7 +179,7 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
 
       val s : Source[FlowEnvelope, NotUsed] = Source.fromGraph(ackSource)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout - 1.second)
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, Some(timeout - 1.second))
 
       Await.result(collector.result, timeout) should have size 1
 

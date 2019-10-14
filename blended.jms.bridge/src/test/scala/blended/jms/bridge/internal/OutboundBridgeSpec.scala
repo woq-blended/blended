@@ -24,13 +24,13 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
   "The outbound bridge should " - {
 
     "process normal inbound messages with untracked transactions" in {
-      implicit val timeout : FiniteDuration = 1.second
+      val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
       val switch = sendOutbound(msgCount, track = false)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(external, "sampleOut").get
+        consumeMessages(external, "sampleOut", timeout).get
 
       messages should have size(msgCount)
 
@@ -38,7 +38,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be (Some(()))
       }
 
-      val envelopes : List[FlowTransactionEvent] = consumeEvents().get
+      val envelopes : List[FlowTransactionEvent] = consumeEvents(timeout).get
 
       envelopes should be (empty)
 
@@ -46,13 +46,13 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
     }
 
     "process normal inbound messages with tracked transactions" in {
-      implicit val timeout : FiniteDuration = 1.second
+      val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
       val switch = sendOutbound(msgCount, true)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(external, "sampleOut").get
+        consumeMessages(external, "sampleOut", timeout).get
 
       messages should have size(msgCount)
 
@@ -60,7 +60,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be (Some(()))
       }
 
-      val envelopes : List[FlowTransactionEvent] = consumeEvents().get
+      val envelopes : List[FlowTransactionEvent] = consumeEvents(timeout).get
 
       envelopes should have size(msgCount)
       assert(envelopes.forall(_.isInstanceOf[FlowTransactionUpdate]))

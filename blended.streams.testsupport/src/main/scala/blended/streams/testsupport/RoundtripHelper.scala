@@ -31,7 +31,6 @@ case class RoundtripHelper(
 
   private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
-  private implicit val to : FiniteDuration = timeout
 
   def withTestMsgs(env : FlowEnvelope*) : RoundtripHelper = copy(testMsgs = testMsgs ++ env)
   def withTimeout(to : FiniteDuration) : RoundtripHelper = copy(timeout = to)
@@ -48,7 +47,13 @@ case class RoundtripHelper(
     val collectors : Map[String, Collector[FlowEnvelope]] = {
       outcome.map { o =>
         val k : String = outcomeId(o)
-        val c = receiveMessages(headerConfig, o.cf, o.dest, log)
+        val c = receiveMessages(
+          headerCfg = headerConfig,
+          cf = o.cf,
+          dest = o.dest,
+          log = log,
+          timeout = Some(timeout)
+        )
         k -> c
       }
     }.toMap

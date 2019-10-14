@@ -59,7 +59,7 @@ class MultiResultProcessorSpec extends TestKit(ActorSystem("mulitprocessor"))
       val (actor, coll) = StreamFactories.runMatSourceWithTimeLimit[FlowEnvelope, ActorRef](
         name = "replicateOk",
         source = src,
-        timeout = to,
+        timeout = Some(to),
         completeOn = Some( l => l.size == 1)
       )
 
@@ -99,7 +99,7 @@ class MultiResultProcessorSpec extends TestKit(ActorSystem("mulitprocessor"))
       val (actor, coll) = StreamFactories.runMatSourceWithTimeLimit[FlowEnvelope, ActorRef](
         name = "replicateFail",
         source = src,
-        timeout = to,
+        timeout = Some(to),
         completeOn = Some( l => l.size == 1)
       )
 
@@ -135,7 +135,7 @@ class MultiResultProcessorSpec extends TestKit(ActorSystem("mulitprocessor"))
       val (actor, coll) = StreamFactories.runMatSourceWithTimeLimit[FlowEnvelope, ActorRef](
         name = "replicateFail",
         source = src,
-        timeout = to,
+        timeout = Some(to),
         completeOn = Some( l => l.size == 1)
       )
 

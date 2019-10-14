@@ -44,21 +44,21 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
   "The outbound bridge should " - {
 
     "reject the messages in a forward fails and no retry destination is defined" in {
-      implicit val timeout : FiniteDuration = 1.second
+      val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
       val switch = sendOutbound(msgCount, true)
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries", timeout).get
       retried should be (empty)
 
-      consumeEvents().get should be (empty)
+      consumeEvents(timeout).get should be (empty)
 
       retried.foreach{ env =>
         env.header[Unit]("UnitProperty") should be (Some(()))
       }
 
-      consumeMessages(internal, "bridge.data.out.activemq.external").get should have size(msgCount)
+      consumeMessages(internal, "bridge.data.out.activemq.external", timeout).get should have size(msgCount)
 
       switch.shutdown()
     }

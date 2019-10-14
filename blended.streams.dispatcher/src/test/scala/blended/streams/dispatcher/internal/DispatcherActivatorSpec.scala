@@ -63,7 +63,11 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
     val collectors = dest.map { d =>
       receiveMessages(
-        headerCfg = ctxt.bs.headerConfig, cf = cf, dest = d, Logger(loggerName)
+        headerCfg = ctxt.bs.headerConfig,
+        cf = cf,
+        dest = d,
+        log = Logger(loggerName),
+        timeout = Some(timeout)
       )
     }
 
