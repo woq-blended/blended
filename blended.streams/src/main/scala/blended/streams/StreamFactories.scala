@@ -7,12 +7,15 @@ import akka.stream._
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.{Done, NotUsed}
 import blended.streams.processor.{CollectingActor, Collector}
+import blended.util.logging.Logger
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 object StreamFactories {
+
+  private val log : Logger = Logger[StreamFactories.type]
 
   def runSourceWithTimeLimit[T](
     name : String,
@@ -50,6 +53,7 @@ object StreamFactories {
 
     akka.pattern.after(timeout, system.scheduler) {
       if (!stopped.get()) {
+        log.info(s"Stopping collector [$name] after [${timeout}]")
         killswitch.shutdown()
       }
       Future { Done }

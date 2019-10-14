@@ -20,7 +20,7 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
     "allow to FileAckSources to process files in parallel" in {
 
       val numSrc : Int = 5
-      val numMsg : Int = 10000
+      val numMsg : Int = 5000
       val t : FiniteDuration = 5.seconds
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc)
@@ -40,7 +40,7 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
           )).async.via(new AckProcessor(s"simplePoll$subId.ack").flow)
 
         startDelay.foreach(d => Thread.sleep(d.toMillis))
-        StreamFactories.runSourceWithTimeLimit("parallel1", src, t)
+        StreamFactories.runSourceWithTimeLimit(s"parallel${subId}", src, t)
       }
 
       prepareDirectory(pollCfg.sourceDir)
@@ -52,7 +52,7 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
       }
 
       val combined : Future[Seq[List[FlowEnvelope]]] = Future.sequence(results)
-      val allResults : Seq[String] = Await.result(combined, t + 100.millis).flatten.map(_.header[String]("BlendedFileName").get)
+      val allResults : Seq[String] = Await.result(combined, t + 1.second).flatten.map(_.header[String]("BlendedFileName").get)
 
       val dups : Map[String, Int] = countWords(allResults).filter{ case (_, v) => v > 1 }
       dups should be (empty)
