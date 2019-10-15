@@ -34,7 +34,7 @@ class MultiResultGraphStageSpec extends TestKit(ActorSystem("multiresult"))
       val createCopies : FlowEnvelope => List[FlowEnvelope] = env => List.fill(numCopies)(env)
 
       val copy : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(
-        new MultipleResultGraphStage[FlowEnvelope, FlowEnvelope]("test")(createCopies)
+        new MultiResultGraphStage[FlowEnvelope, FlowEnvelope]("test")(createCopies)
       )
 
       val source : Source[FlowEnvelope, ActorRef] =

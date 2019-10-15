@@ -5,11 +5,11 @@ import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import blended.util.logging.Logger
 
 // A stage that may generate multiple responses from one incoming message
-class MultipleResultGraphStage[T, U](name : String)(f : T => List[U]) extends GraphStage[FlowShape[T,U]] {
+class MultiResultGraphStage[T, U](name : String)(f : T => List[U]) extends GraphStage[FlowShape[T,U]] {
   private val in : Inlet[T] = Inlet[T](s"MultiResult.$name.in")
   private val out : Outlet[U] = Outlet[U](s"MultiResult.$name.out")
 
-  private val log : Logger = Logger(classOf[MultipleResultGraphStage[_,_]].getName())
+  private val log : Logger = Logger(classOf[MultiResultGraphStage[_,_]].getName())
 
   override val shape : FlowShape[T, U] = FlowShape.of(in, out)
 

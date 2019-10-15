@@ -120,7 +120,7 @@ class MultiResultCollector(
     case r : Try[List[FlowEnvelope]] => r match {
       case Success(l) => l.map(_.exception).find(_.isDefined).flatten match {
         case None =>
-          log.info(s"Successfully executed sub flows for [${env.id}")
+          log.info(s"Successfully executed sub flows for [${env.id}]")
           respond(env, timer)
         case Some(t) =>
           log.warn(s"Subflow for [${env.id}] threw exception [${t.getMessage()}]")
