@@ -94,15 +94,19 @@ private[internal] trait PingOperations { this : JMSSupport =>
           log.debug(s"Consumer created for ping of [${config.vendor}:${config.provider}] and id [$pingId]")
         }
 
-        producer = Some(createProducer(s, config.pingDestination).get)
-        producer.foreach { p =>
-          log.debug(s"Producer created for ping of [${config.vendor}:${config.provider}] and id [$pingId]")
+        if (!config.pingReceiveOnly) {
+          producer = Some(createProducer(s, config.pingDestination).get)
+          producer.foreach { p =>
+            log.debug(s"Producer created for ping of [${config.vendor}:${config.provider}] and id [$pingId]")
 
-          val msg = s.createMessage()
-          msg.setJMSCorrelationID(pingId)
+            val msg = s.createMessage()
+            msg.setJMSCorrelationID(pingId)
 
-          p.send(msg, DeliveryMode.NON_PERSISTENT, 4, timeOutMillis * 2)
-          log.debug(s"Sent ping message for [${config.vendor}:${config.provider}] with id [$pingId]")
+            p.send(msg, DeliveryMode.NON_PERSISTENT, 4, timeOutMillis * 2)
+            log.debug(s"Sent ping message for [${config.vendor}:${config.provider}] with id [$pingId]")
+          }
+        } else {
+          log.debug(s"Using JMS ping with receive only")
         }
       }
 
@@ -135,11 +139,18 @@ private[internal] trait PingOperations { this : JMSSupport =>
     log.debug(s"Probing ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
 
     info.consumer match {
-      case None => PingFailed(new Exception(s"No consumer defined for [${info.cfg.vendor}:${info.cfg.provider}] and pingId [${info.pingId}]"))
+      case None =>
+        PingFailed(new Exception(s"No consumer defined for [${info.cfg.vendor}:${info.cfg.provider}] and pingId [${info.pingId}]"))
+
       case Some(c) =>
         try {
-          Option(c.receive(100L)) match {
-            case None => PingPending
+          Option(c.receiveNoWait()) match {
+            case None =>
+              if (info.cfg.pingReceiveOnly) {
+                PingSuccess(info.pingId)
+              } else {
+                PingPending
+              }
             case Some(m) =>
               val id = m.getJMSCorrelationID()
 

@@ -20,6 +20,7 @@ trait ConnectionConfig {
   val defaultUser : Option[String]
   val defaultPassword : Option[String]
   val pingDestination : String
+  val pingReceiveOnly : Boolean
   val properties : Map[String, String]
   val useJndi : Boolean
   val jndiName : Option[String] = None

@@ -59,7 +59,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
   var con: Option[Connection]
 
   protected val bulkCount: Int = 100000
-  protected val bulkTimeout : FiniteDuration = Math.max(1, bulkCount / 50000).minutes
+  protected val bulkTimeout : FiniteDuration = 2.minutes
 
   private[this] implicit val eCtxt: ExecutionContext = system.dispatcher
 
@@ -107,6 +107,18 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
           counter.incrementAndGet(),
           con = con.get,
           cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"queue:$pingQueue")
+        ))(3.seconds), 3.seconds
+      )
+
+      assert(result.isInstanceOf[PingSuccess])
+    }
+
+    "perform a queue based receive only ping" in {
+      val result = Await.result(
+        execPing(PingExecute(
+          counter.incrementAndGet(),
+          con = con.get,
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"queue:$pingQueue", pingReceiveOnly = true)
         ))(3.seconds), 3.seconds
       )
 
