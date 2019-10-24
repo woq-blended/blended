@@ -2,7 +2,8 @@ package blended.jms.utils
 
 import java.util.Date
 
-import akka.actor.ActorRef
+import akka.actor
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 
 sealed trait JmsConnectionState
 
@@ -34,4 +35,21 @@ case class ConnectionState(
 }
 //scalastyle:on magic.number
 
+object ConnectionStateListener{
+  def create(vendor : String, provider : String)(onStateChanged : ConnectionStateChanged => Unit)(implicit system : ActorSystem) : ActorRef = {
+
+    val result : actor.ActorRef = system.actorOf(Props(new Actor() {
+      override def receive: Receive = {
+        case event : ConnectionStateChanged =>
+          if (event.state.vendor == vendor && event.state.provider == provider) {
+            onStateChanged(event)
+          }
+      }
+    }))
+
+    system.eventStream.subscribe(result, classOf[ConnectionStateChanged])
+
+    result
+  }
+}
 

@@ -1,8 +1,9 @@
 package blended.streams.jms
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.stage._
-import blended.jms.utils.JmsSession
+import blended.jms.utils.{ConnectionStateListener, Disconnected, JmsSession}
 import blended.streams.message.FlowEnvelope
 import blended.util.RichTry._
 import javax.jms.{Destination, MessageProducer}
@@ -11,10 +12,10 @@ import scala.concurrent.duration._
 import scala.util.{Random, Success, Try}
 import scala.util.control.NonFatal
 
-class JmsProducerStage(
+final class JmsProducerStage(
   name : String,
   producerSettings: JmsProducerSettings
-) extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
+)(implicit system : ActorSystem) extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
 
   producerSettings.log.debug(s"Starting producer [$name]")
 
@@ -35,6 +36,7 @@ class JmsProducerStage(
       failStage(t)
     }
 
+    private var stateListener : Option[ActorRef] = None
     private var producer : Map[String, MessageProducer] = Map.empty
 
     private[this] def addProducer(s : String, p : MessageProducer) : Unit = {
@@ -158,9 +160,25 @@ class JmsProducerStage(
       case Push(env) => pushMessage(env)
     }
 
+    override def preStart(): Unit = {
+      super.preStart()
+
+      stateListener = Some(ConnectionStateListener.create(
+        vendor = producerSettings.connectionFactory.vendor,
+        provider = producerSettings.connectionFactory.provider
+      ){ event => event.state.status match {
+        case Disconnected =>
+          val t : Throwable = new Exception(s"Underlying JMS connection closed for [$id]")
+          handleError.invoke(t)
+        case _ =>
+      }})
+    }
+
     override def postStop(): Unit = {
       producerSettings.log.debug(s"Closing JMS Producer stage [$id]")
+      stateListener.foreach(system.stop)
       connector.closeAll()
+      super.postStop()
     }
   }
 

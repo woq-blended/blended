@@ -2,10 +2,10 @@ package blended.streams.jms
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.stage.{AsyncCallback, GraphStage, GraphStageLogic}
-import blended.jms.utils.{JmsDestination, JmsSession, MessageReceived}
+import blended.jms.utils.{ConnectionStateListener, Disconnected, JmsDestination, JmsSession, MessageReceived}
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
 import blended.streams.FlowHeaderConfig
 import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
@@ -80,6 +80,8 @@ final class JmsConsumerStage(
 
     override val log: Logger = consumerSettings.log
     override val autoAcknowledge: Boolean = consumerSettings.acknowledgeMode == AcknowledgeMode.AutoAcknowledge
+
+    private var stateListener : Option[ActorRef] = None
 
     override protected val receiveLogLevel: LogLevel = consumerSettings.receiveLogLevel
 
@@ -242,9 +244,25 @@ final class JmsConsumerStage(
       }
     }
 
+    override def preStart(): Unit = {
+      super.preStart()
+
+      stateListener = Some(ConnectionStateListener.create(
+        vendor = consumerSettings.connectionFactory.vendor,
+        provider = consumerSettings.connectionFactory.provider
+      ){ event => event.state.status match {
+        case Disconnected =>
+          val t : Throwable = new Exception(s"Underlying JMS connection closed for [$id]")
+          handleError.invoke(t)
+        case _ =>
+      }})
+    }
+
     override def postStop(): Unit = {
       log.debug(s"Stopping JmsConsumerStage [$id].")
+      stateListener.foreach(actorSystem.stop)
       connector.closeAll()
+      super.postStop()
     }
   }
 

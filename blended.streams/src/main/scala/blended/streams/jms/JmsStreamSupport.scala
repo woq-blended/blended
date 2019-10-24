@@ -146,7 +146,9 @@ trait JmsStreamSupport {
     name : String,
     settings : JmsProducerSettings,
     autoAck : Boolean
-  )(implicit materializer : Materializer) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  )(implicit system : ActorSystem) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+
+    implicit val materializer : Materializer = ActorMaterializer()
 
     val f = Flow.fromGraph(new JmsProducerStage(name, settings)).named(name)
 

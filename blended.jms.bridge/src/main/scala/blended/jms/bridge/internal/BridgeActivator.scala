@@ -68,7 +68,7 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
             cfg = osgiCfg.config,
             internalCf = cf,
             idSvc = osgiCfg.idSvc,
-            streamsCfg = streamsCfg.copy(onFailureOnly = false),
+            streamsCfg = streamsCfg,
             streamBuilderFactory = streamBuilderFactory
           )
 
