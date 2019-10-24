@@ -25,7 +25,7 @@ class StreamKeepAliveProducerFactory(
     log = log(bcf),
     headerCfg = FlowHeaderConfig.create(idSvc),
     connectionFactory = bcf,
-    jmsDestination = Some(JmsDestination.create(bcf.config.pingDestination).get),
+    jmsDestination = Some(JmsDestination.create(bcf.config.keepAliveDestination).get),
     timeToLive = Some(bcf.config.keepAliveInterval)
   )
 
@@ -33,7 +33,7 @@ class StreamKeepAliveProducerFactory(
     log = log(bcf),
     headerCfg = FlowHeaderConfig.create(idSvc),
     connectionFactory = bcf,
-    jmsDestination = Some(JmsDestination.create(bcf.config.pingDestination).get),
+    jmsDestination = Some(JmsDestination.create(bcf.config.keepAliveDestination).get),
     receiveLogLevel = LogLevel.Debug,
     acknowledgeMode = AcknowledgeMode.AutoAcknowledge,
     selector = Some(s"JMSCorrelationID = '${corrId(bcf)}'")

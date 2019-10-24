@@ -5,7 +5,6 @@ import blended.jms.utils.{BlendedJMSConnectionConfig, ConnectionConfig}
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 import org.apache.activemq.ActiveMQConnectionFactory
-import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
@@ -17,9 +16,10 @@ case class BrokerConfig(
   override val keepAliveEnabled : Boolean,
   override val maxKeepAliveMissed : Int,
   override val keepAliveInterval : FiniteDuration,
+  override val keepAliveReceiveOnly : Boolean,
   override val retryInterval : FiniteDuration,
   override val connectTimeout: FiniteDuration,
-  override val pingDestination : String,
+  override val keepAliveDestination : String,
   override val minReconnect : FiniteDuration,
   override val maxReconnectTimeout : Option[FiniteDuration],
   override val properties : Map[String, String],
@@ -86,7 +86,8 @@ object BrokerConfig {
       keepAliveInterval = jmsConfig.keepAliveInterval,
       retryInterval = jmsConfig.retryInterval,
       connectTimeout = jmsConfig.connectTimeout,
-      pingDestination = jmsConfig.pingDestination,
+      keepAliveDestination = jmsConfig.keepAliveDestination,
+      keepAliveReceiveOnly = jmsConfig.keepAliveReceiveOnly,
       minReconnect = jmsConfig.minReconnect,
       maxReconnectTimeout = jmsConfig.maxReconnectTimeout,
       properties = jmsConfig.properties,
