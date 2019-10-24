@@ -168,7 +168,9 @@ final class JmsProducerStage(
         provider = producerSettings.connectionFactory.provider
       ){ event => event.state.status match {
         case Disconnected =>
-          val t : Throwable = new Exception(s"Underlying JMS connection closed for [$id]")
+          val msg : String = s"Underlying JMS connection closed for [$id]"
+          producerSettings.log.warn(msg)
+          val t : Throwable = new Exception(msg)
           handleError.invoke(t)
         case _ =>
       }})
