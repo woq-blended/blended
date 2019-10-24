@@ -11,7 +11,6 @@ import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.streams.internal.BlendedStreamsConfigImpl
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
@@ -54,7 +53,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
   protected implicit val ectxt : ExecutionContext = system.dispatcher
 
   protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
-  protected val streamsConfig : BlendedStreamsConfig = BlendedStreamsConfigImpl(idSvc)
+  protected val streamsConfig : BlendedStreamsConfig = BlendedStreamsConfig.create(idSvc)
 
   val prefix : String = "spec"
 

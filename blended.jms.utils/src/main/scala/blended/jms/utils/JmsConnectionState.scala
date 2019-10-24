@@ -33,3 +33,5 @@ case class ConnectionState(
     s" firstReconnectAttempt=$firstReconnectAttempt, lastConnectAttempt=$lastConnectAttempt)"
 }
 //scalastyle:on magic.number
+
+

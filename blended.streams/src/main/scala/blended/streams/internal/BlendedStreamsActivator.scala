@@ -41,7 +41,7 @@ class BlendedStreamsActivator extends DominoActivator
 
       tMgr.providesService[FlowTransactionManager]("directory" -> tMgrConfig.dir.getAbsolutePath())
 
-      val streamsCfg : BlendedStreamsConfig = new BlendedStreamsConfigImpl(osgiCfg.idSvc, osgiCfg.config)
+      val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(osgiCfg.idSvc, osgiCfg.config)
       streamsCfg.providesService[BlendedStreamsConfig]
 
       // initialise the JMS keep alive streams

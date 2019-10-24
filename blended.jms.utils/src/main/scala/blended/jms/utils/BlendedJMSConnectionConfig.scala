@@ -29,7 +29,6 @@ object BlendedJMSConnectionConfig {
     defaultUser = None,
     defaultPassword = None,
     keepAliveDestination = "topic:blended.ping",
-    keepAliveReceiveOnly = false,
     properties = Map.empty,
     useJndi = false,
     jndiName = None,
@@ -60,8 +59,6 @@ object BlendedJMSConnectionConfig {
     val defaultUser : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_USER).map { u => stringResolver(u).get }.map(_.toString)
     val defaultPasswd : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_PWD).map { p => stringResolver(p).get }.map(_.toString)
     val destination : Config => String = cfg => cfg.getString("destination", defaultConfig.keepAliveDestination)
-
-    val pingReceiveOnly : Config => Boolean = cfg => cfg.getBoolean("pingReceiveOnly", false)
 
     val properties : (String => Try[Any]) => Config => Try[Map[String, String]] = stringResolver => cfg => Try {
       ConfigPropertyMapConverter.getKeyAsPropertyMap(cfg, "properties", Option(() => defaultConfig.properties))
@@ -99,7 +96,6 @@ object BlendedJMSConnectionConfig {
       defaultUser = defaultUser(cfg),
       defaultPassword = defaultPasswd(cfg),
       keepAliveDestination = destination(cfg),
-      keepAliveReceiveOnly = pingReceiveOnly(cfg),
       properties = properties(stringResolver)(cfg).get,
       jndiName = jndiName(cfg),
       useJndi = useJndi(cfg),
@@ -128,7 +124,6 @@ case class BlendedJMSConnectionConfig(
   override val defaultUser : Option[String],
   override val defaultPassword : Option[String],
   override val keepAliveDestination : String,
-  override val keepAliveReceiveOnly : Boolean,
   override val properties : Map[String, String],
   override val useJndi : Boolean,
   override val jndiName : Option[String] = None,

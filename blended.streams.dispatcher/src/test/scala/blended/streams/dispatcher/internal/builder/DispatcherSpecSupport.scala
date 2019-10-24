@@ -10,7 +10,7 @@ import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.BlendedStreamsConfig
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
-import blended.streams.internal.{BlendedStreamsActivator, BlendedStreamsConfigImpl}
+import blended.streams.internal.BlendedStreamsActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -90,7 +90,7 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
       timeout = 3.seconds
     )
 
-    val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfigImpl(idSvc)
+    val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(idSvc)
 
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
       clazz = ClassTag(classOf[ActorSystem]),

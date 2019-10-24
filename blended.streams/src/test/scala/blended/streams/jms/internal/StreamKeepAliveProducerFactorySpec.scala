@@ -13,15 +13,14 @@ import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.streams.BlendedStreamsConfig
-import blended.streams.internal.BlendedStreamsConfigImpl
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.FlowEnvelope
 import blended.testsupport.BlendedTestSupport
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 
 import scala.concurrent.{Await, ExecutionContext, Promise}
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.Success
 
 class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
@@ -43,7 +42,7 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
   private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
   private val cf : BlendedSingleConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None).asInstanceOf[BlendedSingleConnectionFactory]
 
-  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfigImpl(idSvc)
+  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(idSvc)
 
   "The stream based keep alive producer should" - {
 
@@ -64,7 +63,7 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
       val p : Promise[MessageReceived] = Promise[MessageReceived]()
 
       val pm = probe.fishForMessage(3.seconds){
-        case pm : ProducerMaterialized => true
+        case _ : ProducerMaterialized => true
         case _ => false
       }.asInstanceOf[ProducerMaterialized]
 

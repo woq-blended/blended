@@ -19,7 +19,6 @@ trait ConnectionConfig {
   val defaultUser : Option[String]
   val defaultPassword : Option[String]
   val keepAliveDestination : String
-  val keepAliveReceiveOnly : Boolean
   val properties : Map[String, String]
   val useJndi : Boolean
   val jndiName : Option[String] = None

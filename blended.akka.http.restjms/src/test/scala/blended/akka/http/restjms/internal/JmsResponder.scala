@@ -66,15 +66,15 @@ class JMSResponder(
       }})
       .via(Flow.fromGraph(new JmsProducerStage("requestor-respond", producerSettings)))
 
-    val streamCfg : BlendedStreamsConfig = new BlendedStreamsConfig {
-      override def transactionShard: Option[String] = None
-      override def minDelay: FiniteDuration = 1.second
-      override def maxDelay: FiniteDuration = 1.second
-      override def exponential: Boolean = false
-      override def random: Double = 0.1
-      override def onFailureOnly: Boolean = true
-      override def resetAfter: FiniteDuration = 1.second
-    }
+    val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig(
+      transactionShard = None,
+      minDelay = 1.second,
+      maxDelay = 1.second,
+      exponential = false,
+      random = 0.1,
+      onFailureOnly = true,
+      resetAfter = 1.second
+    )
     log.info("Starting JMS Responder")
 
     streamActor = Some(system.actorOf(StreamController.props[FlowEnvelope, NotUsed]("jmsResponder", src, streamCfg)(onMaterialize = _ => {} )))
