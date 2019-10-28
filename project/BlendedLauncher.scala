@@ -21,6 +21,13 @@ object BlendedLauncher extends ProjectFactory {
       Dependencies.logbackCore,
       Dependencies.logbackClassic,
       Dependencies.commonsDaemon,
+      Dependencies.splunkjava,
+      Dependencies.httpCore,
+      Dependencies.httpCoreNio,
+      Dependencies.httpComponents,
+      Dependencies.httpAsync,
+      Dependencies.commonsLogging,
+      Dependencies.jsonSimple,
 
       Dependencies.scalatest % "test"
     ),
@@ -59,7 +66,14 @@ object BlendedLauncher extends ProjectFactory {
         "scala.library.version" -> Dependencies.scalaVersion,
         "typesafe.config.version" -> Dependencies.typesafeConfig.revision,
         "slf4j.version" -> Dependencies.slf4jVersion,
-        "logback.version" -> Dependencies.logbackClassic.revision
+        "logback.version" -> Dependencies.logbackClassic.revision,
+        "splunkjava.version" -> Dependencies.splunkjava.revision,
+        "httpcore.version" -> Dependencies.httpCore.revision,
+        "httpcorenio.version" -> Dependencies.httpCoreNio.revision,
+        "httpcomponents.version" -> Dependencies.httpComponents.revision,
+        "httpasync.version" -> Dependencies.httpAsync.revision,
+        "commonslogging.version" -> Dependencies.commonsLogging.revision,
+        "jsonsimple.version" -> Dependencies.jsonSimple.revision
       ),
       Test / resourceGenerators += Def.task {
         val frameworks: Seq[ModuleID] = Seq(

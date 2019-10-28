@@ -122,6 +122,17 @@ trait Dependencies {
   val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
   val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
   val snakeyaml = "org.yaml" % "snakeyaml" % "1.18"
+
+  // libs for splunk support via HEC
+  val splunkjava = "com.splunk.logging" % "splunk-library-javalogging" % "1.7.3"
+  val httpCore = "org.apache.httpcomponents" % "httpcore" % "4.4.9"
+  val httpCoreNio = "org.apache.httpcomponents" % "httpcore" % "4.4.6"
+  val httpComponents = "org.apache.httpcomponents" % "httpclient" % "4.5.5"
+  val httpAsync = "org.apache.httpcomponents" % "httpasyncclient" % "4.1.3"
+  val commonsLogging = "commons-logging" % "commons-logging" % "1.2"
+  val jsonSimple = "com.googlecode.json-simple" % "json-simple" % "1.1.1"
+  // -------------- end of splunk libs -----------------------------------------
+
   val sprayJson = "io.spray" %% s"spray-json" % sprayVersion
 
   //  protected def spring(n: String) = "org.springframework" % s"spring-${n}" % springVersion

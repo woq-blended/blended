@@ -16,6 +16,7 @@ object CommonSettings {
 
     resolvers ++= Seq(
       Resolver.sonatypeRepo("snapshots"),
+      "Spring IO Releases" at "https://repo.spring.io/libs-release",
       "Maven2 Local" at m2Repo
     ),
 
