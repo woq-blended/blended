@@ -20,7 +20,7 @@ object FlowProcessor {
     Flow.fromFunction[FlowEnvelope, Either[FlowEnvelope, T]] { env =>
       env.exception match {
         case None =>
-          log.info(s"Starting function [${env.id}]:[$name]")
+          log.debug(s"Starting function [${env.id}]:[$name]")
           val start = System.currentTimeMillis()
           f(env) match {
             case Success(s) =>
@@ -43,12 +43,12 @@ object FlowProcessor {
 
       env.exception match {
         case None =>
-          log.debug(s"Starting Integrationstep [${env.id}]:[$name]")
+          log.debug(s"Starting Integration step [${env.id}]:[$name]")
           val start = System.currentTimeMillis()
 
           val result = f(env) match {
             case Success(s) =>
-              log.info(s"Integration step [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
+              log.debug(s"Integration step [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
               s
 
             case Failure(t) =>

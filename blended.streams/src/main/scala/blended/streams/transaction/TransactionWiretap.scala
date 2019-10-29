@@ -9,7 +9,7 @@ import blended.streams.FlowHeaderConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.worklist.WorklistStateCompleted
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 import javax.jms.Session
 
 import scala.util.Try
@@ -89,7 +89,8 @@ class TransactionWiretap(
         connectionFactory = cf,
         destinationResolver = s => new TransactionDestinationResolver(s, JmsDestination.asString(eventDest)),
         deliveryMode = JmsDeliveryMode.Persistent,
-        jmsDestination = None
+        jmsDestination = None,
+        sendLogLevel = LogLevel.Debug
       )
 
       val producer = b.add(jmsProducer(

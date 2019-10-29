@@ -52,7 +52,7 @@ abstract class AbstractFileSourceSpec extends SimplePojoContainerSpec
 
     def pollFiles(t : FiniteDuration) : List[FlowEnvelope] = {
       val src : Source[FlowEnvelope, NotUsed] =
-        Source.fromGraph(new FileAckSource(pollCfg))
+        Source.fromGraph(new FileAckSource(pollCfg, log))
           .via(FlowProcessor.fromFunction("event", log){ env => Try {
             system.eventStream.publish(FilePolled(env))
             env

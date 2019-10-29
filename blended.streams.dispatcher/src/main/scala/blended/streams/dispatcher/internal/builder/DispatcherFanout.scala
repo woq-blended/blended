@@ -59,9 +59,9 @@ case class DispatcherFanout(
 
             val s = s"using header for [${env.id}]:[outboundMsg] block with expression [$c]"
             if (use) {
-              bs.streamLogger.info(s)
+              bs.streamLogger.debug(s)
             } else {
-              bs.streamLogger.info("Not " + s )
+              bs.streamLogger.debug("Not " + s )
             }
             use
         }

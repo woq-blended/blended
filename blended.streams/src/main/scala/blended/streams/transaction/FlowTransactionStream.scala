@@ -9,7 +9,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
 import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -69,7 +69,8 @@ class FlowTransactionStream(
       headerCfg = headerCfg,
       connectionFactory = cf,
       jmsDestination = Some(JmsTopic(s"${headerCfg.prefix}.topic.transactions")),
-      clearPreviousException = true
+      clearPreviousException = true,
+      sendLogLevel = LogLevel.Debug
     )
 
     jmsProducer("logToJms", settings, false)

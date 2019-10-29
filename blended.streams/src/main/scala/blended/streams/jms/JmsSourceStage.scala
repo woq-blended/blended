@@ -93,7 +93,10 @@ class JmsSourceStage(
                       s
                   }
 
-                  log.debug(s"Message received for [$envelopeId][${settings.jmsDestination.map(_.asString)}] [$id] : $flowMessage")
+                  settings.log.log(
+                    settings.receiveLogLevel,
+                    s"Message received for [$envelopeId][${settings.jmsDestination.map(_.asString)}] [$id] : $flowMessage"
+                  )
 
                   handleMessage.invoke(
                     FlowEnvelope(

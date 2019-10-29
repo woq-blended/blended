@@ -1,6 +1,5 @@
 package blended.streams.processor
 
-import akka.Done
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.scaladsl.Sink
 import blended.util.logging.Logger
@@ -52,7 +51,7 @@ class CollectingActor[T](
       sender() ! messages.toList
 
     case CollectingActor.Completed =>
-      log.info(s"Completing Collector [$name] with [${messages.size}] messages.")
+      log.debug(s"Completing Collector [$name] with [${messages.size}] messages.")
       promise.complete(Success(messages.toList))
 
     case msg : T =>

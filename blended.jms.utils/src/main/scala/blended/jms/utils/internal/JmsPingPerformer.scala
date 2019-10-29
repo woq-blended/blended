@@ -224,7 +224,7 @@ class JmsPingPerformer(config: ConnectionConfig, con: Connection, operations: Pi
           context.become(pinging(pingActor).orElse(timeoutHandler(pingActor)))
           self ! Tick
         case Some(t) =>
-          log.info(s"Failed to initialise ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [$pingId]")
+          log.warning(s"Failed to initialise ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [$pingId]")
           respond(PingFailed(t), pingActor)
       }
   }

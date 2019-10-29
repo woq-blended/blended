@@ -137,7 +137,7 @@ final case class JmsProducerSettings(
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
   sessionCount: Int = 1,
-  // Should we evaluate the mesage for send parameters ?
+  // Should we evaluate the message for send parameters ?
   destinationResolver  : JmsProducerSettings => JmsDestinationResolver = s => new SettingsDestinationResolver(s),
   // the priority to used as default
   priority : Int = 4,
@@ -148,7 +148,8 @@ final case class JmsProducerSettings(
   // A factory for correlation Ids in case no Correlation Id is set in the message
   correlationId : () => Option[String] = () => None,
   sessionRecreateTimeout : FiniteDuration = 100.millis,
-  clearPreviousException : Boolean = false
+  clearPreviousException : Boolean = false,
+  sendLogLevel : LogLevel = LogLevel.Info
 ) extends JmsSettings {
 
   def withDestinationResolver(f : JmsProducerSettings => JmsDestinationResolver) : JmsProducerSettings = copy(destinationResolver = f)

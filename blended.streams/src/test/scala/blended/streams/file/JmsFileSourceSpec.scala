@@ -147,7 +147,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
       prepareDirectory(pollCfg.sourceDir)
 
-      val src : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new FileAckSource(pollCfg))
+      val src : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new FileAckSource(pollCfg, log))
         .via(jmsProducer(s"$name.send", producerSettings(cf, destName), autoAck = true))
 
       val ctrlConfig : StreamControllerConfig = StreamControllerConfig(

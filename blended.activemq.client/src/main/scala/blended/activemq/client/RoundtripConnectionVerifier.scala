@@ -10,7 +10,7 @@ import blended.streams.jms.{JmsEnvelopeHeader, JmsProducerSettings, JmsStreamSup
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
 import blended.streams.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -58,7 +58,8 @@ class RoundtripConnectionVerifier(
       connectionFactory = cf,
       jmsDestination = Some(requestDest),
       timeToLive = Some(receiveTimeout * 2),
-      destinationResolver = s => new MessageDestinationResolver(s)
+      destinationResolver = s => new MessageDestinationResolver(s),
+      sendLogLevel = LogLevel.Debug
     )
 
     log.info(s"Running verification probe for connection [${cf.vendor}:${cf.provider}]")

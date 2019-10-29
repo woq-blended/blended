@@ -102,7 +102,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
         destination = dest,
         deliveryMode = JmsDeliveryMode.Persistent,
         priority = settings.priority,
-        ttl = settings.timeToLive
+        ttl = settings.timeToLive,
       )
     }
   }
@@ -131,7 +131,8 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
       destinationResolver = s => new RetryDestinationResolver(retryCfg.headerCfg, s, router.validate),
       deliveryMode = JmsDeliveryMode.Persistent,
       timeToLive = None,
-      clearPreviousException = true
+      clearPreviousException = true,
+      sendLogLevel = LogLevel.Debug
     )
 
     jmsProducer(

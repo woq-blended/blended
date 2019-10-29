@@ -12,7 +12,7 @@ import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
 import blended.streams.{BlendedStreamsConfig, StreamController, StreamControllerConfig}
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 
 import scala.collection.mutable
 import scala.util.Try
@@ -69,7 +69,8 @@ class RunnableDispatcher(
         jmsDestination = None,
         deliveryMode = JmsDeliveryMode.Persistent,
         priority = 4,
-        timeToLive = None
+        timeToLive = None,
+        sendLogLevel = LogLevel.Debug
       )
 
       val producer = b.add(jmsProducer(
@@ -183,7 +184,7 @@ class RunnableDispatcher(
         // the proper JMS destination
         val actor : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg))
 
-        bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
+        bs.streamLogger.debug(s"Started dispatcher flow for provider [${provider.id}]")
         startedDispatchers.put(provider.id, actor)
       }
     } catch {
