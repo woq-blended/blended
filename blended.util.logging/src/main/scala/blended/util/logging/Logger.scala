@@ -107,7 +107,7 @@ object Logger {
 
   def setProps(props: Map[String, String]) : Unit = synchronized {
     props.foreach{ case (k,v) => mdcPropsMut.put(k,v) }
-    mdcMapIntern = mdcProps.toMap
+    mdcMapIntern = mdcPropsMut.toMap
   }
 
   def clearMdc() : Unit = synchronized {

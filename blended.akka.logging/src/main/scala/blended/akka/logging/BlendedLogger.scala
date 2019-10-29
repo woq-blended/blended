@@ -1,4 +1,4 @@
-package blended.akka.slf4j
+package blended.akka.logging
 
 import akka.actor.{Actor, ActorSystem}
 import akka.dispatch.RequiresMessageQueue
