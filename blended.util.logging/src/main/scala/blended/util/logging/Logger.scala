@@ -5,6 +5,8 @@ import java.util.{logging => jul}
 import scala.reflect.ClassTag
 import org.slf4j
 
+import scala.collection.mutable
+
 object LogLevel extends Enumeration {
 
   type LogLevel = Value
@@ -22,6 +24,18 @@ trait Logger extends Serializable {
   def isInfoEnabled: Boolean = false
   def isDebugEnabled: Boolean = false
   def isTraceEnabled: Boolean = false
+
+  def errorMdc(mdc : Map[String, String])(msg: => String) : Unit = error(msg)
+  def warnMdc(mdc : Map[String, String])(msg: => String) : Unit = warn(msg)
+  def infoMdc(mdc : Map[String, String])(msg: => String) : Unit = info(msg)
+  def debugMdc(mdc : Map[String, String])(msg: => String) : Unit = debug(msg)
+  def traceMdc(mdc : Map[String, String])(msg: => String) : Unit = trace(msg)
+
+  def errorMdc(e: Throwable)(mdc : Map[String, String])(msg: => String) : Unit = error(e)(msg)
+  def warnMdc(e: Throwable)(mdc : Map[String, String])(msg: => String) : Unit = warn(e)(msg)
+  def infoMdc(e: Throwable)(mdc : Map[String, String])(msg: => String) : Unit = info(e)(msg)
+  def debugMdc(e: Throwable)(mdc : Map[String, String])(msg: => String) : Unit = debug(e)(msg)
+  def traceMdc(e: Throwable)(mdc : Map[String, String])(msg: => String) : Unit = trace(e)(msg)
 
   def error(msg: => String): Unit = {}
   def warn(msg: => String): Unit = {}
@@ -59,6 +73,9 @@ trait Logger extends Serializable {
  */
 object Logger {
 
+  private[this] val mdcPropsMut : mutable.Map[String, String] = mutable.Map.empty[String, String]
+  private[this] var mdcMapIntern : Map[String, String] = Map.empty
+
   /**
    * Create a Logger instance by deriving the logger name from the fully qualified class name.
    */
@@ -84,6 +101,17 @@ object Logger {
             new LoggerNoOp(name)
         }
     }
+  }
+
+  def mdcProps : Map[String, String] = mdcMapIntern
+
+  def setProps(props: Map[String, String]) : Unit = synchronized {
+    props.foreach{ case (k,v) => mdcPropsMut.put(k,v) }
+    mdcMapIntern = mdcProps.toMap
+  }
+
+  def clearMdc() : Unit = synchronized {
+    mdcPropsMut.clear()
   }
 }
 
