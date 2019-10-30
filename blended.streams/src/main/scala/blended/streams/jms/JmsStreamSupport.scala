@@ -5,13 +5,13 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 import akka.{Done, NotUsed}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
-import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink, Source}
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.StreamFactories
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.{AckProcessor, Collector}
 import blended.streams.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -83,7 +83,7 @@ trait JmsStreamSupport {
 
   def sendMessages(
     producerSettings: JmsProducerSettings,
-    log : Logger,
+    log : FlowEnvelopeLogger,
     msgs : FlowEnvelope*
   )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext): Try[KillSwitch] = {
 
@@ -103,7 +103,7 @@ trait JmsStreamSupport {
     headerCfg : FlowHeaderConfig,
     cf : IdAwareConnectionFactory,
     dest : JmsDestination,
-    log : Logger,
+    log : FlowEnvelopeLogger,
     listener : Integer = 2,
     minMessageDelay : Option[FiniteDuration] = None,
     selector : Option[String] = None
@@ -116,7 +116,7 @@ trait JmsStreamSupport {
     }
 
     val collected : FlowEnvelope => Unit = { env =>
-      log.debug(s"Acknowledging envelope [${env.id}]")
+      log.logEnv(env, LogLevel.Debug, s"Acknowledging envelope [${env.id}]")
       env.acknowledge()
     }
 

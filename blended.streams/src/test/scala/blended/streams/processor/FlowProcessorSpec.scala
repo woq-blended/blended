@@ -4,9 +4,9 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestKit
-import blended.streams.FlowProcessor
+import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.streams.FlowProcessor.IntegrationStep
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
@@ -21,6 +21,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
   with Matchers {
 
   private val log = Logger[FlowProcessorSpec]
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create("App"), log)
 
   private implicit val materializer = ActorMaterializer()
 
@@ -29,12 +30,12 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
     FlowEnvelope(FlowMessage("Testmessage")(header)).withRequiresAcknowledge(true)
   }
 
-  val same = new FlowProcessor {
+  private val same = new FlowProcessor {
     override val name: String = "identity"
     override val f: IntegrationStep = env => Success(env)
   }
 
-  val faulty = new FlowProcessor {
+  private val faulty = new FlowProcessor {
     override val name: String = "faulty"
     override val f: IntegrationStep = env => Failure(new Exception("Boom"))
   }
@@ -44,7 +45,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
     "process a a simple Intgration step correctly" in {
 
       val flow = Source.single(msg)
-        .via(same.flow(log))
+        .via(same.flow(envLogger))
         .runWith(Sink.seq)
 
       Await.result(flow, 1.second) match {
@@ -57,7 +58,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
     "process an Exception in an integration step correctly" in {
 
       val flow = Source.single(msg)
-        .via(faulty.flow(log))
+        .via(faulty.flow(envLogger))
         .runWith(Sink.seq)
 
       Await.result(flow, 1.second) match {

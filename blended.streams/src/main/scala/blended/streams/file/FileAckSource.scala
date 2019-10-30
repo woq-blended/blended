@@ -8,10 +8,10 @@ import java.util.{Date, UUID}
 import akka.actor.ActorSystem
 import akka.stream.stage.{GraphStage, GraphStageLogic}
 import akka.stream.{Attributes, Outlet, SourceShape}
-import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
+import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
 import blended.util.FileHelper
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel
 
 import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
@@ -43,7 +43,7 @@ object FileAckSource {
 
 class FileAckSource(
   pollCfg : FilePollConfig,
-  logger : Logger
+  logger : FlowEnvelopeLogger
 )(implicit system : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val pollId : String =  s"${pollCfg.headerCfg.prefix}.FilePoller.${pollCfg.id}.source"
@@ -64,9 +64,9 @@ class FileAckSource(
     override def id: String = pollId
 
     /** A logger that must be defined by concrete implementations */
-    override protected def log: Logger = logger
+    override protected def log: FlowEnvelopeLogger = logger
 
-    log.debug(s"Initializing FileAckSource with config [$pollCfg], ackTimeout [$ackTimeout]")
+    log.underlying.debug(s"Initializing FileAckSource with config [$pollCfg], ackTimeout [$ackTimeout]")
 
     /** The id's of the available inflight slots */
     override protected def inflightSlots(): List[String] =
@@ -80,7 +80,6 @@ class FileAckSource(
 
         if (f.exists()) {
           val uuid : String = UUID.randomUUID().toString()
-          log.info(s"Processing file [$f] in [$id] with [$uuid]")
 
           val fileToProcess : File = new File(f + pollCfg.tmpExt)
 
@@ -94,8 +93,6 @@ class FileAckSource(
                 case Some(s) => Charset.forName(s)
               }
 
-              log.debug(s"Using charset [${charSet.displayName()}] to create text message.")
-
               FlowMessage(new String(bytes, charSet))(pollCfg.header)
             } else {
               FlowMessage(bytes)(pollCfg.header)
@@ -107,7 +104,7 @@ class FileAckSource(
               .withRequiresAcknowledge(true)
               .withAckHandler(Some(ackHandler))
 
-            log.debug(s"Created Envelope [$env] in [$id]]")
+            log.logEnv(env, LogLevel.Info, s"Created Envelope [$env] in [$id]]")
 
             Some(new FileAckContext(
               inflightId = id,
@@ -136,13 +133,13 @@ class FileAckSource(
     }
 
     override protected def beforeAcknowledge(ackCtxt: FileAckContext): Unit = {
-      log.debug(s"Successfully processed envelope [${ackCtxt.envelope.id}]")
+      log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Successfully processed envelope [${ackCtxt.envelope.id}]")
       pollCfg.backup match {
         case None =>
           if (ackCtxt.fileToProcess.delete()) {
-            log.debug(s"Deleted file for [${ackCtxt.envelope.id}] : [${ackCtxt.fileToProcess}]")
+            log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Deleted file for [${ackCtxt.envelope.id}] : [${ackCtxt.fileToProcess}]")
           } else {
-            log.warn(s"File for [${ackCtxt.envelope.id}] could not be deleted : [${ackCtxt.fileToProcess}]")
+            log.logEnv(ackCtxt.envelope, LogLevel.Warn, s"File for [${ackCtxt.envelope.id}] could not be deleted : [${ackCtxt.fileToProcess}]")
           }
         case Some(d) =>
 
@@ -157,15 +154,15 @@ class FileAckSource(
           val fTo : File = new File(backupDir, backupFileName)
 
           if (FileHelper.renameFile(fFrom, fTo)) {
-            log.debug(s"Moved file for [${ackCtxt.envelope.id}] from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
+            log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Moved file for [${ackCtxt.envelope.id}] from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
           } else {
-            log.warn(s"File for [${ackCtxt.envelope.id}] failed to be renamed from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
+            log.logEnv(ackCtxt.envelope, LogLevel.Warn, s"File for [${ackCtxt.envelope.id}] failed to be renamed from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
           }
       }
     }
 
     override protected def beforeDenied(ackCtxt: FileAckContext): Unit = {
-      log.debug(s"Restoring file [${ackCtxt.originalFile}] in [${ackCtxt.inflightId}]")
+      log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Restoring file [${ackCtxt.originalFile}] in [${ackCtxt.inflightId}]")
       FileHelper.renameFile(ackCtxt.fileToProcess, ackCtxt.originalFile)
     }
 
@@ -182,7 +179,7 @@ class FileAckSource(
         }
 
         if (f.exists()) {
-          log.debug(s"Directory for [${pollCfg.id}] is locked with file [${f.getAbsolutePath()}]")
+          log.underlying.debug(s"Directory for [${pollCfg.id}] is locked with file [${f.getAbsolutePath()}]")
           true
         } else {
           false

@@ -2,8 +2,9 @@ package blended.streams.jms
 
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue, JmsTopic}
 import blended.streams.FlowHeaderConfig
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.util.logging.LogLevel
 import blended.util.logging.LogLevel.LogLevel
-import blended.util.logging.{LogLevel, Logger}
 import javax.jms
 import javax.jms.Session
 
@@ -84,11 +85,15 @@ sealed trait JmsSettings {
   val headerCfg : FlowHeaderConfig
 
   // A logger, so that it can be injected rather than being created based on the classname only
-  val log : Logger
+  val log : FlowEnvelopeLogger
+
+  // Determine the log level for any message received / message sent events from the envelope
+  val logLevel : FlowEnvelope => LogLevel
 }
 
 final case class JMSConsumerSettings(
-  override val log: Logger,
+  override val log: FlowEnvelopeLogger,
+  override val logLevel: FlowEnvelope => LogLevel = _ => LogLevel.Info,
   override val headerCfg : FlowHeaderConfig,
   connectionFactory: IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
@@ -98,7 +103,6 @@ final case class JMSConsumerSettings(
   pollInterval : FiniteDuration = 100.millis,
   acknowledgeMode: AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
   bufferSize: Int = 100,
-  receiveLogLevel : LogLevel = LogLevel.Info,
   selector: Option[String] = None,
   ackTimeout: FiniteDuration = 1.second,
   durableName: Option[String] = None,
@@ -121,7 +125,7 @@ final case class JMSConsumerSettings(
 
 object JMSConsumerSettings {
   def create(
-    log : Logger,
+    log : FlowEnvelopeLogger,
     cf: IdAwareConnectionFactory,
     headerConfig: FlowHeaderConfig
   ) : JMSConsumerSettings =
@@ -131,7 +135,8 @@ object JMSConsumerSettings {
 }
 
 final case class JmsProducerSettings(
-  override val log : Logger,
+  override val log : FlowEnvelopeLogger,
+  override val logLevel: FlowEnvelope => LogLevel = _ => LogLevel.Info,
   override val headerCfg : FlowHeaderConfig,
   connectionFactory: IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
@@ -148,8 +153,7 @@ final case class JmsProducerSettings(
   // A factory for correlation Ids in case no Correlation Id is set in the message
   correlationId : () => Option[String] = () => None,
   sessionRecreateTimeout : FiniteDuration = 100.millis,
-  clearPreviousException : Boolean = false,
-  sendLogLevel : LogLevel = LogLevel.Info
+  clearPreviousException : Boolean = false
 ) extends JmsSettings {
 
   def withDestinationResolver(f : JmsProducerSettings => JmsDestinationResolver) : JmsProducerSettings = copy(destinationResolver = f)
@@ -175,6 +179,6 @@ final case class JmsProducerSettings(
 
 object JmsProducerSettings {
 
-  def create(log : Logger, connectionFactory: IdAwareConnectionFactory, headerConfig : FlowHeaderConfig) : JmsProducerSettings =
+  def create(log : FlowEnvelopeLogger, connectionFactory: IdAwareConnectionFactory, headerConfig : FlowHeaderConfig) : JmsProducerSettings =
     JmsProducerSettings(log = log, headerCfg = headerConfig, connectionFactory = connectionFactory)
 }

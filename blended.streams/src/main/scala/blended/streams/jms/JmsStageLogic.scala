@@ -39,13 +39,13 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
 
   // async callback, so that downstream flow elements can signal an error
   private[jms] val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
-    settings.log.error(t)(s"Failing stage [$id] : [${t.getMessage()}]")
+    settings.log.underlying.error(t)(s"Failing stage [$id] : [${t.getMessage()}]")
     failStage(t)
   }
 
   // Start the configured sessions
   override def preStart(): Unit = {
-    settings.log.debug(s"Starting JMS Stage [$id] with [$jmsSettings]")
+    settings.log.underlying.debug(s"Starting JMS Stage [$id] with [$jmsSettings]")
 
     materializer match {
       case am : ActorMaterializer =>
@@ -67,14 +67,14 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
             try {
               connection.close()
             } catch {
-              case NonFatal(e) => settings.log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
+              case NonFatal(e) => settings.log.underlying.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
             } finally {
               // By this time, after stopping the connection, closing sessions, all async message submissions to this
               // stage should have been invoked. We invoke markStopped as the last item so it gets delivered after
               // all JMS messages are delivered. This will allow the stage to complete after all pending messages
               // are delivered, thus preventing message loss due to premature stage completion.
               markStopped.invoke(Done)
-              settings.log.debug(s"Successfully closed all sessions for Jms stage [$id][$settings]")
+              settings.log.underlying.debug(s"Successfully closed all sessions for Jms stage [$id][$settings]")
             }
           case _ =>
         }
@@ -91,7 +91,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   }
 
   override def postStop(): Unit = {
-    settings.log.debug(s"Performing Post Stop for [$id]")
+    settings.log.underlying.debug(s"Performing Post Stop for [$id]")
     stopSessions()
   }
 }

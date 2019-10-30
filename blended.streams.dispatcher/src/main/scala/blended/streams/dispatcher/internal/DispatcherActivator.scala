@@ -8,6 +8,7 @@ import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.BlendedStreamsConfig
 import blended.streams.dispatcher.internal.builder.{DispatcherBuilderSupport, RunnableDispatcher}
 import blended.streams.jms._
+import blended.streams.message.FlowEnvelopeLogger
 import blended.streams.transaction.FlowTransactionManager
 import blended.util.logging.Logger
 import com.typesafe.config.Config
@@ -29,13 +30,11 @@ class DispatcherActivator extends DominoActivator
               val internalProvider = registry.internalProvider.get
               log.info(s"Initializing Dispatcher with internal connection factory [${internalProvider.id}]")
 
-              val bs = new DispatcherBuilderSupport {
-                override def containerConfig: Config = cfg.idSvc.containerContext.getContainerConfig()
-
-                override val streamLogger: Logger = Logger(headerConfig.prefix + ".dispatcher")
-              }
-
               whenAdvancedServicePresent[IdAwareConnectionFactory](internalProvider.osgiBrokerFilter) { cf =>
+
+                val bs = new DispatcherBuilderSupport {
+                  override def containerConfig: Config = cfg.idSvc.containerContext.getContainerConfig()
+                }
 
                 implicit val system: ActorSystem = cfg.system
                 implicit val materializer: Materializer = ActorMaterializer()

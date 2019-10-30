@@ -7,7 +7,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestKit
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwareConnectionFactory}
 import blended.streams.StreamFactories
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.Collector
 import blended.streams.FlowHeaderConfig
 import blended.testsupport.RequiresForkedJVM
@@ -61,6 +61,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
   private implicit val eCtxt : ExecutionContext = system.dispatcher
 
   private val log : Logger = Logger[JmsAckSourceSpec]
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   val envelopes : Int => Seq[FlowEnvelope] = msgCount => 1.to(msgCount).map { i =>
     FlowEnvelope().withHeader("msgNo", i).get
@@ -77,7 +78,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
     val dest = JmsDestination.create(destName).get
 
     JMSConsumerSettings(
-      log = log,
+      log = envLogger,
       headerCfg = headerCfg,
       connectionFactory = amqCf,
       jmsDestination = Some(dest),
@@ -87,7 +88,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
   }
 
   private val producerSettings : String => JmsProducerSettings = destName => JmsProducerSettings(
-    log = log,
+    log = envLogger,
     headerCfg = headerCfg,
     connectionFactory = amqCf,
     jmsDestination = Some(JmsDestination.create(destName).get)
@@ -117,7 +118,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
       sendMessages(
         pSettings,
-        log,
+        envLogger,
         envelopes(msgCount):_*
       ) match {
         case Success(s) =>
@@ -148,7 +149,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
       sendMessages(
         pSettings,
-        log,
+        envLogger,
         envelopes(msgCount):_*
       ) match {
         case Success(s) =>

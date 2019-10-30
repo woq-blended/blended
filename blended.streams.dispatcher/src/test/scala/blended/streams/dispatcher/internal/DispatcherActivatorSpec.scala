@@ -63,7 +63,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
     val collectors = dest.map{ d =>
       receiveMessages(
-        headerCfg = ctxt.bs.headerConfig, cf = cf, dest = d, Logger(loggerName)
+        headerCfg = ctxt.bs.headerConfig, cf = cf, dest = d, ctxt.envLogger
       )
     }
 
@@ -76,7 +76,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
       val logSink = Flow[ILoggingEvent]
         .filter{ event =>
-          event.getLevel() == Level.INFO
+          event.getLevel() == Level.INFO || event.getLevel() == Level.WARN
         }
         .toMat(Sink.seq[ILoggingEvent])(Keep.right)
 
@@ -86,13 +86,13 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").get
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = Logger(loggerName),
+        log = ctxt.envLogger,
         headerCfg = ctxt.bs.headerConfig,
         connectionFactory = sonic,
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
 
-      val switch = sendMessages(pSettings, Logger(loggerName), env).get
+      val switch = sendMessages(pSettings, ctxt.envLogger, env).get
 
       val results = getResults(
         cf = sonic,
@@ -132,13 +132,13 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoCbe").get
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = Logger(loggerName),
-        ctxt.bs.headerConfig,
+        log = ctxt.envLogger,
+        headerCfg = ctxt.bs.headerConfig,
         connectionFactory = sonic,
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
 
-      val switch = sendMessages(pSettings, Logger(loggerName), env).get
+      val switch = sendMessages(pSettings, ctxt.envLogger, env).get
 
       val results = getResults(
         cf = sonic,

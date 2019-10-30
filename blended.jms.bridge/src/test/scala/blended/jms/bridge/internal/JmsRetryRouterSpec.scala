@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import blended.jms.utils.{IdAwareConnectionFactory, SimpleIdAwareConnectionFactory}
 import blended.streams.FlowHeaderConfig
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -18,6 +18,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
 
   private[this] val log : Logger = Logger[JmsRetryRouterSpec]
   private[this] val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(prefix = "spec")
+  private[this] val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   private[this] val amqCf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
     vendor = "amq",
@@ -44,7 +45,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val router : JmsRetryRouter = new JmsRetryRouter(
         name = "spec",
         retryCfg = retryCfg.copy(maxRetries = maxRetries),
-        log = log
+        log = envLogger
       )
 
       intercept[RetryCountExceededException] {
@@ -61,7 +62,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val router : JmsRetryRouter = new JmsRetryRouter(
         name = "spec",
         retryCfg = retryCfg.copy(retryTimeout = (timeout / 2).millis),
-        log = log
+        log = envLogger
       )
 
       intercept[RetryTimeoutException] {
@@ -76,7 +77,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val router : JmsRetryRouter = new JmsRetryRouter(
         name = "spec",
         retryCfg = retryCfg,
-        log = log
+        log = envLogger
       )
 
       intercept[MissingRetryDestinationException] {
@@ -89,7 +90,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val router : JmsRetryRouter = new JmsRetryRouter(
         name = "spec",
         retryCfg = retryCfg,
-        log = log
+        log = envLogger
       )
 
       val env : FlowEnvelope = FlowEnvelope()
@@ -105,7 +106,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val router : JmsRetryRouter = new JmsRetryRouter(
         name = "spec",
         retryCfg = retryCfg,
-        log = log
+        log = envLogger
       )
 
       val env : FlowEnvelope = FlowEnvelope()

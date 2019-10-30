@@ -7,7 +7,7 @@ import akka.stream.{FlowShape, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.FlowHeaderConfig
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.worklist.WorklistStateCompleted
 import blended.util.logging.{LogLevel, Logger}
 import javax.jms.Session
@@ -42,7 +42,7 @@ class TransactionWiretap(
   headerCfg : FlowHeaderConfig,
   inbound : Boolean,
   trackSource : String,
-  log : Logger
+  log : FlowEnvelopeLogger
 )(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
   private[transaction] val createTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
@@ -69,10 +69,9 @@ class TransactionWiretap(
         updateTransaction(env)
       }
 
-      log.debug(s"Generated bridge transaction event [$event]")
+      log.logEnv(env, LogLevel.Debug, s"Generated bridge transaction event [$event]")
       FlowTransactionEvent.event2envelope(headerCfg)(event)
         .withHeader(headerCfg.headerTrackSource, trackSource).get
-
     }
 
     Flow.fromGraph(g)
@@ -90,7 +89,7 @@ class TransactionWiretap(
         destinationResolver = s => new TransactionDestinationResolver(s, JmsDestination.asString(eventDest)),
         deliveryMode = JmsDeliveryMode.Persistent,
         jmsDestination = None,
-        sendLogLevel = LogLevel.Debug
+        logLevel = _ => LogLevel.Debug
       )
 
       val producer = b.add(jmsProducer(
@@ -100,7 +99,7 @@ class TransactionWiretap(
       ))
 
       val switchOffTracking = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-        log.trace(s"About to send envelope [$env]")
+        log.logEnv(env, LogLevel.Trace, s"About to send envelope [$env]")
         env.withHeader(headerCfg.headerTrack, false).get
       })
 

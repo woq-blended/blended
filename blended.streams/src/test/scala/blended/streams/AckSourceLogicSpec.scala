@@ -4,11 +4,11 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.scaladsl.Source
 import akka.stream.stage.{GraphStage, GraphStageLogic}
-import akka.stream.{ActorMaterializer, Attributes, Graph, KillSwitches, Materializer, Outlet, SourceShape}
+import akka.stream.{ActorMaterializer, Attributes, Graph, Materializer, Outlet, SourceShape}
 import akka.testkit.TestKit
-import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
+import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.{AckProcessor, Collector}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
@@ -40,7 +40,7 @@ class CountingAckSource(
     override val id: String = s"CountingAckSource-${System.currentTimeMillis()}"
 
     /** A logger that must be defined by concrete implementations */
-    override protected def log: Logger = Logger[CountingAckSource]
+    override protected def log: FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create("App"), Logger[CountingAckSource])
 
     /** The id's of the available inflight slots */
     override protected def inflightSlots(): List[String] = 1.to(numSlots).map(i => s"Count-$i").toList
@@ -77,6 +77,7 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
   private val numSlots : Int = 10
   private val expectedCnt : Long = numSlots * 2
   private val log : Logger = Logger[AckSourceLogicSpec]
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create("App"), log)
   private implicit val eCtxt : ExecutionContext = system.dispatcher
 
   "The AckSourceLogic should" - {
@@ -118,7 +119,7 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
 
       val s : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(ackSource)
-          .via(FlowProcessor.fromFunction("deny", log){ env => Try { throw new Exception("Boom")}})
+          .via(FlowProcessor.fromFunction("deny", envLogger){ env => Try { throw new Exception("Boom")}})
           .via(new AckProcessor("DenyCounter-ack").flow)
 
       val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, timeout){ env => }

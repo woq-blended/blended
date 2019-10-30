@@ -53,7 +53,7 @@ class CbeFlowSpec extends DispatcherSpecSupport
       headerConfig = ctxt.bs.headerConfig,
       dispatcherCfg = ctxt.cfg,
       internalCf =cf,
-      log = Logger("spec.cbesend")
+      streamLogger = ctxt.envLogger,
     ).build()
   }
 
@@ -75,7 +75,7 @@ class CbeFlowSpec extends DispatcherSpecSupport
     headerCfg = ctxt.bs.headerConfig,
     cf = cf,
     dest = JmsQueue("cbeOut"),
-    Logger(loggerName)
+    log = ctxt.envLogger
   )
 
   "The CBE Flow should" - {

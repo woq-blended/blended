@@ -37,7 +37,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
       GraphDSL.create() { implicit b =>
         import GraphDSL.Implicits._
 
-        val outStep = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, send)(ctxt.bs).outbound())
+        val outStep = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, send, ctxt.envLogger)(ctxt.bs).outbound())
         val out = b.add(outColl.sink)
         val err = b.add(errColl.sink)
 
@@ -138,7 +138,8 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,
           idSvc = ctxt.idSvc,
-          bs = ctxt.bs
+          bs = ctxt.bs,
+          streamLogger = ctxt.envLogger
         )(env).get
 
         routing should be (DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
@@ -163,7 +164,8 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,
           idSvc = ctxt.idSvc,
-          bs = ctxt.bs
+          bs = ctxt.bs,
+          streamLogger = ctxt.envLogger
         )(env).get
 
         routing should be (DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
@@ -186,7 +188,8 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,
           idSvc = ctxt.idSvc,
-          bs = ctxt.bs
+          bs = ctxt.bs,
+          streamLogger = ctxt.envLogger
         )(env).get
 
         routing should be (DispatcherTarget(provider.vendor, provider.provider, JmsDestination.create("centralDest").get))

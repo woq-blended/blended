@@ -9,10 +9,10 @@ import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
 import blended.streams.jms.{JmsDeliveryMode, JmsEnvelopeHeader}
 import blended.streams.message.FlowMessage.FlowMessageProps
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.transaction._
 import blended.streams.worklist._
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 
 class MismatchedEnvelopeException(id : String)
   extends Exception(s"Worklist event [$id] couldn't find the corresponding envelope")
@@ -35,10 +35,11 @@ class JmsDestinationMissing(env: FlowEnvelope, outboundId : String)
 case class DispatcherBuilder(
   idSvc : ContainerIdentifierService,
   dispatcherCfg: ResourceTypeRouterConfig,
-  sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
+  sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
+  envLogger : FlowEnvelopeLogger
 )(implicit val bs : DispatcherBuilderSupport) extends JmsEnvelopeHeader {
 
-  private[this] val logger = Logger[DispatcherBuilder]
+  private[this] val classLogger : Logger = Logger[DispatcherBuilder]
 
   def core(): Graph[FanOutShape3[FlowEnvelope, FlowEnvelope, WorklistEvent, FlowEnvelope], NotUsed] = {
 
@@ -46,7 +47,7 @@ case class DispatcherBuilder(
 
       // This is where we pick up the messages from the source, populate the headers
       // and perform initial checks if the message can be processed
-      val processInbound = builder.add(DispatcherInbound(dispatcherCfg, idSvc))
+      val processInbound = builder.add(DispatcherInbound(dispatcherCfg, idSvc, envLogger))
 
       // The fanout step will produce one envelope per outbound config of the resource type
       // sent in the message. The envelope context will contain the config for the outbound
@@ -55,7 +56,7 @@ case class DispatcherBuilder(
       // The step will also emit a WorklistStarted event if the calculation of the
       // fanout steps was successfull.
       // The step will emit an error envelope if an exception was thrown.
-      val processFanout = builder.add(DispatcherFanout(dispatcherCfg, idSvc).build())
+      val processFanout = builder.add(DispatcherFanout(dispatcherCfg, idSvc, envLogger).build())
 
       // The error splitter pushes all envelopes that have an exception defined to the error sink
       // and all messages without an exception defined to the normal sink
@@ -182,7 +183,7 @@ case class DispatcherBuilder(
       case step : WorklistStepCompleted => None
     }
 
-    bs.streamLogger.debug(s"Transaction update for worklist event [${event.worklist.id}] is [$transEvent]")
+    envLogger.underlying.debug(s"Transaction update for worklist event [${event.worklist.id}] is [$transEvent]")
     (event, transEvent)
   }
 
@@ -193,7 +194,7 @@ case class DispatcherBuilder(
         FlowEnvelope(FlowMessage.noProps, event.worklist.id).withException(new MismatchedEnvelopeException(event.worklist.id))
       case h :: _ =>
         if (h.requiresAcknowledge) {
-          logger.debug(s"Acknowledging envelope [${h.id}]")
+          classLogger.debug(s"Acknowledging envelope [${h.id}]")
           h.acknowledge()
         }
         h
@@ -206,7 +207,7 @@ case class DispatcherBuilder(
 
       // The worklist Manager will track currently open worklist events and emit accumulated Worklist Events
       // The worklist manager will produce Worklist started and Worklist Terminated events
-      val wlManager = b.add(WorklistManager.flow("worklistMgr", bs.streamLogger).named("worklistMgr"))
+      val wlManager = b.add(WorklistManager.flow("worklistMgr", envLogger).named("worklistMgr"))
 
       // We process the outcome of the worklist manager and transform it into Transaction events
       val processEvent = b.add(Flow.fromFunction[WorklistEvent, (WorklistEvent, Option[FlowTransactionEvent])](transactionUpdate))
@@ -254,7 +255,7 @@ case class DispatcherBuilder(
           val errProvider = dispatcherCfg.providerRegistry.jmsProvider(vendor, provider).get
           val dest = errProvider.errors.asString
 
-          bs.streamLogger.debug(s"Routing error envelope [${env.id}] to [$vendor:$provider:$dest]")
+          envLogger.logEnv(env, LogLevel.Debug, s"Routing error envelope [${env.id}] to [$vendor:$provider:$dest]")
 
           env
             .withHeader(deliveryModeHeader(bs.headerConfig.prefix), JmsDeliveryMode.Persistent.asString).get
@@ -264,7 +265,7 @@ case class DispatcherBuilder(
             .withHeader(bs.headerConfig.headerState, FlowTransactionStateFailed.toString).get
         } catch {
           case t : Throwable =>
-            bs.streamLogger.warn(s"Failed to resolve error routing for envelope [${env.id}] : [${t.getMessage()}]")
+            envLogger.logEnv(env, LogLevel.Warn, s"Failed to resolve error routing for envelope [${env.id}] : [${t.getMessage()}]")
             env
         }
       })
@@ -272,7 +273,7 @@ case class DispatcherBuilder(
       val sendError = b.add(sendFlow)
 
       val ackError = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-        bs.streamLogger.debug(s"Acknowledging error envelope [${env.id}]")
+        envLogger.logEnv(env, LogLevel.Debug, s"Acknowledging error envelope [${env.id}]")
         env.acknowledge()
         env
       })
@@ -285,7 +286,7 @@ case class DispatcherBuilder(
     Flow.fromGraph(g)
       .via(Flow.fromFunction[FlowEnvelope, FlowTransactionEvent] { env =>
         val event = FlowTransactionFailed(env.id, env.flowMessage.header, env.exception.map(_.getMessage()))
-        bs.streamLogger.debug(s"Transaction event : [$event]")
+        envLogger.logEnv(env, LogLevel.Debug, s"Transaction event : [$event]")
         event
       })
   }

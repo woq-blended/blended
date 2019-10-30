@@ -8,7 +8,7 @@ import akka.stream.{FlowShape, Graph, Materializer}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.TransactionWiretap
 import blended.streams._
@@ -67,7 +67,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
 ) extends JmsStreamSupport {
 
   private[this] val id : String = retryCfg.headerCfg.prefix + ".retry." + retryCfg.retryDestName
-  private[this] val retryLog : Logger = Logger(id)
+  private[this] val retryLog : FlowEnvelopeLogger = FlowEnvelopeLogger.create(retryCfg.headerCfg, Logger(id))
   private[this] val log : Logger = Logger[JmsRetryProcessor]
 
   private[this] var actor : Option[ActorRef] = None
@@ -114,7 +114,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
       connectionFactory = retryCfg.cf,
       acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
       jmsDestination = Some(JmsDestination.create(retryCfg.retryDestName).get),
-      receiveLogLevel = LogLevel.Debug
+      logLevel = _ => LogLevel.Debug
     )
 
     jmsConsumer(
@@ -133,7 +133,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
       deliveryMode = JmsDeliveryMode.Persistent,
       timeToLive = None,
       clearPreviousException = true,
-      sendLogLevel = LogLevel.Debug
+      logLevel = _ => LogLevel.Debug
     )
 
     jmsProducer(

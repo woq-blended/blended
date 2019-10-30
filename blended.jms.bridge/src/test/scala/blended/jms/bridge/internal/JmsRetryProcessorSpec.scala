@@ -11,7 +11,7 @@ import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed}
 import blended.streams.{FlowHeaderConfig, FlowProcessor}
@@ -56,12 +56,13 @@ abstract class ProcessorSpecSupport(name: String) extends SimplePojoContainerSpe
   val brokerName : String = "retry"
   val consumerCount : Int = 5
   val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(prefix = prefix)
+  val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   val amqCf : IdAwareConnectionFactory =
     mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=activemq))"))
 
   def producerSettings : String => JmsProducerSettings = destName => JmsProducerSettings(
-    log = log,
+    log = envLogger,
     headerCfg = headerCfg,
     connectionFactory = amqCf,
     jmsDestination = Some(JmsDestination.create(destName).get)
@@ -87,7 +88,7 @@ abstract class ProcessorSpecSupport(name: String) extends SimplePojoContainerSpe
     log.info("Starting Retry Processor ...")
     retryProcessor.start()
 
-    sendMessages(producerSettings(retryCfg.retryDestName), log, Seq(env):_*) match {
+    sendMessages(producerSettings(retryCfg.retryDestName), envLogger, Seq(env):_*) match {
       case Success(s) =>
         val msgs : List[FlowEnvelope] = consumeMessages(destName)(timeout).get
         s.shutdown()
@@ -109,7 +110,7 @@ abstract class ProcessorSpecSupport(name: String) extends SimplePojoContainerSpe
       headerCfg = headerCfg,
       cf = amqCf,
       dest = JmsDestination.create(dest).get,
-      log = log,
+      log = envLogger,
       listener = 1
     )
 
@@ -256,7 +257,7 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
         // This causes the send to the original destination to fail within the flow, causing
         // the envelope to travel the error path.
         override protected def sendToOriginal : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(
-          FlowProcessor.fromFunction("failedSendOriginal", log) { env =>
+          FlowProcessor.fromFunction("failedSendOriginal", envLogger) { env =>
             Try {
               throw new Exception("Boom")
             }
@@ -266,7 +267,7 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
         // This causes the resend to the retry queue to fail, causing the envelope to be denied and causing
         // a redelivery on the retry queue (in other words the envelope will stay at the head of the queue
         override protected def sendToRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(
-          FlowProcessor.fromFunction("failedSendRetry", log) { env =>
+          FlowProcessor.fromFunction("failedSendRetry", envLogger) { env =>
             Try {
               throw new Exception("Boom")
             }

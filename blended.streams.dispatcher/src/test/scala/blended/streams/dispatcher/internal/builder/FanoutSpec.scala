@@ -24,7 +24,7 @@ class FanoutSpec extends DispatcherSpecSupport
     envelope : FlowEnvelope
   ) : Try[Seq[(OutboundRouteConfig, FlowEnvelope)]] = {
     val resTypeCfg = ctxt.cfg.resourceTypeConfigs.get(resType).get
-    val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
+    val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc, ctxt.envLogger)(ctxt.bs)
     fanout.funFanoutOutbound(envelope
       .withHeader(ctxt.bs.headerResourceType, resType, true).get
       .withContextObject(ctxt.bs.rtConfigKey, resTypeCfg)
@@ -37,7 +37,7 @@ class FanoutSpec extends DispatcherSpecSupport
 
       withDispatcherConfig { ctxt =>
 
-        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
+        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc, ctxt.envLogger)(ctxt.bs)
         val envelope = FlowEnvelope(FlowMessage.noProps)
 
         performFanout(ctxt, fanout, "FanOut", envelope) match {
@@ -56,7 +56,7 @@ class FanoutSpec extends DispatcherSpecSupport
     "create a workliststarted event for a configured resourceType" in {
 
       withDispatcherConfig { ctxt =>
-        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
+        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc, ctxt.envLogger)(ctxt.bs)
 
         ctxt.cfg.resourceTypeConfigs.keys.filter(_ != "NoOutbound").foreach { resType =>
           val envelope = FlowEnvelope(FlowMessage.noProps)
@@ -69,7 +69,7 @@ class FanoutSpec extends DispatcherSpecSupport
               wl.worklist.id should be (envelope.id)
               wl.worklist.items should have size (rtCfg.outbound.size)
             case Failure(t) =>
-              ctxt.bs.streamLogger.error(s"WorklistCreation failed for resource type [$resType]" )
+              ctxt.envLogger.underlying.error(s"WorklistCreation failed for resource type [$resType]" )
               fail(t)
           }
         }
@@ -108,7 +108,7 @@ class FanoutSpec extends DispatcherSpecSupport
         implicit val materializer = ActorMaterializer()
         implicit val eCtxt = system.dispatcher
 
-        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
+        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc, ctxt.envLogger)(ctxt.bs)
 
         ctxt.cfg.resourceTypeConfigs.keys.filter(_ != "NoOutbound").foreach { resType =>
           val envelope = FlowEnvelope(FlowMessage.noProps)
@@ -126,7 +126,7 @@ class FanoutSpec extends DispatcherSpecSupport
             } yield(env, wl)
 
             result.map { case (envelopes, worklists) =>
-              ctxt.bs.streamLogger.info(s"Testing resourcetype [$resType]")
+              ctxt.envLogger.underlying.info(s"Testing resourcetype [$resType]")
               worklists should have size 1
               envelopes should have size rtCfg.outbound.size
             }

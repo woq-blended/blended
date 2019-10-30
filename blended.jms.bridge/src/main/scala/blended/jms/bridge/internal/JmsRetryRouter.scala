@@ -7,9 +7,9 @@ import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import akka.stream.{FlowShape, Graph}
 import blended.streams.FlowProcessor
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel
 
 import scala.concurrent.duration._
 import scala.util.Try
@@ -29,7 +29,7 @@ class MissingHeaderException(h : String)
 class JmsRetryRouter(
   name : String,
   retryCfg : JmsRetryConfig,
-  log : Logger
+  log : FlowEnvelopeLogger
 ) {
 
   private[this] val headerCfg : FlowHeaderConfig = retryCfg.headerCfg
@@ -63,7 +63,7 @@ class JmsRetryRouter(
     val firstRetry : Long = mandatoryHeader(headerCfg.headerFirstRetry)
 
     val remaining : FiniteDuration = (retryTimeout - (System.currentTimeMillis() - firstRetry)).millis
-    log.debug(s"Retrying envelope [${env.id}] : [$retryCount / $maxRetries] [${remaining}] remaining")
+    log.logEnv(env, LogLevel.Debug, s"Retrying envelope [${env.id}] : [$retryCount / $maxRetries] [${remaining}] remaining")
 
     if (maxRetries > 0 && retryCount > maxRetries) {
       throw new RetryCountExceededException(maxRetries)

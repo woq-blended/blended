@@ -8,6 +8,7 @@ import akka.stream.stage.{GraphStage, GraphStageLogic}
 import blended.jms.utils.{JmsAckSession, JmsAckState, JmsDestination}
 import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.util.logging.LogLevel
 import javax.jms._
 
 import scala.concurrent.duration._
@@ -64,24 +65,24 @@ final class JmsAckSourceStage(
 
       private[this] def addInflight(s : String, env: FlowEnvelope) : Unit = {
         inflight = inflight + (s -> env)
-        settings.log.debug(s"Inflight message count of [$id] count is [${inflight.size}]")
+        settings.log.underlying.debug(s"Inflight message count of [$id] count is [${inflight.size}]")
       }
 
       private[this] def removeInflight(s : String) : Unit = {
         inflight = inflight.filterKeys(_!= s)
-        settings.log.debug(s"Inflight message count of [$id] count is [${inflight.size}]")
+        settings.log.underlying.debug(s"Inflight message count of [$id] count is [${inflight.size}]")
       }
 
       private[this] def addConsumer(s: String, c : MessageConsumer) : Unit = {
         consumer = consumer + (s -> c)
-        settings.log.debug(s"Consumer count of [$id][${settings.jmsDestination}] is [${consumer.size}]")
+        settings.log.underlying.debug(s"Consumer count of [$id][${settings.jmsDestination}] is [${consumer.size}]")
       }
 
       private[this] def removeConsumer(s : String) : Unit = {
         if (consumer.contains(s)) {
           consumer = consumer.filterKeys(_ != s)
           cancelTimer(Poll(s))
-          settings.log.debug(s"Consumer count of [$id][${settings.jmsDestination}] is [${consumer.size}]")
+          settings.log.underlying.debug(s"Consumer count of [$id][${settings.jmsDestination}] is [${consumer.size}]")
         }
       }
 
@@ -95,7 +96,7 @@ final class JmsAckSourceStage(
 
       override protected def beforeSessionClose(session: JmsAckSession): Unit = {
         consumer.get(session.sessionId).foreach{ c =>
-          settings.log.debug(s"Closing Consumer for session [${session.sessionId}]")
+          settings.log.underlying.debug(s"Closing Consumer for session [${session.sessionId}]")
           c.close()
           removeConsumer(session.sessionId)
         }
@@ -113,22 +114,22 @@ final class JmsAckSourceStage(
           case JmsAckState.Acknowledged =>
             try {
               handler.jmsMessage.acknowledge()
-              settings.log.debug(s"Acknowledged envelope [${env.id}] message for session [$sessionId]")
+              settings.log.logEnv(env, LogLevel.Debug, s"Acknowledged envelope [${env.id}] message for session [$sessionId]")
               removeInflight(sessionId)
               poll(sessionId)
             } catch {
               case t: Throwable =>
-                settings.log.error(t)(s"Failed to acknowledge message [${env.id}] for session [$sessionId]")
+                settings.log.logEnv(env, LogLevel.Error, s"Failed to acknowledge message [${env.id}] for session [$sessionId]")
                 closeSession(handler.session)
             }
 
           case JmsAckState.Denied =>
-            settings.log.debug(s"Denying message [${env.id}] for session [$sessionId]")
+            settings.log.logEnv(env, LogLevel.Debug, s"Denying message [${env.id}] for session [$sessionId]")
             closeSession(handler.session)
 
           case JmsAckState.Pending =>
             if (System.currentTimeMillis() - handler.created > jmsSettings.ackTimeout.toMillis) {
-              settings.log.warn(s"Acknowledge timed out for message [${env.id}] in session [$sessionId]")
+              settings.log.logEnv(env, LogLevel.Warn, s"Acknowledge timed out for message [${env.id}] in session [$sessionId]")
               closeSession(handler.session)
             } else {
               scheduleOnce(Ack(sessionId), 10.millis)
@@ -165,7 +166,7 @@ final class JmsAckSourceStage(
                   minMessageDelay match {
                     case Some(d) =>
                       if (System.currentTimeMillis() - m.getJMSTimestamp() <= d.toMillis) {
-                        settings.log.trace(s"Message has not reached the minimum message delay yet ...")
+                        settings.log.underlying.trace(s"Message has not reached the minimum message delay yet ...")
                         closeSession(session)
                         nextPoll = Some(m.getJMSTimestamp() + d.toMillis)
                         (None, d)
@@ -180,12 +181,12 @@ final class JmsAckSourceStage(
 
               result
             case (_, _) =>
-              settings.log.trace(s"Session or consumer not available in [$sid]")
+              settings.log.underlying.trace(s"Session or consumer not available in [$sid]")
               (None, 100.millis)
           }
         }
 
-        settings.log.trace(s"Trying to receive message from [${settings.jmsDestination.map(_.asString)}] in session [${sid}]")
+        settings.log.underlying.trace(s"Trying to receive message from [${settings.jmsDestination.map(_.asString)}] in session [${sid}]")
 
         (jmsSessions.get(sid), consumer.get(sid)) match {
           case (Some(session), Some(c)) =>
@@ -198,10 +199,10 @@ final class JmsAckSourceStage(
                 val envelopeId: String = flowMessage.header[String](headerConfig.headerTransId) match {
                   case None =>
                     val newId = UUID.randomUUID().toString()
-                    settings.log.trace(s"Created new envelope id [$newId]")
+                    settings.log.underlying.trace(s"Created new envelope id [$newId]")
                     newId
                   case Some(s) =>
-                    settings.log.trace(s"Reusing transaction id [$s] as envelope id")
+                    settings.log.underlying.trace(s"Reusing transaction id [$s] as envelope id")
                     s
                 }
 
@@ -209,11 +210,6 @@ final class JmsAckSourceStage(
 
                 val msgAge : Long = now -
                   flowMessage.header[Long](timestampHeader(headerConfig.prefix)).getOrElse(now)
-
-                settings.log.log(
-                  settings.receiveLogLevel,
-                  s"Message received [$envelopeId][${settings.jmsDestination.map(_.asString)}] after [$msgAge]ms in [${session.sessionId}] : $flowMessage"
-                )
 
                 val handler = JmsAcknowledgeHandler(
                   id = envelopeId,
@@ -227,22 +223,29 @@ final class JmsAckSourceStage(
                   .withRequiresAcknowledge(true)
                   .withAckHandler(Some(handler))
 
+                settings.log.logEnv(
+                  envelope,
+                  settings.logLevel(envelope),
+                  s"Message received [$envelopeId][${settings.jmsDestination.map(_.asString)}] after [$msgAge]ms in [${session.sessionId}] : $flowMessage"
+                )
+
+
                 session.resetAck()
                 addInflight(session.sessionId, envelope)
                 handleMessage.invoke(envelope)
                 ackQueued(sid)
               case (None, nextPoll) =>
-                settings.log.trace(s"No message available for [${session.sessionId}]")
+                settings.log.underlying.trace(s"No message available for [${session.sessionId}]")
                 scheduleOnce(Poll(sid), nextPoll)
             }
           } catch {
             case NonFatal(e) =>
-              settings.log.warn(s"Error receiving message : [${e.getMessage()}]")
+              settings.log.underlying.warn(s"Error receiving message : [${e.getMessage()}]")
               closeSession(session)
           }
 
           case (_, _) =>
-            settings.log.trace(s"Session or consumer not available in [$sid]")
+            settings.log.underlying.trace(s"Session or consumer not available in [$sid]")
             scheduleOnce(Poll(sid), 100.millis)
         }
       }
@@ -261,12 +264,12 @@ final class JmsAckSourceStage(
               ))
             case None =>
               val msg = s"Destination must be set for consumer in [$id]"
-              settings.log.error(msg)
+              settings.log.underlying.error(msg)
               throw new IllegalArgumentException(msg)
           }
         } catch {
           case NonFatal(t) =>
-            jmsSettings.log.error(s"Error creating JMS session : [$t.]")
+            jmsSettings.log.underlying.error(s"Error creating JMS session : [$t.]")
             handleError.invoke(t)
             Failure(t)
         }
@@ -286,7 +289,7 @@ final class JmsAckSourceStage(
                 poll(p.s)
               } else {
                 val delay : FiniteDuration = (l - now).millis
-                settings.log.trace(s"Delaying msg poll by [$delay] for session [${p.s}]")
+                settings.log.underlying.trace(s"Delaying msg poll by [$delay] for session [${p.s}]")
                 scheduleOnce(p, (l - now).millis)
               }
           }
@@ -303,7 +306,7 @@ final class JmsAckSourceStage(
       }
 
       private[this] def createConsumer(session: JmsAckSession) : Unit = {
-        settings.log.debug(s"Creating message consumer for session [${session.sessionId}], destination [$dest] and selector [${settings.selector}]")
+        settings.log.underlying.debug(s"Creating message consumer for session [${session.sessionId}], destination [$dest] and selector [${settings.selector}]")
         session.createConsumer(settings.selector) match {
 
           case Success(c) =>
@@ -311,7 +314,7 @@ final class JmsAckSourceStage(
             scheduleOnce(Poll(session.sessionId), 100.millis)
 
           case Failure(e) =>
-            settings.log.debug(s"Failed to create consumer for session [${session.sessionId}]")
+            settings.log.underlying.debug(s"Failed to create consumer for session [${session.sessionId}]")
             closeSession(session)
         }
       }

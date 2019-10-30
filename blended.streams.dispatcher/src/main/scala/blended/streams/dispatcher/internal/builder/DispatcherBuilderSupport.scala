@@ -4,10 +4,9 @@ import java.util.UUID
 
 import blended.streams.dispatcher.internal.{OutboundRouteConfig, ResourceTypeConfig}
 import blended.streams.jms.JmsEnvelopeHeader
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.FlowHeaderConfig
 import blended.streams.worklist.{FlowWorklistItem, Worklist, WorklistItem}
-import blended.util.logging.Logger
 import com.typesafe.config.Config
 
 import scala.reflect.ClassTag
@@ -19,9 +18,7 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
   def headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(containerConfig.getConfig(FlowHeaderConfig.headerConfigPath))
 
   private val headerCfg = headerConfig
-  val header = FlowHeaderConfig.header(headerCfg.prefix)
-
-  val streamLogger : Logger
+  private val header = FlowHeaderConfig.header(headerCfg.prefix)
 
   // Keys to stick objects into the FlowEnvelope context
   val appHeaderKey : String = "AppLogHeader"
@@ -52,14 +49,14 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
   * If the object is not present in the envelope or has the wrong type, an exception
   * will be returned.
   */
-  def withContextObject[T,R](key : String, env: FlowEnvelope)(f : T => Try[R])(implicit classTag: ClassTag[T]) : Either[FlowEnvelope, R] = {
+  def withContextObject[T,R](key : String, env: FlowEnvelope, streamLogger: FlowEnvelopeLogger)(f : T => Try[R])(implicit classTag: ClassTag[T]) : Either[FlowEnvelope, R] = {
 
     env.getFromContext[T](key).get match {
 
       // The object can't be found for the key with the given type
       case None => // Should not be possible
         val e = new MissingContextObject(key, classTag.runtimeClass.getName)
-        streamLogger.error(e)(e.getMessage)
+        streamLogger.underlying.error(e)(e.getMessage)
         Left(env.withException(e))
 
       // We have found the object, now we try to apply the function
@@ -76,13 +73,13 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
    * the envelope. This is a special case where the result of the given function is also
    * a FlowEnvelope, so that wrapping the result in an Either[...] is not required.
    */
-  def withContextObject[T](key : String, env: FlowEnvelope)(f : T => FlowEnvelope)(implicit classTag: ClassTag[T]) : FlowEnvelope = {
+  def withContextObject[T](key : String, env: FlowEnvelope, streamLogger: FlowEnvelopeLogger)(f : T => FlowEnvelope)(implicit classTag: ClassTag[T]) : FlowEnvelope = {
 
     env.getFromContext[T](key).get match {
 
       case None => // Should not be possible
         val e = new MissingContextObject(key, classTag.runtimeClass.getName)
-        streamLogger.error(e)(e.getMessage)
+        streamLogger.underlying.error(e)(e.getMessage)
         env.withException(e)
 
       case Some(o) =>

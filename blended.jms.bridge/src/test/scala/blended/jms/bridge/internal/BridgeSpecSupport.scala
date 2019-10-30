@@ -10,7 +10,7 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.internal.BlendedStreamsActivator
 import blended.streams.jms.{JmsEnvelopeHeader, JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.FlowTransactionEvent
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
@@ -58,6 +58,7 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
 
   protected val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+  protected val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   protected def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"
 
@@ -71,7 +72,7 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
     implicit timeout : FiniteDuration, system : ActorSystem, materializer: Materializer
   ) : Try[List[FlowEnvelope]] = Try {
 
-    val coll : Collector[FlowEnvelope] = receiveMessages(headerCfg, cf, JmsDestination.create(destName).get, log)
+    val coll : Collector[FlowEnvelope] = receiveMessages(headerCfg, cf, JmsDestination.create(destName).get, envLogger)
     Await.result(coll.result, timeout + 100.millis)
   }
 
@@ -91,12 +92,12 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
 
   protected def sendMessages(destName : String, cf : IdAwareConnectionFactory)(msgs : FlowEnvelope*) : KillSwitch = {
     val pSettings : JmsProducerSettings = JmsProducerSettings(
-      log = log,
+      log = envLogger,
       headerCfg = headerCfg,
       connectionFactory = cf,
       jmsDestination = Some(JmsDestination.create(destName).get)
     )
 
-    sendMessages(pSettings, log, msgs:_*).get
+    sendMessages(pSettings, envLogger, msgs:_*).get
   }
 }

@@ -5,6 +5,7 @@ import akka.stream._
 import akka.stream.stage._
 import blended.jms.utils.{JmsDestination, JmsProducerSession}
 import blended.streams.message.FlowEnvelope
+import blended.util.logging.LogLevel
 import javax.jms.{Connection, Destination, JMSException, MessageProducer}
 
 import scala.concurrent.duration._
@@ -34,20 +35,20 @@ class JmsSinkStage(
 
       private[this] def addProducer(s : String, p : MessageProducer) : Unit = {
         producer = producer + (s -> p)
-        settings.log.debug(s"Producer count of [$id] is [${producer.size}]")
+        settings.log.underlying.debug(s"Producer count of [$id] is [${producer.size}]")
       }
 
       private[this] def removeProducer(s : String) : Unit = {
         if (producer.contains(s)) {
           producer = producer.filterKeys(_ != s)
-          settings.log.debug(s"Producer count of [$id] is [${producer.size}]")
+          settings.log.underlying.debug(s"Producer count of [$id] is [${producer.size}]")
         }
       }
 
 
       override protected def beforeSessionClose(session: JmsProducerSession): Unit = {
         producer.get(session.sessionId).foreach{ p =>
-          settings.log.debug(s"Closing producer for session [${session.sessionId}]")
+          settings.log.underlying.debug(s"Closing producer for session [${session.sessionId}]")
           p.close()
           removeProducer(session.sessionId)
         }
@@ -77,12 +78,12 @@ class JmsSinkStage(
             jmsDestination = jmsSettings.jmsDestination
           )
 
-          settings.log.debug(s"Producer session [${result.sessionId}] has been created")
+          settings.log.underlying.debug(s"Producer session [${result.sessionId}] has been created")
 
           Success(result)
         } catch {
           case je : JMSException =>
-            settings.log.warn(s"Error creating JMS session : [${je.getMessage()}]")
+            settings.log.underlying.warn(s"Error creating JMS session : [${je.getMessage()}]")
             handleError.invoke(je)
             Failure(je)
         }
@@ -90,7 +91,7 @@ class JmsSinkStage(
 
       override protected def onSessionOpened(jmsSession: JmsProducerSession): Unit = {
         val p : MessageProducer = jmsSession.session.createProducer(null)
-        settings.log.debug(s"Created anonymous producer for [${jmsSession.sessionId}]")
+        settings.log.underlying.debug(s"Created anonymous producer for [${jmsSession.sessionId}]")
         addProducer(jmsSession.sessionId, p)
       }
 
@@ -98,7 +99,7 @@ class JmsSinkStage(
 
         var jmsDest : Option[JmsDestination] = None
 
-        settings.log.debug(s"Trying to send envelope [${env.id}][${env.flowMessage.header.mkString(",")}]")
+        settings.log.logEnv(env, LogLevel.Debug, s"Trying to send envelope [${env.id}][${env.flowMessage.header.mkString(",")}]")
         // select one sender session randomly
 
         if (producer.nonEmpty) {
@@ -111,7 +112,7 @@ class JmsSinkStage(
 
             val sendTtl: Long = sendParams.ttl match {
               case Some(l) => if (l.toMillis < 0L) {
-                settings.log.warn(s"The message [${env.id}] has expired and wont be sent to the JMS destination.")
+                settings.log.logEnv(env, LogLevel.Warn, s"The message [${env.id}] has expired and wont be sent to the JMS destination.")
               }
                 l.toMillis
               case None => 0L
@@ -122,8 +123,8 @@ class JmsSinkStage(
               val dest: Destination = sendParams.destination.create(session.session)
               jmsProd.send(dest, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
               val logDest = s"${settings.connectionFactory.vendor}:${settings.connectionFactory.provider}:$dest"
-              settings.log.log(
-                settings.sendLogLevel,
+              settings.log.logEnv(
+                env, settings.logLevel(env),
                 s"Successfully sent message [${env.id}] to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]"
               )
             }
@@ -135,7 +136,7 @@ class JmsSinkStage(
             }
           } catch {
             case t: Throwable =>
-              settings.log.error(t)(s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}]")
+              settings.log.logEnv(env.withException(t), LogLevel.Error, s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}] : [${t.getMessage()}]")
               closeSession(session)
               env.withException(t)
           }
@@ -143,7 +144,7 @@ class JmsSinkStage(
           outEnvelope
         } else {
           val msg : String = s"No session available to send JMS message [${env.id}]"
-          settings.log.warn(s"No session available to send JMS message")
+          settings.log.underlying.warn(s"No session available to send JMS message")
           env.withException(new Exception(msg))
         }
       }

@@ -3,7 +3,8 @@ package blended.streams.processor
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.FlowProcessor.IntegrationStep
-import blended.util.logging.Logger
+import blended.streams.message.FlowEnvelopeLogger
+import blended.util.logging.LogLevel
 import com.typesafe.config.Config
 import blended.util.config.Implicits._
 
@@ -29,7 +30,7 @@ case class HeaderProcessorConfig(
 
 case class HeaderTransformProcessor(
   name : String,
-  log : Logger,
+  log : FlowEnvelopeLogger,
   rules : List[HeaderProcessorConfig],
   idSvc : Option[ContainerIdentifierService] = None
 ) extends FlowProcessor {
@@ -37,7 +38,7 @@ case class HeaderTransformProcessor(
   override val f: IntegrationStep = { env =>
 
     Try {
-      log.debug(s"Processing rules [${rules.mkString(",")}]")
+      log.logEnv(env, LogLevel.Debug, s"Processing rules [${rules.mkString(",")}]")
 
       val newMsg = rules.foldLeft(env.flowMessage) { case (c, headerCfg) =>
 
@@ -59,15 +60,15 @@ case class HeaderTransformProcessor(
             // Header might be null if a referenced property does not exist
             header match {
               case None =>
-                log.warn(s"Header [${headerCfg.name}] resolved to [null]")
+                log.logEnv(env, LogLevel.Warn, s"Header [${headerCfg.name}] resolved to [null]")
                 c
               case Some(v) =>
-                log.debug(s"Processed Header [${headerCfg.name}, ${headerCfg.overwrite}] : [$v]")
+                log.logEnv(env, LogLevel.Debug, s"Processed Header [${headerCfg.name}, ${headerCfg.overwrite}] : [$v]")
                 c.withHeader(headerCfg.name, v, headerCfg.overwrite).get
             }
         }
       }
-      log.debug(s"Header transformation complete [$name] : $newMsg")
+      log.logEnv(env, LogLevel.Debug, s"Header transformation complete [$name] : $newMsg")
 
       env.copy(flowMessage = newMsg)
     }

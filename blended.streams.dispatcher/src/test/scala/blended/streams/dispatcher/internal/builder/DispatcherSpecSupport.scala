@@ -10,6 +10,7 @@ import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.internal.BlendedStreamsActivator
+import blended.streams.message.FlowEnvelopeLogger
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -30,7 +31,8 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     cfg : ResourceTypeRouterConfig,
     idSvc : ContainerIdentifierService,
     system : ActorSystem,
-    bs : DispatcherBuilderSupport
+    bs : DispatcherBuilderSupport,
+    envLogger : FlowEnvelopeLogger
   )
 
   def country: String = "cc"
@@ -45,6 +47,7 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
   )
 
   def loggerName: String
+  private[this] val logger : Logger = Logger(loggerName)
 
   System.setProperty("AppCountry", country)
   System.setProperty("AppLocation", location)
@@ -74,7 +77,7 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
 
     con match {
       case Some(_) =>
-        ctxt.bs.streamLogger.info(s"Successfully connected to [$cf]")
+        logger.info(s"Successfully connected to [$cf]")
         Success(cf)
       case _ => Failure(new Exception(s"Unable to connect to [${cf.vendor}:${cf.provider}]"))
     }
@@ -104,10 +107,15 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
 
     val bs = new DispatcherBuilderSupport {
       override def containerConfig: Config = idSvc.getContainerContext().getContainerConfig()
-      override val streamLogger: Logger = Logger(loggerName)
     }
 
-    DispatcherExecContext(cfg = cfg, idSvc = idSvc, system = system, bs = bs)
+    DispatcherExecContext(
+      cfg = cfg,
+      idSvc = idSvc,
+      system = system,
+      bs = bs,
+      envLogger = FlowEnvelopeLogger.create(bs.headerConfig, logger)
+    )
   }
 
   def withDispatcherConfig[T](f : DispatcherExecContext => T) : T = f(createDispatcherExecContext())

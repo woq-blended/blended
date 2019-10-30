@@ -93,16 +93,16 @@ class JmsSourceStage(
                       s
                   }
 
-                  settings.log.log(
-                    settings.receiveLogLevel,
+                  val env : FlowEnvelope = FlowEnvelope(
+                    flowMessage.withHeader(headerConfig.headerTransId, envelopeId).get, envelopeId
+                  )
+
+                  settings.log.logEnv(
+                    env, settings.logLevel(env),
                     s"Message received for [$envelopeId][${settings.jmsDestination.map(_.asString)}] [$id] : $flowMessage"
                   )
 
-                  handleMessage.invoke(
-                    FlowEnvelope(
-                      flowMessage.withHeader(headerConfig.headerTransId, envelopeId).get, envelopeId
-                    )
-                  )
+                  handleMessage.invoke(env)
                 }
               })
             } catch {

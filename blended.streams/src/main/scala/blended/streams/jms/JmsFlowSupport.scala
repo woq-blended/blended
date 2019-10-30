@@ -16,16 +16,16 @@ case class JmsAcknowledgeHandler(
   jmsMessage : Message,
   session : JmsAckSession,
   created : Long = System.currentTimeMillis(),
-  log : Logger
+  log : FlowEnvelopeLogger
 ) extends AcknowledgeHandler {
 
   override def deny(): Try[Unit] = Try {
-    log.trace(s"Scheduling denial for envelope [$id] in [${session.sessionId}].")
+    log.underlying.trace(s"Scheduling denial for envelope [$id] in [${session.sessionId}].")
     session.deny(jmsMessage)
   }
 
   override def acknowledge() : Try[Unit] = Try {
-    log.trace(s"Scheduling acknowledgement for envelope [$id] in [${session.sessionId}].")
+    log.underlying.trace(s"Scheduling acknowledgement for envelope [$id] in [${session.sessionId}].")
     session.ack(jmsMessage)
   }
 }

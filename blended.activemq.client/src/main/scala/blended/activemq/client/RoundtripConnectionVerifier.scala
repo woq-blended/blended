@@ -7,7 +7,7 @@ import akka.pattern.after
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms.{JmsEnvelopeHeader, JmsProducerSettings, JmsStreamSupport, MessageDestinationResolver}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.Collector
 import blended.streams.FlowHeaderConfig
 import blended.util.logging.{LogLevel, Logger}
@@ -29,6 +29,7 @@ class RoundtripConnectionVerifier(
   with JmsEnvelopeHeader {
 
   private val log : Logger = Logger[RoundtripConnectionVerifier]
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerConfig, log)
   private val verified : Promise[Boolean] = Promise[Boolean]()
 
   override def verifyConnection(cf: IdAwareConnectionFactory)(implicit eCtxt: ExecutionContext): Future[Boolean] = {
@@ -53,18 +54,18 @@ class RoundtripConnectionVerifier(
       .withHeader(replyToHeader(headerConfig.prefix), responseDest.asString).get
 
     val pSettings : JmsProducerSettings = JmsProducerSettings(
-      log = log,
+      log = envLogger,
       headerCfg = headerConfig,
       connectionFactory = cf,
       jmsDestination = Some(requestDest),
       timeToLive = Some(receiveTimeout * 2),
       destinationResolver = s => new MessageDestinationResolver(s),
-      sendLogLevel = LogLevel.Debug
+      logLevel = _ => LogLevel.Debug
     )
 
     log.info(s"Running verification probe for connection [${cf.vendor}:${cf.provider}]")
 
-    sendMessages(pSettings, log, probeEnv) match {
+    sendMessages(pSettings, envLogger, probeEnv) match {
       case Success(s) =>
         log.info(s"Request message sent successfully to [${requestDest.asString}]")
         s.shutdown()
@@ -75,7 +76,7 @@ class RoundtripConnectionVerifier(
           headerCfg = headerConfig,
           cf = cf,
           dest = responseDest,
-          log = log,
+          log = envLogger,
           listener = 1,
           selector = Some(s"JMSCorrelationID='$id'")
         )

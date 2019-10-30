@@ -65,6 +65,21 @@ trait Logger extends Serializable {
     case LogLevel.Trace => trace(t)(msg)
   }
 
+  def logMdc(mdc : Map[String, String])(level : LogLevel, msg: => String) : Unit = level match {
+    case LogLevel.Error => errorMdc(mdc)(msg)
+    case LogLevel.Warn => warnMdc(mdc)(msg)
+    case LogLevel.Info => infoMdc(mdc)(msg)
+    case LogLevel.Debug => debugMdc(mdc)(msg)
+    case LogLevel.Trace => traceMdc(mdc)(msg)
+  }
+
+  def logMdc(e: Throwable)(mdc : Map[String, String])(level : LogLevel, msg: => String) : Unit = level match {
+    case LogLevel.Error => errorMdc(e)(mdc)(msg)
+    case LogLevel.Warn => warnMdc(e)(mdc)(msg)
+    case LogLevel.Info => infoMdc(e)(mdc)(msg)
+    case LogLevel.Debug => debugMdc(e)(mdc)(msg)
+    case LogLevel.Trace => traceMdc(e)(mdc)(msg)
+  }
 }
 
 /**

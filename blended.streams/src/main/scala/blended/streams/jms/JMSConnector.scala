@@ -42,7 +42,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
   protected def onSessionOpened(jmsSession: S): Unit
 
   private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
-    jmsSettings.log.error(s"Failing stage [$id] with [${t.getMessage()}")
+    jmsSettings.log.underlying.error(s"Failing stage [$id] with [${t.getMessage()}")
     failStage(t)
   }
 
@@ -57,17 +57,17 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
   }
 
   private val onSession: AsyncCallback[S] = getAsyncCallback[S] { session =>
-    jmsSettings.log.debug(s"Session of type [${session.getClass().getSimpleName()}] with id [${session.sessionId}] has been created.")
+    jmsSettings.log.underlying.debug(s"Session of type [${session.getClass().getSimpleName()}] with id [${session.sessionId}] has been created.")
     jmsSessions += (session.sessionId -> session)
     onSessionOpened(session)
   }
 
   private val onSessionClosed : AsyncCallback[S] = getAsyncCallback { s =>
-    jmsSettings.log.debug(s"Session of type [${s.getClass().getSimpleName()}] with id [${s.sessionId}] has been closed.")
+    jmsSettings.log.underlying.debug(s"Session of type [${s.getClass().getSimpleName()}] with id [${s.sessionId}] has been closed.")
     if (isTimerActive(RecreateSessions)) {
       // do nothing as we have already scheduled to recreate the sessions
     } else {
-      jmsSettings.log.debug(s"Restarting sessions in [${jmsSettings.sessionRecreateTimeout}]")
+      jmsSettings.log.underlying.debug(s"Restarting sessions in [${jmsSettings.sessionRecreateTimeout}]")
       scheduleOnce(RecreateSessions, jmsSettings.sessionRecreateTimeout)
     }
 
@@ -92,7 +92,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
 
   protected[this] def closeSession(session: S) : Unit = {
 
-    jmsSettings.log.debug(s"Closing session [${session.sessionId}]")
+    jmsSettings.log.underlying.debug(s"Closing session [${session.sessionId}]")
 
     beforeSessionClose(session)
 
@@ -103,7 +103,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
         jmsSessions -= session.sessionId
         onSessionClosed.invoke(session)
       case Failure(t) =>
-        jmsSettings.log.error(s"Error closing session with id [${session.sessionId}] : [${t.getMessage() }]")
+        jmsSettings.log.underlying.error(s"Error closing session with id [${session.sessionId}] : [${t.getMessage() }]")
         handleError.invoke(t)
     }
   }
@@ -123,7 +123,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
           onSession.invoke(s)
         }
       case Failure(t) =>
-        jmsSettings.log.error(s"Error creating JMS session in [$id] - failing stage")
+        jmsSettings.log.underlying.error(s"Error creating JMS session in [$id] - failing stage")
         handleError.invoke(t)
     }
   }
@@ -133,7 +133,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
     openConnection(startConnection = true).flatMap { connection =>
 
       val toBeCreated = jmsSettings.sessionCount - jmsSessions.size
-      jmsSettings.log.debug(s"Trying to create [$toBeCreated] sessions ...")
+      jmsSettings.log.underlying.debug(s"Trying to create [$toBeCreated] sessions ...")
       val sessionFutures : Seq[Future[Option[S]]] =
         for (_ <- 0 until toBeCreated) yield Future {
           createSession(connection) match {
@@ -155,7 +155,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
 
     val connectionFuture = Future {
 
-      jmsSettings.log.debug(s"Creating connection for [$id]")
+      jmsSettings.log.underlying.debug(s"Creating connection for [$id]")
 
       val connection = factory.createConnection()
 

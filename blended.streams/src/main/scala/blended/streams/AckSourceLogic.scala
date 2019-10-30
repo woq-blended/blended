@@ -37,8 +37,8 @@ package blended.streams
 import akka.stream.{Outlet, SourceShape}
 import akka.stream.stage.{AsyncCallback, OutHandler, TimerGraphStageLogic}
 import blended.streams.AckState.AckState
-import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
-import blended.util.logging.Logger
+import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowEnvelopeLogger}
+import blended.util.logging.LogLevel
 
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -88,7 +88,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   def id : String
 
   /** A logger that must be defined by concrete implementations */
-  protected def log : Logger
+  protected def log : FlowEnvelopeLogger
 
   /** The id's of the available inflight slots */
   protected def inflightSlots() : List[String]
@@ -102,18 +102,18 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
 
   // A callback to fail the stage
   protected val fail : AsyncCallback[Throwable]= getAsyncCallback[Throwable]{ t : Throwable =>
-    log.error(t)(s"Failing stage [$id]")
+    log.underlying.error(t)(s"Failing stage [$id]")
     failStage(t)
   }
 
   private def addInflight(inflightId : String, ackCtxt : T, state : AckState) : Unit = {
     inflightMap += ( inflightId -> (ackCtxt, state))
-    log.debug(s"Inflight message count for [$id] is [${inflightMap.size}]")
+    log.underlying.debug(s"Inflight message count for [$id] is [${inflightMap.size}]")
   }
 
   private def removeInflight(inflightId : String) : Unit = {
     inflightMap -= inflightId
-    log.debug(s"Inflight message count for [$id] is [${inflightMap.size}]")
+    log.underlying.debug(s"Inflight message count for [$id] is [${inflightMap.size}]")
   }
 
   // A callback to immediately schedule the next poll
@@ -124,7 +124,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
 
     inflightMap.get(id) match {
       case Some((ctxt, _ )) =>
-        log.debug(s"Updating state for [$id] to [$state]")
+        log.logEnv(ctxt.envelope, LogLevel.Debug, s"Updating state of [${ctxt.envelope.id}] for [$id] to [$state]")
         inflightMap.put(id, (ctxt, state))
         state match {
           case AckState.Acknowledged => acknowledged(ctxt)
@@ -132,7 +132,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
           case _ =>
         }
       case None =>
-        log.debug(s"AckContext [$id] no longer inflight - perhaps it has timed out ?")
+        log.underlying.debug(s"AckContext [$id] no longer inflight - perhaps it has timed out ?")
     }
   }
 
@@ -142,7 +142,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   private def acknowledged(ackCtxt : T) : Unit = {
     // First, we need to call beforeAcknowldege(), so that concrete implementations
     // can perform the technical acknowledgement
-    log.debug(s"Flow envelope [${ackCtxt.envelope.id}] has been acknowledged in [$id]")
+    log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Flow envelope [${ackCtxt.envelope.id}] has been acknowledged in [$id]")
     beforeAcknowledge(ackCtxt)
     // Then we clear the message from the inflight map
     removeInflight(ackCtxt.inflightId)
@@ -155,7 +155,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   override def postStop(): Unit = {
 
     val p : Map[String, T] = pending()
-    log.debug(s"[$id] has [${p.size}] envelopes still in inflight while stopping")
+    log.underlying.debug(s"[$id] has [${p.size}] envelopes still in inflight while stopping")
 
     // perform any implementation specific logic to roll back pending envelopes
     p.values.foreach(beforeDenied)
@@ -165,7 +165,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
 
   // this will be called whenever an inflight message has been denied
   private def denied(ackCtxt: T) : Unit = {
-    log.debug(s"Flow Envelope [${ackCtxt.envelope.id}] has been denied in [$id]")
+    log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Flow Envelope [${ackCtxt.envelope.id}] has been denied in [$id]")
     beforeDenied(ackCtxt)
     // we need to clean up the inflight map
     removeInflight(ackCtxt.inflightId)
@@ -178,7 +178,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   // this will be called whenever the acknowledgement for an inflight
   // message has timed out. Per default this will be delegated to the
   // denied() handler
-  protected def ackTimedOut(ackCtxt : T) = denied(ackCtxt)
+  protected def ackTimedOut(ackCtxt : T): Unit = denied(ackCtxt)
 
   private def freeInflightSlot() : Option[String] =
     inflightSlots().find { id =>
@@ -206,7 +206,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
         }
       }
 
-      log.debug(s"Performing poll for [$id]")
+      log.underlying.debug(s"Performing poll for [$id]")
       doPerformPoll(id, ackHandler).get match {
         case None =>
 
@@ -219,7 +219,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
 
         case Some(ackCtxt) =>
           // add the context to the inflight messages
-          log.debug(s"Received [${ackCtxt.envelope.flowMessage}] in [$id]")
+          log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Received [${ackCtxt.envelope.flowMessage}] in [$id]")
           addInflight(id, ackCtxt, AckState.Pending)
           // push the envelope to the outlet
           push(out, ackCtxt.envelope)
@@ -241,7 +241,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
           }
 
         timedoutAcks.values.foreach { ctxt =>
-          log.warn(s"Acknowledge for [${ctxt.envelope}] has timed out in [${ctxt.inflightId}]")
+          log.logEnv(ctxt.envelope, LogLevel.Warn, s"Acknowledge for [${ctxt.envelope}] has timed out in [${ctxt.inflightId}]")
           ackTimedOut(ctxt)
         }
 

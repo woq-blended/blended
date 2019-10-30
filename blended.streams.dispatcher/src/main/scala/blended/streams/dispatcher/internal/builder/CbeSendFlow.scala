@@ -7,9 +7,9 @@ import akka.stream.{ActorMaterializer, Materializer}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel
 
 import scala.util.Try
 
@@ -17,7 +17,7 @@ class CbeSendFlow(
   headerConfig : FlowHeaderConfig,
   dispatcherCfg : ResourceTypeRouterConfig,
   internalCf: IdAwareConnectionFactory,
-  log: Logger
+  streamLogger: FlowEnvelopeLogger
 )(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport with JmsEnvelopeHeader {
 
   private implicit val materializer : Materializer = ActorMaterializer()
@@ -28,11 +28,12 @@ class CbeSendFlow(
     val resolver : JmsProducerSettings => JmsDestinationResolver = settings => new DispatcherDestinationResolver(
       settings = settings,
       registry = dispatcherCfg.providerRegistry,
-      bs = bs
+      bs = bs,
+      streamLogger = streamLogger
     )
 
     val sinkSettings = JmsProducerSettings(
-      log = log,
+      log = streamLogger,
       headerCfg = headerConfig,
       connectionFactory = internalCf,
       jmsDestination = Some(config.get.cbes),
@@ -61,7 +62,7 @@ class CbeSendFlow(
         .withHeader(deliveryModeHeader(bs.headerConfig.prefix), JmsDeliveryMode.Persistent.asString).get
         .withHeader(bs.headerConfig.headerTrack, false).get
 
-      bs.streamLogger.debug(s"Prepared to send CBE for envelope [${env.id}]")
+      streamLogger.logEnv(env, LogLevel.Debug, s"Prepared to send CBE for envelope [${env.id}]")
       result
     }
 
