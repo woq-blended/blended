@@ -124,7 +124,7 @@ class JmsSinkStage(
               val logDest = s"${settings.connectionFactory.vendor}:${settings.connectionFactory.provider}:$dest"
               settings.log.log(
                 settings.sendLogLevel,
-                s"Successfully sent message to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]"
+                s"Successfully sent message [${env.id}] to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]"
               )
             }
 

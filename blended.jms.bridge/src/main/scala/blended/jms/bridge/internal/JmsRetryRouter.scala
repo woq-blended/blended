@@ -63,7 +63,7 @@ class JmsRetryRouter(
     val firstRetry : Long = mandatoryHeader(headerCfg.headerFirstRetry)
 
     val remaining : FiniteDuration = (retryTimeout - (System.currentTimeMillis() - firstRetry)).millis
-    log.info(s"Retrying envelope [${env.id}] : [$retryCount / $maxRetries] [${remaining}] remaining")
+    log.debug(s"Retrying envelope [${env.id}] : [$retryCount / $maxRetries] [${remaining}] remaining")
 
     if (maxRetries > 0 && retryCount > maxRetries) {
       throw new RetryCountExceededException(maxRetries)

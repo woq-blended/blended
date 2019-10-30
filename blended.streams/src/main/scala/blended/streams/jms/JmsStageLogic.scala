@@ -45,7 +45,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
 
   // Start the configured sessions
   override def preStart(): Unit = {
-    settings.log.info(s"Starting JMS Stage [$id] with [$jmsSettings]")
+    settings.log.debug(s"Starting JMS Stage [$id] with [$jmsSettings]")
 
     materializer match {
       case am : ActorMaterializer =>
