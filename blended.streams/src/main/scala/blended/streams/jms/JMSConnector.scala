@@ -42,7 +42,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
   protected def onSessionOpened(jmsSession: S): Unit
 
   private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
-    jmsSettings.log.underlying.error(s"Failing stage [$id] with [${t.getMessage()}")
+    jmsSettings.log.underlying.debug(s"Failing stage [$id] with [${t.getMessage()}")
     failStage(t)
   }
 
@@ -103,7 +103,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
         jmsSessions -= session.sessionId
         onSessionClosed.invoke(session)
       case Failure(t) =>
-        jmsSettings.log.underlying.error(s"Error closing session with id [${session.sessionId}] : [${t.getMessage() }]")
+        jmsSettings.log.underlying.debug(s"Error closing session with id [${session.sessionId}] : [${t.getMessage() }]")
         handleError.invoke(t)
     }
   }
@@ -123,7 +123,7 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
           onSession.invoke(s)
         }
       case Failure(t) =>
-        jmsSettings.log.underlying.error(s"Error creating JMS session in [$id] - failing stage")
+        jmsSettings.log.underlying.debug(s"Error creating JMS session in [$id] - failing stage")
         handleError.invoke(t)
     }
   }

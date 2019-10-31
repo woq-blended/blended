@@ -4,9 +4,9 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.{ByteString, Timeout}
 import blended.streams.jms.JmsEnvelopeHeader
-import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, TextFlowMessage}
+import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowEnvelopeLogger, TextFlowMessage}
 import blended.streams.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
@@ -15,7 +15,7 @@ class EnvelopeFileDropper(
   cfg: FileDropConfig,
   headerConfig : FlowHeaderConfig,
   dropActor : ActorRef,
-  log : Logger
+  log : FlowEnvelopeLogger
 )(implicit system: ActorSystem) extends JmsEnvelopeHeader {
 
   // Get the content of the envelope as a ByteString which we can write to disk
@@ -23,7 +23,7 @@ class EnvelopeFileDropper(
     env.flowMessage match {
       case tMsg: TextFlowMessage =>
         val charSet = env.headerWithDefault[String](cfg.charsetHeader, "UTF-8")
-        log.info(s"Using charset [$charSet] to file drop text message [${env.id}]")
+        log.logEnv(env, LogLevel.Debug, s"Using charset [$charSet] to file drop text message [${env.id}]")
         ByteString(tMsg.getText().getBytes(charSet))
 
       case bMsg: BinaryFlowMessage =>
@@ -31,7 +31,7 @@ class EnvelopeFileDropper(
 
       case m =>
         val eTxt = s"Dropping files unsupported for msg [${env.id}] of type [${m.getClass.getName}]"
-        log.error(eTxt)
+        log.logEnv(env, LogLevel.Error, eTxt)
         throw new Exception(eTxt)
     }
   }
@@ -55,12 +55,13 @@ class EnvelopeFileDropper(
       compressed = env.headerWithDefault[Boolean](cfg.compressHeader, false),
       append = env.headerWithDefault[Boolean](cfg.appendHeader, false),
       timestamp = env.headerWithDefault[Long](timestampHeader(headerConfig.prefix), System.currentTimeMillis()),
-      properties = Map("JMSCorrelationID" -> corrId(env)) ++ env.flowMessage.header.mapValues(_.value)
+      properties = Map("JMSCorrelationID" -> corrId(env)) ++ env.flowMessage.header.mapValues(_.value),
+      log = log.underlying
     )
   }
 
   private[this] def handleError(env: FlowEnvelope, error: Throwable): FileDropResult = {
-    log.error(s"Error dropping envelope [${env.id}] to file : [${error.getMessage()}]")
+    log.logEnv(env, LogLevel.Error, s"Error dropping envelope [${env.id}] to file : [${error.getMessage()}]")
     val cmd = dropCmd(env)(e => Success(ByteString(""))).get
     dropActor ! FileDropAbort(env.id, error)
     FileDropResult(cmd, Some(error))

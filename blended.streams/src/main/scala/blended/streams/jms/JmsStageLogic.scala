@@ -39,7 +39,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
 
   // async callback, so that downstream flow elements can signal an error
   private[jms] val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
-    settings.log.underlying.error(t)(s"Failing stage [$id] : [${t.getMessage()}]")
+    settings.log.underlying.debug(t)(s"Failing stage [$id] : [${t.getMessage()}]")
     failStage(t)
   }
 

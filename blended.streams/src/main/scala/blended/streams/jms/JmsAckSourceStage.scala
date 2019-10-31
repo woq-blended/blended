@@ -269,7 +269,7 @@ final class JmsAckSourceStage(
           }
         } catch {
           case NonFatal(t) =>
-            jmsSettings.log.underlying.error(s"Error creating JMS session : [$t.]")
+            jmsSettings.log.underlying.debug(s"Error creating JMS session : [$t.]")
             handleError.invoke(t)
             Failure(t)
         }

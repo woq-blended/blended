@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.{GZIPInputStream, ZipInputStream}
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.util.ByteString
 import blended.util.logging.Logger
 
@@ -21,7 +21,8 @@ case class FileDropCommand(
   compressed: Boolean,
   append: Boolean,
   timestamp: Long,
-  properties: Map[String, Any]
+  properties: Map[String, Any],
+  log : Logger
 ) {
 
   override def equals(obj: Any): Boolean = obj match {
@@ -78,11 +79,9 @@ case class FileDropResult(cmd: FileDropCommand, error: Option[Throwable])
 case object FileDropChunk
 case class FileDropAbort(id: String, t:Throwable)
 
-class FileDropController extends Actor {
-  override def receive: Receive = Actor.emptyBehavior
-}
-
 class FileDropActor extends Actor {
+
+  private val actorLog : Logger = Logger[FileDropActor]
 
   /**
     * @param requestor The actor which has requested the filedrop and expects a response.
@@ -102,8 +101,6 @@ class FileDropActor extends Actor {
     error : Option[Throwable]
   )
 
-  private val log : Logger = Logger[FileDropActor]
-
   // scalastyle:off magic.number
   private val buffer : Array[Byte] = new Array[Byte](4096)
   // scalastyle:on magic.number
@@ -113,7 +110,7 @@ class FileDropActor extends Actor {
   private def checkDirectory(dir: File) : Try[File] = {
 
     if (!dir.exists()) {
-      log.debug(s"Creating directory [${dir.getAbsolutePath}]")
+      actorLog.debug(s"Creating directory [${dir.getAbsolutePath}]")
       dir.mkdirs()
     }
 
@@ -131,7 +128,7 @@ class FileDropActor extends Actor {
       if (file.exists()) {
         val tmpName = s"${cmd.fileName}.${cmd.timestamp}.tmp"
         val tmpFile = new File(cmd.directory, tmpName)
-        log.debug(s"Creating temporary file [${tmpFile.getAbsolutePath}]")
+        cmd.log.debug(s"Creating temporary file for [${cmd.id}] [${tmpFile.getAbsolutePath}]")
         file.renameTo(tmpFile)
         Some(tmpFile)
       } else {
@@ -160,7 +157,7 @@ class FileDropActor extends Actor {
         case None => new FileOutputStream(of)
         case Some(f) =>
           Files.copy(f.toPath, of.toPath)
-          log.debug(s"Appending to file [${of.getAbsolutePath()}]")
+          cmd.log.debug(s"Appending to file for [${cmd.id}] [${of.getAbsolutePath()}]")
           new FileOutputStream(of, true)
       }
     }
@@ -173,17 +170,14 @@ class FileDropActor extends Actor {
     if (cmd.compressed) {
 
       try {
-        log.debug("Trying to use GZIP compression")
         Some(new GZIPInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content.toArray))))
       } catch {
         case NonFatal(_) =>
-          log.debug("Trying to use ZIP compression")
           val zis = new ZipInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content.toArray)))
           val next = Option(zis.getNextEntry)
           if (next.isEmpty) None else Some(zis)
       }
     } else {
-      log.debug(s"Writing content for cmd [${cmd.id}] without compression to [${outFile(cmd)}]")
       Some(new ByteArrayInputStream(cmd.content.toArray))
     }
   }
@@ -215,11 +209,11 @@ class FileDropActor extends Actor {
 
     pending match {
       case Seq() =>
-        log.debug(s"No more pending Filedrops...switching to idle state")
+        actorLog.debug(s"No more pending Filedrops...switching to idle state")
         context.become(idle(Seq.empty))
       case s =>
         val state : FileDropState = s.last
-        log.debug(s"Scheduling pending file drop [${state.cmd.id}]")
+        actorLog.debug(s"Scheduling pending file drop [${state.cmd.id}]")
         context.become(dropping(state, s.take(s.size - 1)))
         self ! FileDropChunk
     }
@@ -231,7 +225,7 @@ class FileDropActor extends Actor {
   private def dropping(state : FileDropState, pending : Seq[FileDropState]) : Receive = {
     case cmd : FileDropCommand =>
       val newState : FileDropState = createDropState(cmd, sender())
-      log.debug(s"File drop for [${cmd.id}] is pending, [${pending.size + 1}] pending in total")
+      cmd.log.debug(s"File drop for [${cmd.id}] is pending, [${pending.size + 1}] pending in total")
       context.become(dropping(state, pending ++ Seq(newState)))
       self ! FileDropChunk
 
@@ -249,7 +243,6 @@ class FileDropActor extends Actor {
 
     // Drop the next chunk to the out directory
     case FileDropChunk =>
-      log.trace("Dropping chunk")
       (state.is, state.os) match {
         // Streams are still open, so we can proceed
         case (Some(in), Some(out)) =>
@@ -259,12 +252,12 @@ class FileDropActor extends Actor {
               out.write(buffer, 0, cnt)
               self ! FileDropChunk
             } else {
-              log.info(s"Successfully executed [${state.cmd}] and created file [${state.cmd.finalFile.getAbsolutePath}]")
+              state.cmd.log.info(s"Successfully executed [${state.cmd}] and created file [${state.cmd.finalFile.getAbsolutePath}]")
               respond(state.copy(error = None), pending)
             }
           } catch {
             case NonFatal(e) =>
-              log.warn(e)(s"Error while dropping file [${e.getMessage()}]")
+              state.cmd.log.warn(e)(s"Error while dropping file [${state.cmd}] : [${e.getMessage()}]")
               respond(state. copy(error = Some(e)), pending)
           }
         // The input or output stream is not open

@@ -5,7 +5,7 @@ import java.io.File
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.ByteString
 import blended.streams.FlowHeaderConfig
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.testsupport.FileTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
@@ -23,8 +23,8 @@ class FileDropSpec extends LoggingFreeSpec
   private val log : Logger = Logger[FileDropSpec]
   private implicit val system : ActorSystem = ActorSystem(getClass().getSimpleName())
   private val to : FiniteDuration = 1.second
-
   private val headerCfg = FlowHeaderConfig.create(prefix = "App")
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   private val dropCfg : FileDropConfig = FileDropConfig(
     dirHeader = "",
@@ -52,7 +52,7 @@ class FileDropSpec extends LoggingFreeSpec
   private def simpleDrops(count : Int) : Unit = {
     val cfg = prepareDropper(dropCfg)("drop")
 
-    val dropper : EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+    val dropper : EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, envLogger)
 
     val envelopes : Seq[FlowEnvelope] = 1.to(count).map{ i =>
       FlowEnvelope(
@@ -85,7 +85,7 @@ class FileDropSpec extends LoggingFreeSpec
     "create a duplicate file if the file already exists in the target directory (without append)" in {
 
       val cfg: FileDropConfig = prepareDropper(dropCfg)("overwrite")
-      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, envLogger)
 
       val content: ByteString = ByteString("Hello Blended")
 
@@ -110,7 +110,7 @@ class FileDropSpec extends LoggingFreeSpec
     "append the content to the existing file if the append header is set to true" in {
 
       val cfg: FileDropConfig = prepareDropper(dropCfg)("append")
-      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, envLogger)
       val content: ByteString = ByteString("Hello Blended" * 10000)
       val zipContent: ByteString = zipCompress(content)
 
@@ -145,7 +145,7 @@ class FileDropSpec extends LoggingFreeSpec
     "extract the (ZIP) compressed content if the compress header is set" in {
 
       val cfg: FileDropConfig = prepareDropper(dropCfg)("zipped")
-      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, envLogger)
       val content: ByteString = ByteString("Hello Blended")
       val zipContent: ByteString = zipCompress(content)
 
@@ -167,7 +167,7 @@ class FileDropSpec extends LoggingFreeSpec
     "extract the (GZIP) compressed content if the compress header is set" in {
 
       val cfg: FileDropConfig = prepareDropper(dropCfg)("gzipped")
-      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, envLogger)
       val content: ByteString = ByteString("Hello Blended")
       val zipContent: ByteString = gzipCompress(content)
 
@@ -188,7 +188,7 @@ class FileDropSpec extends LoggingFreeSpec
 
     "drop files if the FileDropActor is used from several sources" in {
       val cfg: FileDropConfig = prepareDropper(dropCfg.copy(dropTimeout = 10.seconds))("multiple")
-      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, log)
+      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, envLogger)
       val content: ByteString = ByteString("Hello Blended" * 1000000)
 
       val env1: FlowEnvelope = FlowEnvelope(FlowMessage(content)(FlowMessage.props(

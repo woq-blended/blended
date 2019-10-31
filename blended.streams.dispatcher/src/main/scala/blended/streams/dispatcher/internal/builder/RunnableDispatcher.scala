@@ -39,7 +39,17 @@ class RunnableDispatcher(
       log = streamLogger,
       connectionFactory = cf,
       headerCfg = bs.headerConfig,
-      destinationResolver = s => new DispatcherDestinationResolver(s, registry, bs, streamLogger)
+      destinationResolver = s => new DispatcherDestinationResolver(s, registry, bs, streamLogger),
+      logLevel = env => if (
+        env.header[String](bs.headerConfig.headerBridgeVendor).contains(internal.vendor) &&
+        env.header[String](bs.headerConfig.headerBridgeProvider).contains(internal.provider)
+      ) {
+        // In case the final destination lies within the internal JMS provider, we log the message sent as info
+        LogLevel.Info
+      } else {
+        // Otherwise we log it as debug
+        LogLevel.Debug
+      }
     )
 
     jmsProducer(
@@ -116,7 +126,8 @@ class RunnableDispatcher(
       } else {
         val dest = s"${internalProvider.inbound.name}.${provider.vendor}.${provider.provider}"
         Some(JmsDestination.create(dest).get)
-      }
+      },
+      logLevel = _ => if (provider.internal) LogLevel.Info else LogLevel.Debug
     )
 
     val source = jmsConsumer(
@@ -162,7 +173,7 @@ class RunnableDispatcher(
       registry.allProvider.foreach { provider =>
 
         // Create a specific logger for each Dispatcher instance
-        val dispLogger = Logger(bs.headerConfig.prefix + ".dispatcher." + "." + provider.vendor + "." + provider.provider)
+        val dispLogger = Logger(bs.headerConfig.prefix + ".dispatcher." + provider.vendor + "." + provider.provider)
         val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(bs.headerConfig, dispLogger)
 
         // The blueprint for the dispatcher flow

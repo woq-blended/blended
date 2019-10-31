@@ -100,7 +100,7 @@ object DispatcherOutbound {
     val result = DispatcherTarget(
       bridgeProvider.vendor, bridgeProvider.provider, targetDest
     )
-    streamLogger.logEnv(env, LogLevel.Info, s"Routing for [${env.id}] is [$result]")
+    streamLogger.logEnv(env, LogLevel.Debug, s"Routing for [${env.id}] is [$result]")
 
     result
   }

@@ -7,7 +7,7 @@ import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.util.ByteString
 import blended.streams.FlowHeaderConfig
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.testsupport.FileTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
@@ -26,8 +26,8 @@ class FileDropStageSpec extends LoggingFreeSpec
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private val log : Logger = Logger[FileDropStageSpec]
   private val to : FiniteDuration = 1.second
-
   private val headerCfg = FlowHeaderConfig.create(prefix = "App")
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   val prepareDropper : FileDropConfig => String => FileDropConfig =  cfg => subDir => {
     val dir = cfg.defaultDir + "/" + subDir
@@ -47,10 +47,10 @@ class FileDropStageSpec extends LoggingFreeSpec
 
   private val dropActor : ActorRef = system.actorOf(Props[FileDropActor])
 
-
   def dropFlow(cfg: FileDropConfig, bufferSize : Int): ((ActorRef, KillSwitch), Future[Seq[FileDropResult]]) = {
 
-    val dropper: Flow[FlowEnvelope, FileDropResult, _] = Flow.fromGraph(new FileDropStage(name = "spec", config = cfg, headerCfg = headerCfg, dropActor = dropActor,  log = log))
+    val dropper: Flow[FlowEnvelope, FileDropResult, _] =
+      Flow.fromGraph(new FileDropStage(name = "spec", config = cfg, headerCfg = headerCfg, dropActor = dropActor,  log = envLogger))
 
     Source.actorRef[FlowEnvelope](bufferSize, OverflowStrategy.fail)
       .viaMat(dropper)(Keep.left)

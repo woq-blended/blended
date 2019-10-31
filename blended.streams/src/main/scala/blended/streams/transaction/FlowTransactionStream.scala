@@ -9,7 +9,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
 import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
-import blended.util.logging.{LogLevel, Logger}
+import blended.util.logging.LogLevel
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -104,17 +104,21 @@ class FlowTransactionStream(
 
   private val logTransaction : Graph[FlowShape[Try[FlowTransaction], Try[FlowEnvelope]], NotUsed] = {
 
+    val mdc : FlowTransaction => Map[String, String] = trans => FlowEnvelopeLogger.mdcMap(
+      FlowEnvelopeLogger.mdcPrefix(headerCfg), trans.creationProps
+    )
+
     GraphDSL.create() { implicit b =>
 
       val f = b.add(Flow.fromFunction[Try[FlowTransaction], Try[FlowEnvelope]]{
         case Success(t) =>
           t.state match {
             case FlowTransactionStateStarted | FlowTransactionStateCompleted =>
-              streamLogger.underlying.info(t.toString())
+              streamLogger.underlying.infoMdc(mdc(t))(t.toString())
             case FlowTransactionStateFailed =>
-              streamLogger.underlying.warn(t.toString())
+              streamLogger.underlying.warnMdc(mdc(t))(t.toString())
             case _ =>
-              streamLogger.underlying.debug(t.toString())
+              streamLogger.underlying.debugMdc(mdc(t))(t.toString())
           }
 
           Success(FlowTransaction.transaction2envelope(headerCfg)(t))

@@ -58,7 +58,7 @@ class JmsSourceStage(
           ))
         } catch {
           case NonFatal(t) =>
-            log.error(s"Error creating JMS Session : ${t.getMessage()}")
+            log.debug(s"Error creating JMS Session : ${t.getMessage()}")
             handleError.invoke(t)
             Failure(t)
         }
@@ -107,12 +107,12 @@ class JmsSourceStage(
               })
             } catch {
               case jmse : JMSException =>
-                log.warn(jmse)(s"Error setting up message listener [${settings.jmsDestination}] in [${jmsSession.sessionId}]")
+                log.debug(jmse)(s"Error setting up message listener [${settings.jmsDestination}] in [${jmsSession.sessionId}]")
                 closeSession(jmsSession)
             }
 
           case Failure(t) =>
-            log.warn(t)(s"Error setting up consumer [${settings.jmsDestination}] in [${jmsSession.sessionId}]")
+            log.debug(t)(s"Error setting up consumer [${settings.jmsDestination}] in [${jmsSession.sessionId}]")
             closeSession(jmsSession)
         }
       }

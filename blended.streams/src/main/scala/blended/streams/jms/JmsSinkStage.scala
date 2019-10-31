@@ -83,7 +83,7 @@ class JmsSinkStage(
           Success(result)
         } catch {
           case je : JMSException =>
-            settings.log.underlying.warn(s"Error creating JMS session : [${je.getMessage()}]")
+            settings.log.underlying.debug(s"Error creating JMS session : [${je.getMessage()}]")
             handleError.invoke(je)
             Failure(je)
         }
@@ -136,7 +136,7 @@ class JmsSinkStage(
             }
           } catch {
             case t: Throwable =>
-              settings.log.logEnv(env.withException(t), LogLevel.Error, s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}] : [${t.getMessage()}]")
+              settings.log.logEnv(env.withException(t), LogLevel.Debug, s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}] : [${t.getMessage()}]")
               closeSession(session)
               env.withException(t)
           }

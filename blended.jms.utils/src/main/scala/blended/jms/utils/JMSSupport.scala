@@ -105,7 +105,7 @@ trait JMSSupport {
               log.trace(s"Handling received message [$id] from [$destName]")
               msgHandler.handleMessage(m)  match {
                 case Some(t) =>
-                  log.warn(s"Error handling message [$id] from [$destName]")
+                  log.debug(s"Error handling message [$id] from [$destName]")
                   if (errorHandler.handleError(m, t)) m.acknowledge()
                 case None =>
                   log.trace(s"Successfully handled message [$id] from [$destName]")
@@ -140,7 +140,7 @@ trait JMSSupport {
           None
         } catch {
           case NonFatal(t) =>
-            log.error(s"Error sending message to [$destName] : [${t.getMessage}]")
+            log.debug(s"Error sending message to [$destName] : [${t.getMessage}]")
             Some(t)
         }
       } (conn)

@@ -1,13 +1,20 @@
 package blended.streams.message
 
 import blended.streams.FlowHeaderConfig
+import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.Logger
 
 object FlowEnvelopeLogger {
 
+  def mdcPrefix : FlowHeaderConfig => String = headerCfg => headerCfg.prefix + ".env"
+
   def create(headerCfg : FlowHeaderConfig, log: Logger) : FlowEnvelopeLogger =
-    new FlowEnvelopeLogger(log, headerCfg.prefix + ".env")
+    new FlowEnvelopeLogger(log, mdcPrefix(headerCfg))
+
+  def mdcMap(prefix : String, props : FlowMessageProps) : Map[String, String] = props.map { case (k,v) =>
+    s"$prefix.$k" -> v.value.toString
+  }
 }
 
 /**
@@ -20,9 +27,7 @@ class FlowEnvelopeLogger(
   prefix : String
 ) {
 
-  private val mdc : FlowEnvelope => Map[String, String] = env => env.flowMessage.header.map { case (k,v) =>
-    s"$prefix.$k" -> v.value.toString
-  }
+  private val mdc : FlowEnvelope => Map[String, String] = env => FlowEnvelopeLogger.mdcMap(prefix, env.flowMessage.header)
 
   def logEnv(env : FlowEnvelope, level : LogLevel, msg : => String) : Unit = logEnv(env, _ => level, _ => msg)
 
