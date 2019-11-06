@@ -1,6 +1,7 @@
 package blended.file
 
 import java.io.File
+import java.util.Date
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.ByteString
@@ -129,7 +130,7 @@ class FileDropSpec extends LoggingFreeSpec
       ).get))
 
       1.to(n).foreach { _ =>
-        dropFile(dropper, cfg, env)
+        assert(dropFile(dropper, cfg, env).isSuccess)
       }
 
       val err: FileDropResult = dropFile(dropper, cfg, env2).get
@@ -139,6 +140,36 @@ class FileDropSpec extends LoggingFreeSpec
       files should have size 1
 
       val expected: ByteString = multiply(content, n)
+      files.forall { f => verifyTargetFile(f, expected) } should be(true)
+    }
+
+    "use the youngest existing tmp file as append base if the original file does not exist" in {
+
+      val cfg: FileDropConfig = prepareDropper(dropCfg)("appendToTmp")
+      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, envLogger)
+      val content: ByteString = ByteString("Hello Blended" * 10000)
+      val zipContent: ByteString = zipCompress(content)
+
+      val ts : String = FileDropCommand.tsPattern.format(new Date())
+      val tmpFile : File = new File(cfg.defaultDir, s"header.txt.$ts.tmp")
+
+      genFile(new File(cfg.defaultDir, s"header.txt.${FileDropCommand.tsPattern.format(new Date())}.tmp"), content)
+      Thread.sleep(2000)
+      genFile(new File(cfg.defaultDir, s"header.txt.${FileDropCommand.tsPattern.format(new Date())}.tmp"), multiply(content, 2))
+
+      val env: FlowEnvelope = FlowEnvelope(FlowMessage(zipContent)(FlowMessage.props(
+        cfg.fileHeader -> "header.txt",
+        cfg.compressHeader -> true,
+        cfg.appendHeader -> true
+      ).get))
+
+      val err: FileDropResult = dropFile(dropper, cfg, env).get
+      err.error should be(empty)
+
+      val files : List[File] = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
+      files should have size 1
+
+      val expected: ByteString = multiply(content, 3)
       files.forall { f => verifyTargetFile(f, expected) } should be(true)
     }
 

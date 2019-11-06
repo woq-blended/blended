@@ -1,17 +1,24 @@
 package blended.file
 
 import java.io._
-import java.nio.file.Files
+import java.nio.file.{DirectoryStream, Files, Path, StandardCopyOption}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.{GZIPInputStream, ZipInputStream}
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef}
 import akka.util.ByteString
 import blended.util.logging.Logger
 
 import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
+import StandardCopyOption._
+
+import scala.collection.JavaConverters._
+
+object FileDropCommand {
+  val tsPattern : SimpleDateFormat = new SimpleDateFormat("yyyyMMdd.HHmmssSSS")
+}
 
 case class FileDropCommand(
   id : String,
@@ -39,11 +46,12 @@ case class FileDropCommand(
 
   override def hashCode(): Int = toString().hashCode()
 
+  val timestampAsString : String = FileDropCommand.tsPattern.format(new Date(timestamp))
+
   override def toString: String = {
 
-    val ts = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS").format(new Date(timestamp))
     s"FileDropCommand[$id](dir = [$directory], fileName = [$fileName], compressed = $compressed, append = $append, " +
-    s"timestamp = [$ts], content-size = ${content.length}), properties=${properties.mkString("[", ",", "]")}"
+    s"timestamp = [$timestampAsString], content-size = ${content.length}), properties=${properties.mkString("[", ",", "]")}"
   }
 
   // determine the final file name for a file drop
@@ -55,8 +63,8 @@ case class FileDropCommand(
       if (file.exists()) {
         // In case we need to generate a new file name
         new File(directory, fileName.lastIndexOf('.') match {
-          case -1 => s"dup_${System.currentTimeMillis()}_${fileName}"
-          case pos => s"${fileName.substring(0, pos)}.dup_${System.currentTimeMillis()}${fileName.substring(pos)}"
+          case -1 => s"dup_${timestampAsString}_${fileName}"
+          case pos => s"${fileName.substring(0, pos)}.dup_${timestampAsString}${fileName.substring(pos)}"
         })
       } else {
         // In case we do not append and we can generate a new file
@@ -122,17 +130,46 @@ class FileDropActor extends Actor {
   }
 
   // A temp file is only created when we need to append to an existing file.
-  def tmpFile(cmd: FileDropCommand) : Option[File] = {
-    if (cmd.append) {
-      val file : File = cmd.finalFile
-      if (file.exists()) {
-        val tmpName = s"${cmd.fileName}.${cmd.timestamp}.tmp"
-        val tmpFile = new File(cmd.directory, tmpName)
-        cmd.log.debug(s"Creating temporary file for [${cmd.id}] [${tmpFile.getAbsolutePath}]")
-        file.renameTo(tmpFile)
-        Some(tmpFile)
+  def tmpFile(cmd: FileDropCommand) : Try[Option[File]] = Try {
+
+    val filter : DirectoryStream.Filter[Path] = new DirectoryStream.Filter[Path] {
+      override def accept(entry: Path): Boolean = {
+        val n : String = entry.toFile().getName()
+        val p : String = cmd.finalFile.getName()
+        n.startsWith(p) && n.endsWith(".tmp")
+      }
+    }
+
+    def sourceFile(f : File) : Option[File] = {
+      if (f.exists()) {
+        Some(f)
       } else {
-        None
+        val dirStream = Files.newDirectoryStream(new File(cmd.directory).toPath(), filter)
+        val files : List[File] = dirStream.iterator().asScala.toList.map(_.toFile()).sortBy(_.lastModified()).reverse
+        if (files.isEmpty) {
+          None
+        } else {
+          val result : File = files.head
+          cmd.log.warn(s"Using tmp file for append source in [${cmd.id}] : [${result.getAbsolutePath()}]")
+          files.tail.foreach{ f =>
+            cmd.log.debug(s"Removing tmp file [$f]")
+            f.delete()
+          }
+          Some(result)
+        }
+      }
+    }
+
+    if (cmd.append) {
+      sourceFile(cmd.finalFile) match {
+        case Some(f) =>
+          val tmpName = s"${cmd.fileName}.${cmd.timestampAsString}.tmp"
+          val tmpFile = new File(cmd.directory, tmpName)
+          cmd.log.debug(s"Creating temporary file for [${cmd.id}] [${tmpFile.getAbsolutePath}]")
+          Files.move(f.toPath(), tmpFile.toPath(), REPLACE_EXISTING)
+          Some(tmpFile)
+        case None =>
+          None
       }
     } else {
       None
@@ -141,12 +178,12 @@ class FileDropActor extends Actor {
 
   // The outfile is the file that will temporarily hold the final content
   def outFile(cmd: FileDropCommand) : File =
-    new File(cmd.directory, s"${cmd.fileName}.${cmd.timestamp}.out")
+    new File(cmd.directory, s"${cmd.fileName}.${cmd.timestampAsString}.out")
 
   // prepare the output stream, if required for append
   def prepareOutputStream(cmd: FileDropCommand) : Try[(OutputStream, Option[File], File)] = Try {
 
-    val tf = tmpFile(cmd)
+    val tf : Option[File] = tmpFile(cmd).get
 
     val of : File = outFile(cmd)
 
@@ -182,21 +219,47 @@ class FileDropActor extends Actor {
     }
   }
 
-  private def cleanUp(state : FileDropState) : Unit = {
-    Try(state.is.foreach(_.close()))
-    Try(state.os.foreach(_.close()))
+  private def cleanUp(state : FileDropState) : FileDropState = {
+
+    val newState : FileDropState = {
+      try {
+        state.is.foreach(_.close())
+        state.os.foreach(_.close())
+
+        if (!state.error.isDefined) {
+          state.cmd.log.debug(s"Removing tmp file for [${state.cmd.id}] : [${state.tmpFile}]")
+          state.tmpFile.foreach{ tf => Files.delete(tf.toPath()) }
+          state.cmd.log.debug(s"Creating final file for [${state.cmd.id}] : [${state.cmd.finalFile}]")
+          Files.move(state.outFile.toPath(), state.cmd.finalFile.toPath(), REPLACE_EXISTING)
+        }
+
+        state
+      } catch {
+        case NonFatal(t) =>
+          state.cmd.log.warn(t)(s"Error creating final file for [${state.cmd}]")
+          state.copy(error = Some(t))
+      }
+    }
 
     if (state.error.isDefined) {
       // in case an error was encountered, we will restore the original file
       // and forget the append
-      state.tmpFile.foreach { tf => tf.renameTo(state.cmd.finalFile) }
-      state.outFile.delete()
+      state.tmpFile.foreach{ tf =>
+        try {
+          Files.move(tf.toPath(), state.cmd.finalFile.toPath(), REPLACE_EXISTING)
+          Files.delete(state.outFile.toPath())
+        } catch {
+          case NonFatal(t) =>
+            state.cmd.log.warn(t)(s"Error cleaning up files for [${state.cmd}]")
+        }
+      }
     } else {
       // In case the command was successful, we will delete the tmpfile
       // and create the final file
-      state.tmpFile.foreach(_.delete())
-      state.outFile.renameTo(state.cmd.finalFile)
+      state.cmd.log.info(s"Successfully processed filedrop [${state.cmd}] and created file [${state.cmd.finalFile.getAbsolutePath()}]")
     }
+
+    newState
   }
 
   private[this] def respond(
@@ -204,8 +267,8 @@ class FileDropActor extends Actor {
     pending : Seq[FileDropState]
   ) : Unit = {
 
-    cleanUp(state)
-    state.requestor ! FileDropResult.result(state.cmd, state.error)
+    val result : FileDropState = cleanUp(state)
+    state.requestor ! FileDropResult.result(result.cmd, result.error)
 
     pending match {
       case Seq() =>
@@ -252,7 +315,7 @@ class FileDropActor extends Actor {
               out.write(buffer, 0, cnt)
               self ! FileDropChunk
             } else {
-              state.cmd.log.info(s"Successfully executed [${state.cmd}] and created file [${state.cmd.finalFile.getAbsolutePath}]")
+              state.cmd.log.debug(s"Successfully wrote message [${state.cmd.id}] to [${state.outFile}].")
               respond(state.copy(error = None), pending)
             }
           } catch {
