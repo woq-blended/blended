@@ -11,13 +11,19 @@ object KeystoreConfig {
 
   def fromConfig(cfg: Config, hasher : PasswordHasher) : KeystoreConfig = {
     val keyStore = cfg.getString("keyStore", System.getProperty("javax.net.ssl.keyStore"))
-    val storePass = cfg.getString("storePass", System.getProperty("javax.net.ssl.keyStorePassword"))
-    val keyPass = cfg.getString("keyPass", System.getProperty("javax.net.ssl.keyPassword"))
+    val storePass = cfg
+      .getStringOption("explicit.storePass")
+      .orElse(cfg.getStringOption("storePass").map(hasher.password))
+      .getOrElse(System.getProperty("javax.net.ssl.keyStorePassword"))
+    val keyPass = cfg
+      .getStringOption("explicit.keyPass")
+      .orElse(cfg.getStringOption("keyPass").map(hasher.password))
+      .getOrElse(System.getProperty("javax.net.ssl.keyPassword"))
 
     KeystoreConfig(
       keyStore,
-      hasher.password(storePass),
-      hasher.password(keyPass)
+      storePass,
+      keyPass
     )
   }
 }
