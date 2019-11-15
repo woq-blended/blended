@@ -10,7 +10,7 @@ class ScepActivator extends DominoActivator with TypesafeConfigWatching {
   whenBundleActive {
     whenTypesafeConfigAvailable{ (cfg, idSvc) =>
 
-      val scepUrl = cfg.getStringOption("scepUrl")
+      val scepUrl = cfg.getStringOption("scepUrl").map(idSvc.resolvePropertyString(_).get.asInstanceOf[String])
 
       scepUrl.foreach { url =>
 
