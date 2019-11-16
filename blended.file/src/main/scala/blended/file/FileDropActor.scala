@@ -59,6 +59,10 @@ case class FileDropCommand(
   // determine the final file name for a file drop
   val finalFile : File = {
 
+    if (trimmedFileName.length() < fileName.length()) {
+      log.warn(s"Using trimmed file name [$trimmedFileName] for [${toString()}]")
+    }
+
     val file = new File(directory, trimmedFileName)
 
     if (!append) {
