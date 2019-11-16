@@ -32,6 +32,8 @@ case class FileDropCommand(
   log : Logger
 ) {
 
+  val trimmedFileName : String = fileName.trim()
+
   override def equals(obj: Any): Boolean = obj match {
     case cmd : FileDropCommand =>
       content.sameElements(cmd.content) &&
@@ -57,7 +59,7 @@ case class FileDropCommand(
   // determine the final file name for a file drop
   val finalFile : File = {
 
-    val file = new File(directory, fileName)
+    val file = new File(directory, trimmedFileName)
 
     if (!append) {
       if (file.exists()) {
@@ -226,7 +228,7 @@ class FileDropActor extends Actor {
         state.is.foreach(_.close())
         state.os.foreach(_.close())
 
-        if (!state.error.isDefined) {
+        if (state.error.isEmpty) {
           state.cmd.log.debug(s"Removing tmp file for [${state.cmd.id}] : [${state.tmpFile}]")
           state.tmpFile.foreach{ tf => Files.delete(tf.toPath()) }
           state.cmd.log.debug(s"Creating final file for [${state.cmd.id}] : [${state.cmd.finalFile}]")
@@ -241,22 +243,30 @@ class FileDropActor extends Actor {
       }
     }
 
-    if (state.error.isDefined) {
+    if (newState.error.isDefined) {
       // in case an error was encountered, we will restore the original file
       // and forget the append
       state.tmpFile.foreach{ tf =>
         try {
           Files.move(tf.toPath(), state.cmd.finalFile.toPath(), REPLACE_EXISTING)
+        } catch {
+          case NonFatal(t) =>
+            newState.cmd.log.warn(t)(s"Error cleaning up files (move) for [${state.cmd}]")
+        }
+
+        try {
           Files.delete(state.outFile.toPath())
         } catch {
           case NonFatal(t) =>
-            state.cmd.log.warn(t)(s"Error cleaning up files for [${state.cmd}]")
+            newState.cmd.log.warn(t)(s"Error cleaning up files (delete) for [${state.cmd}]")
         }
       }
     } else {
       // In case the command was successful, we will delete the tmpfile
       // and create the final file
-      state.cmd.log.info(s"Successfully processed filedrop [${state.cmd}] and created file [${state.cmd.finalFile.getAbsolutePath()}]")
+      newState.cmd.log.info(
+        s"Successfully processed filedrop [${state.cmd}] and created file [${state.cmd.finalFile.getAbsolutePath()}]"
+      )
     }
 
     newState

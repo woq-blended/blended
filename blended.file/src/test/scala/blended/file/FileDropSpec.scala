@@ -67,7 +67,7 @@ class FileDropSpec extends LoggingFreeSpec
       dropFile(dropper, cfg, env).get
     }
 
-    results should have size(count)
+    results should have size count
     assert(results.forall(_.error.isEmpty))
 
     1.to(count).foreach { i =>
@@ -150,11 +150,10 @@ class FileDropSpec extends LoggingFreeSpec
       val content: ByteString = ByteString("Hello Blended" * 10000)
       val zipContent: ByteString = zipCompress(content)
 
-      val ts : String = FileDropCommand.tsPattern.format(new Date())
-      val tmpFile : File = new File(cfg.defaultDir, s"header.txt.$ts.tmp")
-
       genFile(new File(cfg.defaultDir, s"header.txt.${FileDropCommand.tsPattern.format(new Date())}.tmp"), content)
+      // scalastyle:off magic.number
       Thread.sleep(2000)
+      // scalastyle:on magic.number
       genFile(new File(cfg.defaultDir, s"header.txt.${FileDropCommand.tsPattern.format(new Date())}.tmp"), multiply(content, 2))
 
       val env: FlowEnvelope = FlowEnvelope(FlowMessage(zipContent)(FlowMessage.props(
@@ -244,6 +243,27 @@ class FileDropSpec extends LoggingFreeSpec
 
       assert(verifyTargetFile(new File(cfg.defaultDir, "header1.txt"), content))
       assert(verifyTargetFile(new File(cfg.defaultDir, "header2.txt"), content))
+    }
+
+    "use the trimmed filename for file drop commands" in {
+      val cfg: FileDropConfig = prepareDropper(dropCfg)("trimmed")
+      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, envLogger)
+
+      val content: ByteString = ByteString("Hello Blended")
+
+      val env: FlowEnvelope = FlowEnvelope(
+        FlowMessage(content)(FlowMessage.props(
+          cfg.fileHeader -> " test.txt "
+        ).get)
+      )
+
+      dropFile(dropper, cfg, env)
+
+      val files : List[File] = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
+      files should have size 1
+
+      files.head.getName() should be ("test.txt")
+      files.forall { f => verifyTargetFile(f, content) } should be(true)
     }
   }
 }
