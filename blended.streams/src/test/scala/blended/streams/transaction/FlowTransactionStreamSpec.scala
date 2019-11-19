@@ -9,7 +9,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowHeaderConfig
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.{CollectingActor, Collector}
 import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
@@ -67,7 +67,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
             headerCfg = cfg,
             internalCf = None,
             tMgr = tMgr,
-            streamLogger = log,
+            streamLogger = FlowEnvelopeLogger.create(cfg, log)
           ).build()
 
           source

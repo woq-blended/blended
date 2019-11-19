@@ -1,7 +1,6 @@
 package blended.jmx.internal
 
-import java.{lang => jl}
-import java.{math => jm}
+import java.{lang => jl, math => jm}
 
 import javax.management.ObjectName
 import org.scalacheck.{Arbitrary, Gen}

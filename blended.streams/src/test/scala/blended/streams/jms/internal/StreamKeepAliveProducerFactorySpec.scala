@@ -2,24 +2,24 @@ package blended.streams.jms.internal
 
 import java.io.File
 
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
-import blended.testsupport.scalatest.LoggingFreeSpecLike
-import org.scalatest.Matchers
-import blended.container.context.api.ContainerIdentifierService
-import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory, MessageReceived, ProducerMaterialized}
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.streams.BlendedStreamsConfig
-import blended.streams.message.FlowEnvelope
+import blended.container.context.api.ContainerIdentifierService
+import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory, MessageReceived, ProducerMaterialized}
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.testsupport.BlendedTestSupport
+import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
+import org.scalatest.Matchers
 
-import scala.concurrent.{Await, ExecutionContext, Promise}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Promise}
 import scala.util.Success
 
 class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
@@ -40,6 +40,7 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
   implicit private val eCtxt : ExecutionContext = system.dispatcher
 
   private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
   private val cf : BlendedSingleConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None).asInstanceOf[BlendedSingleConnectionFactory]
 
   private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(idSvc)
@@ -53,7 +54,7 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
       system.eventStream.subscribe(probe.ref, classOf[ProducerMaterialized])
 
       val factory : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
-        log = bcf => Logger(s"blended.streams.jms.keepalive.${bcf.vendor}.${bcf.provider}"),
+        log = bcf => FlowEnvelopeLogger.create(headerCfg, Logger(s"blended.streams.jms.keepalive.${bcf.vendor}.${bcf.provider}")),
         idSvc = idSvc,
         streamsCfg = streamCfg
       )

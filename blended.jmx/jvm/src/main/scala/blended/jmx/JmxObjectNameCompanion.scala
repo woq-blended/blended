@@ -2,8 +2,8 @@ package blended.jmx
 
 import javax.management.ObjectName
 
-import scala.language.implicitConversions
 import scala.collection.mutable
+import scala.language.implicitConversions
 import scala.util.Try
 
 class InvalidObjectNameException extends Exception("Expected a concrete object name, the given value is a pattern")

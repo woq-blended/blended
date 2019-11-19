@@ -27,7 +27,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       genFile(testFile)
 
       val src : Source[FlowEnvelope, NotUsed] =
-        Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
+        Source.fromGraph(new FileAckSource(pollCfg, envLogger)).via(new AckProcessor("simplePoll.ack").flow)
 
       val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, Some(timeout))
 
@@ -54,7 +54,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       1.to(numMsg).foreach { i => genFile(new File(pollCfg.sourceDir, s"test_$i.txt")) }
 
       val src : Source[FlowEnvelope, NotUsed] =
-        Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
+        Source.fromGraph(new FileAckSource(pollCfg, envLogger)).via(new AckProcessor("simplePoll.ack").flow)
 
       val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, Some(t))
 
@@ -72,12 +72,10 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       genFile(new File(pollCfg.sourceDir, "test.txt"))
 
       val src : Source[FlowEnvelope, NotUsed] =
-        Source.fromGraph(new FileAckSource(pollCfg))
-          .via(FlowProcessor.fromFunction("simplePoll.fail", log) { _ =>
-            Try {
-              throw new Exception("boom")
-            }
-          })
+        Source.fromGraph(new FileAckSource(pollCfg, envLogger))
+          .via(FlowProcessor.fromFunction("simplePoll.fail", envLogger){ env => Try {
+            throw new Exception("boom")
+          }})
           .via(new AckProcessor("simplePoll.ack").flow)
 
       val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, Some(timeout))
@@ -96,7 +94,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       genFile(new File(pollCfg.sourceDir, "test.txt"))
 
       val src : Source[FlowEnvelope, NotUsed] =
-        Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
+        Source.fromGraph(new FileAckSource(pollCfg, envLogger)).via(new AckProcessor("simplePoll.ack").flow)
 
       val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, Some(timeout))
       Await.result(collector.result, timeout + 100.millis)

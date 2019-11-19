@@ -1,7 +1,7 @@
+import blended.sbt.Dependencies
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import phoenix.ProjectFactory
 import sbt._
-import blended.sbt.Dependencies
 
 object BlendedJmsUtils extends ProjectFactory {
 

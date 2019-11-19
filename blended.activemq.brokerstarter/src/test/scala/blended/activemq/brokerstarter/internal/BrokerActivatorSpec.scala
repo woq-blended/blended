@@ -5,7 +5,7 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
-import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory}
+import blended.jms.utils.{Connected, ConnectionStateChanged}
 import blended.security.internal.SecurityActivator
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike

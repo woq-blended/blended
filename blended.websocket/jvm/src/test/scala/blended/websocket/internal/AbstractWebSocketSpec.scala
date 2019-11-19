@@ -23,12 +23,12 @@ import blended.security.login.api.Token
 import blended.security.login.impl.LoginActivator
 import blended.security.login.rest.internal.RestLoginActivator
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.RichTry._
 import blended.util.logging.Logger
-import blended.websocket.json.PrickleProtocol._
 import blended.websocket._
+import blended.websocket.json.PrickleProtocol._
 import com.softwaremill.sttp._
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
 import org.osgi.framework.BundleActivator

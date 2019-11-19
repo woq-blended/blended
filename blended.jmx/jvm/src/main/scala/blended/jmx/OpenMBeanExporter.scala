@@ -1,8 +1,8 @@
 package blended.jmx
 
-import scala.util.Try
-
 import javax.management.{InstanceAlreadyExistsException, ObjectName}
+
+import scala.util.Try
 
 /**
  * MBean registry (server facade) that supports exporting and removal of scala products and therefore scala case classes.

@@ -1,16 +1,16 @@
 package blended.streams.transaction
 
-import scala.util.{Failure, Success, Try}
-
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Zip}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.{FlowHeaderConfig, FlowProcessor}
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel
+
+import scala.util.{Failure, Success, Try}
 
 /**
   * Consume transaction events from JMS and produce appropiate logging entries.
@@ -42,7 +42,7 @@ class FlowTransactionStream(
   internalCf : Option[IdAwareConnectionFactory],
   headerCfg : FlowHeaderConfig,
   tMgr : FlowTransactionManager,
-  streamLogger: Logger
+  streamLogger: FlowEnvelopeLogger
 )(implicit system: ActorSystem) extends JmsStreamSupport {
 
   private implicit val materializer : Materializer = ActorMaterializer()
@@ -51,7 +51,9 @@ class FlowTransactionStream(
   private val updateEvent : FlowEnvelope => Try[FlowTransactionEvent] = { env =>
     Try {
       val event = FlowTransactionEvent.envelope2event(headerCfg)(env).get
-      streamLogger.trace(s"Received transaction event [${event.transactionId}][${event.state}]")
+      streamLogger.logEnv(
+        env, LogLevel.Trace, s"Received transaction event [${event.transactionId}][${event.state}]"
+      )
       event
     }
   }
@@ -64,7 +66,8 @@ class FlowTransactionStream(
       headerCfg = headerCfg,
       connectionFactory = cf,
       jmsDestination = Some(JmsTopic(s"${headerCfg.prefix}.topic.transactions")),
-      clearPreviousException = true
+      clearPreviousException = true,
+      logLevel = _ => LogLevel.Debug
     )
 
     jmsProducer(name = "logToJms", settings, autoAck = false)
@@ -98,15 +101,23 @@ class FlowTransactionStream(
 
   private val logTransaction : Graph[FlowShape[Try[FlowTransaction], Try[FlowEnvelope]], NotUsed] = {
 
+    val mdc : FlowTransaction => Map[String, String] = trans => FlowEnvelopeLogger.mdcMap(
+      FlowEnvelopeLogger.mdcPrefix(headerCfg), trans.creationProps
+    )
+
     GraphDSL.create() { implicit b =>
 
       val f = b.add(Flow.fromFunction[Try[FlowTransaction], Try[FlowEnvelope]]{
         case Success(t) =>
-          if (t.state == FlowTransactionStateStarted || t.terminated) {
-            streamLogger.info(t.toString())
-          } else {
-            streamLogger.debug(t.toString())
+          t.state match {
+            case FlowTransactionStateStarted | FlowTransactionStateCompleted =>
+              streamLogger.underlying.infoMdc(mdc(t))(t.toString())
+            case FlowTransactionStateFailed =>
+              streamLogger.underlying.warnMdc(mdc(t))(t.toString())
+            case _ =>
+              streamLogger.underlying.debugMdc(mdc(t))(t.toString())
           }
+
           Success(FlowTransaction.transaction2envelope(headerCfg)(t))
         case Failure(t) =>
           Failure(t)
@@ -119,10 +130,10 @@ class FlowTransactionStream(
   private val createResult : ((FlowEnvelope, Try[FlowEnvelope])) => FlowEnvelope = { case (orig, env) =>
     env match {
       case Success(e) =>
-        streamLogger.trace(s"Successfully processed transaction event [${e.id}]")
+        streamLogger.logEnv(e, LogLevel.Trace, s"Successfully processed transaction event [${e.id}]")
         e.withAckHandler(orig.getAckHandler).withRequiresAcknowledge(orig.requiresAcknowledge).clearException()
       case Failure(t) =>
-        streamLogger.trace(s"Failed to process transaction event [${orig.id}]")
+        streamLogger.logEnv(orig, LogLevel.Trace, s"Failed to process transaction event [${orig.id}]")
         orig.withException(t)
     }
   }

@@ -1,10 +1,10 @@
 package blended.streams
 
 import blended.container.context.api.ContainerIdentifierService
+import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
 import scala.concurrent.duration._
-import blended.util.config.Implicits._
 
 object BlendedStreamsConfig {
 

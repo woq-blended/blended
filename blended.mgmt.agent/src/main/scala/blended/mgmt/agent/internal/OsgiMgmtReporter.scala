@@ -3,11 +3,10 @@ package blended.mgmt.agent.internal
 import akka.actor.Props
 import blended.akka.{OSGIActor, OSGIActorConfig}
 import blended.container.context.api.ContainerIdentifierService
+import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 import blended.util.logging.Logger
 
 import scala.util.{Failure, Try}
-
-import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.

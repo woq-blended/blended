@@ -6,18 +6,19 @@ import akka.stream.stage._
 import blended.jms.utils.{ConnectionStateListener, Disconnected, JmsSession}
 import blended.streams.message.FlowEnvelope
 import blended.util.RichTry._
+import blended.util.logging.LogLevel
 import javax.jms.{Destination, MessageProducer}
 
 import scala.concurrent.duration._
-import scala.util.{Random, Success, Try}
 import scala.util.control.NonFatal
+import scala.util.{Random, Success, Try}
 
 final class JmsProducerStage(
   name : String,
   producerSettings: JmsProducerSettings
 )(implicit system : ActorSystem) extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
 
-  producerSettings.log.debug(s"Starting producer [$name]")
+  producerSettings.log.underlying.debug(s"Starting producer [$name]")
 
   private case class Push(env : FlowEnvelope)
 
@@ -41,13 +42,13 @@ final class JmsProducerStage(
 
     private[this] def addProducer(s : String, p : MessageProducer) : Unit = {
       producer = producer + (s -> p)
-      producerSettings.log.debug(s"Producer count of [$id] is [${producer.size}]")
+      producerSettings.log.underlying.debug(s"Producer count of [$id] is [${producer.size}]")
     }
 
     private[this] def removeProducer(s : String) : Unit = {
       if (producer.contains(s)) {
         producer = producer.filterKeys(_ != s)
-        producerSettings.log.debug(s"Producer count of [$id] is [${producer.size}]")
+        producerSettings.log.underlying.debug(s"Producer count of [$id] is [${producer.size}]")
       }
     }
 
@@ -58,7 +59,7 @@ final class JmsProducerStage(
       addProducer(s.sessionId, p)
     })( s => Try {
       producer.get(s.sessionId).foreach{ p =>
-        producerSettings.log.debug(s"Closing message producer for [${s.sessionId}]")
+        producerSettings.log.underlying.debug(s"Closing message producer for [${s.sessionId}]")
         p.close()
         removeProducer(s.sessionId)
       }
@@ -79,7 +80,7 @@ final class JmsProducerStage(
             push(outlet, sendEnvelope(env)(s)(jmsProd))
 
           case None =>
-            producerSettings.log.warn(s"No producer session available in [$id]")
+            producerSettings.log.underlying.warn(s"No producer session available in [$id]")
             scheduleOnce(Push(env), 10.millis)
         }
       } else {
@@ -88,7 +89,7 @@ final class JmsProducerStage(
           connector.getSession(name + "-" + i)
         }
 
-        producerSettings.log.debug(s"No producer available")
+        producerSettings.log.underlying.debug(s"No producer available")
         scheduleOnce(Push(env), 10.millis)
       }
     }
@@ -101,7 +102,7 @@ final class JmsProducerStage(
         val sendTtl : Long = sendParams.ttl match {
           case Some(l) =>
             if (l.toMillis < 0L) {
-              producerSettings.log.warn(
+              producerSettings.log.logEnv(env, LogLevel.Warn,
                 s"The message [${env.id}] has expired and wont be sent to the JMS destination."
               )
             }
@@ -116,7 +117,7 @@ final class JmsProducerStage(
           )
 
           val logDest = s"${producerSettings.connectionFactory.vendor}:${producerSettings.connectionFactory.provider}:$dest"
-          producerSettings.log.debug(
+          producerSettings.log.logEnv(env, LogLevel.Debug,
             s"Successfully sent message to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] " +
               s"with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]"
           )
@@ -129,7 +130,9 @@ final class JmsProducerStage(
         }
       } catch {
         case NonFatal(t) =>
-          producerSettings.log.error(t)(s"Error sending message [${env.id}] to [${producerSettings.jmsDestination}] in [${jmsSession.sessionId}]")
+          producerSettings.log.logEnv(env, LogLevel.Error,
+            s"Error sending message [${env.id}] to [${producerSettings.jmsDestination}] in [${jmsSession.sessionId}]"
+          )
           closeSession.invoke(jmsSession)
           env.withException(t)
       }
@@ -169,7 +172,7 @@ final class JmsProducerStage(
       ){ event => event.state.status match {
         case Disconnected =>
           val msg : String = s"Underlying JMS connection closed for [$id]"
-          producerSettings.log.warn(msg)
+          producerSettings.log.underlying.warn(msg)
           val t : Throwable = new Exception(msg)
           handleError.invoke(t)
         case _ =>
@@ -177,7 +180,7 @@ final class JmsProducerStage(
     }
 
     override def postStop(): Unit = {
-      producerSettings.log.debug(s"Closing JMS Producer stage [$id]")
+      producerSettings.log.underlying.debug(s"Closing JMS Producer stage [$id]")
       stateListener.foreach(system.stop)
       connector.closeAll()
       super.postStop()

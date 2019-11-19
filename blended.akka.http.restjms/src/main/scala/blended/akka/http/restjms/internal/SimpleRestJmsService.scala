@@ -4,19 +4,19 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
 import akka.util.ByteString
 import blended.akka.OSGIActorConfig
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.streams.jms.{JmsConsumerSettings, JmsConsumerStage, JmsEnvelopeHeader, JmsProducerSettings, JmsProducerStage, MessageDestinationResolver, PassThroughKeyFormatStrategy}
-import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, MsgProperty, TextFlowMessage}
+import blended.streams.jms._
+import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowEnvelopeLogger, FlowMessage, TextFlowMessage}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
 
 import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
 class SimpleRestJmsService(
@@ -30,6 +30,7 @@ class SimpleRestJmsService(
   private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private val log : Logger = Logger(s"${getClass().getName()}.$name")
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create(osgiCfg.idSvc), log)
 
   private val defaultContentTypes = List("application/json", "text/xml")
   private val restConfig : RestJMSConfig = RestJMSConfig.fromConfig(osgiCfg.config)
@@ -43,7 +44,7 @@ class SimpleRestJmsService(
   private val pendingRequests : mutable.Map[String, (HttpRequest, Promise[HttpResponse])] = mutable.Map.empty
 
   private val producerSettings : JmsProducerSettings = JmsProducerSettings(
-    log = log,
+    log = envLogger,
     headerCfg = headerCfg,
     connectionFactory = cf,
     destinationResolver = s => new MessageDestinationResolver(s),
@@ -51,11 +52,11 @@ class SimpleRestJmsService(
   )
 
   private val consumerSettings : JmsConsumerSettings = JmsConsumerSettings(
-    log = log,
+    log = envLogger,
     headerCfg = headerCfg,
     connectionFactory = cf,
     jmsDestination = Some(responseDestination),
-    receiveLogLevel = LogLevel.Debug,
+    logLevel = _ => LogLevel.Debug,
     selector = Some(s"${corrIdHeader(headerCfg.prefix)} = '${osgiCfg.idSvc.uuid}'"),
     keyFormatStrategy = new PassThroughKeyFormatStrategy()
   )
@@ -64,7 +65,7 @@ class SimpleRestJmsService(
 
   private val responseSrc : Source[FlowEnvelope, NotUsed] =
     Source.fromGraph(new JmsConsumerStage(s"$name-response", consumerSettings))
-    .via(FlowProcessor.fromFunction("handleResponse", log){ env => Try {
+    .via(FlowProcessor.fromFunction("handleResponse", envLogger){ env => Try {
       handleResponse(env)
       env
     }})

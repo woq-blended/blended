@@ -11,7 +11,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.jmx.statistics.ServiceInvocationReporter
 import blended.streams._
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.{AckProcessor, HeaderProcessorConfig, HeaderTransformProcessor}
 import blended.streams.transaction._
 import blended.streams.{BlendedStreamsConfig, FlowProcessor}
@@ -77,6 +77,7 @@ class BridgeStreamBuilder(
   protected val outId = s"${bridgeCfg.toCf.vendor}:${bridgeCfg.toCf.provider}:${bridgeCfg.toDest.map(_.asString).getOrElse("out")}"
   val streamId = s"${bridgeCfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
   protected val bridgeLogger = Logger(streamId)
+  protected val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(bridgeCfg.headerCfg, bridgeLogger)
   protected val transShard : Option[String] = streamsConfig.transactionShard
 
   protected val jmxComponent : String = "bridge"
@@ -140,7 +141,7 @@ class BridgeStreamBuilder(
     }
 
     JmsProducerSettings(
-      log = bridgeLogger,
+      log = envLogger,
       connectionFactory = cf,
       headerCfg = bridgeCfg.headerCfg
     )
@@ -152,6 +153,8 @@ class BridgeStreamBuilder(
   protected val internalProvider : Try[BridgeProviderConfig] = bridgeCfg.registry.internalProvider
   protected val internalId : (String, String) = (internalProvider.get.vendor, internalProvider.get.provider)
   protected val retryDest : Option[JmsDestination] = internalProvider.get.retry
+
+  protected val retryCount : FlowEnvelope => Long = env => env.header[Long](bridgeCfg.headerCfg.headerRetryCount).getOrElse(0L)
 
   protected val (isInbound, internalCf) : (Boolean, Try[IdAwareConnectionFactory]) = {
 
@@ -169,7 +172,12 @@ class BridgeStreamBuilder(
   protected def jmsSource : Source[FlowEnvelope, NotUsed] = {
 
     // configure the consumer
-    val srcSettings = JmsConsumerSettings(log = bridgeLogger, connectionFactory = bridgeCfg.fromCf, headerCfg = bridgeCfg.headerCfg)
+    val srcSettings = JmsConsumerSettings(
+      log = envLogger,
+      connectionFactory = bridgeCfg.fromCf,
+      headerCfg = bridgeCfg.headerCfg,
+      logLevel = _ => if (isInbound) LogLevel.Info else LogLevel.Debug
+    )
       .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
       .withDestination(Some(bridgeCfg.fromDest))
       .withSessionCount(bridgeCfg.listener)
@@ -178,7 +186,7 @@ class BridgeStreamBuilder(
 
     val stats : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.startStats(
       name = streamId + "-stats",
-      log = bridgeLogger,
+      log = envLogger,
       component = jmxComponent,
       subComp = Map(
         "direction" -> (if (isInbound) "inbound" else "outbound"),
@@ -210,25 +218,31 @@ class BridgeStreamBuilder(
     // If we need to transform additional headers on the inbound leg
     if (bridgeCfg.inbound && bridgeCfg.header.nonEmpty) {
 
-      bridgeLogger.info(s"Creating Stream with header configs [${bridgeCfg.header}]")
+      bridgeLogger.debug(s"Creating Stream with header configs [${bridgeCfg.header}]")
 
       val header : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = HeaderTransformProcessor(
         name = streamId + "-header",
-        log = bridgeLogger,
+        log = envLogger,
         rules = bridgeCfg.header,
         idSvc = bridgeCfg.idSvc
-      ).flow(bridgeLogger)
+      ).flow(envLogger)
 
       src.via(header)
     } else {
-      bridgeLogger.info(s"Creating Stream without additional header configs")
+      bridgeLogger.debug(s"Creating Stream without additional header configs")
       src
     }
   }
 
   // The jms producer for forwarding the messages to the target destination
   protected def jmsSend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
-    jmsProducer(name = streamId + "-sink", settings = toSettings(bridgeCfg.toCf, bridgeCfg.toDest), autoAck = false)
+    jmsProducer(
+      name = streamId + "-sink",
+      settings = toSettings(bridgeCfg.toCf, bridgeCfg.toDest).copy(
+        logLevel = _ => if (isInbound) LogLevel.Debug else LogLevel.Info
+      ),
+      autoAck = false
+    )
   }
 
   // The producer to send the current envelope to the retry queue in case of an error
@@ -237,7 +251,7 @@ class BridgeStreamBuilder(
   protected def jmsRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
     val skipRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-      Flow.fromGraph(FlowProcessor.log(LogLevel.Debug, bridgeLogger, "Skipping retry"))
+      Flow.fromGraph(FlowProcessor.log(LogLevel.Debug, envLogger, "Skipping retry"))
 
     retryDest match {
       case None =>
@@ -257,7 +271,15 @@ class BridgeStreamBuilder(
           .via(
             jmsProducer(
               name = streamId + "-retry",
-              settings = toSettings(bridgeCfg.fromCf, Some(d)).copy(clearPreviousException = true),
+              settings = toSettings(
+                bridgeCfg.fromCf,
+                Some(d)
+              ).copy(
+                clearPreviousException = true,
+                // We want to log the first send to the retry queue in info level and all others to debug,
+                // so that we can decide whether we want to see only the first or all in splunk
+                logLevel = env => if (retryCount(env) == 0) LogLevel.Info else LogLevel.Debug
+              ),
               autoAck = false
             )
           )
@@ -288,7 +310,7 @@ class BridgeStreamBuilder(
     headerCfg = bridgeCfg.headerCfg,
     inbound = bridgeCfg.inbound,
     trackSource = streamId,
-    log = bridgeLogger
+    log = envLogger
   ).flow()
 
   // flow to generate a transaction event from the current envelope and send it to the
@@ -329,7 +351,7 @@ class BridgeStreamBuilder(
   }
 
   protected def logEnvelope(msg : String) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-    Flow.fromGraph(FlowProcessor.log(LogLevel.Debug, bridgeLogger, msg))
+    Flow.fromGraph(FlowProcessor.log(LogLevel.Debug, envLogger, msg))
 
   val stream : Source[FlowEnvelope, NotUsed] = {
 
@@ -338,7 +360,7 @@ class BridgeStreamBuilder(
 
       // We will forward the message to the target destination
       val forward = b.add(jmsSend)
-      val complete = b.add(FlowProcessor.completeStats(streamId + "completeStats", bridgeLogger, bridgeCfg.headerCfg))
+      val complete = b.add(FlowProcessor.completeStats(streamId + "completeStats", envLogger, bridgeCfg.headerCfg))
 
       // Then we have a path where the send is successful and one where the send has failed
       val sendError = b.add(FlowProcessor.partition[FlowEnvelope] {
@@ -372,5 +394,5 @@ class BridgeStreamBuilder(
     jmsSource.via(g)
   }
 
-  bridgeLogger.info(s"Starting bridge stream with config [inbound=${bridgeCfg.inbound},trackTransaction=${bridgeCfg.trackTransaction}]")
+  bridgeLogger.debug(s"Starting bridge stream with config [inbound=${bridgeCfg.inbound},trackTransaction=${bridgeCfg.trackTransaction}]")
 }

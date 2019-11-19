@@ -7,9 +7,9 @@ import java.util.concurrent.TimeUnit.SECONDS
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import blended.updater.{LocalProfile, ProfileId, Updater}
 import blended.updater.Updater.{OperationFailed, OperationSucceeded}
 import blended.updater.config._
+import blended.updater.{LocalProfile, ProfileId, Updater}
 import blended.util.logging.Logger
 import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
 

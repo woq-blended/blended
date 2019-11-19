@@ -3,8 +3,8 @@ package blended.testsupport.retry
 import akka.actor.Scheduler
 import blended.util.logging.Logger
 
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 object Retry {
 

@@ -3,8 +3,8 @@ package blended.updater.internal
 import java.io.File
 
 import blended.akka.ActorSystemWatching
-import blended.updater.{ProfileActivator, ProfileId, Updater, UpdaterConfig}
 import blended.updater.config.{ConfigWriter, OverlayRef, ProfileLookup, RuntimeConfig}
+import blended.updater.{ProfileActivator, ProfileId, Updater, UpdaterConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import domino.DominoActivator

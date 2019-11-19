@@ -2,10 +2,10 @@ package blended.jmx.internal
 
 import java.lang.management.ManagementFactory
 
-import scala.util.Try
-
 import blended.jmx.{MBeanRegistrationSupport, OpenMBeanExporter, OpenMBeanMapper}
 import javax.management.{MBeanServer, ObjectName}
+
+import scala.util.Try
 
 class OpenMBeanExporterImpl(openMbeanMapper: OpenMBeanMapper) extends OpenMBeanExporter with MBeanRegistrationSupport {
 

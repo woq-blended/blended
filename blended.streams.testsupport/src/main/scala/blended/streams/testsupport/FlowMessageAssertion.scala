@@ -2,10 +2,10 @@ package blended.streams.testsupport
 
 import akka.util.ByteString
 import blended.streams.message._
+import blended.util.RichTry._
 import blended.util.logging.Logger
 
 import scala.util.Try
-import blended.util.RichTry._
 
 object FlowMessageAssertion {
 

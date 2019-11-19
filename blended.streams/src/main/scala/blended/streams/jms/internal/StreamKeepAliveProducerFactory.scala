@@ -7,12 +7,12 @@ import akka.stream.{Materializer, OverflowStrategy}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{BlendedSingleConnectionFactory, JmsDestination, ProducerMaterialized}
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
 
 class StreamKeepAliveProducerFactory(
-  log : BlendedSingleConnectionFactory => Logger,
+  log : BlendedSingleConnectionFactory => FlowEnvelopeLogger,
   idSvc : ContainerIdentifierService,
   streamsCfg : BlendedStreamsConfig
 )(implicit system: ActorSystem, materializer : Materializer) extends KeepAliveProducerFactory with JmsStreamSupport {
@@ -34,7 +34,7 @@ class StreamKeepAliveProducerFactory(
     headerCfg = FlowHeaderConfig.create(idSvc),
     connectionFactory = bcf,
     jmsDestination = Some(JmsDestination.create(bcf.config.keepAliveDestination).get),
-    receiveLogLevel = LogLevel.Debug,
+    logLevel = _ => LogLevel.Debug,
     acknowledgeMode = AcknowledgeMode.AutoAcknowledge,
     selector = Some(s"JMSCorrelationID = '${corrId(bcf)}'")
   )

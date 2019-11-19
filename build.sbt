@@ -39,6 +39,7 @@ lazy val blendedDomino = BlendedDomino.project
 lazy val blendedUtil = BlendedUtil.project
 lazy val blendedTestsupport = BlendedTestsupport.project
 lazy val blendedAkka = BlendedAkka.project
+lazy val blendedAkkaLogging = BlendedAkkaLogging.project
 lazy val blendedSecurityCross = BlendedSecurityCross.project
 lazy val blendedSecurityJvm = BlendedSecurityJvm.project
 lazy val blendedSecurityJs = BlendedSecurityJs.project
@@ -106,6 +107,7 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedUtil,
   blendedTestsupport,
   blendedAkka,
+  blendedAkkaLogging,
   blendedSecurityJvm,
   blendedUpdaterConfigJvm,
   blendedLauncher,

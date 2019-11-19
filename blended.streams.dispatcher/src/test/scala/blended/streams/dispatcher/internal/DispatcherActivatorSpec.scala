@@ -66,7 +66,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
         headerCfg = ctxt.bs.headerConfig,
         cf = cf,
         dest = d,
-        log = Logger(loggerName),
+        log = ctxt.envLogger,
         timeout = Some(timeout)
       )
     }
@@ -79,8 +79,8 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     "process inbound messages with a wrong ResourceType" in {
 
       val logSink = Flow[ILoggingEvent]
-        .filter { event =>
-          event.getLevel() == Level.INFO
+        .filter{ event =>
+          event.getLevel() == Level.INFO || event.getLevel() == Level.WARN
         }
         .toMat(Sink.seq[ILoggingEvent])(Keep.right)
 
@@ -90,13 +90,13 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").get
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = Logger(loggerName),
+        log = ctxt.envLogger,
         headerCfg = ctxt.bs.headerConfig,
         connectionFactory = sonic,
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
 
-      val switch = sendMessages(pSettings, Logger(loggerName), env).get
+      val switch = sendMessages(pSettings, ctxt.envLogger, env).get
 
       val results = getResults(
         cf = sonic,
@@ -136,13 +136,13 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoCbe").get
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = Logger(loggerName),
-        ctxt.bs.headerConfig,
+        log = ctxt.envLogger,
+        headerCfg = ctxt.bs.headerConfig,
         connectionFactory = sonic,
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
 
-      val switch = sendMessages(pSettings, Logger(loggerName), env).get
+      val switch = sendMessages(pSettings, ctxt.envLogger, env).get
 
       val results = getResults(
         cf = sonic,

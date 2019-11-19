@@ -1,11 +1,11 @@
 package blended.jmx
 
+import blended.util.RichTry._
 import javax.management.ObjectName
+import javax.management.openmbean.{CompositeData, TabularData}
 
 import scala.collection.JavaConverters._
 import scala.util.Try
-import blended.util.RichTry._
-import javax.management.openmbean.{CompositeData, TabularData}
 
 object JmxAttributeCompanion {
 

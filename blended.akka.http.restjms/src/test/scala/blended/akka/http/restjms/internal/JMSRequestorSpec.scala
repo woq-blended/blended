@@ -2,8 +2,7 @@ package blended.akka.http.restjms.internal
 
 import java.net.URI
 
-import com.softwaremill.sttp._
-import com.softwaremill.sttp.{StatusCodes => SttpStatusCodes}
+import com.softwaremill.sttp.{StatusCodes => SttpStatusCodes, _}
 
 class JMSRequestorSpec extends AbstractJmsRequestorSpec {
 

@@ -65,7 +65,7 @@ class CollectingActor[T](
   override def receive: Receive = Actor.emptyBehavior
 
   private def complete(msgs: Seq[T]) : Unit = {
-    log.info(s"Completing Collector [$name] with [${msgs.size}] messages.")
+    log.debug(s"Completing Collector [$name] with [${msgs.size}] messages.")
     promise.complete(Success(msgs.toList))
     context.stop(self)
   }
@@ -93,5 +93,4 @@ class CollectingActor[T](
 
     case m => log.error(s"Received unhandled message [$m]")
   }
-
 }

@@ -4,10 +4,10 @@ import java.util.Properties
 
 import akka.actor.ActorSystem
 import blended.security.login.api.Token
-import blended.websocket.json.PrickleProtocol._
+import blended.websocket.WsUpdateEmitter.emit
 import blended.websocket._
+import blended.websocket.json.PrickleProtocol._
 import prickle._
-import WsUpdateEmitter.emit
 
 object BlendedCommandPackage {
 

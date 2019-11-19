@@ -8,6 +8,7 @@ import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.management.MBeanServer
 import org.osgi.framework.BundleActivator
+
 import scala.concurrent.duration._
 
 class JmxActivatorSpec extends SimplePojoContainerSpec

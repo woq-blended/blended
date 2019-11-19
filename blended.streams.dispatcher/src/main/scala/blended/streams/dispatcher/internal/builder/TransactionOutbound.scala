@@ -7,11 +7,11 @@ import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction._
 import blended.streams._
-import blended.util.logging.{LogLevel, Logger}
+import blended.util.logging.LogLevel
 
 import scala.util.Try
 
@@ -21,7 +21,7 @@ class TransactionOutbound(
   dispatcherCfg : ResourceTypeRouterConfig,
   internalCf: IdAwareConnectionFactory,
   streamsCfg : BlendedStreamsConfig,
-  log: Logger
+  log: FlowEnvelopeLogger
 )(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport {
 
   private implicit val materializer : Materializer = ActorMaterializer()
@@ -38,7 +38,7 @@ class TransactionOutbound(
 
     val srcSettings = JmsConsumerSettings(
       log = log,
-      receiveLogLevel = LogLevel.Debug,
+      logLevel = _ => LogLevel.Debug,
       headerCfg = headerConfig,
       connectionFactory = internalCf
     )
@@ -60,7 +60,7 @@ class TransactionOutbound(
         env.header[String](bs.headerConfig.headerState).getOrElse(FlowTransactionStateUpdated.toString())
       ).get != FlowTransactionStateUpdated
 
-    log.debug(s"CBE generation for envelope [${env.id}] is [$result]")
+    log.logEnv(env, LogLevel.Debug, s"CBE generation for envelope [${env.id}] is [$result]")
     result
   }
 
@@ -75,7 +75,7 @@ class TransactionOutbound(
         headerConfig = headerConfig,
         dispatcherCfg = dispatcherCfg,
         internalCf = internalCf,
-        log = log
+        streamLogger = log
       ).build())
 
       cbeSplit.out0 ~> cbeFlow ~> join.in(0)

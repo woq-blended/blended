@@ -3,8 +3,8 @@ package blended.websocket.internal
 import akka.actor.{Actor, ActorRef, Props, Terminated}
 import blended.security.login.api.Token
 import blended.util.logging.Logger
-import blended.websocket.{WithKey, WsContext}
 import blended.websocket.WsUpdateEmitter.emit
+import blended.websocket.{WithKey, WsContext}
 import prickle.Pickler
 
 import scala.concurrent.ExecutionContext

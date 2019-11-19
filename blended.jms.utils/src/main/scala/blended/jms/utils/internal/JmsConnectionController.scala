@@ -1,13 +1,13 @@
 package blended.jms.utils.internal
 
 import akka.actor.{Actor, ActorRef, Cancellable, Props}
-import blended.util.logging.Logger
 import blended.jms.utils._
+import blended.util.logging.Logger
 import javax.jms.Connection
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
-import scala.concurrent.ExecutionContext
 
 object JmsConnectionController {
   def props(

@@ -3,9 +3,9 @@ package blended.file
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.stage._
 import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -23,9 +23,9 @@ class FileDropStage(
   name : String,
   config : FileDropConfig,
   headerCfg : FlowHeaderConfig,
-  dropActor : ActorRef,
-  log : Logger
-)(implicit system : ActorSystem)
+  dropActor: ActorRef,
+  log: FlowEnvelopeLogger
+)(implicit system: ActorSystem)
   extends GraphStage[FlowShape[FlowEnvelope, FileDropResult]] {
 
   private val in = Inlet[FlowEnvelope](s"FileDropStream($name.in)")
@@ -43,8 +43,8 @@ class FileDropStage(
         cfg = config, headerConfig = headerCfg, dropActor = dropActor, log = log
       )
 
-      private val resultCallback : AsyncCallback[FileDropResult] = getAsyncCallback[FileDropResult] { r =>
-        log.debug(s"Filedrop result is [$r]")
+      private val resultCallback : AsyncCallback[FileDropResult] = getAsyncCallback[FileDropResult]{ r =>
+        log.underlying.debug(s"Filedrop result is [$r]")
         results = r :: results
 
         pushResult()
@@ -68,7 +68,7 @@ class FileDropStage(
       setHandler(in, new InHandler {
         override def onPush() : Unit = {
           val env = grab(in)
-          log.debug(s"Filedropstage [$name] is processing envelope [${env.id}]")
+          log.logEnv(env, LogLevel.Debug, s"Filedropstage [$name] is processing envelope [${env.id}]")
           val (cmd, result) = dropper.dropEnvelope(env)
 
           result.onComplete {

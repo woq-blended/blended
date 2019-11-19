@@ -31,7 +31,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
   val headerExistsFilter : String => FlowEnvelope => Boolean = key => env => env.flowMessage.header.isDefinedAt(key)
   val headerMissingFilter : String => FlowEnvelope => Boolean = key => env => !env.flowMessage.header.isDefinedAt(key)
-  val headerFilter : String => AnyRef => FlowEnvelope => Boolean = key => value => env => env.header[AnyRef](key) == Some(value)
+  val headerFilter : String => AnyRef => FlowEnvelope => Boolean = key => value => env => env.header(key).contains(value)
   def filterEnvelopes(envelopes : Seq[FlowEnvelope])(f : FlowEnvelope => Boolean) : Seq[FlowEnvelope] = envelopes.filter(f)
 
   case class DispatcherResult(
@@ -62,13 +62,13 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
     val sinkGraph : Graph[SinkShape[FlowEnvelope], NotUsed] = {
       GraphDSL.create() { implicit builder =>
-        import GraphDSL.Implicits._
+
 
         val out : Inlet[FlowEnvelope] = builder.add(jmsCollector.sink).in
         val worklist : Inlet[WorklistEvent] = builder.add(wlCollector.sink).in
         val error : Inlet[FlowEnvelope] = builder.add(errCollector.sink).in
 
-        val dispatcher = builder.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, goodFlow)(ctxt.bs).core())
+        val dispatcher = builder.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, goodFlow, ctxt.envLogger)(ctxt.bs).core())
 
         dispatcher.out0 ~> out
         dispatcher.out1 ~> worklist
@@ -144,7 +144,8 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
         val builder = DispatcherBuilder(
           idSvc = ctxt.idSvc,
           dispatcherCfg = ctxt.cfg,
-          goodFlow
+          sendFlow = goodFlow,
+          envLogger = ctxt.envLogger
         )(ctxt.bs)
 
         val core = builder.core()(ctxt.system)

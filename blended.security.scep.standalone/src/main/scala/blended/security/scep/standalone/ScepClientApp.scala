@@ -12,8 +12,8 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 object ScepClientApp {
 

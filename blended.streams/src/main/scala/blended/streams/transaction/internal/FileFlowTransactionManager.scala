@@ -15,11 +15,11 @@ import blended.util.logging.Logger
 import prickle._
 
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.io.BufferedSource
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
-import scala.concurrent.duration._
 
 object FileFlowTransactionManager {
   def apply(dir : File)(implicit system : ActorSystem) : FileFlowTransactionManager = new FileFlowTransactionManager(

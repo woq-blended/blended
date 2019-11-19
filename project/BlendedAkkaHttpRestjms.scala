@@ -1,7 +1,7 @@
 import blended.sbt.Dependencies
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import phoenix.ProjectFactory
 import sbt._
-import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 object BlendedAkkaHttpRestjms extends ProjectFactory {
 

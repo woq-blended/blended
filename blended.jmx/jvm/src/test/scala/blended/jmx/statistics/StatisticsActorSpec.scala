@@ -4,8 +4,8 @@ import java.lang.management.ManagementFactory
 
 import akka.actor.{ActorSystem, Scheduler}
 import akka.testkit.TestKit
-import blended.jmx.{JmxObjectName, OpenMBeanExporter, OpenMBeanMapper}
 import blended.jmx.internal.{OpenMBeanExporterImpl, OpenMBeanMapperImpl}
+import blended.jmx.{JmxObjectName, OpenMBeanExporter, OpenMBeanMapper}
 import blended.testsupport.retry.Retry
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.management.{InstanceNotFoundException, MBeanServer, ObjectName}

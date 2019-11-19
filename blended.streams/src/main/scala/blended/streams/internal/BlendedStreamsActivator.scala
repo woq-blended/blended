@@ -6,8 +6,9 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.utils._
-import blended.streams.BlendedStreamsConfig
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
 import blended.streams.jms.internal.{JmsKeepAliveController, KeepAliveProducerFactory, StreamKeepAliveProducerFactory}
+import blended.streams.message.FlowEnvelopeLogger
 import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.streams.transaction.{FlowTransactionManager, FlowTransactionManagerConfig, TransactionManagerCleanupActor}
 import blended.util.config.Implicits._
@@ -18,15 +19,18 @@ import domino.service_watching.ServiceWatcherEvent
 class BlendedStreamsActivator extends DominoActivator
   with ActorSystemWatching {
 
-  private val log : Logger = Logger[BlendedStreamsActivator]
 
   whenBundleActive {
     whenActorSystemAvailable{ osgiCfg =>
 
-      log.info(s"Starting bundle [${bundleContext.getBundle().getSymbolicName()}]")
+      val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(osgiCfg.idSvc)
+      val log : Logger = Logger[BlendedStreamsActivator]
+
+      log.debug(s"Starting bundle [${bundleContext.getBundle().getSymbolicName()}]")
 
       implicit val system : ActorSystem = osgiCfg.system
       implicit val materializer : Materializer = ActorMaterializer()
+
 
       val baseDir : File = new File(osgiCfg.idSvc.getContainerContext().getContainerDirectory())
 
@@ -36,7 +40,7 @@ class BlendedStreamsActivator extends DominoActivator
 
       val tMgr : FlowTransactionManager = new FileFlowTransactionManager(tMgrConfig)
 
-      log.info(s"Starting clean up actor for transaction manager with config [$tMgrConfig]")
+      log.debug(s"Starting clean up actor for transaction manager with config [$tMgrConfig]")
       val tMgrCleanup : ActorRef = osgiCfg.system.actorOf(TransactionManagerCleanupActor.props(tMgr, tMgrConfig))
 
       tMgr.providesService[FlowTransactionManager]("directory" -> tMgrConfig.dir.getAbsolutePath())
@@ -47,7 +51,7 @@ class BlendedStreamsActivator extends DominoActivator
       // initialise the JMS keep alive streams
 
       val pf : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
-        log = bcf => Logger(s"blended.streams.keepalive.${bcf.vendor}.${bcf.provider}"),
+        log = bcf => FlowEnvelopeLogger.create(headerCfg, Logger(s"blended.streams.keepalive.${bcf.vendor}.${bcf.provider}")),
         idSvc = osgiCfg.idSvc,
         streamsCfg = streamsCfg
       )

@@ -1,12 +1,7 @@
 package blended.jmx.internal
 
 import java.util.Date
-import java.{lang => jl}
-import java.{math => jm}
-
-import scala.reflect.ClassTag
-import scala.reflect.classTag
-import scala.collection.JavaConverters._
+import java.{lang => jl, math => jm}
 
 import blended.jmx.JmxAttributeCompanion
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -16,6 +11,9 @@ import javax.management.openmbean.{ArrayType, SimpleType, TabularData}
 import org.scalacheck.Arbitrary
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
+
+import scala.collection.JavaConverters._
+import scala.reflect.{ClassTag, classTag}
 
 class OpenMBeanMapperSpec extends LoggingFreeSpec with PropertyChecks with Matchers {
 

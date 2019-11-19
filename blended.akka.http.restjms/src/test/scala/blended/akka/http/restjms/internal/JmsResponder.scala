@@ -6,9 +6,9 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Source}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
-import blended.streams.jms.{JmsConsumerSettings, JmsConsumerStage, JmsEnvelopeHeader, JmsProducerSettings, JmsProducerStage, MessageDestinationResolver}
+import blended.streams.jms._
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
-import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._
@@ -32,16 +32,17 @@ class JMSResponder(
   private val log : Logger = Logger[JMSResponder]
   private var streamActor : Option[ActorRef] = None
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   private val consumerSettings : JmsConsumerSettings = JmsConsumerSettings(
-    log = log,
+    log = envLogger,
     headerCfg = headerCfg,
     connectionFactory = cf,
     jmsDestination = Some(JmsQueue("redeem"))
   )
 
   private val producerSettings : JmsProducerSettings = JmsProducerSettings(
-    log = log,
+    log = envLogger,
     headerCfg = headerCfg,
     connectionFactory = cf,
     destinationResolver = s => new MessageDestinationResolver(s)
@@ -50,7 +51,7 @@ class JMSResponder(
   def start() : Unit = {
     val src : Source[FlowEnvelope, NotUsed] =
       Source.fromGraph(new JmsConsumerStage("requestor-src", consumerSettings, None))
-      .via(FlowProcessor.fromFunction("respond", log){ env => Try {
+      .via(FlowProcessor.fromFunction("respond", envLogger){ env => Try {
         val body : String = env.header[String]("Content-Type") match {
           case Some("text/xml")   => MockResponses.xml
           case Some("application/json") => MockResponses.json

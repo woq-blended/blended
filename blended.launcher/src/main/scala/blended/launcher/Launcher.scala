@@ -497,7 +497,7 @@ class Launcher private (config : LauncherConfig) {
       val frameworkWiring = framework.adapt(classOf[FrameworkWiring])
       frameworkWiring.resolveBundles(null /* all bundles */ )
       val secondAttemptInstalled = osgiBundles.filter(b => b.bundle.getState() == Bundle.INSTALLED && !isFragment(b))
-      log.debug(s"The following bundles could not be resolved : ${
+      log.warn(s"The following bundles could not be resolved : ${
         secondAttemptInstalled.map(
           b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}"
         ).mkString("\n", "\n", "")

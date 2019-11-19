@@ -2,10 +2,10 @@ package blended.jmx
 
 import java.lang.management.ManagementFactory
 
+import blended.jmx.JmxObjectNameCompanion._
 import blended.jmx.internal.BlendedMBeanServerFacadeImpl
 import blended.util.RichTry._
 import org.scalatest.{FreeSpec, Matchers}
-import JmxObjectNameCompanion._
 
 class MbeanServerFacadeSpec extends FreeSpec
   with Matchers {

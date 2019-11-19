@@ -5,10 +5,9 @@ import java.util.UUID
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.stage.{AsyncCallback, GraphStage, GraphStageLogic}
-import blended.jms.utils.{ConnectionStateListener, Disconnected, JmsDestination, JmsSession, MessageReceived}
-import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
-import blended.streams.FlowHeaderConfig
-import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
+import blended.jms.utils._
+import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
+import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext, FlowHeaderConfig}
 import blended.util.RichTry._
 import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.Logger
@@ -47,7 +46,7 @@ final class JmsConsumerStage(
 )(implicit actorSystem : ActorSystem)
   extends GraphStage[SourceShape[FlowEnvelope]] {
 
-  consumerSettings.log.debug(s"Starting consumer [$name]")
+  consumerSettings.log.underlying.debug(s"Starting consumer [$name]")
 
   private val headerConfig : FlowHeaderConfig = consumerSettings.headerCfg
   private val out : Outlet[FlowEnvelope] = Outlet[FlowEnvelope](s"JmsAckSource($name.out)")
@@ -64,12 +63,16 @@ final class JmsConsumerStage(
 
     override def deny(): Unit = {
       sessionClose(session)
-      consumerSettings.log.log(consumerSettings.receiveLogLevel, s"Message [${envelope.id}] has been denied. Closing receiving session.")
+      consumerSettings.log.logEnv(
+        env, consumerSettings.logLevel(env), s"Message [${envelope.id}] has been denied. Closing receiving session."
+      )
     }
 
     override def acknowledge(): Unit = {
       jmsMessageAck(jmsMessage)
-      consumerSettings.log.log(consumerSettings.receiveLogLevel, s"Acknowledged envelope [${envelope.id}] for session [${session.sessionId}]")
+      consumerSettings.log.logEnv(
+        env, consumerSettings.logLevel(env), s"Acknowledged envelope [${envelope.id}] for session [${session.sessionId}]"
+      )
     }
   }
 
@@ -78,12 +81,10 @@ final class JmsConsumerStage(
     /** The id to identify the instance in the log files */
     override protected val id: String = name
 
-    override val log: Logger = consumerSettings.log
+    override val log: FlowEnvelopeLogger = consumerSettings.log
     override val autoAcknowledge: Boolean = consumerSettings.acknowledgeMode == AcknowledgeMode.AutoAcknowledge
 
     private var stateListener : Option[ActorRef] = None
-
-    override protected val receiveLogLevel: LogLevel = consumerSettings.receiveLogLevel
 
     private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable](t => failStage(t))
 
@@ -99,12 +100,12 @@ final class JmsConsumerStage(
 
     private[this] def addConsumer(s : String, c : MessageConsumer) : Unit = {
       consumer.put(s, c)
-      consumerSettings.log.debug(s"Jms Consumer count of [$name] is [${consumer.size}]")
+      consumerSettings.log.underlying.debug(s"Jms Consumer count of [$name] is [${consumer.size}]")
     }
 
     private[this] def removeConsumer(s : String) : Unit = {
       consumer.remove(s)
-      consumerSettings.log.debug(s"Consumer count of [$name] is [${consumer.size}]")
+      consumerSettings.log.underlying.debug(s"Consumer count of [$name] is [${consumer.size}]")
     }
 
     private val closeSession : AsyncCallback[JmsSession] = getAsyncCallback(s => connector.closeSession(s.sessionId))
@@ -112,7 +113,7 @@ final class JmsConsumerStage(
 
     private lazy val connector : JmsConnector = new JmsConnector(id, consumerSettings)(session => Try {
       // After session opened
-      consumerSettings.log.debug(
+      consumerSettings.log.underlying.debug(
         s"Creating message consumer for session [${session.sessionId}], " +
           s"destination [$srcDest] and selector [${consumerSettings.selector}]"
       )
@@ -122,13 +123,13 @@ final class JmsConsumerStage(
           addConsumer(session.sessionId, c)
 
         case Failure(e) =>
-          consumerSettings.log.debug(s"Failed to create consumer for session [${session.sessionId}] : [${e.getMessage()}]")
+          consumerSettings.log.underlying.debug(s"Failed to create consumer for session [${session.sessionId}] : [${e.getMessage()}]")
           closeSession.invoke(session)
       }
     })( s => Try {
       // before session close
       consumer.get(s.sessionId).foreach{ c =>
-        consumerSettings.log.debug(s"Closing message consumer for [${s.sessionId}]")
+        consumerSettings.log.underlying.debug(s"Closing message consumer for [${s.sessionId}]")
         c.close()
         removeConsumer(s.sessionId)
       }
@@ -174,7 +175,7 @@ final class JmsConsumerStage(
               if (age <= d.toMillis) {
                 closeSession.invoke(session)
                 nextPollRelative = Some( (d.toMillis - age).millis )
-                consumerSettings.log.debug(s"Message has not reached the minimum message delay yet ...rescheduling in [$nextPollRelative]")
+                consumerSettings.log.underlying.debug(s"Message has not reached the minimum message delay yet ...rescheduling in [$nextPollRelative]")
                 None
               } else {
                 nextPollRelative = None
@@ -195,10 +196,10 @@ final class JmsConsumerStage(
       val envelopeId : String = flowMessage.header[String](headerConfig.headerTransId) match {
         case None =>
           val newId = UUID.randomUUID().toString()
-          consumerSettings.log.trace(s"Created new envelope id [$newId]")
+          consumerSettings.log.underlying.trace(s"Created new envelope id [$newId]")
           newId
         case Some(s) =>
-          consumerSettings.log.trace(s"Reusing transaction id [$s] as envelope id")
+          consumerSettings.log.underlying.trace(s"Reusing transaction id [$s] as envelope id")
           s
       }
 
@@ -220,8 +221,7 @@ final class JmsConsumerStage(
 
               val msgAge : Long = now - e.header[Long](timestampHeader(headerConfig.prefix)).getOrElse(now)
 
-              consumerSettings.log.log(
-                consumerSettings.receiveLogLevel,
+              consumerSettings.log.logEnv(e, consumerSettings.logLevel(e),
                 s"Message received [${e.id}][${consumerSettings.jmsDestination.map(_.asString)}] after " +
                   s"[$msgAge]ms in [${s.sessionId}] : ${e.flowMessage}"
               )
@@ -253,7 +253,7 @@ final class JmsConsumerStage(
       ){ event => event.state.status match {
         case Disconnected =>
           val msg : String = s"Underlying JMS connection closed for [$id]"
-          consumerSettings.log.warn(msg)
+          consumerSettings.log.underlying.warn(msg)
           val t : Throwable = new Exception(msg)
           handleError.invoke(t)
         case _ =>
@@ -261,7 +261,7 @@ final class JmsConsumerStage(
     }
 
     override def postStop(): Unit = {
-      log.debug(s"Stopping JmsConsumerStage [$id].")
+      log.underlying.debug(s"Stopping JmsConsumerStage [$id].")
       stateListener.foreach(actorSystem.stop)
       connector.closeAll()
       super.postStop()

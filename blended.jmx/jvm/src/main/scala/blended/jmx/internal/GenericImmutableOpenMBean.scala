@@ -1,7 +1,7 @@
 package blended.jmx.internal
 
 import javax.management.openmbean.OpenType
-import javax.management.{Attribute, AttributeList, AttributeNotFoundException, DynamicMBean, MBeanInfo}
+import javax.management._
 
 class GenericImmutableOpenMBean(mBeanInfo: MBeanInfo, attributes: Map[String, GenericImmutableOpenMBean.Element]) extends DynamicMBean {
 

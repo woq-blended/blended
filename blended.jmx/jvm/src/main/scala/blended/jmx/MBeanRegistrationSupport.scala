@@ -1,9 +1,9 @@
 package blended.jmx
 
-import scala.util.Try
-
 import blended.util.logging.Logger
 import javax.management.{InstanceNotFoundException, MBeanServer, ObjectName}
+
+import scala.util.Try
 
 trait MBeanRegistrationSupport {
 

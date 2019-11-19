@@ -3,15 +3,15 @@ package blended.streams.file
 import java.io.File
 import java.nio.charset.Charset
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.{Date, UUID}
 
 import akka.actor.ActorSystem
 import akka.stream.stage.{GraphStage, GraphStageLogic}
 import akka.stream.{Attributes, Outlet, SourceShape}
-import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
+import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
 import blended.util.FileHelper
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel
 
 import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
@@ -42,31 +42,31 @@ object FileAckSource {
 }
 
 class FileAckSource(
-  pollCfg : FilePollConfig
-) extends GraphStage[SourceShape[FlowEnvelope]] {
+  pollCfg : FilePollConfig,
+  logger : FlowEnvelopeLogger
+)(implicit system : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
-  private val pollId : String = s"${pollCfg.headerCfg.prefix}.FilePoller.${pollCfg.id}.source"
+  private val pollId : String =  s"${pollCfg.headerCfg.prefix}.FilePoller.${pollCfg.id}.source"
   private val out : Outlet[FlowEnvelope] = Outlet(name = pollId)
   private val sdf = new SimpleDateFormat("yyyyMMdd-HHmmssSSS")
 
-  override def shape : SourceShape[FlowEnvelope] = SourceShape(out)
+  override def shape: SourceShape[FlowEnvelope] = SourceShape(out)
 
   private class FileAckContext(
     inflightId : String,
-    env : FlowEnvelope,
+    env: FlowEnvelope,
     val originalFile : File,
-    val fileToProcess : File,
-    val log : Logger
+    val fileToProcess : File
   ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis()) {
 
     override def acknowledge() : Unit = {
-      log.info(s"Successfully processed envelope [${envelope.id}]")
+      logger.logEnv(env, LogLevel.Info, s"Successfully processed envelope [${envelope.id}]")
       pollCfg.backup match {
         case None =>
           if (fileToProcess.delete()) {
-            log.info(s"Deleted file for [${envelope.id}] : [${fileToProcess}]")
+            logger.logEnv(env, LogLevel.Debug, s"Deleted file for [${envelope.id}] : [${fileToProcess}]")
           } else {
-            log.warn(s"File for [${envelope.id}] could not be deleted : [${fileToProcess}]")
+            logger.logEnv(env, LogLevel.Warn, s"File for [${envelope.id}] could not be deleted : [${fileToProcess}]")
           }
         case Some(d) =>
 
@@ -81,18 +81,17 @@ class FileAckSource(
           val fTo : File = new File(backupDir, backupFileName)
 
           if (FileHelper.renameFile(fFrom, fTo)) {
-            log.info(s"Moved file for [${envelope.id}] from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
+            logger.logEnv(env, LogLevel.Debug, s"Moved file for [${envelope.id}] from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
           } else {
-            log.warn(s"File for [${envelope.id}] failed to be renamed from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
+            logger.logEnv(env, LogLevel.Debug, s"File for [${envelope.id}] failed to be renamed from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
           }
       }
     }
 
     override def deny() : Unit = {
-      log.info(s"Restoring file [${originalFile}] in [${inflightId}]")
+      logger.logEnv(env, LogLevel.Debug, s"Restoring file [${originalFile}] in [${inflightId}]")
       FileHelper.renameFile(fileToProcess, originalFile)
     }
-
   }
 
   private class FileSourceLogic() extends AckSourceLogic[FileAckContext](shape, out, pollCfg.ackTimeout) {
@@ -100,9 +99,9 @@ class FileAckSource(
     override val id : String = pollId
 
     /** A logger that must be defined by concrete implementations */
-    override protected val log : Logger = Logger(pollId)
+    override protected def log: FlowEnvelopeLogger = logger
 
-    log.info(s"Initializing FileAckSource with config [$pollCfg], ackTimeout [$ackTimeout]")
+    log.underlying.debug(s"Initializing FileAckSource with config [$pollCfg], ackTimeout [$ackTimeout]")
 
     /** The id's of the available inflight slots */
     override protected val inflightSlots : List[String] =
@@ -117,8 +116,7 @@ class FileAckSource(
         val sdf : SimpleDateFormat = new SimpleDateFormat("yyyyMMdd-HHmmssSSS")
 
         if (f.exists()) {
-          val envId : String = s"${sdf.format(new Date())}-${f.getName()}"
-          log.info(s"Processing file [$f] in [$id] with [$envId]")
+          val uuid : String = UUID.randomUUID().toString()
 
           val fileToProcess : File = new File(f + pollCfg.tmpExt)
 
@@ -128,31 +126,28 @@ class FileAckSource(
 
             val msg : FlowMessage = if (pollCfg.asText) {
               val charSet : Charset = pollCfg.charSet match {
-                case None    => Charset.defaultCharset()
+                case None => Charset.defaultCharset()
                 case Some(s) => Charset.forName(s)
               }
-
-              log.debug(s"Using charset [${charSet.displayName()}] to create text message.")
 
               FlowMessage(new String(bytes, charSet))(pollCfg.header)
             } else {
               FlowMessage(bytes)(pollCfg.header)
             }
 
-            val env : FlowEnvelope = FlowEnvelope(msg, envId)
+            val env : FlowEnvelope = FlowEnvelope(msg,uuid)
               .withHeader(pollCfg.filenameProp, f.getName()).get
               .withHeader(pollCfg.filepathProp, f.getAbsolutePath()).get
               .withRequiresAcknowledge(true)
               .withAckHandler(Some(ackHandler))
 
-            log.debug(s"Created Envelope [$env] in [$id]]")
+            log.logEnv(env, LogLevel.Info, s"Created Envelope [$env] in [$id]]")
 
             Some(new FileAckContext(
               inflightId = id,
               env = env,
               originalFile = f,
-              fileToProcess = fileToProcess,
-              log = log
+              fileToProcess = fileToProcess
             ))
           } else {
             None
@@ -175,8 +170,8 @@ class FileAckSource(
     }
 
     /**
-     * The file poller can be locked by the existence of a lock file if specified.
-     */
+      * The file poller can be locked by the existence of a lock file if specified.
+      */
     private[this] def locked() : Boolean = pollCfg.lock match {
       case None => false
       case Some(l) =>
@@ -187,7 +182,7 @@ class FileAckSource(
         }
 
         if (f.exists()) {
-          log.info(s"Directory for [${pollCfg.id}] is locked with file [${f.getAbsolutePath()}]")
+          log.underlying.debug(s"Directory for [${pollCfg.id}] is locked with file [${f.getAbsolutePath()}]")
           true
         } else {
           false
@@ -195,5 +190,6 @@ class FileAckSource(
     }
   }
 
-  override def createLogic(inheritedAttributes : Attributes) : GraphStageLogic = new FileSourceLogic()
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new FileSourceLogic()
 }

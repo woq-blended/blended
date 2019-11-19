@@ -3,11 +3,11 @@ package blended.jmx
 import java.lang.management.ManagementFactory
 
 import blended.jmx.internal.BlendedMBeanServerFacadeImpl
-import blended.testsupport.scalatest.LoggingFreeSpec
-import org.scalatest.Matchers
-import blended.util.RichTry._
-import prickle._
 import blended.jmx.json.PrickleProtocol._
+import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.util.RichTry._
+import org.scalatest.Matchers
+import prickle._
 
 class JmxAttributeCompanionSpec extends LoggingFreeSpec
   with Matchers {

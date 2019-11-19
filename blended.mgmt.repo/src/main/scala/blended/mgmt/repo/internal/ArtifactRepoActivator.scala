@@ -3,8 +3,8 @@ package blended.mgmt.repo.internal
 import java.io.File
 
 import blended.domino.TypesafeConfigWatching
-import blended.mgmt.repo.{ArtifactRepo, WritableArtifactRepo}
 import blended.mgmt.repo.file.FileArtifactRepo
+import blended.mgmt.repo.{ArtifactRepo, WritableArtifactRepo}
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigException
 import domino.DominoActivator

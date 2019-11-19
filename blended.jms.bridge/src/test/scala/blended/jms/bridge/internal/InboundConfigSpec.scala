@@ -8,9 +8,9 @@ import blended.streams.processor.HeaderProcessorConfig
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.MockContainerContext
 import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.util.RichTry._
 import com.typesafe.config.ConfigFactory
 import org.scalatest.Matchers
-import blended.util.RichTry._
 
 class InboundConfigSpec extends LoggingFreeSpec
   with Matchers {

@@ -3,9 +3,9 @@ package blended.streams.file
 import java.io.File
 import java.nio.file.{DirectoryStream, Files, Path}
 
-import scala.collection.JavaConverters._
 import blended.util.logging.Logger
 
+import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 
 class DirectorySource(pollCfg : FilePollConfig) {

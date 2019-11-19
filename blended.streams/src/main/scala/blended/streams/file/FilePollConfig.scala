@@ -1,8 +1,8 @@
 package blended.streams.file
 
 import blended.container.context.api.ContainerIdentifierService
-import blended.streams.message.{FlowMessage, MsgProperty}
 import blended.streams.FlowHeaderConfig
+import blended.streams.message.{FlowMessage, MsgProperty}
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 

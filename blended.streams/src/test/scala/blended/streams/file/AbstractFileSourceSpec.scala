@@ -9,19 +9,19 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.streams.{FlowProcessor, StreamFactories}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.{AckProcessor, Collector}
-import blended.testsupport.{BlendedTestSupport, FileTestSupport}
+import blended.streams.{FlowHeaderConfig, FlowProcessor, StreamFactories}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.testsupport.{BlendedTestSupport, FileTestSupport}
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
 
 abstract class AbstractFileSourceSpec extends SimplePojoContainerSpec
@@ -43,6 +43,7 @@ abstract class AbstractFileSourceSpec extends SimplePojoContainerSpec
   protected implicit val eCtxt : ExecutionContext = system.dispatcher
   protected implicit val materializer : Materializer = ActorMaterializer()
   protected val log : Logger = Logger[FileSourceSpec]
+  protected val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create(idSvc), log)
 
   val rawCfg : Config = idSvc.getContainerContext().getContainerConfig().getConfig("simplePoll")
 
@@ -52,8 +53,8 @@ abstract class AbstractFileSourceSpec extends SimplePojoContainerSpec
 
     def pollFiles(t : FiniteDuration) : List[FlowEnvelope] = {
       val src : Source[FlowEnvelope, NotUsed] =
-        Source.fromGraph(new FileAckSource(pollCfg))
-          .via(FlowProcessor.fromFunction("event", log){ env => Try {
+        Source.fromGraph(new FileAckSource(pollCfg, envLogger))
+          .via(FlowProcessor.fromFunction("event", envLogger){ env => Try {
             system.eventStream.publish(FilePolled(env))
             env
           }})

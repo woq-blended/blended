@@ -5,8 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
-import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.jms.utils._
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.jms.JMSException
 
 import scala.concurrent.duration._

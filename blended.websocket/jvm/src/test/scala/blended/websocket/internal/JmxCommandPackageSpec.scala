@@ -3,8 +3,8 @@ package blended.websocket.internal
 import akka.http.scaladsl.model.ws.TextMessage
 import akka.testkit.TestProbe
 import blended.util.logging.Logger
-import blended.websocket.json.PrickleProtocol._
 import blended.websocket._
+import blended.websocket.json.PrickleProtocol._
 
 import scala.concurrent.duration._
 

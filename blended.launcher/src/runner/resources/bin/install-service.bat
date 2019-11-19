@@ -26,7 +26,14 @@ set CP=%BLENDED_HOME%/etc^
 ;%BLENDED_HOME%/lib/scala-library-@scala.library.version@.jar^
 ;%BLENDED_HOME%/lib/slf4j-api-@slf4j.version@.jar^
 ;%BLENDED_HOME%/lib/logback-core-@logback.version@.jar^
-;%BLENDED_HOME%/lib/logback-classic-@logback.version@.jar
+;%BLENDED_HOME%/lib/logback-classic-@logback.version@.jar^
+;%BLENDED_HOME%/lib/splunk-library-javalogging-@splunkjava.version@.jar^
+;%BLENDED_HOME%/lib/httpcore-@httpcore.version@.jar^
+;%BLENDED_HOME%/lib/httpcore-nio-@httpcorenio.version@.jar^
+;%BLENDED_HOME%/lib/httpclient-@httpcomponents.version@.jar^
+;%BLENDED_HOME%/lib/httpasyncclient-@httpasync.version@.jar^
+;%BLENDED_HOME%/lib/commons-logging-@commonslogging.version@.jar^
+;%BLENDED_HOME%/lib/json-simple-@jsonsimple.version@.jar
 
 set LOGBACK_CONFIG_SETTING='-Dlogback.configurationFile=%BLENDED_HOME%/etc/logback.xml'
 

@@ -12,7 +12,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwareConnectionFactory}
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.AckProcessor
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.testsupport.BlendedTestSupport
@@ -52,6 +52,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
   private implicit val materializer : Materializer = ActorMaterializer()
 
   private val log : Logger = Logger[JmsFileSourceSpec]
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   private case class EnvelopeReceived(env : FlowEnvelope)
 
@@ -99,7 +100,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     val dest = JmsDestination.create(destName).unwrap
 
     val settings : JmsConsumerSettings = JmsConsumerSettings(
-      log = log,
+      log = envLogger,
       headerCfg = headerCfg,
       connectionFactory = cf,
       jmsDestination = Some(dest),
@@ -107,12 +108,10 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     )
 
     Source.fromGraph(new JmsConsumerStage(name, settings, minMessageDelay = None))
-      .via(FlowProcessor.fromFunction("publish", log) { env =>
-        Try {
-          system.eventStream.publish(EnvelopeReceived(env))
-          env
-        }
-      })
+      .via(FlowProcessor.fromFunction("publish", envLogger){ env => Try {
+        system.eventStream.publish(EnvelopeReceived(env))
+        env
+      }})
       .via(new AckProcessor(name + ".ack").flow)
   }
 
@@ -123,7 +122,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
     val dest : JmsDestination = JmsDestination.create(destName).unwrap
     JmsProducerSettings(
-      log = log,
+      log = envLogger,
       connectionFactory = cf,
       headerCfg = headerCfg,
       jmsDestination = Some(dest)
@@ -147,7 +146,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
       prepareDirectory(pollCfg.sourceDir)
 
-      val src : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new FileAckSource(pollCfg))
+      val src : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new FileAckSource(pollCfg, envLogger))
         .via(jmsProducer(s"$name.send", producerSettings(cf, destName), autoAck = true))
 
       val fileController : ActorRef =

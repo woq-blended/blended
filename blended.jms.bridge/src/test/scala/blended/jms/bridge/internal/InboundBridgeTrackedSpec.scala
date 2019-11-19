@@ -59,13 +59,13 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
       ).get))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = log,
+        log = envLogger,
         headerCfg = headerCfg,
         connectionFactory = external,
         jmsDestination = Some(JmsQueue("SampleHeaderIn"))
       )
 
-      val switch : KillSwitch = sendMessages(pSettings, log, env).get
+      val switch : KillSwitch = sendMessages(pSettings, envLogger, env).get
 
       val result : List[FlowEnvelope] = consumeMessages(internal, "bridge.data.in.activemq.external", 5.seconds).get
 

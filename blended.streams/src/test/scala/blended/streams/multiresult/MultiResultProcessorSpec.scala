@@ -4,11 +4,11 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Keep, Source}
+import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
 import akka.testkit.TestKit
-import blended.streams.{FlowProcessor, StreamFactories}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.streams.{FlowHeaderConfig, FlowProcessor, StreamFactories}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.scalatest.Matchers
@@ -21,7 +21,8 @@ class MultiResultProcessorSpec extends TestKit(ActorSystem("mulitprocessor"))
   with LoggingFreeSpecLike
   with Matchers {
 
-  private val log : Logger = Logger[MultiResultProcessorSpec]
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
+  private val log : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, Logger[MultiResultProcessorSpec])
   private val to : FiniteDuration = 10.seconds
   private implicit val materializer : Materializer = ActorMaterializer()
 

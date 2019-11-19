@@ -1,7 +1,7 @@
 package blended.jmx.json
 
 import blended.jmx._
-import prickle.{CompositePickler, PConfig, PickleState, Pickler, PicklerPair, Unpickler}
+import prickle._
 
 import scala.collection.mutable
 import scala.util.Try

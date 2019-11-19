@@ -7,7 +7,8 @@ import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.FlowHeaderConfig
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -26,10 +27,16 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
   System.setProperty("testName", "header")
   System.setProperty("Country", "cc")
 
+  private[this] implicit val to : FiniteDuration = 3.seconds
+
   private val log = Logger[HeaderProcessorSpec]
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  override def bundles : Seq[(String, BundleActivator)] = Seq(
+  private[this] val idSvc = mandatoryService[ContainerIdentifierService](registry)(None)
+  private[this] val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+  private[this] val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
+
+  override def bundles: Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator()
   )
 
@@ -38,11 +45,10 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
   private val sink = Sink.seq[FlowEnvelope]
 
   private val flow : (List[HeaderProcessorConfig], Option[ContainerIdentifierService]) => RunnableGraph[Future[Seq[FlowEnvelope]]] = (rules, idSvc) =>
-    src.via(HeaderTransformProcessor(name = "t", log = log, rules = rules, idSvc = idSvc).flow(log)).toMat(sink)(Keep.right)
+    src.via(HeaderTransformProcessor(name = "t", log = envLogger, rules = rules, idSvc = idSvc).flow(envLogger)).toMat(sink)(Keep.right)
 
   private val result : (List[HeaderProcessorConfig], Option[ContainerIdentifierService]) => Seq[FlowEnvelope] = { (rules, idSvc) =>
 
-    implicit val timeout : FiniteDuration = 3.seconds
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
     implicit val materializer : Materializer = ActorMaterializer()
 
@@ -63,10 +69,9 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
 
     "perform the normal resolution of container context properties" in {
 
-      implicit val timeout : FiniteDuration = 3.seconds
       val idSvc = mandatoryService[ContainerIdentifierService](registry)(None)
 
-      idSvc.resolvePropertyString("$[[Country]]").get should be("cc")
+      idSvc.resolvePropertyString("$[[Country]]").get should be ("cc")
 
       val r = result(List(
         HeaderProcessorConfig("foo", Some("""$[[Country]]"""), overwrite = true),

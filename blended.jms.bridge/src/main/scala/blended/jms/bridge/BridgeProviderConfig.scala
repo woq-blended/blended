@@ -2,11 +2,11 @@ package blended.jms.bridge
 
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{JmsDestination, ProviderAware}
+import blended.util.RichTry._
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
 import scala.util.Try
-import blended.util.RichTry._
 
 case class BridgeProviderConfig(
   vendor : String,

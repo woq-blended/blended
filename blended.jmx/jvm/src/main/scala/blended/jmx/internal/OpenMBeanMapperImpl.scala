@@ -1,14 +1,13 @@
 package blended.jmx.internal
 
 import java.util.Date
-import java.{lang => jl}
-import java.{util => ju}
-import java.{math => jm}
-import scala.collection.JavaConverters._
-import blended.jmx.OpenMBeanMapper
+import java.{lang => jl, math => jm, util => ju}
 
-import javax.management.{DynamicMBean, MBeanNotificationInfo, ObjectName}
+import blended.jmx.OpenMBeanMapper
 import javax.management.openmbean._
+import javax.management.{DynamicMBean, MBeanNotificationInfo, ObjectName}
+
+import scala.collection.JavaConverters._
 
 class OpenMBeanMapperImpl() extends OpenMBeanMapper {
   import OpenMBeanMapperImpl._

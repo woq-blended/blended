@@ -25,7 +25,7 @@ class JmsConnector(
     * [[blended.streams.StreamControllerSupport]].
     */
   private val connection : Option[Connection] = Try {
-    jmsSettings.log.debug(s"Trying to create JMS connection for stream [$id]")
+    jmsSettings.log.underlying.debug(s"Trying to create JMS connection for stream [$id]")
     jmsSettings.connectionFactory.createConnection()
   } match {
     case Success(c) =>

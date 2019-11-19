@@ -1,12 +1,12 @@
 package blended.streams.json
 
+import blended.streams.json.PrickleProtocol._
+import blended.streams.message.MsgProperty
 import blended.streams.transaction.{FlowTransaction, FlowTransactionGen}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 import prickle._
-import blended.streams.json.PrickleProtocol._
-import blended.streams.message.MsgProperty
 
 class PrickleProtocolSpec extends LoggingFreeSpec
   with Matchers

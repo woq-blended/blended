@@ -8,6 +8,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import blended.container.context.api.ContainerIdentifierService
+import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 import blended.prickle.akka.http.PrickleSupport
 import blended.updater.config._
 import blended.util.logging.Logger
@@ -16,8 +17,6 @@ import com.typesafe.config.Config
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationLong
 import scala.util.Try
-
-import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.

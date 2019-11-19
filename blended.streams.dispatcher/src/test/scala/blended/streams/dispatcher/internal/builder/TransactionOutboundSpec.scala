@@ -63,8 +63,8 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       tMgr = tMgr,
       dispatcherCfg = ctxt.cfg,
       internalCf = cf,
-      streamsCfg = ctxt.streamsCfg,
-      ctxt.bs.streamLogger
+      streamsCfg = streamsCfg,
+      log = ctxt.envLogger
     ).build()
   }
 
@@ -79,7 +79,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     (implicit system : ActorSystem, materializer : Materializer, eCtxt: ExecutionContext) : KillSwitch = {
 
     val pSettings : JmsProducerSettings = JmsProducerSettings(
-      log = Logger(loggerName),
+      log = ctxt.envLogger,
       headerCfg = ctxt.bs.headerConfig,
       connectionFactory = cf,
       jmsDestination = Some(JmsQueue("internal.transactions"))
@@ -87,7 +87,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
 
     sendMessages(
       pSettings,
-      log = ctxt.bs.streamLogger,
+      log = ctxt.envLogger,
       envelopes: _*
     ).unwrap
   }
@@ -96,7 +96,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     headerCfg = ctxt.bs.headerConfig,
     cf = cf,
     dest = JmsQueue("cbeOut"),
-    log = Logger(loggerName),
+    log = ctxt.envLogger,
     timeout = Some(timeout)
   )
 

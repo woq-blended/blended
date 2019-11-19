@@ -1,6 +1,6 @@
 package blended.testsupport.pojosr
 
-import org.osgi.framework.{Bundle, BundleActivator, BundleContext}
+import org.osgi.framework.{Bundle, BundleActivator}
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
 
 abstract class SimplePojoContainerSpec

@@ -1,8 +1,8 @@
 import blended.sbt.Dependencies
 import blended.sbt.phoenix.osgi.OsgiBundle
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import phoenix.ProjectFactory
 import sbt._
-import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 object BlendedActivemqBrokerstarter extends ProjectFactory {
 

@@ -36,7 +36,7 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
       def createCollector(subId : Int, startDelay : Option[FiniteDuration] = None) : Collector[FlowEnvelope] = {
         val src : Source[FlowEnvelope, NotUsed] =
           Source.fromGraph(new FileAckSource(
-            pollCfg.copy(id = s"poller$subId", interval = 100.millis)
+            pollCfg.copy(id = s"poller$subId", interval = 100.millis), envLogger
           )).async.via(new AckProcessor(s"simplePoll$subId.ack").flow)
 
         startDelay.foreach(d => Thread.sleep(d.toMillis))

@@ -1,16 +1,16 @@
 import blended.sbt.Dependencies
 import blended.sbt.phoenix.osgi.OsgiBundle
 import de.wayofquality.sbt.filterresources.FilterResources
-import sbtcrossproject.CrossPlugin.autoImport._
-import sbtcrossproject.CrossProject
-import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
+import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import phoenix.{ProjectConfig, ProjectFactory}
 import sbt.Keys._
 import sbt._
+import sbtcrossproject.CrossPlugin.autoImport._
+import sbtcrossproject.CrossProject
+import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 import scoverage.ScoverageKeys._
-import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
-import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
-import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 private object BlendedWebSocketCross {
   private[this] val builder = sbtcrossproject

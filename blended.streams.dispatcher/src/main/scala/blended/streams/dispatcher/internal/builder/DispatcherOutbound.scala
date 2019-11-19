@@ -9,7 +9,8 @@ import blended.jms.utils.JmsDestination
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms.JmsFlowSupport
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.util.logging.LogLevel
 
 import scala.util.Try
 
@@ -58,8 +59,9 @@ object DispatcherOutbound {
   private[builder] def outboundRouting(
     dispatcherCfg : ResourceTypeRouterConfig,
     idSvc : ContainerIdentifierService,
-    bs : DispatcherBuilderSupport
-  )(env : FlowEnvelope) : Try[DispatcherTarget] = Try {
+    bs : DispatcherBuilderSupport,
+    streamLogger : FlowEnvelopeLogger
+  )(env: FlowEnvelope) : Try[DispatcherTarget] = Try {
 
     val dest : JmsDestination = resolveDest(idSvc)(bs)(env).get
 
@@ -98,21 +100,22 @@ object DispatcherOutbound {
     val result = DispatcherTarget(
       bridgeProvider.vendor, bridgeProvider.provider, targetDest
     )
-    bs.streamLogger.info(s"Routing for [${env.id}] is [$result]")
+    streamLogger.logEnv(env, LogLevel.Debug, s"Routing for [${env.id}] is [$result]")
 
     result
   }
 
   def apply(
-    dispatcherCfg : ResourceTypeRouterConfig,
-    idSvc : ContainerIdentifierService
-  )(implicit bs : DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+    dispatcherCfg: ResourceTypeRouterConfig,
+    idSvc : ContainerIdentifierService,
+    streamLogger : FlowEnvelopeLogger
+  )(implicit bs : DispatcherBuilderSupport)
+    : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
     /*-------------------------------------------------------------------------------------------------*/
-    val routingDecider = FlowProcessor.fromFunction("routingDecider", bs.streamLogger) { env =>
-      Try {
+    val routingDecider = FlowProcessor.fromFunction("routingDecider", streamLogger) { env => Try {
 
-        val routing = outboundRouting(dispatcherCfg, idSvc, bs)(env).get
+      val routing = outboundRouting(dispatcherCfg, idSvc, bs, streamLogger)(env).get
 
         env
           .withHeader(bs.headerBridgeVendor, routing.vendor).get

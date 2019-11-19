@@ -1,8 +1,8 @@
 import blended.sbt.Dependencies
 import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
-import sbt._
 import sbt.Keys._
+import sbt._
 
 object BlendedJolokia extends ProjectFactory {
 

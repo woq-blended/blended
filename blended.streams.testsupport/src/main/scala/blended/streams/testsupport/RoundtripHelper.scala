@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.Collector
 import blended.streams.FlowHeaderConfig
 import blended.util.logging.Logger
@@ -38,6 +38,7 @@ case class RoundtripHelper(
   def withOutcome(o : ExpectedOutcome*) : RoundtripHelper = copy(outcome = outcome ++ o)
 
   val log : Logger = Logger(classOf[RoundtripHelper].getName() + "." + name)
+  val envLog : FlowEnvelopeLogger = new FlowEnvelopeLogger(log, headerConfig.prefix)
 
   def run() : Map[String, Seq[String]] = {
     val msg : String = s"Starting test case [$name], timeout = [$timeout]"
@@ -46,26 +47,26 @@ case class RoundtripHelper(
 
     val collectors : Map[String, Collector[FlowEnvelope]] = {
       outcome.map { o =>
-        val k : String = outcomeId(o)
+        val k : String  = outcomeId(o)
         val c = receiveMessages(
           headerCfg = headerConfig,
           cf = o.cf,
           dest = o.dest,
-          log = log,
+          log = envLog,
           timeout = Some(timeout)
         )
         k -> c
       }
     }.toMap
 
-    val pSettings : JmsProducerSettings = JmsProducerSettings(
-      log = log,
+    val pSettings: JmsProducerSettings = JmsProducerSettings(
+      log = envLog,
       headerCfg = headerConfig,
       connectionFactory = inbound._1,
       jmsDestination = Some(inbound._2)
     )
     // Send the inbound messages
-    sendMessages(pSettings, log, testMsgs : _*)
+    sendMessages(pSettings, envLog, testMsgs:_*)
 
     // Wait for all outcomes
 

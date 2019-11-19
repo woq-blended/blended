@@ -5,8 +5,6 @@ import java.security.cert.X509Certificate
 import java.util
 
 import blended.security.PasswordCallbackHandler
-
-import scala.collection.JavaConverters._
 import blended.security.boot.GroupPrincipal
 import blended.util.logging.Logger
 import javax.security.auth.Subject
@@ -15,6 +13,7 @@ import org.apache.activemq.broker.{Broker, ConnectionContext}
 import org.apache.activemq.command.ConnectionInfo
 import org.apache.activemq.security.{AbstractAuthenticationBroker, SecurityContext}
 
+import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 

@@ -1,9 +1,10 @@
 package blended.jmx.statistics
 
-import scala.util.control.NonFatal
 import akka.actor.{Actor, Props}
 import blended.jmx.OpenMBeanExporter
 import blended.util.logging.Logger
+
+import scala.util.control.NonFatal
 
 case class Accumulator(
   count : Long = 0,

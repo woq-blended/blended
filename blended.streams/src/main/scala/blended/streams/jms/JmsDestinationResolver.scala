@@ -1,8 +1,8 @@
 package blended.streams.jms
 
 import blended.jms.utils.JmsDestination
-import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage, UnitMsgProperty}
 import blended.streams.FlowHeaderConfig
+import blended.streams.message._
 import blended.util.logging.Logger
 import javax.jms.{Destination, JMSException, Message, Session}
 

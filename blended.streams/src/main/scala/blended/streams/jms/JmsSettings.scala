@@ -2,8 +2,9 @@ package blended.streams.jms
 
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue, JmsTopic}
 import blended.streams.FlowHeaderConfig
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.util.logging.LogLevel
 import blended.util.logging.LogLevel.LogLevel
-import blended.util.logging.{LogLevel, Logger}
 import javax.jms
 import javax.jms.Session
 
@@ -85,11 +86,15 @@ sealed trait JmsSettings {
   val headerCfg : FlowHeaderConfig
 
   // A logger, so that it can be injected rather than being created based on the classname only
-  val log : Logger
+  val log : FlowEnvelopeLogger
+
+  // Determine the log level for any message received / message sent events from the envelope
+  val logLevel : FlowEnvelope => LogLevel
 }
 
 final case class JmsConsumerSettings(
-  override val log : Logger,
+  override val log: FlowEnvelopeLogger,
+  override val logLevel: FlowEnvelope => LogLevel = _ => LogLevel.Info,
   override val headerCfg : FlowHeaderConfig,
   override val keyFormatStrategy: JmsKeyFormatStrategy = new DefaultKeyFormatStrategy(),
   connectionFactory : IdAwareConnectionFactory,
@@ -99,7 +104,7 @@ final case class JmsConsumerSettings(
   receiveTimeout : FiniteDuration = 0.seconds,
   pollInterval : FiniteDuration = 100.millis,
   acknowledgeMode: AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
-  receiveLogLevel : LogLevel = LogLevel.Info,
+  bufferSize: Int = 100,
   selector: Option[String] = None,
   ackTimeout: FiniteDuration = 1.second,
   durableName: Option[String] = None
@@ -120,9 +125,9 @@ final case class JmsConsumerSettings(
 
 object JmsConsumerSettings {
   def create(
-    log : Logger,
-    cf : IdAwareConnectionFactory,
-    headerConfig : FlowHeaderConfig
+    log : FlowEnvelopeLogger,
+    cf: IdAwareConnectionFactory,
+    headerConfig: FlowHeaderConfig
   ) : JmsConsumerSettings =
     JmsConsumerSettings(
       log = log, headerCfg = headerConfig, connectionFactory = cf
@@ -130,15 +135,16 @@ object JmsConsumerSettings {
 }
 
 final case class JmsProducerSettings(
-  override val log : Logger,
+  override val log : FlowEnvelopeLogger,
+  override val logLevel: FlowEnvelope => LogLevel = _ => LogLevel.Info,
   override val headerCfg : FlowHeaderConfig,
   override val keyFormatStrategy: JmsKeyFormatStrategy = new DefaultKeyFormatStrategy(),
   connectionFactory : IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
-  jmsDestination : Option[JmsDestination] = None,
-  sessionCount : Int = 1,
+  jmsDestination: Option[JmsDestination] = None,
+  sessionCount: Int = 1,
   // Should we evaluate the mesage for send parameters ?
-  destinationResolver : JmsProducerSettings => JmsDestinationResolver = s => new SettingsDestinationResolver(s),
+  destinationResolver  : JmsProducerSettings => JmsDestinationResolver = s => new SettingsDestinationResolver(s),
   // the priority to used as default
   priority : Int = 4,
   // the delivery mode to be used as a default
@@ -173,6 +179,6 @@ final case class JmsProducerSettings(
 
 object JmsProducerSettings {
 
-  def create(log : Logger, connectionFactory : IdAwareConnectionFactory, headerConfig : FlowHeaderConfig) : JmsProducerSettings =
+  def create(log : FlowEnvelopeLogger, connectionFactory: IdAwareConnectionFactory, headerConfig : FlowHeaderConfig) : JmsProducerSettings =
     JmsProducerSettings(log = log, headerCfg = headerConfig, connectionFactory = connectionFactory)
 }

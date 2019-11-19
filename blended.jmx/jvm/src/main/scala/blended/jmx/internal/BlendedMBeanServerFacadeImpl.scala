@@ -1,14 +1,14 @@
 package blended.jmx.internal
 
+import blended.jmx.JmxObjectNameCompanion._
 import blended.jmx._
 import blended.util.RichTry._
+import blended.util.logging.Logger
 import javax.management._
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.Try
-import JmxObjectNameCompanion._
-import blended.util.logging.Logger
 
 class BlendedMBeanServerFacadeImpl(svr : MBeanServer) extends BlendedMBeanServerFacade {
 

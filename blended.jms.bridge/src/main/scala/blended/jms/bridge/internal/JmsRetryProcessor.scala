@@ -7,11 +7,11 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FlowShape, Graph, Materializer}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.streams._
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.TransactionWiretap
-import blended.streams._
 import blended.util.config.Implicits._
 import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
@@ -70,7 +70,7 @@ class JmsRetryProcessor(
 ) extends JmsStreamSupport {
 
   private[this] val id : String = retryCfg.headerCfg.prefix + ".retry." + retryCfg.retryDestName
-  private[this] val retryLog : Logger = Logger(id)
+  private[this] val retryLog : FlowEnvelopeLogger = FlowEnvelopeLogger.create(retryCfg.headerCfg, Logger(id))
   private[this] val log : Logger = Logger[JmsRetryProcessor]
 
   private[this] var actor : Option[ActorRef] = None
@@ -105,7 +105,7 @@ class JmsRetryProcessor(
         destination = dest,
         deliveryMode = JmsDeliveryMode.Persistent,
         priority = settings.priority,
-        ttl = settings.timeToLive
+        ttl = settings.timeToLive,
       )
     }
   }
@@ -116,7 +116,8 @@ class JmsRetryProcessor(
       headerCfg = retryCfg.headerCfg,
       connectionFactory = retryCfg.cf,
       acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
-      jmsDestination = Some(JmsDestination.create(retryCfg.retryDestName).get)
+      jmsDestination = Some(JmsDestination.create(retryCfg.retryDestName).get),
+      logLevel = _ => LogLevel.Debug
     )
 
     jmsConsumer(
@@ -134,7 +135,8 @@ class JmsRetryProcessor(
       destinationResolver = s => new RetryDestinationResolver(retryCfg.headerCfg, s, router.validate),
       deliveryMode = JmsDeliveryMode.Persistent,
       timeToLive = None,
-      clearPreviousException = true
+      clearPreviousException = true,
+      logLevel = _ => LogLevel.Debug
     )
 
     jmsProducer(

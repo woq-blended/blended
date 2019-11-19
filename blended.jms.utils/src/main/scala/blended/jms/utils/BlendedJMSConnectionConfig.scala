@@ -3,12 +3,12 @@ package blended.jms.utils
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, DEFAULT_USER, USE_JNDI}
 import blended.updater.config.util.ConfigPropertyMapConverter
+import blended.util.RichTry._
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
-import blended.util.RichTry._
 
 object BlendedJMSConnectionConfig {
 

@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.stream.scaladsl.Flow
 import akka.util.Timeout
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._
@@ -25,7 +25,7 @@ class MultiResultProcessor(
   replicator : FlowEnvelope => List[FlowEnvelope],
   processSingle : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
   timeout : Option[FiniteDuration],
-  log : Logger
+  log : FlowEnvelopeLogger
 )(implicit system: ActorSystem) {
 
   private val processor : ActorRef = system.actorOf(MultiResultController.props(

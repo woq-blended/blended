@@ -2,17 +2,16 @@ package blended.streams.multiresult
 
 import java.util.UUID
 
-import akka.{Done, NotUsed}
 import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable, Props}
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
-import akka.stream.scaladsl.{Flow, Keep, RunnableGraph, Sink, Source}
-import blended.streams.message.FlowEnvelope
+import akka.{Done, NotUsed}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.Collector
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
-import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 class MultiResultTimeoutException(id : String, timeout : FiniteDuration)
@@ -23,7 +22,7 @@ object MultiResultController {
     replicator : FlowEnvelope => List[FlowEnvelope],
     processSingle : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
     timeout : Option[FiniteDuration],
-    log : Logger
+    log : FlowEnvelopeLogger
   ) : Props = Props(new MultiResultController(replicator, processSingle, timeout, log))
 }
 
@@ -31,12 +30,12 @@ class MultiResultController(
   replicator : FlowEnvelope => List[FlowEnvelope],
   processSingle : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
   timeout : Option[FiniteDuration],
-  log : Logger
+  log : FlowEnvelopeLogger
 ) extends Actor {
   override def receive: Receive = {
     case env : FlowEnvelope =>
       val respondTo : ActorRef = sender()
-      log.debug(s"Initiating sub flows for envelope [${env.id}]")
+      log.logEnv(env, LogLevel.Debug, s"Initiating sub flows for envelope [${env.id}]")
       val actor : ActorRef = context.system.actorOf(MultiResultCollector.props(
         replicator, processSingle, respondTo, timeout, log
       ))
@@ -52,7 +51,7 @@ object MultiResultCollector {
     processSingle : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
     respondTo : ActorRef,
     timeout : Option[FiniteDuration],
-    log : Logger
+    log : FlowEnvelopeLogger
   ) : Props = Props(new MultiResultCollector(replicator, processSingle, respondTo, timeout, log))
 }
 
@@ -61,7 +60,7 @@ class MultiResultCollector(
   processSingle : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
   respondTo : ActorRef,
   timeout : Option[FiniteDuration],
-  log : Logger
+  log : FlowEnvelopeLogger
 ) extends Actor {
 
   private val bufferSize : Int = 10
@@ -74,13 +73,13 @@ class MultiResultCollector(
 
   override def receive : Receive = {
     case env : FlowEnvelope =>
-      log.info(s"Processing envelope in MultiResultCollector : [${env.id}]")
+      log.logEnv(env, LogLevel.Debug, s"Processing envelope in MultiResultCollector : [${env.id}]")
 
       val copies : List[FlowEnvelope] = replicator(env)
 
       copies.map(_.exception).find(_.isDefined) match {
         case Some(Some(t)) =>
-          log.warn(s"Failed to create copies from envelope [${env.id}] : [${t.getMessage()}]")
+          log.logEnv(env, LogLevel.Warn, s"Failed to create copies from envelope [${env.id}] : [${t.getMessage()}]")
           respond(env.withException(t), None)
 
         case _ =>
@@ -120,25 +119,25 @@ class MultiResultCollector(
     case r : Try[List[FlowEnvelope]] => r match {
       case Success(l) => l.map(_.exception).find(_.isDefined).flatten match {
         case None =>
-          log.info(s"Successfully executed sub flows for [${env.id}]")
+          log.logEnv(env, LogLevel.Info, s"Successfully executed sub flows for [${env.id}]")
           respond(env, timer)
         case Some(t) =>
-          log.warn(s"Subflow for [${env.id}] threw exception [${t.getMessage()}]")
+          log.logEnv(env, LogLevel.Warn, s"Subflow for [${env.id}] threw exception [${t.getMessage()}]")
           respond(env.withException(t), timer)
       }
       case Failure(t) =>
-        log.warn(s"Failed to process subflows of [${env.id}] : ${t.getMessage()}")
+        log.logEnv(env, LogLevel.Warn, s"Failed to process subflows of [${env.id}] : ${t.getMessage()}")
         respond(env.withException(t), timer)
     }
 
     case MultiResultTimeout(t) =>
       val e : Throwable = new MultiResultTimeoutException(env.id, t)
-      log.warn(e.getMessage())
+      log.logEnv(env, LogLevel.Warn, e.getMessage())
       respond(env.withException(e), None)
   }
 
   private def respond(env : FlowEnvelope, timer : Option[Cancellable]): Unit = {
-    log.debug(s"Multiresult processor result is [$env]")
+    log.logEnv(env, LogLevel.Debug, s"Multiresult processor result is [$env]")
     timer.foreach(_.cancel())
     respondTo ! env
     context.stop(self)

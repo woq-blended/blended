@@ -146,6 +146,7 @@ trait FileTestSupport extends Matchers {
 
     log.info(s"Cleaning up directory [$dirName]")
     FileUtils.deleteDirectory(new File(dirName))
+    FileUtils.forceMkdir(new File(dirName))
   }
 
   def genFile(f : File, content : ByteString) : Unit = {

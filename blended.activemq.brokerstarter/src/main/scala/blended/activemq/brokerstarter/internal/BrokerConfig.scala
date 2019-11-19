@@ -5,6 +5,7 @@ import blended.jms.utils.{BlendedJMSConnectionConfig, ConnectionConfig}
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 import org.apache.activemq.ActiveMQConnectionFactory
+
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 

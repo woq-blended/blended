@@ -6,8 +6,7 @@ import akka.NotUsed
 import akka.stream._
 import akka.stream.scaladsl.Flow
 import akka.stream.stage._
-import blended.streams.message.FlowEnvelope
-import blended.util.logging.Logger
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -59,10 +58,10 @@ final case class WorklistTerminated(worklist: Worklist, state: WorklistState, re
 
 object WorklistManager {
 
-  def flow(name : String, log : Logger) : Flow[WorklistEvent, WorklistEvent, NotUsed] =
+  def flow(name: String, log : FlowEnvelopeLogger): Flow[WorklistEvent, WorklistEvent, NotUsed] =
     Flow.fromGraph(new WorklistGraphStage(name, log))
 
-  private class WorklistGraphStage(name : String, log : Logger) extends GraphStage[FlowShape[WorklistEvent, WorklistEvent]] {
+  private class WorklistGraphStage(name: String, log : FlowEnvelopeLogger) extends GraphStage[FlowShape[WorklistEvent, WorklistEvent]] {
 
     private val in = Inlet[WorklistEvent](s"$name.in")
     private val out = Outlet[WorklistEvent](s"$name.out")
@@ -145,11 +144,11 @@ object WorklistManager {
       private def startWorklist(event : WorklistStarted) : Unit = {
         activeWorklists.get(event.worklist.id) match {
           case None =>
-            log.debug(s"Starting Worklist [${event.worklist.id}]")
+            log.underlying.debug(s"Starting Worklist [${event.worklist.id}]")
             activeWorklists += (event.worklist.id -> CurrentWorklistState(event))
             pushEvent(event)
           case Some(awl) =>
-            log.warn(s"Received start event for worklist [${awl.id}] that is already in use, ignoring StartWorklist event")
+            log.underlying.warn(s"Received start event for worklist [${awl.id}] that is already in use, ignoring StartWorklist event")
         }
       }
 
@@ -162,7 +161,7 @@ object WorklistManager {
         )
         pushEvent(event)
         activeWorklists -= wl.id
-        log.debug(s"Sent WorklistEvent [$event], [${activeWorklists.size}] remaining worklists ")
+        log.underlying.debug(s"Sent WorklistEvent [$event], [${activeWorklists.size}] remaining worklists ")
       }
 
       private def checkWorklist(wl : CurrentWorklistState) : Unit = {
@@ -194,18 +193,18 @@ object WorklistManager {
       private def processSteps(event : WorklistStepCompleted) : Unit = {
         activeWorklists.get(event.worklist.id) match {
           case None =>
-            log.trace(s"Worklist [${event.worklist.id}] is not active, ignoring event [$event]")
+            log.underlying.trace(s"Worklist [${event.worklist.id}] is not active, ignoring event [$event]")
           case Some(awl) =>
             // Event should be anything but started
             if (event.state == WorklistStateStarted) {
-              log.trace(s"Unexpected state [${event.state}] in process complete event [$event]")
+              log.underlying.trace(s"Unexpected state [${event.state}] in process complete event [$event]")
             } else {
 
               val filter : String => Boolean = id => awl.items.isDefinedAt(id)
 
               val missingEventIds = event.worklist.items.map(_.id).filterNot(filter)
               if (missingEventIds.nonEmpty) {
-                log.warn(s"Event references untracked item ids [${missingEventIds.mkString(",")}] for [$event]")
+                log.underlying.warn(s"Event references untracked item ids [${missingEventIds.mkString(",")}] for [$event]")
               }
 
               val newEvents : Map[String, CurrentItemState] = event.worklist.items.filter(i => filter(i.id)).map { i =>
