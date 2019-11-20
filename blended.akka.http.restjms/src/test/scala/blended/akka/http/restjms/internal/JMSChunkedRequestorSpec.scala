@@ -4,12 +4,14 @@ import java.net.URI
 
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
+import blended.testsupport.RequiresForkedJVM
 import com.softwaremill.sttp._
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+@RequiresForkedJVM
 class JMSChunkedRequestorSpec extends AbstractJmsRequestorSpec {
 
   implicit val backend = AkkaHttpBackend.usingActorSystem(system)

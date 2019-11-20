@@ -2,8 +2,10 @@ package blended.akka.http.restjms.internal
 
 import java.net.URI
 
+import blended.testsupport.RequiresForkedJVM
 import com.softwaremill.sttp.{StatusCodes => SttpStatusCodes, _}
 
+@RequiresForkedJVM
 class JMSRequestorSpec extends AbstractJmsRequestorSpec {
 
   private implicit val backend = HttpURLConnectionBackend()

@@ -152,6 +152,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   }
 
   private def acknowledged(ackCtxt : T) : Unit = {
+    ackCtxt.acknowledge()
     log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Flow envelope [${ackCtxt.envelope.id}] has been acknowledged in [$id]")
     // Then we clear the message from the inflight map
     removeInflight(ackCtxt.inflightId)
@@ -174,6 +175,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
 
   // this will be called whenever an inflight message has been denied
   private def denied(ackCtxt: T) : Unit = {
+    ackCtxt.deny()
     log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Flow Envelope [${ackCtxt.envelope.id}] has been denied in [$id]")
     // we need to clean up the inflight map
     removeInflight(ackCtxt.inflightId)
@@ -242,7 +244,8 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
           addInflight(id, ackCtxt, AckState.Pending)
           // push the envelope to the outlet
           if (autoAcknowledge) {
-            ackCtxt.acknowledge()
+            log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Auto Acknowledging [${ackCtxt.envelope.id}] in [$id]")
+            acknowledged(ackCtxt)
             push(out, ackCtxt.envelope.withRequiresAcknowledge(false).withAckHandler(None))
           } else {
             addInflight(id, ackCtxt, AckState.Pending)

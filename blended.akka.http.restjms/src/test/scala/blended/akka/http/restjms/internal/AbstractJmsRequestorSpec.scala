@@ -45,6 +45,13 @@ abstract class AbstractJmsRequestorSpec extends SimplePojoContainerSpec
   protected val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
 
   private val responder : JMSResponder = new JMSResponder(cf, idSvc)
-  responder.start()
-  Thread.sleep(5000)
+
+  override protected def beforeAll(): Unit = {
+    responder.start()
+    Thread.sleep(2000)
+  }
+
+  override protected def afterAll(): Unit = {
+    responder.stop()
+  }
 }

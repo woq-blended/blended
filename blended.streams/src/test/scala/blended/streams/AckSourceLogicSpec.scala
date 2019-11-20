@@ -131,7 +131,6 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
 
       val s : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(ackSource)
-          .via(new AckProcessor("AckCounter-ack").flow)
 
       val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("AckCounter", s, Some(timeout))
 
