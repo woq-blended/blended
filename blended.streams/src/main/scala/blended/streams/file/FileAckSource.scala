@@ -116,7 +116,7 @@ class FileAckSource(
         val sdf : SimpleDateFormat = new SimpleDateFormat("yyyyMMdd-HHmmssSSS")
 
         if (f.exists()) {
-          val uuid : String = UUID.randomUUID().toString()
+          val uuid : String = UUID.randomUUID().toString() + "-" + f.getName()
 
           val fileToProcess : File = new File(f + pollCfg.tmpExt)
 
