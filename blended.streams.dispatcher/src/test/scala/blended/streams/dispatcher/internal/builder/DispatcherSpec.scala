@@ -33,7 +33,7 @@ class DispatcherSpec extends DispatcherSpecSupport
     val source = Source.actorRef[FlowEnvelope](defaultBufferSize, OverflowStrategy.fail)
 
     val sinkGraph = GraphDSL.create() { implicit b =>
-
+      import GraphDSL.Implicits._
 
       val dispatcher = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, send, ctxt.envLogger)(ctxt.bs).dispatcher())
       val out = b.add(transColl.sink)

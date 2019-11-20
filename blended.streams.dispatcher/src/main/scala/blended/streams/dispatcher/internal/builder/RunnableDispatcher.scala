@@ -12,7 +12,7 @@ import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
-import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
 import blended.util.RichTry._
 
@@ -105,7 +105,7 @@ class RunnableDispatcher(
       tMgr = tMgr,
       internalCf = cf,
       dispatcherCfg = routerCfg,
-      transactionShard = streamsCfg.transactionShard,
+      streamsCfg = streamsCfg,
       log = FlowEnvelopeLogger.create(bs.headerConfig, Logger(bs.headerConfig.prefix + ".transactions"))
     ).build()
   }
@@ -118,7 +118,7 @@ class RunnableDispatcher(
 
     // todo : stick into config
     val settings = JmsConsumerSettings(
-      log = bs.streamLogger,
+      log = logger,
       headerCfg = bs.headerConfig,
       connectionFactory = cf,
       sessionCount = 3,
@@ -189,7 +189,7 @@ class RunnableDispatcher(
             )(bs).dispatcher()
           )
 
-        val startStats : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.fromFunction("startStats", bs.streamLogger){ env => Try {
+        val startStats : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.fromFunction("startStats", envLogger){ env => Try {
           val resType : String = env.header[String](bs.headerConfig.headerResourceType).getOrElse("UNKNOWN")
           val id : String = ServiceInvocationReporter.invoked(
             component = "dispatcher",
@@ -203,11 +203,8 @@ class RunnableDispatcher(
         }}
 
         // Connect the consumer to a dispatcher
-        val source : Source[FlowTransactionEvent, NotUsed] = bridgeSource(internalProvider, provider, envLogger).via(dispatcher)
-
-        // Prepare and start the dispatcher
         val source : Source[FlowTransactionEvent, NotUsed] =
-          bridgeSource(internalProvider, provider, dispLogger)
+          bridgeSource(internalProvider, provider, envLogger)
             .via(startStats)
             .via(dispatcher)
 
@@ -215,7 +212,7 @@ class RunnableDispatcher(
         // the proper JMS destination
         val actor : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
           streamName = dispLogger.name,
-          src = source.via(transactionSend()),
+          src = source.via(transactionSend(envLogger)),
           streamCfg = streamsCfg
         )(onMaterialize = _ => ()))
 

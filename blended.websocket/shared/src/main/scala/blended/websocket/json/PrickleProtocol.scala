@@ -2,6 +2,7 @@ package blended.websocket.json
 
 import blended.websocket._
 import prickle._
+import blended.jmx.json.PrickleProtocol._
 
 object PrickleProtocol {
 

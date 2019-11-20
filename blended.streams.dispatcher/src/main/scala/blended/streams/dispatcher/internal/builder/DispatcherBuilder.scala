@@ -13,7 +13,7 @@ import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.transaction._
 import blended.streams.worklist._
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 import blended.util.RichTry._
 
 class MismatchedEnvelopeException(id : String)
@@ -135,7 +135,7 @@ case class DispatcherBuilder(
         }
     }
 
-    bs.streamLogger.debug(s"Found worklist envelopes : [$result]")
+    envLogger.underlying.debug(s"Found worklist envelopes : [$result]")
     result
   }
 
@@ -178,7 +178,7 @@ case class DispatcherBuilder(
             }
 
           if (envelopes.isEmpty) {
-            bs.streamLogger.debug(s"No item envelopes found for [${event.worklist.id}]")
+            envLogger.underlying.debug(s"No item envelopes found for [${event.worklist.id}]")
             None
           } else {
             Some(FlowTransactionUpdate(term.worklist.id, props, WorklistStateCompleted, branchIds(envelopes):_*))
@@ -188,7 +188,7 @@ case class DispatcherBuilder(
         }
       // Completed worklist steps do nothing
       case step : WorklistStepCompleted =>
-        bs.streamLogger.debug(s"No transaction event for completed worklist [${event.worklist.id}]")
+        envLogger.underlying.debug(s"No transaction event for completed worklist [${event.worklist.id}]")
         None
     }
 
@@ -343,11 +343,11 @@ case class DispatcherBuilder(
       val trans = b.add(Merge[FlowTransactionEvent](2))
 
       val completeStatsOk = b.add(
-        FlowProcessor.completeStats("completeStats", bs.streamLogger, bs.headerConfig)
+        FlowProcessor.completeStats("completeStats", envLogger, bs.headerConfig)
       )
 
       val completeStatsFailed = b.add(
-        FlowProcessor.completeStats("completeStats", bs.streamLogger, bs.headerConfig)
+        FlowProcessor.completeStats("completeStats", envLogger, bs.headerConfig)
       )
 
       // the normal outcome of core goes to send

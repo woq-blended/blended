@@ -16,7 +16,6 @@ import blended.streams.testsupport.LoggingEventAppender
 import blended.streams.transaction._
 import blended.testsupport.pojosr.PojoSrTestHelper
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
-import blended.util.logging.Logger
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import org.osgi.framework.BundleActivator

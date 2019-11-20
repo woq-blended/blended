@@ -62,7 +62,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
     val sinkGraph : Graph[SinkShape[FlowEnvelope], NotUsed] = {
       GraphDSL.create() { implicit builder =>
-
+        import GraphDSL.Implicits._
 
         val out : Inlet[FlowEnvelope] = builder.add(jmsCollector.sink).in
         val worklist : Inlet[WorklistEvent] = builder.add(wlCollector.sink).in

@@ -35,7 +35,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
     val sinkGraph : Graph[SinkShape[FlowEnvelope], NotUsed] = {
       GraphDSL.create() { implicit b =>
-
+        import GraphDSL.Implicits._
 
         val outStep = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, send, ctxt.envLogger)(ctxt.bs).outbound())
         val out = b.add(outColl.sink)
