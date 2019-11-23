@@ -10,7 +10,7 @@ import akka.stream.scaladsl.Flow
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.Collector
@@ -213,6 +213,18 @@ class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeo
         assert(first + retryCfg.retryTimeout.toMillis <= now)
       }
     }
+
+    val otherFailed : Collector[FlowEnvelope] = receiveMessages(
+      headerCfg = headerCfg,
+      cf = amqCf,
+      dest = JmsQueue(retryCfg.failedDestName),
+      log = envLogger,
+      listener = 1,
+      completeOn = None,
+      timeout = Some(timeout)
+    )
+
+    Await.result(otherFailed.result, timeout + 500.millis) should be (empty)
   }
 }
 

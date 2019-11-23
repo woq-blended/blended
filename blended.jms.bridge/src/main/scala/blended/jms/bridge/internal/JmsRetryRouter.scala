@@ -10,6 +10,7 @@ import blended.streams.FlowProcessor
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.FlowHeaderConfig
 import blended.util.logging.LogLevel
+import blended.util.logging.LogLevel.LogLevel
 
 import scala.concurrent.duration._
 import scala.util.Try
@@ -49,7 +50,7 @@ class JmsRetryRouter(
       .withHeader(headerCfg.headerFirstRetry, firstRetry).get
   }
 
-  val validate : FlowProcessor.IntegrationStep = env => Try {
+  val validate : LogLevel => FlowProcessor.IntegrationStep = level => env => Try {
 
     val mandatoryHeader : String => Long = h =>
       env.header[Long](h) match {
@@ -63,7 +64,7 @@ class JmsRetryRouter(
     val firstRetry : Long = mandatoryHeader(headerCfg.headerFirstRetry)
 
     val remaining : FiniteDuration = (retryTimeout - (System.currentTimeMillis() - firstRetry)).millis
-    log.logEnv(env, LogLevel.Debug, s"Retrying envelope [${env.id}] : [$retryCount / $maxRetries] [${remaining}] remaining")
+    log.logEnv(env, level, s"Retrying envelope [${env.id}] : [$retryCount / $maxRetries] [${remaining}] remaining", false)
 
     if (maxRetries > 0 && retryCount > maxRetries) {
       throw new RetryCountExceededException(maxRetries)
@@ -82,6 +83,6 @@ class JmsRetryRouter(
 
   val flow : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
     Flow.fromGraph(FlowProcessor.fromFunction(name + ".header", log)(header))
-      .via(FlowProcessor.fromFunction(name + ".validate", log)(validate))
+      .via(FlowProcessor.fromFunction(name + ".validate", log)(validate(LogLevel.Debug)))
 
 }

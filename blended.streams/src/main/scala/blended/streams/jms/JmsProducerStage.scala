@@ -117,9 +117,9 @@ final class JmsProducerStage(
           )
 
           val logDest = s"${producerSettings.connectionFactory.vendor}:${producerSettings.connectionFactory.provider}:$dest"
-          producerSettings.log.logEnv(env, LogLevel.Debug,
-            s"Successfully sent message to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] " +
-              s"with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]"
+          producerSettings.log.logEnv(env, producerSettings.logLevel(env),
+            s"Successfully sent message [${env.id}] to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] " +
+              s"with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]", false
           )
         }
 

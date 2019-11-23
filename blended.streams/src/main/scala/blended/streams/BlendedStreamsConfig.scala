@@ -14,7 +14,7 @@ object BlendedStreamsConfig {
   }
 
   def create(idSvc : ContainerIdentifierService, cfg : Config) : BlendedStreamsConfig = BlendedStreamsConfig(
-    transactionShard = cfg.getStringOption("transactionShard"),
+    transactionShard = cfg.getStringOption("transactionShard").map(s => idSvc.resolvePropertyString(s).get.toString()),
     minDelay  = cfg.getDuration("minDelay", 5.seconds),
     maxDelay = cfg.getDuration("maxDelay", 1.minute),
     exponential = cfg.getBoolean("exponential", true),

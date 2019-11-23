@@ -7,7 +7,7 @@ import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.RichTry._
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.scalatest.Matchers
 
@@ -53,7 +53,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
         val env : FlowEnvelope = FlowEnvelope()
           .withHeader(headerCfg.headerRetryCount, maxRetries).unwrap
 
-        router.validate(router.header(env).get).unwrap
+        router.validate(LogLevel.Debug)(router.header(env).get).unwrap
       }
     }
 
@@ -70,7 +70,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
         val env : FlowEnvelope = FlowEnvelope()
           .withHeader(headerCfg.headerFirstRetry, System.currentTimeMillis() - timeout).unwrap
 
-        router.validate(router.header(env).get).unwrap
+        router.validate(LogLevel.Debug)(router.header(env).get).unwrap
       }
     }
 
@@ -83,7 +83,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
 
       intercept[MissingRetryDestinationException] {
         val env : FlowEnvelope = FlowEnvelope()
-        router.validate(router.header(env).get).unwrap
+        router.validate(LogLevel.Debug)(router.header(env).get).unwrap
       }
     }
 
@@ -97,8 +97,8 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val env : FlowEnvelope = FlowEnvelope()
         .withHeader(headerCfg.headerRetryDestination, "myQueue").unwrap
 
-      val env1 : FlowEnvelope = router.validate(router.header(env).get).unwrap
-      val env2 : FlowEnvelope = router.validate(router.header(env1).get).unwrap
+      val env1 : FlowEnvelope = router.validate(LogLevel.Debug)(router.header(env).get).unwrap
+      val env2 : FlowEnvelope = router.validate(LogLevel.Debug)(router.header(env1).get).unwrap
 
       env2.header[Int](headerCfg.headerRetryCount) should be(Some(2))
     }
@@ -113,8 +113,8 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val env : FlowEnvelope = FlowEnvelope()
         .withHeader(headerCfg.headerRetryDestination, "myQueue").unwrap
 
-      val env1 : FlowEnvelope = router.validate(router.header(env).get).unwrap
-      val env2 : FlowEnvelope = router.validate(router.header(env1).get).unwrap
+      val env1 : FlowEnvelope = router.validate(LogLevel.Debug)(router.header(env).get).unwrap
+      val env2 : FlowEnvelope = router.validate(LogLevel.Debug)(router.header(env1).get).unwrap
 
       env2.header[Long](headerCfg.headerFirstRetry) should be(defined)
       env2.header[Long](headerCfg.headerFirstRetry) should be(env1.header[Long](headerCfg.headerFirstRetry))

@@ -70,7 +70,7 @@ class TransactionWiretap(
         updateTransaction(env)
       }
 
-      log.logEnv(env, LogLevel.Debug, s"Generated bridge transaction event [$event]")
+      log.logEnv(env, LogLevel.Debug, s"Generated bridge transaction event [$event]", false)
       FlowTransactionEvent.event2envelope(headerCfg)(event)
         .withHeader(headerCfg.headerTrackSource, trackSource).unwrap
     }
@@ -111,7 +111,7 @@ class TransactionWiretap(
     Flow.fromGraph(g)
   }
 
-  def flow() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  def flow(clearException : Boolean = false) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
     val g = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
@@ -123,9 +123,10 @@ class TransactionWiretap(
       val select = b.add(
         Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope] { pair =>
 
-          pair._1.exception match {
-            case None    => pair._2.clearException()
-            case Some(e) => pair._2.withException(e)
+          if (clearException) {
+            pair._2.clearException()
+          } else {
+            pair._2
           }
         }
       )

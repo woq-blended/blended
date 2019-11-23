@@ -29,13 +29,15 @@ class FlowEnvelopeLogger(
 
   private val mdc : FlowEnvelope => Map[String, String] = env => FlowEnvelopeLogger.mdcMap(prefix, env.flowMessage.header)
 
-  def logEnv(env : FlowEnvelope, level : LogLevel, msg : => String) : Unit = logEnv(env, _ => level, _ => msg)
+  def logEnv(env : FlowEnvelope, level : LogLevel, msg : => String, withStacktrace : Boolean = true) : Unit =
+    logEnv(env, _ => level, _ => msg, withStacktrace )
 
-  def logEnv(env : FlowEnvelope, level : FlowEnvelope => LogLevel, msg: FlowEnvelope => String) : Unit = {
+  def logEnv(env : FlowEnvelope, level : FlowEnvelope => LogLevel, msg: FlowEnvelope => String, withStacktrace : Boolean) : Unit = {
 
-    env.exception match {
-      case None => underlying.logMdc(mdc(env))(level(env), msg(env))
-      case Some(e) => underlying.logMdc(e)(mdc(env))(level(env), msg(env))
+    if (env.exception.isDefined && withStacktrace) {
+      underlying.logMdc(env.exception.get)(mdc(env))(level(env), msg(env))
+    } else {
+      underlying.logMdc(mdc(env))(level(env), msg(env))
     }
   }
 }

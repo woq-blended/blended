@@ -20,7 +20,7 @@ class ConnectionMonitor(vendor : String, provider : String, clientId : String) e
   def setState(newState : ConnectionState) : Unit = { state = newState }
   def getState() : ConnectionState = state
 
-  override def getStatus() : String = state.status.toString()
+  override def getStatus() : String = state.status.toString().toLowerCase()
 
   override def getLastConnect() : String = state.lastConnect match {
     case None    => "n/a"

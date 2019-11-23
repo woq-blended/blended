@@ -226,7 +226,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
         }
       }
 
-      log.underlying.debug(s"Performing poll for [$id]")
+      log.underlying.trace(s"Performing poll for [$id]")
       doPerformPoll(id, ackHandler) match {
         case Success(None) =>
 

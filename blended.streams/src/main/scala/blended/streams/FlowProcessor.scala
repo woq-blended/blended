@@ -54,7 +54,7 @@ object FlowProcessor {
               s
 
             case Failure(t) =>
-              log.logEnv(env.withException(t), LogLevel.Warn, s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
+              log.logEnv(env.withException(t), LogLevel.Warn, s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]", false)
               env.withException(t)
           }
 
@@ -67,7 +67,7 @@ object FlowProcessor {
   }
 
   def log(level : LogLevel.LogLevel, logger : FlowEnvelopeLogger, text : String = "") : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-    logger.logEnv(env, level, s"$text : $env")
+    logger.logEnv(env, level, s"$text : $env", false)
     env
   }
 

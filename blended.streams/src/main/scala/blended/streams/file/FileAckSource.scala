@@ -60,7 +60,7 @@ class FileAckSource(
   ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis()) {
 
     override def acknowledge() : Unit = {
-      logger.logEnv(env, LogLevel.Info, s"Successfully processed envelope [${envelope.id}]")
+      logger.logEnv(env, LogLevel.Debug, s"Successfully processed envelope [${envelope.id}]")
       pollCfg.backup match {
         case None =>
           if (fileToProcess.delete()) {

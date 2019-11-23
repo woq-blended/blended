@@ -9,8 +9,7 @@ import blended.jms.utils._
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext, FlowHeaderConfig}
 import blended.util.RichTry._
-import blended.util.logging.LogLevel.LogLevel
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel
 import javax.jms.{Message, MessageConsumer}
 
 import scala.collection.mutable
@@ -64,14 +63,14 @@ final class JmsConsumerStage(
     override def deny(): Unit = {
       sessionClose(session)
       consumerSettings.log.logEnv(
-        env, consumerSettings.logLevel(env), s"Message [${envelope.id}] has been denied. Closing receiving session."
+        env, LogLevel.Debug, s"Message [${envelope.id}] has been denied. Closing receiving session."
       )
     }
 
     override def acknowledge(): Unit = {
       jmsMessageAck(jmsMessage)
       consumerSettings.log.logEnv(
-        env, consumerSettings.logLevel(env), s"Acknowledged envelope [${envelope.id}] for session [${session.sessionId}]"
+        env, LogLevel.Debug, s"Acknowledged envelope [${envelope.id}] for session [${session.sessionId}]"
       )
     }
   }

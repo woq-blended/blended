@@ -132,12 +132,11 @@ class MultiResultCollector(
 
     case MultiResultTimeout(t) =>
       val e : Throwable = new MultiResultTimeoutException(env.id, t)
-      log.logEnv(env, LogLevel.Warn, e.getMessage())
       respond(env.withException(e), None)
   }
 
   private def respond(env : FlowEnvelope, timer : Option[Cancellable]): Unit = {
-    log.logEnv(env, LogLevel.Debug, s"Multiresult processor result is [$env]")
+    log.logEnv(env, LogLevel.Debug, s"Multiresult processor result is [$env]", false)
     timer.foreach(_.cancel())
     respondTo ! env
     context.stop(self)

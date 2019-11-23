@@ -105,7 +105,7 @@ class JmsRetryProcessor(
         destination = dest,
         deliveryMode = JmsDeliveryMode.Persistent,
         priority = settings.priority,
-        ttl = settings.timeToLive,
+        ttl = settings.timeToLive
       )
     }
   }
@@ -132,7 +132,7 @@ class JmsRetryProcessor(
       log = retryLog,
       headerCfg = retryCfg.headerCfg,
       connectionFactory = retryCfg.cf,
-      destinationResolver = s => new RetryDestinationResolver(retryCfg.headerCfg, s, router.validate),
+      destinationResolver = s => new RetryDestinationResolver(retryCfg.headerCfg, s, router.validate(LogLevel.Trace)),
       deliveryMode = JmsDeliveryMode.Persistent,
       timeToLive = None,
       clearPreviousException = true,
@@ -157,9 +157,9 @@ class JmsRetryProcessor(
       log = retryLog
     )
 
-    Flow.fromGraph(FlowProcessor.fromFunction(id, retryLog)(router.validate))
+    Flow.fromGraph(FlowProcessor.fromFunction(id, retryLog)(router.validate(LogLevel.Trace)))
       .via(FlowProcessor.log(LogLevel.Debug, retryLog, "Creating transaction failed event"))
-      .via(wiretap.flow())
+      .via(wiretap.flow(true))
   }
 
   protected def sendToOriginal : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = resendMessage
@@ -200,7 +200,7 @@ class JmsRetryProcessor(
       // case the envelope is marked with an exception after trying to forward the
       // message
 
-      val transSplit = b.add(FlowProcessor.partition[FlowEnvelope] { env => env.exception.isEmpty && router.validate(env).isFailure })
+      val transSplit = b.add(FlowProcessor.partition[FlowEnvelope] { env => env.exception.isEmpty && router.validate(LogLevel.Trace)(env).isFailure })
       val transMerge = b.add(Merge[FlowEnvelope](2))
 
       merge.out ~> transSplit.in
