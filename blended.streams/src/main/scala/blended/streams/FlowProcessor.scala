@@ -54,7 +54,7 @@ object FlowProcessor {
               s
 
             case Failure(t) =>
-              log.logEnv(env.withException(t), LogLevel.Warn, s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]", false)
+              log.logEnv(env.withException(t), LogLevel.Debug, s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]", false)
               env.withException(t)
           }
 

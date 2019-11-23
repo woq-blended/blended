@@ -13,6 +13,7 @@ import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.TransactionWiretap
 import blended.util.config.Implicits._
+import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
 import javax.jms.Session
@@ -92,7 +93,7 @@ class JmsRetryProcessor(
           JmsDestination.create(env.headerWithDefault[String](headerConfig.headerRetryDestination, retryCfg.failedDestName)).get
 
         // If the envelope has an exception, we will try to resend it unless the retry router validation
-        // throws an exception (which always means we can't retry the message
+        // throws an exception (which always means we can't retry the message)
         case Some(_) =>
           validator(env) match {
             case Success(_) => JmsDestination.create(retryCfg.retryDestName).get
@@ -136,7 +137,11 @@ class JmsRetryProcessor(
       deliveryMode = JmsDeliveryMode.Persistent,
       timeToLive = None,
       clearPreviousException = true,
-      logLevel = _ => LogLevel.Debug
+      logLevel = env => if (router.validate(LogLevel.Trace)(env).isFailure) {
+        LogLevel.Info
+      } else {
+        LogLevel.Debug
+      }
     )
 
     jmsProducer(

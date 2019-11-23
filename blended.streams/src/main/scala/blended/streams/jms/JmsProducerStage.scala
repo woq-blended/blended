@@ -130,7 +130,7 @@ final class JmsProducerStage(
         }
       } catch {
         case NonFatal(t) =>
-          producerSettings.log.logEnv(env, LogLevel.Error,
+          producerSettings.log.logEnv(env, LogLevel.Debug,
             s"Error sending message [${env.id}] to [${producerSettings.jmsDestination}] in [${jmsSession.sessionId}]"
           )
           closeSession.invoke(jmsSession)
