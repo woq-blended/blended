@@ -29,6 +29,8 @@ object ProxyConfig {
           ProxyTarget(
             path = k,
             uri = v.getString("uri"),
+            user = v.getStringOption("user"),
+            password = v.getStringOption("password"),
             timeout = v.getInt("timeout", 10),
             redirectCount = v.getInt("redirectCount", 0),
             redirectHeaderPolicy = cfg.getStringOption("headerPolicy") match {
@@ -49,6 +51,8 @@ case class ProxyTarget(
   path: String,
   uri: String,
   timeout: Int,
+  user : Option[String] = None,
+  password : Option[String] = None,
   redirectCount: Int = 0,
   redirectHeaderPolicy : RedirectHeaderPolicy = RedirectHeaderPolicy.Client_Only
 ) {

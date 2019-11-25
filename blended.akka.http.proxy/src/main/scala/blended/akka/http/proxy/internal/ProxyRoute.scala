@@ -2,16 +2,16 @@ package blended.akka.http.proxy.internal
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-
 import akka.actor.ActorSystem
-import akka.http.scaladsl.{ ConnectionContext, Http }
+import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.{ Host, Location }
-import akka.http.scaladsl.server.{ RequestContext, Route }
+import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials, Host, Location}
+import akka.http.scaladsl.server.{RequestContext, Route}
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import blended.util.logging.Logger
 import javax.net.ssl.SSLContext
+import scala.collection.JavaConverters._
 
 trait ProxyRoute {
 
@@ -57,16 +57,37 @@ trait ProxyRoute {
           Http().singleRequest(_: HttpRequest)
       }
 
+      val authHeader : Seq[HttpHeader] =
+        (proxyConfig.user, proxyConfig.password) match {
+          case (Some(u), Some(p)) => Seq(
+            Authorization(BasicHttpCredentials(u, p))
+          )
+          case (_, _) => Seq.empty
+        }
+
       val request = ctx.request
 
       val uri = Uri(
-        if (requestPath.isEmpty) proxyConfig.uri
-        else s"${proxyConfig.uri}/${requestPath}"
+        if (requestPath.isEmpty)  {
+          proxyConfig.uri
+        } else {
+          s"${proxyConfig.uri}/${requestPath}"
+        }
       // Keep the query part of the original request
       ).copy(rawQueryString = request.uri.rawQueryString)
 
-      // keep headers, but not the host header
-      val headers = request.headers.filter(header => header.isNot(Host.lowercaseName))
+      val headers = request.headers.filter{
+        header =>
+          // keep headers, but not the host header
+          if (header.is(Host.lowercaseName)) {
+            false
+          // remove the authorization header if we have found user / pwd in the config
+          } else if (header.is(Authorization.lowercaseName)){
+            authHeader.isEmpty
+          } else {
+            true
+          }
+      } ++ authHeader
 
       log.info(s"Received HttpRequest [${request}] at endpoint [${proxyConfig.path}] and path [${requestPath}] with query [${request.uri.queryString()}]")
 
