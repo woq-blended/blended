@@ -113,7 +113,7 @@ class FlowTransactionStream(
             case FlowTransactionStateStarted | FlowTransactionStateCompleted =>
               streamLogger.underlying.infoMdc(mdc(t))(t.toString())
             case FlowTransactionStateFailed =>
-              streamLogger.underlying.debugMdc(mdc(t))(t.toString())
+              streamLogger.underlying.warnMdc(mdc(t))(t.toString())
             case _ =>
               streamLogger.underlying.debugMdc(mdc(t))(t.toString())
           }
