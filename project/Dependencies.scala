@@ -105,6 +105,7 @@ trait Dependencies {
 
   val orgOsgi = "org.osgi" % "org.osgi.core" % "6.0.0"
   val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
+  val osLib = "com.lihaoyi" %% "os-lib" % "0.4.2"
 
   val parboiledCore = "org.parboiled" % "parboiled-core" % parboiledVersion
   val parboiledScala = "org.parboiled" %% "parboiled-scala" % parboiledVersion

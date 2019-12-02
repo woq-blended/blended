@@ -10,10 +10,11 @@ object BlendedSecurityCrypto extends ProjectFactory {
     deps = Seq(
       Dependencies.cmdOption,
 
-      Dependencies.scalatest % "test",
-      Dependencies.scalacheck % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.scalacheck % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.osLib % Test
     ),
     adaptBundle = b => b.copy(
       importPackage = Seq(

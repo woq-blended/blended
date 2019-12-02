@@ -7,20 +7,25 @@ import java.util.concurrent.TimeoutException
 
 import blended.testsupport.TestFile
 import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import de.tototec.cmdoption.CmdlineParser
+import org.scalatest.Matchers
+import os.CommandResult
 
-class ScepClientAppTest extends LoggingFreeSpec with TestFile {
+class ScepClientAppTest extends LoggingFreeSpec with TestFile with Matchers {
+
+  private[this] val log = Logger[ScepClientAppTest]
 
   "Cmdline parser" - {
 
-    "validate (ensure consistent cmdoption setup)" in {
+    "validate cmdline parser (ensure consistent cmdoption setup)" in {
       val cmdline = new Cmdline()
       val cp = new CmdlineParser(cmdline)
       cp.validate()
     }
 
-    "cmdline help" in {
+    "cmdline help " in {
       val ex = intercept[ExitAppException] {
         ScepClientApp.run(Array("--help"))
       }
@@ -70,12 +75,27 @@ class ScepClientAppTest extends LoggingFreeSpec with TestFile {
       withTestDir() { dir =>
         val etc = new File(dir, "etc")
         etc.mkdirs()
-        Files.copy(confFile.toPath(), new File(etc, "application.conf").toPath(), StandardCopyOption.REPLACE_EXISTING)
+        val targetConfFile = new File(etc, "application.conf")
+        log.info(s"Copying config file from [${confFile}] to [${targetConfFile}]")
+        Files.copy(confFile.toPath(), targetConfFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
 
         val ex = intercept[ExitAppException] {
           ScepClientApp.run(Array("--refresh-certs", "--base-dir", dir.getAbsolutePath()))
         }
         assert(ex.exitCode === 0)
+        val keystorefile = new File(etc, "keystore")
+        assert(keystorefile.exists())
+
+        // try to open the keystore with keytool
+        val proc: CommandResult = os.proc("keytool", "-list", "-keystore", keystorefile.getAbsolutePath()).call(
+          env = Map("LC_ALL" -> "c"),
+          stdin = os.ProcessInput.SourceInput("e2e63a747c4c633e11d5f41f0297c020")
+        )
+        val out = proc.out.string
+        out should include("Keystore type: PKCS12")
+        out should include("Keystore provider: SUN")
+        out should include("Your keystore contains 1 entry")
+        out should include("server1,")
 
       }(TestFile.DeleteWhenNoFailure)
 

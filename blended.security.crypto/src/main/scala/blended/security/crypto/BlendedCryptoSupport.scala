@@ -22,7 +22,7 @@ object BlendedCryptoSupport {
       defaultPwd
     }
 
-    val secretFromFile : Array[Char] = (pwd + "*" + 16).substring(0,16).toCharArray()
+    val secretFromFile : Array[Char] = (pwd + "*" * 16).substring(0,16).toCharArray()
 
     val secret : String = {
       val salt : Array[Char] = ("V*YE6FPXW6#!g^hD" + "*" * 16).substring(0,16).toCharArray()

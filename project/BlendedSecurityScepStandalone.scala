@@ -36,7 +36,8 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
       Dependencies.logbackCore,
       Dependencies.logbackClassic,
       Dependencies.jclOverSlf4j,
-      Dependencies.scalatest % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.osLib % Test
     )
   ) {
 
