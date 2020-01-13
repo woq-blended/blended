@@ -115,7 +115,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       val src: Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg, envLogger)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector: Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout) { _ => }
+      val collector: Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, Some(timeout))
       Await.result(collector.result, timeout + 100.millis)
 
       getFiles(pollCfg.backup.get, pattern = "test.txt", recursive = false).map(_.getName()) should have size (1)
