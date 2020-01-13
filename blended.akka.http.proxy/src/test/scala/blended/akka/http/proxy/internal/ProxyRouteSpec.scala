@@ -1,5 +1,8 @@
 package blended.akka.http.proxy.internal
 
+import java.io.IOException
+import java.net.{InetSocketAddress, Socket}
+
 import scala.concurrent.duration._
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.StatusCodes
@@ -160,7 +163,7 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 
   "Live Proxy Tests (requires internet access)" - {
 
-    def ping(host : String, port : Int) = {
+    def ping(host : String, port : Int): Boolean = {
       val socket = new Socket()
       try {
         socket.connect(new InetSocketAddress(host, port), 500)
@@ -230,7 +233,7 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 
     }
 
-    "live test against http://heise.de with redirectCount 1" in whenOnline {
+    "live test against http://heise.de with redirectCount 1" in {
 
       val proxyRoute = new ProxyRoute {
         override val actorSystem = system

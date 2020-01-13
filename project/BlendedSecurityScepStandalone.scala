@@ -41,7 +41,8 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
       Dependencies.jclOverSlf4j,
 
       Dependencies.scalatest % Test,
-      Dependencies.scalatest % Test
+      Dependencies.scalatest % Test,
+      Dependencies.osLib % Test
     )
 
     override def plugins : Seq[AutoPlugin] = super.plugins ++ Seq(

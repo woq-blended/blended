@@ -36,7 +36,7 @@ object BlendedCryptoSupport {
       src.foreach(_.close())
     }
 
-    val secretFromFile : Array[Char] = (pwd + "*" + keyBytes).substring(0, keyBytes).toCharArray()
+    val secretFromFile : Array[Char] = (pwd + "*" * keyBytes).substring(0, keyBytes).toCharArray()
 
     val secret : String = {
       val salt : Array[Char] = ("V*YE6FPXW6#!g^hD" + "*" * keyBytes).substring(0, keyBytes).toCharArray()

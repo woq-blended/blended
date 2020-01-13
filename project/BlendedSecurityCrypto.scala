@@ -18,7 +18,8 @@ object BlendedSecurityCrypto extends ProjectFactory {
       Dependencies.scalatest % Test,
       Dependencies.scalacheck % Test,
       Dependencies.logbackCore % Test,
-      Dependencies.logbackClassic % Test
+      Dependencies.logbackClassic % Test,
+      Dependencies.osLib % Test
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(
