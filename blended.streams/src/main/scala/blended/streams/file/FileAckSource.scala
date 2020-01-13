@@ -121,7 +121,7 @@ class FileAckSource(
           val fileToProcess : File = new File(f + pollCfg.tmpExt)
 
           // First we try to rename the file in order to check whether it can be accessed yet
-          if (FileHelper.renameFile(f, fileToProcess)) {
+          if (FileHelper.renameFile(f, fileToProcess, false)) {
             val bytes : Array[Byte] = FileHelper.readFile(fileToProcess.getAbsolutePath())
 
             val msg : FlowMessage = if (pollCfg.asText) {
@@ -167,6 +167,45 @@ class FileAckSource(
           case None => Success(None)
         }
       }
+    }
+
+    override protected def beforeAcknowledge(ackCtxt: FileAckContext): Unit = {
+      log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Successfully processed envelope [${ackCtxt.envelope.id}]")
+      pollCfg.backup match {
+        case None =>
+          if (ackCtxt.fileToProcess.delete()) {
+            log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Deleted file for [${ackCtxt.envelope.id}] : [${ackCtxt.fileToProcess}]")
+          } else {
+            log.logEnv(ackCtxt.envelope, LogLevel.Warn, s"File for [${ackCtxt.envelope.id}] could not be deleted : [${ackCtxt.fileToProcess}]")
+          }
+
+        case Some(d) =>
+          val backupDir = new File(d)
+          if (!backupDir.exists()) {
+            backupDir.mkdirs()
+          }
+
+          val backupFileName =
+            if (pollCfg.backupTimestamp) {
+              ackCtxt.originalFile.getName + "-" + sdf.format(new Date())
+            } else {
+              ackCtxt.originalFile.getName
+            }
+
+          val fFrom : File = ackCtxt.fileToProcess
+          val fTo : File = new File(backupDir, backupFileName)
+
+          if (FileHelper.renameFile(fFrom, fTo, true)) {
+            log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Moved file for [${ackCtxt.envelope.id}] from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
+          } else {
+            log.logEnv(ackCtxt.envelope, LogLevel.Warn, s"File for [${ackCtxt.envelope.id}] failed to be renamed from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
+          }
+      }
+    }
+
+    override protected def beforeDenied(ackCtxt: FileAckContext): Unit = {
+      log.logEnv(ackCtxt.envelope, LogLevel.Debug, s"Restoring file [${ackCtxt.originalFile}] in [${ackCtxt.inflightId}]")
+      FileHelper.renameFile(ackCtxt.fileToProcess, ackCtxt.originalFile, true)
     }
 
     /**

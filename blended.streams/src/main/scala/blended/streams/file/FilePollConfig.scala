@@ -16,6 +16,7 @@ object FilePollConfig {
   val PATH_SOURCEDIR      = "sourceDirectory"
   val PATH_PATTERN        = "pattern"
   val PATH_BACKUP         = "backup"
+  val PATH_BACKUP_TST     = "backupTimestamp"
   val PATH_LOCK           = "lock"
   val PATH_ASTEXT         = "asText"
   val PATH_TMP_EXT        = "extension"
@@ -52,6 +53,7 @@ object FilePollConfig {
       pattern = cfg.getStringOption(PATH_PATTERN),
       lock = cfg.getStringOption(PATH_LOCK),
       backup = cfg.getStringOption(PATH_BACKUP),
+      backupTimestamp = cfg.getBoolean(PATH_BACKUP_TST, true),
       charSet = cfg.getStringOption(PATH_CHARSET),
       ackTimeout = cfg.getDuration(PATH_ACKTIMEOUT, 1.second),
       asText = cfg.getBoolean(PATH_ASTEXT, false),
@@ -72,7 +74,8 @@ case class FilePollConfig(
   pattern : Option[String],
   lock : Option[String],
   backup : Option[String],
-  asText : Boolean,
+  backupTimestamp : Boolean,
+  asText: Boolean,
   charSet : Option[String],
   ackTimeout : FiniteDuration,
   batchSize : Int,

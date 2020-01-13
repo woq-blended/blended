@@ -1,7 +1,8 @@
 package blended.security.crypto
 
-import de.tototec.cmdoption.{CmdOption, CmdlineParser}
+import scala.io.Source
 
+import de.tototec.cmdoption.{CmdOption, CmdlineParser}
 import scala.util.{Failure, Success}
 
 object BlendedEncryptor {
@@ -22,18 +23,29 @@ object BlendedEncryptor {
 
       // scalastyle:off regex
       cmdLine.plain.foreach { p =>
-        cs.encrypt(p) match {
-          case Failure(t) =>
-            System.err.println(s"Could not encrypt [$p] : [${t.getMessage()}]")
+        val text = p match {
+          case "-" =>
+            // read from stdin
+            Source.stdin.getLines().mkString("\n")
+          case x => x
+        }
+
+        cs.encrypt(text) match {
+          case Failure(e) =>
+            System.err.println(s"Could not encrypt value [${e.getMessage()}]")
           case Success(e) =>
-            System.out.println(s"Encrypted value for [$p] : [$e]")
+            if(cmdLine.verbose) {
+              System.out.println(s"Encrypted value for [$text] : [$e]")
+            } else {
+              System.out.println(e)
+            }
         }
       }
       // scalastyle:on regex
     }
   }
 
-  private class CmdLine {
+  private[crypto] class CmdLine {
 
     @CmdOption(names = Array("--help", "-h"), description = "Show this help", isHelp = true)
     var help : Boolean = false
@@ -49,9 +61,15 @@ object BlendedEncryptor {
     @CmdOption(
       names = Array("--plain", "-p"),
       args = Array("text"),
-      description = "The plain text to encrypt."
+      description = "The plain text to encrypt. Use '-' to read text from STDIN"
     )
     var _plain : String = _
-    def plain : Option[String] = Option(_plain)
+    def plain = Option(_plain)
+
+    @CmdOption(
+      names = Array("--verbose", "-v"),
+      description = "Be more verbose"
+    )
+    var verbose: Boolean = false
   }
 }

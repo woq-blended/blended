@@ -86,8 +86,8 @@ class FileSourceSpec extends AbstractFileSourceSpec {
 
     "create a backup file if the backup directory is configured" in {
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
-        sourceDir = BlendedTestSupport.projectTestOutput + "/backup",
-        backup = Some(BlendedTestSupport.projectTestOutput + "/backup/backup")
+        sourceDir = BlendedTestSupport.projectTestOutput + "/backupts",
+        backup = Some(BlendedTestSupport.projectTestOutput + "/backupts/backup")
       )
       prepareDirectory(pollCfg.backup.get)
       prepareDirectory(pollCfg.sourceDir)
@@ -100,6 +100,25 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       Await.result(collector.result, timeout + 100.millis)
 
       getFiles(pollCfg.backup.get, pattern = ".*", recursive = false).map(_.getName()) should have size 1
+    }
+
+    "create a backup without timestamp suffix file if the backup directory is configured" in {
+      val pollCfg: FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
+        sourceDir = BlendedTestSupport.projectTestOutput + "/backup",
+        backup = Some(BlendedTestSupport.projectTestOutput + "/backup/backup"),
+        backupTimestamp = false
+      )
+      prepareDirectory(pollCfg.backup.get)
+      prepareDirectory(pollCfg.sourceDir)
+      genFile(new File(pollCfg.sourceDir, "test.txt"))
+
+      val src: Source[FlowEnvelope, NotUsed] =
+        Source.fromGraph(new FileAckSource(pollCfg, envLogger)).via(new AckProcessor("simplePoll.ack").flow)
+
+      val collector: Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout) { _ => }
+      Await.result(collector.result, timeout + 100.millis)
+
+      getFiles(pollCfg.backup.get, pattern = "test.txt", recursive = false).map(_.getName()) should have size (1)
     }
 
     "do not process files if the lock file exists (relative)" in {
