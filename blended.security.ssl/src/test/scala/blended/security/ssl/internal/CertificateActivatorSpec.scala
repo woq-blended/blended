@@ -34,12 +34,10 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
       mandatoryService[SSLContext](registry)(Some("(type=server)"))
       mandatoryService[SSLContext](registry)(Some("(type=client)"))
 
-      val hasher : PasswordHasher = new PasswordHasher(pojoUuid)
-
       val jks : JavaKeystore = new JavaKeystore(
         store = new File(baseDir, "etc/keystore"),
-        storepass = hasher.password("blended").toCharArray(),
-        keypass = Some(hasher.password("mysecret").toCharArray())
+        storepass = "e2e63a747c4c633e11d5f41f0297c020".toCharArray(),
+        keypass = Some("e96504e3aeba28e8a3ed39116829e0da".toCharArray())
       )
 
       val mks = jks.loadKeyStore().get
