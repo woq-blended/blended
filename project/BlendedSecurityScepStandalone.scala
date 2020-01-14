@@ -9,7 +9,7 @@ import sbt.librarymanagement.InclExclRule
 
 object BlendedSecurityScepStandalone extends ProjectFactory {
 
-  private[this] val libDir = "libs"
+  private[this] val libDir = "lib"
 
   implicit class ImplicitModuleId(moduleId : ModuleID) {
     def pure : ModuleID = moduleId.withExclusions(Vector(InclExclRule()))
