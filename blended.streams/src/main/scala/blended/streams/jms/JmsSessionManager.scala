@@ -68,7 +68,7 @@ class JmsSessionManager(
               Failure(t)
           }
         } else {
-          log.warn(s"No free session slot available in [$name] for [$id] : [$maxSessions].")
+          log.debug(s"No free session slot available in [$name] for [$id] : [$maxSessions].")
           Success(None)
         }
     }
