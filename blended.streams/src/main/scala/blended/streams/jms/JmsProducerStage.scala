@@ -80,7 +80,7 @@ final class JmsProducerStage(
             push(outlet, sendEnvelope(env)(s)(jmsProd))
 
           case None =>
-            producerSettings.log.underlying.warn(s"No producer session available in [$id]")
+            producerSettings.log.underlying.debug(s"No producer session available in [$id]")
             scheduleOnce(Push(env), 10.millis)
         }
       } else {

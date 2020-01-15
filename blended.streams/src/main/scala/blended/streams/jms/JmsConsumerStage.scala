@@ -252,7 +252,7 @@ final class JmsConsumerStage(
       ){ event => event.state.status match {
         case Disconnected =>
           val msg : String = s"Underlying JMS connection closed for [$id]"
-          consumerSettings.log.underlying.warn(msg)
+          consumerSettings.log.underlying.debug(msg)
           val t : Throwable = new Exception(msg)
           handleError.invoke(t)
         case _ =>
