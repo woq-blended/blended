@@ -129,7 +129,7 @@ final class JmsAckSourceStage(
 
           case JmsAckState.Pending =>
             if (System.currentTimeMillis() - handler.created > jmsSettings.ackTimeout.toMillis) {
-              settings.log.logEnv(env, LogLevel.Warn, s"Acknowledge timed out for message [${env.id}] in session [$sessionId]")
+              settings.log.logEnv(env, LogLevel.Debug, s"Acknowledge timed out for message [${env.id}] in session [$sessionId]")
               closeSession(handler.session)
             } else {
               scheduleOnce(Ack(sessionId), 10.millis)
@@ -240,7 +240,7 @@ final class JmsAckSourceStage(
             }
           } catch {
             case NonFatal(e) =>
-              settings.log.underlying.warn(s"Error receiving message : [${e.getMessage()}]")
+              settings.log.underlying.debug(s"Error receiving message : [${e.getMessage()}]")
               closeSession(session)
           }
 

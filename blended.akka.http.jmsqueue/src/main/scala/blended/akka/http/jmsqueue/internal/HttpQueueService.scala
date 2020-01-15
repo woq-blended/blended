@@ -93,7 +93,7 @@ trait HttpQueueService {
 
     } catch {
       case NonFatal(e) =>
-        log.warn(s"Error receiving message from queue [$queue] for [$vendor:$provider]. Cause: ${e.getMessage()}")
+        log.debug(s"Error receiving message from queue [$queue] for [$vendor:$provider]. Cause: ${e.getMessage()}")
         ReceiveResult(vendor, provider, queue, Failure(e))
     } finally {
       Future {
@@ -101,19 +101,19 @@ trait HttpQueueService {
           try {
             consumer.foreach(_.close())
           } catch {
-            case NonFatal(t) => log.warn(s"Error closing consumer [${t.getMessage()}]")
+            case NonFatal(t) => log.debug(s"Error closing consumer [${t.getMessage()}]")
           }
 
           try {
             sess.foreach(_.close())
           } catch {
-            case NonFatal(t) => log.warn(s"Error closing session [${t.getMessage()}]")
+            case NonFatal(t) => log.debug(s"Error closing session [${t.getMessage()}]")
           }
 
           try {
             conn.foreach(_.close())
           } catch {
-            case NonFatal(t) => log.warn(s"Error closing connection [${t.getMessage()}]")
+            case NonFatal(t) => log.debug(s"Error closing connection [${t.getMessage()}]")
           }
         }
       }
