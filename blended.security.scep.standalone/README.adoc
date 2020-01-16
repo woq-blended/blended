@@ -107,11 +107,22 @@ blended.security {
 
       // the storepass is used to generate the keystore password
       // this is not the effectively used password
-      storePass = "blended"
+      # storePass = "blended"
 
       // the keypass is used to generate the private key password
       // this is not the effectively used password
-      keyPass = "mysecret"
+      # keyPass = "mysecret"
+
+      explicit {
+        // if defined, it replaces the blended.security.ssl.storePass with an explicitly
+        // given password. The passwort will be used as-is.
+        // Using the config encryption feature (storePass = "$[encrypted[h79ghg123]") is strongly encouraged.
+        storePass = ""
+        // if defined, it replaces the blended.security.ssl.keyPass with an explicitly
+        // given password. The passwort will be used as-is.
+        // Using the config encryption feature (keyPass = "$[encrypted[h79ghg123]") is strongly encouraged.
+        keyPass = ""
+      }
 
       // the configuration of the self signed certificate provider.
       // This is required as an initial SCEP request is performed
@@ -172,6 +183,19 @@ blended.security {
     }
   }
 ----
+
+=== Encryption of sensitive configuration data
+
+To not expose sensitive configuration data like user credentials and passwords,
+the configuration format supports encrypted notation of config values.
+
+An encrypted value looks as follows:
+----
+key = "$[encrypted[8f359ca521]]"
+----
+
+To produce encrypted values, you can use the `BlendedEncryptor` tool.
+
 
 == Export a server key and certificate to openssl
 
