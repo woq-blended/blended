@@ -6,6 +6,7 @@ import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.BlendedStreamsConfig
+import blended.streams.jms.{JmsRetryConfig, JmsRetryProcessor}
 import blended.util.RichTry._
 import blended.util.logging.Logger
 import domino.DominoActivator

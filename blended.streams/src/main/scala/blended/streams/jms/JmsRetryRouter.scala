@@ -1,4 +1,4 @@
-package blended.jms.bridge.internal
+package blended.streams.jms
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -6,9 +6,8 @@ import java.util.Date
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import akka.stream.{FlowShape, Graph}
-import blended.streams.FlowProcessor
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
-import blended.streams.FlowHeaderConfig
+import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.util.logging.LogLevel
 import blended.util.logging.LogLevel.LogLevel
 

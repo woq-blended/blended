@@ -1,4 +1,4 @@
-package blended.jms.bridge.internal
+package blended.streams.jms
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
@@ -8,12 +8,10 @@ import akka.stream.{FlowShape, Graph, Materializer}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams._
-import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.TransactionWiretap
 import blended.util.config.Implicits._
-import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
 import javax.jms.Session
