@@ -17,6 +17,8 @@ addSbtPlugin("io.crashbox" % "sbt-gpg" % "0.2.0")
 // Export test coveragt to codacy
 addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "2.112")
 
+addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.10.0-RC1")
+
 // OSGi bundle build support
 addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.5")
 
