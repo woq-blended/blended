@@ -169,9 +169,10 @@ class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount")
   "Consume messages from the retry destination and pass them to the retry failed destination if the retry cont exceeds" in {
     val srcQueue: String = "myQueue"
 
-    val retryMsg: FlowEnvelope = FlowEnvelope()
-      .withHeader(headerCfg.headerRetryDestination, srcQueue).unwrap
-      .withHeader(headerCfg.headerRetryCount, retryCfg.maxRetries).unwrap
+   val retryMsg: FlowEnvelope = FlowEnvelope()
+     .withHeader(headerCfg.headerRetrying, "True").unwrap
+     .withHeader(headerCfg.headerRetryDestination, srcQueue).unwrap
+     .withHeader(headerCfg.headerRetryCount, retryCfg.maxRetries).unwrap
 
     withExpectedDestination(
       retryCfg.failedDestName,

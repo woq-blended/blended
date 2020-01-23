@@ -51,6 +51,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
 
       intercept[RetryCountExceededException] {
         val env : FlowEnvelope = FlowEnvelope()
+          .withHeader(headerCfg.headerRetrying, "True").unwrap
           .withHeader(headerCfg.headerRetryCount, maxRetries).unwrap
 
         router.validate(LogLevel.Debug)(router.header(env).get).unwrap
@@ -95,6 +96,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       )
 
       val env : FlowEnvelope = FlowEnvelope()
+        .withHeader(headerCfg.headerRetrying, "True").unwrap
         .withHeader(headerCfg.headerRetryDestination, "myQueue").unwrap
 
       val env1 : FlowEnvelope = router.validate(LogLevel.Debug)(router.header(env).get).unwrap

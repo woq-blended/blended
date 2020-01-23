@@ -220,7 +220,7 @@ class BridgeStreamBuilder(
 
       bridgeLogger.debug(s"Creating Stream with header configs [${bridgeCfg.header}]")
 
-      val header : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = HeaderTransformProcessor(
+      val header: Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = HeaderTransformProcessor(
         name = streamId + "-header",
         log = envLogger,
         rules = bridgeCfg.header,
@@ -391,7 +391,13 @@ class BridgeStreamBuilder(
       FlowShape(forward.in, ack.out)
     }
 
-    jmsSource.via(g)
+    val clearRetrying : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.fromFunction("clearRetrying", envLogger){ env => Try {
+      env.removeHeader(bridgeCfg.headerCfg.headerRetrying)
+    }}
+
+    jmsSource
+      .via(g)
+      .via(clearRetrying)
   }
 
   bridgeLogger.debug(s"Starting bridge stream with config [inbound=${bridgeCfg.inbound},trackTransaction=${bridgeCfg.trackTransaction}]")

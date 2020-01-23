@@ -16,6 +16,7 @@ object FlowHeaderConfig {
   private val updatedPath = "transactionUpdated"
   private val trackTransactionPath = "trackTransaction"
   private val trackSourcePath = "trackSource"
+  private val retryingPath = "retrying"
   private val retryCountPath = "retryCount"
   private val maxRetriesPath = "maxRetries"
   private val retryTimeoutPath = "retryTimeout"
@@ -35,6 +36,7 @@ object FlowHeaderConfig {
   private val transUpdated = "TransactionUpdated"
   private val trackTrans = "TrackTransaction"
   private val trackSource = "TrackSource"
+  private val retrying = "Retrying"
   private val retryCount = "RetryCount"
   private val maxRetries = "MaxRetries"
   private val retryTimeout = "RetryTimeout"
@@ -64,6 +66,7 @@ object FlowHeaderConfig {
     headerTransUpdated = header(prefix)(transUpdated),
     headerTrack = header(prefix)(trackTrans),
     headerTrackSource = header(prefix)(trackSource),
+    headerRetrying = header(prefix)(retrying),
     headerRetryCount = header(prefix)(retryCount),
     headerMaxRetries = header(prefix)(maxRetries),
     headerRetryTimeout = header(prefix)(retryTimeout),
@@ -86,6 +89,7 @@ object FlowHeaderConfig {
     val headerUpdated = cfg.getString(updatedPath, transUpdated)
     val headerTrack = cfg.getString(trackTransactionPath, trackTrans)
     val headerTrackSource = cfg.getString(trackSourcePath, trackSource)
+    val headerRetrying = cfg.getString(retryingPath, retrying)
     val headerRetryCount = cfg.getString(retryCountPath, retryCount)
     val headerMaxRetries = cfg.getString(maxRetriesPath, maxRetries)
     val headerRetryTimeout = cfg.getString(retryTimeoutPath, retryTimeout)
@@ -107,6 +111,7 @@ object FlowHeaderConfig {
       headerTransUpdated = header(prefix)(headerUpdated),
       headerTrack = header(prefix)(headerTrack),
       headerTrackSource = header(prefix)(headerTrackSource),
+      headerRetrying = header(prefix)(headerRetrying),
       headerRetryCount = header(prefix)(headerRetryCount),
       headerMaxRetries = header(prefix)(headerMaxRetries),
       headerRetryTimeout = header(prefix)(headerRetryTimeout),
@@ -131,6 +136,7 @@ case class FlowHeaderConfig private (
   headerTransUpdated : String,
   headerTrack : String,
   headerTrackSource : String,
+  headerRetrying : String,
   headerRetryCount : String,
   headerMaxRetries : String,
   headerRetryTimeout : String,
