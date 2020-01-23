@@ -37,28 +37,47 @@ class RunnableDispatcher(
 
   private[builder] def dispatcherSend(streamLogger : FlowEnvelopeLogger) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
-    val sendProducerSettings = JmsProducerSettings(
-      log = streamLogger,
-      connectionFactory = cf,
-      headerCfg = bs.headerConfig,
-      destinationResolver = s => new DispatcherDestinationResolver(s, registry, bs, streamLogger),
-      logLevel = env => if (
-        env.header[String](bs.headerConfig.headerBridgeVendor).contains(internal.vendor) &&
-        env.header[String](bs.headerConfig.headerBridgeProvider).contains(internal.provider)
-      ) {
-        // In case the final destination lies within the internal JMS provider, we log the message sent as info
-        LogLevel.Info
-      } else {
-        // Otherwise we log it as debug
-        LogLevel.Debug
-      }
-    )
+    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+      GraphDSL.create() { implicit b =>
 
-    jmsProducer(
-      name = "dispatcherSend",
-      autoAck = false,
-      settings = sendProducerSettings
-    )
+        import GraphDSL.Implicits._
+
+        val sendProducerSettings = JmsProducerSettings(
+          log = streamLogger,
+          connectionFactory = cf,
+          headerCfg = bs.headerConfig,
+          destinationResolver = s => new DispatcherDestinationResolver(s, registry, bs, streamLogger),
+          logLevel = env => if (
+            env.header[String](bs.headerConfig.headerBridgeVendor).contains(internal.vendor) &&
+              env.header[String](bs.headerConfig.headerBridgeProvider).contains(internal.provider)
+          ) {
+            // In case the final destination lies within the internal JMS provider, we log the message sent as info
+            LogLevel.Info
+          } else {
+            // Otherwise we log it as debug
+            LogLevel.Debug
+          }
+        )
+
+        val clearRetrying = b.add(
+          FlowProcessor.fromFunction("clearRetrying", streamLogger){ env => Try {
+            env.removeHeader(bs.headerConfig.headerRetrying)
+          }}
+        )
+
+        val performSend = b.add(jmsProducer(
+          name = "dispatcherSend",
+          autoAck = false,
+          settings = sendProducerSettings
+        ))
+
+        clearRetrying ~> performSend
+
+        FlowShape(clearRetrying.in, performSend.out)
+      }
+    }
+
+    Flow.fromGraph(g)
   }
 
   // Simply stick the transaction event into the transaction destination
