@@ -75,7 +75,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
   protected val retryCfg : JmsRetryConfig = JmsRetryConfig(
     cf = amqCf,
     retryDestName = "retryQueue",
-    failedDestName = Some("retryFailed"),
+    failedDestName = "retryFailed",
     eventDestName = "internal.transactions",
     retryInterval = 500.millis,
     maxRetries = 5,
@@ -175,7 +175,7 @@ class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount")
      .withHeader(headerCfg.headerRetryCount, retryCfg.maxRetries).unwrap
 
     withExpectedDestination(
-      retryCfg.failedDestName.get,
+      retryCfg.failedDestName,
       new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
       completeOn = _.nonEmpty
@@ -200,7 +200,7 @@ class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeo
       .withHeader(headerCfg.headerFirstRetry, System.currentTimeMillis() - 2 * retryCfg.retryTimeout.toMillis).unwrap
 
     withExpectedDestination(
-      retryCfg.failedDestName.get,
+      retryCfg.failedDestName,
       new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
       completeOn = _.nonEmpty
@@ -217,7 +217,7 @@ class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeo
     val otherFailed : Collector[FlowEnvelope] = receiveMessages(
       headerCfg = headerCfg,
       cf = amqCf,
-      dest = JmsQueue(retryCfg.failedDestName.get),
+      dest = JmsQueue(retryCfg.failedDestName),
       log = envLogger,
       listener = 1,
       completeOn = None,
@@ -235,7 +235,7 @@ class JmsRetryProcessorMissingDestinationSpec extends ProcessorSpecSupport("miss
     val retryMsg : FlowEnvelope = FlowEnvelope()
 
     withExpectedDestination(
-      retryCfg.failedDestName.get,
+      retryCfg.failedDestName,
       new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
       completeOn = _.nonEmpty
@@ -275,7 +275,7 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
       completeOn = _=> false
     )(retryMsg)(_ should be (empty))
 
-    consumeMessages(retryCfg.failedDestName.get)(_.nonEmpty) match {
+    consumeMessages(retryCfg.failedDestName)(_.nonEmpty) match {
       case Failure(t) => fail(t)
       case Success(Nil) => fail(s"Expected message in [${retryCfg.failedDestName}]")
       case Success(env :: _) =>
