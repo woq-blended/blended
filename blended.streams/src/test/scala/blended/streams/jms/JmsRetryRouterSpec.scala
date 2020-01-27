@@ -31,7 +31,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
   private[this] val retryCfg : JmsRetryConfig = JmsRetryConfig(
     cf = amqCf,
     retryDestName = "retryQueue",
-    failedDestName = "retryFailed",
+    failedDestName = Some("retryFailed"),
     eventDestName = "transactions",
     retryInterval = 3.seconds,
     headerCfg = headerCfg

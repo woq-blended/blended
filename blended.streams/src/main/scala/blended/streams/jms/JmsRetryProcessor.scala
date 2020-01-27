@@ -25,7 +25,7 @@ object JmsRetryConfig {
     idSvc : ContainerIdentifierService,
     cf : IdAwareConnectionFactory,
     retryDestName : String,
-    retryFailedName : String,
+    retryFailedName : Option[String],
     eventDestName : String,
     cfg : Config
   ) : Try[JmsRetryConfig] = Try {
@@ -51,11 +51,11 @@ case class JmsRetryConfig(
   cf : IdAwareConnectionFactory,
   headerCfg : FlowHeaderConfig,
   retryDestName : String,
-  failedDestName : String,
+  failedDestName : Option[String],
   eventDestName : String,
   retryInterval : FiniteDuration,
   maxRetries : Long = -1,
-  retryTimeout : FiniteDuration = 1.day
+  retryTimeout : FiniteDuration = 1.day,
 ) {
   override def toString : String = s"${getClass().getSimpleName}[${cf.vendor}:${cf.provider}](retryDestination=$retryDestName," +
     s"failedDestination=$failedDestName,retryInterval=$retryInterval,maxRetries=$maxRetries,retryTimeout=$retryTimeout)"
@@ -88,14 +88,22 @@ class JmsRetryProcessor(
         // If the envelope does not have an exception, we will send it to the original destination for reprocessing
         // If the header "RetryDestination" is missing, we will send the message to the retry failed queue
         case None =>
-          JmsDestination.create(env.headerWithDefault[String](headerConfig.headerRetryDestination, retryCfg.failedDestName)).get
+          JmsDestination.create(env.headerWithDefault[String](headerConfig.headerRetryDestination, retryCfg.failedDestName.getOrElse("retryFailed"))).get
 
         // If the envelope has an exception, we will try to resend it unless the retry router validation
         // throws an exception (which always means we can't retry the message)
         case Some(_) =>
           validator(env) match {
-            case Success(_) => JmsDestination.create(retryCfg.retryDestName).get
-            case Failure(_) => JmsDestination.create(retryCfg.failedDestName).get
+            case Success(_) =>
+              JmsDestination.create(retryCfg.retryDestName).get
+            case Failure(_) =>
+              retryCfg.failedDestName match {
+                case Some(d) =>
+                  JmsDestination.create(d).get
+                case None =>
+                  JmsDestination.create(env.headerWithDefault[String](headerConfig.headerRetryDestination, retryCfg.failedDestName.getOrElse("retryFailed"))).get
+
+              }
           }
       }
 
