@@ -14,14 +14,14 @@ object BlendedFile extends ProjectFactory {
     override val description : String = "Bundle to define a customizable Filedrop / Filepoll API"
 
     override def deps : Seq[ModuleID] = Seq(
-      Dependencies.commonsIo % "test",
-      Dependencies.activeMqBroker % "test",
-      Dependencies.activeMqKahadbStore % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.scalatest % "test"
+      Dependencies.commonsIo % Test,
+      Dependencies.activeMqBroker % Test,
+      Dependencies.activeMqKahadbStore % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.scalatest % Test
     )
 
     override def plugins : Seq[AutoPlugin] = super.plugins ++ Seq(

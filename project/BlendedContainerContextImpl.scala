@@ -20,12 +20,12 @@ object BlendedContainerContextImpl extends ProjectFactory {
       Dependencies.springExpression,
       Dependencies.springCore,
 
-      Dependencies.scalatest % "test",
-      Dependencies.scalacheck % "test",
-      Dependencies.mockitoAll % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.jclOverSlf4j % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.scalacheck % Test,
+      Dependencies.mockitoAll % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.jclOverSlf4j % Test
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(
