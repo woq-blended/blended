@@ -22,6 +22,7 @@ object BlendedContainerContextApi extends ProjectFactory {
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtilLogging.project,
       BlendedSecurityCrypto.project
     )
   }

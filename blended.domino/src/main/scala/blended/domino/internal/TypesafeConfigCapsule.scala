@@ -1,7 +1,6 @@
 package blended.domino.internal
 
-import blended.container.context.api.ContainerIdentifierService
-import blended.domino.ConfigLocator
+import blended.container.context.api.{ConfigLocator, ContainerIdentifierService}
 import com.typesafe.config.Config
 import domino.DominoImplicits
 import domino.capsule.{Capsule, CapsuleContext, CapsuleScope}
@@ -23,8 +22,8 @@ class TypesafeConfigCapsule(
 
   override def start() : Unit = {
     whenServicePresent[ContainerIdentifierService] { idSvc =>
-      val locator = new ConfigLocator(idSvc.containerContext)
-      val cfg = locator.getConfig(bundleContext.getBundle().getSymbolicName())
+
+      val cfg = idSvc.containerContext.getConfig(bundleContext.getBundle().getSymbolicName())
 
       if (optCapsuleScope.isEmpty) {
         val newCapsuleScope = capsuleContext.executeWithinNewCapsuleScope {

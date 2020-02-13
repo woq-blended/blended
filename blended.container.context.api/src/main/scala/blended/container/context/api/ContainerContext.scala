@@ -1,9 +1,10 @@
 package blended.container.context.api
 
+import java.io.File
 import java.util.concurrent.atomic.AtomicLong
 
 import blended.security.crypto.ContainerCryptoSupport
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 
 object ContainerContext {
 
@@ -33,6 +34,19 @@ trait ContainerContext {
 
   // application.conf + application_overlay.conf
   def getContainerConfig() : Config
+
+  def getConfig(id : String) : Config = {
+
+    ConfigLocator.config(
+      new File(getContainerConfigDirectory()), s"$id.conf", getContainerConfig()
+    ) match {
+      case empty if empty.isEmpty =>
+        val cfg = getContainerConfig()
+        if (cfg.hasPath(id)) cfg.getConfig(id) else ConfigFactory.empty()
+
+      case cfg => cfg
+    }
+  }
 
   def getNextTransactionCounter() : Long = ContainerContext.nextTransactionCounter
 }

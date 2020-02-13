@@ -22,7 +22,6 @@ object BlendedContainerContextImpl extends ProjectFactory {
 
       Dependencies.scalatest % "test",
       Dependencies.scalacheck % "test",
-      Dependencies.mockitoAll % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test",
       Dependencies.jclOverSlf4j % "test"

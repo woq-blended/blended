@@ -3,7 +3,7 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.ContainerContext
+import blended.container.context.api.{ConfigLocator, ContainerContext}
 import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
@@ -144,18 +144,19 @@ class ContainerContextImpl() extends ContainerContext {
 
     log.debug(s"Overlay config: ${overlayConfig}")
 
-    val config = overlayConfig match {
+    val olCfg : Config = overlayConfig match {
       case Some(oc) => ConfigFactory.parseFile(oc, ConfigParseOptions.defaults().setAllowMissing(false))
       case _        => ConfigFactory.empty()
     }
-    config.withFallback(ConfigFactory.parseFile(
-      new File(getProfileConfigDirectory(), "application.conf"), ConfigParseOptions.defaults().setAllowMissing(false)
-    ))
+
+    val appCfg : Config =
+      ConfigLocator.config(new File(getContainerConfigDirectory()), "application.conf", ConfigFactory.empty())
+
+    olCfg.withFallback(appCfg)
       .withFallback(sysProps)
       .withFallback(envProps)
       .resolve()
   }
 
   override def getContainerConfig() : Config = ctConfig
-
 }
