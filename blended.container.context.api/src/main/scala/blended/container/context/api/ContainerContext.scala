@@ -58,7 +58,7 @@ trait ContainerContext {
   /**
    * Provide access to encryption and decryption facilities, optionally secured with a secret file.
    */
-  def containerCryptoSupport : ContainerCryptoSupport
+  def cryptoSupport : ContainerCryptoSupport
 
   /**
    * The application.conf, optionally modified with an overlay.

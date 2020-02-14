@@ -10,7 +10,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 class ContainerIdentifierServiceImpl(
   ctContext : ContainerContext

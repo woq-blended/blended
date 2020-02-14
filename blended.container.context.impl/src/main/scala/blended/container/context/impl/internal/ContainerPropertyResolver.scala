@@ -207,7 +207,7 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
           resolve(e.prefix) + e.pattern + resolve(e.postfix)
 
         case "encrypted" =>
-          val decrypted : String = ctContext.containerCryptoSupport.decrypt(e.pattern).get
+          val decrypted : String = ctContext.cryptoSupport.decrypt(e.pattern).get
           resolve(e.prefix) + resolve(decrypted).toString() + resolve(e.postfix)
 
         case _ =>
@@ -219,7 +219,8 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
       }
     } else {
       lastIndexOfPattern(-1, -1, line, evalStartDelim) match {
-        case i if i < 0 => line
+        case i if i < 0 =>
+          line
         case i if i >= 0 =>
           val e = extractVariableElement(line, evalStartDelim, evalEndDelim)
           if (e.prefix.isEmpty && e.postfix.isEmpty) {

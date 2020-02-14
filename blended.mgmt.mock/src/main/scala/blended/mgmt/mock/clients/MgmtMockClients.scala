@@ -28,7 +28,7 @@ class MgmtMockClients(config : Config) {
     override def profileDirectory() : String = containerDirectory()
     override def profileConfigDirectory() : String = containerDirectory()
     override def containerHostname() : String = "localhost"
-    override def containerCryptoSupport() : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("pwd.txt")
+    override def cryptoSupport() : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("pwd.txt")
     override def containerConfig() : TSConfig = ConfigFactory.empty()
   }
 

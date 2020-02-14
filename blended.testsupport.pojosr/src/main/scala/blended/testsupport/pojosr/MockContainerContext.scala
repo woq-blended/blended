@@ -3,7 +3,7 @@ package blended.testsupport.pojosr
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
+import blended.container.context.api.ContainerContext
 import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import com.typesafe.config.impl.Parseable
 import com.typesafe.config.{Config, ConfigFactory, ConfigObject, ConfigParseOptions}
@@ -20,11 +20,11 @@ class MockContainerContext(baseDir : String) extends ContainerContext {
 
   override val profileDirectory : String = containerDirectory
 
-  override val profileConfigDirectory : String = containerConfigDirectory(
+  override val profileConfigDirectory : String = containerConfigDirectory
 
   override val containerHostname : String = "localhost"
 
-  private lazy val cryptoSupport : ContainerCryptoSupport = {
+  override val cryptoSupport : ContainerCryptoSupport = {
     val ctConfig : Config = containerConfig
 
     val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
@@ -37,8 +37,6 @@ class MockContainerContext(baseDir : String) extends ContainerContext {
       new File(containerConfigDirectory, cipherSecretFile).getAbsolutePath()
     )
   }
-
-  override val containerCryptoSupport : ContainerCryptoSupport = cryptoSupport
 
   private def getSystemProperties() : Properties = {
     // Avoid ConcurrentModificationException due to parallel setting of system properties by copying properties

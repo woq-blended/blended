@@ -3,50 +3,40 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
-import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
 import scala.collection.JavaConverters._
-import scala.util.{Failure, Success}
-
-object ContainerContextImpl {
-  private val PROP_BLENDED_HOME = "blended.home"
-  private val CONFIG_DIR = "etc"
-  private val SECRET_FILE_PATH : String = "blended.security.secretFile"
-
-}
 
 class ContainerContextImpl extends AbstractContainerContextImpl {
 
-  import ContainerContextImpl._
+  import AbstractContainerContextImpl._
 
   private[this] val log = Logger[ContainerContextImpl]
 
-  override val containerDirectory : String =
+  override lazy val containerDirectory : String =
     new File(System.getProperty("blended.home")).getAbsolutePath
 
-  override val containerHostname : String = {
+  override lazy val containerHostname : String = {
     try {
       val localMachine = java.net.InetAddress.getLocalHost()
       localMachine.getCanonicalHostName()
     } catch {
-      case uhe : java.net.UnknownHostException => "UNKNOWN"
+      case _ : java.net.UnknownHostException => "UNKNOWN"
     }
   }
 
-  override val containerLogDirectory : String = containerLogDir
+  override lazy val containerLogDirectory : String = containerLogDir
 
-  override val profileDirectory : String = profileDir
+  override lazy val profileDirectory : String = profileDir
 
-  val brandingProperties : Map[String, String] = {
+  lazy val brandingProperties : Map[String, String] = {
     val props = (try {
       import blended.launcher.runtime.Branding
       // it is possible, that this optional class is not available at runtime,
       // e.g. when started with another launcher
-      log.debug("About to read launcher branding properies")
+      log.debug("About to read launcher branding properties")
       Option(Branding.getProperties())
     } catch {
       case e : NoClassDefFoundError => None
@@ -90,26 +80,10 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
     f.getAbsolutePath()
   }
 
-  private lazy val cryptoSupport : ContainerCryptoSupport = {
-    val ctConfig : Config = containerConfig()
-
-    val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
-      ctConfig.getString(SECRET_FILE_PATH)
-    } else {
-      "secret"
-    }
-
-    BlendedCryptoSupport.initCryptoSupport(
-      new File(containerConfigDirectory, cipherSecretFile).getAbsolutePath()
-    )
-  }
-
-  override val containerCryptoSupport : ContainerCryptoSupport = cryptoSupport
-
-  override val containerConfigDirectory : String =
+  override lazy val containerConfigDirectory : String =
     new File(containerDirectory, CONFIG_DIR).getAbsolutePath
 
-  override val profileConfigDirectory : String = new File(profileDirectory, CONFIG_DIR).getAbsolutePath
+  override lazy val profileConfigDirectory : String = new File(profileDirectory, CONFIG_DIR).getAbsolutePath
 
   private[this] lazy val ctConfig : Config = {
     val sysProps = ConfigFactory.systemProperties()
@@ -159,28 +133,6 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
       .resolve()
   }
 
-  override val containerConfig : Config = ctConfig
-
-  /**
-   * Read a config with a given id from the profile config directory and apply all blended
-   * replacements in the result.
-   *
-   * @param id The id to retrieve the config for. This is usually the bundle symbolic name.
-   */
-  override def getConfig(id: String): Config = {
-
-    ConfigLocator.config(
-      containerConfigDirectory, s"$id.conf", containerConfig, this
-    ) match {
-      case Failure(e) =>
-        log.warn(s"Failed to read config for id [$id] : [${e.getMessage()}], using empty config")
-        ConfigFactory.empty()
-      case Success(empty) if empty.isEmpty =>
-        val cfg = containerConfig
-        if (cfg.hasPath(id)) cfg.getConfig(id) else ConfigFactory.empty()
-      case Success(cfg) => cfg
-    }
-  }
-
+  override lazy val containerConfig : Config = ctConfig
 
 }

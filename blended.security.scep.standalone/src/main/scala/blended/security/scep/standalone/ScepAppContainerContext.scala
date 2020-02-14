@@ -42,7 +42,7 @@ class ScepAppContainerContext(baseDir : String) extends ContainerContext {
     )
   }
 
-  override def containerCryptoSupport() : ContainerCryptoSupport = cryptoSupport
+  override def cryptoSupport() : ContainerCryptoSupport = cryptoSupport
 
   override def containerConfig() : Config = {
     val sys = new Properties()
