@@ -3,13 +3,14 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.{ConfigLocator, ContainerContext}
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
 import scala.collection.JavaConverters._
+import scala.util.{Failure, Success}
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
@@ -18,16 +19,16 @@ object ContainerContextImpl {
 
 }
 
-class ContainerContextImpl() extends ContainerContext {
+class ContainerContextImpl extends AbstractContainerContextImpl {
 
   import ContainerContextImpl._
 
   private[this] val log = Logger[ContainerContextImpl]
 
-  override def getContainerDirectory() : String =
+  override val containerDirectory : String =
     new File(System.getProperty("blended.home")).getAbsolutePath
 
-  override def getContainerHostname() : String = {
+  override val containerHostname : String = {
     try {
       val localMachine = java.net.InetAddress.getLocalHost()
       localMachine.getCanonicalHostName()
@@ -36,9 +37,9 @@ class ContainerContextImpl() extends ContainerContext {
     }
   }
 
-  override def getContainerLogDirectory() : String = containerLogDir
+  override val containerLogDirectory : String = containerLogDir
 
-  override def getProfileDirectory() : String = profileDir
+  override val profileDirectory : String = profileDir
 
   val brandingProperties : Map[String, String] = {
     val props = (try {
@@ -85,12 +86,12 @@ class ContainerContextImpl() extends ContainerContext {
   }
 
   private[this] lazy val containerLogDir : String = {
-    val f = new File(getContainerDirectory() + "/log")
+    val f = new File(containerDirectory + "/log")
     f.getAbsolutePath()
   }
 
   private lazy val cryptoSupport : ContainerCryptoSupport = {
-    val ctConfig : Config = getContainerConfig()
+    val ctConfig : Config = containerConfig()
 
     val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
       ctConfig.getString(SECRET_FILE_PATH)
@@ -99,16 +100,16 @@ class ContainerContextImpl() extends ContainerContext {
     }
 
     BlendedCryptoSupport.initCryptoSupport(
-      new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
+      new File(containerConfigDirectory, cipherSecretFile).getAbsolutePath()
     )
   }
 
-  override def getContainerCryptoSupport() : ContainerCryptoSupport = cryptoSupport
+  override val containerCryptoSupport : ContainerCryptoSupport = cryptoSupport
 
-  override def getContainerConfigDirectory() : String =
-    new File(getContainerDirectory(), CONFIG_DIR).getAbsolutePath
+  override val containerConfigDirectory : String =
+    new File(containerDirectory, CONFIG_DIR).getAbsolutePath
 
-  override def getProfileConfigDirectory() : String = new File(getProfileDirectory(), CONFIG_DIR).getAbsolutePath
+  override val profileConfigDirectory : String = new File(profileDirectory, CONFIG_DIR).getAbsolutePath
 
   private[this] lazy val ctConfig : Config = {
     val sysProps = ConfigFactory.systemProperties()
@@ -150,7 +151,7 @@ class ContainerContextImpl() extends ContainerContext {
     }
 
     val appCfg : Config =
-      ConfigLocator.config(new File(getContainerConfigDirectory()), "application.conf", ConfigFactory.empty())
+      ConfigLocator.safeConfig(containerConfigDirectory, "application.conf", ConfigFactory.empty(), this)
 
     olCfg.withFallback(appCfg)
       .withFallback(sysProps)
@@ -158,5 +159,28 @@ class ContainerContextImpl() extends ContainerContext {
       .resolve()
   }
 
-  override def getContainerConfig() : Config = ctConfig
+  override val containerConfig : Config = ctConfig
+
+  /**
+   * Read a config with a given id from the profile config directory and apply all blended
+   * replacements in the result.
+   *
+   * @param id The id to retrieve the config for. This is usually the bundle symbolic name.
+   */
+  override def getConfig(id: String): Config = {
+
+    ConfigLocator.config(
+      containerConfigDirectory, s"$id.conf", containerConfig, this
+    ) match {
+      case Failure(e) =>
+        log.warn(s"Failed to read config for id [$id] : [${e.getMessage()}], using empty config")
+        ConfigFactory.empty()
+      case Success(empty) if empty.isEmpty =>
+        val cfg = containerConfig
+        if (cfg.hasPath(id)) cfg.getConfig(id) else ConfigFactory.empty()
+      case Success(cfg) => cfg
+    }
+  }
+
+
 }

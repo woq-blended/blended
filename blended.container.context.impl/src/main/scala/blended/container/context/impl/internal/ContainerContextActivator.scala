@@ -1,6 +1,6 @@
 package blended.container.context.impl.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.util.logging.Logger
 import domino.DominoActivator
 
@@ -16,15 +16,14 @@ class ContainerContextActivator extends DominoActivator {
 
   whenBundleActive {
     try {
-      val containerContext = new ContainerContextImpl()
-      val idSvc = new ContainerIdentifierServiceImpl(containerContext)
+      val ctContext = new ContainerContextImpl()
 
-      log.info(s"Container identifier is [${idSvc.uuid}]")
-      log.info(s"Profile home directory is [${containerContext.getProfileDirectory()}]")
-      log.info(s"Container Context properties are : ${idSvc.properties.mkString("[", ",", "]")}")
+      log.info(s"Container identifier is [${ctContext.identifierService.uuid}]")
+      log.info(s"Profile home directory is [${ctContext.profileDirectory}]")
+      log.info(s"Container Context properties are : ${ctContext.identifierService.properties.mkString("[", ",", "]")}")
 
-      Logger.setProps(mdcMap(idSvc))
-      idSvc.providesService[ContainerIdentifierService]
+      Logger.setProps(mdcMap(ctContext.identifierService))
+      ctContext.providesService[ContainerContext]
     } catch {
       case NonFatal(e) =>
         log.error(e.getMessage())

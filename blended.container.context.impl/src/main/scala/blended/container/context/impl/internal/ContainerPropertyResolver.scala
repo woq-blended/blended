@@ -2,7 +2,7 @@ package blended.container.context.impl.internal
 
 import java.util.regex.{Matcher, Pattern}
 
-import blended.container.context.api.{ContainerIdentifierService, PropertyResolverException, SpelFunctions}
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService, PropertyResolverException, SpelFunctions}
 import blended.util.logging.Logger
 import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
@@ -11,7 +11,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext
 import scala.collection.mutable
 import scala.util.Try
 
-object ContainerPropertyResolver {
+class ContainerPropertyResolver(ctContext : ContainerContext) {
 
   private case class ExtractedElement(
     prefix : String,
@@ -23,7 +23,7 @@ object ContainerPropertyResolver {
   type Resolver = String => String
   type Modifier = (String, String) => String
 
-  private[this] val log = Logger[ContainerPropertyResolver.type]
+  private[this] val log = Logger[ContainerPropertyResolver]
 
   private[this] val resolveStartChar = "["
   private[this] val resolveEndChar = "]"
@@ -132,8 +132,8 @@ object ContainerPropertyResolver {
     }
   )
 
-  private[this] def resolver(idSvc : ContainerIdentifierService) : Map[String, Resolver] = Map(
-    ContainerIdentifierService.containerId -> (_ => idSvc.uuid)
+  private[this] val resolver : Map[String, Resolver] = Map(
+    ContainerIdentifierService.containerId -> (_ => ctContext.identifierService().uuid)
   )
 
   private[this] def extractModifier(s : String) : Option[(Modifier, String)] = {
@@ -142,7 +142,7 @@ object ContainerPropertyResolver {
     modifiers.get(modName).map { m => (m, params) }
   }
 
-  private[this] def processRule(idSvc : ContainerIdentifierService, rule : String, additionalProps : Map[String, Any]) : String = {
+  private[this] def processRule(rule : String, additionalProps : Map[String, Any]) : String = {
 
     log.trace(s"Processing rule [$rule]")
 
@@ -162,7 +162,7 @@ object ContainerPropertyResolver {
       case Some(m) => m
     }
 
-    val props = Option(idSvc.properties).getOrElse(Map.empty)
+    val props = Option(ctContext.identifierService().properties).getOrElse(Map.empty)
 
     // First, we resolve the rule from the environment vars or System properties
     // The resolution is mandatory
@@ -179,7 +179,7 @@ object ContainerPropertyResolver {
         ) match {
             case Some(s) => s.toString()
             case None =>
-              resolver(idSvc).get(ruleName) match {
+              resolver.get(ruleName) match {
                 case Some(r) => r(ruleName)
                 case None    => throw new PropertyResolverException(s"Unable to resolve property [$rule]")
               }
@@ -192,7 +192,7 @@ object ContainerPropertyResolver {
     result
   }
 
-  def resolve(idSvc : ContainerIdentifierService, line : String, additionalProps : Map[String, Any] = Map.empty) : AnyRef = {
+  def resolve(line : String, additionalProps : Map[String, Any] = Map.empty) : AnyRef = {
     // First we check if we have replacements in "Blended Style"
 
     /**
@@ -204,17 +204,17 @@ object ContainerPropertyResolver {
       val e = extractVariableElement(line, resolveStartDelim, resolveEndDelim)
       e.modifier match {
         case "delayed" =>
-          resolve(idSvc, e.prefix) + e.pattern + resolve(idSvc, e.postfix)
+          resolve(e.prefix) + e.pattern + resolve(e.postfix)
 
         case "encrypted" =>
-          val decrypted : String = idSvc.getContainerContext().getContainerCryptoSupport().decrypt(e.pattern).get
-          resolve(idSvc, e.prefix) + resolve(idSvc, decrypted).toString() + resolve(idSvc, e.postfix)
+          val decrypted : String = ctContext.containerCryptoSupport.decrypt(e.pattern).get
+          resolve(e.prefix) + resolve(decrypted).toString() + resolve(e.postfix)
 
         case _ =>
           // First we resolve the inner expression to resolve any nested expressions
-          val inner = resolve(idSvc, e.pattern, additionalProps).toString
+          val inner = resolve(e.pattern, additionalProps).toString
           // then we resolve the entire line with the inner expression resolved
-          resolve(idSvc, e.prefix + processRule(idSvc, inner, additionalProps) + e.postfix, additionalProps)
+          resolve(e.prefix + processRule(inner, additionalProps) + e.postfix, additionalProps)
 
       }
     } else {
@@ -223,9 +223,9 @@ object ContainerPropertyResolver {
         case i if i >= 0 =>
           val e = extractVariableElement(line, evalStartDelim, evalEndDelim)
           if (e.prefix.isEmpty && e.postfix.isEmpty) {
-            evaluate(idSvc, e.pattern, additionalProps)
+            evaluate(e.pattern, additionalProps)
           } else {
-            resolve(idSvc, e.prefix + evaluate(idSvc, e.pattern, additionalProps) + e.postfix, additionalProps)
+            resolve(e.prefix + evaluate(e.pattern, additionalProps) + e.postfix, additionalProps)
           }
       }
     }
@@ -233,20 +233,21 @@ object ContainerPropertyResolver {
 
   // TODO : Should this be Option[AnyRef] ??
   private[impl] def evaluate(
-    idSvc : ContainerIdentifierService, line : String, additionalProps : Map[String, Any] = Map.empty
+    line : String, additionalProps : Map[String, Any] = Map.empty
   ) : AnyRef = {
 
     val context = new StandardEvaluationContext()
     classOf[SpelFunctions].getDeclaredMethods().foreach { m =>
       context.registerFunction(m.getName(), m)
     }
-    context.setRootObject(idSvc)
+
+    context.setRootObject(ctContext.identifierService())
 
     additionalProps.foreach {
       case (k, v) =>
         context.setVariable(k, v)
     }
-    context.setVariable("idSvc", idSvc)
+    context.setVariable("idSvc", ctContext.identifierService())
 
     val exp = parseExpression(line).get
 

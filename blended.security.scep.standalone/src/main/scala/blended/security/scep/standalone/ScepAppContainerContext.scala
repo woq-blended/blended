@@ -16,20 +16,20 @@ class ScepAppContainerContext(baseDir : String) extends ContainerContext {
 
   private val SECRET_FILE_PATH : String = "blended.security.secretFile"
 
-  override def getContainerDirectory() : String = baseDir
+  override def containerDirectory() : String = baseDir
 
-  override def getContainerConfigDirectory() : String = getContainerDirectory() + "/etc"
+  override def containerConfigDirectory() : String = containerDirectory() + "/etc"
 
-  override def getContainerLogDirectory() : String = baseDir
+  override def containerLogDirectory() : String = baseDir
 
-  override def getProfileDirectory() : String = getContainerDirectory()
+  override def profileDirectory() : String = containerDirectory()
 
-  override def getProfileConfigDirectory() : String = getContainerConfigDirectory()
+  override def profileConfigDirectory() : String = containerConfigDirectory()
 
-  override def getContainerHostname() : String = "localhost"
+  override def containerHostname() : String = "localhost"
 
   private lazy val cryptoSupport : ContainerCryptoSupport = {
-    val ctConfig : Config = getContainerConfig()
+    val ctConfig : Config = containerConfig()
 
     val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
       ctConfig.getString(SECRET_FILE_PATH)
@@ -38,20 +38,20 @@ class ScepAppContainerContext(baseDir : String) extends ContainerContext {
     }
 
     BlendedCryptoSupport.initCryptoSupport(
-      new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
+      new File(containerConfigDirectory(), cipherSecretFile).getAbsolutePath()
     )
   }
 
-  override def getContainerCryptoSupport() : ContainerCryptoSupport = cryptoSupport
+  override def containerCryptoSupport() : ContainerCryptoSupport = cryptoSupport
 
-  override def getContainerConfig() : Config = {
+  override def containerConfig() : Config = {
     val sys = new Properties()
     sys.putAll(System.getProperties())
     val sysProps = Parseable.newProperties(sys, ConfigParseOptions.defaults().setOriginDescription("system properties")).parse()
     val envProps = ConfigFactory.systemEnvironment()
 
     ConfigFactory.parseFile(
-      new File(getProfileConfigDirectory(), "application.conf"),
+      new File(profileConfigDirectory(), "application.conf"),
       ConfigParseOptions.defaults().setAllowMissing(false)
     ).
       withFallback(sysProps).

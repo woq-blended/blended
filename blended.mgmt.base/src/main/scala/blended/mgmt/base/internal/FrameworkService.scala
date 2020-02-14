@@ -24,7 +24,7 @@ class FrameworkService(bundleContext : BundleContext, ctContext : ContainerConte
 
   override def restartContainer(reason : String, saveLogs : Boolean) : Unit = {
 
-    val cfg = ctContext.getContainerConfig()
+    val cfg = ctContext.containerConfig()
     val saveLogsPath = "blended.saveLogsOnRestart"
 
     try {
@@ -62,7 +62,7 @@ class FrameworkService(bundleContext : BundleContext, ctContext : ContainerConte
 
     val archiveName = s"restart-$timestamp.zip"
 
-    val logDir = new File(ctContext.getContainerLogDirectory())
+    val logDir = new File(ctContext.containerLogDirectory())
     log.info(s"Creating log archive from directory [${logDir.getAbsolutePath()}]")
 
     val logFiles = logDir.list( (dir : File, name : String) => {

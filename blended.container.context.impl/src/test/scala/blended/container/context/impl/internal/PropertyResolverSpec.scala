@@ -15,21 +15,21 @@ class PropertyResolverSpec extends FreeSpec
 
   val ctCtxt : ContainerContext = new ContainerContext() {
 
-    override def getProfileDirectory() : String = ???
+    override def profileDirectory() : String = ???
 
-    override def getProfileConfigDirectory() : String = ???
+    override def profileConfigDirectory() : String = ???
 
-    override def getContainerLogDirectory() : String = ???
+    override def containerLogDirectory() : String = ???
 
-    override def getContainerDirectory() : String = ???
+    override def containerDirectory() : String = ???
 
-    override def getContainerConfigDirectory() : String = ???
+    override def containerConfigDirectory() : String = ???
 
-    override def getContainerHostname() : String = ???
+    override def containerHostname() : String = ???
 
-    override def getContainerConfig() : Config = ???
+    override def containerConfig() : Config = ???
 
-    override def getContainerCryptoSupport() : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("secret")
+    override def containerCryptoSupport() : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("secret")
   }
 
   val idSvc : ContainerIdentifierService = new ContainerIdentifierService {

@@ -1,6 +1,6 @@
 package blended.domino.internal
 
-import blended.container.context.api.{ConfigLocator, ContainerIdentifierService}
+import blended.container.context.api.ContainerContext
 import com.typesafe.config.Config
 import domino.DominoImplicits
 import domino.capsule.{Capsule, CapsuleContext, CapsuleScope}
@@ -9,7 +9,7 @@ import org.osgi.framework.BundleContext
 
 class TypesafeConfigCapsule(
   cCtxt : CapsuleContext,
-  f : (Config, ContainerIdentifierService) => Unit,
+  f : (Config, ContainerContext) => Unit,
   bCtxt : BundleContext
 ) extends Capsule
   with ServiceWatching
@@ -21,13 +21,13 @@ class TypesafeConfigCapsule(
   var optCapsuleScope : Option[CapsuleScope] = None
 
   override def start() : Unit = {
-    whenServicePresent[ContainerIdentifierService] { idSvc =>
+    whenServicePresent[ContainerContext] { ctCtxt =>
 
-      val cfg = idSvc.containerContext.getConfig(bundleContext.getBundle().getSymbolicName())
+      val cfg : Config = ctCtxt.getConfig(bundleContext.getBundle().getSymbolicName())
 
       if (optCapsuleScope.isEmpty) {
         val newCapsuleScope = capsuleContext.executeWithinNewCapsuleScope {
-          f(cfg, idSvc)
+          f(cfg, ctCtxt)
         }
         optCapsuleScope = Some(newCapsuleScope)
       }

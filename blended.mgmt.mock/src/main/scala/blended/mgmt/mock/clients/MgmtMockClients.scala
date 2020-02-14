@@ -22,14 +22,14 @@ class MgmtMockClients(config : Config) {
   private[this] val rnd = new Random()
 
   private[this] val ctCtxt : ContainerContext = new ContainerContext {
-    override def getContainerDirectory() : String = "."
-    override def getContainerConfigDirectory() : String = getContainerDirectory()
-    override def getContainerLogDirectory() : String = getContainerDirectory()
-    override def getProfileDirectory() : String = getContainerDirectory()
-    override def getProfileConfigDirectory() : String = getContainerDirectory()
-    override def getContainerHostname() : String = "localhost"
-    override def getContainerCryptoSupport() : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("pwd.txt")
-    override def getContainerConfig() : TSConfig = ConfigFactory.empty()
+    override def containerDirectory() : String = "."
+    override def containerConfigDirectory() : String = containerDirectory()
+    override def containerLogDirectory() : String = containerDirectory()
+    override def profileDirectory() : String = containerDirectory()
+    override def profileConfigDirectory() : String = containerDirectory()
+    override def containerHostname() : String = "localhost"
+    override def containerCryptoSupport() : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("pwd.txt")
+    override def containerConfig() : TSConfig = ConfigFactory.empty()
   }
 
   implicit val system : ActorSystem = ActorSystem("MgmtMockClients")

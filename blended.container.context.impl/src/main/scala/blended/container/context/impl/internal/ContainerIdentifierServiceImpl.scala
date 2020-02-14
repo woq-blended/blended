@@ -6,21 +6,23 @@ import java.nio.file.Files
 import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.updater.config.RuntimeConfig
 import blended.util.logging.Logger
-import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
-import scala.util.{Success, Try}
+import scala.util.{Failure, Try}
 
 class ContainerIdentifierServiceImpl(
-  @BeanProperty override val containerContext : ContainerContext
+  ctContext : ContainerContext
 ) extends ContainerIdentifierService {
 
   private[this] val log = Logger[ContainerIdentifierServiceImpl]
+  private[this] val ctConfigDir : String = ctContext.containerConfigDirectory
+  private[this] val profileConfigDir : String = ctContext.profileConfigDirectory
 
   @BeanProperty
   override lazy val uuid : String = {
-    val idFile = new File(System.getProperty("blended.home") + "/etc", s"blended.container.context.id")
+    val idFile = new File(ctConfigDir, s"blended.container.context.id")
     val lines = Files.readAllLines(idFile.toPath)
     if (!lines.isEmpty) {
       log.info(s"Using Container ID [${lines.get(0)}]")
@@ -38,12 +40,7 @@ class ContainerIdentifierServiceImpl(
       case None    => Seq.empty
     }
 
-    val cfgFile = new File(containerContext.getProfileConfigDirectory(), "blended.container.context.conf")
-    val cfg : Config = Try {
-      ConfigFactory.parseFile(cfgFile, ConfigParseOptions.defaults().setAllowMissing(false))
-    }.recoverWith {
-      case _ : Throwable => Success(ConfigFactory.empty())
-    }.get
+    val cfg : Config = ConfigLocator.safeConfig(profileConfigDir, "blended.container.context.conf", ConfigFactory.empty(), ctContext)
 
     val unresolved : Map[String, String] = cfg.entrySet().asScala.map { entry =>
       (entry.getKey, cfg.getString(entry.getKey))
@@ -51,25 +48,20 @@ class ContainerIdentifierServiceImpl(
 
     val missingPropNames = mandatoryPropNames.filter(p => unresolved.get(p).isEmpty)
 
-    if (!missingPropNames.isEmpty) {
+    if (missingPropNames.nonEmpty) {
       val msg = s"The configuration file [blended.container.context.conf] is missing entries for the properties ${missingPropNames.mkString("[", ",", "]")}"
       throw new RuntimeException(msg)
     }
 
-    val resolve : Map[String, Try[String]] = unresolved.map { case (k, v) => (k, resolvePropertyString(v).map(_.toString())) }
+    val resolve : Map[String, Try[String]] = unresolved.map { case (k, v) => (k, ctContext.resolveString(v).map(_.toString())) }
 
     val resolveErrors = resolve.filter(_._2.isFailure)
 
-    if (!resolveErrors.isEmpty) {
+    if (resolveErrors.nonEmpty) {
       val msg = "Error resolving container properties : " + resolveErrors.mkString("[", ",", "]")
       throw new RuntimeException(msg)
     }
 
     resolve.map { case (k : String, v : Try[String]) => k -> v.get }
-  }
-
-  def resolvePropertyString(value : String, additionalProps : Map[String, Any]) : Try[AnyRef] = Try {
-    val r = ContainerPropertyResolver.resolve(this, value, additionalProps)
-    r
   }
 }
