@@ -1,6 +1,6 @@
 package blended.security.ssl.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.domino.TypesafeConfigWatching
 import blended.security.ssl.{CertificateManager, CertificateProvider, SelfSignedCertificateProvider, SelfSignedConfig}
 import blended.util.config.Implicits._
@@ -14,11 +14,11 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
 
   private[this] val log = Logger[CertificateActivator]
 
-  private[this] def setupSelfSignedProvider(cfg : Config, idSvc : ContainerIdentifierService) : Unit = {
+  private[this] def setupSelfSignedProvider(cfg : Config, ctCtxt : ContainerContext) : Unit = {
     // Should we provide a CertifacteProvider with a self-signed certificate?
     cfg.getConfigOption("selfsigned") match {
       case Some(selfCfg) =>
-        val selfSignedProvider = new SelfSignedCertificateProvider(SelfSignedConfig.fromConfig(selfCfg, idSvc))
+        val selfSignedProvider = new SelfSignedCertificateProvider(SelfSignedConfig.fromConfig(selfCfg, ctCtxt))
         selfSignedProvider.providesService[CertificateProvider](Map(
           "provider" -> "default"
         ))
@@ -54,11 +54,11 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
 
   whenBundleActive {
 
-    whenTypesafeConfigAvailable { (cfg, idSvc) =>
+    whenTypesafeConfigAvailable { (cfg, ctCtxt) =>
 
-      val mgrConfig = CertificateManagerConfig.fromConfig(cfg, new PasswordHasher(idSvc.uuid), idSvc)
+      val mgrConfig = CertificateManagerConfig.fromConfig(cfg, new PasswordHasher(ctCtxt.identifierService.uuid), ctCtxt)
 
-      setupSelfSignedProvider(cfg, idSvc)
+      setupSelfSignedProvider(cfg, ctCtxt)
       setupCertificateManager(mgrConfig)
 
       whenAdvancedServicePresent[SSLContext]("(type=server)") { ctxt =>

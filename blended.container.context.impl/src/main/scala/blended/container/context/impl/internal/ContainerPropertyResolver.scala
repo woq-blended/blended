@@ -133,7 +133,7 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
   )
 
   private[this] val resolver : Map[String, Resolver] = Map(
-    ContainerIdentifierService.containerId -> (_ => ctContext.identifierService().uuid)
+    ContainerIdentifierService.containerId -> (_ => ctContext.identifierService.uuid)
   )
 
   private[this] def extractModifier(s : String) : Option[(Modifier, String)] = {
@@ -162,7 +162,7 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
       case Some(m) => m
     }
 
-    val props = Option(ctContext.identifierService().properties).getOrElse(Map.empty)
+    val props = Option(ctContext.identifierService.properties).getOrElse(Map.empty)
 
     // First, we resolve the rule from the environment vars or System properties
     // The resolution is mandatory
@@ -242,13 +242,13 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
       context.registerFunction(m.getName(), m)
     }
 
-    context.setRootObject(ctContext.identifierService())
+    context.setRootObject(ctContext.identifierService)
 
     additionalProps.foreach {
       case (k, v) =>
         context.setVariable(k, v)
     }
-    context.setVariable("idSvc", ctContext.identifierService())
+    context.setVariable("idSvc", ctContext.identifierService)
 
     val exp = parseExpression(line).get
 

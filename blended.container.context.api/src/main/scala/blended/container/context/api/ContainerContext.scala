@@ -75,7 +75,7 @@ trait ContainerContext {
   /**
    * Access to the Container Identifier Service
    */
-  def identifierService() : ContainerIdentifierService
+  def identifierService : ContainerIdentifierService
 
   /**
    * Access to a blended resolver for config values
