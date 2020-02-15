@@ -42,7 +42,7 @@ trait ContainerContext {
   /**
    * The base directory for the current container profile
    */
-  def profileDirectory() : String
+  def profileDirectory : String
 
   /**
    * The config directory for all profile specific configuration files. Usually this is

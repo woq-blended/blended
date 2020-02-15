@@ -3,7 +3,7 @@ package blended.container.context.impl.internal
 import blended.container.context.api.{ContainerContext, PropertyResolverException}
 import blended.testsupport.BlendedTestSupport
 import blended.util.RichTry._
-import org.scalatest.{DoNotDiscover, FreeSpec, Matchers}
+import org.scalatest.{FreeSpec, Matchers}
 
 import scala.util.control.NonFatal
 

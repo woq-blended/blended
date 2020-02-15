@@ -94,7 +94,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
-    val cfgDir = cfg.idSvc.containerContext.getProfileConfigDirectory()
+    val cfgDir = cfg.ctContext.profileConfigDirectory
     val uri = s"file://$cfgDir/${brokerCfg.file}"
 
     try {

@@ -1,6 +1,6 @@
 package blended.activemq.brokerstarter.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.jms.utils.{BlendedJMSConnectionConfig, ConnectionConfig}
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
@@ -65,14 +65,14 @@ object BrokerConfig {
 
   val anonymousGroups : Config => List[String] = cfg => cfg.getStringList("anonymousGroups", List.empty)
 
-  def create(brokerName : String, idSvc : ContainerIdentifierService, cfg : Config) : Try[BrokerConfig] = Try {
+  def create(brokerName : String, ctCtxt : ContainerContext, cfg : Config) : Try[BrokerConfig] = Try {
 
-    val resolve : String => Try[Any] = value => idSvc.resolvePropertyString(value)
+    val resolve : String => Try[AnyRef] = value => ctCtxt.resolveString(value)
 
     val v = vendor(resolve)(cfg).getOrElse("activemq")
     val p = provider(resolve)(cfg).getOrElse("activemq")
 
-    val jmsConfig : BlendedJMSConnectionConfig = BlendedJMSConnectionConfig.fromConfig(resolve)(v, p, cfg)
+    val jmsConfig : BlendedJMSConnectionConfig = BlendedJMSConnectionConfig.fromConfig(ctCtxt)(v, p, cfg)
 
     BrokerConfig(
       vendor = jmsConfig.vendor,

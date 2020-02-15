@@ -1,0 +1,6 @@
+## Container Context API migration
+
+
+[ ] Remove blended evaluation from bundle config code
+
+[ ] Add test case for config evaluation and activator to jms utils.

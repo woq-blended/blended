@@ -23,7 +23,10 @@ object BlendedMgmtBase extends ProjectFactory {
       BlendedDomino.project,
       BlendedContainerContextApi.project,
       BlendedUtil.project,
-      BlendedUtilLogging.project
+      BlendedUtilLogging.project,
+
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test
     )
   }
 }

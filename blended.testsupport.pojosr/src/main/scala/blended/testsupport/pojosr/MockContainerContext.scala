@@ -3,40 +3,25 @@ package blended.testsupport.pojosr
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.ContainerContext
-import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
+import blended.container.context.impl.internal.AbstractContainerContextImpl
 import com.typesafe.config.impl.Parseable
 import com.typesafe.config.{Config, ConfigFactory, ConfigObject, ConfigParseOptions}
 
-class MockContainerContext(baseDir : String) extends ContainerContext {
+class MockContainerContext(baseDir : String) extends AbstractContainerContextImpl {
 
   private val SECRET_FILE_PATH : String = "blended.security.secretFile"
 
-  override val containerDirectory : String = baseDir
+  override lazy val containerDirectory : String = baseDir
 
-  override val containerConfigDirectory : String = containerDirectory + "/etc"
+  override lazy val containerConfigDirectory : String = containerDirectory + "/etc"
 
-  override val containerLogDirectory : String = baseDir
+  override lazy val containerLogDirectory : String = baseDir
 
-  override val profileDirectory : String = containerDirectory
+  override lazy val profileDirectory : String = containerDirectory
 
-  override val profileConfigDirectory : String = containerConfigDirectory
+  override lazy val profileConfigDirectory : String = containerConfigDirectory
 
-  override val containerHostname : String = "localhost"
-
-  override val cryptoSupport : ContainerCryptoSupport = {
-    val ctConfig : Config = containerConfig
-
-    val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
-      ctConfig.getString(SECRET_FILE_PATH)
-    } else {
-      "secret"
-    }
-
-    BlendedCryptoSupport.initCryptoSupport(
-      new File(containerConfigDirectory, cipherSecretFile).getAbsolutePath()
-    )
-  }
+  override lazy val containerHostname : String = "localhost"
 
   private def getSystemProperties() : Properties = {
     // Avoid ConcurrentModificationException due to parallel setting of system properties by copying properties
@@ -55,7 +40,7 @@ class MockContainerContext(baseDir : String) extends ContainerContext {
       .parse()
   }
 
-  override val containerConfig : Config = {
+  override lazy val containerConfig : Config = {
     val sysProps = loadSystemProperties()
     val envProps = ConfigFactory.systemEnvironment()
 
@@ -68,6 +53,4 @@ class MockContainerContext(baseDir : String) extends ContainerContext {
       .withFallback(envProps)
       .resolve()
   }
-
-
 }

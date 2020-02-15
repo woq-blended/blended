@@ -1,6 +1,6 @@
 package blended.mgmt.base.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.util.logging.Logger
 import domino.DominoActivator
 import javax.management.{MBeanServer, ObjectName}
@@ -10,11 +10,11 @@ class MgmtBaseActivator extends DominoActivator {
   private[this] val log = Logger[MgmtBaseActivator]
 
   whenBundleActive {
-    whenServicePresent[ContainerIdentifierService] { idSvc =>
+    whenServicePresent[ContainerContext] { ctCtxt =>
 
       log.info("Creating Framework Service instance...")
 
-      val fwSvc = new FrameworkService(bundleContext, idSvc.containerContext)
+      val fwSvc = new FrameworkService(bundleContext, ctCtxt)
       fwSvc.providesService[blended.mgmt.base.FrameworkService]
 
       whenServicePresent[MBeanServer] { server =>
