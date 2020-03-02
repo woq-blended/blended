@@ -8,7 +8,7 @@ import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.{AckProcessor, Collector}
 import blended.streams.{FlowHeaderConfig, FlowProcessor, StreamFactories}
@@ -38,14 +38,14 @@ abstract class AbstractFileSourceSpec extends SimplePojoContainerSpec
   )
 
   implicit val timeout : FiniteDuration = 1.second
-  protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
+  protected val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
   protected implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   protected implicit val eCtxt : ExecutionContext = system.dispatcher
   protected implicit val materializer : Materializer = ActorMaterializer()
   protected val log : Logger = Logger[FileSourceSpec]
-  protected val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create(idSvc), log)
+  protected val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create(ctCtxt), log)
 
-  val rawCfg : Config = idSvc.getContainerContext().getContainerConfig().getConfig("simplePoll")
+  val rawCfg : Config = ctCtxt.containerConfig.getConfig("simplePoll")
 
   protected def testWithLock(srcDir : File, lockFile : File, pollCfg : FilePollConfig): Unit = {
 

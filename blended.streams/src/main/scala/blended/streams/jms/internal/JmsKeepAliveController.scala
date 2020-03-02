@@ -3,7 +3,7 @@ package blended.streams.jms.internal
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, ActorRef, Cancellable, OneForOneStrategy, Props, SupervisorStrategy}
 import akka.stream.{ActorMaterializer, Materializer}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils._
 import blended.streams.FlowHeaderConfig
 import blended.streams.jms.JmsStreamSupport
@@ -13,15 +13,15 @@ import blended.util.logging.Logger
 import scala.concurrent.ExecutionContext
 
 object JmsKeepAliveController{
-  def props(idSvc : ContainerIdentifierService, producer : KeepAliveProducerFactory) : Props =
-    Props(new JmsKeepAliveController(idSvc, producer))
+  def props(ctCtxt : ContainerContext, producer : KeepAliveProducerFactory) : Props =
+    Props(new JmsKeepAliveController(ctCtxt, producer))
 }
 
 /**
  * Keep track of connection factories registered as services and create KeepAlive Streams as appropriate.
  */
 class JmsKeepAliveController(
-  idSvc : ContainerIdentifierService,
+  ctCtxt : ContainerContext,
   producer : KeepAliveProducerFactory
 ) extends Actor {
 
@@ -42,7 +42,7 @@ class JmsKeepAliveController(
     case AddedConnectionFactory(cf) =>
       if (!watched.contains(cfKey(cf))) {
         log.info(s"Starting keep Alive actor for JMS connection factory [${cf.vendor}:${cf.provider}]")
-        val actor : ActorRef = context.system.actorOf(JmsKeepAliveActor.props(idSvc, cf, producer))
+        val actor : ActorRef = context.system.actorOf(JmsKeepAliveActor.props(ctCtxt, cf, producer))
         context.become(running(watched + (cfKey(cf) -> actor)))
       }
 
@@ -60,12 +60,12 @@ trait KeepAliveProducerFactory {
 }
 
 object JmsKeepAliveActor {
-  def props(idSvc : ContainerIdentifierService, cf : IdAwareConnectionFactory, prodFactory : KeepAliveProducerFactory) : Props =
-    Props(new JmsKeepAliveActor(idSvc, cf, prodFactory))
+  def props(ctCtxt : ContainerContext, cf : IdAwareConnectionFactory, prodFactory : KeepAliveProducerFactory) : Props =
+    Props(new JmsKeepAliveActor(ctCtxt, cf, prodFactory))
 }
 
 class JmsKeepAliveActor(
-  idSvc : ContainerIdentifierService,
+  ctCtxt : ContainerContext,
   cf : IdAwareConnectionFactory,
   prodFactory : KeepAliveProducerFactory
 ) extends Actor
@@ -74,7 +74,7 @@ class JmsKeepAliveActor(
   private val log : Logger = Logger[JmsKeepAliveActor]
   private implicit val eCtxt : ExecutionContext = context.system.dispatcher
   private implicit val materializer : Materializer = ActorMaterializer()
-  private val headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+  private val headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
 
   case object Tick
 
@@ -131,7 +131,7 @@ class JmsKeepAliveActor(
 
     case Tick =>
       val env : FlowEnvelope = FlowEnvelope(FlowMessage.props(
-        "JMSCorrelationID" -> idSvc.uuid,
+        "JMSCorrelationID" -> ctCtxt.identifierService.uuid,
         headerConfig.headerKeepAlivesMissed -> (cnt + 1)
       ).get)
 

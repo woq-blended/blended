@@ -9,7 +9,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.Collector
@@ -51,8 +51,8 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
   protected implicit val materializer : ActorMaterializer = ActorMaterializer()
   protected implicit val ectxt : ExecutionContext = system.dispatcher
 
-  protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
-  protected val streamsConfig : BlendedStreamsConfig = BlendedStreamsConfig.create(idSvc)
+  protected val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
+  protected val streamsConfig : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
 
   val prefix : String = "spec"
 

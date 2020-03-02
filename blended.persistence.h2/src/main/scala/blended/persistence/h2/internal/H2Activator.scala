@@ -20,11 +20,11 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
   whenBundleActive {
     log.debug("About to start " + getClass())
 
-    whenTypesafeConfigAvailable { (config, idService) =>
+    whenTypesafeConfigAvailable { (config, ctContext) =>
 
       def getString(path : String) : Option[String] = {
         val lookup : Option[String] = if (config.hasPath(path)) Some(config.getString(path)) else None
-        lookup.map(v => idService.resolvePropertyString(v).map(_.toString()).get)
+        lookup.map(v => ctContext.resolveString(v).map(_.toString()).get)
       }
 
       val dbPath : Option[String] = getString("dbPath")

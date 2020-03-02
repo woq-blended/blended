@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FlowShape, Graph, Materializer}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
@@ -22,7 +22,7 @@ import scala.util.{Failure, Success, Try}
 object JmsRetryConfig {
 
   def fromConfig(
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     cf : IdAwareConnectionFactory,
     retryDestName : String,
     retryFailedName : String,
@@ -36,7 +36,7 @@ object JmsRetryConfig {
 
     JmsRetryConfig(
       cf = cf,
-      headerCfg = FlowHeaderConfig.create(idSvc),
+      headerCfg = FlowHeaderConfig.create(ctCtxt),
       retryDestName = retryDestName,
       failedDestName = retryFailedName,
       eventDestName = eventDestName,

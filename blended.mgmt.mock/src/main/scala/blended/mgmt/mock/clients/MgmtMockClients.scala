@@ -3,11 +3,10 @@ package blended.mgmt.mock.clients
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
-import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
+import blended.container.context.api.ContainerContext
+import blended.container.context.impl.internal.AbstractContainerContextImpl
 import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 import blended.mgmt.mock.MockObjects
-import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import blended.util.logging.Logger
 import com.typesafe.config.{ConfigFactory, Config => TSConfig}
 import de.tototec.cmdoption.CmdlineParser
@@ -21,15 +20,14 @@ class MgmtMockClients(config : Config) {
   private[this] val log = Logger[MgmtMockClients]
   private[this] val rnd = new Random()
 
-  private[this] val ctCtxt : ContainerContext = new ContainerContext {
-    override def containerDirectory() : String = "."
-    override def containerConfigDirectory() : String = containerDirectory()
-    override def containerLogDirectory() : String = containerDirectory()
-    override def profileDirectory() : String = containerDirectory()
-    override def profileConfigDirectory() : String = containerDirectory()
-    override def containerHostname() : String = "localhost"
-    override def cryptoSupport() : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("pwd.txt")
-    override def containerConfig() : TSConfig = ConfigFactory.empty()
+  private[this] val ctCtxt : ContainerContext = new AbstractContainerContextImpl {
+    override def containerDirectory: String = "."
+    override def containerConfigDirectory: String = containerDirectory
+    override def containerLogDirectory: String = containerDirectory
+    override def profileDirectory: String = containerDirectory
+    override def profileConfigDirectory: String = containerDirectory
+    override def containerHostname: String = "localhost"
+    override def containerConfig: TSConfig = ConfigFactory.empty()
   }
 
   implicit val system : ActorSystem = ActorSystem("MgmtMockClients")
@@ -50,11 +48,9 @@ class MgmtMockClients(config : Config) {
         initialUpdateDelayMsec = config.initialUpdateDelayMsec
       )
 
-      val idSvc : ContainerIdentifierService = new ContainerIdentifierServiceImpl(ctCtxt) {
-        override lazy val uuid : String = ci.containerId
-      }
 
-      system.actorOf(ContainerActor.props(reporterConfig, idSvc), name = "container-" + ci.containerId)
+
+      system.actorOf(ContainerActor.props(reporterConfig, ctCtxt), name = "container-" + ci.containerId)
     }
   }
 

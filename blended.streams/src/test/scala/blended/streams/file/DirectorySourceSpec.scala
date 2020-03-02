@@ -10,7 +10,7 @@ class DirectorySourceSpec extends AbstractFileSourceSpec {
 
     "not deliver the same file within the poll interval" in {
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(
         sourceDir = BlendedTestSupport.projectTestOutput + "/dirSource",
         pattern = Some("^.*txt$")
       )

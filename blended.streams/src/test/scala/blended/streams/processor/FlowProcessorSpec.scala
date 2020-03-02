@@ -4,11 +4,10 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestKit
-import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.streams.FlowProcessor.IntegrationStep
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.message.FlowMessage.FlowMessageProps
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
+import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.scalatest.Matchers
