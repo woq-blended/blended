@@ -23,7 +23,7 @@ class BlendedStreamsActivator extends DominoActivator
   whenBundleActive {
     whenActorSystemAvailable{ osgiCfg =>
 
-      val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(osgiCfg.idSvc)
+      val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(osgiCfg.ctContext)
       val log : Logger = Logger[BlendedStreamsActivator]
 
       log.debug(s"Starting bundle [${bundleContext.getBundle().getSymbolicName()}]")
@@ -32,7 +32,7 @@ class BlendedStreamsActivator extends DominoActivator
       implicit val materializer : Materializer = ActorMaterializer()
 
 
-      val baseDir : File = new File(osgiCfg.idSvc.getContainerContext().getContainerDirectory())
+      val baseDir : File = new File(osgiCfg.ctContext.containerDirectory)
 
       // initialise the flow transaction for persisting flow transaction states
       val tMgrConfig : FlowTransactionManagerConfig =
@@ -45,18 +45,18 @@ class BlendedStreamsActivator extends DominoActivator
 
       tMgr.providesService[FlowTransactionManager]("directory" -> tMgrConfig.dir.getAbsolutePath())
 
-      val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(osgiCfg.idSvc, osgiCfg.config)
+      val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(osgiCfg.ctContext, osgiCfg.config)
       streamsCfg.providesService[BlendedStreamsConfig]
 
       // initialise the JMS keep alive streams
 
       val pf : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
         log = bcf => FlowEnvelopeLogger.create(headerCfg, Logger(s"blended.streams.keepalive.${bcf.vendor}.${bcf.provider}")),
-        idSvc = osgiCfg.idSvc,
+        ctCtxt = osgiCfg.ctContext,
         streamsCfg = streamsCfg
       )
 
-      val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props(new JmsKeepAliveController(osgiCfg.idSvc, pf)))
+      val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props(new JmsKeepAliveController(osgiCfg.ctContext, pf)))
 
       // We will watch for published instances of JMS connection configurations
       watchServices[IdAwareConnectionFactory]{

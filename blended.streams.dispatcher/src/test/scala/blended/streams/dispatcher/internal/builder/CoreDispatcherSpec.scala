@@ -68,7 +68,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
         val worklist : Inlet[WorklistEvent] = builder.add(wlCollector.sink).in
         val error : Inlet[FlowEnvelope] = builder.add(errCollector.sink).in
 
-        val dispatcher = builder.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, goodFlow, ctxt.envLogger)(ctxt.bs).core())
+        val dispatcher = builder.add(DispatcherBuilder(ctxt.ctCtxt, ctxt.cfg, goodFlow, ctxt.envLogger)(ctxt.bs).core())
 
         dispatcher.out0 ~> out
         dispatcher.out1 ~> worklist
@@ -142,7 +142,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
       withDispatcherConfig { ctxt =>
 
         val builder = DispatcherBuilder(
-          idSvc = ctxt.idSvc,
+          ctCtxt = ctxt.ctCtxt,
           dispatcherCfg = ctxt.cfg,
           sendFlow = goodFlow,
           envLogger = ctxt.envLogger

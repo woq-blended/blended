@@ -1,4 +1,4 @@
-package blended.jms.bridge.internal
+package blended.streams.jms
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -6,26 +6,27 @@ import java.util.Date
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import akka.stream.{FlowShape, Graph}
-import blended.streams.FlowProcessor
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
-import blended.streams.FlowHeaderConfig
+import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.util.logging.LogLevel
 import blended.util.logging.LogLevel.LogLevel
 
 import scala.concurrent.duration._
 import scala.util.Try
 
+class JmsRetryException(msg : String) extends Exception(msg)
+
 class RetryCountExceededException(n : Long)
-  extends Exception(s"Maximum Retry [$n] count exceeded")
+  extends JmsRetryException(s"Maximum Retry [$n] count exceeded")
 
 class RetryTimeoutException(t : Long)
-  extends Exception(s"Retry timeout [${new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS").format(new Date(t))}] exceeded")
+  extends JmsRetryException(s"Retry timeout [${new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS").format(new Date(t))}] exceeded")
 
 class MissingRetryDestinationException(d : String)
-  extends Exception(s"The retry destination header [$d] is missing in the message.")
+  extends JmsRetryException(s"The retry destination header [$d] is missing in the message.")
 
-class MissingHeaderException(h : String)
-  extends Exception(s"The envelope is missing the header ($h)")
+class MissingRetryHeaderException(h : String)
+  extends JmsRetryException(s"The envelope is missing the header ($h)")
 
 class JmsRetryRouter(
   name : String,
@@ -38,8 +39,17 @@ class JmsRetryRouter(
   // make sure all headers are set without encountering an exception
   val header : FlowProcessor.IntegrationStep = env => Try {
 
+    // Decide if we are already within the retryLoop
+    val retrying : Boolean = env.header[String](headerCfg.headerRetrying).nonEmpty
     val maxRetries : Long = env.header[Long](headerCfg.headerMaxRetries).getOrElse(retryCfg.maxRetries)
-    val retryCount : Long = env.header[Long](headerCfg.headerRetryCount).getOrElse(0L) + 1
+
+    // In case we are not yet in the retry loop we will reset the retry counter in any case
+    val retryCount : Long = if (retrying) {
+      env.header[Long](headerCfg.headerRetryCount).getOrElse(0L) + 1
+    } else {
+      1L
+    }
+
     val retryTimeout : Long = env.header[Long](headerCfg.headerRetryTimeout).getOrElse(retryCfg.retryTimeout.toMillis)
     val firstRetry : Long = env.header[Long](headerCfg.headerFirstRetry).getOrElse(System.currentTimeMillis())
 
@@ -48,13 +58,14 @@ class JmsRetryRouter(
       .withHeader(headerCfg.headerRetryCount, retryCount).get
       .withHeader(headerCfg.headerRetryTimeout, retryTimeout).get
       .withHeader(headerCfg.headerFirstRetry, firstRetry).get
+      .withHeader(headerCfg.headerRetrying, "True").get
   }
 
   val validate : LogLevel => FlowProcessor.IntegrationStep = level => env => Try {
 
     val mandatoryHeader : String => Long = h =>
       env.header[Long](h) match {
-        case None    => throw new MissingHeaderException(h)
+        case None    => throw new MissingRetryHeaderException(h)
         case Some(l) => l
       }
 

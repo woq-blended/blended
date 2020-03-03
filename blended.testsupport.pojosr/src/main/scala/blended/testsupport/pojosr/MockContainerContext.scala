@@ -3,42 +3,33 @@ package blended.testsupport.pojosr
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.ContainerContext
-import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
+import blended.container.context.impl.internal.AbstractContainerContextImpl
 import com.typesafe.config.impl.Parseable
 import com.typesafe.config.{Config, ConfigFactory, ConfigObject, ConfigParseOptions}
 
-class MockContainerContext(baseDir : String) extends ContainerContext {
+import scala.beans.BeanProperty
+
+class MockContainerContext(baseDir : String) extends AbstractContainerContextImpl {
 
   private val SECRET_FILE_PATH : String = "blended.security.secretFile"
 
-  override def getContainerDirectory() : String = baseDir
+  @BeanProperty
+  override lazy val containerDirectory : String = baseDir
 
-  override def getContainerConfigDirectory() : String = getContainerDirectory() + "/etc"
+  @BeanProperty
+  override lazy val containerConfigDirectory : String = containerDirectory + "/etc"
 
-  override def getContainerLogDirectory() : String = baseDir
+  @BeanProperty
+  override lazy val containerLogDirectory : String = baseDir
 
-  override def getProfileDirectory() : String = getContainerDirectory()
+  @BeanProperty
+  override lazy val profileDirectory : String = containerDirectory
 
-  override def getProfileConfigDirectory() : String = getContainerConfigDirectory()
+  @BeanProperty
+  override lazy val profileConfigDirectory : String = containerConfigDirectory
 
-  override def getContainerHostname() : String = "localhost"
-
-  private lazy val cryptoSupport : ContainerCryptoSupport = {
-    val ctConfig : Config = getContainerConfig()
-
-    val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
-      ctConfig.getString(SECRET_FILE_PATH)
-    } else {
-      "secret"
-    }
-
-    BlendedCryptoSupport.initCryptoSupport(
-      new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
-    )
-  }
-
-  override def getContainerCryptoSupport() : ContainerCryptoSupport = cryptoSupport
+  @BeanProperty
+  override lazy val containerHostname : String = "localhost"
 
   private def getSystemProperties() : Properties = {
     // Avoid ConcurrentModificationException due to parallel setting of system properties by copying properties
@@ -57,13 +48,14 @@ class MockContainerContext(baseDir : String) extends ContainerContext {
       .parse()
   }
 
-  override def getContainerConfig() : Config = {
+  @BeanProperty
+  override lazy val containerConfig : Config = {
     val sysProps = loadSystemProperties()
     val envProps = ConfigFactory.systemEnvironment()
 
     ConfigFactory
       .parseFile(
-        new File(getProfileConfigDirectory(), "application.conf"),
+        new File(profileConfigDirectory, "application.conf"),
         ConfigParseOptions.defaults().setAllowMissing(false)
       )
       .withFallback(sysProps)

@@ -47,9 +47,7 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching {
 
           cfgMap.foreach {
             case (key, config) =>
-              val connectionCfg : ConnectionConfig = BlendedJMSConnectionConfig.fromConfig(
-                stringResolver = osgiCfg.idSvc.resolvePropertyString
-              )(
+              val connectionCfg : ConnectionConfig = BlendedJMSConnectionConfig.fromConfig(osgiCfg.ctContext)(
                 vendor = "activemq",
                 provider = key,
                 cfg = config

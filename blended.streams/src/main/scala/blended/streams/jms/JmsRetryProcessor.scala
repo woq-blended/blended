@@ -1,19 +1,17 @@
-package blended.jms.bridge.internal
+package blended.streams.jms
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FlowShape, Graph, Materializer}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams._
-import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.TransactionWiretap
 import blended.util.config.Implicits._
-import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
 import javax.jms.Session
@@ -24,7 +22,7 @@ import scala.util.{Failure, Success, Try}
 object JmsRetryConfig {
 
   def fromConfig(
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     cf : IdAwareConnectionFactory,
     retryDestName : String,
     retryFailedName : String,
@@ -38,7 +36,7 @@ object JmsRetryConfig {
 
     JmsRetryConfig(
       cf = cf,
-      headerCfg = FlowHeaderConfig.create(idSvc),
+      headerCfg = FlowHeaderConfig.create(ctCtxt),
       retryDestName = retryDestName,
       failedDestName = retryFailedName,
       eventDestName = eventDestName,
@@ -57,7 +55,7 @@ case class JmsRetryConfig(
   eventDestName : String,
   retryInterval : FiniteDuration,
   maxRetries : Long = -1,
-  retryTimeout : FiniteDuration = 1.day
+  retryTimeout : FiniteDuration = 1.day,
 ) {
   override def toString : String = s"${getClass().getSimpleName}[${cf.vendor}:${cf.provider}](retryDestination=$retryDestName," +
     s"failedDestination=$failedDestName,retryInterval=$retryInterval,maxRetries=$maxRetries,retryTimeout=$retryTimeout)"
@@ -97,8 +95,7 @@ class JmsRetryProcessor(
         case Some(_) =>
           validator(env) match {
             case Success(_) => JmsDestination.create(retryCfg.retryDestName).get
-            case Failure(_) => JmsDestination.create(retryCfg.failedDestName).get
-          }
+            case Failure(_) => JmsDestination.create(retryCfg.failedDestName).get          }
       }
 
       JmsSendParameter(

@@ -7,7 +7,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory, MessageReceived, ProducerMaterialized}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
@@ -39,11 +39,11 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
   implicit private val materializer : Materializer = ActorMaterializer()
   implicit private val eCtxt : ExecutionContext = system.dispatcher
 
-  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+  private val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
   private val cf : BlendedSingleConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None).asInstanceOf[BlendedSingleConnectionFactory]
 
-  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(idSvc)
+  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
 
   "The stream based keep alive producer should" - {
 
@@ -55,7 +55,7 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
 
       val factory : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
         log = bcf => FlowEnvelopeLogger.create(headerCfg, Logger(s"blended.streams.jms.keepalive.${bcf.vendor}.${bcf.provider}")),
-        idSvc = idSvc,
+        ctCtxt = ctCtxt,
         streamsCfg = streamCfg
       )
 

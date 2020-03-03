@@ -1,6 +1,6 @@
 package blended.streams
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
@@ -8,13 +8,13 @@ import scala.concurrent.duration._
 
 object BlendedStreamsConfig {
 
-  def create(idSvc : ContainerIdentifierService) : BlendedStreamsConfig = {
-    val cfg : Config = idSvc.containerContext.getContainerConfig.getConfig("blended.streams")
-    create(idSvc, cfg)
+  def create(ctCtxt : ContainerContext) : BlendedStreamsConfig = {
+    val cfg : Config = ctCtxt.containerConfig.getConfig("blended.streams")
+    create(ctCtxt, cfg)
   }
 
-  def create(idSvc : ContainerIdentifierService, cfg : Config) : BlendedStreamsConfig = BlendedStreamsConfig(
-    transactionShard = cfg.getStringOption("transactionShard").map(s => idSvc.resolvePropertyString(s).get.toString()),
+  def create(ctCtxt : ContainerContext, cfg : Config) : BlendedStreamsConfig = BlendedStreamsConfig(
+    transactionShard = cfg.getStringOption("transactionShard").map(s => ctCtxt.resolveString(s).get.toString()),
     minDelay  = cfg.getDuration("minDelay", 5.seconds),
     maxDelay = cfg.getDuration("maxDelay", 1.minute),
     exponential = cfg.getBoolean("exponential", true),

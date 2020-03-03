@@ -35,7 +35,7 @@ class DispatcherSpec extends DispatcherSpecSupport
     val sinkGraph = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val dispatcher = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, send, ctxt.envLogger)(ctxt.bs).dispatcher())
+      val dispatcher = b.add(DispatcherBuilder(ctxt.ctCtxt, ctxt.cfg, send, ctxt.envLogger)(ctxt.bs).dispatcher())
       val out = b.add(transColl.sink)
 
       dispatcher ~> out

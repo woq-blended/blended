@@ -1,4 +1,4 @@
-package blended.jms.bridge.internal
+package blended.streams.jms
 
 import java.io.File
 import java.util.UUID
@@ -9,9 +9,8 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed}
@@ -52,8 +51,8 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
   protected implicit val materializer : ActorMaterializer = ActorMaterializer()
   protected implicit val ectxt : ExecutionContext = system.dispatcher
 
-  protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
-  protected val streamsConfig : BlendedStreamsConfig = BlendedStreamsConfig.create(idSvc)
+  protected val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
+  protected val streamsConfig : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
 
   val prefix : String = "spec"
 
@@ -170,9 +169,10 @@ class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount")
   "Consume messages from the retry destination and pass them to the retry failed destination if the retry cont exceeds" in {
     val srcQueue: String = "myQueue"
 
-    val retryMsg: FlowEnvelope = FlowEnvelope()
-      .withHeader(headerCfg.headerRetryDestination, srcQueue).unwrap
-      .withHeader(headerCfg.headerRetryCount, retryCfg.maxRetries).unwrap
+   val retryMsg: FlowEnvelope = FlowEnvelope()
+     .withHeader(headerCfg.headerRetrying, "True").unwrap
+     .withHeader(headerCfg.headerRetryDestination, srcQueue).unwrap
+     .withHeader(headerCfg.headerRetryCount, retryCfg.maxRetries).unwrap
 
     withExpectedDestination(
       retryCfg.failedDestName,

@@ -3,7 +3,7 @@ package blended.streams.dispatcher.internal.builder
 import akka.NotUsed
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge}
 import akka.stream.{FanOutShape2, Graph}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
 import blended.streams.jms.JmsEnvelopeHeader
@@ -17,7 +17,7 @@ import scala.util.{Failure, Success, Try}
 
 case class DispatcherFanout(
   dispatcherCfg : ResourceTypeRouterConfig,
-  idSvc : ContainerIdentifierService,
+  ctCtxt : ContainerContext,
   streamLogger : FlowEnvelopeLogger
 )(implicit bs : DispatcherBuilderSupport) extends JmsEnvelopeHeader {
 
@@ -57,7 +57,7 @@ case class DispatcherFanout(
           // if the block does not have a condition, the header block will be used
           case None => true
           case Some(c) =>
-            val resolve = idSvc.resolvePropertyString(c, env.flowMessage.header.mapValues(_.value))
+            val resolve = ctCtxt.resolveString(c, env.flowMessage.header.mapValues(_.value))
             streamLogger.logEnv(env, LogLevel.Debug, s"Resolved condition to [$resolve][${resolve.map(_.getClass().getName())}]")
             val use = resolve.map(_.asInstanceOf[Boolean]).unwrap
 
@@ -90,7 +90,7 @@ case class DispatcherFanout(
             .withHeader(deliveryModeHeader(bs.headerConfig.prefix), oh.deliveryMode).unwrap
 
         oh.header.foreach { case (header, value) =>
-          val resolved = idSvc.resolvePropertyString(value, env.flowMessage.header.mapValues(_.value)).get
+          val resolved = ctCtxt.resolveString(value, env.flowMessage.header.mapValues(_.value)).get
           streamLogger.logEnv(env, LogLevel.Trace,s"[${newEnv.id}]:[${outCfg.id}] - resolved property [$header] to [$resolved]")
           newEnv = newEnv.withHeader(header, resolved).unwrap
         }
@@ -125,7 +125,7 @@ case class DispatcherFanout(
     wl
   }
 
-  private lazy val decideRouting = DispatcherOutbound(dispatcherCfg, idSvc, streamLogger)
+  private lazy val decideRouting = DispatcherOutbound(dispatcherCfg, ctCtxt, streamLogger)
 
   def build() : Graph[FanOutShape2[FlowEnvelope, FlowEnvelope, WorklistEvent], NotUsed] = {
     GraphDSL.create() { implicit builder =>

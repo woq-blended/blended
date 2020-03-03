@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Flow
 import akka.stream.{FlowShape, Graph}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal.{ResourceTypeConfig, ResourceTypeRouterConfig}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
@@ -17,7 +17,7 @@ object DispatcherInbound {
 
   def apply(
     dispatcherCfg : ResourceTypeRouterConfig,
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     streamLogger : FlowEnvelopeLogger
   )(implicit bs : DispatcherBuilderSupport, system : ActorSystem) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
@@ -30,7 +30,7 @@ object DispatcherInbound {
           name = "defaultHeader",
           log = streamLogger,
           rules = dispatcherCfg.defaultHeader,
-          idSvc = Some(idSvc)
+          ctCtxt = Some(ctCtxt)
         ).flow(streamLogger).named("defaultHeader")
       )
     }

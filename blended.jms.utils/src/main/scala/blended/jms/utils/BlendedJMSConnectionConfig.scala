@@ -1,6 +1,6 @@
 package blended.jms.utils
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, DEFAULT_USER, USE_JNDI}
 import blended.updater.config.util.ConfigPropertyMapConverter
 import blended.util.RichTry._
@@ -41,10 +41,12 @@ object BlendedJMSConnectionConfig {
 
   // scalastyle:off method.length
   def fromConfig(
-    stringResolver : String => Try[Any]
+    ctContext : ContainerContext
   )(
     vendor : String, provider : String, cfg : Config
   ) : BlendedJMSConnectionConfig = {
+
+    val stringResolver : String => Try[AnyRef] = s => ctContext.resolveString(s)
 
     val enabled : Config => Boolean = cfg => cfg.getBoolean("enabled", defaultConfig.enabled)
     val jmxEnabled : Config => Boolean = cfg => cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)

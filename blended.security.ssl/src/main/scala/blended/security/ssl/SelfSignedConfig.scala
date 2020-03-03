@@ -1,6 +1,6 @@
 package blended.security.ssl
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.security.ssl.internal.ConfigCommonNameProvider
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
@@ -19,12 +19,12 @@ object SelfSignedConfig {
   val sigAlgPath = "signatureAlgorithm"
   val validDaysPath = "validDays"
 
-  def fromConfig(cfg : Config, idSvc : ContainerIdentifierService) : SelfSignedConfig = {
+  def fromConfig(cfg : Config, ctCtxt : ContainerContext) : SelfSignedConfig = {
     val keyStrength = cfg.getInt("keyStrength", defaultKeyStrength)
     val signatureAlgorithm = cfg.getString("signatureAlgorithm", "SHA256withRSA")
     val validDays = cfg.getInt("validDays", 1)
 
-    SelfSignedConfig(new ConfigCommonNameProvider(cfg, idSvc), keyStrength, signatureAlgorithm, validDays)
+    SelfSignedConfig(new ConfigCommonNameProvider(cfg, ctCtxt), keyStrength, signatureAlgorithm, validDays)
   }
 }
 

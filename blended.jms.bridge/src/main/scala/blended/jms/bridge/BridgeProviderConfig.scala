@@ -1,6 +1,6 @@
 package blended.jms.bridge
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{JmsDestination, ProviderAware}
 import blended.util.RichTry._
 import blended.util.config.Implicits._
@@ -31,9 +31,9 @@ case class BridgeProviderConfig(
 //noinspection NameBooleanParameters
 object BridgeProviderConfig {
 
-  def create(idSvc : ContainerIdentifierService, cfg : Config) : Try[BridgeProviderConfig] = Try {
+  def create(ctCtxt : ContainerContext, cfg : Config) : Try[BridgeProviderConfig] = Try {
 
-    def resolve(value : String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
+    def resolve(value : String) : String = ctCtxt.resolveString(value).map(_.toString()).get
 
     val vendor = resolve(cfg.getString("vendor"))
     val provider = resolve(cfg.getString("provider"))

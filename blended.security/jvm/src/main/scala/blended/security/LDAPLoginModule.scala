@@ -13,6 +13,7 @@ import javax.security.auth.login.LoginException
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.util.control.NonFatal
 
 class LDAPLoginModule extends AbstractLoginModule {
 
@@ -21,7 +22,7 @@ class LDAPLoginModule extends AbstractLoginModule {
   override protected val moduleName : String = "ldap"
 
   // convenience to extract the LDAP Config object
-  lazy val ldapCfg : LDAPLoginConfig = idSvc match {
+  lazy val ldapCfg : LDAPLoginConfig = ctCtxt match {
     case Some(s) =>
       LDAPLoginConfig.fromConfig(loginConfig, s)
     case None =>
@@ -43,7 +44,7 @@ class LDAPLoginModule extends AbstractLoginModule {
 
       new InitialDirContext(new util.Hashtable[String, Object](env.asJava))
     } catch {
-      case t : Throwable =>
+      case NonFatal(t) =>
         log.error(t)(t.getMessage())
         throw new LoginException(t.getMessage())
     }
@@ -57,7 +58,7 @@ class LDAPLoginModule extends AbstractLoginModule {
     try {
       dirContext
     } catch {
-      case t : Throwable =>
+      case NonFatal(t) =>
         log.error(t)(t.getMessage())
         throw new LoginException(t.getMessage())
     }

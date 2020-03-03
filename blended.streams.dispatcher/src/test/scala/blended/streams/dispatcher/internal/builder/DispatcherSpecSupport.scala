@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
@@ -30,7 +30,7 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
 
   case class DispatcherExecContext(
     cfg : ResourceTypeRouterConfig,
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     system : ActorSystem,
     bs : DispatcherBuilderSupport,
     envLogger : FlowEnvelopeLogger
@@ -87,12 +87,12 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
   }
 
   def createDispatcherExecContext() : DispatcherExecContext = {
-    val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)(
-      clazz = ClassTag(classOf[ContainerIdentifierService]),
+    val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)(
+      clazz = ClassTag(classOf[ContainerContext]),
       timeout = 3.seconds
     )
 
-    val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(idSvc)
+    val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
 
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
       clazz = ClassTag(classOf[ActorSystem]),
@@ -105,18 +105,18 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     )
 
     val cfg = ResourceTypeRouterConfig.create(
-      idSvc,
+      ctCtxt,
       provider,
-      idSvc.containerContext.getContainerConfig().getConfig("blended.streams.dispatcher")
+      ctCtxt.containerConfig.getConfig("blended.streams.dispatcher")
     ).get
 
     val bs = new DispatcherBuilderSupport {
-      override def containerConfig : Config = idSvc.getContainerContext().getContainerConfig()
+      override def containerConfig : Config = ctCtxt.containerConfig
     }
 
     DispatcherExecContext(
       cfg = cfg,
-      idSvc = idSvc,
+      ctCtxt = ctCtxt,
       system = system,
       bs = bs,
       envLogger = FlowEnvelopeLogger.create(bs.headerConfig, logger)

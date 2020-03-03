@@ -1,6 +1,6 @@
 package blended.streams.file
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowMessage, MsgProperty}
 import blended.util.config.Implicits._
@@ -29,18 +29,18 @@ object FilePollConfig {
 
   val DEFAULT_BATCH_SIZE : Int = 10
 
-  def apply(cfg : Config, idSvc : ContainerIdentifierService) : FilePollConfig = {
+  def apply(cfg : Config, ctCtxt : ContainerContext) : FilePollConfig = {
 
     val props : FlowMessage.FlowMessageProps = if (cfg.hasPath(PATH_HEADER)) {
       cfg.getConfig(PATH_HEADER).entrySet().asScala.map { e =>
         val k = e.getKey()
-        val v = idSvc.resolvePropertyString(cfg.getConfig(PATH_HEADER).getString(k, "")).get.toString()
+        val v = ctCtxt.resolveString(cfg.getConfig(PATH_HEADER).getString(k, "")).get.toString()
         k -> MsgProperty(v).get
       }.toMap
     } else {
       Map.empty
     }
-    apply(cfg, FlowHeaderConfig.create(idSvc), props)
+    apply(cfg, FlowHeaderConfig.create(ctCtxt), props)
   }
 
   def apply(cfg : Config, headerCfg : FlowHeaderConfig, header : FlowMessage.FlowMessageProps = Map.empty) : FilePollConfig = {

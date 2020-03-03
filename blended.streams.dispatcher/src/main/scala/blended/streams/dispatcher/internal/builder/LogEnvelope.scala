@@ -19,8 +19,9 @@ object LogEnvelope {
 
     FlowProcessor.fromFunction( stepName, logger) { env =>
 
-      Try {
+      val logLevel : FlowEnvelope => LogLevel = _ => level
 
+      val logString : FlowEnvelope => String = env => {
         val outCfg : Option[OutboundRouteConfig] = env.getFromContext[OutboundRouteConfig](bs.outboundCfgKey) match {
           case Success(o) => o
           case Failure(_) => None
@@ -40,6 +41,11 @@ object LogEnvelope {
 
         val id = s"[${env.id}]:[$stepName]" + outCfg.map(c => s":[${c.id}]").getOrElse("")
 
+        s"[${env.id}] FlowId[$id] $env"
+      }
+
+      Try {
+        logger.logEnv(env, logLevel(env), logString(env), false)
         env
       }
     }

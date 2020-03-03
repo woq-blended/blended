@@ -1,6 +1,6 @@
 package blended.streams.dispatcher.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.JmsDestination
 import blended.streams.jms.JmsDeliveryMode
@@ -22,7 +22,7 @@ object ResourceTypeRouterConfig {
   private[this] val resourcetypesPath = "resourcetypes"
 
   def create(
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     provider : BridgeProviderRegistry,
     cfg : Config
   ) : Try[ResourceTypeRouterConfig] = Try {
@@ -31,8 +31,8 @@ object ResourceTypeRouterConfig {
 
     val eventProvider = ProviderResolver.getProvider(
       provider,
-      idSvc.resolvePropertyString(cfg.getString(defaultEventVendorPath, internalProvider.vendor)).map(_.toString).get,
-      idSvc.resolvePropertyString(cfg.getString(defaultEventProviderPath, internalProvider.provider)).map(_.toString).get
+      ctCtxt.resolveString(cfg.getString(defaultEventVendorPath, internalProvider.vendor)).map(_.toString).get,
+      ctCtxt.resolveString(cfg.getString(defaultEventProviderPath, internalProvider.provider)).map(_.toString).get
     ).get
 
     val logHeader : List[String] = cfg.getStringList(applicationLogHeaderPath, List.empty)
@@ -41,7 +41,7 @@ object ResourceTypeRouterConfig {
       cfg.getConfigMap(resourcetypesPath, Map.empty).map {
         case (key, value) =>
           key -> ResourceTypeConfig.create(
-            idSvc = idSvc,
+            ctCtxt = ctCtxt,
             registry = provider,
             resType = key,
             defaultProvider = internalProvider,
@@ -82,7 +82,7 @@ object ResourceTypeConfig {
   private[this] val timeoutPath = "timeout"
 
   def create(
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     registry : BridgeProviderRegistry,
     resType : String,
     defaultProvider : BridgeProviderConfig,
@@ -92,14 +92,14 @@ object ResourceTypeConfig {
   ) : Try[ResourceTypeConfig] = Try {
 
     val outboundRoutes : List[OutboundRouteConfig] = cfg.getConfigList(outboundPath).asScala.map { c =>
-      OutboundRouteConfig.create(idSvc, registry, c, defaultProvider, defaultEventProvider, defaultLogHeader).get
+      OutboundRouteConfig.create(ctCtxt, registry, c, defaultProvider, defaultEventProvider, defaultLogHeader).get
     }.toList
 
     ResourceTypeConfig(
       resourceType = resType,
       withCBE = cfg.getBoolean("withCBE", true),
       outbound = outboundRoutes,
-      inboundConfig = cfg.getConfigOption(inboundPath).map(c => InboundRouteConfig.create(idSvc, c).get),
+      inboundConfig = cfg.getConfigOption(inboundPath).map(c => InboundRouteConfig.create(ctCtxt, c).get),
       timeout = cfg.getLong(timeoutPath, 10L).seconds
     )
   }
@@ -118,7 +118,7 @@ object OutboundRouteConfig {
   private[this] val outboundHeaderPath = "outboundHeader"
 
   def create(
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     registry : BridgeProviderRegistry,
     cfg : Config,
     defaultProvider : BridgeProviderConfig,
@@ -129,7 +129,7 @@ object OutboundRouteConfig {
     val id = cfg.getString("id", "default")
 
     val outboundHeader = cfg.getConfigList(outboundHeaderPath, List.empty).map(c => OutboundHeaderConfig.create(
-      idSvc, registry, c, defaultProvider, defaultEventProvider, defaultLogHeader
+      ctCtxt, registry, c, defaultProvider, defaultEventProvider, defaultLogHeader
     ).get)
 
     OutboundRouteConfig(
@@ -153,11 +153,11 @@ object InboundRouteConfig {
   private[this] val headerPath = "header"
 
   def create(
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     cfg : Config
   ) : Try[InboundRouteConfig] = Try {
 
-    val destName = idSvc.resolvePropertyString(cfg.getString(inboundUriPath)).map(_.toString()).get
+    val destName = ctCtxt.resolveString(cfg.getString(inboundUriPath)).map(_.toString()).get
 
     InboundRouteConfig(
       entry = JmsDestination.create(destName).get,
@@ -188,7 +188,7 @@ object OutboundHeaderConfig {
   private[this] val deliveryModePath = "deliveryMode"
 
   def create(
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     registry : BridgeProviderRegistry,
     cfg : Config,
     defaultProvider : BridgeProviderConfig,
@@ -196,12 +196,12 @@ object OutboundHeaderConfig {
     defaultLogHeader : List[String]
   ) : Try[OutboundHeaderConfig] = Try {
 
-    val bridgeProvider = ProviderResolver.providerFromConfig(idSvc, registry, cfg, bridgeVendorPath, bridgeProviderPath).get match {
+    val bridgeProvider = ProviderResolver.providerFromConfig(ctCtxt, registry, cfg, bridgeVendorPath, bridgeProviderPath).get match {
       case Some(p) => p
       case None    => defaultProvider
     }
 
-    val bridgeDestination = cfg.getStringOption(bridgeDestinationPath).map(s => idSvc.resolvePropertyString(s).get).map(_.toString())
+    val bridgeDestination = cfg.getStringOption(bridgeDestinationPath).map(s => ctCtxt.resolveString(s).get).map(_.toString())
     val moduleLastOnComplete = cfg.getBoolean(moduleLastOnCompletePath, false)
     val applicationLogHeader = cfg.getStringListOption(applicationLogHeaderPath).getOrElse(defaultLogHeader)
 

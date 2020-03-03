@@ -1,0 +1,18 @@
+## Container Context API migration
+
+
+### Jms Utils
+
+[ ] Remove blended evaluation from bundle config code
+
+[ ] Add test case for config evaluation and activator
+
+### MgmtReporter
+
+[ ] Refactor setup bundle actor code
+
+[ ] Add test case for started Mgmt Reporter
+
+### Security SSL
+
+[ ] Remove blendedevaluation from bundle config code

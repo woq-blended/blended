@@ -1,6 +1,7 @@
 import blended.sbt.Dependencies
 import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import sbt._
 
 object BlendedContainerContextApi extends ProjectFactory {
@@ -12,7 +13,17 @@ object BlendedContainerContextApi extends ProjectFactory {
     override val description = "The API for the Container Context and Identifier Services"
 
     override def deps : Seq[ModuleID] = Seq(
-      Dependencies.typesafeConfig
+      Dependencies.typesafeConfig,
+
+      Dependencies.scalatest % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
+    )
+
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogLogPackages ++= Map(
+        "blended" -> "TRACE"
+      )
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(
@@ -22,7 +33,10 @@ object BlendedContainerContextApi extends ProjectFactory {
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
-      BlendedSecurityCrypto.project
+      BlendedUtilLogging.project,
+      BlendedSecurityCrypto.project,
+
+      BlendedTestsupport.project % Test
     )
   }
 }

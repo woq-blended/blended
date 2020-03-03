@@ -7,7 +7,7 @@ import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 import blended.prickle.akka.http.PrickleSupport
 import blended.updater.config._
@@ -46,7 +46,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
   ////////////////////
   // ABSTRACT
   protected val config : Try[MgmtReporterConfig]
-  protected val idSvc : ContainerIdentifierService
+  protected val ctContext : ContainerContext
   ////////////////////
 
   private case class MgmtReporterState(
@@ -93,8 +93,8 @@ trait MgmtReporter extends Actor with PrickleSupport {
       config.foreach { cfg =>
 
         val info = ContainerInfo(
-          containerId = idSvc.uuid,
-          properties = idSvc.properties,
+          containerId = ctContext.identifierService.uuid,
+          properties = ctContext.identifierService.properties,
           serviceInfos = state.serviceInfos.values.toList,
           profiles = state.lastProfileInfo.profiles,
           timestampMsec = System.currentTimeMillis(),

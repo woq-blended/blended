@@ -4,26 +4,26 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{Materializer, OverflowStrategy}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{BlendedSingleConnectionFactory, JmsDestination, ProducerMaterialized}
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
-import blended.util.logging.{LogLevel, Logger}
+import blended.util.logging.LogLevel
 
 class StreamKeepAliveProducerFactory(
   log : BlendedSingleConnectionFactory => FlowEnvelopeLogger,
-  idSvc : ContainerIdentifierService,
+  ctCtxt : ContainerContext,
   streamsCfg : BlendedStreamsConfig
 )(implicit system: ActorSystem, materializer : Materializer) extends KeepAliveProducerFactory with JmsStreamSupport {
 
   private var stream : Option[ActorRef] = None
 
-  private val corrId : BlendedSingleConnectionFactory => String = bcf => s"${idSvc.uuid}-${bcf.vendor}-${bcf.provider}"
+  private val corrId : BlendedSingleConnectionFactory => String = bcf => s"${ctCtxt.identifierService.uuid}-${bcf.vendor}-${bcf.provider}"
 
   private val producerSettings : BlendedSingleConnectionFactory => JmsProducerSettings = bcf => JmsProducerSettings(
     log = log(bcf),
-    headerCfg = FlowHeaderConfig.create(idSvc),
+    headerCfg = FlowHeaderConfig.create(ctCtxt),
     connectionFactory = bcf,
     jmsDestination = Some(JmsDestination.create(bcf.config.keepAliveDestination).get),
     timeToLive = Some(bcf.config.keepAliveInterval)
@@ -31,7 +31,7 @@ class StreamKeepAliveProducerFactory(
 
   private val consumerSettings : BlendedSingleConnectionFactory => JmsConsumerSettings = bcf => JmsConsumerSettings(
     log = log(bcf),
-    headerCfg = FlowHeaderConfig.create(idSvc),
+    headerCfg = FlowHeaderConfig.create(ctCtxt),
     connectionFactory = bcf,
     jmsDestination = Some(JmsDestination.create(bcf.config.keepAliveDestination).get),
     logLevel = _ => LogLevel.Debug,

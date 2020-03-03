@@ -51,6 +51,7 @@ trait ProjectSettings
   override def settings: Seq[sbt.Setting[_]] = super.settings ++ {
 
     Seq(
+      scalaVersion := "2.12.8",
       Keys.name := projectName,
       Keys.moduleName := Keys.name.value,
       Keys.description := description,

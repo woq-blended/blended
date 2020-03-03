@@ -4,19 +4,16 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FanOutShape2, FlowShape, Graph, Materializer}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.bridge.internal.TrackTransaction.TrackTransaction
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.jmx.statistics.ServiceInvocationReporter
-import blended.streams._
 import blended.streams.jms._
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.{AckProcessor, HeaderProcessorConfig, HeaderTransformProcessor}
 import blended.streams.transaction._
-import blended.streams.{BlendedStreamsConfig, FlowProcessor}
+import blended.streams.{BlendedStreamsConfig, FlowProcessor, _}
 import blended.util.logging.{LogLevel, Logger}
-import blended.util.RichTry._
 
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
@@ -61,7 +58,7 @@ case class BridgeStreamConfig(
   header : List[HeaderProcessorConfig],
   // A reference to an ContainerIdentifierService that must be used to resolve header
   // expressions
-  idSvc : Option[ContainerIdentifierService] = None,
+  ctCtxt : Option[ContainerContext] = None,
   // the minimum timespan after which a new session will be created after closing a session
   // upon an exception
   sessionRecreateTimeout : FiniteDuration
@@ -220,11 +217,11 @@ class BridgeStreamBuilder(
 
       bridgeLogger.debug(s"Creating Stream with header configs [${bridgeCfg.header}]")
 
-      val header : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = HeaderTransformProcessor(
+      val header: Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = HeaderTransformProcessor(
         name = streamId + "-header",
         log = envLogger,
         rules = bridgeCfg.header,
-        idSvc = bridgeCfg.idSvc
+        ctCtxt = bridgeCfg.ctCtxt
       ).flow(envLogger)
 
       src.via(header)
@@ -391,7 +388,13 @@ class BridgeStreamBuilder(
       FlowShape(forward.in, ack.out)
     }
 
-    jmsSource.via(g)
+    val clearRetrying : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.fromFunction("clearRetrying", envLogger){ env => Try {
+      env.removeHeader(bridgeCfg.headerCfg.headerRetrying)
+    }}
+
+    jmsSource
+      .via(g)
+      .via(clearRetrying)
   }
 
   bridgeLogger.debug(s"Starting bridge stream with config [inbound=${bridgeCfg.inbound},trackTransaction=${bridgeCfg.trackTransaction}]")

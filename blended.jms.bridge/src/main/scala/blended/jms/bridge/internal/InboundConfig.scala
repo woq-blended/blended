@@ -1,6 +1,6 @@
 package blended.jms.bridge.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils._
 import blended.streams.jms.JmsDeliveryMode
 import blended.streams.processor.HeaderProcessorConfig
@@ -12,9 +12,9 @@ import scala.util.Try
 
 object InboundConfig {
 
-  def create(idSvc : ContainerIdentifierService, cfg : Config) : Try[InboundConfig] = Try {
+  def create(ctCtxt : ContainerContext, cfg : Config) : Try[InboundConfig] = Try {
 
-    def resolve(value : String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
+    def resolve(value : String) : String = ctCtxt.resolveString(value).map(_.toString()).get
 
     val name : String = resolve(cfg.getString("name"))
     val vendor : String = resolve(cfg.getString("vendor"))

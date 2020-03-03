@@ -20,7 +20,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
 
     "perform a regular file poll from a given directory" in {
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/simplePoll")
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/simplePoll")
       prepareDirectory(pollCfg.sourceDir)
 
       val testFile : File = new File(pollCfg.sourceDir, "test.txt")
@@ -49,7 +49,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       val numMsg : Int = 5000
       val t : FiniteDuration = 10.seconds
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/bulkPoll")
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/bulkPoll")
       prepareDirectory(pollCfg.sourceDir)
       1.to(numMsg).foreach { i => genFile(new File(pollCfg.sourceDir, s"test_$i.txt")) }
 
@@ -67,7 +67,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
 
     "restore the original file if the envelope was denied" in {
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/restore")
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/restore")
       prepareDirectory(pollCfg.sourceDir)
       genFile(new File(pollCfg.sourceDir, "test.txt"))
 
@@ -85,7 +85,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
     }
 
     "create a backup file if the backup directory is configured" in {
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(
         sourceDir = BlendedTestSupport.projectTestOutput + "/backupts",
         backup = Some(BlendedTestSupport.projectTestOutput + "/backupts/backup")
       )
@@ -103,7 +103,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
     }
 
     "create a backup without timestamp suffix file if the backup directory is configured" in {
-      val pollCfg: FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
+      val pollCfg: FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(
         sourceDir = BlendedTestSupport.projectTestOutput + "/backup",
         backup = Some(BlendedTestSupport.projectTestOutput + "/backup/backup"),
         backupTimestamp = false
@@ -126,7 +126,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       val srcDir : File = new File(BlendedTestSupport.projectTestOutput + "lockrel")
       val lockFile : File = new File(srcDir, "lock.dat")
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(
         sourceDir = srcDir.getAbsolutePath(),
         lock = Some("./lock.dat")
       )
@@ -138,7 +138,7 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       val srcDir : File = new File(BlendedTestSupport.projectTestOutput + "lockabs")
       val lockFile : File = new File(srcDir, "lock.dat")
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(
         sourceDir = srcDir.getAbsolutePath(),
         lock = Some(lockFile.getAbsolutePath())
       )

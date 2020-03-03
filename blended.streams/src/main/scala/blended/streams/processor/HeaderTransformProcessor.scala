@@ -1,6 +1,6 @@
 package blended.streams.processor
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.streams.FlowProcessor
 import blended.streams.FlowProcessor.IntegrationStep
 import blended.streams.message.FlowEnvelopeLogger
@@ -32,7 +32,7 @@ case class HeaderTransformProcessor(
   name : String,
   log : FlowEnvelopeLogger,
   rules : List[HeaderProcessorConfig],
-  idSvc : Option[ContainerIdentifierService] = None
+  ctCtxt : Option[ContainerContext] = None
 ) extends FlowProcessor {
 
   override val f : IntegrationStep = { env =>
@@ -47,12 +47,12 @@ case class HeaderTransformProcessor(
             case None =>
               c.removeHeader(headerCfg.name)
             case Some(v) =>
-              val header = Option(idSvc match {
+              val header = Option(ctCtxt match {
                 case None =>
                   v
                 case Some(s) =>
                   val props : Map[String, Any] = c.header.mapValues(_.value)
-                  s.resolvePropertyString(
+                  s.resolveString(
                     v.toString(),
                     props + ("envelope" -> env)
                   ).get

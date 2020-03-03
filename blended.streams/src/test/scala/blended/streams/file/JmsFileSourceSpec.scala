@@ -9,7 +9,7 @@ import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwareConnectionFactory}
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
@@ -44,9 +44,9 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
   )
 
   private implicit val timeout : FiniteDuration = 1.second
-  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
-  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(idSvc)
+  private val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
+  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
 
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   private implicit val materializer : Materializer = ActorMaterializer()
@@ -131,7 +131,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
   "A file source connected to a JmsSinkStage should" - {
 
-    val rawCfg : Config = idSvc.getContainerContext().getContainerConfig().getConfig("simplePoll")
+    val rawCfg : Config = ctCtxt.containerConfig.getConfig("simplePoll")
 
     def setupStreams(
       name : String,
@@ -140,7 +140,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       srcDir : String
     ) : Seq[ActorRef] = {
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(
         sourceDir = BlendedTestSupport.projectTestOutput + s"/$srcDir"
       )
 

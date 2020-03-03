@@ -7,7 +7,7 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.{CollectingActor, Collector}
@@ -39,7 +39,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
   )
 
   private implicit val timeout : FiniteDuration = 1.second
-  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
+  private val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private implicit val materializer : Materializer = ActorMaterializer()
@@ -56,7 +56,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
 
         val transColl = Collector[FlowEnvelope](name = "trans", onCollected = Some({ e : FlowEnvelope => e.acknowledge() }))
 
-        val cfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+        val cfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
 
         try {
 

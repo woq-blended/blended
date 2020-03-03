@@ -5,7 +5,7 @@ import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
 import blended.streams.jms.{JmsDeliveryMode, JmsEnvelopeHeader}
@@ -35,7 +35,7 @@ class JmsDestinationMissing(env : FlowEnvelope, outboundId : String)
   extends Exception(s"Unable to resolve JMS Destination for [${env.id}] in [$outboundId]")
 
 case class DispatcherBuilder(
-  idSvc : ContainerIdentifierService,
+  ctCtxt : ContainerContext,
   dispatcherCfg: ResourceTypeRouterConfig,
   sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
   envLogger : FlowEnvelopeLogger
@@ -49,7 +49,7 @@ case class DispatcherBuilder(
 
       // This is where we pick up the messages from the source, populate the headers
       // and perform initial checks if the message can be processed
-      val processInbound = builder.add(DispatcherInbound(dispatcherCfg, idSvc, envLogger))
+      val processInbound = builder.add(DispatcherInbound(dispatcherCfg, ctCtxt, envLogger))
 
       // The fanout step will produce one envelope per outbound config of the resource type
       // sent in the message. The envelope context will contain the config for the outbound
@@ -58,7 +58,7 @@ case class DispatcherBuilder(
       // The step will also emit a WorklistStarted event if the calculation of the
       // fanout steps was successfull.
       // The step will emit an error envelope if an exception was thrown.
-      val processFanout = builder.add(DispatcherFanout(dispatcherCfg, idSvc, envLogger).build())
+      val processFanout = builder.add(DispatcherFanout(dispatcherCfg, ctCtxt, envLogger).build())
 
       // The error splitter pushes all envelopes that have an exception defined to the error sink
       // and all messages without an exception defined to the normal sink

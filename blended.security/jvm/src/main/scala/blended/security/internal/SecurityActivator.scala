@@ -14,7 +14,7 @@ class SecurityActivator extends DominoActivator with TypesafeConfigWatching {
 
   whenBundleActive {
 
-    whenTypesafeConfigAvailable { (cfg, idSvc) =>
+    whenTypesafeConfigAvailable { (cfg, ctContext) =>
       val symName = bundleContext.getBundle().getSymbolicName()
       val module = cfg.getString("module", "simple")
 
@@ -37,7 +37,7 @@ class SecurityActivator extends DominoActivator with TypesafeConfigWatching {
           bundleName = symName,
           loginModuleClassName = loginModuleClassName,
           cfg = cfg.getConfig(module),
-          idSvc = idSvc
+          ctCtxt = ctContext
         )
       )
 

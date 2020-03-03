@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.internal.BlendedStreamsActivator
 import blended.streams.jms.{JmsEnvelopeHeader, JmsProducerSettings, JmsStreamSupport}
@@ -55,9 +55,9 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   protected val streamsCfg : BlendedStreamsConfig = mandatoryService[BlendedStreamsConfig](registry)(None)
 
   protected val (internal, external) = getConnectionFactories(registry)
-  protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
+  protected val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
 
-  protected val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+  protected val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
   protected val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   protected def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"

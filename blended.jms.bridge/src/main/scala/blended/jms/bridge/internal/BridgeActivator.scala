@@ -6,6 +6,7 @@ import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.BlendedStreamsConfig
+import blended.streams.jms.{JmsRetryConfig, JmsRetryProcessor}
 import blended.util.RichTry._
 import blended.util.logging.Logger
 import domino.DominoActivator
@@ -45,7 +46,7 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
     whenActorSystemAvailable { osgiCfg =>
 
       val providerList = osgiCfg.config.getConfigList("provider").asScala.map { p =>
-        BridgeProviderConfig.create(osgiCfg.idSvc, p).unwrap
+        BridgeProviderConfig.create(osgiCfg.ctContext, p).unwrap
       }.toList
 
       log.info(s"Starting jms bridge with providers [${providerList.map(_.toString()).mkString(",")}]")
@@ -67,7 +68,7 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
           val ctrlConfig = BridgeControllerConfig.create(
             cfg = osgiCfg.config,
             internalCf = cf,
-            idSvc = osgiCfg.idSvc,
+            ctCtxt = osgiCfg.ctContext,
             streamsCfg = streamsCfg,
             streamBuilderFactory = streamBuilderFactory
           )
@@ -81,7 +82,7 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
             registry.internalProvider.unwrap.retry.foreach { retryDest =>
               val retryCfg: JmsRetryConfig = JmsRetryConfig.fromConfig(
-                idSvc = osgiCfg.idSvc,
+                ctCtxt = osgiCfg.ctContext,
                 cf = cf,
                 retryDestName = JmsDestination.asString(retryDest),
                 retryFailedName = JmsDestination.asString(registry.internalProvider.unwrap.retryFailed),
