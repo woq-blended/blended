@@ -7,6 +7,7 @@ import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
+import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
 
 class ContainerContextImpl extends AbstractContainerContextImpl {
@@ -15,9 +16,11 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
 
   private[this] val log = Logger[ContainerContextImpl]
 
+  @BeanProperty
   override lazy val containerDirectory : String =
     new File(System.getProperty("blended.home")).getAbsolutePath
 
+  @BeanProperty
   override lazy val containerHostname : String = {
     try {
       val localMachine = java.net.InetAddress.getLocalHost()
@@ -27,8 +30,10 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
     }
   }
 
+  @BeanProperty
   override lazy val containerLogDirectory : String = containerLogDir
 
+  @BeanProperty
   override lazy val profileDirectory : String = profileDir
 
   lazy val brandingProperties : Map[String, String] = {
@@ -80,9 +85,11 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
     f.getAbsolutePath()
   }
 
+  @BeanProperty
   override lazy val containerConfigDirectory : String =
     new File(containerDirectory, CONFIG_DIR).getAbsolutePath
 
+  @BeanProperty
   override lazy val profileConfigDirectory : String = new File(profileDirectory, CONFIG_DIR).getAbsolutePath
 
   private[this] lazy val ctConfig : Config = {
@@ -133,6 +140,7 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
       .resolve()
   }
 
+  @BeanProperty
   override lazy val containerConfig : Config = ctConfig
 
 }

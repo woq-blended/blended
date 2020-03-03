@@ -1,6 +1,6 @@
 package blended.streams.dispatcher.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
@@ -10,7 +10,7 @@ import scala.util.Try
 object ProviderResolver {
 
   private[dispatcher] def providerFromConfig(
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     registry : BridgeProviderRegistry,
     cfg : Config,
     vendorPath : String,
@@ -21,8 +21,8 @@ object ProviderResolver {
       case (Some(v), Some(p)) =>
         Some(getProvider(
           registry,
-          idSvc.resolvePropertyString(v).map(_.toString()).get,
-          idSvc.resolvePropertyString(p).map(_.toString()).get
+          ctCtxt.resolveString(v).map(_.toString()).get,
+          ctCtxt.resolveString(p).map(_.toString()).get
         ).get)
       case (_, _) =>
         None

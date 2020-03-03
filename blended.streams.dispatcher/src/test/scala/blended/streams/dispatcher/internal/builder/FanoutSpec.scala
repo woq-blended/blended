@@ -5,7 +5,6 @@ import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.{GraphDSL, Keep, RunnableGraph, Source}
 import blended.streams.dispatcher.internal.OutboundRouteConfig
-import blended.streams.message
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.worklist.{WorklistEvent, WorklistStateStarted}
@@ -26,7 +25,7 @@ class FanoutSpec extends DispatcherSpecSupport
     envelope : FlowEnvelope
   ) : Try[Seq[(OutboundRouteConfig, FlowEnvelope)]] = {
     val resTypeCfg = ctxt.cfg.resourceTypeConfigs.get(resType).get
-    val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc, ctxt.envLogger)(ctxt.bs)
+    val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)
     fanout.funFanoutOutbound(envelope
       .withHeader(ctxt.bs.headerResourceType, resType).get
       .withContextObject(ctxt.bs.rtConfigKey, resTypeCfg))
@@ -38,7 +37,7 @@ class FanoutSpec extends DispatcherSpecSupport
 
       withDispatcherConfig { ctxt =>
 
-        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc, ctxt.envLogger)(ctxt.bs)
+        val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)
         val envelope = FlowEnvelope(FlowMessage.noProps)
 
         performFanout(ctxt, fanout, "FanOut", envelope) match {
@@ -57,7 +56,7 @@ class FanoutSpec extends DispatcherSpecSupport
     "create a workliststarted event for a configured resourceType" in {
 
       withDispatcherConfig { ctxt =>
-        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc, ctxt.envLogger)(ctxt.bs)
+        val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)
 
         ctxt.cfg.resourceTypeConfigs.keys.filter(_ != "NoOutbound").foreach { resType =>
           val envelope = FlowEnvelope(FlowMessage.noProps)
@@ -115,7 +114,7 @@ class FanoutSpec extends DispatcherSpecSupport
         implicit val materializer : Materializer = ActorMaterializer()
         implicit val eCtxt : ExecutionContext = system.dispatcher
 
-        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc, ctxt.envLogger)(ctxt.bs)
+        val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)
 
         ctxt.cfg.resourceTypeConfigs.keys.filter(_ != "NoOutbound").foreach { resType =>
           val envelope = FlowEnvelope(FlowMessage.noProps)

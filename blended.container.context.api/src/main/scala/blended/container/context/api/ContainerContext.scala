@@ -6,6 +6,7 @@ import blended.security.crypto.ContainerCryptoSupport
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory}
 
+import scala.beans.BeanProperty
 import scala.util.{Failure, Success, Try}
 
 class PropertyResolverException(msg : String) extends Exception(msg)
@@ -29,41 +30,49 @@ trait ContainerContext {
   /**
    * The home directory of the container, usually defined by the system property <code>blended.home</code>
    */
-  def containerDirectory : String
+  @BeanProperty
+  val containerDirectory : String
 
 
-  def containerConfigDirectory : String
+  @BeanProperty
+  val containerConfigDirectory : String
 
   /**
    * The target directory for the container log files
    */
-  def containerLogDirectory : String
+  @BeanProperty
+  val containerLogDirectory : String
 
   /**
    * The base directory for the current container profile
    */
-  def profileDirectory : String
+  @BeanProperty
+  val profileDirectory : String
 
   /**
    * The config directory for all profile specific configuration files. Usually this is
    * <code>getProfileDirectory()/etc</code>. This is the main config directory.
    */
-  def profileConfigDirectory : String
+  @BeanProperty
+  val profileConfigDirectory : String
 
   /**
    * The hostname of the current container as defined by the netowrk layer.
    */
-  def containerHostname : String
+  @BeanProperty
+  val containerHostname : String
 
   /**
    * Provide access to encryption and decryption facilities, optionally secured with a secret file.
    */
-  def cryptoSupport : ContainerCryptoSupport
+  @BeanProperty
+  val cryptoSupport : ContainerCryptoSupport
 
   /**
    * The application.conf, optionally modified with an overlay.
     */
-  def containerConfig : Config
+  @BeanProperty
+  val containerConfig : Config
 
   /**
    * Read a config with a given id from the profile config directory and apply all blended
@@ -75,7 +84,8 @@ trait ContainerContext {
   /**
    * Access to the Container Identifier Service
    */
-  def identifierService : ContainerIdentifierService
+  @BeanProperty
+  val identifierService : ContainerIdentifierService
 
   /**
    * Access to a blended resolver for config values

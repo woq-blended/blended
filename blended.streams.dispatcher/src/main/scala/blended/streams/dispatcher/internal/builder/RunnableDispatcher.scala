@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.scaladsl.{Flow, GraphDSL, Source}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.jmx.statistics.ServiceInvocationReporter
@@ -23,7 +23,7 @@ class RunnableDispatcher(
   registry : BridgeProviderRegistry,
   cf : IdAwareConnectionFactory,
   bs : DispatcherBuilderSupport,
-  idSvc : ContainerIdentifierService,
+  ctCtxt : ContainerContext,
   tMgr : FlowTransactionManager,
   routerCfg : ResourceTypeRouterConfig,
   streamsCfg : BlendedStreamsConfig
@@ -201,7 +201,7 @@ class RunnableDispatcher(
         val dispatcher : Flow[FlowEnvelope, FlowTransactionEvent, NotUsed] =
           Flow.fromGraph(
             DispatcherBuilder(
-              idSvc = idSvc,
+              ctCtxt = ctCtxt,
               dispatcherCfg = routerCfg,
               envLogger = envLogger,
               sendFlow = dispatcherSend(envLogger),

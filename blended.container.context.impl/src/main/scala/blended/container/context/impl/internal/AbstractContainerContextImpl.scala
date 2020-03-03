@@ -7,6 +7,7 @@ import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory}
 
+import scala.beans.BeanProperty
 import scala.util.{Failure, Success, Try}
 
 object AbstractContainerContextImpl {
@@ -24,6 +25,7 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
   /**
    * Access to the Container Identifier Service
    */
+  @BeanProperty
   override val identifierService: ContainerIdentifierService = new ContainerIdentifierServiceImpl(this)
 
   /**
@@ -36,6 +38,7 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
   /**
    * Provide access to encryption and decryption facilities, optionally secured with a secret file.
    */
+  @BeanProperty
   override val cryptoSupport: ContainerCryptoSupport = {
     import AbstractContainerContextImpl._
 

@@ -248,6 +248,7 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
       case (k, v) =>
         context.setVariable(k, v)
     }
+    context.setVariable("ctCtxt", ctContext)
     context.setVariable("idSvc", ctContext.identifierService)
 
     val exp = parseExpression(line).get

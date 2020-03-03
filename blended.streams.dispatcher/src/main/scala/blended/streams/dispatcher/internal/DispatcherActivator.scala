@@ -32,14 +32,14 @@ class DispatcherActivator extends DominoActivator
               whenAdvancedServicePresent[IdAwareConnectionFactory](internalProvider.osgiBrokerFilter) { cf =>
 
                 val bs = new DispatcherBuilderSupport {
-                  override def containerConfig: Config = cfg.idSvc.containerContext.getContainerConfig()
+                  override def containerConfig: Config = cfg.ctContext.containerConfig
                 }
 
                 implicit val system: ActorSystem = cfg.system
                 implicit val materializer: Materializer = ActorMaterializer()
 
                 val routerCfg = ResourceTypeRouterConfig.create(
-                  idSvc = cfg.idSvc,
+                  ctCtxt = cfg.ctContext,
                   provider = registry,
                   cfg = cfg.config
                 ).get
@@ -48,7 +48,7 @@ class DispatcherActivator extends DominoActivator
                   registry = registry,
                   cf = cf,
                   bs = bs,
-                  idSvc = cfg.idSvc,
+                  ctCtxt = cfg.ctContext,
                   tMgr = tMgr,
                   streamsCfg = streamsCfg,
                   routerCfg = routerCfg

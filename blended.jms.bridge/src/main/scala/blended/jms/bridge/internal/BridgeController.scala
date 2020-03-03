@@ -3,7 +3,7 @@ package blended.jms.bridge.internal
 import akka.NotUsed
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.Materializer
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.bridge._
 import blended.jms.bridge.internal.BridgeController.{AddConnectionFactory, RemoveConnectionFactory}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
@@ -23,20 +23,20 @@ private[bridge] object BridgeControllerConfig {
   def create(
     cfg : Config,
     internalCf : IdAwareConnectionFactory,
-    idSvc: ContainerIdentifierService,
+    ctCtxt: ContainerContext,
     streamsCfg : BlendedStreamsConfig,
     streamBuilderFactory : ActorSystem => Materializer => (BridgeStreamConfig, BlendedStreamsConfig) => BridgeStreamBuilder
   ) : BridgeControllerConfig = {
 
-    val headerCfg = FlowHeaderConfig.create(idSvc)
+    val headerCfg = FlowHeaderConfig.create(ctCtxt)
 
     val providerList = cfg.getConfigList("provider").asScala.map { p =>
-      BridgeProviderConfig.create(idSvc, p).get
+      BridgeProviderConfig.create(ctCtxt, p).get
     }.toList
 
     val inboundList : List[InboundConfig] =
       cfg.getConfigList("inbound", List.empty).map { i =>
-        InboundConfig.create(idSvc, i).get
+        InboundConfig.create(ctCtxt, i).get
       }
 
     val trackInbound : Boolean = cfg.getBoolean("trackInbound", true)
@@ -57,7 +57,7 @@ private[bridge] object BridgeControllerConfig {
       headerCfg = headerCfg,
       inbound = inboundList,
       outboundAlternates = alternates,
-      idSvc = idSvc,
+      ctCtxt = ctCtxt,
       rawConfig = cfg,
       streamsCfg = streamsCfg,
       trackInbound = trackInbound,
@@ -72,7 +72,7 @@ private[bridge] case class BridgeControllerConfig(
   headerCfg : FlowHeaderConfig,
   inbound : List[InboundConfig],
   outboundAlternates : Seq[String],
-  idSvc : ContainerIdentifierService,
+  ctCtxt : ContainerContext,
   trackInbound : Boolean,
   streamsCfg : BlendedStreamsConfig,
   rawConfig : Config,
@@ -124,7 +124,7 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
       },
       subscriberName = in.subscriberName,
       header = in.header,
-      idSvc = Some(ctrlCfg.idSvc),
+      ctCtxt = Some(ctrlCfg.ctCtxt),
       sessionRecreateTimeout = in.sessionRecreateTimeout
     )
 

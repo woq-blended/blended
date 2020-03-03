@@ -42,7 +42,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
     val sinkGraph = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val evtHandler = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, goodSend, ctxt.envLogger)(ctxt.bs).worklistEventHandler())
+      val evtHandler = b.add(DispatcherBuilder(ctxt.ctCtxt, ctxt.cfg, goodSend, ctxt.envLogger)(ctxt.bs).worklistEventHandler())
       val err = b.add(errColl.sink)
       val trans = b.add(transColl.sink)
 
