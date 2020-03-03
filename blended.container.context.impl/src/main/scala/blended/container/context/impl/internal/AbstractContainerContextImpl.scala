@@ -73,4 +73,8 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
       case Success(cfg) => cfg
     }
   }
+
+  override def toString: String =
+    s"${getClass().getSimpleName()}(containerDir = $containerDirectory, containerConfigDirectory = $containerConfigDirectory)," +
+    s"containerLogDirectory = $containerLogDirectory, hostName = $containerHostname, uuid = ${identifierService.uuid}"
 }

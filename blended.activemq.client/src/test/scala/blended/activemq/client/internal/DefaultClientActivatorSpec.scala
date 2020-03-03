@@ -3,7 +3,7 @@ package blended.activemq.client.internal
 import java.io.File
 
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
@@ -24,7 +24,7 @@ class DefaultClientActivatorSpec extends SimplePojoContainerSpec
   )
 
   private implicit val timeout : FiniteDuration = 3.seconds
-  mandatoryService[ContainerIdentifierService](registry)(None)
+  mandatoryService[ContainerContext](registry)(None)
 
   "The ActiveMQ Client Activator should" - {
 

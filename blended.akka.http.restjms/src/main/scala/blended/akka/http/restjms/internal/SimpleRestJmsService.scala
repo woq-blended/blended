@@ -30,7 +30,8 @@ class SimpleRestJmsService(
   private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private val log : Logger = Logger(s"${getClass().getName()}.$name")
-  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create(osgiCfg.idSvc), log)
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(osgiCfg.ctContext)
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   private val defaultContentTypes = List("application/json", "text/xml")
   private val restConfig : RestJMSConfig = RestJMSConfig.fromConfig(osgiCfg.config)
@@ -39,7 +40,6 @@ class SimpleRestJmsService(
   private val operations : Map[String, JmsOperationConfig] = restConfig.operations
   log.info(s"Starting RestJMS Service with [$operations]")
 
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(osgiCfg.idSvc)
 
   private val pendingRequests : mutable.Map[String, (HttpRequest, Promise[HttpResponse])] = mutable.Map.empty
 
@@ -57,7 +57,7 @@ class SimpleRestJmsService(
     connectionFactory = cf,
     jmsDestination = Some(responseDestination),
     logLevel = _ => LogLevel.Debug,
-    selector = Some(s"${corrIdHeader(headerCfg.prefix)} = '${osgiCfg.idSvc.uuid}'"),
+    selector = Some(s"${corrIdHeader(headerCfg.prefix)} = '${osgiCfg.ctContext.identifierService.uuid}'"),
     keyFormatStrategy = new PassThroughKeyFormatStrategy()
   )
 
@@ -168,7 +168,7 @@ class SimpleRestJmsService(
       val header : Seq[(String, Any)] = Seq(
         destHeader(headerCfg.prefix) -> opCfg.destination,
         replyToHeader(headerCfg.prefix) -> s"${responseDestination.name}",
-        corrIdHeader(headerCfg.prefix) -> osgiCfg.idSvc.uuid,
+        corrIdHeader(headerCfg.prefix) -> osgiCfg.ctContext.identifierService.uuid,
         "Content-Type" -> cType.mediaType.value
       ) ++ opCfg.header.map{ case (k,v) => k -> v }
 

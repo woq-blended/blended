@@ -8,7 +8,7 @@ import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.http.restjms.AkkaHttpRestJmsActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.internal.BlendedStreamsActivator
 import blended.testsupport.BlendedTestSupport
@@ -41,10 +41,10 @@ abstract class AbstractJmsRequestorSpec extends SimplePojoContainerSpec
   protected implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   protected implicit val materializer : ActorMaterializer = ActorMaterializer()
 
-  protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
+  protected val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
   protected val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
 
-  private val responder : JMSResponder = new JMSResponder(cf, idSvc)
+  private val responder : JMSResponder = new JMSResponder(cf, ctCtxt)
 
   override protected def beforeAll(): Unit = {
     responder.start()

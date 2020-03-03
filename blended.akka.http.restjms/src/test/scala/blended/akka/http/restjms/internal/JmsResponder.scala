@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, PoisonPill}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Source}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
@@ -26,12 +26,12 @@ object MockResponses {
 }
 
 class JMSResponder(
-  cf : IdAwareConnectionFactory, idSvc : ContainerIdentifierService
+  cf : IdAwareConnectionFactory, ctCtxt : ContainerContext
 )(implicit system : ActorSystem, materializer : ActorMaterializer) extends JmsEnvelopeHeader {
 
   private val log : Logger = Logger[JMSResponder]
   private var streamActor : Option[ActorRef] = None
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
   private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   private val consumerSettings : JmsConsumerSettings = JmsConsumerSettings(

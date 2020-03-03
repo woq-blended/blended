@@ -11,6 +11,7 @@ import blended.util.logging.Logger
 import com.typesafe.config.{ConfigFactory, Config => TSConfig}
 import de.tototec.cmdoption.CmdlineParser
 
+import scala.beans.BeanProperty
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.util.Random
@@ -21,13 +22,13 @@ class MgmtMockClients(config : Config) {
   private[this] val rnd = new Random()
 
   private[this] val ctCtxt : ContainerContext = new AbstractContainerContextImpl {
-    override def containerDirectory: String = "."
-    override def containerConfigDirectory: String = containerDirectory
-    override def containerLogDirectory: String = containerDirectory
-    override def profileDirectory: String = containerDirectory
-    override def profileConfigDirectory: String = containerDirectory
-    override def containerHostname: String = "localhost"
-    override def containerConfig: TSConfig = ConfigFactory.empty()
+    @BeanProperty  val containerDirectory: String = "."
+    @BeanProperty  override val containerConfigDirectory: String = containerDirectory
+    @BeanProperty  override val containerLogDirectory: String = containerDirectory
+    @BeanProperty  override val profileDirectory: String = containerDirectory
+    @BeanProperty  override val profileConfigDirectory: String = containerDirectory
+    @BeanProperty  override val containerHostname: String = "localhost"
+    @BeanProperty  override val containerConfig: TSConfig = ConfigFactory.empty()
   }
 
   implicit val system : ActorSystem = ActorSystem("MgmtMockClients")

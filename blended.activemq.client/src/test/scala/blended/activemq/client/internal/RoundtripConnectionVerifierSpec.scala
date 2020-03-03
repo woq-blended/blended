@@ -77,7 +77,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
       assert(!Await.result(f, 5.seconds))
     }
 
-    "stay unresolve if the connection to the broker did not succeed" in {
+    "stay unresolved if the connection to the broker did not succeed" in {
 
       val ucf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
         vendor = "amq",

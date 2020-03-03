@@ -114,7 +114,7 @@ object ScepClientApp {
   def readCsrFile(csrFile : String) : Unit = {
     val file = new File(csrFile).getAbsoluteFile()
     if (!file.exists() || !file.isFile()) {
-      throw new RuntimeException(s"File does not exists: ${file}")
+      throw new RuntimeException(s"File does not exist: ${file}")
     }
     log.debug(s"About to parse file ${file}")
     val reader = new FileReader(file)
