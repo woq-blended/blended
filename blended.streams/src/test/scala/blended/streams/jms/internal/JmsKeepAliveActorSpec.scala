@@ -95,7 +95,7 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
 
       val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
       assert(envelopes.size == cfg.maxKeepAliveMissed)
-      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.identifierService.uuid)))
+      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.uuid)))
 
       probe.fishForMessage(3.seconds){
         case _ : MaxKeepAliveExceeded => true
@@ -131,7 +131,7 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
 
       val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
       assert(envelopes.size == 1)
-      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.identifierService.uuid)))
+      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.uuid)))
 
       probe.fishForMessage(3.seconds){
         case _ : KeepAliveMissed => true
@@ -165,7 +165,7 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
 
       val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
       //assert(envelopes.size == 1)
-      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.identifierService.uuid)))
+      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.uuid)))
 
       system.eventStream.publish(MessageReceived(cf.vendor, cf.provider, UUID.randomUUID().toString()))
 

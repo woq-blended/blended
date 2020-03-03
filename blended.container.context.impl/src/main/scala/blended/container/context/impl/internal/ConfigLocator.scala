@@ -45,20 +45,17 @@ object ConfigLocator {
     }
   }
 
-  /**
-   * Read a configuration file from a given directory.
-   */
-  def config(cfgDir : String, fileName : String, fallback: Config, ctContext: ContainerContext) : Try[Config] = {
+  def safeConfig(cfgDir : String, fileName: String, fallback: Config, ctContext : ContainerContext) : Config = {
     val file = new File(cfgDir, fileName)
     log.debug(s"Retrieving config from [${file.getAbsolutePath()}]")
-    evaluatedConfig(file, fallback, ctContext)
-  }
 
-  def safeConfig(cfgDir : String, fileName: String, fallback: Config, ctContext : ContainerContext) : Config =
-    config(cfgDir, fileName, fallback, ctContext) match {
+    evaluatedConfig(file, fallback, ctContext) match {
       case Failure(e) =>
         log.warn(s"Error reading [$fileName] : [${e.getMessage()}], using empty config")
         ConfigFactory.empty()
-      case Success(cfg) => cfg
+      case Success(cfg) =>
+        log.debug(s"Resolved config from [${file.getAbsolutePath()}]")
+        cfg
     }
+  }
 }

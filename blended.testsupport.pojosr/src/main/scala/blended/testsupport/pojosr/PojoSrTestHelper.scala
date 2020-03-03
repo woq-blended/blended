@@ -2,8 +2,7 @@ package blended.testsupport.pojosr
 
 import java.io.File
 
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
-import blended.container.context.impl.internal.{ContainerContextImpl, ContainerIdentifierServiceImpl}
+import blended.container.context.api.ContainerContext
 import blended.util.logging.Logger
 import domino.DominoActivator
 import org.osgi.framework.{BundleActivator, ServiceReference}

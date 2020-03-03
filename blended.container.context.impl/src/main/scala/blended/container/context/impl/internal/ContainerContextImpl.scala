@@ -14,7 +14,7 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
 
   import AbstractContainerContextImpl._
 
-  private[this] val log = Logger[ContainerContextImpl]
+  private[this] lazy val log : Logger = Logger[ContainerContextImpl]
 
   @BeanProperty
   override lazy val containerDirectory : String =
@@ -37,7 +37,7 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
   override lazy val profileDirectory : String = profileDir
 
   lazy val brandingProperties : Map[String, String] = {
-    val props = (try {
+    val props : Properties = (try {
       import blended.launcher.runtime.Branding
       // it is possible, that this optional class is not available at runtime,
       // e.g. when started with another launcher
@@ -92,14 +92,14 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
   @BeanProperty
   override lazy val profileConfigDirectory : String = new File(profileDirectory, CONFIG_DIR).getAbsolutePath
 
-  private[this] lazy val ctConfig : Config = {
+  @BeanProperty
+  override lazy val containerConfig : Config = {
     val sysProps = ConfigFactory.systemProperties()
     val envProps = ConfigFactory.systemEnvironment()
 
-    val branding = brandingProperties
-    val overlayConfig = branding.get(RuntimeConfig.Properties.PROFILE_DIR) match {
+    val overlayConfig = brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) match {
       case Some(profileDir) =>
-        branding.get(RuntimeConfig.Properties.OVERLAYS) match {
+        brandingProperties.get(RuntimeConfig.Properties.OVERLAYS) match {
           case Some(overlays) =>
             val overlayRefs = overlays.split("[,]").toList.map(_.split("[:]", 2)).flatMap {
               case Array(n, v) => Some(OverlayRef(n, v))
@@ -126,21 +126,18 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
 
     log.debug(s"Overlay config: ${overlayConfig}")
 
-    val olCfg : Config = overlayConfig match {
+    val oldCfg : Config = overlayConfig match {
       case Some(oc) => ConfigFactory.parseFile(oc, ConfigParseOptions.defaults().setAllowMissing(false))
       case _        => ConfigFactory.empty()
     }
 
     val appCfg : Config =
-      ConfigLocator.safeConfig(containerConfigDirectory, "application.conf", ConfigFactory.empty(), this)
+      ConfigLocator.safeConfig(profileConfigDirectory, "application.conf", ConfigFactory.empty(), this)
 
-    olCfg.withFallback(appCfg)
+    oldCfg.withFallback(appCfg)
       .withFallback(sysProps)
       .withFallback(envProps)
       .resolve()
   }
-
-  @BeanProperty
-  override lazy val containerConfig : Config = ctConfig
 
 }

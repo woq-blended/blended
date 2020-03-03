@@ -131,7 +131,7 @@ class JmsKeepAliveActor(
 
     case Tick =>
       val env : FlowEnvelope = FlowEnvelope(FlowMessage.props(
-        "JMSCorrelationID" -> ctCtxt.identifierService.uuid,
+        "JMSCorrelationID" -> ctCtxt.uuid,
         headerConfig.headerKeepAlivesMissed -> (cnt + 1)
       ).get)
 

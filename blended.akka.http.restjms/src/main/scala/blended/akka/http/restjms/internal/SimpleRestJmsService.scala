@@ -57,7 +57,7 @@ class SimpleRestJmsService(
     connectionFactory = cf,
     jmsDestination = Some(responseDestination),
     logLevel = _ => LogLevel.Debug,
-    selector = Some(s"${corrIdHeader(headerCfg.prefix)} = '${osgiCfg.ctContext.identifierService.uuid}'"),
+    selector = Some(s"${corrIdHeader(headerCfg.prefix)} = '${osgiCfg.ctContext.uuid}'"),
     keyFormatStrategy = new PassThroughKeyFormatStrategy()
   )
 
@@ -168,7 +168,7 @@ class SimpleRestJmsService(
       val header : Seq[(String, Any)] = Seq(
         destHeader(headerCfg.prefix) -> opCfg.destination,
         replyToHeader(headerCfg.prefix) -> s"${responseDestination.name}",
-        corrIdHeader(headerCfg.prefix) -> osgiCfg.ctContext.identifierService.uuid,
+        corrIdHeader(headerCfg.prefix) -> osgiCfg.ctContext.uuid,
         "Content-Type" -> cType.mediaType.value
       ) ++ opCfg.header.map{ case (k,v) => k -> v }
 

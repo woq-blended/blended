@@ -2,6 +2,7 @@ package blended.container.context.impl.internal
 
 import blended.container.context.api.{ContainerContext, PropertyResolverException}
 import blended.testsupport.BlendedTestSupport
+import blended.updater.config.RuntimeConfig
 import blended.util.RichTry._
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -10,7 +11,9 @@ import scala.util.control.NonFatal
 class PropertyResolverSpec extends FreeSpec
   with Matchers {
 
-  val ctCtxt : ContainerContext = new MockContainerContext(BlendedTestSupport.projectTestOutput)
+  System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB")
+  System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
+  val ctCtxt : ContainerContext = new ContainerContextImpl()
 
   System.setProperty("sysProp", "test")
 

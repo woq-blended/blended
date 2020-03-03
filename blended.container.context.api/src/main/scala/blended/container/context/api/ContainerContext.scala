@@ -13,6 +13,8 @@ class PropertyResolverException(msg : String) extends Exception(msg)
 
 object ContainerContext {
 
+  val containerId : String = "uuid"
+
   val transactionCounter = new AtomicLong(0)
 
   def nextTransactionCounter : Long = {
@@ -81,11 +83,11 @@ trait ContainerContext {
    */
   def getConfig(id : String) : Config
 
-  /**
-   * Access to the Container Identifier Service
-   */
   @BeanProperty
-  val identifierService : ContainerIdentifierService
+  val uuid : String
+
+  @BeanProperty
+  val properties : Map[String, String]
 
   /**
    * Access to a blended resolver for config values

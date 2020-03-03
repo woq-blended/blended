@@ -3,7 +3,7 @@ package blended.security
 import java.text.MessageFormat
 import java.util
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.security.internal.{LDAPLoginConfig, LdapSearchResult}
 import blended.util.logging.Logger
 import com.sun.jndi.ldap.LdapCtxFactory
@@ -26,7 +26,7 @@ class LDAPLoginModule extends AbstractLoginModule {
     case Some(s) =>
       LDAPLoginConfig.fromConfig(loginConfig, s)
     case None =>
-      throw new Exception(s"LDAP Login module must be configured with an instance of [${classOf[ContainerIdentifierService]}]")
+      throw new Exception(s"LDAP Login module must be configured with an instance of [${classOf[ContainerContext]}]")
   }
 
   // obtain the initial LDAP Context

@@ -3,8 +3,7 @@ package blended.security.scep.standalone
 import java.io.File
 import java.util.ServiceLoader
 
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
-import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
+import blended.container.context.api.ContainerContext
 import blended.security.ssl.{CertificateManager, MemoryKeystore}
 import blended.util.logging.Logger
 import domino.DominoActivator

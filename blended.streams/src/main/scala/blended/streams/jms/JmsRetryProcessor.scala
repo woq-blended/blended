@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FlowShape, Graph, Materializer}
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}

@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
+import blended.container.context.api.ContainerContext
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory

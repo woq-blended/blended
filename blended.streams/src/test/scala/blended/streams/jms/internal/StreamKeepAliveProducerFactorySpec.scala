@@ -7,7 +7,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory, MessageReceived, ProducerMaterialized}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
