@@ -11,7 +11,8 @@ import scala.util.control.NonFatal
 class PropertyResolverSpec extends FreeSpec
   with Matchers {
 
-  System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB")
+  System.setProperty("COUNTRY", "cc")
+  System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
   System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
   val ctCtxt : ContainerContext = new ContainerContextImpl()
 

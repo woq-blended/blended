@@ -21,13 +21,13 @@ object ConfigLocator {
   private[this] val sysProps : Config = ConfigFactory.systemProperties()
   private[this] val envProps : Config = ConfigFactory.systemEnvironment()
 
-  private[this] def readConfigFile(f : File, fallback : Config) : Config = ConfigFactory.parseFile(f)
+  private[internal] def readConfigFile(f : File, fallback : Config) : Config = ConfigFactory.parseFile(f)
     .withFallback(fallback)
     .withFallback(sysProps)
     .withFallback(envProps)
     .resolve()
 
-  private[this] def evaluatedConfig(f : File, fallback : Config, ctContext : ContainerContext) : Try[Config] = Try {
+  private[internal] def evaluatedConfig(f : File, fallback : Config, ctContext : ContainerContext) : Try[Config] = Try {
 
     if (f.exists && f.isFile && f.canRead) {
 

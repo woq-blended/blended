@@ -7,11 +7,12 @@ import blended.util.logging.Logger
 import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
+import blended.util.RichTry._
 
 import scala.collection.mutable
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
-class ContainerPropertyResolver(ctContext : ContainerContext) {
+class ContainerPropertyResolver(ctCtxt : Option[ContainerContext]) {
 
   private case class ExtractedElement(
     prefix : String,
@@ -20,8 +21,8 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
     modifier : String = ""
   )
 
-  type Resolver = String => String
-  type Modifier = (String, String) => String
+  type Resolver = String => Try[String]
+  type Modifier = (String, String) => Try[String]
 
   private[this] val log = Logger[ContainerPropertyResolver]
 
@@ -103,38 +104,44 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
 
   // these are the valid modifiers in a resolver expression
   private[this] val modifiers : Map[String, Modifier] = Map(
-    "upper" -> { case (s : String, _ : String) => s.toUpperCase() },
+    "upper" -> { case (s : String, _ : String) => Try { s.toUpperCase() } },
 
-    "lower" -> { case (s : String, _ : String) => s.toLowerCase() },
+    "lower" -> { case (s : String, _ : String) => Try { s.toLowerCase() } },
 
-    "capitalize" -> { case (s : String, _ : String) => s.capitalize },
+    "capitalize" -> { case (s : String, _ : String) => Try { s.capitalize } },
 
     "right" -> {
-      case (s : String, param : String) =>
+      case (s : String, param : String) => Try {
         val n = param.toInt
         if (n >= s.length) s else s.takeRight(n)
+      }
     },
 
     "left" -> {
-      case (s : String, param : String) =>
+      case (s : String, param : String) => Try {
         val n = param.toInt
         if (n >= s.length) s else s.take(n)
+      }
     },
 
     "replace" -> {
-      case (s : String, param : String) =>
+      case (s : String, param : String) => Try {
         val replace = param.split(":")
         if (replace.length != 2) {
           s
         } else {
           s.replaceAll(replace(0), replace(1))
         }
+      }
     }
   )
 
   private[this] val resolver : Map[String, Resolver] = Map(
-    ContainerContext.containerId -> (_ => ctContext.uuid)
-  )
+    ContainerContext.containerId -> { _ => ctCtxt match {
+      case None => Failure(new PropertyResolverException("Could not resolve container uuid"))
+      case Some(c) => Success(c.uuid)
+    }
+  })
 
   private[this] def extractModifier(s : String) : Option[(Modifier, String)] = {
     val pos = s.indexOf(":")
@@ -142,7 +149,7 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
     modifiers.get(modName).map { m => (m, params) }
   }
 
-  private[this] def processRule(rule : String, additionalProps : Map[String, Any]) : String = {
+  private[this] def processRule(rule : String, additionalProps : Map[String, Any]) : Try[String] = {
 
     log.trace(s"Processing rule [$rule]")
 
@@ -162,12 +169,12 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
       case Some(m) => m
     }
 
-    val props = Option(ctContext.properties).getOrElse(Map.empty)
+    val props : Map[String, String] = ctCtxt.map(_.properties).getOrElse(Map.empty)
 
     // First, we resolve the rule from the environment vars or System properties
     // The resolution is mandatory
-    var result : String = props.get(ruleName) match {
-      case Some(s) => s
+    val applyRules : Try[String] = props.get(ruleName) match {
+      case Some(s) => Success(s)
       case None =>
         Option(
           additionalProps.getOrElse(
@@ -177,22 +184,25 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
             )
           )
         ) match {
-            case Some(s) => s.toString()
+            case Some(s) => Success(s.toString())
             case None =>
               resolver.get(ruleName) match {
                 case Some(r) => r(ruleName)
-                case None    => throw new PropertyResolverException(s"Unable to resolve property [$rule]")
+                case None    => Failure(new PropertyResolverException(s"Unable to resolve property [$rule]"))
               }
           }
     }
 
     // Then we apply the collected modifiers left to right to the resolved value
-    result = mods.foldLeft[String](result)((a, b) => b._1(a, b._2))
+    val result : Try[String] = mods.foldLeft[Try[String]](applyRules)( (current, value) => current match {
+      case f @ Failure(_) => f
+      case Success(s) => value._1(s, value._2)
+    })
 
     result
   }
 
-  def resolve(line : String, additionalProps : Map[String, Any] = Map.empty) : AnyRef = {
+  def resolve(line : String, additionalProps : Map[String, Any] = Map.empty) : Try[AnyRef] = Try {
     // First we check if we have replacements in "Blended Style"
 
     /**
@@ -204,17 +214,21 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
       val e = extractVariableElement(line, resolveStartDelim, resolveEndDelim)
       e.modifier match {
         case "delayed" =>
-          resolve(e.prefix) + e.pattern + resolve(e.postfix)
+          resolve(e.prefix).unwrap + e.pattern + resolve(e.postfix).unwrap
 
-        case "encrypted" =>
-          val decrypted : String = ctContext.cryptoSupport.decrypt(e.pattern).get
-          resolve(e.prefix) + resolve(decrypted).toString() + resolve(e.postfix)
+        case "encrypted" => ctCtxt match {
+          case None =>
+            throw new PropertyResolverException(s"Could not decrypt config value [${e.pattern}]")
+          case Some(c) =>
+            val decrypted : String = c.cryptoSupport.decrypt(e.pattern).get
+            resolve(e.prefix).unwrap.toString() + resolve(decrypted).unwrap.toString() + resolve(e.postfix).unwrap.toString()
+        }
 
         case _ =>
           // First we resolve the inner expression to resolve any nested expressions
-          val inner = resolve(e.pattern, additionalProps).toString
+          val inner = resolve(e.pattern, additionalProps).unwrap.toString
           // then we resolve the entire line with the inner expression resolved
-          resolve(e.prefix + processRule(inner, additionalProps) + e.postfix, additionalProps)
+          resolve(e.prefix + processRule(inner, additionalProps).unwrap + e.postfix, additionalProps).unwrap
 
       }
     } else {
@@ -226,7 +240,7 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
           if (e.prefix.isEmpty && e.postfix.isEmpty) {
             evaluate(e.pattern, additionalProps)
           } else {
-            resolve(e.prefix + evaluate(e.pattern, additionalProps) + e.postfix, additionalProps)
+            resolve(e.prefix + evaluate(e.pattern, additionalProps).toString() + e.postfix, additionalProps).unwrap
           }
       }
     }
@@ -242,13 +256,15 @@ class ContainerPropertyResolver(ctContext : ContainerContext) {
       context.registerFunction(m.getName(), m)
     }
 
-    context.setRootObject(ctContext)
+    ctCtxt.foreach{ c =>
+      context.setRootObject(c)
+      context.setVariable("ctCtxt", c)
+    }
 
     additionalProps.foreach {
       case (k, v) =>
         context.setVariable(k, v)
     }
-    context.setVariable("ctCtxt", ctContext)
 
     val exp = parseExpression(line).get
 

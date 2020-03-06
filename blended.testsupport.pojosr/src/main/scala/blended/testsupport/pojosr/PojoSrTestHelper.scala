@@ -50,7 +50,7 @@ trait PojoSrTestHelper {
         System.setProperty("blended.updater.profile.properties.keys", s))
 
       whenBundleActive {
-        new MockContainerContext(baseDir).providesService[ContainerContext]
+        new MockContainerContext(baseDir, pojoUuid).providesService[ContainerContext]
       }
     }
   }

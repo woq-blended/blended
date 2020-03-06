@@ -11,7 +11,7 @@ class ConfigLocatorSpec extends LoggingFreeSpec
   with Matchers {
 
   private val cfgDir : String = BlendedTestSupport.projectTestOutput
-  System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB")
+  System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
   System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
   val ctCtxt : ContainerContext = new ContainerContextImpl()
 

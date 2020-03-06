@@ -92,7 +92,6 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
   @BeanProperty
   override lazy val profileConfigDirectory : String = new File(profileDirectory, CONFIG_DIR).getAbsolutePath
 
-  @BeanProperty
   override lazy val containerConfig : Config = {
     val sysProps = ConfigFactory.systemProperties()
     val envProps = ConfigFactory.systemEnvironment()

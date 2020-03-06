@@ -28,7 +28,7 @@ class MgmtMockClients(config : Config) {
     @BeanProperty  override val profileDirectory: String = containerDirectory
     @BeanProperty  override val profileConfigDirectory: String = containerDirectory
     @BeanProperty  override val containerHostname: String = "localhost"
-    @BeanProperty  override val containerConfig: TSConfig = ConfigFactory.empty()
+    override val containerConfig: TSConfig = ConfigFactory.empty()
   }
 
   implicit val system : ActorSystem = ActorSystem("MgmtMockClients")

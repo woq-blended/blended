@@ -29,7 +29,7 @@ class ScepAppContainerContext(baseDir : String) extends AbstractContainerContext
 
   @BeanProperty override lazy val containerHostname : String = "localhost"
 
-  @BeanProperty override lazy val containerConfig : Config = {
+  override lazy val containerConfig : Config = {
     val sys = new Properties()
     sys.putAll(System.getProperties())
     val sysProps = Parseable.newProperties(sys, ConfigParseOptions.defaults().setOriginDescription("system properties")).parse()

@@ -67,13 +67,11 @@ trait ContainerContext {
   /**
    * Provide access to encryption and decryption facilities, optionally secured with a secret file.
    */
-  @BeanProperty
   val cryptoSupport : ContainerCryptoSupport
 
   /**
    * The application.conf, optionally modified with an overlay.
     */
-  @BeanProperty
   val containerConfig : Config
 
   /**
@@ -86,7 +84,6 @@ trait ContainerContext {
   @BeanProperty
   val uuid : String
 
-  @BeanProperty
   val properties : Map[String, String]
 
   /**

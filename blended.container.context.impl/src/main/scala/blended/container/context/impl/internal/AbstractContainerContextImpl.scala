@@ -8,10 +8,10 @@ import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import blended.updater.config.RuntimeConfig
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory}
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.beans.BeanProperty
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object AbstractContainerContextImpl {
   val PROP_BLENDED_HOME = "blended.home"
@@ -23,19 +23,23 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
 
   private[this] lazy val log : Logger = Logger(getClass().getName())
 
-  private lazy val resolver : ContainerPropertyResolver = new ContainerPropertyResolver(this)
+  private lazy val resolver : ContainerPropertyResolver = {
+    // make sure all properties are resolved correctly
+    val msg : String = toString()
+    log.debug(s"Initializing resolver for [$msg]")
+    new ContainerPropertyResolver(Some(this))
+  }
 
   /**
    * Access to a blended resolver for config values
    */
-  override def resolveString(s: String, additionalProps: Map[String, Any]): Try[AnyRef] = Try {
+  override def resolveString(s: String, additionalProps: Map[String, Any]): Try[AnyRef] = {
     resolver.resolve(s, additionalProps)
   }
 
   /**
    * Provide access to encryption and decryption facilities, optionally secured with a secret file.
    */
-  @BeanProperty
   override val cryptoSupport: ContainerCryptoSupport = {
     import AbstractContainerContextImpl._
 
@@ -81,10 +85,11 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
     }
   }
 
-  @BeanProperty
   override lazy val properties : Map[String, String] = {
 
-    val cfg : Config = ConfigLocator.safeConfig(profileConfigDirectory, "blended.container.context.conf", ConfigFactory.empty(), this)
+    val propResolver : ContainerPropertyResolver = new ContainerPropertyResolver(None)
+
+    val cfg : Config = ConfigLocator.readConfigFile(new File(profileConfigDirectory, "blended.container.context.conf"), ConfigFactory.empty())
 
     val mandatoryPropNames : Seq[String] = Option(System.getProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS)) match {
       case Some(s) => if (s.trim().isEmpty) Seq.empty else s.trim().split(",").toSeq
@@ -102,7 +107,13 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
       throw new RuntimeException(msg)
     }
 
-    props
+    props.map{ case (k,v) =>
+      propResolver.resolve(v) match {
+        case Failure(t) => throw t
+        case Success(r) =>
+          k -> r.toString()
+      }
+    }
   }
 
   override def toString: String =
