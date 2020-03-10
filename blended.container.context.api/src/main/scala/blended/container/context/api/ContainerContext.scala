@@ -3,11 +3,10 @@ package blended.container.context.api
 import java.util.concurrent.atomic.AtomicLong
 
 import blended.security.crypto.ContainerCryptoSupport
-import blended.util.logging.Logger
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 
 import scala.beans.BeanProperty
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 class PropertyResolverException(msg : String) extends Exception(msg)
 
@@ -15,20 +14,17 @@ object ContainerContext {
 
   val containerId : String = "uuid"
 
-  val transactionCounter = new AtomicLong(0)
-
-  def nextTransactionCounter : Long = {
-    if (transactionCounter.get() == Long.MaxValue) {
-      transactionCounter.set(0L)
+  object NextTransactionCounter extends (() => Long) {
+    private val transactionCounter = new AtomicLong(0)
+    def apply(): Long = {
+      transactionCounter.compareAndSet(Long.MaxValue, 0L);
+      transactionCounter.incrementAndGet()
     }
-
-    transactionCounter.incrementAndGet()
   }
 }
 
 trait ContainerContext {
 
-  private[this] val log : Logger = Logger[ContainerContext]
   /**
    * The home directory of the container, usually defined by the system property <code>blended.home</code>
    */
@@ -94,5 +90,5 @@ trait ContainerContext {
   /**
    * Provide access to the next transaction number
    */
-  def getNextTransactionCounter() : Long = ContainerContext.nextTransactionCounter
+  def getNextTransactionCounter() : Long = ContainerContext.NextTransactionCounter()
 }
