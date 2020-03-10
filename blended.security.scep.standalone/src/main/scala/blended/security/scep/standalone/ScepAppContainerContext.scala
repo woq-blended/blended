@@ -15,8 +15,6 @@ class ScepAppContainerContext(baseDir : String) extends AbstractContainerContext
   private[this] val log = Logger[this.type]
   log.debug(s"Starting [$this]")
 
-  private val SECRET_FILE_PATH : String = "blended.security.secretFile"
-
   @BeanProperty override lazy val containerDirectory : String = baseDir
 
   @BeanProperty override lazy val containerConfigDirectory : String = containerDirectory + "/etc"

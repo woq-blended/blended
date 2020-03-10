@@ -22,38 +22,39 @@ object ConfigLocator {
   private[this] val envProps : Config = ConfigFactory.systemEnvironment()
 
   private[internal] def readConfigFile(f : File, fallback : Config) : Config = {
-    val reader : Reader = new FileReader(f)
 
-    ConfigFactory.parseReader(reader)
-      .withFallback(fallback)
-      .withFallback(sysProps)
-      .withFallback(envProps)
-      .resolve()
-  }
-
-  private[internal] def evaluatedConfig(f : File, fallback : Config, ctContext : ContainerContext) : Try[Config] = Try {
-
-    if (f.exists && f.isFile && f.canRead) {
-
-      val replaced = readConfigFile(f, fallback).entrySet().asScala.map{ e =>
-        val v : AnyRef = e.getValue() match {
-          case s if s.valueType() == ConfigValueType.STRING => ctContext.resolveString(s.unwrapped().toString()).map(_.toString()).unwrap
-          case o => o.unwrapped()
-        }
-        e.getKey() -> ConfigValueFactory.fromAnyRef(v)
-      }.toMap.asJava
-
-      ConfigFactory.parseMap(replaced).resolve()
+    if (f.exists() && f.isFile() && f.canRead()) {
+      ConfigFactory.parseFile(f)
+        .withFallback(fallback)
+        .withFallback(sysProps)
+        .withFallback(envProps)
+        .resolve()
     } else {
       ConfigFactory.empty()
     }
+  }
+
+  private[internal] def evaluatedConfig(rawCfg : Config, ctContext : ContainerContext) : Try[Config] = Try {
+
+    val replaced = rawCfg.entrySet().asScala.map{ e =>
+      val v : AnyRef = e.getValue() match {
+        case s if s.valueType() == ConfigValueType.STRING =>
+          val resolved : String = ctContext.resolveString(s.unwrapped().toString()).map(_.toString()).unwrap
+          resolved
+        case o =>
+          o.unwrapped()
+      }
+      e.getKey() -> ConfigValueFactory.fromAnyRef(v)
+    }.toMap.asJava
+
+    ConfigFactory.parseMap(replaced).resolve()
   }
 
   def safeConfig(cfgDir : String, fileName: String, fallback: Config, ctContext : ContainerContext) : Config = {
     val file = new File(cfgDir, fileName)
     log.debug(s"Retrieving config from [${file.getAbsolutePath()}]")
 
-    evaluatedConfig(file, fallback, ctContext) match {
+    evaluatedConfig(readConfigFile(file, fallback), ctContext) match {
       case Failure(e) =>
         log.warn(s"Error reading [${file.getAbsolutePath()}] : [${e.getMessage()}], using empty config")
         ConfigFactory.empty()

@@ -16,6 +16,7 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
   import AbstractContainerContextImpl._
 
   private[this] lazy val log : Logger = Logger[ContainerContextImpl]
+  initialize()
 
   @BeanProperty
   override lazy val containerDirectory : String =
@@ -50,7 +51,13 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
       log.warn("Could not read launcher branding properies")
       new Properties()
     }
-    props.entrySet().asScala.map(e => e.getKey().toString() -> e.getValue().toString()).toMap
+
+    val result : Map[String, String] =
+      props.entrySet().asScala.map(e => e.getKey().toString() -> e.getValue().toString()).toMap
+
+    log.debug(s"Resolved branding properties : [${result.mkString(",")}]")
+
+    result
   }
 
   private[this] lazy val profileDir : String = {
@@ -93,11 +100,8 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
   @BeanProperty
   override lazy val profileConfigDirectory : String = new File(profileDirectory, CONFIG_DIR).getAbsolutePath
 
-  override lazy val containerConfig : Config = {
-    val sysProps = ConfigFactory.systemProperties()
-    val envProps = ConfigFactory.systemEnvironment()
-
-    val overlayConfig = brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) match {
+  private lazy val overlayConfig : Config = {
+    val cfg : Option[File] = brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) match {
       case Some(profileDir) =>
         brandingProperties.get(RuntimeConfig.Properties.OVERLAYS) match {
           case Some(overlays) =>
@@ -124,20 +128,34 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
       case _ => None
     }
 
-    log.debug(s"Overlay config: ${overlayConfig}")
-
-    val oldCfg : Config = overlayConfig match {
+    val result : Config = cfg match {
       case Some(oc) => ConfigFactory.parseFile(oc, ConfigParseOptions.defaults().setAllowMissing(false))
       case _        => ConfigFactory.empty()
     }
 
-    val appCfg : Config =
-      ConfigLocator.evaluatedConfig(new File(profileConfigDirectory, "application.conf"), ConfigFactory.empty(), this).unwrap
+    log.debug(s"After reading overlay config : $result")
 
-    oldCfg.withFallback(appCfg)
+    result
+  }
+
+  override lazy val containerConfig : Config = {
+    val sysProps = ConfigFactory.systemProperties()
+    val envProps = ConfigFactory.systemEnvironment()
+
+    val appCfg : Config =
+      ConfigLocator.readConfigFile(new File(profileConfigDirectory, "application.conf"), ConfigFactory.load())
+
+    val evaluated = ConfigLocator.evaluatedConfig(appCfg, this).unwrap
+
+    log.debug(s"After reading application.conf : $evaluated")
+
+    val resolvedCfg : Config = overlayConfig.withFallback(evaluated)
       .withFallback(sysProps)
       .withFallback(envProps)
       .resolve()
-  }
 
+    log.debug(s"Resolved container config : $resolvedCfg")
+
+    resolvedCfg
+  }
 }

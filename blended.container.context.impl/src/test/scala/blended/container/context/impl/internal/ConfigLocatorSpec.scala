@@ -14,6 +14,8 @@ class ConfigLocatorSpec extends LoggingFreeSpec
   System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
   System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
   System.setProperty("blended.container.home", BlendedTestSupport.projectTestOutput)
+  System.setProperty("COUNTRY", "cc")
+
   val ctCtxt : ContainerContext = new ContainerContextImpl()
 
   "The config locator should" - {

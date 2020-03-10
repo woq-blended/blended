@@ -7,6 +7,7 @@ import blended.updater.config.RuntimeConfig
 import blended.util.logging.Logger
 import org.scalatest.Matchers
 import blended.util.RichTry._
+import scala.collection.JavaConverters._
 
 class ContainerContextImplSpec extends LoggingFreeSpec
   with Matchers {
@@ -37,6 +38,12 @@ class ContainerContextImplSpec extends LoggingFreeSpec
       ctContext.resolveString("$[[" + ContainerContext.containerId + "]]").unwrap should be(ctContext.uuid)
 
       ctContext.containerConfig.entrySet() should not be (empty)
+
+      ctContext.containerConfig.getString("blended.sample") should be ("cc")
+      ctContext.containerConfig.getString("blended.persistence.h2.dbUserName") should be ("admin")
+
+      ctContext.containerConfig.getConfig("akka.http") should not be (empty)
+      ctContext.containerConfig.getConfig("akka.stream") should not be (empty)
     }
   }
 

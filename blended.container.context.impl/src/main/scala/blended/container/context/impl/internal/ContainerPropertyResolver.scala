@@ -3,16 +3,21 @@ package blended.container.context.impl.internal
 import java.util.regex.{Matcher, Pattern}
 
 import blended.container.context.api.{ContainerContext, PropertyResolverException, SpelFunctions}
+import blended.security.crypto.ContainerCryptoSupport
+import blended.util.RichTry._
 import blended.util.logging.Logger
 import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
-import blended.util.RichTry._
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-class ContainerPropertyResolver(ctCtxt : Option[ContainerContext]) {
+class ContainerPropertyResolver(
+  ctUuid : String,
+  properties : Map[String, String],
+  cryptoSupport : ContainerCryptoSupport
+) {
 
   private case class ExtractedElement(
     prefix : String,
@@ -20,6 +25,8 @@ class ContainerPropertyResolver(ctCtxt : Option[ContainerContext]) {
     postfix : String,
     modifier : String = ""
   )
+
+  private[this] var ctCtxt : Option[ContainerContext] = None
 
   type Resolver = String => Try[String]
   type Modifier = (String, String) => Try[String]
@@ -47,6 +54,8 @@ class ContainerPropertyResolver(ctCtxt : Option[ContainerContext]) {
   private[this] val parser = new SpelExpressionParser()
 
   private[this] val elCache : mutable.Map[String, Expression] = mutable.Map.empty
+
+  private[internal] def setCtCtxt(ctxt : ContainerContext) : Unit = ctCtxt = Some(ctxt)
 
   private[this] def parseExpression(exp : String) : Try[Expression] = Try {
 
@@ -137,11 +146,8 @@ class ContainerPropertyResolver(ctCtxt : Option[ContainerContext]) {
   )
 
   private[this] val resolver : Map[String, Resolver] = Map(
-    ContainerContext.containerId -> { _ => ctCtxt match {
-      case None => Failure(new PropertyResolverException("Could not resolve container uuid"))
-      case Some(c) => Success(c.uuid)
-    }
-  })
+    ContainerContext.containerId -> { _ => Success(ctUuid) }
+  )
 
   private[this] def extractModifier(s : String) : Option[(Modifier, String)] = {
     val pos = s.indexOf(":")
@@ -169,11 +175,9 @@ class ContainerPropertyResolver(ctCtxt : Option[ContainerContext]) {
       case Some(m) => m
     }
 
-    val props : Map[String, String] = ctCtxt.map(_.properties).getOrElse(Map.empty)
-
     // First, we resolve the rule from the environment vars or System properties
     // The resolution is mandatory
-    val applyRules : Try[String] = props.get(ruleName) match {
+    val applyRules : Try[String] = properties.get(ruleName) match {
       case Some(s) => Success(s)
       case None =>
         Option(
@@ -214,15 +218,13 @@ class ContainerPropertyResolver(ctCtxt : Option[ContainerContext]) {
       val e = extractVariableElement(line, resolveStartDelim, resolveEndDelim)
       e.modifier match {
         case "delayed" =>
-          resolve(e.prefix).unwrap + e.pattern + resolve(e.postfix).unwrap
+          resolve(e.prefix, additionalProps).unwrap + e.pattern + resolve(e.postfix, additionalProps).unwrap
 
-        case "encrypted" => ctCtxt match {
-          case None =>
-            throw new PropertyResolverException(s"Could not decrypt config value [${e.pattern}]")
-          case Some(c) =>
-            val decrypted : String = c.cryptoSupport.decrypt(e.pattern).get
-            resolve(e.prefix).unwrap.toString() + resolve(decrypted).unwrap.toString() + resolve(e.postfix).unwrap.toString()
-        }
+        case "encrypted" =>
+          val decrypted : String = cryptoSupport.decrypt(e.pattern).get
+          resolve(e.prefix, additionalProps).unwrap.toString() +
+            resolve(decrypted, additionalProps).unwrap.toString() +
+            resolve(e.postfix, additionalProps).unwrap.toString()
 
         case _ =>
           // First we resolve the inner expression to resolve any nested expressions

@@ -16,18 +16,27 @@ import scala.util.{Failure, Success, Try}
 object AbstractContainerContextImpl {
   val PROP_BLENDED_HOME = "blended.home"
   val CONFIG_DIR = "etc"
-  val SECRET_FILE_PATH : String = "blended.security.secretFile"
+  val SECRET_FILE_PROP : String = "blended.security.secret"
 }
 
 abstract class AbstractContainerContextImpl extends ContainerContext {
 
   private[this] lazy val log : Logger = Logger(getClass().getName())
 
+  def initialize() : Unit = {
+    // make sure we initialize the config
+    val cfg = containerConfig
+    // then inject the context into the property resolver
+    resolver.setCtCtxt(this)
+  }
+
   private lazy val resolver : ContainerPropertyResolver = {
     // make sure all properties are resolved correctly
-    val msg : String = toString()
-    log.debug(s"Initializing resolver for [$msg]")
-    new ContainerPropertyResolver(Some(this))
+    new ContainerPropertyResolver(
+      ctUuid = uuid,
+      properties = properties,
+      cryptoSupport = cryptoSupport
+    )
   }
 
   /**
@@ -43,11 +52,7 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
   override val cryptoSupport: ContainerCryptoSupport = {
     import AbstractContainerContextImpl._
 
-    val cipherSecretFile : String = if (containerConfig.hasPath(SECRET_FILE_PATH)) {
-      containerConfig.getString(SECRET_FILE_PATH)
-    } else {
-      "secret"
-    }
+    val cipherSecretFile : String = System.getProperty(SECRET_FILE_PROP, "secret")
 
     BlendedCryptoSupport.initCryptoSupport(
       new File(containerConfigDirectory, cipherSecretFile).getAbsolutePath()
@@ -66,11 +71,17 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
       profileConfigDirectory, s"$id.conf", containerConfig, this
     )
 
-    if (cfg.isEmpty()) {
-      if (containerConfig.hasPath(id)) containerConfig.getConfig(id) else ConfigFactory.empty()
+    val result : Config = if (cfg.isEmpty()) {
+      if (containerConfig.hasPath(id)) {
+        containerConfig.getConfig(id)
+      } else {
+        ConfigFactory.empty()
+      }
     } else {
       cfg
     }
+
+    result
   }
 
   @BeanProperty
@@ -87,7 +98,11 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
 
   override lazy val properties : Map[String, String] = {
 
-    val propResolver : ContainerPropertyResolver = new ContainerPropertyResolver(None)
+    val propResolver : ContainerPropertyResolver = new ContainerPropertyResolver(
+      ctUuid = uuid,
+      properties = Map.empty,
+      cryptoSupport = cryptoSupport
+    )
 
     val cfg : Config = {
       val f : File = new File(profileConfigDirectory, "blended.container.context.conf")
@@ -126,5 +141,6 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
   override def toString: String =
     s"${getClass().getSimpleName()}(containerDir = $containerDirectory, containerConfigDirectory = $containerConfigDirectory," +
     s"profileDirectory = $profileDirectory, profileConfigDirectory = $profileConfigDirectory" +
-    s"containerLogDirectory = $containerLogDirectory, hostName = $containerHostname, uuid = $uuid, properties = (${properties.mkString(",")})"
+    s"containerLogDirectory = $containerLogDirectory, hostName = $containerHostname, uuid = $uuid, properties = (${properties.mkString(",")}" +
+    s", config size = ${containerConfig.entrySet().size()} keys)"
 }
