@@ -63,7 +63,7 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
   override def getConfig(id: String): Config = {
 
     val cfg : Config = ConfigLocator.safeConfig(
-      containerConfigDirectory, s"$id.conf", containerConfig, this
+      profileConfigDirectory, s"$id.conf", containerConfig, this
     )
 
     if (cfg.isEmpty()) {
@@ -89,7 +89,14 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
 
     val propResolver : ContainerPropertyResolver = new ContainerPropertyResolver(None)
 
-    val cfg : Config = ConfigLocator.readConfigFile(new File(profileConfigDirectory, "blended.container.context.conf"), ConfigFactory.empty())
+    val cfg : Config = {
+      val f : File = new File(profileConfigDirectory, "blended.container.context.conf")
+      if (f.exists()) {
+        ConfigLocator.readConfigFile(new File(profileConfigDirectory, "blended.container.context.conf"), ConfigFactory.empty())
+      } else {
+        ConfigFactory.empty()
+      }
+    }
 
     val mandatoryPropNames : Seq[String] = Option(System.getProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS)) match {
       case Some(s) => if (s.trim().isEmpty) Seq.empty else s.trim().split(",").toSeq
@@ -117,6 +124,7 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
   }
 
   override def toString: String =
-    s"${getClass().getSimpleName()}(containerDir = $containerDirectory, containerConfigDirectory = $containerConfigDirectory)," +
+    s"${getClass().getSimpleName()}(containerDir = $containerDirectory, containerConfigDirectory = $containerConfigDirectory," +
+    s"profileDirectory = $profileDirectory, profileConfigDirectory = $profileConfigDirectory" +
     s"containerLogDirectory = $containerLogDirectory, hostName = $containerHostname, uuid = $uuid, properties = (${properties.mkString(",")})"
 }

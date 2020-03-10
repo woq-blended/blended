@@ -131,7 +131,7 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
     }
 
     val appCfg : Config =
-      ConfigLocator.safeConfig(profileConfigDirectory, "application.conf", ConfigFactory.empty(), this)
+      ConfigLocator.evaluatedConfig(profileConfigDirectory, "application.conf", ConfigFactory.empty(), this)
 
     oldCfg.withFallback(appCfg)
       .withFallback(sysProps)

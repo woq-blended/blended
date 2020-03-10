@@ -53,7 +53,7 @@ trait ContainerContext {
 
   /**
    * The config directory for all profile specific configuration files. Usually this is
-   * <code>getProfileDirectory()/etc</code>. This is the main config directory.
+   * <code>profileDirectory/etc</code>. This is the main config directory.
    */
   @BeanProperty
   val profileConfigDirectory : String

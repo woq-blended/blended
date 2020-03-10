@@ -20,6 +20,8 @@ class ContainerContextImplSpec extends LoggingFreeSpec
       System.setProperty("COUNTRY", "cc")
       System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
       System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
+      System.setProperty("blended.container.home", BlendedTestSupport.projectTestOutput)
+
       val ctContext : ContainerContext = new ContainerContextImpl()
 
       log.info(s"Container Context : [$ctContext]")
@@ -33,6 +35,8 @@ class ContainerContextImplSpec extends LoggingFreeSpec
       ctContext.uuid should be ("context")
 
       ctContext.resolveString("$[[" + ContainerContext.containerId + "]]").unwrap should be(ctContext.uuid)
+
+      ctContext.containerConfig.entrySet() should not be (empty)
     }
   }
 

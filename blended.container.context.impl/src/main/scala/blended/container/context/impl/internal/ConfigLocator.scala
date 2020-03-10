@@ -1,6 +1,6 @@
 package blended.container.context.impl.internal
 
-import java.io.File
+import java.io.{File, FileReader, Reader}
 
 import blended.container.context.api.ContainerContext
 import blended.util.logging.Logger
@@ -21,11 +21,15 @@ object ConfigLocator {
   private[this] val sysProps : Config = ConfigFactory.systemProperties()
   private[this] val envProps : Config = ConfigFactory.systemEnvironment()
 
-  private[internal] def readConfigFile(f : File, fallback : Config) : Config = ConfigFactory.parseFile(f)
-    .withFallback(fallback)
-    .withFallback(sysProps)
-    .withFallback(envProps)
-    .resolve()
+  private[internal] def readConfigFile(f : File, fallback : Config) : Config = {
+    val reader : Reader = new FileReader(f)
+
+    ConfigFactory.parseReader(reader)
+      .withFallback(fallback)
+      .withFallback(sysProps)
+      .withFallback(envProps)
+      .resolve()
+  }
 
   private[internal] def evaluatedConfig(f : File, fallback : Config, ctContext : ContainerContext) : Try[Config] = Try {
 
@@ -51,7 +55,7 @@ object ConfigLocator {
 
     evaluatedConfig(file, fallback, ctContext) match {
       case Failure(e) =>
-        log.warn(s"Error reading [$fileName] : [${e.getMessage()}], using empty config")
+        log.warn(s"Error reading [${file.getAbsolutePath()}] : [${e.getMessage()}], using empty config")
         ConfigFactory.empty()
       case Success(cfg) =>
         log.debug(s"Resolved config from [${file.getAbsolutePath()}]")
