@@ -8,9 +8,8 @@ import blended.security.ssl.{CertificateManager, MemoryKeystore}
 import blended.util.logging.Logger
 import domino.DominoActivator
 import org.apache.felix.connect.launch.{ClasspathScanner, PojoServiceRegistryFactory}
-
 import scala.collection.JavaConverters._
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
@@ -19,11 +18,10 @@ import scala.util.{Failure, Success}
  * @param salt
  * @param baseDir0 The base dir, used for the internal blended container configuration (etc, log)
  */
-class CertRefresher(salt : String, baseDir0 : File = new File(".")) {
+class CertRefresher(salt: String, baseDir0: File = new File("."))
+                   (implicit executionContext: ExecutionContext) {
 
   private[this] val log = Logger[CertRefresher]
-
-  implicit val executionContext = scala.concurrent.ExecutionContext.global
 
   val baseDir = {
     val baseDir = baseDir0.getAbsolutePath()
@@ -58,7 +56,7 @@ class CertRefresher(salt : String, baseDir0 : File = new File(".")) {
     val ctxtProvider = new DominoActivator {
       whenBundleActive {
         log.debug(s"Starting ScepAppContainerContext with baseDir=${baseDir}")
-        val ctCtxt = new ScepAppContainerContext(baseDir)
+        val ctCtxt = new ScepAppContainerContext(baseDir, salt)
         ctCtxt.providesService[ContainerContext]
         log.debug(s"Provided ContainerContext [$ctCtxt]")
       }
@@ -75,11 +73,11 @@ class CertRefresher(salt : String, baseDir0 : File = new File(".")) {
     registry
   }
 
-  def stop() : Unit = {
+  def stop(): Unit = {
     registry.getBundleContext().getBundle().stop(0)
   }
 
-  def checkCert() : Future[MemoryKeystore] = {
+  def checkCert(): Future[MemoryKeystore] = {
 
     val promise = Promise[MemoryKeystore]()
 

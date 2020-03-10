@@ -3,9 +3,14 @@ package blended.security.scep.standalone
 import java.io.File
 import java.net.{InetAddress, URL}
 import java.nio.file.{Files, StandardCopyOption}
-import java.util.concurrent.TimeoutException
+import java.util.concurrent.{TimeUnit, TimeoutException}
+
+import scala.concurrent.duration.FiniteDuration
+import scala.util.Try
+import scala.util.control.NonFatal
 
 import blended.testsupport.TestFile
+import blended.testsupport.retry.Retry
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
@@ -65,41 +70,49 @@ class ScepClientAppTest extends LoggingFreeSpec with TestFile with Matchers {
     val confFileName = System.getenv(envValName)
 
     s"should get a test certificate from online-scep server (TEST_SCEP_CONFIGFILE=${confFileName})" in {
-      assume(confFileName !== null, clue)
-      val confFile = new File(confFileName)
-      assume(confFile.exists(), clue)
+      def doTest(): Unit = {
 
-      val url = ConfigFactory.parseFile(confFile).getString("blended.security.scep.scepUrl")
-      val host = new URL(url).getHost()
-      assume(InetAddress.getByName(host).isReachable(2000), "\nScep host is not reachable")
+        assume(confFileName !== null, clue)
+        val confFile = new File(confFileName)
+        assume(confFile.exists(), clue)
 
-      withTestDir() { dir =>
-        val etc = new File(dir, "etc")
-        etc.mkdirs()
-        val targetConfFile = new File(etc, "application.conf")
-        log.info(s"Copying config file from [${confFile}] to [${targetConfFile}]")
-        Files.copy(confFile.toPath(), targetConfFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        val url = ConfigFactory.parseFile(confFile).getString("blended.security.scep.scepUrl")
+        val host = new URL(url).getHost()
+        assume(InetAddress.getByName(host).isReachable(2000), "\nScep host is not reachable")
 
-        val ex = intercept[ExitAppException] {
-          ScepClientApp.run(Array("--refresh-certs", "--base-dir", dir.getAbsolutePath()))
-        }
-        assert(ex.exitCode === 0)
-        val keystorefile = new File(etc, "keystore")
-        assert(keystorefile.exists())
+        withTestDir() { dir =>
+          val etc = new File(dir, "etc")
+          etc.mkdirs()
+          val targetConfFile = new File(etc, "application.conf")
+          log.info(s"Copying config file from [${confFile}] to [${targetConfFile}]")
+          Files.copy(confFile.toPath(), targetConfFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
 
-        // try to open the keystore with keytool
-        val proc: CommandResult = os.proc("keytool", "-list", "-keystore", keystorefile.getAbsolutePath()).call(
-          env = Map("LC_ALL" -> "c"),
-          stdin = os.ProcessInput.SourceInput("e2e63a747c4c633e11d5f41f0297c020")
-        )
-        val out = proc.out.string
-        out should include("Keystore type: PKCS12")
-        out should include("Keystore provider: SUN")
-        out should include("Your keystore contains 1 entry")
-        out should include("server1,")
+          val ex = intercept[ExitAppException] {
+            ScepClientApp.run(Array("--refresh-certs", "--base-dir", dir.getAbsolutePath()))
+          }
+          assert(ex.exitCode === 0)
+          val keystorefile = new File(etc, "keystore")
+          assert(keystorefile.exists())
 
-      }(TestFile.DeleteWhenNoFailure)
+          // try to open the keystore with keytool
+          val proc: CommandResult = os.proc("keytool", "-list", "-keystore", keystorefile.getAbsolutePath()).call(
+            env = Map("LC_ALL" -> "c"),
+            stdin = os.ProcessInput.SourceInput("e2e63a747c4c633e11d5f41f0297c020")
+          )
+          val out = proc.out.string
+          out should include("Keystore type: PKCS12")
+          out should include("Keystore provider: SUN")
+          out should include("Your keystore contains 1 entry")
+          out should include("server1,")
 
+        }(TestFile.DeleteWhenNoFailure)
+      }
+
+      // first test certs takes sometimes very long
+      Try(doTest())
+        .recoverWith{ case NonFatal(_) => Thread.sleep(1000); Try(doTest())}
+        .recoverWith{ case NonFatal(_) => Thread.sleep(5000); Try(doTest())}
+        .get
     }
   }
 
