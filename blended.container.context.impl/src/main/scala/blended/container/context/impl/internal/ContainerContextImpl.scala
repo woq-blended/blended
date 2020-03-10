@@ -6,6 +6,7 @@ import java.util.Properties
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+import blended.util.RichTry._
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
@@ -131,7 +132,7 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
     }
 
     val appCfg : Config =
-      ConfigLocator.evaluatedConfig(profileConfigDirectory, "application.conf", ConfigFactory.empty(), this)
+      ConfigLocator.evaluatedConfig(new File(profileConfigDirectory, "application.conf"), ConfigFactory.empty(), this).unwrap
 
     oldCfg.withFallback(appCfg)
       .withFallback(sysProps)

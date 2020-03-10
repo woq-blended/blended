@@ -14,6 +14,7 @@ class PropertyResolverSpec extends FreeSpec
   System.setProperty("COUNTRY", "cc")
   System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
   System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
+  System.setProperty("blended.container.home", BlendedTestSupport.projectTestOutput)
   val ctCtxt : ContainerContext = new ContainerContextImpl()
 
   System.setProperty("sysProp", "test")
@@ -44,7 +45,6 @@ class PropertyResolverSpec extends FreeSpec
       ctCtxt.resolveString("$[[foo]]").unwrap should be("bar")
       ctCtxt.resolveString("$[[foo]]$[[foo]]").unwrap should be("barbar")
       ctCtxt.resolveString("test$[[foo]]").unwrap should be("testbar")
-
     }
 
     "should replace a nested value in the replacement String" in {
