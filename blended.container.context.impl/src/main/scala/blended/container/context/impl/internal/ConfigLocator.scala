@@ -24,7 +24,7 @@ object ConfigLocator {
   private[internal] def readConfigFile(f : File, fallback : Config) : Config = {
 
     if (f.exists() && f.isFile() && f.canRead()) {
-      ConfigFactory.parseFile(f)
+      ConfigFactory.parseFile(f, ConfigParseOptions.defaults().setAllowMissing(false))
         .withFallback(fallback)
         .withFallback(sysProps)
         .withFallback(envProps)

@@ -12,7 +12,7 @@ import scala.beans.BeanProperty
 
 class MockContainerContext(baseDir : String, ctid : String) extends AbstractContainerContextImpl {
 
-  private val SECRET_FILE_PATH : String = "blended.security.secretFile"
+  initialize()
 
   @BeanProperty
   override lazy val containerDirectory : String = baseDir

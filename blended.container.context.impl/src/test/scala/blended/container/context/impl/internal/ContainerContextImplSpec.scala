@@ -7,6 +7,8 @@ import blended.updater.config.RuntimeConfig
 import blended.util.logging.Logger
 import org.scalatest.Matchers
 import blended.util.RichTry._
+import com.typesafe.config.Config
+
 import scala.collection.JavaConverters._
 
 class ContainerContextImplSpec extends LoggingFreeSpec
@@ -44,6 +46,11 @@ class ContainerContextImplSpec extends LoggingFreeSpec
 
       ctContext.containerConfig.getConfig("akka.http") should not be (empty)
       ctContext.containerConfig.getConfig("akka.stream") should not be (empty)
+
+      val cfg : Config = ctContext.containerConfig.getConfig("akka.ssl-config")
+      cfg should not be (empty)
+
+      println(cfg.entrySet().asScala.mkString("\n"))
     }
   }
 
