@@ -27,7 +27,7 @@ object SelfSignedTest {
     val keystore = new JavaKeystore(new File("/tmp/keystore"), "test".toCharArray, Some("test".toCharArray))
     val memStore = new MemoryKeystore(Map.empty)
 
-    val cert : CertificateHolder = provider.refreshCertificate(None, selfSignedCfg.commonNameProvider).get.copy(changed = true)
+    val cert : CertificateHolder = provider.refreshCertificate(None, selfSignedCfg.commonNameProvider).get
     println(cert.dump)
 
     keystore.saveKeyStore(memStore.update("cert", cert).get)

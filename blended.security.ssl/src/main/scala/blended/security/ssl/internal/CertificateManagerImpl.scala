@@ -128,12 +128,15 @@ class CertificateManagerImpl(
 
     // first refresh the server certificates if required
     log.debug("Loading keystore...")
-    val ks = loadKeyStore().get
+    val ks: Option[MemoryKeystore] = loadKeyStore().get
     log.debug(s"Loaded keystore [$ks]")
 
     ks.map { ms =>
       log.debug(s"Refreshing certificates for keystore [$ms]")
       val changedKs = ms.refreshCertificates(cfg.certConfigs, providerMap).get
+      log.debug(s"Changed certificate aliases [${changedKs.certificates.collect{
+        case c if c._2.change.changed => c._1 -> c._2.change
+      }}]")
 
       log.debug(s"Saving keystore...")
       val jks = javaKeystore.get
@@ -141,7 +144,7 @@ class CertificateManagerImpl(
         case Failure(t) =>
           log.warn(t)(s"Failed to save keystore to file [${jks.keystore.getAbsolutePath()}] : [${t.getMessage()}]")
           throw t
-        case Success(keyStore) => keyStore
+        case Success(_) => changedKs
       }
     }
   }

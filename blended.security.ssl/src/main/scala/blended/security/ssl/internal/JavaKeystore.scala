@@ -4,9 +4,8 @@ import java.io.{File, FileInputStream, FileOutputStream}
 import java.security.cert.X509Certificate
 import java.security.{KeyStore, PrivateKey, PublicKey}
 
-import blended.security.ssl.{CertificateHolder, InconsistentKeystoreException, MemoryKeystore}
+import blended.security.ssl.{CertificateChange, CertificateHolder, InconsistentKeystoreException, MemoryKeystore}
 import blended.util.logging.Logger
-
 import scala.collection.JavaConverters._
 import scala.util.Try
 
@@ -32,7 +31,7 @@ class JavaKeystore(
 
     val ks : KeyStore = loadKeyStoreFromFile().get
 
-    ms.certificates.filter(_._2.changed).foreach {
+    ms.certificates.filter(_._2.change.changed).foreach {
       case (alias, cert) =>
         keypass match {
           case None =>
@@ -46,7 +45,7 @@ class JavaKeystore(
     }
 
     saveKeyStoreToFile(ks).get
-    MemoryKeystore(ms.certificates.mapValues(_.copy(changed = false)))
+    MemoryKeystore(ms.certificates.mapValues(_.copy(change = CertificateChange.Unchanged)))
   }
 
   private[ssl] def loadKeyStoreFromFile() : Try[KeyStore] = Try {

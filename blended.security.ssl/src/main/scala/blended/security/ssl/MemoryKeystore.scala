@@ -14,19 +14,39 @@ case class MemoryKeystore(certificates : Map[String, CertificateHolder]) {
   private[this] val log : Logger = Logger[MemoryKeystore]
   private[this] val millisPerDay : Long = 1.day.toMillis
 
-  val changedAliases : List[String] = certificates.filter { case (_, v) => v.changed }.keys.toList
+  /**
+   * Return those aliases of certificates which were updated or newly added.
+   */
+  def changedAliases : List[String] = certificates.collect {
+    case (key, CertificateHolder(_, _, _, change)) if change.changed => key
+  }.toList
 
-  // The in memory keystore is consistent if and only if all certificates have a private key defined
-  // or none of it does have a private key defined.
+  /**
+   * The in memory keystore is consistent if and only if all certificates have a private key defined
+   * or none of it does have a private key defined.
+   */
   def consistent : Boolean = {
     certificates.values.forall(_.privateKey.isDefined) || certificates.values.forall(_.privateKey.isEmpty)
   }
 
+  /**
+   * Updates/replaces the certificate (chain) for the given alias and updates
+   * the `change` flag of the associated [[CertificateHolder]].
+   */
   def update(alias : String, cert : CertificateHolder) : Try[MemoryKeystore] = Try {
 
-    log.info(s"Updating memory keystore [alias=$alias]")
-    val result : MemoryKeystore =
-      MemoryKeystore(certificates.filterKeys(_ != alias) + (alias -> cert.copy(changed = true)))
+    val newState = certificates.get(alias) match {
+      case None => CertificateChange.Added
+      case Some(oldCert) =>
+        oldCert match {
+          case CertificateHolder(_, _, _, CertificateChange.Unchanged) =>
+            if (oldCert.dump == cert.dump) CertificateChange.Unchanged
+            else CertificateChange.Updated
+          case CertificateHolder(_, _, _, change) => change
+        }
+    }
+    log.info(s"Updating memory keystore [alias=$alias] and change state [${newState}]")
+    val result : MemoryKeystore = MemoryKeystore(certificates + (alias -> cert.copy(change = newState)))
 
     if (result.consistent) {
       log.info(s"Updated keystore aliases : [${result.certificates.keys}]")
