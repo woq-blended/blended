@@ -54,6 +54,8 @@ Usage: java -jar scep-client.jar [options]
 Options:
   --base-dir dir      Alternative base directory (aka scepclient.home,
                       used to lookup the etc directory)
+  --expect-refresh    Expected a refreshed certificate. If no certificate was
+                      refreshed the application will exit with exit code 5
   --help,-h           Show this help
   --password,-p seed  Generate a password from a given seed and salt.
                       The salt is either implicitly set or explicitly
@@ -78,6 +80,18 @@ After the certificates were initially fetched and checked successful, the applic
 In case of an error or if one of the certificates were no longer valid, the application will return with an exit code other than `0`.
 
 If an error occurs while connection to the SCEP server or processing the certificates, _but_ all certificate are still valid, the application will return with exit code `0`.
+
+Please note, that even though the scep-client is successfully communicating with the server and will get a certificate,
+it must not necessarily get a _new_ certificate.
+It is up to the server if you receive a newly generated certificate or an older one.
+Just configuring a higher value for `minValidDays` does not guarantee a fresher certificate.
+You can use the option `expect-refresh` to signal the case that no new certificate was received.
+It will exit with an exit code other that `0` (currently `5`, but this may change in future).
+This allows you to chain the scep-client with you server refresh logic only in case some certificate has changed:
+
+----
+scep-client --refresh --expect-refresh && do-some-server-refresh-logic.sh
+----
 
 You can inspect the application log file `log/scep-client.log` for processing and error details.
 
