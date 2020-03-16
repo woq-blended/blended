@@ -66,8 +66,8 @@ class CertRefresher(salt: String, baseDir0: File = new File("."))
       ctxtProvider.start(registry.getBundleContext())
     } catch {
       case NonFatal(e) =>
-        log.warn(s"Failed to start Application Context : [${e.getMessage()}]")
-        throw new ExitAppException(exitCode = 1, errMsg = Some(e.getMessage()), cause = e)
+        log.warn(s"Failed to start Application Context. ${e.getMessage()}")
+        throw new ExitAppException(exitCode = ExitCode.Error, errMsg = Some(e.getMessage()), cause = e)
     }
 
     registry
