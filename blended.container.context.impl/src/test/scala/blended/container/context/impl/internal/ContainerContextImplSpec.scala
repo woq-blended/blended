@@ -27,6 +27,9 @@ class ContainerContextImplSpec extends LoggingFreeSpec
 
       val ctContext : ContainerContext = new ContainerContextImpl()
 
+      val cfg : Config = ctContext.getConfig("ssl-config.keyManager")
+      cfg.getConfig("prototype") should not be (empty)
+      println(cfg.root().render())
       log.info(s"Container Context : [$ctContext]")
 
       ctContext.properties should have size(9)
@@ -46,12 +49,6 @@ class ContainerContextImplSpec extends LoggingFreeSpec
 
       ctContext.containerConfig.getConfig("akka.http") should not be (empty)
       ctContext.containerConfig.getConfig("akka.stream") should not be (empty)
-
-      val cfg : Config = ctContext.containerConfig.getConfig("akka.ssl-config")
-      cfg should not be (empty)
-
-      println(cfg.entrySet().asScala.mkString("\n"))
     }
   }
-
 }

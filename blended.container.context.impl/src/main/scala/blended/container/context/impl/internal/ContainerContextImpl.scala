@@ -133,7 +133,7 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
       case _        => ConfigFactory.empty()
     }
 
-    log.debug(s"After reading overlay config : $result")
+    log.trace(s"After reading overlay config : $result")
 
     result
   }
@@ -143,15 +143,23 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
     val envProps = ConfigFactory.systemEnvironment()
 
     val appCfg : Config =
-      ConfigLocator.readConfigFile(new File(profileConfigDirectory, "application.conf"), ConfigFactory.load())
+      ConfigFactory.parseFile(
+        new File(profileConfigDirectory, "application.conf"),
+        ConfigParseOptions.defaults().setAllowMissing(false)
+      ).withFallback(sysProps).withFallback(envProps).resolve()
+
+    val nullKeys =
+      ConfigLocator.fullKeyset("", appCfg).filter(s => appCfg.getIsNull(s))
+        .map(s => (s -> null)).toMap.asJava
 
     val evaluated = ConfigLocator.evaluatedConfig(appCfg, this).unwrap
 
-    log.debug(s"After reading application.conf : $evaluated")
+    log.trace(s"After reading application.conf : $evaluated")
 
     val resolvedCfg : Config = overlayConfig.withFallback(evaluated)
       .withFallback(sysProps)
       .withFallback(envProps)
+      .withFallback(ConfigFactory.parseMap(nullKeys))
       .resolve()
 
     log.debug(s"Resolved container config : $resolvedCfg")

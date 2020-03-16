@@ -73,6 +73,7 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
 
     val result : Config = if (cfg.isEmpty()) {
       if (containerConfig.hasPath(id)) {
+        log.debug(s"Resolving config for [$id] from application config")
         containerConfig.getConfig(id)
       } else {
         ConfigFactory.empty()

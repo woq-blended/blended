@@ -8,6 +8,7 @@ import com.typesafe.config._
 import blended.util.RichTry._
 
 import scala.collection.JavaConverters._
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -34,8 +35,25 @@ object ConfigLocator {
     }
   }
 
-  private[internal] def evaluatedConfig(rawCfg : Config, ctContext : ContainerContext) : Try[Config] = Try {
+  private[internal] def fullKeyset(prefix : String, cfg: Config) : List[String] = {
+    val keySet : List[String] = cfg.root().keySet().asScala.toList
 
+    val toAdd : List[List[String]] = keySet.map{ s =>
+      if (cfg.getIsNull(s)) {
+        List(prefix + s)
+      } else {
+        try {
+          fullKeyset(prefix + s + ".", cfg.getConfig(s))
+        } catch {
+          case NonFatal(_) => List(prefix + s)
+        }
+      }
+    }
+
+    toAdd.flatten
+  }
+
+  private[internal] def evaluatedConfig(rawCfg : Config, ctContext : ContainerContext) : Try[Config] = Try {
     val replaced = rawCfg.entrySet().asScala.map{ e =>
       val v : AnyRef = e.getValue() match {
         case s if s.valueType() == ConfigValueType.STRING =>
@@ -59,7 +77,6 @@ object ConfigLocator {
         log.warn(s"Error reading [${file.getAbsolutePath()}] : [${e.getMessage()}], using empty config")
         ConfigFactory.empty()
       case Success(cfg) =>
-        log.debug(s"Resolved config from [${file.getAbsolutePath()}]")
         cfg
     }
   }
