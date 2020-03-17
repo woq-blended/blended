@@ -9,7 +9,7 @@ import org.scalatest.Matchers
 import blended.util.RichTry._
 import com.typesafe.config.Config
 
-import scala.collection.JavaConverters._
+import scala.util.Try
 
 class ContainerContextImplSpec extends LoggingFreeSpec
   with Matchers {
@@ -29,8 +29,11 @@ class ContainerContextImplSpec extends LoggingFreeSpec
 
       val cfg : Config = ctContext.getConfig("ssl-config.keyManager")
       cfg.getConfig("prototype") should not be (empty)
-      println(cfg.root().render())
       log.info(s"Container Context : [$ctContext]")
+
+      val clientCfg : Config = ctContext.getConfig("akka.http.host-connection-pool")
+      clientCfg should not be (empty)
+      assert( Try { clientCfg.getConfig("client")}.isSuccess )
 
       ctContext.properties should have size(9)
       ctContext.properties.get("foo") should be (Some("bar"))

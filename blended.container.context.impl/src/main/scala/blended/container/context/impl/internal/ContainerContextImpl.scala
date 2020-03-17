@@ -10,6 +10,7 @@ import blended.util.RichTry._
 
 import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
+import scala.util.{Success, Try}
 
 class ContainerContextImpl extends AbstractContainerContextImpl {
 
@@ -148,9 +149,18 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
         ConfigParseOptions.defaults().setAllowMissing(false)
       ).withFallback(sysProps).withFallback(envProps).resolve()
 
-    val nullKeys =
-      ConfigLocator.fullKeyset("", appCfg).filter(s => appCfg.getIsNull(s))
-        .map(s => (s -> null)).toMap.asJava
+    // we need to make sure that all keys are available in the resulting config,
+    // even if they point to null values or empty configs
+    val allKeys : List[String] = ConfigLocator.fullKeyset("", appCfg)
+
+    val nullKeys = allKeys.filter(s => appCfg.getIsNull(s)).map(s => (s -> null)).toMap.asJava
+
+    val emptyKeys = allKeys.filter { s =>
+      Try { appCfg.getConfig(s) } match {
+        case Success(c) => c.isEmpty()
+        case _ => false
+      }
+    }.map(s => s -> ConfigFactory.empty().root()).toMap.asJava
 
     val evaluated = ConfigLocator.evaluatedConfig(appCfg, this).unwrap
 
@@ -160,6 +170,7 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
       .withFallback(sysProps)
       .withFallback(envProps)
       .withFallback(ConfigFactory.parseMap(nullKeys))
+      .withFallback(ConfigFactory.parseMap(emptyKeys))
       .resolve()
 
     log.debug(s"Resolved container config : $resolvedCfg")

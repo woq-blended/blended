@@ -43,7 +43,7 @@ object ConfigLocator {
         List(prefix + s)
       } else {
         try {
-          fullKeyset(prefix + s + ".", cfg.getConfig(s))
+          List(prefix + s) ++ fullKeyset(prefix + s + ".", cfg.getConfig(s))
         } catch {
           case NonFatal(_) => List(prefix + s)
         }

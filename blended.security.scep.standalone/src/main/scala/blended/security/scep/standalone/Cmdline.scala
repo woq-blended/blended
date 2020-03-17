@@ -65,10 +65,10 @@ class Cmdline {
   var _baseDir: String = _
   def baseDir: Option[String] = Option(_baseDir)
 
+  // Must use the hardcoded exit code here, otherwise doc generation fails
   @CmdOption(
     names = Array("--expect-refresh"),
-    description = "Expected a refreshed certificate. If no certificate was refreshed the application will exit with exit code " +
-      ExitCode.StringCode_NoCertsRefreshed,
+    description = "Expected a refreshed certificate. If no certificate was refreshed the application will exit with exit code 5",
     requires = Array("--refresh-certs")
   )
   var expectRefresh: Boolean = false
