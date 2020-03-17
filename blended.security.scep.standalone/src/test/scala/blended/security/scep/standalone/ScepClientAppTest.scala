@@ -14,7 +14,7 @@ import blended.testsupport.retry.Retry
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
-import de.tototec.cmdoption.CmdlineParser
+import de.tototec.cmdoption.{CmdOption, CmdlineParser}
 import org.scalatest.Matchers
 import os.CommandResult
 
@@ -44,6 +44,13 @@ class ScepClientAppTest extends LoggingFreeSpec with TestFile with Matchers {
       }
       assert(ex.exitCode === ExitCode.InvalidCmdline)
       assert(ex.errMsg !== None)
+    }
+
+    "hardcoded description contains correct exit code" in {
+      val anno = classOf[Cmdline].getDeclaredFields()
+        .flatMap(f => Option(f.getAnnotation(classOf[CmdOption])))
+        .find(a => a.names().contains("--expect-refresh"))
+      anno.get.description() should endWith(s" ${ExitCode.NoCertsRefreshed.code}")
     }
 
   }
