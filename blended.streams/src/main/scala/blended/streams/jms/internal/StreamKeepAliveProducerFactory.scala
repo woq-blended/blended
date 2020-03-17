@@ -19,7 +19,7 @@ class StreamKeepAliveProducerFactory(
 
   private var stream : Option[ActorRef] = None
 
-  private val corrId : BlendedSingleConnectionFactory => String = bcf => s"${ctCtxt.identifierService.uuid}-${bcf.vendor}-${bcf.provider}"
+  private val corrId : BlendedSingleConnectionFactory => String = bcf => s"${ctCtxt.uuid}-${bcf.vendor}-${bcf.provider}"
 
   private val producerSettings : BlendedSingleConnectionFactory => JmsProducerSettings = bcf => JmsProducerSettings(
     log = log(bcf),

@@ -49,7 +49,7 @@ class JavaKeystoreSpec extends LoggingFreeSpec
       ms1.consistent should be(true)
       ms1.certificates should be(empty)
 
-      val cert : CertificateHolder = createRootCertificate(cn = "root").get.copy(changed = true)
+      val cert : CertificateHolder = createRootCertificate(cn = "root").get
       val ms2 : MemoryKeystore = jks.saveKeyStore(ms1.update("test", cert).get).get
 
       ms2.certificates should have size 1
@@ -69,7 +69,7 @@ class JavaKeystoreSpec extends LoggingFreeSpec
       ms1.consistent should be(true)
       ms1.certificates should be(empty)
 
-      val cert : CertificateHolder = createRootCertificate(cn = "root").get.copy(changed = true)
+      val cert : CertificateHolder = createRootCertificate(cn = "root").get
       jks.saveKeyStore(ms1.update("test", cert).get).get
 
       val ms2 : MemoryKeystore = jks.loadKeyStore().get

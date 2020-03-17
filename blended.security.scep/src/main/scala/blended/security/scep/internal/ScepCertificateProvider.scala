@@ -96,11 +96,10 @@ class ScepCertificateProvider(cfg : ScepConfig)
     cnProvider : CommonNameProvider
   ) : Try[CertificateHolder] = Try {
 
-    val selfSigned = selfSignedCertificate(cnProvider).get
-
     val reqCert : CertificateHolder = inCert match {
       case None =>
         log.info(s"Requesting initial certificate from SCEP server at [${cfg.url}].")
+        val selfSigned = selfSignedCertificate(cnProvider).get
         selfSigned
       case Some(c) =>
         log.info(s"Refreshing certificate from SCEP server at [${cfg.url}].")

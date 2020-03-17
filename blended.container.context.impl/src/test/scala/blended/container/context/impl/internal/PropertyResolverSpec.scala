@@ -2,6 +2,7 @@ package blended.container.context.impl.internal
 
 import blended.container.context.api.{ContainerContext, PropertyResolverException}
 import blended.testsupport.BlendedTestSupport
+import blended.updater.config.RuntimeConfig
 import blended.util.RichTry._
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -10,7 +11,11 @@ import scala.util.control.NonFatal
 class PropertyResolverSpec extends FreeSpec
   with Matchers {
 
-  val ctCtxt : ContainerContext = new MockContainerContext(BlendedTestSupport.projectTestOutput)
+  System.setProperty("COUNTRY", "cc")
+  System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
+  System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
+  System.setProperty("blended.container.home", BlendedTestSupport.projectTestOutput)
+  val ctCtxt : ContainerContext = new ContainerContextImpl()
 
   System.setProperty("sysProp", "test")
 
@@ -40,7 +45,6 @@ class PropertyResolverSpec extends FreeSpec
       ctCtxt.resolveString("$[[foo]]").unwrap should be("bar")
       ctCtxt.resolveString("$[[foo]]$[[foo]]").unwrap should be("barbar")
       ctCtxt.resolveString("test$[[foo]]").unwrap should be("testbar")
-
     }
 
     "should replace a nested value in the replacement String" in {

@@ -2,7 +2,7 @@ package blended.security.ssl.internal
 
 import java.io.File
 
-import blended.security.ssl.{CertificateRequestBuilder, CertificateSigner, MemoryKeystore, SecurityTestSupport}
+import blended.security.ssl.{CertificateChange, CertificateRequestBuilder, CertificateSigner, MemoryKeystore, SecurityTestSupport}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
@@ -16,7 +16,7 @@ class TrustStoreRefresherSpec extends LoggingFreeSpec
   "The truststore refresher" - {
 
     val pwd : String = "trust"
-    val ms : MemoryKeystore = MemoryKeystore(Map("root" -> createRootCertificate(cn = "root").get.copy(changed = true)))
+    val ms : MemoryKeystore = MemoryKeystore(Map("root" -> createRootCertificate(cn = "root").get.copy(change = CertificateChange.Added)))
 
     "not update anything if the truststore properties are not set" in {
       System.clearProperty(SslContextProvider.propTrustStorePwd)

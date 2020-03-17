@@ -1,6 +1,6 @@
 package blended.jms.utils
 
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, DEFAULT_USER, USE_JNDI}
 import blended.updater.config.util.ConfigPropertyMapConverter
 import blended.util.RichTry._
@@ -25,7 +25,7 @@ object BlendedJMSConnectionConfig {
     maxReconnectTimeout = None,
     connectTimeout = 30.seconds,
     retryInterval = 5.seconds,
-    clientId = "$[[" + ContainerIdentifierService.containerId + "]]",
+    clientId = "$[[" + ContainerContext.containerId + "]]",
     defaultUser = None,
     defaultPassword = None,
     keepAliveDestination = "topic:blended.ping",

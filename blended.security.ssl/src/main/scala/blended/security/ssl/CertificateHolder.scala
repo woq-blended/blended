@@ -22,11 +22,11 @@ import scala.util.Try
  * with the factory method(s) in the companion object. These methods will create the
  * sorted chain verify the signatures of each certificate within the chain.
  */
-case class CertificateHolder(
+case class CertificateHolder private (
   publicKey : PublicKey,
   privateKey : Option[PrivateKey],
   chain : List[X509Certificate],
-  changed : Boolean = false
+  change : CertificateChange = CertificateChange.Unchanged
 ) {
 
   val subjectPrincipal : Option[X500Principal] = chain.headOption.map(_.getIssuerX500Principal())

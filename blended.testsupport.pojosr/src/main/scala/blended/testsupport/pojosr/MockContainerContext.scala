@@ -1,6 +1,7 @@
 package blended.testsupport.pojosr
 
 import java.io.File
+import java.nio.file.Files
 import java.util.Properties
 
 import blended.container.context.impl.internal.AbstractContainerContextImpl
@@ -9,9 +10,9 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigObject, ConfigParseOpti
 
 import scala.beans.BeanProperty
 
-class MockContainerContext(baseDir : String) extends AbstractContainerContextImpl {
+class MockContainerContext(baseDir : String, ctid : String) extends AbstractContainerContextImpl {
 
-  private val SECRET_FILE_PATH : String = "blended.security.secretFile"
+  initialize()
 
   @BeanProperty
   override lazy val containerDirectory : String = baseDir
@@ -31,6 +32,9 @@ class MockContainerContext(baseDir : String) extends AbstractContainerContextImp
   @BeanProperty
   override lazy val containerHostname : String = "localhost"
 
+  @BeanProperty
+  override lazy val uuid : String = ctid
+
   private def getSystemProperties() : Properties = {
     // Avoid ConcurrentModificationException due to parallel setting of system properties by copying properties
     val systemProperties = System.getProperties()
@@ -48,7 +52,6 @@ class MockContainerContext(baseDir : String) extends AbstractContainerContextImp
       .parse()
   }
 
-  @BeanProperty
   override lazy val containerConfig : Config = {
     val sysProps = loadSystemProperties()
     val envProps = ConfigFactory.systemEnvironment()

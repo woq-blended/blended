@@ -1,52 +1,58 @@
 package blended.container.context.impl.internal
 
 import java.io.File
+import java.nio.file.Files
 
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
+import blended.container.context.api.ContainerContext
 import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
+import blended.updater.config.RuntimeConfig
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory}
 
+import scala.collection.JavaConverters._
 import scala.beans.BeanProperty
 import scala.util.{Failure, Success, Try}
 
 object AbstractContainerContextImpl {
   val PROP_BLENDED_HOME = "blended.home"
   val CONFIG_DIR = "etc"
-  val SECRET_FILE_PATH : String = "blended.security.secretFile"
+  val SECRET_FILE_PROP : String = "blended.security.secret"
 }
 
 abstract class AbstractContainerContextImpl extends ContainerContext {
 
-  private val log : Logger = Logger(getClass().getName())
+  private[this] lazy val log : Logger = Logger(getClass().getName())
 
-  private val resolver : ContainerPropertyResolver = new ContainerPropertyResolver(this)
+  def initialize() : Unit = {
+    // make sure we initialize the config
+    val cfg = containerConfig
+    // then inject the context into the property resolver
+    resolver.setCtCtxt(this)
+  }
 
-  /**
-   * Access to the Container Identifier Service
-   */
-  @BeanProperty
-  override val identifierService: ContainerIdentifierService = new ContainerIdentifierServiceImpl(this)
+  private lazy val resolver : ContainerPropertyResolver = {
+    // make sure all properties are resolved correctly
+    new ContainerPropertyResolver(
+      ctUuid = uuid,
+      properties = properties,
+      cryptoSupport = cryptoSupport
+    )
+  }
 
   /**
    * Access to a blended resolver for config values
    */
-  override def resolveString(s: String, additionalProps: Map[String, Any]): Try[AnyRef] = Try {
+  override def resolveString(s: String, additionalProps: Map[String, Any]): Try[AnyRef] = {
     resolver.resolve(s, additionalProps)
   }
 
   /**
    * Provide access to encryption and decryption facilities, optionally secured with a secret file.
    */
-  @BeanProperty
   override val cryptoSupport: ContainerCryptoSupport = {
     import AbstractContainerContextImpl._
 
-    val cipherSecretFile : String = if (containerConfig.hasPath(SECRET_FILE_PATH)) {
-      containerConfig.getString(SECRET_FILE_PATH)
-    } else {
-      "secret"
-    }
+    val cipherSecretFile : String = System.getProperty(SECRET_FILE_PROP, "secret")
 
     BlendedCryptoSupport.initCryptoSupport(
       new File(containerConfigDirectory, cipherSecretFile).getAbsolutePath()
@@ -61,20 +67,81 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
    */
   override def getConfig(id: String): Config = {
 
-    ConfigLocator.config(
-      containerConfigDirectory, s"$id.conf", containerConfig, this
-    ) match {
-      case Failure(e) =>
-        log.warn(s"Failed to read config for id [$id] : [${e.getMessage()}], using empty config")
+    val cfg : Config = ConfigLocator.safeConfig(
+      profileConfigDirectory, s"$id.conf", containerConfig, this
+    )
+
+    val result : Config = if (cfg.isEmpty()) {
+      if (containerConfig.hasPath(id)) {
+        log.debug(s"Resolving config for [$id] from application config")
+        containerConfig.getConfig(id)
+      } else {
         ConfigFactory.empty()
-      case Success(empty) if empty.isEmpty =>
-        val cfg = containerConfig
-        if (cfg.hasPath(id)) cfg.getConfig(id) else ConfigFactory.empty()
-      case Success(cfg) => cfg
+      }
+    } else {
+      cfg
+    }
+
+    result
+  }
+
+  @BeanProperty
+  override lazy val uuid : String = {
+    val idFile = new File(containerConfigDirectory, s"blended.container.context.id")
+    val lines = Files.readAllLines(idFile.toPath)
+    if (!lines.isEmpty) {
+      log.info(s"Using Container ID [${lines.get(0)}]")
+      lines.get(0)
+    } else {
+      throw new Exception("Unable to determine Container Id")
+    }
+  }
+
+  override lazy val properties : Map[String, String] = {
+
+    val propResolver : ContainerPropertyResolver = new ContainerPropertyResolver(
+      ctUuid = uuid,
+      properties = Map.empty,
+      cryptoSupport = cryptoSupport
+    )
+
+    val cfg : Config = {
+      val f : File = new File(profileConfigDirectory, "blended.container.context.conf")
+      if (f.exists()) {
+        ConfigLocator.readConfigFile(new File(profileConfigDirectory, "blended.container.context.conf"), ConfigFactory.empty())
+      } else {
+        ConfigFactory.empty()
+      }
+    }
+
+    val mandatoryPropNames : Seq[String] = Option(System.getProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS)) match {
+      case Some(s) => if (s.trim().isEmpty) Seq.empty else s.trim().split(",").toSeq
+      case None    => Seq.empty
+    }
+
+    val props : Map[String, String] = cfg.entrySet().asScala.map { entry =>
+      (entry.getKey, cfg.getString(entry.getKey))
+    }.toMap.filter{ case (k,_) => mandatoryPropNames.contains(k) }
+
+    val missingPropNames = mandatoryPropNames.filter(p => props.get(p).isEmpty)
+
+    if (missingPropNames.nonEmpty) {
+      val msg = s"The configuration file [blended.container.context.conf] is missing entries for the properties ${missingPropNames.mkString("[", ",", "]")}"
+      throw new RuntimeException(msg)
+    }
+
+    props.map{ case (k,v) =>
+      propResolver.resolve(v) match {
+        case Failure(t) => throw t
+        case Success(r) =>
+          k -> r.toString()
+      }
     }
   }
 
   override def toString: String =
-    s"${getClass().getSimpleName()}(containerDir = $containerDirectory, containerConfigDirectory = $containerConfigDirectory)," +
-    s"containerLogDirectory = $containerLogDirectory, hostName = $containerHostname, uuid = ${identifierService.uuid}"
+    s"${getClass().getSimpleName()}(containerDir = $containerDirectory, containerConfigDirectory = $containerConfigDirectory," +
+    s"profileDirectory = $profileDirectory, profileConfigDirectory = $profileConfigDirectory" +
+    s"containerLogDirectory = $containerLogDirectory, hostName = $containerHostname, uuid = $uuid, properties = (${properties.mkString(",")}" +
+    s", config size = ${containerConfig.entrySet().size()} keys)"
 }

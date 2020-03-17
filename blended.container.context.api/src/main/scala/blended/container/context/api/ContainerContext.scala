@@ -3,30 +3,28 @@ package blended.container.context.api
 import java.util.concurrent.atomic.AtomicLong
 
 import blended.security.crypto.ContainerCryptoSupport
-import blended.util.logging.Logger
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 
 import scala.beans.BeanProperty
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 class PropertyResolverException(msg : String) extends Exception(msg)
 
 object ContainerContext {
 
-  val transactionCounter = new AtomicLong(0)
+  val containerId : String = "uuid"
 
-  def nextTransactionCounter : Long = {
-    if (transactionCounter.get() == Long.MaxValue) {
-      transactionCounter.set(0L)
+  object NextTransactionCounter extends (() => Long) {
+    private val transactionCounter = new AtomicLong(0)
+    def apply(): Long = {
+      transactionCounter.compareAndSet(Long.MaxValue, 0L);
+      transactionCounter.incrementAndGet()
     }
-
-    transactionCounter.incrementAndGet()
   }
 }
 
 trait ContainerContext {
 
-  private[this] val log : Logger = Logger[ContainerContext]
   /**
    * The home directory of the container, usually defined by the system property <code>blended.home</code>
    */
@@ -51,7 +49,7 @@ trait ContainerContext {
 
   /**
    * The config directory for all profile specific configuration files. Usually this is
-   * <code>getProfileDirectory()/etc</code>. This is the main config directory.
+   * <code>profileDirectory/etc</code>. This is the main config directory.
    */
   @BeanProperty
   val profileConfigDirectory : String
@@ -65,13 +63,11 @@ trait ContainerContext {
   /**
    * Provide access to encryption and decryption facilities, optionally secured with a secret file.
    */
-  @BeanProperty
   val cryptoSupport : ContainerCryptoSupport
 
   /**
    * The application.conf, optionally modified with an overlay.
     */
-  @BeanProperty
   val containerConfig : Config
 
   /**
@@ -81,11 +77,10 @@ trait ContainerContext {
    */
   def getConfig(id : String) : Config
 
-  /**
-   * Access to the Container Identifier Service
-   */
   @BeanProperty
-  val identifierService : ContainerIdentifierService
+  val uuid : String
+
+  val properties : Map[String, String]
 
   /**
    * Access to a blended resolver for config values
@@ -95,5 +90,5 @@ trait ContainerContext {
   /**
    * Provide access to the next transaction number
    */
-  def getNextTransactionCounter() : Long = ContainerContext.nextTransactionCounter
+  def getNextTransactionCounter() : Long = ContainerContext.NextTransactionCounter()
 }

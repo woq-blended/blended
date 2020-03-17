@@ -8,7 +8,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import blended.container.context.api.ContainerContext
-import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 import blended.prickle.akka.http.PrickleSupport
 import blended.updater.config._
 import blended.util.logging.Logger
@@ -93,8 +92,8 @@ trait MgmtReporter extends Actor with PrickleSupport {
       config.foreach { cfg =>
 
         val info = ContainerInfo(
-          containerId = ctContext.identifierService.uuid,
-          properties = ctContext.identifierService.properties,
+          containerId = ctContext.uuid,
+          properties = ctContext.properties,
           serviceInfos = state.serviceInfos.values.toList,
           profiles = state.lastProfileInfo.profiles,
           timestampMsec = System.currentTimeMillis(),

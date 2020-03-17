@@ -56,7 +56,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
 
     whenTypesafeConfigAvailable { (cfg, ctCtxt) =>
 
-      val mgrConfig = CertificateManagerConfig.fromConfig(cfg, new PasswordHasher(ctCtxt.identifierService.uuid), ctCtxt)
+      val mgrConfig = CertificateManagerConfig.fromConfig(cfg, new PasswordHasher(ctCtxt.uuid), ctCtxt)
 
       setupSelfSignedProvider(cfg, ctCtxt)
       setupCertificateManager(mgrConfig)

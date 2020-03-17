@@ -1,7 +1,7 @@
 package blended.akka.internal
 
 import akka.actor.ActorSystem
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
+import blended.container.context.api.ContainerContext
 import blended.util.logging.Logger
 import domino.DominoActivator
 

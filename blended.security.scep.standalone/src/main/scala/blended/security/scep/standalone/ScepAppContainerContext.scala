@@ -10,26 +10,24 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
 import scala.beans.BeanProperty
 
-class ScepAppContainerContext(baseDir : String) extends AbstractContainerContextImpl {
+class ScepAppContainerContext(baseDir: String, salt: String) extends AbstractContainerContextImpl {
 
   private[this] val log = Logger[this.type]
   log.debug(s"Starting [$this]")
 
-  private val SECRET_FILE_PATH : String = "blended.security.secretFile"
+  @BeanProperty override lazy val containerDirectory: String = baseDir
 
-  @BeanProperty override lazy val containerDirectory : String = baseDir
+  @BeanProperty override lazy val containerConfigDirectory: String = containerDirectory + "/etc"
 
-  @BeanProperty override lazy val containerConfigDirectory : String = containerDirectory + "/etc"
+  @BeanProperty override lazy val containerLogDirectory: String = baseDir
 
-  @BeanProperty override lazy val containerLogDirectory : String = baseDir
+  @BeanProperty override lazy val profileDirectory: String = containerDirectory
 
-  @BeanProperty override lazy val profileDirectory : String = containerDirectory
+  @BeanProperty override lazy val profileConfigDirectory: String = containerConfigDirectory
 
-  @BeanProperty override lazy val profileConfigDirectory : String = containerConfigDirectory
+  @BeanProperty override lazy val containerHostname: String = "localhost"
 
-  @BeanProperty override lazy val containerHostname : String = "localhost"
-
-  @BeanProperty override lazy val containerConfig : Config = {
+  override lazy val containerConfig: Config = {
     val sys = new Properties()
     sys.putAll(System.getProperties())
     val sysProps = Parseable.newProperties(sys, ConfigParseOptions.defaults().setOriginDescription("system properties")).parse()
@@ -44,4 +42,6 @@ class ScepAppContainerContext(baseDir : String) extends AbstractContainerContext
       withFallback(ConfigFactory.parseResources(getClass().getClassLoader(), "application-defaults.conf")).
       resolve()
   }
+
+  override lazy val uuid: String = salt
 }

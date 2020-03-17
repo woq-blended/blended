@@ -3,9 +3,14 @@ package blended.security.scep.standalone
 import java.io.File
 import java.net.{InetAddress, URL}
 import java.nio.file.{Files, StandardCopyOption}
-import java.util.concurrent.TimeoutException
+import java.util.concurrent.{TimeUnit, TimeoutException}
+
+import scala.concurrent.duration.FiniteDuration
+import scala.util.Try
+import scala.util.control.NonFatal
 
 import blended.testsupport.TestFile
+import blended.testsupport.retry.Retry
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
@@ -29,7 +34,7 @@ class ScepClientAppTest extends LoggingFreeSpec with TestFile with Matchers {
       val ex = intercept[ExitAppException] {
         ScepClientApp.run(Array("--help"))
       }
-      assert(ex.exitCode === 0)
+      assert(ex.exitCode === ExitCode.Ok)
       assert(ex.errMsg === None)
     }
 
@@ -37,7 +42,7 @@ class ScepClientAppTest extends LoggingFreeSpec with TestFile with Matchers {
       val ex = intercept[ExitAppException] {
         ScepClientApp.run(Array("--unknown"))
       }
-      assert(ex.exitCode === 2)
+      assert(ex.exitCode === ExitCode.InvalidCmdline)
       assert(ex.errMsg !== None)
     }
 
@@ -50,21 +55,23 @@ class ScepClientAppTest extends LoggingFreeSpec with TestFile with Matchers {
       val ex = intercept[ExitAppException] {
         ScepClientApp.run(Array("--refresh-certs", "--timeout", "5", "--base-dir", dir.getAbsolutePath()))
       }
-      assert(ex.exitCode === 1)
+      assert(ex.exitCode === ExitCode.Error)
       //TODO: Review - Ends with a file not found exception after API change
       //assert(ex.getCause().getClass() === classOf[TimeoutException])
     }(TestFile.DeleteWhenNoFailure)
   }
 
-  "Online SCEP server environment specific" - {
-    val envValName = "TEST_SCEP_CONFIGFILE"
+  val envValName = "TEST_SCEP_CONFIGFILE"
+  val confFileName = System.getenv(envValName)
+
+  s"Online SCEP server environment specific (${envValName}=${confFileName})" - {
     val clue =
       s"""
          |To test against an online SCEP server, please define the $envValName environment variable.
          |It must point to a configuration file with absolute path""".stripMargin
-    val confFileName = System.getenv(envValName)
 
-    s"should get a test certificate from online-scep server (TEST_SCEP_CONFIGFILE=${confFileName})" in {
+    def testOnlineTestServer(checkRefreshedCert: Boolean): Unit = {
+
       assume(confFileName !== null, clue)
       val confFile = new File(confFileName)
       assume(confFile.exists(), clue)
@@ -81,9 +88,13 @@ class ScepClientAppTest extends LoggingFreeSpec with TestFile with Matchers {
         Files.copy(confFile.toPath(), targetConfFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
 
         val ex = intercept[ExitAppException] {
-          ScepClientApp.run(Array("--refresh-certs", "--base-dir", dir.getAbsolutePath()))
+          ScepClientApp.run(
+            Array("--refresh-certs", "--base-dir", dir.getAbsolutePath()) ++
+            Array("--expect-refresh").filter(_ => checkRefreshedCert)
+          )
         }
-        assert(ex.exitCode === 0)
+        // initial request should refresh/initial get a cert with exit code 0
+        assert(ex.exitCode === ExitCode.Ok)
         val keystorefile = new File(etc, "keystore")
         assert(keystorefile.exists())
 
@@ -98,9 +109,33 @@ class ScepClientAppTest extends LoggingFreeSpec with TestFile with Matchers {
         out should include("Your keystore contains 1 entry")
         out should include("server1,")
 
-      }(TestFile.DeleteWhenNoFailure)
+        if(checkRefreshedCert) {
+          val ex = intercept[ExitAppException] {
+            ScepClientApp.run(
+              Array("--refresh-certs", "--expect-refresh", "--base-dir", dir.getAbsolutePath())
+            )
+          }
+          // sub-sequent refresh should detect no change and exit with exit code 5
+          assert(ex.exitCode === ExitCode.NoCertsRefreshed)
+        }
 
+      }(TestFile.DeleteWhenNoFailure)
     }
+
+    s"should get a test certificate from online scep server" in {
+      // first test certs takes sometimes very long
+      Try(testOnlineTestServer(checkRefreshedCert = false))
+//        .recoverWith{ case NonFatal(_) => Thread.sleep(3000); Try(testOnlineTestServer(false))}
+        .get
+    }
+
+    s"should report a non-refreshed certificate with exit code ${ExitCode.NoCertsRefreshed.code}" in {
+      // first test certs takes sometimes very long
+      Try(testOnlineTestServer(checkRefreshedCert = true))
+//        .recoverWith{ case NonFatal(_) => Thread.sleep(3000); Try(testOnlineTestServer(true))}
+        .get
+    }
+
   }
 
 }

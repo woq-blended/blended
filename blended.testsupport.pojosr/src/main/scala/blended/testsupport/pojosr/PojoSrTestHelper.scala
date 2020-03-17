@@ -2,8 +2,7 @@ package blended.testsupport.pojosr
 
 import java.io.File
 
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
-import blended.container.context.impl.internal.{ContainerContextImpl, ContainerIdentifierServiceImpl}
+import blended.container.context.api.ContainerContext
 import blended.util.logging.Logger
 import domino.DominoActivator
 import org.osgi.framework.{BundleActivator, ServiceReference}
@@ -51,7 +50,7 @@ trait PojoSrTestHelper {
         System.setProperty("blended.updater.profile.properties.keys", s))
 
       whenBundleActive {
-        new MockContainerContext(baseDir).providesService[ContainerContext]
+        new MockContainerContext(baseDir, pojoUuid).providesService[ContainerContext]
       }
     }
   }
