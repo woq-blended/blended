@@ -12,9 +12,9 @@ import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.http.jmsqueue.BlendedAkkaHttpJmsqueueActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
+import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -42,6 +42,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
   private val svcUrlBase : String = "http://localhost:9995/httpqueue"
 
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
@@ -94,13 +95,13 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(msg)(FlowMessage.noProps))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = log,
+        log = envLogger,
         headerCfg = headerCfg,
         connectionFactory = amqCF,
         jmsDestination = Some(JmsQueue("Queue1"))
       )
 
-      sendMessages(pSettings, log, env)
+      sendMessages(pSettings, envLogger, env)
 
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
@@ -117,13 +118,13 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(ByteString(msg))(FlowMessage.noProps))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = log,
+        log = envLogger,
         headerCfg = headerCfg,
         connectionFactory = amqCF,
         jmsDestination = Some(JmsQueue("Queue1"))
       )
 
-      sendMessages(pSettings, log, env)
+      sendMessages(pSettings, envLogger, env)
 
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
@@ -141,13 +142,13 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       )
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = log,
+        log = envLogger,
         headerCfg = headerCfg,
         connectionFactory = amqCF,
         jmsDestination = Some(JmsQueue("Queue1"))
       )
 
-      sendMessages(pSettings, log, env)
+      sendMessages(pSettings, envLogger, env)
 
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()

@@ -6,9 +6,9 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.stream.scaladsl.{Keep, Sink}
 import akka.util.ByteString
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
+import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import javax.jms.ConnectionFactory
@@ -32,6 +32,7 @@ class HttpQueueServiceSpec extends FreeSpec
   private val cf : IdAwareConnectionFactory = amqCf()
 
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   override protected def afterAll() : Unit = {
     stopBroker(broker)
@@ -83,13 +84,13 @@ class HttpQueueServiceSpec extends FreeSpec
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(msg)(FlowMessage.noProps))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = log,
+        log = envLogger,
         headerCfg = headerCfg,
         connectionFactory = cf,
         jmsDestination = Some(JmsQueue("Queue1"))
       )
 
-      sendMessages(pSettings, log, env)
+      sendMessages(pSettings, envLogger, env)
 
       Get(s"/activemq/Queue1") ~> route ~> check {
         val r = response
@@ -108,13 +109,13 @@ class HttpQueueServiceSpec extends FreeSpec
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(ByteString(msg))(FlowMessage.noProps))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = log,
+        log = envLogger,
         headerCfg = headerCfg,
         connectionFactory = cf,
         jmsDestination = Some(JmsQueue("Queue1"))
       )
 
-      sendMessages(pSettings, log, env)
+      sendMessages(pSettings, envLogger, env)
 
       Get(s"/activemq/Queue1") ~> route ~> check {
         val r = response

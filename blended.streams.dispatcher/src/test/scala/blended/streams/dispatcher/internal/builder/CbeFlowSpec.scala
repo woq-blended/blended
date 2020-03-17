@@ -11,7 +11,6 @@ import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent}
 import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.pojosr.PojoSrTestHelper
-import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
@@ -52,8 +51,8 @@ class CbeFlowSpec extends DispatcherSpecSupport
     new CbeSendFlow(
       headerConfig = ctxt.bs.headerConfig,
       dispatcherCfg = ctxt.cfg,
-      internalCf = cf,
-      log = Logger("spec.cbesend")
+      internalCf =cf,
+      streamLogger = ctxt.envLogger
     ).build()
   }
 
@@ -77,7 +76,8 @@ class CbeFlowSpec extends DispatcherSpecSupport
     headerCfg = ctxt.bs.headerConfig,
     cf = cf,
     dest = JmsQueue("cbeOut"),
-    Logger(loggerName)
+    log = ctxt.envLogger,
+    timeout = Some(timeout)
   )
 
   "The CBE Flow should" - {

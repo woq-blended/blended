@@ -1,16 +1,16 @@
 package blended.security.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
 object LDAPLoginConfig {
 
   // TODO: Review passing of ContainerIdentifierService
-  def fromConfig(cfg : Config, idSvc : ContainerIdentifierService) : LDAPLoginConfig = {
+  def fromConfig(cfg : Config, ctCtxt : ContainerContext) : LDAPLoginConfig = {
 
     val resolve : String => String = s =>
-      idSvc.resolvePropertyString(s).map(_.toString).get
+      ctCtxt.resolveString(s).map(_.toString).get
 
     LDAPLoginConfig(
       url = resolve(cfg.getString("url")),

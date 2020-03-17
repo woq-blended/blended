@@ -12,18 +12,16 @@ addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.13.1")
 // Build assembly artifacts (zip,gz,tgz)
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.9")
 //addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.3")
-// Support for artifact signing with pgp
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")
+// Support for artifact signing with gpg
+addSbtPlugin("io.crashbox" % "sbt-gpg" % "0.2.0")
 // Export test coveragt to codacy
 addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "2.112")
 
 // OSGi bundle build support
 addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.5")
 
-// bloop compile server support (config file generator currently)
-//addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "1.0.0")
 // Scala source code formatter (also used by Scala-IDE/Eclipse)
-addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.2")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.0.0")
 // Strip artifacts to make them more reproducible (same input -> same output, checksum wise)
 addSbtPlugin("net.bzzt" % "sbt-reproducible-builds" % "0.16")
 

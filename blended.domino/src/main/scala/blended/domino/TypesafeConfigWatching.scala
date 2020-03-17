@@ -1,6 +1,6 @@
 package blended.domino
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.domino.internal.TypesafeConfigCapsule
 import com.typesafe.config.Config
 import domino.DominoImplicits
@@ -15,7 +15,7 @@ trait TypesafeConfigWatching extends DominoImplicits {
   /** Dependency */
   protected def bundleContext : BundleContext
 
-  def whenTypesafeConfigAvailable(f : (Config, ContainerIdentifierService) => Unit) : Unit = {
+  def whenTypesafeConfigAvailable(f : (Config, ContainerContext) => Unit) : Unit = {
     val m = new TypesafeConfigCapsule(capsuleContext, f, bundleContext)
     capsuleContext.addCapsule(m)
   }

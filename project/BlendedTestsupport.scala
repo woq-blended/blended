@@ -15,9 +15,6 @@ object BlendedTestsupport extends ProjectFactory {
       Dependencies.commonsIo,
       Dependencies.akkaActor,
       Dependencies.akkaTestkit,
-      Dependencies.akkaCamel,
-      Dependencies.camelCore,
-      Dependencies.camelJms,
       Dependencies.scalatest,
       Dependencies.junit
     )

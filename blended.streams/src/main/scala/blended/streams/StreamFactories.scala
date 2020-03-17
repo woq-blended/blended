@@ -7,6 +7,7 @@ import akka.stream._
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.{Done, NotUsed}
 import blended.streams.processor.{CollectingActor, Collector}
+import blended.util.logging.Logger
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -14,20 +15,34 @@ import scala.reflect.ClassTag
 
 object StreamFactories {
 
+  private val log : Logger = Logger[StreamFactories.type]
+
   def runSourceWithTimeLimit[T](
     name : String,
     source : Source[T, NotUsed],
-    timeout : FiniteDuration
-  )(collected : T => Unit)(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : Collector[T] = {
+    timeout : Option[FiniteDuration],
+    onCollected : Option[T => Unit] = None,
+    completeOn : Option[Seq[T] => Boolean] = None
+  )(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : Collector[T] =
+    runMatSourceWithTimeLimit(name, source, timeout, onCollected, completeOn)._2
+
+  def runMatSourceWithTimeLimit[T, Mat](
+    name : String,
+    source : Source[T, Mat],
+    timeout : Option[FiniteDuration],
+    onCollected : Option[T => Unit] = None,
+    completeOn : Option[Seq[T] => Boolean] = None
+  )(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : (Mat, Collector[T]) = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
     val stopped = new AtomicBoolean(false)
 
-    val collector = Collector[T](name)(collected)
+    val collector = Collector[T](name = name, onCollected = onCollected, completeOn = completeOn)
+
     val sink = Sink.actorRef(collector.actor, CollectingActor.Completed)
 
-    val (killswitch, done) = source
-      .viaMat(KillSwitches.single)(Keep.right)
+    val ((mat, killswitch), done) = source
+      .viaMat(KillSwitches.single)(Keep.both)
       .watchTermination()(Keep.both)
       .toMat(sink)(Keep.left)
       .run()
@@ -36,14 +51,17 @@ object StreamFactories {
       case _ => stopped.set(true)
     }
 
-    akka.pattern.after(timeout, system.scheduler) {
-      if (!stopped.get()) {
-        killswitch.shutdown()
+    timeout.foreach{ t =>
+      akka.pattern.after(t, system.scheduler) {
+        if (!stopped.get()) {
+          log.info(s"Stopping collector [$name] after [${timeout}]")
+          killswitch.shutdown()
+        }
+        Future { Done }
       }
-      Future { Done }
     }
 
-    collector
+    (mat, collector)
   }
 
   def keepAliveSource[T](bufferSize : Int)(implicit system : ActorSystem, materializer : Materializer) : Source[T, (ActorRef, KillSwitch)] = {

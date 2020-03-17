@@ -1,14 +1,14 @@
 package blended.jms.utils
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, DEFAULT_USER, USE_JNDI}
 import blended.updater.config.util.ConfigPropertyMapConverter
+import blended.util.RichTry._
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
-import blended.util.RichTry._
 
 object BlendedJMSConnectionConfig {
 
@@ -18,17 +18,17 @@ object BlendedJMSConnectionConfig {
     provider = "",
     enabled = true,
     jmxEnabled = true,
-    pingEnabled = true,
-    pingTolerance = 5,
-    pingInterval = 30.seconds,
-    pingTimeout = 3.seconds,
-    retryInterval = 5.seconds,
+    keepAliveEnabled = true,
+    maxKeepAliveMissed = 5,
+    keepAliveInterval = 60.seconds,
     minReconnect = 5.minutes,
     maxReconnectTimeout = None,
-    clientId = "$[[" + ContainerIdentifierService.containerId + "]]",
+    connectTimeout = 30.seconds,
+    retryInterval = 5.seconds,
+    clientId = "$[[" + ContainerContext.containerId + "]]",
     defaultUser = None,
     defaultPassword = None,
-    pingDestination = "topic:blended.ping",
+    keepAliveDestination = "topic:blended.ping",
     properties = Map.empty,
     useJndi = false,
     jndiName = None,
@@ -41,24 +41,26 @@ object BlendedJMSConnectionConfig {
 
   // scalastyle:off method.length
   def fromConfig(
-    stringResolver : String => Try[Any]
+    ctContext : ContainerContext
   )(
     vendor : String, provider : String, cfg : Config
   ) : BlendedJMSConnectionConfig = {
 
+    val stringResolver : String => Try[AnyRef] = s => ctContext.resolveString(s)
+
     val enabled : Config => Boolean = cfg => cfg.getBoolean("enabled", defaultConfig.enabled)
     val jmxEnabled : Config => Boolean = cfg => cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
-    val pingEnabled : Config => Boolean = cfg => cfg.getBoolean("pingEnabled", defaultConfig.pingEnabled)
-    val pingTolerance : Config => Int = cfg => cfg.getInt("pingTolerance", defaultConfig.pingTolerance)
-    val pingInterval : Config => FiniteDuration = cfg => cfg.getDuration("pingInterval", defaultConfig.pingInterval)
-    val pingTimeout : Config => FiniteDuration = cfg => cfg.getDuration("pingTimeout", defaultConfig.pingTimeout)
-    val retryInterval : Config => FiniteDuration = cfg => cfg.getDuration("retryInterval", defaultConfig.retryInterval)
+    val keepAliveEnabled : Config => Boolean = cfg => cfg.getBoolean("keepAliveEnabled", defaultConfig.keepAliveEnabled)
+    val maxKeepAliveMissed : Config => Int = cfg => cfg.getInt("maxKeepAliveMissed", defaultConfig.maxKeepAliveMissed)
+    val keepAliveInterval : Config => FiniteDuration = cfg => cfg.getDuration("keepAliveInterval", defaultConfig.keepAliveInterval)
     val minReconnect : Config => FiniteDuration = cfg => cfg.getDuration("minReconnect", defaultConfig.minReconnect)
     val maxReconnectTimeout : Config => Option[FiniteDuration] = cfg => cfg.getDurationOption("maxReconnectTimeout")
+    val connectTimeout : Config => FiniteDuration = cfg => cfg.getDuration("connectTimeout", defaultConfig.connectTimeout)
+    val retryInterval : Config => FiniteDuration = cfg => cfg.getDuration("retryInterval", defaultConfig.retryInterval)
 
     val defaultUser : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_USER).map { u => stringResolver(u).get }.map(_.toString)
     val defaultPasswd : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_PWD).map { p => stringResolver(p).get }.map(_.toString)
-    val destination : Config => String = cfg => cfg.getString("destination", defaultConfig.pingDestination)
+    val destination : Config => String = cfg => cfg.getString("destination", defaultConfig.keepAliveDestination)
 
     val properties : (String => Try[Any]) => Config => Try[Map[String, String]] = stringResolver => cfg => Try {
       ConfigPropertyMapConverter.getKeyAsPropertyMap(cfg, "properties", Option(() => defaultConfig.properties))
@@ -85,17 +87,17 @@ object BlendedJMSConnectionConfig {
       enabled = enabled(cfg),
       provider = provider,
       jmxEnabled = jmxEnabled(cfg),
-      pingEnabled = pingEnabled(cfg),
-      pingTolerance = pingTolerance(cfg),
-      pingInterval = pingInterval(cfg),
-      pingTimeout = pingTimeout(cfg),
-      retryInterval = retryInterval(cfg),
+      keepAliveEnabled = keepAliveEnabled(cfg),
+      maxKeepAliveMissed = maxKeepAliveMissed(cfg),
+      keepAliveInterval = keepAliveInterval(cfg),
       minReconnect = minReconnect(cfg),
       maxReconnectTimeout = maxReconnectTimeout(cfg),
+      retryInterval = retryInterval(cfg),
+      connectTimeout = connectTimeout(cfg),
       clientId = clientId(cfg).get,
       defaultUser = defaultUser(cfg),
       defaultPassword = defaultPasswd(cfg),
-      pingDestination = destination(cfg),
+      keepAliveDestination = destination(cfg),
       properties = properties(stringResolver)(cfg).get,
       jndiName = jndiName(cfg),
       useJndi = useJndi(cfg),
@@ -113,17 +115,17 @@ case class BlendedJMSConnectionConfig(
   override val provider : String,
   override val enabled : Boolean,
   override val jmxEnabled : Boolean,
-  override val pingEnabled : Boolean,
-  override val pingTolerance : Int,
-  override val pingInterval : FiniteDuration,
-  override val pingTimeout : FiniteDuration,
-  override val retryInterval : FiniteDuration,
+  override val keepAliveEnabled : Boolean,
+  override val maxKeepAliveMissed : Int,
+  override val keepAliveInterval: FiniteDuration,
   override val minReconnect : FiniteDuration,
-  override val maxReconnectTimeout : Option[FiniteDuration],
+  override val connectTimeout: FiniteDuration,
+  override val maxReconnectTimeout: Option[FiniteDuration],
+  override val retryInterval : FiniteDuration,
   override val clientId : String,
   override val defaultUser : Option[String],
   override val defaultPassword : Option[String],
-  override val pingDestination : String,
+  override val keepAliveDestination : String,
   override val properties : Map[String, String],
   override val useJndi : Boolean,
   override val jndiName : Option[String] = None,

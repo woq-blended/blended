@@ -1,72 +1,33 @@
 package blended.container.context.impl.internal
 
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService, PropertyResolverException}
-import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
-import com.typesafe.config.Config
+import blended.container.context.api.{ContainerContext, PropertyResolverException}
+import blended.testsupport.BlendedTestSupport
+import blended.updater.config.RuntimeConfig
+import blended.util.RichTry._
 import org.scalatest.{FreeSpec, Matchers}
 
-import scala.beans.BeanProperty
-import scala.util.Try
 import scala.util.control.NonFatal
 
-//noinspection NotImplementedCode
 class PropertyResolverSpec extends FreeSpec
   with Matchers {
 
-  val ctCtxt : ContainerContext = new ContainerContext() {
+  System.setProperty("COUNTRY", "cc")
+  System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
+  System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
+  System.setProperty("blended.container.home", BlendedTestSupport.projectTestOutput)
+  val ctCtxt : ContainerContext = new ContainerContextImpl()
 
-    override def getProfileDirectory() : String = ???
-
-    override def getProfileConfigDirectory() : String = ???
-
-    override def getContainerLogDirectory() : String = ???
-
-    override def getContainerDirectory() : String = ???
-
-    override def getContainerConfigDirectory() : String = ???
-
-    override def getContainerHostname() : String = ???
-
-    override def getContainerConfig() : Config = ???
-
-    override def getContainerCryptoSupport() : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("secret")
-  }
-
-  val idSvc : ContainerIdentifierService = new ContainerIdentifierService {
-
-    @BeanProperty
-    override lazy val uuid : String = "id"
-    @BeanProperty
-    override val containerContext : ContainerContext = ctCtxt
-    @BeanProperty
-    override val properties : Map[String, String] = Map(
-      "foo" -> "bar",
-      "bar" -> "test",
-      "FOO" -> "BAR",
-      "num" -> "12345",
-      "version" -> "2.2.0",
-      "typeA" -> "A",
-      "typeB" -> "B"
-    )
-
-    def resolvePropertyString(value : String, additionalProps : Map[String, Any]) : Try[AnyRef] = Try {
-      val r = ContainerPropertyResolver.resolve(this, value, additionalProps)
-      r
-    }
-  }
-
-  System.getProperties().setProperty("sysProp", "test")
+  System.setProperty("sysProp", "test")
 
   "The property resolver" - {
 
     "should yield the input string if no replacements are specified" in {
-
-      ContainerPropertyResolver.resolve(idSvc, "foo") should be("foo")
+      ctCtxt.resolveString("foo").unwrap should be("foo")
     }
 
     "should throw an Exception when the end delimiter is missing" in {
       try {
-        ContainerPropertyResolver.resolve(idSvc, "$[[foo")
+        ctCtxt.resolveString("$[[foo").unwrap
         fail()
       } catch {
         case _ : PropertyResolverException =>
@@ -76,84 +37,79 @@ class PropertyResolverSpec extends FreeSpec
 
     "should throw an exception when the property can't be resolved" in {
       intercept[PropertyResolverException] {
-        ContainerPropertyResolver.resolve(idSvc, "$[[noprop]]")
+        ctCtxt.resolveString("$[[noprop]]").unwrap
       }
     }
 
     "should replace a single value in the replacement String" in {
-
-      ContainerPropertyResolver.resolve(idSvc, "$[[foo]]") should be("bar")
-      ContainerPropertyResolver.resolve(idSvc, "$[[foo]]$[[foo]]") should be("barbar")
-      ContainerPropertyResolver.resolve(idSvc, "test$[[foo]]") should be("testbar")
-
+      ctCtxt.resolveString("$[[foo]]").unwrap should be("bar")
+      ctCtxt.resolveString("$[[foo]]$[[foo]]").unwrap should be("barbar")
+      ctCtxt.resolveString("test$[[foo]]").unwrap should be("testbar")
     }
 
     "should replace a nested value in the replacement String" in {
-      ContainerPropertyResolver.resolve(idSvc, "$[[$[[foo]]]]") should be("test")
+      ctCtxt.resolveString("$[[$[[foo]]]]").unwrap should be("test")
     }
 
     "should fallback to sysytem properties if replacement property is not in container properties" in {
-      ContainerPropertyResolver.resolve(idSvc, "$[[sysProp]]") should be("test")
+      ctCtxt.resolveString("$[[sysProp]]").unwrap should be("test")
     }
 
     "should apply the parameters if given in the replacement rule" in {
-      ContainerPropertyResolver.resolve(idSvc, "$[[foo(upper)]]") should be("BAR")
-      ContainerPropertyResolver.resolve(idSvc, "$[[FOO(lower)]]") should be("bar")
-      ContainerPropertyResolver.resolve(idSvc, "$[[FOO(lower,capitalize)]]") should be("Bar")
-      ContainerPropertyResolver.resolve(idSvc, "$[[num(left:4)]]") should be("1234")
-      ContainerPropertyResolver.resolve(idSvc, "$[[num(right:4)]]") should be("2345")
-      ContainerPropertyResolver.resolve(idSvc, "$[[num(right:6)]]") should be("12345")
-      ContainerPropertyResolver.resolve(idSvc, "$[[version(replace:\\.:_)]]") should be("2_2_0")
-      ContainerPropertyResolver.resolve(idSvc, "$[[typeA(replace:A:1)(replace:B:2))]]") should be("1")
-      ContainerPropertyResolver.resolve(idSvc, "$[[typeB(replace:A:1,replace:B:2))]]") should be("2")
+      ctCtxt.resolveString("$[[foo(upper)]]").unwrap should be("BAR")
+      ctCtxt.resolveString("$[[FOO(lower)]]").unwrap should be("bar")
+      ctCtxt.resolveString("$[[FOO(lower,capitalize)]]").unwrap should be("Bar")
+      ctCtxt.resolveString("$[[num(left:4)]]").unwrap should be("1234")
+      ctCtxt.resolveString("$[[num(right:4)]]").unwrap should be("2345")
+      ctCtxt.resolveString("$[[num(right:6)]]").unwrap should be("12345")
+      ctCtxt.resolveString("$[[version(replace:\\.:_)]]").unwrap should be("2_2_0")
+      ctCtxt.resolveString("$[[typeA(replace:A:1)(replace:B:2))]]").unwrap should be("1")
+      ctCtxt.resolveString("$[[typeB(replace:A:1,replace:B:2))]]").unwrap should be("2")
 
-      ContainerPropertyResolver.resolve(idSvc, "${{'$[[foo]]'.toUpperCase()}}") should be("BAR")
-      ContainerPropertyResolver.resolve(idSvc, "${{'$[[FOO]]'.toLowerCase()}}") should be("bar")
-      ContainerPropertyResolver.resolve(idSvc, "$[[foo(capitalize)]]") should be("Bar")
-      ContainerPropertyResolver.resolve(idSvc, "${{#left('$[[num]]', 4)}}") should be("1234")
-      ContainerPropertyResolver.resolve(idSvc, "${{#right('$[[num]]', 4)}}") should be("2345")
-      ContainerPropertyResolver.resolve(idSvc, "${{#right('$[[num]]', 6)}}") should be("12345")
-      ContainerPropertyResolver.resolve(idSvc, "${{'$[[version]]'.replaceAll('\\.', '_')}}") should be("2_2_0")
-      //      ContainerPropertyResolver.resolve(idSvc, "${{#replace('$[[typeA]]')}}") should be ("1")
-      ContainerPropertyResolver.resolve(idSvc, "$[[typeB(replace:A:1,replace:B:2))]]") should be("2")
+      ctCtxt.resolveString("${{'$[[foo]]'.toUpperCase()}}").unwrap should be("BAR")
+      ctCtxt.resolveString("${{'$[[FOO]]'.toLowerCase()}}").unwrap should be("bar")
+      ctCtxt.resolveString("$[[foo(capitalize)]]").unwrap should be("Bar")
+      ctCtxt.resolveString("${{#left('$[[num]]', 4)}}").unwrap should be("1234")
+      ctCtxt.resolveString("${{#right('$[[num]]', 4)}}").unwrap should be("2345")
+      ctCtxt.resolveString("${{#right('$[[num]]', 6)}}").unwrap should be("12345")
+      ctCtxt.resolveString("${{'$[[version]]'.replaceAll('\\.', '_')}}").unwrap should be("2_2_0")
+      //      ctCtxt.resolveString("${{#replace('$[[typeA]]')}}") should be ("1")
+      ctCtxt.resolveString("$[[typeB(replace:A:1,replace:B:2))]]").unwrap should be("2")
 
-      val enc : String = idSvc.getContainerContext().getContainerCryptoSupport().encrypt("$[[foo]]$[[foo(upper)]]").get
+      val enc : String = ctCtxt.cryptoSupport.encrypt("$[[foo]]$[[foo(upper)]]").unwrap
       val line = "$[encrypted[" + enc + "]]"
 
-      ContainerPropertyResolver.resolve(idSvc, line) should be("barBAR")
+      ctCtxt.resolveString(line).unwrap should be("barBAR")
     }
 
     "should allow to delay the property resolution" in {
-      ContainerPropertyResolver.resolve(idSvc, line = "$[[foo(lower)]]$[delayed[${{#foo}}]]") should be("bar${{#foo}}")
-      ContainerPropertyResolver.resolve(idSvc, line = "$[delayed[${{#foo}}]]") should be("${{#foo}}")
+      ctCtxt.resolveString("$[[foo(lower)]]$[delayed[${{#foo}}]]").unwrap should be("bar${{#foo}}")
+      ctCtxt.resolveString("$[delayed[${{#foo}}]]").unwrap should be("${{#foo}}")
     }
 
-    "should allow to resolve a spring expression" in {
-      ContainerPropertyResolver.resolve(
-        idSvc,
-        line = "${{#foo}}",
+    "should allow to resolveString a spring expression" in {
+      ctCtxt.resolveString(
+        "${{#foo}}",
         additionalProps = Map(
           "myProperty" -> "Blended"
         )
-      ) should be("")
+      ).unwrap should be("")
 
-      ContainerPropertyResolver.resolve(
-        idSvc,
-        line = "${{#myProperty}}",
+      ctCtxt.resolveString(
+        "${{#myProperty}}",
         additionalProps = Map(
           "myProperty" -> "Blended"
         )
-      ) should be("Blended")
+      ).unwrap should be("Blended")
     }
 
     "should allow to nest lookups and expressions" in {
-      ContainerPropertyResolver.resolve(
-        idSvc,
-        line = "$[[${{#myProperty}}]]",
+      ctCtxt.resolveString(
+        "$[[${{#myProperty}}]]",
         additionalProps = Map(
           "myProperty" -> "foo"
         )
-      ) should be("bar")
+      ).unwrap should be("bar")
     }
   }
 }

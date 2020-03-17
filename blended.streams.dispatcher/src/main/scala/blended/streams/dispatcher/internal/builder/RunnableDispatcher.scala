@@ -4,16 +4,17 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.scaladsl.{Flow, GraphDSL, Source}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.persistence.PersistenceService
+import blended.jmx.statistics.ServiceInvocationReporter
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
-import blended.streams.{StreamController, StreamControllerConfig}
-import blended.util.logging.Logger
+import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
+import blended.util.logging.{LogLevel, Logger}
+import blended.util.RichTry._
 
 import scala.collection.mutable
 import scala.util.Try
@@ -22,10 +23,11 @@ class RunnableDispatcher(
   registry : BridgeProviderRegistry,
   cf : IdAwareConnectionFactory,
   bs : DispatcherBuilderSupport,
-  idSvc : ContainerIdentifierService,
-  pSvc : PersistenceService,
-  routerCfg : ResourceTypeRouterConfig
-)(implicit system : ActorSystem, materializer : Materializer) extends JmsStreamSupport {
+  ctCtxt : ContainerContext,
+  tMgr : FlowTransactionManager,
+  routerCfg : ResourceTypeRouterConfig,
+  streamsCfg : BlendedStreamsConfig
+)(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
   private val startedDispatchers : mutable.Map[String, ActorRef] = mutable.Map.empty
   private var transMgr : Option[ActorRef] = None
@@ -33,42 +35,73 @@ class RunnableDispatcher(
 
   private val internal : BridgeProviderConfig = registry.internalProvider.get
 
-  private[builder] def dispatcherSend() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  private[builder] def dispatcherSend(streamLogger : FlowEnvelopeLogger) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
-    val sendProducerSettings = JmsProducerSettings(
-      log = bs.streamLogger,
-      connectionFactory = cf,
-      headerCfg = bs.headerConfig,
-      destinationResolver = s => new DispatcherDestinationResolver(s, registry, bs)
-    )
+    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+      GraphDSL.create() { implicit b =>
 
-    jmsProducer(
-      name = "dispatcherSend",
-      autoAck = false,
-      settings = sendProducerSettings
-    )
+        import GraphDSL.Implicits._
+
+        val sendProducerSettings = JmsProducerSettings(
+          log = streamLogger,
+          connectionFactory = cf,
+          headerCfg = bs.headerConfig,
+          destinationResolver = s => new DispatcherDestinationResolver(s, registry, bs, streamLogger),
+          logLevel = env => if (
+            env.header[String](bs.headerConfig.headerBridgeVendor).contains(internal.vendor) &&
+              env.header[String](bs.headerConfig.headerBridgeProvider).contains(internal.provider)
+          ) {
+            // In case the final destination lies within the internal JMS provider, we log the message sent as info
+            LogLevel.Info
+          } else {
+            // Otherwise we log it as debug
+            LogLevel.Debug
+          }
+        )
+
+        val clearRetrying = b.add(
+          FlowProcessor.fromFunction("clearRetrying", streamLogger){ env => Try {
+            env.removeHeader(bs.headerConfig.headerRetrying)
+          }}
+        )
+
+        val performSend = b.add(jmsProducer(
+          name = "dispatcherSend",
+          autoAck = false,
+          settings = sendProducerSettings
+        ))
+
+        clearRetrying ~> performSend
+
+        FlowShape(clearRetrying.in, performSend.out)
+      }
+    }
+
+    Flow.fromGraph(g)
   }
 
   // Simply stick the transaction event into the transaction destination
-  private[builder] def transactionSend()(implicit system : ActorSystem, materializer : Materializer) : Graph[FlowShape[FlowTransactionEvent, FlowEnvelope], NotUsed] = {
+  private[builder] def transactionSend(streamLogger : FlowEnvelopeLogger)(implicit system : ActorSystem, materializer: Materializer) :
+    Graph[FlowShape[FlowTransactionEvent, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
       val transform = b.add(Flow.fromFunction[FlowTransactionEvent, FlowEnvelope] { t =>
         FlowTransactionEvent.event2envelope(bs.headerConfig)(t)
-          .withHeader(bs.headerConfig.headerTrackSource, bs.streamLogger.name).get
+          .withHeader(bs.headerConfig.headerTrackSource, streamLogger.underlying.name).get
       })
 
       val transactionSendSettings = JmsProducerSettings(
-        log = bs.streamLogger,
+        log = streamLogger,
         headerCfg = bs.headerConfig,
         connectionFactory = cf,
         destinationResolver = s => new TransactionDestinationResolver(s, JmsDestination.asString(internal.transactions)),
         jmsDestination = None,
         deliveryMode = JmsDeliveryMode.Persistent,
         priority = JmsSendParameter.defaultPriority,
-        timeToLive = None
+        timeToLive = None,
+        logLevel = _ => LogLevel.Debug
       )
 
       val producer = b.add(jmsProducer(
@@ -82,7 +115,7 @@ class RunnableDispatcher(
     }
   }
 
-  private[builder] def transactionStream(tMgr : ActorRef) : Try[ActorRef] = Try {
+  private[builder] def transactionStream(tMgr : FlowTransactionManager) : Try[ActorRef] = Try {
 
     implicit val builderSupport : DispatcherBuilderSupport = bs
 
@@ -91,25 +124,20 @@ class RunnableDispatcher(
       tMgr = tMgr,
       internalCf = cf,
       dispatcherCfg = routerCfg,
-      log = Logger(bs.headerConfig.prefix + ".transactions")
+      streamsCfg = streamsCfg,
+      log = FlowEnvelopeLogger.create(bs.headerConfig, Logger(bs.headerConfig.prefix + ".transactions"))
     ).build()
   }
-
-  private[builder] val builder = DispatcherBuilder(
-    idSvc = idSvc,
-    dispatcherCfg = routerCfg,
-    dispatcherSend()
-  )(bs)
 
   def bridgeSource(
     internalProvider : BridgeProviderConfig,
     provider : BridgeProviderConfig,
-    logger : Logger
+    logger : FlowEnvelopeLogger
   ) : Source[FlowEnvelope, NotUsed] = {
 
     // todo : stick into config
-    val settings = JMSConsumerSettings(
-      log = bs.streamLogger,
+    val settings = JmsConsumerSettings(
+      log = logger,
       headerCfg = bs.headerConfig,
       connectionFactory = cf,
       sessionCount = 3,
@@ -119,7 +147,8 @@ class RunnableDispatcher(
       } else {
         val dest = s"${internalProvider.inbound.name}.${provider.vendor}.${provider.provider}"
         Some(JmsDestination.create(dest).get)
-      }
+      },
+      logLevel = _ => if (provider.internal) LogLevel.Info else LogLevel.Debug
     )
 
     val source = jmsConsumer(
@@ -130,7 +159,7 @@ class RunnableDispatcher(
 
     if (provider.internal) {
 
-      val setShard = Option(System.getProperty("blended.streams.transactionShard")) match {
+      val setShard = streamsCfg.transactionShard match {
         case None => source
         case Some(shard) => source.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
           env.withHeader(bs.headerConfig.headerTransShard, shard, overwrite = false).get
@@ -143,7 +172,7 @@ class RunnableDispatcher(
         headerCfg = bs.headerConfig,
         inbound = true,
         trackSource = "internalDispatcher",
-        log = bs.streamLogger
+        log = logger
       ).flow()
 
       setShard.via(startTransaction)
@@ -158,38 +187,59 @@ class RunnableDispatcher(
       // Get the internal provider
       val internalProvider = registry.internalProvider.get
 
-      // We will create the Transaction Manager
-      transMgr = Some(system.actorOf(FlowTransactionManager.props(pSvc)))
-
       // The transaction stream will process the transaction events from the transactions destination
-      transStream = Some(transactionStream(transMgr.get).get)
-
-      // The blueprint for the dispatcher flow
-      val dispatcher : Flow[FlowEnvelope, FlowTransactionEvent, NotUsed] =
-        Flow.fromGraph(builder.dispatcher())
+      transStream = Some(transactionStream(tMgr).get)
 
       // Create one dispatcher for each configured provider
       registry.allProvider.foreach { provider =>
 
         // Create a specific logger for each Dispatcher instance
-        val dispLogger = Logger(bs.streamLogger.name + "." + provider.vendor + "." + provider.provider)
+        val dispLogger = Logger(bs.headerConfig.prefix + ".dispatcher." + provider.vendor + "." + provider.provider)
+        val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(bs.headerConfig, dispLogger)
 
-        // Connect the consumer to a dispatcher
-        val source = bridgeSource(internalProvider, provider, dispLogger).via(dispatcher)
-
-        // Prepare and start the dispatcher
-        val streamCfg = StreamControllerConfig.fromConfig(routerCfg.rawConfig).get
-          .copy(
-            name = dispLogger.name
+        // The blueprint for the dispatcher flow
+        val dispatcher : Flow[FlowEnvelope, FlowTransactionEvent, NotUsed] =
+          Flow.fromGraph(
+            DispatcherBuilder(
+              ctCtxt = ctCtxt,
+              dispatcherCfg = routerCfg,
+              envLogger = envLogger,
+              sendFlow = dispatcherSend(envLogger),
+            )(bs).dispatcher()
           )
 
-        val actor = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg))
+        val startStats : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.fromFunction("startStats", envLogger){ env => Try {
+          val resType : String = env.header[String](bs.headerConfig.headerResourceType).getOrElse("UNKNOWN")
+          val id : String = ServiceInvocationReporter.invoked(
+            component = "dispatcher",
+            subComponents = Map(
+              "jmsvendor" -> provider.vendor,
+              "provider" -> provider.provider,
+              "resourcetype" -> resType
+            )
+          )
+          env.withHeader(bs.headerConfig.headerStatsId, id).unwrap
+        }}
 
-        bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
+        // Connect the consumer to a dispatcher
+        val source : Source[FlowTransactionEvent, NotUsed] =
+          bridgeSource(internalProvider, provider, envLogger)
+            .via(startStats)
+            .via(dispatcher)
+
+        // Wrap the dispatcher into a stream controller and make sure, the generated transaction events are sent to
+        // the proper JMS destination
+        val actor : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+          streamName = dispLogger.name,
+          src = source.via(transactionSend(envLogger)),
+          streamCfg = streamsCfg
+        )(onMaterialize = _ => ()))
+
+        dispLogger.debug(s"Started dispatcher flow for provider [${provider.id}]")
         startedDispatchers.put(provider.id, actor)
       }
     } catch {
-      case t : Throwable => bs.streamLogger.error(t)(s"Failed to start dispatcher [${t.getMessage()}]")
+      case t : Throwable => Logger[RunnableDispatcher].error(t)(s"Failed to start dispatcher [${t.getMessage()}]")
     }
   }
 

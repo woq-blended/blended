@@ -3,8 +3,8 @@ package blended.activemq.client.internal
 import akka.actor.ActorSystem
 import blended.activemq.client.{ConnectionVerifier, RoundtripConnectionVerifier}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue, SimpleIdAwareConnectionFactory}
+import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.FlowHeaderConfig
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
@@ -57,7 +57,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
         verify = env => true,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
-        headerConfig = FlowHeaderConfig(prefix = "App")
+        headerConfig = FlowHeaderConfig.create(prefix = "App")
       )
 
       val f = verifier.verifyConnection(cf)
@@ -70,14 +70,14 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
         verify = env => false,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
-        headerConfig = FlowHeaderConfig(prefix = "App")
+        headerConfig = FlowHeaderConfig.create(prefix = "App")
       )
 
       val f = verifier.verifyConnection(cf)
       assert(!Await.result(f, 5.seconds))
     }
 
-    "stay unresolve if the connection to the broker did not succeed" in {
+    "stay unresolved if the connection to the broker did not succeed" in {
 
       val ucf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
         vendor = "amq",
@@ -91,7 +91,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
         verify = env => false,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
-        headerConfig = FlowHeaderConfig(prefix = "App")
+        headerConfig = FlowHeaderConfig.create(prefix = "App")
       )
 
       val f = verifier.verifyConnection(ucf)

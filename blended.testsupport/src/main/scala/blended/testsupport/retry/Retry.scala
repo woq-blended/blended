@@ -3,8 +3,8 @@ package blended.testsupport.retry
 import akka.actor.Scheduler
 import blended.util.logging.Logger
 
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 object Retry {
 
@@ -15,7 +15,7 @@ object Retry {
    * @param retries The max count of retries, before giving up.
    * @param onRetry Action to be run before a retry.
    * @param op The operation to be executed and, iff failed, retried.
-   * @param ex ExecutionContext to run the inner futures with.
+   * @param ec ExecutionContext to run the inner futures with.
    * @param s The Scheduler used to schedule the next retry.
    *
    * @return The Future containing the result of `op` or the last failure.

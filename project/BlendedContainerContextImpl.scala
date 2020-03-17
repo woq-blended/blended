@@ -1,6 +1,7 @@
 import blended.sbt.Dependencies
 import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import sbt._
 
 object BlendedContainerContextImpl extends ProjectFactory {
@@ -22,7 +23,6 @@ object BlendedContainerContextImpl extends ProjectFactory {
 
       Dependencies.scalatest % "test",
       Dependencies.scalacheck % "test",
-      Dependencies.mockitoAll % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test",
       Dependencies.jclOverSlf4j % "test"
@@ -31,6 +31,12 @@ object BlendedContainerContextImpl extends ProjectFactory {
     override def bundle : OsgiBundle = super.bundle.copy(
       bundleActivator = s"$projectName.internal.ContainerContextActivator",
       importPackage = Seq("blended.launcher.runtime;resolution:=optional")
+    )
+
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogLogPackages ++= Map(
+        "blended" -> "TRACE"
+      )
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(

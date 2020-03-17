@@ -2,8 +2,7 @@ package blended.testsupport.pojosr
 
 import java.io.File
 
-import blended.container.context.api.ContainerIdentifierService
-import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
+import blended.container.context.api.ContainerContext
 import blended.util.logging.Logger
 import domino.DominoActivator
 import org.osgi.framework.{BundleActivator, ServiceReference}
@@ -42,7 +41,7 @@ trait PojoSrTestHelper {
     }
   }
 
-  def idSvcActivator(
+  def contextActivator(
     mandatoryProperties : Option[String] = None
   ) : BundleActivator = {
     new DominoActivator {
@@ -51,11 +50,7 @@ trait PojoSrTestHelper {
         System.setProperty("blended.updater.profile.properties.keys", s))
 
       whenBundleActive {
-        val ctCtxt = new MockContainerContext(baseDir)
-        // This needs to be a fixed uuid as some tests might be for restarts and require the same id
-        new ContainerIdentifierServiceImpl(ctCtxt) {
-          override lazy val uuid : String = pojoUuid
-        }.providesService[ContainerIdentifierService]
+        new MockContainerContext(baseDir, pojoUuid).providesService[ContainerContext]
       }
     }
   }
@@ -80,7 +75,7 @@ trait PojoSrTestHelper {
     System.setProperty("blended.container.home", baseDir)
     sysProperties.foreach { case (k, v) => System.setProperty(k, v) }
     startBundle(createRegistry().get)(
-      classOf[ContainerIdentifierServiceImpl].getPackage().getName(), idSvcActivator(Some(mandatoryProperties.mkString(",")))
+      classOf[ContainerContext].getPackage().getName(), contextActivator(Some(mandatoryProperties.mkString(",")))
     ).get._2
   }
 

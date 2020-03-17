@@ -1,35 +1,15 @@
 package blended.streams.jms
 
-import blended.jms.utils.{JmsAckSession, JmsDestination}
+import blended.jms.utils.JmsDestination
+import blended.streams.FlowHeaderConfig
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message._
-import blended.streams.transaction.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.RichTry._
 import javax.jms._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.Try
-import blended.util.RichTry._
-
-case class JmsAcknowledgeHandler(
-  id : String,
-  jmsMessage : Message,
-  session : JmsAckSession,
-  created : Long = System.currentTimeMillis(),
-  log : Logger
-) extends AcknowledgeHandler {
-
-  override def deny() : Try[Unit] = Try {
-    log.trace(s"Scheduling denial for envelope [$id] in [${session.sessionId}].")
-    session.deny(jmsMessage)
-  }
-
-  override def acknowledge() : Try[Unit] = Try {
-    log.trace(s"Scheduling acknowledgement for envelope [$id] in [${session.sessionId}].")
-    session.ack(jmsMessage)
-  }
-}
 
 object JmsSendParameter {
   val defaultPriority : Int = 4
@@ -57,16 +37,12 @@ trait JmsEnvelopeHeader {
   val replyToHeader : String => String = s => jmsHeaderPrefix(s) + "ReplyTo"
   val timestampHeader : String => String = s => jmsHeaderPrefix(s) + "Timestamp"
   val typeHeader : String => String = s => jmsHeaderPrefix(s) + "Type"
+  val msgIdHeader : String => String = s => jmsHeaderPrefix(s) + "MessageId"
 
   val replyToQueueName : String = "replyTo"
 }
 
 object JmsFlowSupport extends JmsEnvelopeHeader {
-
-  val hyphen : String = "-"
-  val dot : String = "."
-  val hyphen_repl : String = "_HYPHEN_"
-  val dot_repl : String = "_DOT_"
 
   // Convert a JMS message into a FlowMessage. This is normally used in JMS Sources
   val jms2flowMessage : FlowHeaderConfig => JmsSettings => Message => Try[FlowMessage] = headerConfig => settings => msg => Try {
@@ -95,7 +71,8 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
         priorityHeader(prefix) -> msg.getJMSPriority(),
         deliveryModeHeader(prefix) -> delMode,
         timestampHeader(prefix) -> msg.getJMSTimestamp(),
-        typeHeader(prefix) -> msg.getJMSType()
+        typeHeader(prefix) -> msg.getJMSType(),
+        msgIdHeader(prefix) -> msg.getJMSMessageID()
       ).unwrap
 
       val expireHeaderMap : Map[String, MsgProperty] = msg.getJMSExpiration() match {
@@ -113,9 +90,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
 
       val props : Map[String, MsgProperty] = msg.getPropertyNames().asScala.map { name =>
 
-        val propName = name.toString()
-          .replaceAll(hyphen_repl, hyphen)
-          .replaceAll(dot_repl, dot)
+        val propName = settings.keyFormatStrategy.handleReceivedKey(name.toString())
 
         propName -> MsgProperty(msg.getObjectProperty(name.toString())).unwrap
       }.toMap

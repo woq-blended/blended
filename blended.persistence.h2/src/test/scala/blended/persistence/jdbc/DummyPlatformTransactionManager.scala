@@ -1,8 +1,8 @@
 package blended.persistence.jdbc
 
 import blended.util.logging.Logger
-import org.springframework.transaction.{IllegalTransactionStateException, PlatformTransactionManager, TransactionDefinition, TransactionStatus}
 import org.springframework.transaction.support.SimpleTransactionStatus
+import org.springframework.transaction.{IllegalTransactionStateException, PlatformTransactionManager, TransactionDefinition, TransactionStatus}
 
 /**
  * A dummy platform transaction manager without any transactional behaviour but with logging. Only for testing.

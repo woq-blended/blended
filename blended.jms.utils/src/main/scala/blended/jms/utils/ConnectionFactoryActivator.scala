@@ -47,11 +47,11 @@ abstract class ConnectionFactoryActivator extends DominoActivator with ActorSyst
           val cfVendor = osgiCfg.config.getString("vendor")
           val cfProvider = entry.getKey()
 
-          log.info(s"Configuring connection factory for vendor [$cfVendor] with provider [$cfProvider]")
+          log.info(s"Configuring connection factory for vendor [${cfVendor}:${cfProvider}]")
 
           val fnEnabled = connectionFactoryEnabled.map(f => f(osgiCfg))
 
-          val cfCfg = BlendedJMSConnectionConfig.fromConfig(osgiCfg.idSvc.resolvePropertyString)(
+          val cfCfg = BlendedJMSConnectionConfig.fromConfig(osgiCfg.ctContext)(
             vendor = cfVendor,
             provider = cfProvider,
             cfg = osgiCfg.config.getConfig("factories").getConfig(cfProvider)

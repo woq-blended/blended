@@ -4,8 +4,8 @@ import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpChallenges, H
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, AuthenticationResult}
-import blended.security.{BlendedPermission, BlendedPermissionManager}
 import blended.security.SubjectImplicits._
+import blended.security.{BlendedPermission, BlendedPermissionManager}
 import blended.util.logging.Logger
 import javax.security.auth.Subject
 import javax.security.auth.callback._

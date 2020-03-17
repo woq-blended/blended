@@ -4,6 +4,7 @@ felix-cache
 *.backup
 *~
 *.swp
+*.asc
 libs/
 3rdparty
 package-lock.json
@@ -11,6 +12,7 @@ package-lock.json
 node_modules 
 target.tgz
 .sbtopts
+.metals 
 
 blended.sslcontext/notes.txt
 

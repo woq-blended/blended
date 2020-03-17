@@ -2,7 +2,7 @@ package blended.security
 
 import java.util
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.security.boot.{GroupPrincipal, UserPrincipal}
 import blended.security.internal.BlendedConfiguration
 import blended.util.logging.Logger
@@ -22,7 +22,7 @@ abstract class AbstractLoginModule extends LoginModule {
   protected var cbHandler : Option[CallbackHandler] = None
   protected var loginConfig : Config = ConfigFactory.empty()
   protected var loggedInUser : Option[String] = None
-  protected var idSvc : Option[ContainerIdentifierService] = None
+  protected var ctCtxt : Option[ContainerContext] = None
 
   protected val moduleName : String
 
@@ -48,7 +48,7 @@ abstract class AbstractLoginModule extends LoginModule {
     log.info(s"Initialising Login module ...[$moduleName]")
 
     loginConfig = getOption[Config](BlendedConfiguration.configProp).getOrElse(ConfigFactory.empty())
-    idSvc = getOption[ContainerIdentifierService](BlendedConfiguration.idSvcProp)
+    ctCtxt = getOption[ContainerContext](BlendedConfiguration.ctCtxtProp)
 
     // This is the subject which needs to be enriched with the user and group information
     this.subject = Option(subject)
@@ -91,6 +91,7 @@ abstract class AbstractLoginModule extends LoginModule {
     loggedInUser match {
       case None => false
       case Some(u) =>
+        log.debug(s"User [$u] logged in successfully")
         subject.foreach { s =>
           s.getPrincipals().add(new UserPrincipal(u))
           val groups = getGroups(u)

@@ -11,10 +11,9 @@ trait Dependencies {
   val activeMqVersion = "5.15.6"
   val akkaVersion = "2.5.21"
   val akkaHttpVersion = "10.1.7"
-  val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
-  val jettyVersion = "9.4.18.v20190429"
-  val jolokiaVersion = "1.6.1"
+  val jettyVersion = "9.4.21.v20190926"
+  val jolokiaVersion = "1.5.0"
   val microJsonVersion = "1.4"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
@@ -32,8 +31,8 @@ trait Dependencies {
   val activeMqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
   val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % activeMqVersion
   val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
+
   val akkaActor = akka("actor")
-  val akkaCamel = akka("camel")
   val akkaHttp = akkaHttpModule("http")
   val akkaHttpCore = akkaHttpModule("http-core")
   val akkaHttpTestkit = akkaHttpModule("http-testkit")
@@ -49,9 +48,6 @@ trait Dependencies {
 
   val bouncyCastleBcprov = "org.bouncycastle" % "bcprov-jdk15on" % "1.60"
   val bouncyCastlePkix = "org.bouncycastle" % "bcpkix-jdk15on" % "1.60"
-
-  val camelCore = "org.apache.camel" % "camel-core" % camelVersion
-  val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
 
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
   val commonsBeanUtils = "commons-beanutils" % "commons-beanutils" % "1.9.3"
@@ -106,6 +102,7 @@ trait Dependencies {
 
   val orgOsgi = "org.osgi" % "org.osgi.core" % "6.0.0"
   val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
+  val osLib = "com.lihaoyi" %% "os-lib" % "0.4.2"
 
   val parboiledCore = "org.parboiled" % "parboiled-core" % parboiledVersion
   val parboiledScala = "org.parboiled" %% "parboiled-scala" % parboiledVersion
@@ -123,6 +120,17 @@ trait Dependencies {
   val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
   val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
   val snakeyaml = "org.yaml" % "snakeyaml" % "1.18"
+
+  // libs for splunk support via HEC
+  val splunkjava = "com.splunk.logging" % "splunk-library-javalogging" % "1.7.3"
+  val httpCore = "org.apache.httpcomponents" % "httpcore" % "4.4.9"
+  val httpCoreNio = "org.apache.httpcomponents" % "httpcore" % "4.4.6"
+  val httpComponents = "org.apache.httpcomponents" % "httpclient" % "4.5.5"
+  val httpAsync = "org.apache.httpcomponents" % "httpasyncclient" % "4.1.3"
+  val commonsLogging = "commons-logging" % "commons-logging" % "1.2"
+  val jsonSimple = "com.googlecode.json-simple" % "json-simple" % "1.1.1"
+  // -------------- end of splunk libs -----------------------------------------
+
   val sprayJson = "io.spray" %% s"spray-json" % sprayVersion
 
   //  protected def spring(n: String) = "org.springframework" % s"spring-${n}" % springVersion

@@ -7,8 +7,8 @@ import blended.security.BlendedPermissionManager
 import blended.security.login.api.{AbstractTokenStore, Token, TokenHandler}
 
 import scala.collection.mutable
-import scala.concurrent.duration._
 import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 object TokenStoreMessages {

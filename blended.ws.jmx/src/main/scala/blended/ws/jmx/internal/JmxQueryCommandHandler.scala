@@ -1,10 +1,5 @@
 package blended.ws.jmx.internal
 
-import blended.security.login.api.Token
-import blended.websocket.{WebSocketCommandHandler, JsonHelper}
-
-import scala.util.Try
-
 //class JmxQueryCommandHandler extends WebSocketCommandHandler {
 //  /**
 //    * Execute a command on behalf of a client. All permission information is contained

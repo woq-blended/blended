@@ -2,19 +2,21 @@ package blended.streams.dispatcher.internal.builder
 
 import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.JmsDestination
+import blended.streams.FlowHeaderConfig
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.util.RichTry._
+import blended.util.logging.LogLevel
 import javax.jms.Session
 
 import scala.concurrent.duration._
 import scala.util.Try
-import blended.util.RichTry._
 
 class DispatcherDestinationResolver(
   override val settings : JmsProducerSettings,
   registry : BridgeProviderRegistry,
-  bs : DispatcherBuilderSupport
+  bs : DispatcherBuilderSupport,
+  streamLogger : FlowEnvelopeLogger
 ) extends FlowHeaderConfigAware with JmsEnvelopeHeader {
 
   override def headerConfig : FlowHeaderConfig = bs.headerConfig
@@ -41,7 +43,7 @@ class DispatcherDestinationResolver(
     val delMode : JmsDeliveryMode = JmsDeliveryMode.create(env.header[String](deliveryModeHeader(bs.headerConfig.prefix)).get).unwrap
     val ttl : Option[FiniteDuration] = env.header[Long](bs.headerTimeToLive).map(_.millis)
 
-    bs.streamLogger.debug(s"Sending envelope [${env.id}] to [$dest]")
+    streamLogger.logEnv(env, LogLevel.Debug, s"Sending envelope [${env.id}] to [$dest]")
 
     JmsSendParameter(
       message = msg,

@@ -7,11 +7,10 @@ import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.{Done, NotUsed}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.streams.StreamFactories
-import blended.streams.message.FlowEnvelope
+import blended.streams.{FlowHeaderConfig, StreamFactories}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.{AckProcessor, Collector}
-import blended.streams.transaction.FlowHeaderConfig
-import blended.util.logging.Logger
+import blended.util.logging.LogLevel
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -82,8 +81,8 @@ trait JmsStreamSupport {
   }
 
   def sendMessages(
-    producerSettings : JmsProducerSettings,
-    log : Logger,
+    producerSettings: JmsProducerSettings,
+    log : FlowEnvelopeLogger,
     msgs : FlowEnvelope*
   )(implicit system : ActorSystem, materializer : Materializer, ectxt : ExecutionContext) : Try[KillSwitch] = {
 
@@ -103,11 +102,13 @@ trait JmsStreamSupport {
     headerCfg : FlowHeaderConfig,
     cf : IdAwareConnectionFactory,
     dest : JmsDestination,
-    log : Logger,
+    log : FlowEnvelopeLogger,
     listener : Integer = 2,
     minMessageDelay : Option[FiniteDuration] = None,
-    selector : Option[String] = None
-  )(implicit timeout : FiniteDuration, system : ActorSystem, materializer : Materializer) : Collector[FlowEnvelope] = {
+    selector : Option[String] = None,
+    completeOn : Option[Seq[FlowEnvelope] => Boolean] = None,
+    timeout : Option[FiniteDuration]
+  )(implicit system : ActorSystem, materializer : Materializer) : Collector[FlowEnvelope] = {
 
     val listenerCount : Int = if (dest.isInstanceOf[JmsQueue]) {
       listener
@@ -116,33 +117,39 @@ trait JmsStreamSupport {
     }
 
     val collected : FlowEnvelope => Unit = { env =>
-      log.debug(s"Acknowledging envelope [${env.id}]")
+      log.logEnv(env, LogLevel.Debug, s"Acknowledging envelope [${env.id}]")
       env.acknowledge()
     }
 
+    val source : Source[FlowEnvelope, NotUsed] = jmsConsumer(
+      name = dest.asString,
+      settings =
+        JmsConsumerSettings(log = log, headerCfg = headerCfg, connectionFactory = cf)
+          .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
+          .withSessionCount(listenerCount)
+          .withDestination(Some(dest))
+          .withSelector(selector),
+      minMessageDelay = minMessageDelay
+    )
+
     StreamFactories.runSourceWithTimeLimit(
-      dest.asString,
-      jmsConsumer(
-        name = dest.asString,
-        settings =
-          JMSConsumerSettings(log = log, headerCfg = headerCfg, connectionFactory = cf)
-            .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
-            .withSessionCount(listenerCount)
-            .withDestination(Some(dest))
-            .withSelector(selector),
-        minMessageDelay = minMessageDelay
-      ),
-      timeout
-    )(collected)
+      name = dest.asString,
+      source = source,
+      timeout = timeout,
+      onCollected = Some(collected),
+      completeOn = completeOn
+    )
   }
 
   def jmsProducer(
     name : String,
     settings : JmsProducerSettings,
     autoAck : Boolean
-  )(implicit system : ActorSystem, materializer : Materializer) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  )(implicit system : ActorSystem) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
-    val f = Flow.fromGraph(new JmsSinkStage(name, settings)).named(name)
+    implicit val materializer : Materializer = ActorMaterializer()
+
+    val f = Flow.fromGraph(new JmsProducerStage(name, settings)).named(name)
 
     if (autoAck) {
       f.via(new AckProcessor(s"ack-$name").flow.named(s"ack-$name"))
@@ -153,14 +160,8 @@ trait JmsStreamSupport {
 
   def jmsConsumer(
     name : String,
-    settings : JMSConsumerSettings,
+    settings : JmsConsumerSettings,
     minMessageDelay : Option[FiniteDuration]
-  )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] = {
-
-    if (settings.acknowledgeMode == AcknowledgeMode.ClientAcknowledge) {
-      Source.fromGraph(new JmsAckSourceStage(name, settings, minMessageDelay))
-    } else {
-      Source.fromGraph(new JmsSourceStage(name, settings))
-    }
-  }
+  )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] =
+    Source.fromGraph(new JmsConsumerStage(name, settings, minMessageDelay))
 }

@@ -1,19 +1,20 @@
 package blended.streams.dispatcher.internal.builder
 
+import java.io.File
 import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.persistence.PersistenceService
-import blended.persistence.h2.internal.H2Activator
+import blended.streams.BlendedStreamsConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
+import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionUpdate}
-import blended.streams.worklist.WorklistState
-import blended.testsupport.RequiresForkedJVM
+import blended.streams.worklist._
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.{BeforeAndAfterAll, Matchers}
@@ -35,16 +36,13 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   override def loggerName: String = "outbound"
 
   override def bundles: Seq[(String, BundleActivator)] = super.bundles ++ Seq(
-    "blended.activemq.brokerstarter" -> new BrokerActivator(),
-    "blended.persistence.h2" -> new H2Activator()
+    "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
     clazz = ClassTag(classOf[ActorSystem]),
     timeout = timeout
   )
-
-  private val pSvc = mandatoryService[PersistenceService](registry)(None)
 
   private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
@@ -55,7 +53,8 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     ctxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).unwrap
   private val cf = jmsConnectionFactory(registry, ctxt)(internalVendor, internalProvider, 3.seconds).unwrap
 
-  private val tMgr = system.actorOf(FlowTransactionManager.props(pSvc))
+  private val tMgr : FlowTransactionManager = FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "transOutbound"))
+  private val streamsCfg : BlendedStreamsConfig = mandatoryService[BlendedStreamsConfig](registry)(None)
 
   override protected def beforeAll(): Unit = {
     implicit val bs : DispatcherBuilderSupport = ctxt.bs
@@ -64,7 +63,8 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       tMgr = tMgr,
       dispatcherCfg = ctxt.cfg,
       internalCf = cf,
-      ctxt.bs.streamLogger
+      streamsCfg = streamsCfg,
+      log = ctxt.envLogger
     ).build()
   }
 
@@ -79,7 +79,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     (implicit system : ActorSystem, materializer : Materializer, eCtxt: ExecutionContext) : KillSwitch = {
 
     val pSettings : JmsProducerSettings = JmsProducerSettings(
-      log = Logger(loggerName),
+      log = ctxt.envLogger,
       headerCfg = ctxt.bs.headerConfig,
       connectionFactory = cf,
       jmsDestination = Some(JmsQueue("internal.transactions"))
@@ -87,7 +87,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
 
     sendMessages(
       pSettings,
-      log = ctxt.bs.streamLogger,
+      log = ctxt.envLogger,
       envelopes: _*
     ).unwrap
   }
@@ -96,7 +96,8 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     headerCfg = ctxt.bs.headerConfig,
     cf = cf,
     dest = JmsQueue("cbeOut"),
-    Logger(loggerName)
+    log = ctxt.envLogger,
+    timeout = Some(timeout)
   )
 
   "The transaction outbound handler should" - {
@@ -148,7 +149,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       val envStart = transactionEnvelope(ctxt, FlowTransactionUpdate(
         transactionId = UUID.randomUUID().toString(),
         properties = FlowMessage.noProps,
-        updatedState = WorklistState.Completed,
+        updatedState = WorklistStateCompleted,
         branchIds = "foo, bar"
       )).withHeader(ctxt.bs.headerCbeEnabled, true).unwrap
 

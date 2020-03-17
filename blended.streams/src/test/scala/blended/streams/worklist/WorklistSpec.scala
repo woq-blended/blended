@@ -5,6 +5,8 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, KillSwitches, Materializer, OverflowStrategy}
 import akka.testkit.TestKit
+import blended.streams.FlowHeaderConfig
+import blended.streams.message.FlowEnvelopeLogger
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.scalatest.Matchers
@@ -21,6 +23,8 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
   with Matchers {
 
   private val log = Logger[WorklistSpec]
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
   private implicit val materialzer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private val defaultCooldown = 500.millis
@@ -36,7 +40,7 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
 
     val sink = Sink.seq[WorklistEvent]
 
-    val mgr : Flow[WorklistEvent, WorklistEvent, NotUsed] = WorklistManager.flow("worklist", log)
+    val mgr : Flow[WorklistEvent, WorklistEvent, NotUsed] = WorklistManager.flow("worklist", envLogger)
 
     val ((actor, killswitch), result) = source
       .viaMat(KillSwitches.single)(Keep.both)
@@ -86,8 +90,8 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
 
       withWorklistManager(
         WorklistStarted(worklist(item1)),
-        WorklistStepCompleted(worklist(item2), WorklistState.Completed),
-        WorklistStepCompleted(worklist(item1), WorklistState.Completed),
+        WorklistStepCompleted(worklist(item2), WorklistStateCompleted),
+        WorklistStepCompleted(worklist(item1), WorklistStateCompleted),
       ) { r =>
 
         r should have size(2)
@@ -98,8 +102,8 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
 
       withWorklistManager(
         WorklistStarted(worklist(item1, item2)),
-        WorklistStepCompleted(worklist(item2), WorklistState.Completed),
-        WorklistStepCompleted(worklist(item1), WorklistState.Completed),
+        WorklistStepCompleted(worklist(item2), WorklistStateCompleted),
+        WorklistStepCompleted(worklist(item1), WorklistStateCompleted),
       ) { r =>
 
         r should have size(2)
@@ -108,7 +112,7 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
 
         r.last match {
           case t : WorklistTerminated =>
-            t.state should be (WorklistState.Completed)
+            t.state should be (WorklistStateCompleted)
           case _ => fail()
         }
       }
@@ -128,7 +132,7 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
         assert(r.head.isInstanceOf[WorklistStarted])
         r.last match {
           case t : WorklistTerminated =>
-            t.state should be (WorklistState.TimeOut)
+            t.state should be (WorklistStateTimeout)
           case _ => fail()
         }
       }

@@ -42,7 +42,7 @@ object ScepTestClient {
 
     val provider = new ScepCertificateProvider(scepConfig)
 
-    val cert1 = provider.refreshCertificate(None, cnProvider).get.copy(changed = true)
+    val cert1 = provider.refreshCertificate(None, cnProvider).get
 
     cert1.chain.foreach { c =>
       log.info(X509CertificateInfo(c).toString)
@@ -50,7 +50,7 @@ object ScepTestClient {
 
     log.info("=" * 100)
 
-    val cert2 = provider.refreshCertificate(Some(cert1), cnProvider).get.copy(changed = true)
+    val cert2 = provider.refreshCertificate(Some(cert1), cnProvider).get
 
     cert2.chain.foreach { c =>
       log.info(X509CertificateInfo(c).toString)

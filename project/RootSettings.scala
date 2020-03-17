@@ -32,6 +32,10 @@ object RootSettings {
       Map(
         crossTarget.value / "unidoc" -> assetDir / "scaladoc",
         crossTarget.value / "scoverage-report" -> assetDir / "coverage",
+
+        target.value / "testlog" -> assetDir / "testlog",
+        target.value / "test-results/junit" -> assetDir / "xunit",
+
         modulesDir / "blended-bootstrap.css" -> assetDir / "css" / "blended-bootstrap.css",
         modulesDir / "node_modules" / "bootstrap" / "dist" / "js" / "bootstrap.min.js" -> assetDir / "js" / "bootstrap.min.js",
         modulesDir / "node_modules" / "jquery" / "dist" / "jquery.min.js" -> assetDir / "js" / "jquery.min.js",

@@ -1,10 +1,10 @@
 package blended.jms.utils.internal
 
-import akka.actor.ActorSystem
-import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
-import javax.jms._
+import java.util.concurrent.atomic.AtomicInteger
 
-import scala.util.Try
+import akka.actor.ActorSystem
+import blended.jms.utils.BlendedJMSConnectionConfig
+import javax.jms._
 
 class DummyConnection extends Connection {
 
@@ -40,28 +40,23 @@ class DummyConnection extends Connection {
   ) : ConnectionConsumer = ???
 }
 
-class DummyHolder(f : () => Connection)(implicit system : ActorSystem)
+class DummyHolder(f : () => Connection, maxConnects : Int = Int.MaxValue)(implicit system : ActorSystem)
   extends ConnectionHolder(BlendedJMSConnectionConfig.defaultConfig) {
+
+  private val conCount : AtomicInteger = new AtomicInteger(0)
 
   override val vendor : String = "dummy"
   override val provider : String = "dummy"
 
-  override def getConnectionFactory() : ConnectionFactory = ???
-
-  private[this] var conn : Option[BlendedJMSConnection] = None
-
-  override def getConnection() : Option[BlendedJMSConnection] = conn
-
-  override def connect() : Connection = conn match {
-    case Some(c) => c
-    case None =>
-      val c = new BlendedJMSConnection(f())
-      conn = Some(c)
-      c
-  }
-
-  override def close() : Try[Unit] = Try {
-    conn.foreach { c => c.connection.close() }
-    conn = None
+  override def getConnectionFactory(): ConnectionFactory = new ConnectionFactory {
+    override def createConnection(): Connection = {
+      if (conCount.get() < maxConnects) {
+        conCount.incrementAndGet()
+        f()
+      } else {
+        throw new Exception("Max connects exceeded")
+      }
+    }
+    override def createConnection(userName: String, password: String): Connection = createConnection()
   }
 }

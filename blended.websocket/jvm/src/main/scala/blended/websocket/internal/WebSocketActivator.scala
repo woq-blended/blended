@@ -5,10 +5,10 @@ import blended.akka.ActorSystemWatching
 import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.jmx.BlendedMBeanServerFacade
 import blended.security.login.api.TokenStore
-import domino.DominoActivator
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import blended.websocket.WebSocketCommandPackage
+import domino.DominoActivator
 import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedService, RemovedService}
 
 class WebSocketActivator extends DominoActivator with ActorSystemWatching {

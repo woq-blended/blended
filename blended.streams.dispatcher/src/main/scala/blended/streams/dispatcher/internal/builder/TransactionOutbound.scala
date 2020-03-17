@@ -2,40 +2,43 @@ package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.scaladsl.{Flow, Source}
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
+import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.{FlowTransactionStream, _}
-import blended.streams.{StreamController, StreamControllerConfig}
-import blended.util.logging.Logger
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.streams.processor.AckProcessor
+import blended.streams.transaction._
+import blended.streams._
+import blended.util.logging.LogLevel
 
 import scala.util.Try
 
 class TransactionOutbound(
   headerConfig : FlowHeaderConfig,
-  tMgr : ActorRef,
+  tMgr : FlowTransactionManager,
   dispatcherCfg : ResourceTypeRouterConfig,
-  internalCf : IdAwareConnectionFactory,
-  log : Logger
-)(implicit system : ActorSystem, bs : DispatcherBuilderSupport) extends JmsStreamSupport {
+  internalCf: IdAwareConnectionFactory,
+  streamsCfg : BlendedStreamsConfig,
+  log: FlowEnvelopeLogger
+)(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport {
 
   private implicit val materializer : Materializer = ActorMaterializer()
   private val config = dispatcherCfg.providerRegistry.mandatoryProvider(internalCf.vendor, internalCf.provider)
 
   private[builder] val jmsSource : Try[Source[FlowEnvelope, NotUsed]] = Try {
 
-    val transDest : JmsDestination = Option(System.getProperty("blended.streams.transactionShard")) match {
+    val transDest : JmsDestination = streamsCfg.transactionShard match {
       case None => config.get.transactions
       case Some(shard) =>
         val d = JmsDestination.asString(config.get.transactions)
         JmsDestination.create(d + "." + shard).get
     }
 
-    val srcSettings = JMSConsumerSettings(
+    val srcSettings = JmsConsumerSettings(
       log = log,
+      logLevel = _ => LogLevel.Debug,
       headerCfg = headerConfig,
       connectionFactory = internalCf
     )
@@ -50,42 +53,60 @@ class TransactionOutbound(
     )
   }
 
-  def build() : ActorRef = {
+  private val requiresCbe : FlowEnvelope => Boolean = { env =>
 
-    val sendFlow = new CbeSendFlow(
-      headerConfig = headerConfig,
-      dispatcherCfg = dispatcherCfg,
-      internalCf = internalCf,
-      log = log
-    ).build()
+    val result: Boolean = env.header[Boolean](bs.headerCbeEnabled).getOrElse(false) &&
+      FlowTransactionState.apply(
+        env.header[String](bs.headerConfig.headerState).getOrElse(FlowTransactionStateUpdated.toString())
+      ).get != FlowTransactionStateUpdated
+
+    log.logEnv(env, LogLevel.Debug, s"CBE generation for envelope [${env.id}] is [$result]")
+    result
+  }
+
+  private val sendCbe : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+
+    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create(){ implicit b =>
+      import GraphDSL.Implicits._
+
+      val cbeSplit = b.add(FlowProcessor.partition[FlowEnvelope](requiresCbe))
+      val join = b.add(Merge[FlowEnvelope](2))
+      val cbeFlow = b.add(new CbeSendFlow(
+        headerConfig = headerConfig,
+        dispatcherCfg = dispatcherCfg,
+        internalCf = internalCf,
+        streamLogger = log
+      ).build())
+
+      cbeSplit.out0 ~> cbeFlow ~> join.in(0)
+      cbeSplit.out1 ~> join.in(1)
+
+      FlowShape(cbeSplit.in, join.out)
+    }
+
+    Flow.fromGraph(g)
+  }
+
+  def build() : ActorRef = {
 
     val transactionStream : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
       new FlowTransactionStream(
         headerCfg = headerConfig,
         internalCf = Some(internalCf),
         tMgr = tMgr,
-        streamLogger = log,
-        // The default for CBE is false here
-        // all messages that have run through the dispatcher will have the correct CBE setting
-        performSend = { env =>
-          val result = env.header[Boolean](bs.headerCbeEnabled).getOrElse(false) &&
-            FlowTransactionState.withName(
-              env.header[String](bs.headerConfig.headerState).getOrElse(FlowTransactionState.Updated.toString())
-            ) != FlowTransactionState.Updated
-
-          log.debug(s"CBE generation for envelope [${env.id}] is [$result]")
-          result
-        },
-        sendFlow = sendFlow
+        streamLogger = log
       ).build()
 
-    val src : Source[FlowEnvelope, NotUsed] = jmsSource.get.via(transactionStream)
 
-    val streamCfg = StreamControllerConfig.fromConfig(dispatcherCfg.rawConfig).get
-      .copy(
-        name = "transactionOut"
-      )
+    val src : Source[FlowEnvelope, NotUsed] = jmsSource.get
+      .via(transactionStream)
+      .via(sendCbe)
+      .via(new AckProcessor("transactionOutbound").flow)
 
-    system.actorOf(StreamController.props[FlowEnvelope, NotUsed](src, streamCfg))
+    system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+      streamName = "transactionOut",
+      src = src,
+      streamCfg = streamsCfg
+    )(onMaterialize = _ => ()))
   }
 }

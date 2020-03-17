@@ -12,15 +12,15 @@ val travisBuildNumber = sys.env.getOrElse("TRAVIS_BUILD_NUMBER", "Not on Travis"
 addCommandAlias("ciBuild", "; clean ; test ")
 
 // A convenience to push SNAPSHOT to sonatype Snapshots
-addCommandAlias(name = "ciPublish", value="; clean ; packageBin ; publishSigned ")
+addCommandAlias(name = "ciPublish", value="; clean ; packageBin ; publish ")
 
 // A convenience to package everything, sign it and push it to maven central
 addCommandAlias(
   "ciRelease",
-  s"""; clean; packageBin ; sonatypeOpen "Auto Release via Travis ($travisBuildNumber)" ; publishSigned ; sonatypeClose ; sonatypeRelease"""
+  s"""; clean; packageBin ; sonatypeOpen "Auto Release via Travis ($travisBuildNumber)" ; publish ; sonatypeClose ; sonatypeRelease"""
 )
 
-addCommandAlias("cleanPublish", "; coverageOff ; clean ; publishM2")
+addCommandAlias("cleanPublish", "; coverageOff ; clean ; publishLocal")
 addCommandAlias("cleanCoverage", "; coverage ; clean ; test ; coverageReport ; coverageAggregate ; coverageOff")
 
 addCommandAlias(name = "siteComplete", "; cleanCoverage ; unidoc ; jbakeSite")
@@ -28,15 +28,7 @@ addCommandAlias(name = "siteComplete", "; cleanCoverage ; unidoc ; jbakeSite")
 inThisBuild(BuildHelper.readVersion(file("version.txt")))
 
 lazy val global = Def.settings(
-  Global/scalariformAutoformat := false,
-  Global/scalariformWithBaseDirectory := true,
-
-  Global/testlogDirectory := target.value / "testlog",
-
-  Global/useGpg := false,
-  Global/pgpPublicRing := baseDirectory.value / "project" / ".gnupg" / "pubring.gpg",
-  Global/pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg",
-  Global/pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray)
+  Global/testlogDirectory := target.value / "testlog"
 )
 
 // TODO: Can we get rid of these ?
@@ -47,6 +39,7 @@ lazy val blendedDomino = BlendedDomino.project
 lazy val blendedUtil = BlendedUtil.project
 lazy val blendedTestsupport = BlendedTestsupport.project
 lazy val blendedAkka = BlendedAkka.project
+lazy val blendedAkkaLogging = BlendedAkkaLogging.project
 lazy val blendedSecurityCross = BlendedSecurityCross.project
 lazy val blendedSecurityJvm = BlendedSecurityJvm.project
 lazy val blendedSecurityJs = BlendedSecurityJs.project
@@ -59,14 +52,12 @@ lazy val blendedUpdater = BlendedUpdater.project
 lazy val blendedUpdaterTools = BlendedUpdaterTools.project
 lazy val blendedPersistence = BlendedPersistence.project
 lazy val blendedUpdaterRemote = BlendedUpdaterRemote.project
-lazy val blendedCamelUtils = BlendedCamelUtils.project
 lazy val blendedJmsUtils = BlendedJmsUtils.project
 lazy val blendedActivemqBrokerstarter = BlendedActivemqBrokerstarter.project
 lazy val blendedContainerContextImpl = BlendedContainerContextImpl.project
 lazy val blendedJmxJvm = BlendedJmxJvm.project
 lazy val blendedJmxJs = BlendedJmxJs.project
 lazy val blendedJettyBoot = BlendedJettyBoot.project
-lazy val blendedJmsSampler = BlendedJmsSampler.project
 lazy val blendedTestsupportPojosr = BlendedTestsupportPojosr.project
 lazy val blendedAkkaHttpApi = BlendedAkkaHttpApi.project
 lazy val blendedAkkaHttp = BlendedAkkaHttp.project
@@ -91,8 +82,6 @@ lazy val blendedSecurityTest = BlendedSecurityTest.project
 lazy val blendedSecuritySsl = BlendedSecuritySsl.project
 lazy val blendedHawtioLogin = BlendedHawtioLogin.project
 lazy val blendedJolokia = BlendedJolokia.project
-lazy val blendedSamplesCamel = BlendedSamplesCamel.project
-lazy val blendedSamplesJms = BlendedSamplesJms.project
 lazy val blendedAkkaHttpSampleHelloworld = BlendedAkkaHttpSampleHelloworld.project
 lazy val blendedSecurityCrypto = BlendedSecurityCrypto.project
 // Referenced in adoc file: doc/content/BUILDING.adoc
@@ -118,6 +107,7 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedUtil,
   blendedTestsupport,
   blendedAkka,
+  blendedAkkaLogging,
   blendedSecurityJvm,
   blendedUpdaterConfigJvm,
   blendedLauncher,
@@ -126,13 +116,11 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedUpdaterTools,
   blendedPersistence,
   blendedUpdaterRemote,
-  blendedCamelUtils,
   blendedJmsUtils,
   blendedActivemqBrokerstarter,
   blendedContainerContextImpl,
   blendedJmxJvm,
   blendedJettyBoot,
-  blendedJmsSampler,
   blendedTestsupportPojosr,
   blendedAkkaHttpApi,
   blendedAkkaHttp,
@@ -160,8 +148,6 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedSecurityScepStandalone,
   blendedHawtioLogin,
   blendedJolokia,
-  blendedSamplesCamel,
-  blendedSamplesJms,
   blendedAkkaHttpSampleHelloworld,
   blendedActivemqClient,
   blendedJmsBridge,

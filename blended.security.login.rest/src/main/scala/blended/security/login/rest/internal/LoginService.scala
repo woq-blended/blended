@@ -10,8 +10,8 @@ import akka.http.scaladsl.server.Route
 import blended.security.BlendedPermissionManager
 import blended.security.akka.http.JAASSecurityDirectives
 import blended.security.login.api.TokenStore
+import blended.util.logging.Logger
 import javax.security.auth.Subject
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -22,7 +22,7 @@ class LoginService(
   override val mgr : BlendedPermissionManager
 )(implicit eCtxt : ExecutionContext) extends JAASSecurityDirectives {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[LoginService])
+  private[this] val log : Logger = Logger[LoginService]
 
   private[this] lazy val publicKeyPEM : String = {
 

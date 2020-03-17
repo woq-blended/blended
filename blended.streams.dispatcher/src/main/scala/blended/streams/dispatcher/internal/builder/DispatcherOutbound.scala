@@ -3,13 +3,14 @@ package blended.streams.dispatcher.internal.builder
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import akka.stream.{FlowShape, Graph}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.JmsDestination
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms.JmsFlowSupport
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.util.logging.LogLevel
 
 import scala.util.Try
 
@@ -35,7 +36,7 @@ object DispatcherOutbound {
     }
   }
 
-  val resolveDest : ContainerIdentifierService => DispatcherBuilderSupport => FlowEnvelope => Try[JmsDestination] = { idSvc => bs => env => Try {
+  val resolveDest : ContainerContext => DispatcherBuilderSupport => FlowEnvelope => Try[JmsDestination] = { ctCtxt => bs => env => Try {
 
     env.getFromContext[Option[String]](bs.bridgeDestinationKey).get match {
       case None => throw new Exception(s"Failed to resolve context object [${bs.bridgeDestinationKey}]")
@@ -43,8 +44,8 @@ object DispatcherOutbound {
         case None => JmsDestination.create(JmsFlowSupport.replyToQueueName).get
         case Some(d) =>
 
-          val name : String = idSvc.resolvePropertyString(
-            value = d,
+          val name : String = ctCtxt.resolveString(
+            s = d,
             additionalProps = env.flowMessage.header.mapValues(_.value)
           ).map(_.toString()).get
 
@@ -57,11 +58,12 @@ object DispatcherOutbound {
 
   private[builder] def outboundRouting(
     dispatcherCfg : ResourceTypeRouterConfig,
-    idSvc : ContainerIdentifierService,
-    bs : DispatcherBuilderSupport
-  )(env : FlowEnvelope) : Try[DispatcherTarget] = Try {
+    ctCtxt : ContainerContext,
+    bs : DispatcherBuilderSupport,
+    streamLogger : FlowEnvelopeLogger
+  )(env: FlowEnvelope) : Try[DispatcherTarget] = Try {
 
-    val dest : JmsDestination = resolveDest(idSvc)(bs)(env).get
+    val dest : JmsDestination = resolveDest(ctCtxt)(bs)(env).get
 
     val targetDest : JmsDestination = dest.name match {
       case JmsFlowSupport.replyToQueueName =>
@@ -79,11 +81,11 @@ object DispatcherOutbound {
       case JmsFlowSupport.replyToQueueName =>
 
         val v : Option[String] = env.header[String](bs.srcVendorHeader(bs.headerConfig.prefix)).map { s =>
-          idSvc.resolvePropertyString(s).map(_.toString()).get
+          ctCtxt.resolveString(s).map(_.toString()).get
         }
 
         val p : Option[String] = env.header[String](bs.srcProviderHeader(bs.headerConfig.prefix)).map { s =>
-          idSvc.resolvePropertyString(s).map(_.toString()).get
+          ctCtxt.resolveString(s).map(_.toString()).get
         }
 
         resolveProvider(dispatcherCfg.providerRegistry, v, p).get
@@ -98,21 +100,22 @@ object DispatcherOutbound {
     val result = DispatcherTarget(
       bridgeProvider.vendor, bridgeProvider.provider, targetDest
     )
-    bs.streamLogger.info(s"Routing for [${env.id}] is [$result]")
+    streamLogger.logEnv(env, LogLevel.Debug, s"Routing for [${env.id}] is [$result]")
 
     result
   }
 
   def apply(
-    dispatcherCfg : ResourceTypeRouterConfig,
-    idSvc : ContainerIdentifierService
-  )(implicit bs : DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+    dispatcherCfg: ResourceTypeRouterConfig,
+    ctCtxt : ContainerContext,
+    streamLogger : FlowEnvelopeLogger
+  )(implicit bs : DispatcherBuilderSupport)
+    : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
     /*-------------------------------------------------------------------------------------------------*/
-    val routingDecider = FlowProcessor.fromFunction("routingDecider", bs.streamLogger) { env =>
-      Try {
+    val routingDecider = FlowProcessor.fromFunction("routingDecider", streamLogger) { env => Try {
 
-        val routing = outboundRouting(dispatcherCfg, idSvc, bs)(env).get
+      val routing = outboundRouting(dispatcherCfg, ctCtxt, bs, streamLogger)(env).get
 
         env
           .withHeader(bs.headerBridgeVendor, routing.vendor).get

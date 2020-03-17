@@ -10,7 +10,7 @@ import blended.websocket.json.PrickleProtocol._
 import prickle.{Pickler, Unpickler}
 
 import scala.concurrent.duration._
-import scala.util.{Failure, Try}
+import scala.util.Try
 
 object JmxCommandPackage {
 

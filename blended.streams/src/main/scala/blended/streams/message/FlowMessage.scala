@@ -2,12 +2,11 @@ package blended.streams.message
 
 import akka.NotUsed
 import akka.util.ByteString
+import blended.util.RichTry._
 
 import scala.reflect.ClassTag
 import scala.runtime.BoxedUnit
 import scala.util.Try
-
-import blended.util.RichTry._
 
 sealed trait MsgProperty {
   def value : Any

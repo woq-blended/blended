@@ -3,49 +3,48 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.ContainerContext
-import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+import blended.util.RichTry._
 
+import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
+import scala.util.{Success, Try}
 
-object ContainerContextImpl {
-  private val PROP_BLENDED_HOME = "blended.home"
-  private val CONFIG_DIR = "etc"
-  private val SECRET_FILE_PATH : String = "blended.security.secretFile"
+class ContainerContextImpl extends AbstractContainerContextImpl {
 
-}
+  import AbstractContainerContextImpl._
 
-class ContainerContextImpl() extends ContainerContext {
+  private[this] lazy val log : Logger = Logger[ContainerContextImpl]
+  initialize()
 
-  import ContainerContextImpl._
-
-  private[this] val log = Logger[ContainerContextImpl]
-
-  override def getContainerDirectory() : String =
+  @BeanProperty
+  override lazy val containerDirectory : String =
     new File(System.getProperty("blended.home")).getAbsolutePath
 
-  override def getContainerHostname() : String = {
+  @BeanProperty
+  override lazy val containerHostname : String = {
     try {
       val localMachine = java.net.InetAddress.getLocalHost()
       localMachine.getCanonicalHostName()
     } catch {
-      case uhe : java.net.UnknownHostException => "UNKNOWN"
+      case _ : java.net.UnknownHostException => "UNKNOWN"
     }
   }
 
-  override def getContainerLogDirectory() : String = containerLogDir
+  @BeanProperty
+  override lazy val containerLogDirectory : String = containerLogDir
 
-  override def getProfileDirectory() : String = profileDir
+  @BeanProperty
+  override lazy val profileDirectory : String = profileDir
 
-  val brandingProperties : Map[String, String] = {
-    val props = (try {
+  lazy val brandingProperties : Map[String, String] = {
+    val props : Properties = (try {
       import blended.launcher.runtime.Branding
       // it is possible, that this optional class is not available at runtime,
       // e.g. when started with another launcher
-      log.debug("About to read launcher branding properies")
+      log.debug("About to read launcher branding properties")
       Option(Branding.getProperties())
     } catch {
       case e : NoClassDefFoundError => None
@@ -53,7 +52,13 @@ class ContainerContextImpl() extends ContainerContext {
       log.warn("Could not read launcher branding properies")
       new Properties()
     }
-    props.entrySet().asScala.map(e => e.getKey().toString() -> e.getValue().toString()).toMap
+
+    val result : Map[String, String] =
+      props.entrySet().asScala.map(e => e.getKey().toString() -> e.getValue().toString()).toMap
+
+    log.debug(s"Resolved branding properties : [${result.mkString(",")}]")
+
+    result
   }
 
   private[this] lazy val profileDir : String = {
@@ -85,39 +90,21 @@ class ContainerContextImpl() extends ContainerContext {
   }
 
   private[this] lazy val containerLogDir : String = {
-    val f = new File(getContainerDirectory() + "/log")
+    val f = new File(containerDirectory + "/log")
     f.getAbsolutePath()
   }
 
-  private lazy val cryptoSupport : ContainerCryptoSupport = {
-    val ctConfig : Config = getContainerConfig()
+  @BeanProperty
+  override lazy val containerConfigDirectory : String =
+    new File(containerDirectory, CONFIG_DIR).getAbsolutePath
 
-    val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
-      ctConfig.getString(SECRET_FILE_PATH)
-    } else {
-      "secret"
-    }
+  @BeanProperty
+  override lazy val profileConfigDirectory : String = new File(profileDirectory, CONFIG_DIR).getAbsolutePath
 
-    BlendedCryptoSupport.initCryptoSupport(
-      new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
-    )
-  }
-
-  override def getContainerCryptoSupport() : ContainerCryptoSupport = cryptoSupport
-
-  override def getContainerConfigDirectory() : String =
-    new File(getContainerDirectory(), CONFIG_DIR).getAbsolutePath
-
-  override def getProfileConfigDirectory() : String = new File(getProfileDirectory(), CONFIG_DIR).getAbsolutePath
-
-  private[this] lazy val ctConfig : Config = {
-    val sysProps = ConfigFactory.systemProperties()
-    val envProps = ConfigFactory.systemEnvironment()
-
-    val branding = brandingProperties
-    val overlayConfig = branding.get(RuntimeConfig.Properties.PROFILE_DIR) match {
+  private lazy val overlayConfig : Config = {
+    val cfg : Option[File] = brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) match {
       case Some(profileDir) =>
-        branding.get(RuntimeConfig.Properties.OVERLAYS) match {
+        brandingProperties.get(RuntimeConfig.Properties.OVERLAYS) match {
           case Some(overlays) =>
             val overlayRefs = overlays.split("[,]").toList.map(_.split("[:]", 2)).flatMap {
               case Array(n, v) => Some(OverlayRef(n, v))
@@ -142,20 +129,52 @@ class ContainerContextImpl() extends ContainerContext {
       case _ => None
     }
 
-    log.debug(s"Overlay config: ${overlayConfig}")
-
-    val config = overlayConfig match {
+    val result : Config = cfg match {
       case Some(oc) => ConfigFactory.parseFile(oc, ConfigParseOptions.defaults().setAllowMissing(false))
       case _        => ConfigFactory.empty()
     }
-    config.withFallback(ConfigFactory.parseFile(
-      new File(getProfileConfigDirectory(), "application.conf"), ConfigParseOptions.defaults().setAllowMissing(false)
-    ))
-      .withFallback(sysProps)
-      .withFallback(envProps)
-      .resolve()
+
+    log.trace(s"After reading overlay config : $result")
+
+    result
   }
 
-  override def getContainerConfig() : Config = ctConfig
+  override lazy val containerConfig : Config = {
+    val sysProps = ConfigFactory.systemProperties()
+    val envProps = ConfigFactory.systemEnvironment()
 
+    val appCfg : Config =
+      ConfigFactory.parseFile(
+        new File(profileConfigDirectory, "application.conf"),
+        ConfigParseOptions.defaults().setAllowMissing(false)
+      ).withFallback(sysProps).withFallback(envProps).resolve()
+
+    // we need to make sure that all keys are available in the resulting config,
+    // even if they point to null values or empty configs
+    val allKeys : List[String] = ConfigLocator.fullKeyset("", appCfg)
+
+    val nullKeys = allKeys.filter(s => appCfg.getIsNull(s)).map(s => (s -> null)).toMap.asJava
+
+    val emptyKeys = allKeys.filter { s =>
+      Try { appCfg.getConfig(s) } match {
+        case Success(c) => c.isEmpty()
+        case _ => false
+      }
+    }.map(s => s -> ConfigFactory.empty().root()).toMap.asJava
+
+    val evaluated = ConfigLocator.evaluatedConfig(appCfg, this).unwrap
+
+    log.trace(s"After reading application.conf : $evaluated")
+
+    val resolvedCfg : Config = overlayConfig.withFallback(evaluated)
+      .withFallback(sysProps)
+      .withFallback(envProps)
+      .withFallback(ConfigFactory.parseMap(nullKeys))
+      .withFallback(ConfigFactory.parseMap(emptyKeys))
+      .resolve()
+
+    log.debug(s"Resolved container config : $resolvedCfg")
+
+    resolvedCfg
+  }
 }

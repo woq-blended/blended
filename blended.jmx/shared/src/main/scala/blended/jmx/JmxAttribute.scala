@@ -19,7 +19,6 @@ case class StringAttributeValue(override val value : String) extends AttributeVa
   override def toString : String = "\"" + super.toString + "\""
 }
 
-
 final case class UnitAttributeValue(override val value : Unit = ()) extends AttributeValue
 final case class IntAttributeValue(override val value : Int) extends AttributeValue
 final case class LongAttributeValue(override val value : Long) extends AttributeValue

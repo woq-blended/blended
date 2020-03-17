@@ -29,7 +29,12 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Dependencies.logbackCore % Test,
       Dependencies.logbackClassic % Test,
       Dependencies.travesty % Test,
-      Dependencies.asciiRender % Test
+      Dependencies.asciiRender % Test,
+      Dependencies.springCore % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test,
+      Dependencies.springExpression % Test,
+      Dependencies.commonsLogging % Test
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(
@@ -45,7 +50,6 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
         "App" -> "DEBUG",
-        "spec" -> "DEBUG",
         "blended" -> "DEBUG",
         "outbound" -> "DEBUG"
       )

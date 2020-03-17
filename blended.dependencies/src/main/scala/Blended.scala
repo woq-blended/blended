@@ -7,7 +7,7 @@ trait Blended {
   // TODO: Find a way to generate the current version
   def blendedVersion : String // = version.value
 
-  private def blended(name : String): ModuleID = "de.wayofquality.blended" %% name % blendedVersion
+  protected def blended(name : String): ModuleID = "de.wayofquality.blended" %% name % blendedVersion
 
   val activemqBrokerstarter = blended("blended.activemq.brokerstarter")
   val activemqClient = blended("blended.activemq.client")
@@ -19,7 +19,7 @@ trait Blended {
   val akkaHttpProxy = blended("blended.akka.http.proxy")
   val akkaHttpRestJms = blended("blended.akka.http.restjms")
   val akkaHttpSampleHelloworld = blended("blended.akka.http.sample.helloworld")
-  val camelUtils = blended("blended.camel.utils")
+  val akkaLogging = blended("blended.akka.logging")
   val containerContextApi = blended("blended.container.context.api")
   val containerContextImpl = blended("blended.container.context.impl")
   val containerRegistry = blended("blended.container.registry")

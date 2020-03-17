@@ -1,6 +1,6 @@
 package blended.jms.bridge.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils._
 import blended.streams.jms.JmsDeliveryMode
 import blended.streams.processor.HeaderProcessorConfig
@@ -12,29 +12,30 @@ import scala.util.Try
 
 object InboundConfig {
 
-  def create(idSvc : ContainerIdentifierService, cfg : Config) : Try[InboundConfig] = Try {
+  def create(ctCtxt : ContainerContext, cfg : Config) : Try[InboundConfig] = Try {
 
-    def resolve(value : String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
+    def resolve(value : String) : String = ctCtxt.resolveString(value).map(_.toString()).get
 
-    val name = resolve(cfg.getString("name"))
-    val vendor = resolve(cfg.getString("vendor"))
-    val provider = cfg.getStringOption("provider").map(resolve)
+    val name : String = resolve(cfg.getString("name"))
+    val vendor : String = resolve(cfg.getString("vendor"))
+    val provider : Option[String] = cfg.getStringOption("provider").map(resolve)
 
-    val inDest = JmsDestination.create(resolve(cfg.getString("from"))).get match {
+    val subscriberName : Option[String] = cfg.getStringOption("subscriberName").map(resolve)
+
+    val inDest : JmsDestination = JmsDestination.create(resolve(cfg.getString("from"))).get match {
       case q : JmsQueue => q
-      case t : JmsTopic => cfg.getStringOption("subscriberName") match {
+      case t : JmsTopic => subscriberName match  {
         case Some(sn) => JmsDurableTopic(t.name, sn)
         case None     => t
       }
       case t : JmsDurableTopic => t
     }
 
-    val selector = cfg.getStringOption("selector")
-    val persistent = JmsDeliveryMode.create(cfg.getString("persistent", JmsDeliveryMode.Persistent.asString)).get
+    val selector : Option[String] = cfg.getStringOption("selector").map(resolve)
+    val persistent : JmsDeliveryMode = JmsDeliveryMode.create(cfg.getString("persistent", JmsDeliveryMode.Persistent.asString)).get
 
-    val subscriberName = cfg.getStringOption("subscriberName")
 
-    val listener = cfg.getInt("listener", 2)
+    val listener : Int = cfg.getInt("listener", 2)
 
     val header : List[HeaderProcessorConfig] = cfg.getConfigList("header", List.empty).map { cfg =>
       HeaderProcessorConfig.create(cfg)

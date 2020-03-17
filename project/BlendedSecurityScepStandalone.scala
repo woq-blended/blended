@@ -9,7 +9,7 @@ import sbt.librarymanagement.InclExclRule
 
 object BlendedSecurityScepStandalone extends ProjectFactory {
 
-  private[this] val libDir = "libs"
+  private[this] val libDir = "lib"
 
   implicit class ImplicitModuleId(moduleId : ModuleID) {
     def pure : ModuleID = moduleId.withExclusions(Vector(InclExclRule()))
@@ -41,7 +41,8 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
       Dependencies.jclOverSlf4j,
 
       Dependencies.scalatest % Test,
-      Dependencies.scalatest % Test
+      Dependencies.scalatest % Test,
+      Dependencies.osLib % Test
     )
 
     override def plugins : Seq[AutoPlugin] = super.plugins ++ Seq(

@@ -3,15 +3,14 @@ package blended.jms.utils
 import java.lang.management.ManagementFactory
 
 import akka.actor.ActorSystem
-import akka.util.Timeout
-import blended.jms.utils.internal.{CheckConnection, _}
+import blended.jms.utils.internal._
 import blended.util.logging.Logger
 import javax.jms.{Connection, ConnectionFactory, JMSException}
 import javax.management.ObjectName
 import org.osgi.framework.BundleContext
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 trait IdAwareConnectionFactory extends ConnectionFactory with ProviderAware {
   val clientId : String
@@ -19,15 +18,13 @@ trait IdAwareConnectionFactory extends ConnectionFactory with ProviderAware {
 }
 
 class BlendedSingleConnectionFactory(
-  config : ConnectionConfig,
+  val config : ConnectionConfig,
   bundleContext : Option[BundleContext]
 )(implicit system : ActorSystem) extends IdAwareConnectionFactory {
 
   override val vendor : String = config.vendor
   override val provider : String = config.provider
 
-  private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
-  private[this] implicit val timeout : Timeout = Timeout(100.millis)
   private[this] val log : Logger = Logger[BlendedSingleConnectionFactory]
 
   private[this] val monitorName = s"Monitor-$vendor-$provider"
@@ -58,14 +55,16 @@ class BlendedSingleConnectionFactory(
           try {
             jmxServer.unregisterMBean(objName)
           } catch {
-            case _ : Throwable => // do nothing
+            case NonFatal(t) =>
+              log.warn(s"Failed to deregister MBean [${objName.toString()}]:[${t.getMessage()}]")
           }
         }
 
         try {
           jmxServer.registerMBean(jmxBean, objName)
         } catch {
-          case t : Throwable => log.warn(s"Could not register MBean [${objName.toString}]:[${t.getMessage()}]")
+          case NonFatal(t) =>
+            log.warn(s"Could not register MBean [${objName.toString}]:[${t.getMessage()}]")
         }
 
         Some(jmxBean)
@@ -73,9 +72,10 @@ class BlendedSingleConnectionFactory(
         None
       }
 
-      val monitor = system.actorOf(ConnectionStateMonitor.props(bundleContext, mbean), monitorName)
+      // Simply create the state monitor for that particular connection
+      system.actorOf(ConnectionStateMonitor.props(vendor, provider, bundleContext, mbean), monitorName)
       log.info(s"Connection State Monitor [$stateMgrName] created.")
-      Some(system.actorOf(ConnectionStateManager.props(config, monitor, holder), stateMgrName))
+      Some(system.actorOf(ConnectionStateManager.props(config, holder), stateMgrName))
     } else {
       log.info(s"Connection State Monitor [$stateMgrName] is disabled by config setting.")
       None
@@ -93,11 +93,14 @@ class BlendedSingleConnectionFactory(
           case None    => throw new Exception(s"Error connecting to [$id].")
         }
       } catch {
-        case e : Exception =>
+        case NonFatal(e) =>
           val msg = s"Error getting Connection Factory [${e.getMessage()}]"
           log.error(msg)
-          val jmsEx = new JMSException(msg)
-          jmsEx.setLinkedException(e)
+          val jmsEx : JMSException = new JMSException(msg)
+          e match {
+            case ex : Exception => jmsEx.setLinkedException(ex)
+            case _ =>
+          }
           throw jmsEx
       }
     } else {
@@ -125,7 +128,7 @@ object SimpleIdAwareConnectionFactory {
       vendor = vendor,
       provider = provider,
       clientId = clientId,
-      pingEnabled = false,
+      keepAliveEnabled = false,
       minReconnect = minReconnect
     )
 

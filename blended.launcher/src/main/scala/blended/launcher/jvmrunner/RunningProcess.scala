@@ -84,7 +84,7 @@ private[jvmrunner] class RunningProcess(
 
     // If the process is still alive after we tried to stop it we will kill it
     if (waitUntilStopped(shutdownTimeout)) {
-      log.info("Killing container JVM after maximum shutdown timeout ...")
+      log.info(s"Killing container JVM after maximum shutdown timeout of [$shutdownTimeout]")
       process.destroy()
     }
 

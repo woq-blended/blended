@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BATCHSIZE=5
+BATCHSIZE=3
 mkdir -p target
 
 function projects() {

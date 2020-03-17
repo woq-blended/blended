@@ -1,12 +1,13 @@
 package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
+import akka.actor.ActorSystem
 import akka.stream.scaladsl.Flow
 import akka.stream.{FlowShape, Graph}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal.{ResourceTypeConfig, ResourceTypeRouterConfig}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.HeaderTransformProcessor
 import blended.util.logging.LogLevel
 
@@ -16,8 +17,9 @@ object DispatcherInbound {
 
   def apply(
     dispatcherCfg : ResourceTypeRouterConfig,
-    idSvc : ContainerIdentifierService
-  )(implicit bs : DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+    ctCtxt : ContainerContext,
+    streamLogger : FlowEnvelopeLogger
+  )(implicit bs : DispatcherBuilderSupport, system : ActorSystem) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
     /*-------------------------------------------------------------------------------------------------*/
     /* Populate the message with the configured default headers                                        */
@@ -26,17 +28,17 @@ object DispatcherInbound {
       Flow.fromGraph(
         HeaderTransformProcessor(
           name = "defaultHeader",
-          log = bs.streamLogger,
+          log = streamLogger,
           rules = dispatcherCfg.defaultHeader,
-          idSvc = Some(idSvc)
-        ).flow(bs.streamLogger).named("defaultHeader")
+          ctCtxt = Some(ctCtxt)
+        ).flow(streamLogger).named("defaultHeader")
       )
     }
 
     /*-------------------------------------------------------------------------------------------------*/
     /* Make sure we do have a resourcetype in the message we can process                               */
     /*-------------------------------------------------------------------------------------------------*/
-    val checkResourceType = FlowProcessor.fromFunction("checkResourceType", bs.streamLogger) { env =>
+    val checkResourceType = FlowProcessor.fromFunction("checkResourceType", streamLogger) { env =>
       Try {
         env.header[String](bs.headerResourceType) match {
           case None =>
@@ -58,10 +60,10 @@ object DispatcherInbound {
     }
 
     /*-------------------------------------------------------------------------------------------------*/
-    val decideCbe = FlowProcessor.fromFunction("decideCbe", bs.streamLogger) { env =>
+    val decideCbe = FlowProcessor.fromFunction("decideCbe", streamLogger) { env =>
 
       Try {
-        bs.withContextObject[ResourceTypeConfig](bs.rtConfigKey, env) { rtCfg : ResourceTypeConfig =>
+        bs.withContextObject[ResourceTypeConfig](bs.rtConfigKey, env, streamLogger){ rtCfg : ResourceTypeConfig =>
 
           if (rtCfg.withCBE) {
             val newMsg = env.flowMessage
@@ -79,7 +81,7 @@ object DispatcherInbound {
     }
 
     Flow.fromGraph(defaultHeader)
-      .via(Flow.fromGraph(LogEnvelope(dispatcherCfg, "logInbound", LogLevel.Info)))
+      .via(Flow.fromGraph(LogEnvelope(dispatcherCfg, "logInbound", LogLevel.Info, streamLogger)))
       .via(Flow.fromGraph(checkResourceType))
       .via(Flow.fromGraph(decideCbe))
   }

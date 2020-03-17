@@ -1,13 +1,14 @@
 import blended.sbt.Dependencies
 import blended.sbt.phoenix.osgi.OsgiBundle
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import phoenix.{ProjectConfig, ProjectFactory}
-import sbt._
 import sbt.Keys._
+import sbt._
 import sbtcrossproject.CrossPlugin.autoImport._
 import sbtcrossproject.CrossProject
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 import scoverage.ScoverageKeys._
-import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 private object BlendedJmxCross {
 
@@ -61,13 +62,24 @@ object BlendedJmxJvm extends ProjectFactory {
       bundleActivator = s"$projectName.internal.BlendedJmxActivator",
       exportPackage = Seq(
         projectName,
-        s"$projectName.json"
+        s"$projectName.json",
+        s"$projectName.statistics"
+      )
+    )
+
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "App" -> "Debug",
+        "spec" -> "Debug",
+        "blended" -> "Debug"
       )
     )
 
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedUtil.project,
       BlendedUtilLogging.project,
+      BlendedAkka.project,
 
       BlendedTestsupport.project % Test,
       BlendedTestsupportPojosr.project % Test

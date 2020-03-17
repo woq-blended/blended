@@ -3,11 +3,15 @@ package blended.akka.http.proxy.internal
 import java.io.IOException
 import java.net.{InetSocketAddress, Socket}
 
-import akka.http.scaladsl.model.headers.Location
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import scala.concurrent.duration._
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials, Location}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
+import akka.http.scaladsl.server.directives.Credentials
+import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.testkit.ScalatestRouteTest
 import blended.util.logging.Logger
 import org.scalatest.FreeSpec
 
@@ -21,8 +25,20 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 
   implicit val routeTestTimeout : RouteTestTimeout = RouteTestTimeout(30.seconds)
 
+  def authenticator(cred : Credentials) : Option[String] = {
+    cred match {
+      case p @ Credentials.Provided(id) if id == "blended" && p.verify("password") => Some(id)
+      case _ => None
+    }
+  }
+
   s"Test against embedded temporary localhost server on port $localPort" - {
     val testRoute = get {
+      path("secure") {
+        authenticateBasic(realm = "blended", authenticator) { userName =>
+          complete(s"Authenticated user $userName")
+        }
+      } ~
       path("hello") {
         complete("Hello")
       } ~
@@ -49,11 +65,11 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
         reject(ctx)
       }
 
-    def localtest(redirectCount : Int = 0)(f : Route => Unit) : Unit = {
+    def localtest(redirectCount: Int = 0, user : Option[String] = None, pwd: Option[String] = None)(f: Route => Unit): Unit = {
       TestServer.withServer(localPort, testRoute) {
         val proxyRoute = new ProxyRoute {
           override val actorSystem = system
-          override val proxyConfig = ProxyTarget(path = "path", uri = s"http://localhost:$localPort", timeout = 2, redirectCount = redirectCount)
+          override val proxyConfig = ProxyTarget(path = "path", uri = s"http://localhost:$localPort", timeout = 2, redirectCount = redirectCount, user = user, password = pwd)
           override val sslContext = None
         }
 
@@ -68,6 +84,23 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
       localtest() { prefixRoute =>
         Get("/test") ~> prefixRoute ~> check {
           assert(responseAs[String] === "Root")
+        }
+      }
+    }
+
+    "GET /secure" in {
+
+      // make sure we use credentials injected in the config
+      localtest(user = Some("blended"), pwd = Some("password")) { prefixRoute =>
+        Get("/test/secure") ~> prefixRoute ~> check {
+          assert(responseAs[String] === "Authenticated user blended")
+        }
+      }
+
+      // make sure credentials from the config override credentials from the request
+      localtest(user = Some("blended"), pwd = Some("password")) { prefixRoute =>
+        Get("/test/secure").withHeaders(Authorization(BasicHttpCredentials("foo", "bar"))) ~> prefixRoute ~> check {
+          assert(responseAs[String] === "Authenticated user blended")
         }
       }
     }
@@ -130,7 +163,7 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 
   "Live Proxy Tests (requires internet access)" - {
 
-    def ping(host : String, port : Int) = {
+    def ping(host : String, port : Int): Boolean = {
       val socket = new Socket()
       try {
         socket.connect(new InetSocketAddress(host, port), 500)
@@ -201,7 +234,6 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
     }
 
     "live test against http://heise.de with redirectCount 1" in {
-      assume(ping("heise.de", 80), clue)
 
       val proxyRoute = new ProxyRoute {
         override val actorSystem = system

@@ -1,8 +1,8 @@
 package blended.websocket
 
+import blended.websocket.json.PrickleProtocol._
 import org.scalatest.{FreeSpec, Matchers}
 import prickle._
-import blended.websocket.json.PrickleProtocol._
 
 class JsonSpec extends FreeSpec
   with Matchers {

@@ -42,7 +42,7 @@ class TrustStoreRefresher(ms : MemoryKeystore) {
 
     trusted.findByPrincipal(rootCn) match {
       case None =>
-        log.info(s"Updating trust store with cerificate for [$rootCn]")
+        log.info(s"Updating trust store with certificate for [$rootCn]")
         val alias : String = if (trusted.certificates.isDefinedAt(rootCn.toString())) {
           UUID.randomUUID().toString()
         } else {

@@ -1,4 +1,5 @@
 import blended.sbt.Dependencies
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import phoenix.ProjectFactory
 import sbt._
 
@@ -13,7 +14,6 @@ object BlendedJmsUtils extends ProjectFactory {
       "A bundle to provide a ConnectionFactory wrapper that monitors a single connection and is able to monitor the connection via an active ping."
 
     override def deps : Seq[ModuleID] = Seq(
-      Dependencies.camelJms,
       Dependencies.jms11Spec,
       Dependencies.scalatest % Test,
       Dependencies.akkaSlf4j % Test,
@@ -25,6 +25,15 @@ object BlendedJmsUtils extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "App" -> "DEBUG",
+        "spec" -> "DEBUG",
+        "blended" -> "DEBUG"
+      )
+    )
+
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedDomino.project,
       BlendedMgmtBase.project,
@@ -32,7 +41,7 @@ object BlendedJmsUtils extends ProjectFactory {
       BlendedUpdaterConfigJvm.project,
       BlendedUtilLogging.project,
       BlendedAkka.project,
-      BlendedCamelUtils.project % Test,
+
       BlendedTestsupport.project % Test
     )
   }

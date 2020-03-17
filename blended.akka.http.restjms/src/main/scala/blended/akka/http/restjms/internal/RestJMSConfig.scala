@@ -2,6 +2,7 @@ package blended.akka.http.restjms.internal
 
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
+
 import scala.collection.JavaConverters._
 
 object RestJMSConfig {
@@ -30,7 +31,6 @@ case class RestJMSConfig(
 object JmsOperationConfig {
   private val destinationPath = "destination"
   private val headerPath = "header"
-  private val receivetimeoutPath = "receivetimeout"
   private val timeoutPath = "timeout"
   private val jmsReplyPath = "jmsreply"
   private val cTypePath = "contentTypes"
@@ -45,7 +45,6 @@ object JmsOperationConfig {
       destination = cfg.getString(destinationPath),
       //scalastyle:off magic.number
       timeout = cfg.getLong(timeoutPath, 1000L),
-      receivetimeout = cfg.getLong(receivetimeoutPath, 250L),
       //scalastyle:on magic.number
 
       header = if (cfg.hasPath(headerPath)) {
@@ -74,9 +73,6 @@ object JmsOperationConfig {
 case class JmsOperationConfig(
   // This is the destination used for the request / reply operation
   destination : String,
-
-  // The receive Timeout to configure the polling interval for the response consumer
-  receivetimeout : Long,
 
   // Timeout in Milliseconds for the operation
   timeout : Long,

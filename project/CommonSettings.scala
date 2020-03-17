@@ -1,4 +1,3 @@
-import com.typesafe.sbt.SbtScalariform.autoImport._
 import phoenix.ProjectConfig
 import sbt.Keys._
 import sbt._
@@ -17,6 +16,7 @@ trait CommonSettings extends ProjectConfig {
 
     resolvers ++= Seq(
       Resolver.sonatypeRepo("snapshots"),
+      "Spring IO Releases" at "https://repo.spring.io/libs-release",
       "Maven2 Local" at m2Repo
     ),
 
@@ -44,7 +44,6 @@ trait CommonSettings extends ProjectConfig {
     scalaVersion := blended.sbt.Dependencies.scalaVersion,
     scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
 
-    scalariformAutoformat := false,
-    scalariformWithBaseDirectory := true
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oF")
   )
 }

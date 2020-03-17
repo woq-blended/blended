@@ -13,7 +13,7 @@ import scala.util.control.NonFatal
 
 trait FileTestSupport extends Matchers {
 
-  private[FileTestSupport] val log : Logger = Logger[FileTestSupport]
+  private val log : Logger = Logger[FileTestSupport]
 
   val duplicateFilter : FileFilter = new FileFilter {
     override def accept(f : File) : Boolean = f.isDirectory() || (f.isFile() && f.getName().contains("dup_"))
@@ -146,6 +146,7 @@ trait FileTestSupport extends Matchers {
 
     log.info(s"Cleaning up directory [$dirName]")
     FileUtils.deleteDirectory(new File(dirName))
+    FileUtils.forceMkdir(new File(dirName))
   }
 
   def genFile(f : File, content : ByteString) : Unit = {

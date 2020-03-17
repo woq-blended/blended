@@ -1,6 +1,6 @@
 package blended.container.context.impl.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.util.logging.Logger
 import domino.DominoActivator
 
@@ -8,17 +8,20 @@ import scala.util.control.NonFatal
 
 class ContainerContextActivator extends DominoActivator {
 
+  private[this] val mdcPrefix : String = "blended"
   private[this] val log = Logger[ContainerContextActivator]
+
+  private def mdcMap(ctCtxt : ContainerContext) : Map[String, String] =
+    ctCtxt.properties.map{ case (k,v) => ( s"$mdcPrefix.$k", v) } + ( s"$mdcPrefix.ctUuid" -> ctCtxt.uuid)
 
   whenBundleActive {
     try {
-      val containerContext = new ContainerContextImpl()
-      val idSvc = new ContainerIdentifierServiceImpl(containerContext)
-      log.info(s"Container identifier is [${idSvc.uuid}]")
-      log.info(s"Profile home directory is [${containerContext.getProfileDirectory()}]")
-      log.info(s"Container Context properties are : ${idSvc.properties.mkString("[", ",", "]")}")
+      val ctContext = new ContainerContextImpl()
 
-      idSvc.providesService[ContainerIdentifierService]
+      Logger.setProps(mdcMap(ctContext))
+      ctContext.providesService[ContainerContext]
+
+      log.info(s"Started Container Context [$ctContext]")
     } catch {
       case NonFatal(e) =>
         log.error(e.getMessage())

@@ -1,6 +1,6 @@
 package blended.websocket.json
 
-import blended.websocket.{BlendedJmxMessage, BlendedWsMessage, JmxSubscribe, JmxUnsubscribe, JmxUpdate, Version, VersionResponse, WsMessageEncoded}
+import blended.websocket._
 import prickle._
 import blended.jmx.json.PrickleProtocol._
 

@@ -1,15 +1,17 @@
 package blended.jms.utils.internal
 import java.text.SimpleDateFormat
 
-class ConnectionMonitor(vendor : String, provider : String, clientId : String) extends ConnectionMonitorMBean {
+import blended.jms.utils.{ConnectionCommand, ConnectionState, Disconnected}
+
+class ConnectionMonitor(vendor : String, provider : String, clientId : String) extends ConnectionMonitorMXBean {
 
   private[this] val df = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS")
-  private[this] var state : ConnectionState = ConnectionState(provider = provider).copy(status = ConnectionState.DISCONNECTED)
+  private[this] var state : ConnectionState = ConnectionState(vendor = vendor, provider = provider).copy(status = Disconnected)
 
   private[this] var cmd : ConnectionCommand = ConnectionCommand(vendor = vendor, provider = provider)
 
+  override def getVendor() : String = vendor
   override def getProvider() : String = provider
-
   override def getClientId() : String = clientId
 
   def getCommand() : ConnectionCommand = cmd
@@ -18,7 +20,7 @@ class ConnectionMonitor(vendor : String, provider : String, clientId : String) e
   def setState(newState : ConnectionState) : Unit = { state = newState }
   def getState() : ConnectionState = state
 
-  override def getStatus() : String = state.status
+  override def getStatus() : String = state.status.toString().toLowerCase()
 
   override def getLastConnect() : String = state.lastConnect match {
     case None    => "n/a"
@@ -30,7 +32,7 @@ class ConnectionMonitor(vendor : String, provider : String, clientId : String) e
     case Some(d) => df.format(d)
   }
 
-  override def getFailedPings() : Int = state.failedPings
+  override def getMissedKeepAlives() : Int = state.missedKeepAlives
 
   override def getMaxEvents() : Int = state.maxEvents
 

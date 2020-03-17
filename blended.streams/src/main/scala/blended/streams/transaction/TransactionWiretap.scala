@@ -5,10 +5,12 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Zip}
 import akka.stream.{FlowShape, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.streams.FlowHeaderConfig
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
-import blended.streams.worklist.WorklistState
-import blended.util.logging.Logger
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.streams.worklist.WorklistStateCompleted
+import blended.util.RichTry._
+import blended.util.logging.LogLevel
 import javax.jms.Session
 
 import scala.util.Try
@@ -26,7 +28,7 @@ class TransactionDestinationResolver(
     log.debug(s"Transaction destination for [${env.id}] is [$dest]")
 
     JmsSendParameter(
-      message = createJmsMessage(session, env).get,
+      message = createJmsMessage(session, env).unwrap,
       destination = dest,
       deliveryMode = settings.deliveryMode,
       priority = settings.priority,
@@ -41,8 +43,8 @@ class TransactionWiretap(
   headerCfg : FlowHeaderConfig,
   inbound : Boolean,
   trackSource : String,
-  log : Logger
-)(implicit system : ActorSystem, materializer : Materializer) extends JmsStreamSupport {
+  log : FlowEnvelopeLogger
+)(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
   private[transaction] val createTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
@@ -55,7 +57,7 @@ class TransactionWiretap(
       env.exception match {
         case None =>
           val branch = env.header[String](headerCfg.headerBranch).getOrElse("default")
-          FlowTransactionUpdate(env.id, env.flowMessage.header, WorklistState.Completed, branch)
+          FlowTransactionUpdate(env.id, env.flowMessage.header, WorklistStateCompleted, branch)
 
         case Some(e) => FlowTransactionFailed(env.id, env.flowMessage.header, Some(e.getMessage()))
       }
@@ -68,10 +70,9 @@ class TransactionWiretap(
         updateTransaction(env)
       }
 
-      log.debug(s"Generated bridge transaction event [$event]")
+      log.logEnv(env, LogLevel.Debug, s"Generated bridge transaction event [$event]", false)
       FlowTransactionEvent.event2envelope(headerCfg)(event)
-        .withHeader(headerCfg.headerTrackSource, trackSource).get
-
+        .withHeader(headerCfg.headerTrackSource, trackSource).unwrap
     }
 
     Flow.fromGraph(g)
@@ -88,7 +89,8 @@ class TransactionWiretap(
         connectionFactory = cf,
         destinationResolver = s => new TransactionDestinationResolver(s, JmsDestination.asString(eventDest)),
         deliveryMode = JmsDeliveryMode.Persistent,
-        jmsDestination = None
+        jmsDestination = None,
+        logLevel = _ => LogLevel.Debug
       )
 
       val producer = b.add(jmsProducer(
@@ -98,8 +100,8 @@ class TransactionWiretap(
       ))
 
       val switchOffTracking = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-        log.debug(s"About to send envelope [$env]")
-        env.withHeader(headerCfg.headerTrack, false).get
+        log.logEnv(env, LogLevel.Trace, s"About to send envelope [$env]")
+        env.withHeader(headerCfg.headerTrack, false).unwrap
       })
 
       switchOffTracking ~> producer
@@ -109,7 +111,7 @@ class TransactionWiretap(
     Flow.fromGraph(g)
   }
 
-  def flow() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  def flow(clearException : Boolean = false) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
     val g = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
@@ -121,9 +123,10 @@ class TransactionWiretap(
       val select = b.add(
         Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope] { pair =>
 
-          pair._1.exception match {
-            case None    => pair._2.clearException()
-            case Some(e) => pair._2.withException(e)
+          if (clearException) {
+            pair._2.clearException()
+          } else {
+            pair._2
           }
         }
       )

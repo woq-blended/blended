@@ -2,12 +2,11 @@ package blended.mgmt.agent.internal
 
 import akka.actor.Props
 import blended.akka.{OSGIActor, OSGIActorConfig}
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
+import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 import blended.util.logging.Logger
 
 import scala.util.{Failure, Try}
-
-import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.
@@ -44,7 +43,7 @@ class OsgiMgmtReporter(cfg : OSGIActorConfig) extends OSGIActor(cfg) with MgmtRe
       x
   }
 
-  override protected val idSvc : ContainerIdentifierService = cfg.idSvc
+  override protected val ctContext : ContainerContext = cfg.ctContext
 }
 
 object OsgiMgmtReporter {

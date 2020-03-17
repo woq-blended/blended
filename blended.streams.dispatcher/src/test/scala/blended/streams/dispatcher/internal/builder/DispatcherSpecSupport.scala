@@ -4,11 +4,14 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
+import blended.streams.BlendedStreamsConfig
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
+import blended.streams.internal.BlendedStreamsActivator
+import blended.streams.message.FlowEnvelopeLogger
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -27,9 +30,10 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
 
   case class DispatcherExecContext(
     cfg : ResourceTypeRouterConfig,
-    idSvc : ContainerIdentifierService,
+    ctCtxt : ContainerContext,
     system : ActorSystem,
-    bs : DispatcherBuilderSupport
+    bs : DispatcherBuilderSupport,
+    envLogger : FlowEnvelopeLogger
   )
 
   def country : String = "cc"
@@ -39,10 +43,12 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.streams" -> new BlendedStreamsActivator(),
     "blended.jms.bridge" -> new BridgeActivator()
   )
 
-  def loggerName : String
+  def loggerName: String
+  private val logger : Logger = Logger(loggerName)
 
   System.setProperty("AppCountry", country)
   System.setProperty("AppLocation", location)
@@ -74,17 +80,19 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
 
     con match {
       case Some(_) =>
-        ctxt.bs.streamLogger.info(s"Successfully connected to [$cf]")
+        logger.info(s"Successfully connected to [$cf]")
         Success(cf)
       case _ => Failure(new Exception(s"Unable to connect to [${cf.vendor}:${cf.provider}]"))
     }
   }
 
   def createDispatcherExecContext() : DispatcherExecContext = {
-    val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)(
-      clazz = ClassTag(classOf[ContainerIdentifierService]),
+    val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)(
+      clazz = ClassTag(classOf[ContainerContext]),
       timeout = 3.seconds
     )
+
+    val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
 
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
       clazz = ClassTag(classOf[ActorSystem]),
@@ -97,17 +105,22 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     )
 
     val cfg = ResourceTypeRouterConfig.create(
-      idSvc,
+      ctCtxt,
       provider,
-      idSvc.containerContext.getContainerConfig().getConfig("blended.streams.dispatcher")
+      ctCtxt.containerConfig.getConfig("blended.streams.dispatcher")
     ).get
 
     val bs = new DispatcherBuilderSupport {
-      override def containerConfig : Config = idSvc.getContainerContext().getContainerConfig()
-      override val streamLogger : Logger = Logger(loggerName)
+      override def containerConfig : Config = ctCtxt.containerConfig
     }
 
-    DispatcherExecContext(cfg = cfg, idSvc = idSvc, system = system, bs = bs)
+    DispatcherExecContext(
+      cfg = cfg,
+      ctCtxt = ctCtxt,
+      system = system,
+      bs = bs,
+      envLogger = FlowEnvelopeLogger.create(bs.headerConfig, logger)
+    )
   }
 
   def withDispatcherConfig[T](f : DispatcherExecContext => T) : T = f(createDispatcherExecContext())

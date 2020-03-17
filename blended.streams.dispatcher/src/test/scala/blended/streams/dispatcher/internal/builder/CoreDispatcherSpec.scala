@@ -31,7 +31,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
   val headerExistsFilter : String => FlowEnvelope => Boolean = key => env => env.flowMessage.header.isDefinedAt(key)
   val headerMissingFilter : String => FlowEnvelope => Boolean = key => env => !env.flowMessage.header.isDefinedAt(key)
-  val headerFilter : String => AnyRef => FlowEnvelope => Boolean = key => value => env => env.header[AnyRef](key) == Some(value)
+  val headerFilter : String => AnyRef => FlowEnvelope => Boolean = key => value => env => env.header(key).contains(value)
   def filterEnvelopes(envelopes : Seq[FlowEnvelope])(f : FlowEnvelope => Boolean) : Seq[FlowEnvelope] = envelopes.filter(f)
 
   case class DispatcherResult(
@@ -51,9 +51,11 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
   )= {
     implicit val materializer : Materializer = ActorMaterializer()
 
-    val jmsCollector = Collector[FlowEnvelope]("jms")(_.acknowledge())
-    val errCollector = Collector[FlowEnvelope]("error")(_.acknowledge())
-    val wlCollector = Collector[WorklistEvent]("worklist")(_ => {})
+    val ack : FlowEnvelope => Unit = _.acknowledge()
+
+    val jmsCollector = Collector[FlowEnvelope]("jms", onCollected = Some(ack))
+    val errCollector = Collector[FlowEnvelope]("error", onCollected = Some(ack))
+    val wlCollector = Collector[WorklistEvent]("worklist")
 
     val source : Source[FlowEnvelope, (ActorRef, KillSwitch)]
       = StreamFactories.keepAliveSource[FlowEnvelope](bufferSize)
@@ -66,7 +68,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
         val worklist : Inlet[WorklistEvent] = builder.add(wlCollector.sink).in
         val error : Inlet[FlowEnvelope] = builder.add(errCollector.sink).in
 
-        val dispatcher = builder.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, goodFlow)(ctxt.bs).core())
+        val dispatcher = builder.add(DispatcherBuilder(ctxt.ctCtxt, ctxt.cfg, goodFlow, ctxt.envLogger)(ctxt.bs).core())
 
         dispatcher.out0 ~> out
         dispatcher.out1 ~> worklist
@@ -140,14 +142,15 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
       withDispatcherConfig { ctxt =>
 
         val builder = DispatcherBuilder(
-          idSvc = ctxt.idSvc,
+          ctCtxt = ctxt.ctCtxt,
           dispatcherCfg = ctxt.cfg,
-          goodFlow
+          sendFlow = goodFlow,
+          envLogger = ctxt.envLogger
         )(ctxt.bs)
 
-        val core = builder.core()
+        val core = builder.core()(ctxt.system)
         val event = builder.worklistEventHandler()
-        val dispatcher = builder.dispatcher()
+        val dispatcher = builder.dispatcher()(ctxt.system)
 
         // TODO: Review for more meaningfull graphs
         travesty.toFile(core, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_core.svg").getAbsolutePath())

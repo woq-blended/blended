@@ -1,113 +1,11 @@
 package blended.streams.transaction
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.streams.FlowHeaderConfig
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty, TextFlowMessage}
-import blended.streams.transaction.FlowTransactionState.FlowTransactionState
 import blended.streams.worklist.WorklistState
-import blended.streams.worklist.WorklistState.WorklistState
-import blended.util.config.Implicits._
-import com.typesafe.config.Config
 
 import scala.util.Try
-
-object FlowHeaderConfig {
-
-  // these are the keys the we will look up in the config to potentially
-  // overwrite the default settings
-  private val prefixPath = "prefix"
-  private val transIdPath = "transactionId"
-  private val branchIdPath = "branchId"
-  private val statePath = "transactionState"
-  private val trackTransactionPath = "trackTransaction"
-  private val trackSourcePath = "trackSource"
-  private val retryCountPath = "retryCount"
-  private val maxRetriesPath = "maxRetries"
-  private val retryTimeoutPath = "retryTimeout"
-  private val retryDestPath = "retryDestination"
-  private val firstRetryPath = "firstRetry"
-  private val transShardPath = "transactionShard"
-
-  private val transId = "TransactionId"
-  private val transShard = "TransactionShard"
-  private val branchId = "BranchId"
-  private val transState = "TransactionState"
-  private val trackTrans = "TrackTransaction"
-  private val trackSource = "TrackSource"
-  private val retryCount = "RetryCount"
-  private val maxRetries = "MaxRetries"
-  private val retryTimeout = "RetryTimeout"
-  private val retryDest = "RetryDestination"
-  private val firstRetry = "FirstRetry"
-
-  val headerConfigPath : String = "blended.flow.header"
-  val header : String => String => String = prefix => name => prefix + name
-
-  def create(idSvc : ContainerIdentifierService) : FlowHeaderConfig = create(
-    idSvc.containerContext.getContainerConfig().getConfig(FlowHeaderConfig.headerConfigPath)
-  )
-
-  def create(prefix : String) : FlowHeaderConfig = FlowHeaderConfig(
-    prefix = prefix,
-    headerTransId = header(prefix)(transId),
-    headerTransShard = header(prefix)(transShard),
-    headerBranch = header(prefix)(branchId),
-    headerState = header(prefix)(transState),
-    headerTrack = header(prefix)(trackTrans),
-    headerTrackSource = header(prefix)(trackSource),
-    headerRetryCount = header(prefix)(retryCount),
-    headerMaxRetries = header(prefix)(maxRetries),
-    headerRetryTimeout = header(prefix)(retryTimeout),
-    headerRetryDestination = header(prefix)(retryDest),
-    headerFirstRetry = header(prefix)(firstRetry)
-  )
-
-  def create(cfg : Config) : FlowHeaderConfig = {
-
-    val prefix = cfg.getString(prefixPath, "Blended")
-    val headerTransId = cfg.getString(transIdPath, transId)
-    val headerTransShard = cfg.getString(transShardPath, transShard)
-    val headerBranch = cfg.getString(branchIdPath, branchId)
-    val headerState = cfg.getString(statePath, transState)
-    val headerTrack = cfg.getString(trackTransactionPath, trackTrans)
-    val headerTrackSource = cfg.getString(trackSourcePath, trackSource)
-    val headerRetryCount = cfg.getString(retryCountPath, retryCount)
-    val headerMaxRetries = cfg.getString(maxRetriesPath, maxRetries)
-    val headerRetryTimeout = cfg.getString(retryTimeoutPath, retryTimeout)
-    val headerRetryDest = cfg.getString(retryDestPath, retryDest)
-    val headerFirstRetry = cfg.getString(firstRetryPath, firstRetry)
-
-    FlowHeaderConfig(
-      prefix = prefix,
-      headerTransId = header(prefix)(headerTransId),
-      headerTransShard = header(prefix)(headerTransShard),
-      headerBranch = header(prefix)(headerBranch),
-      headerState = header(prefix)(headerState),
-      headerTrack = header(prefix)(headerTrack),
-      headerTrackSource = header(prefix)(headerTrackSource),
-      headerRetryCount = header(prefix)(headerRetryCount),
-      headerMaxRetries = header(prefix)(headerMaxRetries),
-      headerRetryTimeout = header(prefix)(headerRetryTimeout),
-      headerRetryDestination = header(prefix)(headerRetryDest),
-      headerFirstRetry = header(prefix)(headerFirstRetry)
-    )
-  }
-}
-
-case class FlowHeaderConfig private (
-  prefix : String,
-  headerTransId : String = "TransactionId",
-  headerTransShard : String = "TransactionShard",
-  headerBranch : String = "BranchId",
-  headerState : String = "TransactionState",
-  headerTrack : String = "TrackTransaction",
-  headerTrackSource : String = "TrackSource",
-  headerRetryCount : String = "RetryCount",
-  headerMaxRetries : String = "MaxRetries",
-  headerRetryTimeout : String = "RetryTimeout",
-  headerRetryDestination : String = "RetryDestination",
-  headerFirstRetry : String = "FirstRetry"
-)
 
 object FlowTransactionEvent {
 
@@ -155,22 +53,22 @@ object FlowTransactionEvent {
 
     Try {
       (envelope.header[String](cfg.headerTransId), envelope.header[String](cfg.headerState)) match {
-        case (Some(id), Some(state)) => FlowTransactionState.withName(state) match {
-          case FlowTransactionState.Started =>
-            val header = envelope.flowMessage.header.filter { case (k, _) => !k.startsWith("JMS") }
+        case (Some(id), Some(state)) => FlowTransactionState.apply(state).get match {
+          case FlowTransactionStateStarted =>
+            val header = envelope.flowMessage.header.filter{ case (k, v) => !k.startsWith("JMS") }
             FlowTransactionStarted(id, header)
 
-          case FlowTransactionState.Completed =>
+          case FlowTransactionStateCompleted =>
             FlowTransactionCompleted(id, envelope.flowMessage.header)
 
-          case FlowTransactionState.Failed =>
+          case FlowTransactionStateFailed =>
             val reason : Option[String] = envelope.flowMessage match {
               case txtMsg : TextFlowMessage => Some(txtMsg.content)
               case _                        => None
             }
             FlowTransactionFailed(id, envelope.flowMessage.header, reason)
 
-          case FlowTransactionState.Updated =>
+          case FlowTransactionStateUpdated =>
 
             val branchIds : Seq[String] = envelope.header[String](cfg.headerBranch) match {
               case Some(s) => if (s.isEmpty()) Seq() else s.split(",")
@@ -178,9 +76,8 @@ object FlowTransactionEvent {
             }
 
             val updatedState : WorklistState = envelope.flowMessage match {
-              case txtMsg : TextFlowMessage => WorklistState.withName(txtMsg.content)
-              case m =>
-                throw new InvalidTransactionEnvelopeException(s"Expected TextFlowMessage for an update envelope, actual [${m.getClass().getName()}]")
+              case txtMsg : TextFlowMessage => WorklistState.apply(txtMsg.content).get
+              case m => throw new InvalidTransactionEnvelopeException(s"Expected TextFlowMessage for an update envelope, actual [${m.getClass().getName()}]")
             }
 
             FlowTransactionUpdate(id, envelope.flowMessage.header, updatedState, branchIds : _*)
@@ -204,9 +101,9 @@ sealed trait FlowTransactionEvent {
 
 case class FlowTransactionStarted(
   override val transactionId : String,
-  override val properties : Map[String, MsgProperty]
+  override val properties : Map[String, MsgProperty],
 ) extends FlowTransactionEvent {
-  override val state : FlowTransactionState = FlowTransactionState.Started
+  override val state: FlowTransactionState = FlowTransactionStateStarted
 }
 
 case class FlowTransactionUpdate(
@@ -215,7 +112,7 @@ case class FlowTransactionUpdate(
   updatedState : WorklistState,
   branchIds : String*
 ) extends FlowTransactionEvent {
-  override val state : FlowTransactionState = FlowTransactionState.Updated
+  override val state: FlowTransactionState = FlowTransactionStateUpdated
 
   override def toString : String = super.toString + s",branchIds=[${branchIds.mkString(",")}],updatedState=[$updatedState]"
 }
@@ -225,14 +122,14 @@ case class FlowTransactionFailed(
   override val properties : FlowMessageProps,
   reason : Option[String]
 ) extends FlowTransactionEvent {
-  override val state : FlowTransactionState = FlowTransactionState.Failed
+  override val state: FlowTransactionState = FlowTransactionStateFailed
 
   override def toString : String = super.toString + s"[${reason.getOrElse("")}]"
 }
 
 final case class FlowTransactionCompleted(
   override val transactionId : String,
-  override val properties : FlowMessageProps
+  override val properties : FlowMessageProps,
 ) extends FlowTransactionEvent {
-  override val state : FlowTransactionState = FlowTransactionState.Completed
+  override val state: FlowTransactionState = FlowTransactionStateCompleted
 }

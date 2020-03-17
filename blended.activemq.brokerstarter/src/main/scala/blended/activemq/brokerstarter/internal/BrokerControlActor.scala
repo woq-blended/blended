@@ -7,13 +7,13 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, PoisonPill, Props}
 import blended.akka.OSGIActorConfig
-import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory}
+import blended.jms.utils.{BlendedSingleConnectionFactory, ConnectionConfig, IdAwareConnectionFactory}
 import blended.util.logging.Logger
 import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
 import domino.service_providing.ServiceProviding
 import javax.jms.ConnectionFactory
 import javax.net.ssl.SSLContext
-import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFactory}
+import org.apache.activemq.broker.{BrokerFactory, BrokerPlugin, BrokerService, DefaultBrokerFactory}
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
 
@@ -88,13 +88,13 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
   private[this] var svcReg : Option[ServiceRegistration[_]] = None
   private[this] val uuid = UUID.randomUUID().toString()
 
-  override def toString : String = s"BrokerControlActor(${brokerCfg})"
+  override def toString : String = s"BrokerControlActor($brokerCfg)"
 
   private[this] def startBroker() : Unit = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
-    val cfgDir = cfg.idSvc.containerContext.getProfileConfigDirectory()
+    val cfgDir = cfg.ctContext.profileConfigDirectory
     val uri = s"file://$cfgDir/${brokerCfg.file}"
 
     try {
@@ -105,8 +105,15 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
       BrokerFactory.setStartDefault(false)
       val brokerFactory = new XBeanBrokerFactory()
 
-      val b = brokerFactory.createBroker(new URI(uri))
+      val b : BrokerService = brokerFactory.createBroker(new URI(uri))
       broker = Some(b)
+
+      if (brokerCfg.withAuthentication) {
+        val plugins : List[BrokerPlugin] = new JaasAuthenticationPlugin(brokerCfg) :: Option(b.getPlugins()).map(_.toList).getOrElse(List.empty)
+        b.setPlugins(plugins.toArray)
+      } else {
+        log.info(s"The broker [${brokerCfg.brokerName}] will start without authentication")
+      }
 
       sslCtxt.foreach { ctxt =>
         val amqSslContext = new org.apache.activemq.broker.SslContext()
@@ -144,7 +151,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
 
         val url = s"vm://${brokerCfg.brokerName}?create=false"
 
-        val jmsCfg = brokerCfg.copy(properties = brokerCfg.properties + ("brokerURL" -> url))
+        val jmsCfg : ConnectionConfig = brokerCfg.copy(properties = brokerCfg.properties + ("brokerURL" -> url))
 
         val cf = new BlendedSingleConnectionFactory(
           config = jmsCfg,
@@ -168,7 +175,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
         b.stop()
         b.waitUntilStopped()
       } catch {
-        case t : Throwable =>
+        case NonFatal(t) =>
           log.error(t)(s"Error stopping ActiveMQ broker [${brokerCfg.brokerName}]")
       } finally {
         try {
@@ -194,7 +201,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
     b.waitUntilStopped()
   }
 
-  private val jvmId = ManagementFactory.getRuntimeMXBean().getName()
+  private val jvmId : String = ManagementFactory.getRuntimeMXBean().getName()
 
   override def receive : Receive = {
     case BrokerControlActor.StartBroker =>

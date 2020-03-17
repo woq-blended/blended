@@ -7,11 +7,10 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
-abstract class JmsSession {
-
-  def connection : Connection
-
-  def session : Session
+final case class JmsSession(
+  session : Session,
+  sessionId : String
+) {
 
   def closeSessionAsync()(system : ActorSystem) : Future[Unit] = {
 
@@ -35,7 +34,7 @@ abstract class JmsSession {
     p.future
   }
 
-  def closeSession() : Unit = {
+  def closeSession() : Try[Unit] = Try {
     session.close()
   }
 
@@ -43,26 +42,10 @@ abstract class JmsSession {
 
   def abortSession() : Unit = closeSession()
 
-  def sessionId : String
-}
-
-case class JmsProducerSession(
-  connection : Connection,
-  session : Session,
-  override val sessionId : String,
-  jmsDestination : Option[JmsDestination]
-) extends JmsSession
-
-class JmsConsumerSession(
-  val connection : Connection,
-  val session : Session,
-  override val sessionId : String,
-  val jmsDestination : JmsDestination
-) extends JmsSession {
-
   def createConsumer(
+    jmsDestination: JmsDestination,
     selector : Option[String]
-  )(implicit ec : ExecutionContext) : Try[MessageConsumer] = Try {
+  ) : Try[MessageConsumer] = Try {
     (selector, jmsDestination) match {
       case (None, t : JmsDurableTopic) =>
         session.createDurableSubscriber(t.create(session).asInstanceOf[Topic], t.subscriberName)
@@ -82,34 +65,5 @@ class JmsConsumerSession(
       case (None, q) =>
         session.createConsumer(q.create(session).asInstanceOf[Queue])
     }
-  }
-}
-
-object JmsAckState extends Enumeration {
-  type JmsAckState = Value
-  val Pending, Acknowledged, Denied = Value
-}
-
-class JmsAckSession(
-  override val connection : Connection,
-  override val session : Session,
-  override val sessionId : String,
-  override val jmsDestination : JmsDestination,
-  val ackTimeout : FiniteDuration = 1.second
-) extends JmsConsumerSession(connection, session, sessionId, jmsDestination) {
-
-  var ackState : JmsAckState.JmsAckState = JmsAckState.Pending
-
-  def resetAck() : Unit = synchronized {
-    ackState = JmsAckState.Pending
-  }
-
-  def deny(message : Message) : Unit = synchronized {
-    ackState = JmsAckState.Denied
-
-  }
-
-  def ack(message : Message) : Unit = synchronized {
-    ackState = JmsAckState.Acknowledged
   }
 }

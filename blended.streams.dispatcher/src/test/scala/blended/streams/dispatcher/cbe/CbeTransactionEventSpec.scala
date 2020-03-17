@@ -2,24 +2,24 @@ package blended.streams.dispatcher.cbe
 
 import java.util.Date
 
-import blended.streams.transaction.{EventSeverity, FlowTransactionState}
+import blended.streams.transaction.{EventSeverity, FlowTransactionStateStarted}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.XMLSupport
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 
-class CbeTransactionEventSpec extends LoggingFreeSpec
+class CbeEventSpec extends LoggingFreeSpec
   with Matchers {
 
-  private val headers = Map(
+  val headers : Map[String, String] = Map(
     "foo" -> "bar",
     "Application" -> "XX",
     "Module" -> "YY"
   )
 
-  // scalastyle:off magic.number
-  private val comp = CbeComponent(
+  //scalastyle:off magic.number
+  val comp : CbeComponent = CbeComponent(
     "SIB-2.0",
     "TestComponent",
     "cc-9999",
@@ -53,14 +53,14 @@ class CbeTransactionEventSpec extends LoggingFreeSpec
     "be representable as a CBE XML" in {
 
       val event = CbeTransactionEvent(
-        id = "myId",
-        severity = EventSeverity.Information,
-        component = comp,
-        state = Some(FlowTransactionState.Started),
-        properties = headers,
+        id           = "myId",
+        severity     = EventSeverity.Information,
+        component    = comp,
+        state        = Some(FlowTransactionStateStarted),
+        properties   = headers,
         closeProcess = false,
-        timeout = 1.second,
-        timestamp = new Date()
+        timeout      = 1.second,
+        timestamp    = new Date()
       )
 
       val xml = event.asCBE()
@@ -69,14 +69,14 @@ class CbeTransactionEventSpec extends LoggingFreeSpec
 
     "populate ModuleLast if the process is to be closed" in {
       val event = CbeTransactionEvent(
-        id = "myId",
-        severity = EventSeverity.Information,
-        component = comp,
-        state = Some(FlowTransactionState.Started),
-        properties = headers,
+        id           = "myId",
+        severity     = EventSeverity.Information,
+        component    = comp,
+        state        = Some(FlowTransactionStateStarted),
+        properties   = headers,
         closeProcess = true,
-        timeout = 1.second,
-        timestamp = new Date()
+        timeout      = 1.second,
+        timestamp    = new Date()
       )
 
       val xml = event.asCBE()

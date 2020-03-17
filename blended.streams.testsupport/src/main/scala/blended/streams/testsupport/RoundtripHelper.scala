@@ -1,14 +1,12 @@
 package blended.streams.testsupport
 
-package sib.itest.streams
-
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.Collector
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._
@@ -25,7 +23,7 @@ case class RoundtripHelper(
   inbound : (IdAwareConnectionFactory, JmsDestination),
   testMsgs : Seq[FlowEnvelope] = Seq.empty,
   timeout : FiniteDuration = 10.seconds,
-  headerConfig : FlowHeaderConfig = FlowHeaderConfig(prefix = "SIB"),
+  headerConfig: FlowHeaderConfig = FlowHeaderConfig.create(prefix = "SIB"),
   outcome : Seq[ExpectedOutcome] = Seq.empty
 )(implicit system : ActorSystem) extends JmsStreamSupport {
 
@@ -33,7 +31,6 @@ case class RoundtripHelper(
 
   private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
-  private implicit val to : FiniteDuration = timeout
 
   def withTestMsgs(env : FlowEnvelope*) : RoundtripHelper = copy(testMsgs = testMsgs ++ env)
   def withTimeout(to : FiniteDuration) : RoundtripHelper = copy(timeout = to)
@@ -41,6 +38,7 @@ case class RoundtripHelper(
   def withOutcome(o : ExpectedOutcome*) : RoundtripHelper = copy(outcome = outcome ++ o)
 
   val log : Logger = Logger(classOf[RoundtripHelper].getName() + "." + name)
+  val envLog : FlowEnvelopeLogger = new FlowEnvelopeLogger(log, headerConfig.prefix)
 
   def run() : Map[String, Seq[String]] = {
     val msg : String = s"Starting test case [$name], timeout = [$timeout]"
@@ -49,20 +47,26 @@ case class RoundtripHelper(
 
     val collectors : Map[String, Collector[FlowEnvelope]] = {
       outcome.map { o =>
-        val k : String = outcomeId(o)
-        val c = receiveMessages(headerConfig, o.cf, o.dest, log)
+        val k : String  = outcomeId(o)
+        val c = receiveMessages(
+          headerCfg = headerConfig,
+          cf = o.cf,
+          dest = o.dest,
+          log = envLog,
+          timeout = Some(timeout)
+        )
         k -> c
       }
     }.toMap
 
-    val pSettings : JmsProducerSettings = JmsProducerSettings(
-      log = log,
+    val pSettings: JmsProducerSettings = JmsProducerSettings(
+      log = envLog,
       headerCfg = headerConfig,
       connectionFactory = inbound._1,
       jmsDestination = Some(inbound._2)
     )
     // Send the inbound messages
-    sendMessages(pSettings, log, testMsgs : _*)
+    sendMessages(pSettings, envLog, testMsgs:_*)
 
     // Wait for all outcomes
 

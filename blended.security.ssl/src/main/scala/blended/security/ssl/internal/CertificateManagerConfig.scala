@@ -1,6 +1,6 @@
 package blended.security.ssl.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.security.ssl.CommonNameProvider
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
@@ -9,15 +9,23 @@ import scala.util.Try
 
 object KeystoreConfig {
 
-  def fromConfig(cfg : Config, hasher : PasswordHasher) : KeystoreConfig = {
+  def fromConfig(cfg: Config, hasher: PasswordHasher, ctCtxt: ContainerContext): KeystoreConfig = {
     val keyStore = cfg.getString("keyStore", System.getProperty("javax.net.ssl.keyStore"))
-    val storePass = cfg.getString("storePass", System.getProperty("javax.net.ssl.keyStorePassword"))
-    val keyPass = cfg.getString("keyPass", System.getProperty("javax.net.ssl.keyPassword"))
+    val storePass: String = ctCtxt.resolveString(cfg
+      .getStringOption("explicit.storePass")
+      .orElse(cfg.getStringOption("storePass").map(hasher.password))
+      .getOrElse(System.getProperty("javax.net.ssl.keyStorePassword")))
+      .get.asInstanceOf[String]
+    val keyPass: String = ctCtxt.resolveString(cfg
+      .getStringOption("explicit.keyPass")
+      .orElse(cfg.getStringOption("keyPass").map(hasher.password))
+      .getOrElse(System.getProperty("javax.net.ssl.keyPassword")))
+      .get.asInstanceOf[String]
 
     KeystoreConfig(
       keyStore,
-      hasher.password(storePass),
-      hasher.password(keyPass)
+      storePass,
+      keyPass
     )
   }
 }
@@ -32,14 +40,14 @@ case class KeystoreConfig(
  * Configuration of [[CertificateManagerImpl]]
  */
 case class CertificateManagerConfig(
-  clientOnly : Boolean,
-  maintainTruststore : Boolean,
-  keystoreCfg : Option[KeystoreConfig],
-  providerList : List[String],
-  certConfigs : List[CertificateConfig],
-  refresherConfig : Option[RefresherConfig],
-  skipInitialCheck : Boolean,
-  validCypherSuites : List[String]
+  clientOnly: Boolean,
+  maintainTruststore: Boolean,
+  keystoreCfg: Option[KeystoreConfig],
+  providerList: List[String],
+  certConfigs: List[CertificateConfig],
+  refresherConfig: Option[RefresherConfig],
+  skipInitialCheck: Boolean,
+  validCypherSuites: List[String]
 )
 
 object CertificateManagerConfig {
@@ -48,23 +56,23 @@ object CertificateManagerConfig {
    * Read a [[CertificateManagerConfig]] from a typesafe [[Config]],
    * using the given [[PasswordHasher]] to hash the passwords (`keyPass` and `storePass`).
    */
-  def fromConfig(cfg : Config, hasher : PasswordHasher, idSvc : ContainerIdentifierService) : CertificateManagerConfig = {
+  def fromConfig(cfg : Config, hasher : PasswordHasher, ctCtxt : ContainerContext) : CertificateManagerConfig = {
 
-    val clientOnly : Boolean = cfg.getBoolean("clientOnly", false)
+    val clientOnly: Boolean = cfg.getBoolean("clientOnly", false)
 
-    val maintainTruststore : Boolean = cfg.getBoolean("maintainTruststore", true)
+    val maintainTruststore: Boolean = cfg.getBoolean("maintainTruststore", true)
 
-    val keystoreCfg : Option[KeystoreConfig] = if (clientOnly) {
+    val keystoreCfg: Option[KeystoreConfig] = if (clientOnly) {
       None
     } else {
-      Some(KeystoreConfig.fromConfig(cfg, hasher))
+      Some(KeystoreConfig.fromConfig(cfg, hasher, ctCtxt))
     }
 
-    val providers : List[String] = cfg.getStringList("providerList", List.empty)
+    val providers: List[String] = cfg.getStringList("providerList", List.empty)
 
     val certConfigs = cfg.getConfigMap("certificates", Map.empty).map {
       case (k, v) =>
-        CertificateConfig.fromConfig(k, v, idSvc)
+        CertificateConfig.fromConfig(k, v, ctCtxt)
     }.toList
 
     val refresherConfig = cfg.getConfigOption("refresher").map(c => RefresherConfig.fromConfig(c).get)
@@ -97,11 +105,11 @@ object CertificateConfig {
 
   val defaultMinValidDays = 10
 
-  def fromConfig(alias : String, cfg : Config, idSvc : ContainerIdentifierService) : CertificateConfig = {
+  def fromConfig(alias : String, cfg : Config, ctCtxt : ContainerContext) : CertificateConfig = {
     val provider = cfg.getString("provider", "default")
     val minValidDays = cfg.getInt("minValidDays", defaultMinValidDays)
 
-    CertificateConfig(provider, alias, minValidDays, new ConfigCommonNameProvider(cfg, idSvc))
+    CertificateConfig(provider, alias, minValidDays, new ConfigCommonNameProvider(cfg, ctCtxt))
   }
 }
 

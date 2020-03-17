@@ -10,8 +10,7 @@ import blended.streams.dispatcher.internal.builder.DispatcherOutbound.Dispatcher
 import blended.streams.jms.JmsFlowSupport
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.worklist.WorklistState.WorklistState
-import blended.streams.worklist.{WorklistEvent, WorklistState}
+import blended.streams.worklist._
 import org.scalatest.Matchers
 
 import scala.concurrent.ExecutionContext
@@ -29,8 +28,8 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
     implicit val system : ActorSystem = ctxt.system
 
-    val outColl = Collector[WorklistEvent]("out")(_ => {})
-    val errColl = Collector[FlowEnvelope]("err")(_.acknowledge())
+    val outColl = Collector[WorklistEvent]("out")
+    val errColl = Collector[FlowEnvelope]("err", onCollected = Some({ e : FlowEnvelope => e.acknowledge()}))
 
     val source = Source.single[FlowEnvelope](testMsg)
 
@@ -38,7 +37,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
       GraphDSL.create() { implicit b =>
         import GraphDSL.Implicits._
 
-        val outStep = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, send)(ctxt.bs).outbound())
+        val outStep = b.add(DispatcherBuilder(ctxt.ctCtxt, ctxt.cfg, send, ctxt.envLogger)(ctxt.bs).outbound())
         val out = b.add(outColl.sink)
         val err = b.add(errColl.sink)
 
@@ -91,13 +90,13 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
   "The outbound flow of the dispatcher should" - {
 
     "produce a worklist completed event for successfull completions of the outbound flow" in {
-      val good = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
-      testOutbound(WorklistState.Completed, good)
+      val good = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env}
+      testOutbound(WorklistStateCompleted, good)
     }
 
     "produce a worklist failed event after unsuccessfull completions of the outbound flow" in {
-      val bad = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env.withException(new Exception("Boom !")) }
-      testOutbound(WorklistState.Failed, bad)
+      val bad = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env.withException(new Exception("Boom !")) }
+      testOutbound(WorklistStateFailed, bad)
     }
   }
 
@@ -139,8 +138,9 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,
-          idSvc = ctxt.idSvc,
-          bs = ctxt.bs
+          ctCtxt = ctxt.ctCtxt,
+          bs = ctxt.bs,
+          streamLogger = ctxt.envLogger
         )(env).get
 
         routing should be(DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
@@ -164,8 +164,9 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,
-          idSvc = ctxt.idSvc,
-          bs = ctxt.bs
+          ctCtxt = ctxt.ctCtxt,
+          bs = ctxt.bs,
+          streamLogger = ctxt.envLogger
         )(env).get
 
         routing should be(DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
@@ -187,8 +188,9 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,
-          idSvc = ctxt.idSvc,
-          bs = ctxt.bs
+          ctCtxt = ctxt.ctCtxt,
+          bs = ctxt.bs,
+          streamLogger = ctxt.envLogger
         )(env).get
 
         routing should be(DispatcherTarget(provider.vendor, provider.provider, JmsDestination.create("centralDest").get))

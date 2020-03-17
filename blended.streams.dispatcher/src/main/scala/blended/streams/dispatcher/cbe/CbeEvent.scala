@@ -5,25 +5,24 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 
 import blended.streams.transaction.EventSeverity.EventSeverity
-import blended.streams.transaction.FlowTransactionState._
-import blended.streams.transaction.{EventSeverity, FlowTransactionState}
+import blended.streams.transaction.{EventSeverity, FlowTransactionState, FlowTransactionStateFailed}
 
 import scala.concurrent.duration._
 
 object CbeEvent {
 
   def apply(
-    id : String,
-    component : CbeComponent,
-    state : FlowTransactionState.FlowTransactionState,
-    properties : Map[String, Object],
+    id           : String,
+    component    : CbeComponent,
+    state        : FlowTransactionState,
+    properties   : Map[String, Object],
     closeProcess : Boolean,
-    timeout : Long
+    timeout      : Long
   ) : CbeTransactionEvent = {
 
     val sev = state match {
-      case Failed => EventSeverity.Critical
-      case _      => EventSeverity.Information
+      case FlowTransactionStateFailed => EventSeverity.Critical
+      case _ => EventSeverity.Information
     }
 
     CbeTransactionEvent(
@@ -40,16 +39,16 @@ object CbeEvent {
 }
 
 case class CbeTransactionEvent(
-  id : String,
-  severity : EventSeverity,
-  component : CbeComponent,
-  state : Option[FlowTransactionState.FlowTransactionState],
-  properties : Map[String, Object],
-  timestamp : Date,
+  id           : String,
+  severity     : EventSeverity,
+  component    : CbeComponent,
+  state        : Option[FlowTransactionState],
+  properties   : Map[String, Object],
+  timestamp    : Date,
   closeProcess : Boolean,
-  timeout : FiniteDuration,
-  msg : Option[String] = None,
-  situation : String = "STATUS"
+  timeout      : FiniteDuration,
+  msg          : Option[String] = None,
+  situation    : String = "STATUS"
 ) {
 
   private val ignoreHeader : List[String] = List("Application", "Module", "ModuleLast")

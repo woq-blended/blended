@@ -1,6 +1,6 @@
 package blended.activemq.brokerstarter.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{BlendedJMSConnectionConfig, ConnectionConfig}
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
@@ -14,22 +14,25 @@ case class BrokerConfig(
   override val provider : String,
   override val clientId : String,
   override val jmxEnabled : Boolean,
-  override val pingEnabled : Boolean,
-  override val pingTolerance : Int,
-  override val pingDestination : String,
-  override val pingInterval : FiniteDuration,
-  override val pingTimeout : FiniteDuration,
+  override val keepAliveEnabled : Boolean,
+  override val maxKeepAliveMissed : Int,
+  override val keepAliveInterval : FiniteDuration,
+  override val retryInterval : FiniteDuration,
+  override val connectTimeout: FiniteDuration,
+  override val keepAliveDestination : String,
   override val minReconnect : FiniteDuration,
   override val maxReconnectTimeout : Option[FiniteDuration],
   override val properties : Map[String, String],
-  override val retryInterval : FiniteDuration,
+  override val defaultUser : Option[String],
+  override val defaultPassword : Option[String],
   brokerName : String,
   file : String,
-  withSsl : Boolean
+  withSsl : Boolean,
+  withAuthentication : Boolean,
+  anonymousUser : Option[String],
+  anonymousGroups : List[String]
 ) extends ConnectionConfig {
   override val enabled : Boolean = true
-  override val defaultUser : Option[String] = None
-  override val defaultPassword : Option[String] = None
   override val useJndi : Boolean = false
   override val cfEnabled : Option[ConnectionConfig => Boolean] = None
   override val cfClassName : Option[String] = Some(classOf[ActiveMQConnectionFactory].getName())
@@ -56,33 +59,43 @@ object BrokerConfig {
 
   val ssl : Config => Boolean = cfg => cfg.getBoolean("withSsl", true)
 
-  def create(brokerName : String, idSvc : ContainerIdentifierService, cfg : Config) : Try[BrokerConfig] = Try {
+  val authenticate : Config => Boolean = cfg => cfg.getBoolean("withAuthentication", false)
 
-    val resolve : String => Try[Any] = value => idSvc.resolvePropertyString(value)
+  val anonymous : Config => Option[String] = cfg => cfg.getStringOption("anonymousUser")
+
+  val anonymousGroups : Config => List[String] = cfg => cfg.getStringList("anonymousGroups", List.empty)
+
+  def create(brokerName : String, ctCtxt : ContainerContext, cfg : Config) : Try[BrokerConfig] = Try {
+
+    val resolve : String => Try[AnyRef] = value => ctCtxt.resolveString(value)
 
     val v = vendor(resolve)(cfg).getOrElse("activemq")
     val p = provider(resolve)(cfg).getOrElse("activemq")
 
-    val jmsConfig : BlendedJMSConnectionConfig = BlendedJMSConnectionConfig.fromConfig(resolve)(v, p, cfg)
+    val jmsConfig : BlendedJMSConnectionConfig = BlendedJMSConnectionConfig.fromConfig(ctCtxt)(v, p, cfg)
 
     BrokerConfig(
       vendor = jmsConfig.vendor,
       provider = jmsConfig.provider,
+      defaultUser = jmsConfig.defaultUser,
+      defaultPassword = jmsConfig.defaultPassword,
       clientId = jmsConfig.clientId,
       jmxEnabled = jmsConfig.jmxEnabled,
-      pingEnabled = jmsConfig.pingEnabled,
-      pingTolerance = jmsConfig.pingTolerance,
-      pingDestination = jmsConfig.pingDestination,
-      pingInterval = jmsConfig.pingInterval,
-      pingTimeout = jmsConfig.pingTimeout,
+      keepAliveEnabled = jmsConfig.keepAliveEnabled,
+      maxKeepAliveMissed = jmsConfig.maxKeepAliveMissed,
+      keepAliveInterval = jmsConfig.keepAliveInterval,
+      retryInterval = jmsConfig.retryInterval,
+      connectTimeout = jmsConfig.connectTimeout,
+      keepAliveDestination = jmsConfig.keepAliveDestination,
       minReconnect = jmsConfig.minReconnect,
       maxReconnectTimeout = jmsConfig.maxReconnectTimeout,
       properties = jmsConfig.properties,
-      retryInterval = jmsConfig.retryInterval,
-
       brokerName = name(resolve)(cfg).getOrElse(brokerName),
       file = file(resolve)(cfg).getOrElse(s"$brokerName.amq"),
-      withSsl = ssl(cfg)
+      withSsl = ssl(cfg),
+      withAuthentication = authenticate(cfg),
+      anonymousUser = anonymous(cfg),
+      anonymousGroups = anonymousGroups(cfg)
     )
   }
 }

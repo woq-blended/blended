@@ -4,10 +4,10 @@ import java.util.Properties
 
 import akka.actor.ActorSystem
 import blended.security.login.api.Token
-import blended.websocket.json.PrickleProtocol._
+import blended.websocket.WsUpdateEmitter.emit
 import blended.websocket._
+import blended.websocket.json.PrickleProtocol._
 import prickle._
-import WsUpdateEmitter.emit
 
 object BlendedCommandPackage {
 
@@ -38,7 +38,10 @@ class BlendedCommandPackage(
         val ctxt : WsContext = WsContext(namespace = namespace, name = name)
         // This is a side effect, which will push the version info to the client
         emit[BlendedWsMessage](
-          msg = VersionResponse(BlendedCommandPackage.version), token = t, context = ctxt, pickler = wsMessagesPicklerPair.pickler
+          msg = VersionResponse(BlendedCommandPackage.version),
+          token = t,
+          context = ctxt,
+          pickler = wsMessagesPicklerPair.pickler
         )(system)
         ctxt
     }

@@ -21,7 +21,12 @@ object BlendedJmsBridge extends ProjectFactory {
       Dependencies.logbackClassic % Test,
       Dependencies.activeMqBroker % Test,
       Dependencies.scalatest % Test,
-      Dependencies.scalacheck % Test
+      Dependencies.scalacheck % Test,
+      Dependencies.springCore % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test,
+      Dependencies.springExpression % Test,
+      Dependencies.commonsLogging % Test
     )
 
     override def bundle : OsgiBundle = super.bundle.copy(
@@ -30,10 +35,10 @@ object BlendedJmsBridge extends ProjectFactory {
 
     override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / testlogLogPackages ++= Map(
-        "" +
-          "App" -> "DEBUG",
+        "App" -> "DEBUG",
         "blended" -> "DEBUG",
         "spec" -> "DEBUG"
+        //"blended.jms" -> "TRACE"
       )
     )
 

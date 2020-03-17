@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.stream.{FlowShape, Graph}
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal.{OutboundRouteConfig, ResourceTypeRouterConfig}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.util.logging.LogLevel.LogLevel
 
 import scala.util.{Failure, Success, Try}
@@ -14,12 +14,14 @@ import scala.util.{Failure, Success, Try}
 /*-------------------------------------------------------------------------------------------------*/
 object LogEnvelope {
 
-  def apply(dispatcherCfg : ResourceTypeRouterConfig, stepName : String, level : LogLevel)(implicit bs : DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
+  def apply(dispatcherCfg: ResourceTypeRouterConfig, stepName : String, level: LogLevel, logger : FlowEnvelopeLogger)(implicit bs: DispatcherBuilderSupport) :
+    Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
 
-    FlowProcessor.fromFunction(stepName, bs.streamLogger) { env =>
+    FlowProcessor.fromFunction( stepName, logger) { env =>
 
-      Try {
+      val logLevel : FlowEnvelope => LogLevel = _ => level
 
+      val logString : FlowEnvelope => String = env => {
         val outCfg : Option[OutboundRouteConfig] = env.getFromContext[OutboundRouteConfig](bs.outboundCfgKey) match {
           case Success(o) => o
           case Failure(_) => None
@@ -39,6 +41,11 @@ object LogEnvelope {
 
         val id = s"[${env.id}]:[$stepName]" + outCfg.map(c => s":[${c.id}]").getOrElse("")
 
+        s"[${env.id}] FlowId[$id] $env"
+      }
+
+      Try {
+        logger.logEnv(env, logLevel(env), logString(env), false)
         env
       }
     }

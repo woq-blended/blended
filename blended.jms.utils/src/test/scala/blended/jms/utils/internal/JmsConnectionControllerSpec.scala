@@ -3,17 +3,22 @@ package blended.jms.utils.internal
 import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
 
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
+import blended.jms.utils._
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.jms.JMSException
-import org.scalatest.FreeSpecLike
 
 import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
 class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
-  with FreeSpecLike
+  with LoggingFreeSpecLike
   with ImplicitSender {
+
+  private class EmptyActor extends Actor {
+    override def receive: Receive = Actor.emptyBehavior
+  }
 
   private[this] val idCnt = new AtomicInteger(0)
 
@@ -23,10 +28,10 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
   "The JMS Connection Controller" - {
 
-    "should answer with a positive ConnectResult message in case of a succesful connect" in {
+    "should answer with a positive ConnectResult message in case of a successful connect" in {
 
       val holder = new DummyHolder(() => new DummyConnection())
-      val testActor = system.actorOf(JmsConnectionController.props(holder))
+      val testActor = system.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
 
       val t = new Date()
 
@@ -50,7 +55,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
         throw new JMSException("boom")
       })
 
-      val testActor = system.actorOf(JmsConnectionController.props(holder))
+      val testActor = system.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
 
       val t = new Date()
 
@@ -63,7 +68,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
     "should answer with a ConnectionClosed message in case of a successful disconnect" in {
       val holder = new DummyHolder(() => new DummyConnection())
-      val testActor = system.actorOf(JmsConnectionController.props(holder))
+      val testActor = system.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
 
       val t = new Date()
 
@@ -88,7 +93,24 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
         }
       })
 
-      val testActor = system.actorOf(JmsConnectionController.props(holder))
+      val testActor = system.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
+
+      val t = new Date()
+      testActor ! Connect(t, testId())
+
+      val m = receiveOne(100.millis).asInstanceOf[ConnectResult]
+      assert(m.ts == t)
+      assert(m.r.isRight)
+
+      testActor ! Disconnect(timeout)
+      expectMsg(CloseTimeout)
+    }
+
+    "should answer with a CloseTimeout message in case the CloseActor does not respond" in {
+      val timeout = 100.millis
+      val holder = new DummyHolder(() => new DummyConnection())
+
+      val testActor = system.actorOf(JmsConnectionController.props(holder, Props(new EmptyActor())))
 
       val t = new Date()
       testActor ! Connect(t, testId())
@@ -110,7 +132,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
         }
       })
 
-      val testActor = system.actorOf(JmsConnectionController.props(holder))
+      val testActor = system.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
 
       val t = new Date()
       testActor ! Connect(t, testId())

@@ -2,9 +2,9 @@ package blended.streams.message
 
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.util.RichTry._
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
-import blended.util.RichTry._
 
 import scala.util.Success
 

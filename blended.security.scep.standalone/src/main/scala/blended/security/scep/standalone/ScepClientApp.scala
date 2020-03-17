@@ -12,8 +12,8 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequest
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 object ScepClientApp {
 
@@ -35,10 +35,10 @@ object ScepClientApp {
           Console.err.println(m)
         }
         Logger[ScepClientApp.type].debug(e)(s"About to exit VM from main-method with exit code [${e.exitCode}]")
-        System.exit(e.exitCode) // ! Hard exit !
+        System.exit(e.exitCode.code) // ! Hard exit !
       case NonFatal(e) =>
-        Logger[ScepClientApp.type].error(e)(s"An unexepected error occured. Exiting the application with exit code [2]\nReason: ${e.getMessage()}")
-        System.exit(2) // ! Hard exit !
+        Logger[ScepClientApp.type].error(e)(s"An unexepected error occured.\nReason: ${e.getMessage()}")
+        System.exit(ExitCode.InternalError.code) // ! Hard exit !
     }
   }
 
@@ -56,12 +56,12 @@ object ScepClientApp {
     try {
       cp.parse(args : _*)
     } catch {
-      case e : CmdlineParserException => throw new ExitAppException(2, Option(e.getLocalizedMessage()), e)
+      case e : CmdlineParserException => throw new ExitAppException(ExitCode.InvalidCmdline, Option(e.getLocalizedMessage()), e)
     }
 
     if (cmdline.help || args.isEmpty) {
       cp.usage()
-      throw new ExitAppException(0)
+      throw new ExitAppException(ExitCode.Ok)
     }
 
     val salt = cmdline.salt.getOrElse("scep-client")
@@ -82,7 +82,8 @@ object ScepClientApp {
       refreshCert(
         salt,
         timeout = Duration(cmdline.timeout, TimeUnit.SECONDS),
-        baseDir = new File(cmdline.baseDir.getOrElse(".")).getAbsoluteFile()
+        baseDir = new File(cmdline.baseDir.getOrElse(".")).getAbsoluteFile(),
+        cmdline.expectRefresh
       )
     }
 
@@ -114,7 +115,7 @@ object ScepClientApp {
   def readCsrFile(csrFile : String) : Unit = {
     val file = new File(csrFile).getAbsoluteFile()
     if (!file.exists() || !file.isFile()) {
-      throw new RuntimeException(s"File does not exists: ${file}")
+      throw new RuntimeException(s"File does not exist: ${file}")
     }
     log.debug(s"About to parse file ${file}")
     val reader = new FileReader(file)
@@ -142,29 +143,38 @@ object ScepClientApp {
       case other =>
         val msg = s"File [${csrFile}] has no supported CSR file format"
         log.error(msg)
-        throw new ExitAppException(1, Some(msg))
+        throw new ExitAppException(ExitCode.Error, Some(msg))
     }
   }
 
-  def refreshCert(salt : String, timeout : Duration, baseDir : File) : Unit = {
+  def refreshCert(salt : String, timeout : Duration, baseDir : File, expectCertChange: Boolean) : Unit = {
     implicit val executionContext = scala.concurrent.ExecutionContext.global
     val refresher = new CertRefresher(salt, baseDir)
+
     val checking = refresher.checkCert()
 
     try {
       Await.ready(checking, atMost = timeout).value.get match {
         case Success(r) =>
-          println(s"Successfully refreshed certificates")
+          log.debug(s"Successfully gathered certificates")
           refresher.stop()
+
+          if (expectCertChange && r.changedAliases.isEmpty) {
+            throw new ExitAppException(
+              exitCode = ExitCode.NoCertsRefreshed,
+              errMsg = Some(s"Successfully gathered unchanged certificates.")
+            )
+          }
+
           throw new ExitAppException(
-            exitCode = 0,
+            exitCode = ExitCode.Ok,
             errMsg = Some(s"Successfully refreshed certificates")
           )
 
         case Failure(e) =>
           refresher.stop()
           throw new ExitAppException(
-            exitCode = 1,
+            exitCode = ExitCode.Error,
             errMsg = Some(s"Error: Could not refresh certificates.\nReason: ${e.getMessage()}\nSee log file for details."),
             cause = e
           )
@@ -173,7 +183,7 @@ object ScepClientApp {
       case e : TimeoutException =>
         refresher.stop()
         throw new ExitAppException(
-          exitCode = 1,
+          exitCode = ExitCode.Timeout,
           errMsg = Some(s"Error: Could not refresh certificates.\nReason: Timeout after [${timeout}]\nSee log file for details."),
           cause = e
         )

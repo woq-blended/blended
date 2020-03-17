@@ -8,17 +8,17 @@ trait ConnectionConfig {
   val provider : String
   val enabled : Boolean
   val jmxEnabled : Boolean
-  val pingEnabled : Boolean
-  val pingTolerance : Int
-  val pingInterval : FiniteDuration
-  val pingTimeout : FiniteDuration
-  val retryInterval : FiniteDuration
+  val keepAliveEnabled : Boolean
+  val maxKeepAliveMissed : Int
+  val keepAliveInterval : FiniteDuration
   val minReconnect : FiniteDuration
-  val maxReconnectTimeout : Option[FiniteDuration]
+  val maxReconnectTimeout: Option[FiniteDuration]
+  val connectTimeout : FiniteDuration
+  val retryInterval : FiniteDuration
   val clientId : String
   val defaultUser : Option[String]
   val defaultPassword : Option[String]
-  val pingDestination : String
+  val keepAliveDestination : String
   val properties : Map[String, String]
   val useJndi : Boolean
   val jndiName : Option[String] = None

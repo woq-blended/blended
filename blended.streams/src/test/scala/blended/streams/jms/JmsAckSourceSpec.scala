@@ -1,15 +1,17 @@
 package blended.streams.jms
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Flow, Source}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestKit
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwareConnectionFactory}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, MessageReceived, SimpleIdAwareConnectionFactory}
 import blended.streams.StreamFactories
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.Collector
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.FlowHeaderConfig
 import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
@@ -21,6 +23,9 @@ import org.scalatest.{BeforeAndAfterAll, Matchers}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.{Failure, Success}
+import blended.util.RichTry._
+
+import scala.collection.generic.AtomicIndexFlag
 
 @RequiresForkedJVM
 class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
@@ -31,7 +36,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
   private val brokerName : String = "blended"
   private val consumerCount : Int = 5
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig(prefix = "Spec")
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(prefix = "Spec")
 
   private lazy val amqCf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
     vendor = "amq",
@@ -61,9 +66,10 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
   private implicit val eCtxt : ExecutionContext = system.dispatcher
 
   private val log : Logger = Logger[JmsAckSourceSpec]
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   val envelopes : Int => Seq[FlowEnvelope] = msgCount => 1.to(msgCount).map { i =>
-    FlowEnvelope().withHeader("msgNo", i).get
+    FlowEnvelope().withHeader("msgNo", i).unwrap
   }
 
   override protected def afterAll() : Unit = {
@@ -72,12 +78,12 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
     system.terminate()
   }
 
-  private val consumerSettings : String => JMSConsumerSettings = destName => {
+  private val consumerSettings : String => JmsConsumerSettings = destName => {
 
-    val dest = JmsDestination.create(destName).get
+    val dest = JmsDestination.create(destName).unwrap
 
-    JMSConsumerSettings(
-      log = log,
+    JmsConsumerSettings(
+      log = envLogger,
       headerCfg = headerCfg,
       connectionFactory = amqCf,
       jmsDestination = Some(dest),
@@ -87,76 +93,91 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
   }
 
   private val producerSettings : String => JmsProducerSettings = destName => JmsProducerSettings(
-    log = log,
+    log = envLogger,
     headerCfg = headerCfg,
     connectionFactory = amqCf,
     jmsDestination = Some(JmsDestination.create(destName).get)
   )
 
-  private val consumer : JMSConsumerSettings => Option[FiniteDuration] => Source[FlowEnvelope, NotUsed] =
+  private val consumer : JmsConsumerSettings => Option[FiniteDuration] => Source[FlowEnvelope, NotUsed] =
     cSettings => minMessageDelay => jmsConsumer(
       name = "test",
       settings = cSettings,
       minMessageDelay = minMessageDelay
-    ).via(Flow.fromFunction { env =>
-      env.acknowledge()
-      env
-    })
+    )
 
   "The JMS Ack Source should" - {
 
-    "Consume and acknowledge messages without delay correctly" in {
+    "consume and acknowledge messages without delay correctly" in {
 
-      val msgCount : Int = 50
+      val eventCount : AtomicInteger = new AtomicInteger(0)
+
+      val eventActor : ActorRef = system.actorOf(Props(new Actor() {
+        override def receive: Receive = {
+          case e : MessageReceived =>
+            eventCount.incrementAndGet()
+        }
+      }))
+
+      system.eventStream.subscribe(eventActor, classOf[MessageReceived])
+
+      val msgCount : Int = 100
       val destName : String = "noDelay"
 
-      val cSettings : JMSConsumerSettings = consumerSettings(destName)
+      val cSettings : JmsConsumerSettings = consumerSettings(destName)
       val pSettings : JmsProducerSettings = producerSettings(destName)
 
       val msgConsumer : Source[FlowEnvelope, NotUsed] = consumer(cSettings)(None)
 
       sendMessages(
         pSettings,
-        log,
-        envelopes(msgCount) : _*
+        envLogger,
+        envelopes(msgCount):_*
       ) match {
-          case Success(s) =>
-            val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
-              name = "ackConsumer",
-              source = msgConsumer,
-              timeout = 5.seconds
-            )(e => e.acknowledge())
+        case Success(s) =>
+          val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
+            name = "ackConsumer",
+            source = msgConsumer,
+            timeout = Some(5.seconds),
+            onCollected = Some({e : FlowEnvelope => e.acknowledge()})
+          )
 
-            val result = Await.result(coll.result, 6.seconds).map { env => env.header[Int]("msgNo").get }
-            result should have size (msgCount)
+          val result : List[Int] = Await.result(coll.result, 6.seconds).map { env => env.header[Int]("msgNo").get }
+          val missing : List[Int] = 1.to(msgCount).filter(i => !result.contains(i)).toList
+          missing should be(empty)
 
-            s.shutdown()
-          case Failure(t) => fail(t)
-        }
+          s.shutdown()
+        case Failure(t) =>
+          fail(t)
+      }
+
+      eventCount.get() should be (msgCount)
+      system.stop(eventActor)
     }
 
-    "Do not consume messages before the minimum message delay is reached" in {
+    "not consume messages before the minimum message delay is reached" in {
 
       val msgCount : Int = 10
       val destName : String = "delayed"
       val minDelay : FiniteDuration = 3.seconds
 
-      val cSettings : JMSConsumerSettings = consumerSettings(destName)
+      val cSettings : JmsConsumerSettings = consumerSettings(destName)
       val pSettings : JmsProducerSettings = producerSettings(destName)
 
       val msgConsumer : Source[FlowEnvelope, NotUsed] = consumer(cSettings)(Some(minDelay))
 
       sendMessages(
         pSettings,
-        log,
-        envelopes(msgCount) : _*
+        envLogger,
+        envelopes(msgCount):_*
       ) match {
           case Success(s) =>
             val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
               name = "delayedConsumer",
               source = msgConsumer,
-              timeout = minDelay - 1.seconds
-            )(e => e.acknowledge())
+              timeout = Some(minDelay - 1.second),
+              onCollected = Some({e : FlowEnvelope => e.acknowledge()})
+            )
 
             val result : List[Int] = Await.result(coll.result, minDelay + 1.second).map { env => env.header[Int]("msgNo").get }
             result should be(empty)
@@ -166,15 +187,15 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
             val coll2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
               name = "delayedConsumer2",
               source = msgConsumer,
-              timeout = minDelay + 500.millis
-            )(e => e.acknowledge())
+              timeout = Some(minDelay + 500.millis),
+              onCollected = Some({e : FlowEnvelope => e.acknowledge()})
+            )
 
             val result2 : List[Int] = Await.result(coll2.result, minDelay + 1.seconds).map { env => env.header[Int]("msgNo").get }
-            result2 should have size (msgCount)
+            result2 should have size msgCount
 
           case Failure(t) => fail(t)
         }
     }
   }
-
 }

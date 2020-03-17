@@ -3,55 +3,38 @@ package blended.security.scep.standalone
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.ContainerContext
-import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
+import blended.container.context.impl.internal.AbstractContainerContextImpl
 import blended.util.logging.Logger
 import com.typesafe.config.impl.Parseable
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
-class ScepAppContainerContext(baseDir : String) extends ContainerContext {
+import scala.beans.BeanProperty
+
+class ScepAppContainerContext(baseDir: String, salt: String) extends AbstractContainerContextImpl {
 
   private[this] val log = Logger[this.type]
-  log.debug(s"Created ${getClass().getName()} with baseDir [${baseDir}]")
+  log.debug(s"Starting [$this]")
 
-  private val SECRET_FILE_PATH : String = "blended.security.secretFile"
+  @BeanProperty override lazy val containerDirectory: String = baseDir
 
-  override def getContainerDirectory() : String = baseDir
+  @BeanProperty override lazy val containerConfigDirectory: String = containerDirectory + "/etc"
 
-  override def getContainerConfigDirectory() : String = getContainerDirectory() + "/etc"
+  @BeanProperty override lazy val containerLogDirectory: String = baseDir
 
-  override def getContainerLogDirectory() : String = baseDir
+  @BeanProperty override lazy val profileDirectory: String = containerDirectory
 
-  override def getProfileDirectory() : String = getContainerDirectory()
+  @BeanProperty override lazy val profileConfigDirectory: String = containerConfigDirectory
 
-  override def getProfileConfigDirectory() : String = getContainerConfigDirectory()
+  @BeanProperty override lazy val containerHostname: String = "localhost"
 
-  override def getContainerHostname() : String = "localhost"
-
-  private lazy val cryptoSupport : ContainerCryptoSupport = {
-    val ctConfig : Config = getContainerConfig()
-
-    val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
-      ctConfig.getString(SECRET_FILE_PATH)
-    } else {
-      "secret"
-    }
-
-    BlendedCryptoSupport.initCryptoSupport(
-      new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
-    )
-  }
-
-  override def getContainerCryptoSupport() : ContainerCryptoSupport = cryptoSupport
-
-  override def getContainerConfig() : Config = {
+  override lazy val containerConfig: Config = {
     val sys = new Properties()
     sys.putAll(System.getProperties())
     val sysProps = Parseable.newProperties(sys, ConfigParseOptions.defaults().setOriginDescription("system properties")).parse()
     val envProps = ConfigFactory.systemEnvironment()
 
     ConfigFactory.parseFile(
-      new File(getProfileConfigDirectory(), "application.conf"),
+      new File(profileConfigDirectory, "application.conf"),
       ConfigParseOptions.defaults().setAllowMissing(false)
     ).
       withFallback(sysProps).
@@ -59,4 +42,6 @@ class ScepAppContainerContext(baseDir : String) extends ContainerContext {
       withFallback(ConfigFactory.parseResources(getClass().getClassLoader(), "application-defaults.conf")).
       resolve()
   }
+
+  override lazy val uuid: String = salt
 }

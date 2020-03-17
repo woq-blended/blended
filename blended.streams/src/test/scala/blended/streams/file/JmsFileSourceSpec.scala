@@ -9,16 +9,16 @@ import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerIdentifierService
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwareConnectionFactory}
 import blended.streams.jms._
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.AckProcessor
-import blended.streams.transaction.FlowHeaderConfig
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.util.RichTry._
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -44,13 +44,15 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
   )
 
   private implicit val timeout : FiniteDuration = 1.second
-  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+  private val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
+  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
 
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   private implicit val materializer : Materializer = ActorMaterializer()
 
   private val log : Logger = Logger[JmsFileSourceSpec]
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   private case class EnvelopeReceived(env : FlowEnvelope)
 
@@ -95,24 +97,21 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     destName : String
   ) : Source[FlowEnvelope, NotUsed] = {
 
-    val dest = JmsDestination.create(destName).get
+    val dest = JmsDestination.create(destName).unwrap
 
-    val settings : JMSConsumerSettings = JMSConsumerSettings(
-      log = log,
+    val settings : JmsConsumerSettings = JmsConsumerSettings(
+      log = envLogger,
       headerCfg = headerCfg,
       connectionFactory = cf,
       jmsDestination = Some(dest),
-      acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
-      sessionRecreateTimeout = 100.millis
+      acknowledgeMode = AcknowledgeMode.ClientAcknowledge
     )
 
-    Source.fromGraph(new JmsAckSourceStage(name, settings, minMessageDelay = None))
-      .via(FlowProcessor.fromFunction("publish", log) { env =>
-        Try {
-          system.eventStream.publish(EnvelopeReceived(env))
-          env
-        }
-      })
+    Source.fromGraph(new JmsConsumerStage(name, settings, minMessageDelay = None))
+      .via(FlowProcessor.fromFunction("publish", envLogger){ env => Try {
+        system.eventStream.publish(EnvelopeReceived(env))
+        env
+      }})
       .via(new AckProcessor(name + ".ack").flow)
   }
 
@@ -121,19 +120,18 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     destName : String
   ) : JmsProducerSettings = {
 
-    val dest : JmsDestination = JmsDestination.create(destName).get
+    val dest : JmsDestination = JmsDestination.create(destName).unwrap
     JmsProducerSettings(
-      log = log,
+      log = envLogger,
       connectionFactory = cf,
       headerCfg = headerCfg,
-      jmsDestination = Some(dest),
-      sessionRecreateTimeout = 100.millis
+      jmsDestination = Some(dest)
     )
   }
 
   "A file source connected to a JmsSinkStage should" - {
 
-    val rawCfg : Config = idSvc.getContainerContext().getContainerConfig().getConfig("simplePoll")
+    val rawCfg : Config = ctCtxt.containerConfig.getConfig("simplePoll")
 
     def setupStreams(
       name : String,
@@ -142,29 +140,29 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       srcDir : String
     ) : Seq[ActorRef] = {
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(
         sourceDir = BlendedTestSupport.projectTestOutput + s"/$srcDir"
       )
 
       prepareDirectory(pollCfg.sourceDir)
 
-      val src : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new FileAckSource(pollCfg))
+      val src : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new FileAckSource(pollCfg, envLogger))
         .via(jmsProducer(s"$name.send", producerSettings(cf, destName), autoAck = true))
 
-      val ctrlConfig : StreamControllerConfig = StreamControllerConfig(
-        name = name,
-        minDelay = 2.seconds,
-        maxDelay = 10.seconds,
-        exponential = false,
-        onFailureOnly = false,
-        random = 0.2
-      )
-
       val fileController : ActorRef =
-        system.actorOf(StreamController.props[FlowEnvelope, NotUsed](src, ctrlConfig.copy(name = name + ".controller")))
+        system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
+          streamName = name + ".controller",
+          src = src,
+          streamCfg = streamCfg
+        )(
+          onMaterialize = _ => ()
+        ))
+
       val msgController : ActorRef = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](
-        msgConsumer(destName, cf, destName), ctrlConfig.copy(name = name + ".consumer")
-      ))
+        streamName = name,
+        src = msgConsumer(destName, cf, destName),
+        streamCfg = streamCfg
+      )(onMaterialize = _ => ()))
 
       Seq(fileController, msgController)
     }
@@ -193,6 +191,9 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       testWithJms(10.seconds, srcDir)
 
       controller.foreach(_ ! StreamController.Stop)
+      // scalastyle:off magic.number
+      Thread.sleep(1000)
+      // scalastyle:on magic.number
 
       stopBroker(b)
     }

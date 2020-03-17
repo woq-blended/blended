@@ -1,4 +1,5 @@
 import blended.sbt.Dependencies
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import phoenix.ProjectFactory
 import sbt._
 
@@ -15,28 +16,38 @@ object BlendedAkkaHttpRestjms extends ProjectFactory {
       Dependencies.akkaStream,
       Dependencies.akkaHttp,
       Dependencies.akkaActor,
-      Dependencies.camelCore,
-      Dependencies.camelJms,
       Dependencies.jms11Spec,
       Dependencies.sttp % Test,
       Dependencies.sttpAkka % Test,
       Dependencies.activeMqBroker % Test,
       Dependencies.activeMqClient % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test,
       Dependencies.akkaSlf4j % Test,
       Dependencies.akkaTestkit % Test,
       Dependencies.scalatest % Test,
-      Dependencies.akkaHttpTestkit % Test,
       Dependencies.logbackCore % Test,
       Dependencies.logbackClassic % Test
     )
 
+    override def settings : Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "App" -> "DEBUG",
+        "spec" -> "DEBUG",
+        "blended" -> "DEBUG"
+      )
+    )
+
     override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
-      BlendedCamelUtils.project,
       BlendedDomino.project,
       BlendedContainerContextApi.project,
       BlendedAkka.project,
+      BlendedStreams.project,
       BlendedAkkaHttp.project,
       BlendedUtil.project,
+      BlendedTestsupport.project % Test,
+      BlendedActivemqBrokerstarter.project % Test,
       BlendedTestsupportPojosr.project % Test
     )
   }

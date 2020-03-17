@@ -3,15 +3,14 @@ package blended.security.scep.standalone
 import java.io.File
 import java.util.ServiceLoader
 
-import blended.container.context.api.ContainerIdentifierService
-import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
+import blended.container.context.api.ContainerContext
 import blended.security.ssl.{CertificateManager, MemoryKeystore}
 import blended.util.logging.Logger
 import domino.DominoActivator
 import org.apache.felix.connect.launch.{ClasspathScanner, PojoServiceRegistryFactory}
-
 import scala.collection.JavaConverters._
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 /**
@@ -19,11 +18,10 @@ import scala.util.{Failure, Success}
  * @param salt
  * @param baseDir0 The base dir, used for the internal blended container configuration (etc, log)
  */
-class CertRefresher(salt : String, baseDir0 : File = new File(".")) {
+class CertRefresher(salt: String, baseDir0: File = new File("."))
+                   (implicit executionContext: ExecutionContext) {
 
   private[this] val log = Logger[CertRefresher]
-
-  implicit val executionContext = scala.concurrent.ExecutionContext.global
 
   val baseDir = {
     val baseDir = baseDir0.getAbsolutePath()
@@ -55,28 +53,31 @@ class CertRefresher(salt : String, baseDir0 : File = new File(".")) {
     val registry = factory.newPojoServiceRegistry(config.asJava)
     log.debug(s"Created registry: ${registry}")
 
-    val idServProvider = new DominoActivator {
+    val ctxtProvider = new DominoActivator {
       whenBundleActive {
         log.debug(s"Starting ScepAppContainerContext with baseDir=${baseDir}")
-        val ctCtxt = new ScepAppContainerContext(baseDir)
-        // This needs to be a fixed uuid as some tests might be for restarts and require the same id
-        val idService = new ContainerIdentifierServiceImpl(ctCtxt) {
-          override lazy val uuid : String = salt
-        }
-        idService.providesService[ContainerIdentifierService]
-        log.debug(s"Provided idService: ${idService}")
+        val ctCtxt = new ScepAppContainerContext(baseDir, salt)
+        ctCtxt.providesService[ContainerContext]
+        log.debug(s"Provided ContainerContext [$ctCtxt]")
       }
     }
-    idServProvider.start(registry.getBundleContext())
+
+    try {
+      ctxtProvider.start(registry.getBundleContext())
+    } catch {
+      case NonFatal(e) =>
+        log.warn(s"Failed to start Application Context. ${e.getMessage()}")
+        throw new ExitAppException(exitCode = ExitCode.Error, errMsg = Some(e.getMessage()), cause = e)
+    }
 
     registry
   }
 
-  def stop() : Unit = {
+  def stop(): Unit = {
     registry.getBundleContext().getBundle().stop(0)
   }
 
-  def checkCert() : Future[MemoryKeystore] = {
+  def checkCert(): Future[MemoryKeystore] = {
 
     val promise = Promise[MemoryKeystore]()
 

@@ -26,11 +26,15 @@ class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatc
 
           val context = config.context
 
-          // handle each configured proxy endpoint independently
-          config.paths.foreach { proxyTarget =>
-            // setup proxys route according to config and register it into the service registry
-            val proxyConfig = proxyTarget.copy(uri = cfg.idSvc.resolvePropertyString(proxyTarget.uri).map(_.toString()).get)
-            log.debug(s"About to setup proxy [$proxyConfig]")
+      // handle each configured proxy endpoint independently
+      config.paths.foreach { proxyTarget =>
+        // setup proxys route according to config and register it into the service registry
+        val proxyConfig = proxyTarget.copy(
+          uri = cfg.ctContext.resolveString(proxyTarget.uri).map(_.toString()).get,
+          user = proxyTarget.user.map(s => cfg.ctContext.resolveString(s).map(_.toString()).get),
+          password = proxyTarget.password.map(s => cfg.ctContext.resolveString(s).map(_.toString()).get),
+        )
+        log.debug(s"About to setup proxy [${proxyConfig}]")
 
             val sslContextFilter = "(type=client)"
 
