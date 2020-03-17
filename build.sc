@@ -120,6 +120,7 @@ object Deps {
 
   val orgOsgi = ivy"org.osgi:org.osgi.core:6.0.0"
   val orgOsgiCompendium = ivy"org.osgi:org.osgi.compendium:5.0.0"
+  val osLib = ivy"com.lihaoyi::os-lib:0.4.2"
 
   val parboiledCore = ivy"org.parboiled:parboiled-core:${parboiledVersion}"
   val parboiledScala = ivy"org.parboiled::parboiled-scala:${parboiledVersion}"
@@ -161,8 +162,9 @@ object Deps {
   val typesafeSslConfigCore = ivy"com.typesafe::ssl-config-core:0.3.6"
 
   object js {
-    val scalatest = ivy"org.scalatest::scalatest::${scalatestVersion}"
     val prickle = ivy"com.github.benhutchison::prickle::${prickleVersion}"
+    val scalatest = ivy"org.scalatest::scalatest::${scalatestVersion}"
+    val scalacheck = ivy"org.scalacheck::scalacheck::${scalaCheckVersion}"
   }
 
 }
@@ -582,14 +584,14 @@ object blended extends Module {
         util.logging,
         akka
       )
-       object test extends Tests {
-         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-           Deps.akkaSlf4j,
-           Deps.akkaStream,
-           Deps.activeMqBroker,
-           Deps.activeMqKahadbStore,
-           Deps.akkaTestkit,
-           Deps.logbackClassic
+      object test extends Tests {
+        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          Deps.akkaSlf4j,
+          Deps.akkaStream,
+          Deps.activeMqBroker,
+          Deps.activeMqKahadbStore,
+          Deps.akkaTestkit,
+          Deps.logbackClassic
         )}
         override def moduleDeps = super.moduleDeps ++ Seq(
           camel.utils,
@@ -598,6 +600,48 @@ object blended extends Module {
       }
     }
   }
+
+
+  object jmx extends BlendedJvmModule {
+    override val description = "Helper bundle to expose the platform's MBeanServer as OSGI Service."
+    override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+      Deps.domino,
+      Deps.prickle,
+      Deps.typesafeConfig
+    )}
+    override def moduleDeps = super.moduleDeps ++ Seq(
+      blended.util,
+      blended.util.logging,
+      blended.akka
+    )
+
+    override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+      `Bundle-Activator` = Option(s"${blendedModule}.internal.BlendedJmxActivator"),
+      `Export-Package` = Seq(
+        blendedModule,
+        s"${blendedModule}.json",
+        s"${blendedModule}.statistics"
+      )
+    )}
+    object test extends Tests {
+      override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+        Deps.logbackClassic,
+        Deps.scalacheck
+      )}
+      override def moduleDeps = super.moduleDeps ++ Seq(
+        blended.testsupport,
+        blended.testsupport.pojosr
+      )
+    }
+    object js extends Js {
+      override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+        Deps.js.prickle,
+        Deps.js.scalacheck
+      )}
+    }
+  }
+
+
 
   object launcher extends BlendedModule {
     override def description = "Provide an OSGi Launcher"
@@ -651,12 +695,17 @@ object blended extends Module {
     object base extends BlendedModule {
       override val description = "Shared classes for management and reporting facility."
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
-        domino,
-        container.context.api,
-        util,
-        util.logging
+        blended.domino,
+        blended.container.context.api,
+        blended.util,
+        blended.util.logging
       )
-      object test extends Tests
+      object test extends Tests {
+        override def moduleDeps = super.moduleDeps ++ Seq(
+          blended.testsupport,
+          blended.testsupport.pojosr
+        )
+      }
     }
   }
   object persistence extends BlendedModule {
@@ -784,7 +833,8 @@ object blended extends Module {
         override def ivyDeps = super.ivyDeps() ++ Agg(
           Deps.scalacheck,
           Deps.logbackCore,
-          Deps.logbackClassic
+          Deps.logbackClassic,
+          Deps.osLib
         )
         override def moduleDeps = super.moduleDeps ++ Seq(
           testsupport
@@ -875,8 +925,11 @@ object blended extends Module {
           updater.config
         )
         object test extends Tests {
+          override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+            Deps.osLib
+          )}
           override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
-            testsupport
+            blended.testsupport
           )
         }
       }
@@ -893,10 +946,11 @@ object blended extends Module {
       Deps.levelDbJava
     )}
     override def moduleDeps = super.moduleDeps ++ Seq(
-      util.logging,
-      jms.utils,
-      akka,
-      persistence
+      blended.util.logging,
+      blended.jms.utils,
+      blended.akka,
+      blended.persistence,
+      blended.jmx
     )
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
       `Export-Package` = Seq(
