@@ -3,7 +3,7 @@ import scala.util.Try
 import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
 import mill.api.Loose
 import mill.{PathRef, _}
-import mill.define.{Sources, Target}
+import mill.define.{Command, Sources, Target}
 import mill.scalajslib.ScalaJSModule
 import mill.scalajslib.api.ModuleKind
 import mill.scalalib._
@@ -199,14 +199,15 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
       Deps.scalatest
     )}
     override def testFrameworks = Seq("org.scalatest.tools.Framework")
-    override def resources = T.sources {
-      super.resources() ++ Seq(
-        PathRef(millSourcePath / 'src / 'test / 'binaryResources)
-      )
-    }
+    /** Empty, we use [[testResources]] instead to model sbt behavior. */
+    override def resources = T.sources { Seq.empty[PathRef] }
+    def copyResources: Sources = T.sources(
+      millSourcePath / "src" / "test" / "resources",
+      millSourcePath / "src" / "test" / "binaryResources"
+    )
     // TODO: set projectTestOutput property to resources directory
     /** Used by all tests, e.g. for logback config. */
-    def testResources = T {
+    def logResources = T {
       val moduleSpec = toString()
       val dest = T.ctx().dest
       val logConfig =
@@ -229,7 +230,24 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
       os.write(dest / "logback-test.xml", logConfig)
       PathRef(dest)
     }
-    override def runClasspath: Target[Seq[PathRef]] = T{ super.runClasspath() ++ Seq(testResources()) }
+    /** A command, because this needs to run always to be always fresh, as we intend to write into that dir when executing tests.
+     * This is in migration from sbt-like setup.
+     */
+    def testResources(): Command[PathRef] = T.command {
+      val dest = T.ctx().dest
+      copyResources().foreach { p =>
+        if(os.exists(p.path)) {
+          os.list(p.path).foreach { p1 =>
+            os.copy.into(p1, dest)
+          }
+        }
+      }
+      PathRef(dest)
+    }
+    override def runClasspath: Target[Seq[PathRef]] = T{ super.runClasspath() ++ Seq(logResources(), testResources()()) }
+    override def forkArgs: Target[Seq[String]] = T{ super.forkArgs() ++ Seq(
+      s"-DprojectTestOutput=${testResources()().path.toIO.getPath()}"
+    )}
   }
 
   /** Show all compiled classes. */
@@ -253,7 +271,7 @@ trait BlendedJvmModule extends BlendedModule { jvmBase =>
     override def sources = T.sources {
       super.sources() ++ Seq(PathRef(millSourcePath / os.up / 'shared / 'src / 'test / 'scala))
     }
-    override def resources = T.sources { super.resources() ++ Seq(
+    override def copyResources = T.sources { super.resources() ++ Seq(
       PathRef(millSourcePath / os.up / 'shared / 'src / 'test / 'resources),
       PathRef(millSourcePath / os.up / 'shared / 'src / 'test / 'binaryResources)
     )}
