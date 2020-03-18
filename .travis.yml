@@ -5,9 +5,12 @@ jdk:
   - openjdk11
 
 env:
-  global:
-    - TEST_ONLINE="true"
+  - TEST_ONLINE="true"
+    SCRIPT_1="./millw -i __.test.test"
+  - TEST_ONLINE="true"
+    SCRIPT_1="./millw -i -k __.test.test"
+  - TEST_ONLINE="true"
+    SCRIPT_1="./millw -i __.publishLocal"
 
 script:
-  - ./millw -i __.publishLocal
-  - ./millw -i __.test.test
+  - "${SCRIPT_1}"
