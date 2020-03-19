@@ -1,14 +1,22 @@
+import java.io.FileOutputStream
+import java.nio.file.Files
+import java.util.zip.ZipEntry
+
 import scala.util.Try
+import scala.util.matching.Regex
+import scala.util.matching.Regex.quoteReplacement
 
 import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
-import mill.api.Loose
+import coursier.Repository
+import coursier.maven.MavenRepository
+import mill.api.{Ctx, Loose}
 import mill.{PathRef, _}
-import mill.define.{Command, Sources, Target}
+import mill.define.{Command, Input, Sources, Target, Task}
 import mill.scalajslib.ScalaJSModule
 import mill.scalajslib.api.ModuleKind
 import mill.scalalib._
 import mill.scalalib.publish._
-import os.Path
+import os.{Path, RelPath}
 
 // This import the mill-osgi plugin
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.2.0`
@@ -32,6 +40,7 @@ object Deps {
   val prickleVersion = "1.1.14"
   val scalaJsVersion = "0.6.29"
   val scalaVersion = "2.12.8"
+  def scalaBinVersion = scalaVersion.split("[.]").take(2).mkString(".")
   val scalatestVersion = "3.0.8"
   val scalaCheckVersion = "1.14.0"
   val slf4jVersion = "1.7.25"
@@ -161,6 +170,15 @@ object Deps {
   val typesafeConfig = ivy"com.typesafe:config:1.3.3"
   val typesafeSslConfigCore = ivy"com.typesafe::ssl-config-core:0.3.6"
 
+  // libs for splunk support via HEC
+  val splunkjava = ivy"com.splunk.logging:splunk-library-javalogging:1.7.3"
+  val httpCore = ivy"org.apache.httpcomponents:httpcore:4.4.9"
+  val httpCoreNio = ivy"org.apache.httpcomponents:httpcore:4.4.6"
+  val httpComponents = ivy"org.apache.httpcomponents:httpclient:4.5.5"
+  val httpAsync = ivy"org.apache.httpcomponents:httpasyncclient:4.1.3"
+  val commonsLogging = ivy"commons-logging:commons-logging:1.2"
+  val jsonSimple = ivy"com.googlecode.json-simple:json-simple:1.1.1"
+
   object js {
     val prickle = ivy"com.github.benhutchison::prickle::${prickleVersion}"
     val scalatest = ivy"org.scalatest::scalatest::${scalatestVersion}"
@@ -169,7 +187,14 @@ object Deps {
 
 }
 
-trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
+trait BlendedCoursierModule extends CoursierModule {
+  private def zincWorker: ZincWorkerModule = mill.scalalib.ZincWorkerModule
+  override def repositories: Seq[Repository] = zincWorker.repositories ++ Seq(
+    MavenRepository("https://repo.spring.io/libs-release")
+  )
+}
+
+trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishModule with OsgiBundleModule {
   /** The blended module name. */
   def blendedModule: String = millModuleSegments.parts.mkString(".")
   /** The module description. */
@@ -262,7 +287,7 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
     )}
   }
 
-  /** Show all compiled classes. */
+  /** Show all compiled classes: `mill show __.classes` */
   def classes: T[Seq[Path]] = T {
     Try(os.walk(compile().classes.path)).getOrElse(Seq())
   }
@@ -304,6 +329,88 @@ trait BlendedJvmModule extends BlendedModule { jvmBase =>
     }
   }
 }
+
+trait DistModule extends CoursierModule {
+  override def millSourcePath: Path = super.millSourcePath / os.up
+
+  /** Sources to put into the dist file. */
+  def sources: Sources
+  /** Sources to put into the dist file after filtereing */
+  def filteredSources: Sources
+  /** Filter properties to apply to [[filteredSources]]. */
+  def filterProperties: Target[Map[String, String]]
+  /** Dependencies to put under lib directory inside the dist. */
+  def libIvyDeps: Target[Loose.Agg[Dep]] = T{ Agg.empty[Dep] }
+  /** Dependencies to put under lib directory inside the dist. */
+  def libModules: Seq[PublishModule] = Seq()
+  def filterRegex: String = "[@]([^\\n]+?)[@]"
+
+  def scalaVersion: Target[String] = T{ Deps.scalaVersion }
+
+  def expandedFilteredSources: Target[PathRef] = T{
+    val dest = T.ctx().dest
+    FilterUtil.filterDirs(
+      unfilteredResourcesDirs = filteredSources().map(_.path),
+      pattern = filterRegex,
+      filterTargetDir = dest,
+      props = filterProperties(),
+      failOnMiss = true
+    )
+    PathRef(dest)
+  }
+
+  def transitiveLibModules: Seq[PublishModule] = libModules.flatMap(_.transitiveModuleDeps).collect{ case m: PublishModule => m }.distinct
+  /**
+   * The transitive ivy dependencies of this module and all it's upstream modules
+   */
+  def transitiveLibIvyDeps: T[Agg[Dep]] = T{
+    libIvyDeps() ++ T.traverse(libModules)(_.transitiveIvyDeps)().flatten
+  }
+
+  def distName: T[String] = T{"out"}
+
+  override def resolveCoursierDependency: Task[Dep => coursier.Dependency] = T.task{
+    Lib.depToDependency(_: Dep, scalaVersion(), "")
+  }
+
+  def resolvedLibs: Target[PathRef] = T{
+    val dest = T.ctx().dest
+    val libs = Target.traverse(transitiveLibModules)(m => T.task {
+      (m.artifactId(), m.publishVersion(), m.jar().path)
+    })()
+
+    libs.foreach { case (aId, version, jar) =>
+      val target = dest / "lib" / s"${aId}-${version}.jar"
+      os.copy(jar, target, createFolders = true)
+    }
+
+    val jars = resolveDeps(transitiveLibIvyDeps)().map(_.path)
+
+    jars.foreach { jar =>
+      os.copy(jar, dest / "lib" / jar.last, createFolders = true)
+    }
+    PathRef(dest)
+  }
+
+  /** Creates the distribution zip file */
+  def zip = T{
+    val dest = T.ctx().dest
+    val zip = dest / s"${distName()}.zip"
+
+    val dirs =
+      sources().map(_.path) ++ Seq(
+        expandedFilteredSources().path,
+        resolvedLibs().path
+      )
+
+    ZipUtil.createZip(
+      outputPath = zip,
+      inputPaths = dirs
+    )
+    zip
+  }
+}
+
 
 object blended extends Module {
   def version = T.input {
@@ -806,8 +913,6 @@ object blended extends Module {
     }
   }
 
-
-
   object launcher extends BlendedModule {
     override def description = "Provide an OSGi Launcher"
     override def ivyDeps = Agg(
@@ -831,6 +936,54 @@ object blended extends Module {
       blended.updater.config,
       blended.security.crypto
     )
+
+    object dist extends DistModule with BlendedCoursierModule {
+      override def distName: T[String] = T{ s"${blended.launcher.artifactId()}-${blended.launcher.publishVersion()}" }
+      override def sources: Sources = T.sources(millSourcePath / "src" / "runner" / "binaryResources")
+      override def filteredSources: Sources = T.sources(millSourcePath / "src" / "runner" / "resources")
+      override def filterProperties: Target[Map[String, String]] = T{ Map(
+        "blended.launcher.version" -> blended.launcher.publishVersion(),
+        "blended.updater.config.version" -> blended.updater.config.publishVersion(),
+        "blended.util.logging.version" -> blended.util.logging.publishVersion(),
+        "blended.security.crypto.version" -> blended.security.crypto.publishVersion(),
+        "cmdoption.version" -> Deps.cmdOption.dep.version,
+        "org.osgi.core.version" -> Deps.orgOsgi.dep.version,
+        "scala.binary.version" -> Deps.scalaBinVersion,
+        "scala.library.version" -> Deps.scalaVersion,
+        "typesafe.config.version" -> Deps.typesafeConfig.dep.version,
+        "slf4j.version" -> Deps.slf4jVersion,
+        "logback.version" -> Deps.logbackClassic.dep.version,
+        "splunkjava.version" -> Deps.splunkjava.dep.version,
+        "httpcore.version" -> Deps.httpCore.dep.version,
+        "httpcorenio.version" -> Deps.httpCoreNio.dep.version,
+        "httpcomponents.version" -> Deps.httpComponents.dep.version,
+        "httpasync.version" -> Deps.httpAsync.dep.version,
+        "commonslogging.version" -> Deps.commonsLogging.dep.version,
+        "jsonsimple.version" -> Deps.jsonSimple.dep.version
+      )}
+      override def libIvyDeps = T{ Agg(
+        Deps.cmdOption,
+        Deps.orgOsgi,
+        Deps.scalaLibrary,
+        Deps.slf4j,
+        Deps.splunkjava,
+        Deps.httpCore,
+        Deps.httpCoreNio,
+        Deps.httpComponents,
+        Deps.httpAsync,
+        Deps.commonsLogging,
+        Deps.jsonSimple
+      )}
+      override def libModules = Seq(
+        blended.domino,
+        blended.launcher,
+        blended.util.logging,
+        blended.security.crypto
+      )
+    }
+
+
+
     object test extends Tests {
       override def ivyDeps = super.ivyDeps() ++ Agg(
         Deps.scalatest
@@ -1258,3 +1411,126 @@ object blended extends Module {
   }
 
 }
+
+trait ZipUtil {
+
+  def createZip(outputPath: os.Path,
+                inputPaths: Seq[Path],
+                explicitEntries: Seq[(RelPath, Path)] = Seq(),
+//                fileFilter: (os.Path, os.RelPath) => Boolean = (p: os.Path, r: os.RelPath) => true,
+                prefix: String = "",
+                timestamp: Option[Long] = None,
+                includeDirs: Boolean = false): Unit = {
+    import java.util.zip.ZipOutputStream
+    import scala.collection.mutable
+
+    os.remove.all(outputPath)
+    val seen = mutable.Set.empty[os.RelPath]
+    val zip = new ZipOutputStream(new FileOutputStream(outputPath.toIO))
+
+    try{
+      assert(inputPaths.forall(os.exists(_)))
+      for{
+        p <- inputPaths
+        (file, mapping) <-
+          if (os.isFile(p)) Iterator(p -> os.rel / p.last)
+          else os.walk(p).filter(p => includeDirs || os.isFile(p)).map(sub => sub -> sub.relativeTo(p)).sorted
+        if !seen(mapping) // && fileFilter(p, mapping)
+      } {
+        seen.add(mapping)
+        val entry = new ZipEntry(prefix + mapping.toString)
+        entry.setTime(timestamp.getOrElse(os.mtime(file)))
+        zip.putNextEntry(entry)
+        if(os.isFile(file)) zip.write(os.read.bytes(file))
+        zip.closeEntry()
+      }
+    } finally {
+      zip.close()
+    }
+  }
+
+  def unpackZip(src: os.Path, dest: os.Path): Unit = {
+    import mill.api.IO
+
+    os.makeDir.all(dest)
+    val byteStream = os.read.inputStream(src)
+    val zipStream = new java.util.zip.ZipInputStream(byteStream)
+    try {
+      while ({
+        zipStream.getNextEntry match {
+          case null => false
+          case entry =>
+            if (!entry.isDirectory) {
+              val entryDest = dest / os.RelPath(entry.getName)
+              os.makeDir.all(entryDest / os.up)
+              val fileOut = new java.io.FileOutputStream(entryDest.toString)
+              try IO.stream(zipStream, fileOut)
+              finally fileOut.close()
+            }
+            zipStream.closeEntry()
+            true
+        }
+      }) ()
+    }
+    finally zipStream.close()
+  }
+}
+object ZipUtil extends ZipUtil
+
+trait FilterUtil {
+    private def applyFilter(
+      source: Path,
+      pattern: Regex,
+      targetDir: Path,
+      relative: os.RelPath,
+      properties: Map[String, String],
+      failOnMiss: Boolean
+    )(implicit ctx: Ctx): (Path, os.RelPath) = {
+
+      def performReplace(in: String): String = {
+        val replacer = { m: Regex.Match =>
+          val variable = m.group(1)
+          val matched = m.matched
+
+          quoteReplacement(properties.getOrElse(
+            variable,
+            if (failOnMiss) sys.error(s"Unknown variable: [$variable]") else {
+              ctx.log.error(s"${source}: Can't replace unknown variable: [${variable}]")
+              matched
+            }
+          ))
+        }
+
+        pattern.replaceAllIn(in, replacer)
+      }
+
+      val destination = targetDir / relative
+
+      os.makeDir.all(destination / os.up)
+
+      val content = os.read(source)
+      os.write(destination, performReplace(content))
+
+      (destination, relative)
+    }
+
+    def filterDirs(
+      unfilteredResourcesDirs: Seq[Path],
+      pattern: String,
+      filterTargetDir: Path,
+      props: Map[String, String],
+      failOnMiss: Boolean
+    )(implicit ctx: Ctx): Seq[(Path, RelPath)] = {
+      val files: Seq[(Path, RelPath)] = unfilteredResourcesDirs.filter(os.exists).flatMap { base =>
+        os.walk(base).filter(os.isFile).map(p => p -> p.relativeTo(base))
+      }
+      val regex = new Regex(pattern)
+      val filtered: Seq[(Path, RelPath)] = files.map {
+        case (file, relative) => applyFilter(file, regex, filterTargetDir, relative, props, failOnMiss)
+      }
+      ctx.log.debug("Filtered Resources: " + filtered.mkString(","))
+      filtered
+    }
+
+}
+object FilterUtil extends FilterUtil
