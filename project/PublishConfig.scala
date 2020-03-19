@@ -2,6 +2,7 @@ import phoenix.ProjectConfig
 import sbt.Keys._
 import sbt._
 import xerial.sbt.Sonatype
+import xerial.sbt.Sonatype.SonatypeKeys._
 
 trait PublishConfig extends ProjectConfig {
 
@@ -13,6 +14,8 @@ trait PublishConfig extends ProjectConfig {
         // General settings for subprojects to be published
         publishMavenStyle := true,
         publishArtifact in Test := false,
+
+        sonatypeProfileName := "de.wayofquality",
 
         (for {
           username <- Option(System.getenv().get("SONATYPE_USERNAME"))
