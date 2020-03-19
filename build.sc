@@ -202,7 +202,10 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
     )}
     override def testFrameworks = Seq("org.scalatest.tools.Framework")
     /** Empty, we use [[testResources]] instead to model sbt behavior. */
-
+    override def runIvyDeps: Target[Loose.Agg[Dep]] = T{ super.runIvyDeps() ++ Agg(
+      Deps.logbackClassic,
+      Deps.jclOverSlf4j
+    )}
     override def resources = T.sources { Seq.empty[PathRef] }
 
     def testResources: Sources = T.sources(
@@ -721,6 +724,9 @@ object blended extends Module {
       override def moduleDeps = super.moduleDeps ++ Seq(
         blended.testsupport
       )
+      override def testResources: Sources = T.sources { super.testResources() ++ Seq(
+        PathRef(millSourcePath / os.up / "src" / "test" / "filterResources")
+      )}
     }
   }
 
@@ -784,7 +790,8 @@ object blended extends Module {
       )}
       override def runIvyDeps: Target[Loose.Agg[Dep]] = T{ super.runIvyDeps() ++ Agg(
         Deps.logbackClassic,
-        Deps.springExpression
+//        Deps.springExpression,
+        Deps.jclOverSlf4j
       )}
       override def moduleDeps = super.moduleDeps ++ Seq(
         blended.testsupport,
@@ -811,14 +818,12 @@ object blended extends Module {
       Deps.logbackClassic,
       Deps.commonsDaemon
     )
-
     override def osgiHeaders = super.osgiHeaders().copy(
       `Import-Package` = Seq(
         "org.apache.commons.daemon;resolution:=optional",
         "de.tototec.cmdoption.*;resolution:=optional"
       )
     )
-
     // TODO: filter resources
     // TODO: package laucnher distribution zip
     override def moduleDeps = Seq(
@@ -846,6 +851,9 @@ object blended extends Module {
         blended.util.logging
       )
       object test extends Tests {
+        override def runIvyDeps: Target[Loose.Agg[Dep]] = T{ super.runIvyDeps() ++ Agg(
+          Deps.jclOverSlf4j
+        )}
         override def moduleDeps = super.moduleDeps ++ Seq(
           blended.testsupport,
           blended.testsupport.pojosr
