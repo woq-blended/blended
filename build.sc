@@ -1,5 +1,4 @@
 import java.io.FileOutputStream
-import java.nio.file.Files
 import java.util.zip.ZipEntry
 
 import scala.util.Try
@@ -73,9 +72,6 @@ object Deps {
 
   val bouncyCastleBcprov = ivy"org.bouncycastle:bcprov-jdk15on:1.60"
   val bouncyCastlePkix = ivy"org.bouncycastle:bcpkix-jdk15on:1.60"
-
-  val camelCore = ivy"org.apache.camel:camel-core:${camelVersion}"
-  val camelJms = ivy"org.apache.camel:camel-jms:${camelVersion}"
 
   val cmdOption = ivy"de.tototec:de.tototec.cmdoption:0.6.0"
   val commonsBeanUtils = ivy"commons-beanutils:commons-beanutils:1.9.3"
@@ -423,13 +419,17 @@ object blended extends Module {
         """A simple wrapper around an Active MQ broker that makes sure that the broker is completely
           |started before exposing a connection factory OSGi service""".stripMargin
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-        Deps.camelJms,
         Deps.activeMqBroker,
-        Deps.activeMqSpring
+        Deps.activeMqSpring,
+        Deps.springBeans,
+        Deps.springContext,
+        Deps.springCore
       )}
       override def moduleDeps = super.moduleDeps ++ Seq(
         blended.akka,
-        blended.jms.utils
+        blended.jms.utils,
+        blended.security.boot,
+        blended.security
       )
       override def osgiHeaders = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Some(s"${blendedModule}.internal.BrokerActivator")
@@ -437,7 +437,11 @@ object blended extends Module {
       object test extends Tests {
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           Deps.logbackClassic,
-          Deps.activeMqKahadbStore
+          Deps.activeMqKahadbStore,
+          Deps.springCore,
+          Deps.springBeans,
+          Deps.springContext,
+          Deps.springExpression
         )}
         override def moduleDeps = super.moduleDeps ++ Seq(
           blended.testsupport,
@@ -715,21 +719,6 @@ object blended extends Module {
     }
   }
 
-  object camel extends Module {
-    object utils extends BlendedModule {
-      override val description : String = "Useful helpers for Camel"
-      override def ivyDeps = T{ super.ivyDeps() ++ Agg(
-        Deps.orgOsgi,
-        Deps.orgOsgiCompendium,
-//        Deps.camelJms,
-        Deps.slf4j
-      )}
-      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
-        blended.akka
-      )
-    }
-  }
-
   object container extends Module {
 
     object context extends Module {
@@ -837,21 +826,125 @@ object blended extends Module {
     }
   }
 
+  object hawtio extends Module {
+    object login extends BlendedModule {
+      override val description : String = "Adding required imports to the hawtio war bundle"
+      override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+        `Fragment-Host` = Some("io.hawt.hawtio-web"),
+        `Import-Package` = Seq(
+          "blended.security.boot",
+          "com.sun.jndi.ldap;resolution:=optional"
+        )
+      )}
+      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+        blended.security.boot
+      )
+    }
+  }
+
+  object jetty extends Module {
+    object boot extends BlendedModule {
+      override val description : String = "Bundle wrapping the original jetty boot bundle to dynamically provide SSL Context via OSGI services"
+      override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+       Deps.domino,
+        Deps.jettyOsgiBoot
+      )}
+      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+        blended.domino,
+        blended.util.logging
+      )
+      private val jettyVersion = """version="[9,4,20)""""
+      override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+        `Bundle-Activator` = Option(s"${blendedModule}.internal.JettyActivator"),
+        `Import-Package` = Seq(
+          s"org.eclipse.jetty.annotations;$jettyVersion;resolution:=optional",
+          s"org.eclipse.jetty.deploy;$jettyVersion",
+          s"org.eclipse.jetty.deploy.bindings;$jettyVersion",
+          s"org.eclipse.jetty.deploy.graph;$jettyVersion",
+          s"org.eclipse.jetty.http;$jettyVersion",
+          s"org.eclipse.jetty.server;$jettyVersion",
+          s"org.eclipse.jetty.server.handler;$jettyVersion",
+          s"org.eclipse.jetty.util;$jettyVersion",
+          s"org.eclipse.jetty.util.thread;$jettyVersion",
+          s"org.eclipse.jetty.util.component;$jettyVersion",
+          s"org.eclipse.jetty.util.log;$jettyVersion",
+          s"org.eclipse.jetty.util.resource;$jettyVersion",
+          s"org.eclipse.jetty.webapp;$jettyVersion",
+          s"org.eclipse.jetty.xml;$jettyVersion",
+          s"org.osgi.service.event",
+          s"javax.mail.*;resolution:=optional",
+          s"javax.transaction.*;resolution:=optional",
+          s"org.objectweb.asm;resolution:=optional",
+          s"org.osgi.service.cm",
+          s"org.osgi.service.url",
+          s"org.slf4j.*;resolution:=optional",
+          s"org.xml.sax,org.xml.sax.helpers",
+          "*"
+        ),
+        `DynamicImport-Package` = Seq(
+          s"org.eclipse.jetty;$jettyVersion"
+        ),
+        `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last)
+      )}
+      override def embeddedJars: T[Seq[PathRef]] = T{ super.embeddedJars() ++
+        resolveDeps(T.task {
+          Agg(Deps.jettyOsgiBoot.exclude("*" -> "*"))
+        })().toSeq
+      }
+    }
+  }
+
   object jms extends Module {
+    object bridge extends BlendedModule {
+      override val description : String = "A generic JMS bridge to connect the local JMS broker to en external JMS"
+      override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+        Deps.akkaActor,
+        Deps.akkaStream,
+        Deps.typesafeConfig
+      )}
+      override def moduleDeps = super.moduleDeps ++ Seq(
+        blended.util,
+        blended.util.logging,
+        blended.jms.utils,
+        blended.domino,
+        blended.akka,
+        blended.streams
+      )
+      override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+        `Bundle-Activator` = Option(s"${blendedModule}.internal.BridgeActivator")
+      )}
+      object test extends Tests {
+        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          Deps.logbackClassic,
+          Deps.activeMqBroker,
+          Deps.scalacheck,
+          Deps.springCore,
+          Deps.springBeans,
+          Deps.springContext,
+          Deps.springExpression,
+          Deps.akkaSlf4j
+        )}
+        override def moduleDeps = super.moduleDeps ++ Seq(
+          blended.activemq.brokerstarter,
+          blended.testsupport,
+          blended.testsupport.pojosr,
+          blended.streams.testsupport
+        )
+      }
+    }
     object utils extends BlendedModule {
       override val description = "A bundle to provide a ConnectionFactory wrapper that monitors a single connection and is able to monitor the connection via an active ping."
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-        Deps.camelJms,
         Deps.jms11Spec
       )}
 
       override def moduleDeps = super.moduleDeps ++ Seq(
-        domino,
-        mgmt.base,
-        container.context.api,
-        updater.config,
-        util.logging,
-        akka
+        blended.domino,
+        blended.mgmt.base,
+        blended.container.context.api,
+        blended.updater.config,
+        blended.util.logging,
+        blended.akka
       )
       object test extends Tests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
@@ -863,8 +956,7 @@ object blended extends Module {
           Deps.logbackClassic
         )}
         override def moduleDeps = super.moduleDeps ++ Seq(
-          camel.utils,
-          testsupport
+          blended.testsupport
         )
       }
     }
@@ -1283,11 +1375,78 @@ object blended extends Module {
         Deps.logbackClassic
       )}
       override def moduleDeps = super.moduleDeps ++ Seq(
-        activemq.brokerstarter,
-        persistence.h2,
-        testsupport.pojosr,
-        testsupport
+        blended.activemq.brokerstarter,
+        blended.persistence.h2,
+        blended.testsupport.pojosr,
+        blended.testsupport
       )
+    }
+    object dispatcher extends BlendedModule {
+      override val description : String = "A generic Dispatcher to support common integration routing."
+      override def ivyDeps: Target[Loose.Agg[Dep]] = T{super.ivyDeps() ++ Agg(
+        Deps.akkaActor,
+        Deps.akkaStream,
+        Deps.geronimoJms11Spec,
+        Deps.akkaPersistence,
+        Deps.levelDbJava
+      )}
+      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+        blended.util.logging,
+        blended.streams,
+        blended.jms.bridge,
+        blended.akka,
+        blended.persistence
+      )
+
+      override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.DispatcherActivator"),
+        `Export-Package` = Seq(
+          blendedModule,
+          s"${blendedModule}.cbe"
+        )
+      )}
+      object test extends Tests {
+        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          Deps.akkaTestkit,
+          Deps.akkaSlf4j,
+          Deps.activeMqBroker,
+          Deps.activeMqKahadbStore,
+          Deps.logbackClassic,
+          Deps.travesty,
+          Deps.asciiRender,
+          Deps.springCore,
+          Deps.springBeans,
+          Deps.springContext,
+          Deps.springExpression
+        )}
+        override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
+          blended.persistence.h2,
+          blended.activemq.brokerstarter,
+          blended.streams.testsupport,
+          blended.testsupport.pojosr,
+          blended.testsupport
+        )
+      }
+    }
+    object testsupport extends BlendedModule {
+      override val description : String = "Some classes to make testing for streams a bit easier"
+      override def ivyDeps = Agg(
+        Deps.scalacheck,
+        Deps.scalatest,
+        Deps.akkaTestkit,
+        Deps.akkaActor,
+        Deps.akkaStream,
+        Deps.akkaPersistence,
+        Deps.logbackClassic
+      )
+      override def moduleDeps = Seq(
+        blended.util.logging,
+        blended.streams,
+        blended.testsupport
+      )
+
+      object test extends Tests
+
     }
   }
 
@@ -1303,13 +1462,11 @@ object blended extends Module {
       Deps.junit,
       Deps.commonsIo
     )
-
     override def moduleDeps = Seq(
-      util,
-      util.logging,
-      security.boot
+      blended.util,
+      blended.util.logging,
+      blended.security.boot
     )
-
     object test extends Tests
 
     object pojosr extends BlendedModule {
@@ -1320,9 +1477,9 @@ object blended extends Module {
         Deps.orgOsgi
       )
       override def moduleDeps = Seq(
-        util.logging,
-        container.context.impl,
-        domino
+        blended.util.logging,
+        blended.container.context.impl,
+        blended.domino
       )
       object test extends Tests
     }
@@ -1348,8 +1505,8 @@ object blended extends Module {
         )
       )
       override def moduleDeps = Seq(
-        util.logging,
-        security
+        blended.util.logging,
+        blended.security
       )
       object test extends Tests {
         override def ivyDeps = super.ivyDeps() ++ Agg(
@@ -1360,7 +1517,7 @@ object blended extends Module {
           Deps.log4s
         )
         override def moduleDeps = super.moduleDeps ++ Seq(
-          testsupport
+          blended.testsupport
         )
       }
 
