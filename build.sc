@@ -24,6 +24,10 @@ import de.tobiasroeser.mill.osgi._
 /** Project directory. */
 val baseDir: os.Path = build.millSourcePath
 
+trait TODO extends Module {
+  def todo = T{ println(s"TODO ${millModuleSegments.parts.mkString(".")}") }
+}
+
 object Deps {
 
   // Versions
@@ -1005,6 +1009,8 @@ object blended extends Module {
     }
   }
 
+  object jolokia extends TODO
+
   object launcher extends BlendedModule {
     override def description = "Provide an OSGi Launcher"
     override def ivyDeps = Agg(
@@ -1087,6 +1093,12 @@ object blended extends Module {
   }
 
   object mgmt extends Module {
+    object agent extends TODO
+    object mock extends TODO
+    object repo extends TODO
+    object repo_rest extends TODO
+    object rest extends TODO
+    object serviceJmx extends TODO
     object base extends BlendedModule {
       override val description = "Shared classes for management and reporting facility."
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
@@ -1167,6 +1179,9 @@ object blended extends Module {
     }
   }
 
+  object prickle extends TODO
+  object prickleAkkaHttp extends TODO
+
   object security extends BlendedJvmModule {
     override def description = "Configuration bundle for the security framework"
     override def ivyDeps = Agg(
@@ -1202,6 +1217,12 @@ object blended extends Module {
         )}
       }
     }
+
+    object akkaHttp extends TODO
+    object loginApi extends TODO
+    object loginImpl extends TODO
+    object loginRest extends TODO
+    object securityTest extends TODO
 
     object boot extends BlendedModule {
       override def description: String = "A delegating login module for the blended container"
@@ -1486,7 +1507,7 @@ object blended extends Module {
 
   }
 
-  object updater extends Module {
+  object updater extends TODO {
 
     object config extends BlendedJvmModule {
       override def description = "Configurations for Updater and Launcher"
@@ -1531,8 +1552,10 @@ object blended extends Module {
           )}
         }
       }
-
     }
+
+    object remote extends TODO
+    object tools extends TODO
 
   }
 
@@ -1566,6 +1589,8 @@ object blended extends Module {
       object test extends Tests
     }
   }
+
+  object websocket extends TODO
 
 }
 
