@@ -43,7 +43,7 @@ object Deps {
   val prickleVersion = "1.1.14"
   val scalaJsVersion = "0.6.29"
   val scalaVersion = "2.12.8"
-  def scalaBinVersion = scalaVersion.split("[.]").take(2).mkString(".")
+  def scalaBinVersion(scalaVersion: String) = scalaVersion.split("[.]").take(2).mkString(".")
   val scalatestVersion = "3.0.8"
   val scalaCheckVersion = "1.14.0"
   val slf4jVersion = "1.7.25"
@@ -136,8 +136,8 @@ object Deps {
   val prickle = ivy"com.github.benhutchison::prickle:${prickleVersion}"
 
   // SCALA
-  val scalaLibrary = ivy"org.scala-lang:scala-library:${scalaVersion}"
-  val scalaReflect = ivy"org.scala-lang:scala-reflect:${scalaVersion}"
+  def scalaLibrary(scalaVersion: String) = ivy"org.scala-lang:scala-library:${scalaVersion}"
+  def scalaReflect(scalaVersion: String) = ivy"org.scala-lang:scala-reflect:${scalaVersion}"
   val scalaParser = ivy"org.scala-lang.modules::scala-parser-combinators:1.1.1"
   val scalaXml = ivy"org.scala-lang.modules::scala-xml:1.1.0"
 
@@ -1046,8 +1046,8 @@ object blended extends Module {
         "blended.security.crypto.version" -> blended.security.crypto.publishVersion(),
         "cmdoption.version" -> Deps.cmdOption.dep.version,
         "org.osgi.core.version" -> Deps.orgOsgi.dep.version,
-        "scala.binary.version" -> Deps.scalaBinVersion,
-        "scala.library.version" -> Deps.scalaVersion,
+        "scala.binary.version" -> Deps.scalaBinVersion(scalaVersion()),
+        "scala.library.version" -> scalaVersion(),
         "typesafe.config.version" -> Deps.typesafeConfig.dep.version,
         "slf4j.version" -> Deps.slf4jVersion,
         "logback.version" -> Deps.logbackClassic.dep.version,
@@ -1059,10 +1059,12 @@ object blended extends Module {
         "commonslogging.version" -> Deps.commonsLogging.dep.version,
         "jsonsimple.version" -> Deps.jsonSimple.dep.version
       )}
+
+      override def scalaVersion: Target[String] = T{ blended.launcher.scalaVersion() }
       override def libIvyDeps = T{ Agg(
         Deps.cmdOption,
         Deps.orgOsgi,
-        Deps.scalaLibrary,
+        Deps.scalaLibrary(scalaVersion()),
         Deps.slf4j,
         Deps.splunkjava,
         Deps.httpCore,
@@ -1080,8 +1082,6 @@ object blended extends Module {
       )
     }
 
-
-
     object test extends Tests {
       override def ivyDeps = super.ivyDeps() ++ Agg(
         Deps.scalatest
@@ -1093,10 +1093,70 @@ object blended extends Module {
   }
 
   object mgmt extends Module {
-    object agent extends TODO
+    object agent extends BlendedModule {
+      override val description : String = "Bundle to regularly report monitoring information to a central container hosting the container registry"
+      override def ivyDeps = super.ivyDeps() ++ Agg(
+        Deps.orgOsgi,
+        Deps.akkaOsgi,
+        Deps.akkaHttp,
+        Deps.akkaStream
+      )
+      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+        blended.akka,
+        blended.updater.config,
+        blended.util.logging,
+        blended.prickle.akka.http
+      )
+      override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.AgentActivator")
+      )}
+    }
     object mock extends TODO
-    object repo extends TODO
-    object repo_rest extends TODO
+    object repo extends BlendedModule {
+      override val description : String = "File Artifact Repository"
+      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+        blended.domino,
+        blended.updater.config,
+        blended.util.logging,
+        blended.mgmt.base
+      )
+      override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.ArtifactRepoActivator")
+      )}
+      object test extends Tests {
+        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          Deps.lambdaTest,
+          Deps.akkaTestkit,
+          Deps.akkaSlf4j,
+          Deps.logbackClassic
+        )}
+        override def moduleDeps = super.moduleDeps ++ Seq(
+          blended.testsupport
+        )
+      }
+
+      object rest extends BlendedModule {
+        override val description : String = "File Artifact Repository REST Service"
+        override def ivyDeps = super.ivyDeps() ++ Agg(
+          Deps.akkaHttp
+        )
+        override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+          blended.domino,
+          blended.updater.config,
+          blended.mgmt.base,
+          blended.mgmt.repo,
+          blended.security.akka.http,
+          blended.util,
+          blended.util.logging,
+          blended.akka.http
+        )
+        override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+          `Bundle-Activator` = Some(s"${blendedModule}.internal.ArtifactRepoRestActivator")
+        )}
+        object test extends Tests {
+        }
+      }
+    }
     object rest extends TODO
     object serviceJmx extends TODO
     object base extends BlendedModule {
@@ -1179,8 +1239,51 @@ object blended extends Module {
     }
   }
 
-  object prickle extends TODO
-  object prickleAkkaHttp extends TODO
+  object prickle extends BlendedModule {
+    override val description : String = "OSGi package for Prickle and mircojson"
+    override def ivyDeps = super.ivyDeps() ++ Agg(
+      Deps.prickle.exclude("*" -> "*"),
+      Deps.microjson.exclude("*" -> "*")
+    )
+    override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+      `Import-Package` = Seq(
+        "prickle",
+        "microjson"
+      ),
+      `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last)
+    )}
+    override def exportContents: T[Seq[String]] = T{ Seq(
+      s"prickle;version=${Deps.prickleVersion};-split-package:=merge-first",
+      s"microjson;version=${Deps.microJsonVersion};-split-package:=merge-first"
+    )}
+    override def embeddedJars: T[Seq[PathRef]] = T{
+      compileClasspath().toSeq.filter(f =>
+        f.path.last.startsWith("prickle") || f.path.last.startsWith("microjson")
+      )
+    }
+
+    object akka extends Module {
+      object http extends BlendedModule {
+        override val description : String = "Define some convenience to use Prickle with Akka HTTP"
+        override def ivyDeps = super.ivyDeps() ++ Agg(
+          Deps.akkaHttpCore,
+          Deps.akkaHttp,
+          Deps.akkaStream,
+          Deps.prickle
+        )
+        override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+          blended.util.logging
+        )
+        object test extends Tests {
+          override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+            Deps.akkaStreamTestkit,
+            Deps.akkaHttpTestkit,
+            Deps.logbackClassic
+          )}
+        }
+      }
+    }
+  }
 
   object security extends BlendedJvmModule {
     override def description = "Configuration bundle for the security framework"
@@ -1218,7 +1321,34 @@ object blended extends Module {
       }
     }
 
-    object akkaHttp extends TODO
+    object akka extends Module {
+      object http extends BlendedModule {
+        override val description : String = "Some security aware Akka HTTP routes for the blended container"
+        override def ivyDeps = super.ivyDeps() ++ Agg(
+          Deps.akkaHttp,
+          Deps.akkaStream,
+          Deps.orgOsgi,
+          Deps.orgOsgiCompendium,
+          Deps.slf4j
+        )
+        override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+          blended.akka,
+          blended.security,
+          blended.util.logging
+        )
+        object test extends Tests {
+          override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+            Deps.commonsBeanUtils,
+            Deps.akkaStreamTestkit,
+            Deps.akkaHttpTestkit,
+            Deps.logbackClassic
+          )}
+          override def moduleDeps = super.moduleDeps ++ Seq(
+            blended.testsupport
+          )
+        }
+      }
+    }
     object loginApi extends TODO
     object loginImpl extends TODO
     object loginRest extends TODO
@@ -1507,7 +1637,44 @@ object blended extends Module {
 
   }
 
-  object updater extends TODO {
+  object updater extends BlendedModule {
+    override val description = "OSGi Updater"
+    override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+      Deps.orgOsgi,
+      Deps.domino,
+      Deps.akkaOsgi,
+      Deps.slf4j,
+      Deps.typesafeConfig
+    )}
+    override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+      blended.updater.config,
+      blended.launcher,
+      blended.mgmt.base,
+      blended.container.context.api,
+      blended.akka
+    )
+    override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+      `Bundle-Activator` = Option(s"${blendedModule}.internal.BlendedUpdaterActivator"),
+      `Import-Package` = Seq(
+        "blended.launcher.runtime;resolution:=optional"
+      )
+    )}
+    object test extends Tests {
+      override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+        Deps.akkaTestkit,
+        Deps.felixFramework,
+        Deps.logbackClassic,
+        Deps.akkaSlf4j,
+        Deps.felixGogoRuntime,
+        Deps.felixGogoShell,
+        Deps.felixGogoCommand,
+        Deps.felixFileinstall,
+        Deps.mockitoAll
+      )}
+      override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
+        blended.testsupport
+      )
+    }
 
     object config extends BlendedJvmModule {
       override def description = "Configurations for Updater and Launcher"
@@ -1554,8 +1721,61 @@ object blended extends Module {
       }
     }
 
-    object remote extends TODO
-    object tools extends TODO
+    object remote extends BlendedModule {
+      override val description = "OSGi Updater remote handle support"
+      override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+        Deps.orgOsgi,
+        Deps.domino,
+        Deps.akkaOsgi,
+        Deps.slf4j,
+        Deps.typesafeConfig
+      )}
+      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+        blended.util.logging,
+        blended.persistence,
+        blended.updater.config,
+        blended.mgmt.base,
+        blended.launcher,
+        blended.container.context.api,
+        blended.akka
+      )
+      override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+        `Bundle-Activator` = Option(s"${blendedModule}.internal.RemoteUpdaterActivator")
+      )}
+      object test extends Tests {
+        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          Deps.akkaTestkit,
+          Deps.felixFramework,
+          Deps.logbackClassic,
+          Deps.akkaSlf4j,
+          Deps.felixGogoRuntime,
+          Deps.felixGogoShell,
+          Deps.felixGogoCommand,
+          Deps.felixFileinstall,
+          Deps.mockitoAll,
+          Deps.springCore,
+          Deps.springBeans,
+          Deps.springContext,
+          Deps.springExpression,
+          Deps.jclOverSlf4j
+        )}
+        override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
+          blended.testsupport,
+          blended.persistence.h2
+        )
+      }
+    }
+    object tools extends BlendedModule {
+      override val description = "Configurations for Updater and Launcher"
+      override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+        Deps.typesafeConfig,
+        Deps.cmdOption
+      )}
+      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
+        blended.updater.config
+      )
+      object test extends Tests
+    }
 
   }
 
