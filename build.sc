@@ -105,7 +105,6 @@ object Deps {
   val jms11Spec = ivy"org.apache.geronimo.specs:geronimo-jms_1.1_spec:1.1.1"
   val jolokiaJvm = ivy"org.jolokia:jolokia-jvm:${jolokiaVersion}"
   val jolokiaJvmAgent = ivy"org.jolokia:jolokia-jvm:${jolokiaVersion};classifier=agent"
-  //    val jolokiaJvmAgent = jolokiaJvm.classifier("agent")
   val jscep = ivy"com.google.code.jscep:jscep:2.5.0"
   val jsonLenses = ivy"net.virtual-void::json-lenses:0.6.2"
   val julToSlf4j = ivy"org.slf4j:jul-to-slf4j:${slf4jVersion}"
@@ -177,6 +176,7 @@ object Deps {
   val jsonSimple = ivy"com.googlecode.json-simple:json-simple:1.1.1"
 
   object js {
+    val log4s = ivy"org.log4s::log4s::${Deps.log4s.dep.version}"
     val prickle = ivy"com.github.benhutchison::prickle::${prickleVersion}"
     val scalatest = ivy"org.scalatest::scalatest::${scalatestVersion}"
     val scalacheck = ivy"org.scalacheck::scalacheck::${scalaCheckVersion}"
@@ -303,23 +303,30 @@ trait BlendedJvmModule extends BlendedModule { jvmBase =>
 
   trait Tests extends super.Tests {
     override def sources = T.sources {
-      super.sources() ++ Seq(PathRef(millSourcePath / os.up / 'shared / 'src / 'test / 'scala))
+      super.sources() ++ Seq(PathRef(jvmBase.millSourcePath / os.up / 'shared / 'src / 'test / 'scala))
     }
     override def testResources = T.sources { super.testResources() ++ Seq(
-      PathRef(millSourcePath / os.up / 'shared / 'src / 'test / 'resources),
-      PathRef(millSourcePath / os.up / 'shared / 'src / 'test / 'binaryResources)
+      PathRef(jvmBase.millSourcePath / os.up / 'shared / 'src / 'test / 'resources),
+      PathRef(jvmBase.millSourcePath / os.up / 'shared / 'src / 'test / 'binaryResources)
     )}
   }
 
-  trait Js extends ScalaJSModule {
+  trait Js extends ScalaJSModule { jsBase =>
     override def millSourcePath = jvmBase.millSourcePath / os.up / "js"
     override def scalaJSVersion = Deps.scalaJsVersion
     override def scalaVersion = jvmBase.scalaVersion
-    override def sources: Sources = T.sources(millSourcePath / os.up / "shared" / "src" / "main" / "scala")
+    override def sources: Sources = T.sources(
+      millSourcePath / "src" / "main" / "scala",
+      millSourcePath / os.up / "shared" / "src" / "main" / "scala"
+    )
     override def moduleKind: T[ModuleKind] = T{ ModuleKind.CommonJSModule }
     def blendedModule = jvmBase.blendedModule
     override def artifactName: T[String] = jvmBase.artifactName
     trait Tests extends super.Tests {
+      override def sources: Sources = T.sources(
+        jsBase.millSourcePath / "src" / "test" / "scala",
+        jsBase.millSourcePath / os.up / "shared" / "src" / "test" / "scala"
+      )
       override def ivyDeps = T{ super.ivyDeps() ++ Agg(
         Deps.js.scalatest
       )}
@@ -1857,7 +1864,9 @@ object blended extends Module {
         )
         object test extends Tests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-            Deps.js.prickle
+            Deps.js.prickle,
+            Deps.js.scalacheck,
+            Deps.js.log4s
           )}
         }
       }
@@ -2002,7 +2011,8 @@ object blended extends Module {
       )
       object test extends Tests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-          Deps.js.scalacheck
+          Deps.js.scalacheck,
+          Deps.js.log4s
         )}
       }
     }
