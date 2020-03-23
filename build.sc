@@ -37,8 +37,8 @@ object Deps {
   val microJsonVersion = "1.4"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
-  val scalaJsVersion = "0.6.29"
-  val scalaVersion = "2.12.8"
+  val scalaJsVersion = "0.6.32"
+  val scalaVersion = "2.12.11"
   def scalaBinVersion(scalaVersion: String) = scalaVersion.split("[.]").take(2).mkString(".")
   val scalatestVersion = "3.0.8"
   val scalaCheckVersion = "1.14.0"
@@ -216,7 +216,7 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
       )
     )
   }
-  override def scalacOptions = Seq("-deprecation")
+  override def scalacOptions = Seq("-deprecation", "-target:jvm-1.8")
 
   trait Tests extends super.Tests {
     override def ivyDeps = T{ super.ivyDeps() ++ Agg(
