@@ -1098,6 +1098,39 @@ object blended extends Module {
       override def moduleDeps = super.moduleDeps ++ Seq(
         blended.testsupport
       )
+      def osgiFrameworkIvyDeps: Map[String, Dep] = Map(
+        "Felix 5.0.0" -> ivy"org.apache.felix:org.apache.felix.framework:5.0.0",
+        "Felix 5.6.10" -> ivy"org.apache.felix:org.apache.felix.framework:5.6.10",
+//        "Eclipse OSGi 3.8.0" -> ivy"org.eclipse:org.eclipse.osgi:3.8.0.v20120529-1548",
+        "Eclipse OSGi 3.10.100.v20150529-1857" -> ivy"org.osgi:org.eclipse.osgi:3.10.100.v20150529-1857",
+        "Eclipse OSGi 3.12.50" -> ivy"org.eclipse.platform:org.eclipse.osgi:3.12.50",
+//        "Eclipse OSGi 3.9.1.v20130814-1242" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.9.1.v20130814-1242",
+        "Eclipse OSGi 3.10.0.v20140606-1445" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.10.0.v20140606-1445"
+      )
+      def resolvedOsgiFrameworks = T{
+        Target.traverse(osgiFrameworkIvyDeps.toSeq){ case (name, dep) =>
+          T.task { name -> resolveDeps(T.task { Agg(dep) })().toSeq.head }
+        }().toMap
+      }
+      override def generatedSources: Target[Seq[PathRef]] = T{ super.generatedSources() ++ {
+        val file = T.dest / "blended" / "launcher" / "TestOsgiFrameworks.scala"
+        val body =
+          s"""
+            |package blended.launcher
+            |
+            |import java.io.File
+            |
+            |/** Generated with mill: The frameworks to use in the tests. */
+            |object TestOsgiFrameworks {
+            |  val frameworks: Map[String, String] = ${
+              resolvedOsgiFrameworks().map { case (name, file) => s""""${name}" -> "${file.path}"""" }
+                .mkString("Map(\n    ", ",\n    ", "  )")
+              }
+            |}
+            |""".stripMargin
+        os.write(file, body, createFolders = true)
+        Seq(PathRef(T.dest))
+      }}
     }
   }
 
