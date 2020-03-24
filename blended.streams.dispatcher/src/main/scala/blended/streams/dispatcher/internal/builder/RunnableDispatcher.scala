@@ -1,23 +1,25 @@
 package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream._
 import akka.stream.scaladsl.{Flow, GraphDSL, Source}
 import blended.container.context.api.ContainerContext
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.jms.utils.{Connected, ConnectionState, ConnectionStateChanged, IdAwareConnectionFactory, JmsDestination}
 import blended.jmx.statistics.ServiceInvocationReporter
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
 import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
 import blended.util.RichTry._
 
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext
 import scala.util.Try
+import scala.util.control.NonFatal
 
 class RunnableDispatcher(
   registry : BridgeProviderRegistry,
@@ -181,11 +183,55 @@ class RunnableDispatcher(
     }
   }
 
+  private def sendStartupMessages(providerCfg : BridgeProviderConfig) : Unit = {
+
+    val logger = FlowEnvelopeLogger.create(
+      bs.headerConfig,
+      Logger(bs.headerConfig.prefix + ".dispatcher." + providerCfg.vendor + "." + providerCfg.provider + ".startup")
+    )
+
+    try {
+      implicit val eCtxt : ExecutionContext = system.dispatcher
+
+      if (routerCfg.startupMap.nonEmpty) {
+
+        val stateActor : ActorRef = system.actorOf(Props(new Actor {
+
+          val prodSettings: JmsProducerSettings = JmsProducerSettings(
+            log = logger,
+            headerCfg = bs.headerConfig,
+            connectionFactory = cf,
+            jmsDestination = Some(providerCfg.inbound),
+            deliveryMode = JmsDeliveryMode.NonPersistent,
+            timeToLive = None
+          )
+
+          val msgs : Seq[FlowEnvelope] = routerCfg.startupMap.map { case (k, v) =>
+            FlowEnvelope(FlowMessage(v)(FlowMessage.props(bs.headerConfig.headerResourceType -> k).unwrap))
+          }.toSeq
+
+          override def receive: Receive = {
+            case e : ConnectionStateChanged if e.state.status == Connected && providerCfg.vendor == e.state.vendor && providerCfg.provider == e.state.provider =>
+              logger.underlying.debug(s"Sending [${msgs.size}] messages to [${providerCfg.vendor}:${providerCfg.provider}:${providerCfg.inbound.asString}]")
+              sendMessages(prodSettings, logger, msgs:_*).unwrap
+              context.stop(self)
+          }
+        }))
+
+        system.eventStream.subscribe(stateActor, classOf[ConnectionStateChanged])
+      }
+    } catch {
+      case NonFatal(e) =>
+        logger.underlying.warn(s"Failed to send startup messages [${e.getMessage()}]")
+    }
+  }
+
   def start() : Unit = {
 
     try {
       // Get the internal provider
-      val internalProvider = registry.internalProvider.get
+      val internalProvider : BridgeProviderConfig = registry.internalProvider.get
+      sendStartupMessages(internalProvider)
 
       // The transaction stream will process the transaction events from the transactions destination
       transStream = Some(transactionStream(tMgr).get)

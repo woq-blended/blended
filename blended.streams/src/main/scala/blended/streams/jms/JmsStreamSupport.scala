@@ -68,13 +68,6 @@ trait JmsStreamSupport {
       if (hasException.get()) {
         Await.result(errEnv, 1.second).flatMap(_.exception).foreach(t => throw t)
       }
-
-      // if the stream has is finished before sending off all the messages, something went wrong.
-      // TODO: This looks strange
-      if (done.isCompleted) {
-        throw new Exception("Failed to create flow.")
-      }
-
     } while (!hasException.get && sendCount.get < msgs.size)
 
     killswitch
