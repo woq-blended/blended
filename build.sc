@@ -246,7 +246,7 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
            |    <file>${baseDir.toIO.getPath()}/target/test-${moduleSpec}.log</file>
            |
            |    <encoder>
-           |      <pattern>%date %level [%thread] %logger{36} %msg%n</pattern>
+           |      <pattern>%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%t] %logger : %msg%n</pattern>
            |    </encoder>
            |  </appender>
            |
