@@ -5,11 +5,14 @@ jdk:
   - openjdk11
 
 env:
-  - TEST_ONLINE="true"
+  - NAME="Test (fail fast)"
+    TEST_ONLINE="true"
     SCRIPT_1="./millw -i __.test.test"
-  - TEST_ONLINE="true"
+  - NAME="Test (keep going)"
+    TEST_ONLINE="true"
     SCRIPT_1="./millw -i -k __.test.test"
-  - TEST_ONLINE="true"
+  - NAME="Publish into local IVY repo"
+    TEST_ONLINE="true"
     SCRIPT_1="./millw -i __.publishLocal"
 
 script:
