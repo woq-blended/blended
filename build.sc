@@ -1,6 +1,7 @@
 import java.io.FileOutputStream
 import java.util.zip.ZipEntry
 
+import scala.collection.immutable
 import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
 import scala.util.Try
 import scala.util.matching.Regex
@@ -321,16 +322,28 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
     }
 
     /** redirect to "other"-compile */
-    override def compile: T[CompilationResult] = if(testGroup == defaultTestGroup) super.compile else otherCompile
+    override def compile: T[CompilationResult] = if(testGroup == defaultTestGroup) super.compile else otherModule.compile
     /** Override this to define the target which compiles the test sources */
-    def otherCompile: T[CompilationResult]
+    def otherModule: ForkedTest
 
-    def checkTestGroups = T{
-      // only check in default cross instance "other"
-      if(testGroup == defaultTestGroup)
-      if((detectTestGroups().keySet != Set(defaultTestGroup) || testGroups.nonEmpty) &&  testGroups.values.toSet == detectTestGroups().values.toSet){
-      } else {
-        T.log.error(s"Test groups invalid. Please set them to: ${detectTestGroups()}")
+    def checkTestGroups: T[Unit] = {
+      if(testGroup == defaultTestGroup) T{
+        // only check in default cross instance "other"
+
+        val anyGroupsDetected = detectTestGroups().keySet != Set(defaultTestGroup)
+        val anyGroupsDefined = testGroups.nonEmpty
+        val relevantGroups: PartialFunction[(String, Set[String]), Set[String]] = {
+          case (name, tests) if name != defaultTestGroup => tests
+        }
+        val definedGroupedTests = testGroups.collect(relevantGroups).toSet
+        val detectedGroupedTests = detectTestGroups().collect(relevantGroups).toSet
+
+        if((anyGroupsDetected || anyGroupsDefined) && definedGroupedTests != detectedGroupedTests) {
+          T.log.error(s"Test groups invalid. Detected the following explicit groups: ${detectTestGroups() - defaultTestGroup}.")
+        }
+      } else T{
+        // depend on the other check
+        otherModule.checkTestGroups()
       }
     }
 
@@ -736,7 +749,7 @@ object blended extends Module {
 
         object test extends Cross[Test](crossTestGroups: _*)
         class Test(override val testGroup: String) extends ForkedTest {
-          override def otherCompile = restjms.test(defaultTestGroup).compile
+          override def otherModule: ForkedTest = restjms.test(defaultTestGroup)
           override def ivyDeps = T{ super.ivyDeps() ++ Agg(
             Deps.sttp,
             Deps.sttpAkka,
@@ -1001,7 +1014,7 @@ object blended extends Module {
 
       object test extends Cross[Test](crossTestGroups: _*)
       class Test(override val testGroup: String) extends ForkedTest {
-        override def otherCompile = bridge.test(defaultTestGroup).compile
+        override def otherModule: ForkedTest =  bridge.test(defaultTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           Deps.activeMqBroker,
           Deps.scalacheck,
