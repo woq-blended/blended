@@ -1522,8 +1522,20 @@ object blended extends Module {
         s"${blendedModule}.json"
       )
     )}
-    object unittest extends Tests
+    object test extends Tests {
+      override def sources: Sources = T.sources { super.sources() ++ Seq(
+        PathRef(baseDir / "blended.security.test" / "src" / "test" / "scala")
+      )}
+      override def testResources: Sources = T.sources { super.testResources() ++ Seq(
+        PathRef(baseDir / "blended.security.test" / "src" / "test" / "resources")
+      )}
 
+      override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
+        blended.testsupport,
+        blended.testsupport.pojosr,
+        blended.security.login.impl
+      )
+    }
     object js extends Js {
       override def ivyDeps = Agg(
         ivy"com.github.benhutchison::prickle::1.1.14"
@@ -1649,14 +1661,6 @@ object blended extends Module {
           )
         }
       }
-    }
-    object test extends Tests {
-      override def millSourcePath = baseDir / "blended.security.test"
-      override def moduleDeps = super.moduleDeps ++ Seq(
-        blended.testsupport,
-        blended.testsupport.pojosr,
-        blended.security.login.impl
-      )
     }
 
     object boot extends BlendedModule {
