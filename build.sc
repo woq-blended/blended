@@ -326,7 +326,7 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
     /** Override this to define the target which compiles the test sources */
     def otherModule: ForkedTest
 
-    def checkTestGroups: T[Unit] = {
+    def checkTestGroups(): Command[Unit] = T.command {
       if(testGroup == defaultTestGroup) T{
         // only check in default cross instance "other"
 
@@ -343,7 +343,7 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
         }
       } else T{
         // depend on the other check
-        otherModule.checkTestGroups()
+        otherModule.checkTestGroups()()
       }
     }
 
@@ -354,7 +354,7 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
       else super.test(args: _*)
 
     override def testCachedArgs: T[Seq[String]] = T{
-      checkTestGroups()
+      checkTestGroups()()
       val tests = if(testGroup == defaultTestGroup && testGroups.get(defaultTestGroup).isEmpty) {
         val allTests = detectTestGroups().values.toSet.flatten
         val groupTests = testGroups.values.toSet.flatten
@@ -530,7 +530,12 @@ object blended extends Module {
       override def osgiHeaders = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Some(s"${blendedModule}.internal.BrokerActivator")
       )}
-      object test extends Tests {
+      override def testGroups: Map[String, Set[String]] = Map(
+        "BrokerActivatorSpec" -> Set("blended.activemq.brokerstarter.internal.BrokerActivatorSpec")
+      )
+      object test extends Cross[Test](crossTestGroups: _*)
+      class Test(override val testGroup: String) extends ForkedTest {
+        override def otherModule: ForkedTest =  brokerstarter.test(defaultTestGroup)
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           Deps.activeMqKahadbStore,
           Deps.springCore,
@@ -998,7 +1003,6 @@ object blended extends Module {
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Option(s"${blendedModule}.internal.BridgeActivator")
       )}
-
       override def testGroups: Map[String, Set[String]] = Map(
         "RouteAfterRetrySpec" -> Set("blended.jms.bridge.internal.RouteAfterRetrySpec"),
         "InboundRejectBridgeSpec" -> Set("blended.jms.bridge.internal.InboundRejectBridgeSpec"),
@@ -1011,7 +1015,6 @@ object blended extends Module {
         "InboundBridgeUntrackedSpec" -> Set("blended.jms.bridge.internal.InboundBridgeUntrackedSpec"),
         "SendFailedRejectBridgeSpec" -> Set("blended.jms.bridge.internal.SendFailedRejectBridgeSpec")
       )
-
       object test extends Cross[Test](crossTestGroups: _*)
       class Test(override val testGroup: String) extends ForkedTest {
         override def otherModule: ForkedTest =  bridge.test(defaultTestGroup)
@@ -1318,7 +1321,12 @@ object blended extends Module {
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Bundle-Activator` = Some(s"${blendedModule}.internal.ArtifactRepoRestActivator")
         )}
-        object test extends Tests {
+        override def testGroups: Map[String, Set[String]] = Map(
+          "CollectorServicePojosrSpec" -> Set("blended.mgmt.rest.internal.CollectorServicePojosrSpec")
+        )
+        object test extends Cross[Test](crossTestGroups: _*)
+        class Test(override val testGroup: String) extends ForkedTest {
+          override def otherModule: ForkedTest =  rest.test(defaultTestGroup)
         }
       }
     }
@@ -1514,7 +1522,7 @@ object blended extends Module {
         s"${blendedModule}.json"
       )
     )}
-    object test extends Tests
+    object unittest extends Tests
 
     object js extends Js {
       override def ivyDeps = Agg(
@@ -1621,7 +1629,12 @@ object blended extends Module {
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Bundle-Activator` = Some(s"${blendedModule}.internal.RestLoginActivator")
         )}
-        object unittest extends Tests {
+        override def testGroups: Map[String, Set[String]] = Map(
+          "LoginServiceSpec" -> Set("blended.security.login.rest.internal.LoginServiceSpec")
+        )
+        object test extends Cross[Test](crossTestGroups: _*)
+        class Test(override val testGroup: String) extends ForkedTest {
+          override def otherModule: ForkedTest =  rest.test(defaultTestGroup)
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             Deps.akkaTestkit,
             Deps.akkaStreamTestkit,
@@ -1635,15 +1648,15 @@ object blended extends Module {
             blended.security.login.impl
           )
         }
-        object test extends Tests {
-          override def millSourcePath = baseDir / "blended.security.test"
-          override def moduleDeps = super.moduleDeps ++ Seq(
-            blended.testsupport,
-            blended.testsupport.pojosr,
-            blended.security.login.impl
-          )
-        }
       }
+    }
+    object test extends Tests {
+      override def millSourcePath = baseDir / "blended.security.test"
+      override def moduleDeps = super.moduleDeps ++ Seq(
+        blended.testsupport,
+        blended.testsupport.pojosr,
+        blended.security.login.impl
+      )
     }
 
     object boot extends BlendedModule {
@@ -1807,7 +1820,24 @@ object blended extends Module {
         s"${blendedModule}.worklist"
       )
     )}
-    object test extends Tests {
+    override def testGroups: Map[String, Set[String]] = Map(
+      "JmsAckSourceSpec" -> Set("blended.streams.jms.JmsAckSourceSpec"),
+      "FlowTransactionStreamSpec" -> Set("blended.streams.transaction.FlowTransactionStreamSpec"),
+      "JmsRetryProcessorForwardSpec" -> Set("blended.streams.jms.JmsRetryProcessorForwardSpec"),
+      "JmsRetryProcessorSendToRetrySpec" -> Set("blended.streams.jms.JmsRetryProcessorSendToRetrySpec"),
+      "JmsRetryProcessorRetryCountSpec" -> Set("blended.streams.jms.JmsRetryProcessorRetryCountSpec"),
+      "ParallelFileSourceSpec" -> Set("blended.streams.file.ParallelFileSourceSpec"),
+      "FlowTransactionEventSpec" -> Set("blended.streams.transaction.FlowTransactionEventSpec"),
+      "JmsRetryProcessorFailedSpec" -> Set("blended.streams.jms.JmsRetryProcessorFailedSpec"),
+      "JmsKeepAliveActorSpec" -> Set("blended.streams.jms.internal.JmsKeepAliveActorSpec"),
+      "FileSourceSpec" -> Set("blended.streams.file.FileSourceSpec"),
+      "JmsRetryProcessorRetryTimeoutSpec" -> Set("blended.streams.jms.JmsRetryProcessorRetryTimeoutSpec"),
+      "BulkCleanupSpec" -> Set("blended.streams.transaction.BulkCleanupSpec"),
+      "FileFlowTransactionManagerSpec" -> Set("blended.streams.transaction.FileFlowTransactionManagerSpec")
+    )
+    object test extends Cross[Test](crossTestGroups: _*)
+    class Test(override val testGroup: String) extends ForkedTest {
+      override def otherModule: ForkedTest = streams.test(defaultTestGroup)
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         Deps.commonsIo,
         Deps.scalacheck,
@@ -1848,7 +1878,14 @@ object blended extends Module {
           s"${blendedModule}.cbe"
         )
       )}
-      object test extends Tests {
+      override def testGroups: Map[String, Set[String]] = Map(
+        "TransactionOutboundSpec" -> Set("blended.streams.dispatcher.internal.builder.TransactionOutboundSpec"),
+        "CbeFlowSpec" -> Set("blended.streams.dispatcher.internal.builder.CbeFlowSpec"),
+        "DispatcherActivatorSpec" -> Set("blended.streams.dispatcher.internal.DispatcherActivatorSpec")
+      )
+      object test extends Cross[Test](crossTestGroups: _*)
+      class Test(override val testGroup: String) extends ForkedTest {
+        override def otherModule: ForkedTest = dispatcher.test(defaultTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           Deps.akkaTestkit,
           Deps.akkaSlf4j,
