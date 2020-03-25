@@ -1,6 +1,7 @@
 import java.io.FileOutputStream
 import java.util.zip.ZipEntry
 
+import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
 import scala.util.Try
 import scala.util.matching.Regex
 import scala.util.matching.Regex.quoteReplacement
@@ -8,14 +9,16 @@ import scala.util.matching.Regex.quoteReplacement
 import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
 import coursier.Repository
 import coursier.maven.MavenRepository
-import mill.api.{Ctx, Loose}
+import mill.api.{Ctx, Loose, Result}
 import mill.{PathRef, _}
 import mill.define.{Command, Input, Sources, Target, Task}
 import mill.scalajslib.ScalaJSModule
 import mill.scalajslib.api.ModuleKind
 import mill.scalalib._
+import mill.scalalib.api.CompilationResult
 import mill.scalalib.publish._
 import os.{Path, RelPath}
+import sbt.testing.{Fingerprint, Framework}
 
 // This import the mill-osgi plugin
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.2.0`
@@ -287,6 +290,74 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
     )}
   }
 
+  val defaultTestGroup = "other"
+  def testGroups: Map[String, Set[String]] = Map()
+  def crossTestGroups: Seq[String] = (Set(defaultTestGroup) ++ testGroups.keySet).toSeq
+
+  trait ForkedTest extends Tests {
+
+    def testGroup: String = defaultTestGroup
+
+    def detectTestGroups: T[Map[String, Set[String]]] = T {
+      if(testFrameworks() != Seq("org.scalatest.tools.Framework")) {
+        Result.Failure("Unsupported test framework set")
+      } else {
+        val testClasspath = runClasspath().map(_.path)
+        val cl = new URLClassLoader(testClasspath.map(_.toNIO.toUri().toURL()), getClass().getClassLoader())
+        val framework: Framework = TestRunner.frameworks(testFrameworks())(cl).head
+        val testClasses: Loose.Agg[(Class[_], Fingerprint)] = Lib.discoverTests(cl, framework, Agg(compile().classes.path))
+        val groups: Map[String, List[(Class[_], Fingerprint)]] = testClasses.toList.groupBy { case (cl, fp) =>
+          cl.getAnnotations().map{ anno =>
+//            println(s"anno: ${anno}, name: ${anno.getClass().getName()}")
+          }
+          val isFork = cl.getAnnotations().exists(a => a.toString().contains("blended.testsupport.RequiresForkedJVM") || a.getClass().getName().contains("blended.testsupport.RequiresForkedJVM"))
+          if(isFork) cl.getName()
+          else defaultTestGroup
+        }
+        val groupNames: Map[String, Set[String]] = groups.mapValues(_.map(_._1.getName()).toSet)
+        cl.close()
+        Result.Success(groupNames)
+      }
+    }
+
+    /** redirect to "other"-compile */
+    override def compile: T[CompilationResult] = if(testGroup == defaultTestGroup) super.compile else otherCompile
+    /** Override this to define the target which compiles the test sources */
+    def otherCompile: T[CompilationResult]
+
+    def checkTestGroups = T{
+      // only check in default cross instance "other"
+      if(testGroup == defaultTestGroup)
+      if((detectTestGroups().keySet != Set(defaultTestGroup) || testGroups.nonEmpty) &&  testGroups.values.toSet == detectTestGroups().values.toSet){
+      } else {
+        T.log.error(s"Test groups invalid. Please set them to: ${detectTestGroups()}")
+      }
+    }
+
+    override def test(args: String*): Command[(String, Seq[TestRunner.Result])] =
+      if(args.isEmpty) T.command{
+        super.testTask(testCachedArgs)()
+      }
+      else super.test(args: _*)
+
+    override def testCachedArgs: T[Seq[String]] = T{
+      checkTestGroups()
+      val tests = if(testGroup == defaultTestGroup && testGroups.get(defaultTestGroup).isEmpty) {
+        val allTests = detectTestGroups().values.toSet.flatten
+        val groupTests = testGroups.values.toSet.flatten
+        allTests -- groupTests
+      } else {
+        testGroups(testGroup)
+      }
+      T.log.debug(s"tests: ${tests}")
+      if(tests.isEmpty) {
+        Seq("-w", "NON_TESTS")
+      } else {
+        tests.toSeq.flatMap(tc => Seq("-w", tc))
+      }
+    }
+  }
+
   /** Show all compiled classes: `mill show __.classes` */
   def classes: T[Seq[Path]] = T {
     Try(os.walk(compile().classes.path)).getOrElse(Seq())
@@ -419,7 +490,6 @@ trait DistModule extends CoursierModule {
     zip
   }
 }
-
 
 object blended extends Module {
   def version = T.input {
@@ -658,7 +728,15 @@ object blended extends Module {
           blended.akka.http,
           blended.util
         )
-        object test extends Tests {
+
+        override def testGroups: Map[String, Set[String]] = Map(
+          "JMSRequestorSpec" -> Set("blended.akka.http.restjms.internal.JMSRequestorSpec"),
+          "JMSChunkedRequestorSpec" -> Set("blended.akka.http.restjms.internal.JMSChunkedRequestorSpec")
+        )
+
+        object test extends Cross[Test](crossTestGroups: _*)
+        class Test(override val testGroup: String) extends ForkedTest {
+          override def otherCompile = restjms.test(defaultTestGroup).compile
           override def ivyDeps = T{ super.ivyDeps() ++ Agg(
             Deps.sttp,
             Deps.sttpAkka,
@@ -907,7 +985,23 @@ object blended extends Module {
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Option(s"${blendedModule}.internal.BridgeActivator")
       )}
-      object test extends Tests {
+
+      override def testGroups: Map[String, Set[String]] = Map(
+        "RouteAfterRetrySpec" -> Set("blended.jms.bridge.internal.RouteAfterRetrySpec"),
+        "InboundRejectBridgeSpec" -> Set("blended.jms.bridge.internal.InboundRejectBridgeSpec"),
+        "TransactionSendFailedRejectBridgeSpec" -> Set("blended.jms.bridge.internal.TransactionSendFailedRejectBridgeSpec"),
+        "TransactionSendFailedRetryBridgeSpec" -> Set("blended.jms.bridge.internal.TransactionSendFailedRetryBridgeSpec"),
+        "SendFailedRetryBridgeSpec" -> Set("blended.jms.bridge.internal.SendFailedRetryBridgeSpec"),
+        "MapToExternalBridgeSpec" -> Set("blended.jms.bridge.internal.MapToExternalBridgeSpec"),
+        "OutboundBridgeSpec" -> Set("blended.jms.bridge.internal.OutboundBridgeSpec"),
+        "InboundBridgeTrackedSpec" -> Set("blended.jms.bridge.internal.InboundBridgeTrackedSpec"),
+        "InboundBridgeUntrackedSpec" -> Set("blended.jms.bridge.internal.InboundBridgeUntrackedSpec"),
+        "SendFailedRejectBridgeSpec" -> Set("blended.jms.bridge.internal.SendFailedRejectBridgeSpec")
+      )
+
+      object test extends Cross[Test](crossTestGroups: _*)
+      class Test(override val testGroup: String) extends ForkedTest {
+        override def otherCompile = bridge.test(defaultTestGroup).compile
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           Deps.activeMqBroker,
           Deps.scalacheck,
