@@ -37,6 +37,11 @@ case class ConnectResult(ts : Date, r : Either[Throwable, Connection])
 
 case class ConnectionStateChanged(state : ConnectionState)
 
+case class QueryConnectionState(
+  vendor : String,
+  provider : String
+)
+
 case class ConnectionCommand(
   vendor : String,
   provider : String,

@@ -68,6 +68,11 @@ trait JmsStreamSupport {
       if (hasException.get()) {
         Await.result(errEnv, 1.second).flatMap(_.exception).foreach(t => throw t)
       }
+
+      // if the stream has is finished before sending off all the messages, something went wrong.
+      if (done.isCompleted) {
+        throw new Exception("Failed to send messages to stream")
+      }
     } while (!hasException.get && sendCount.get < msgs.size)
 
     killswitch

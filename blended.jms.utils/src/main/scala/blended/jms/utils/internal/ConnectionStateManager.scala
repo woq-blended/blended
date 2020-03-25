@@ -63,6 +63,7 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
     context.system.eventStream.subscribe(self, classOf[ConnectionCommand])
     context.system.eventStream.subscribe(self, classOf[Reconnect])
     context.system.eventStream.subscribe(self, classOf[KeepAliveEvent])
+    context.system.eventStream.subscribe(self, classOf[QueryConnectionState])
   }
 
   // ---- State: Disconnected
@@ -192,6 +193,11 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
     }
   }
 
+  def handleQueryState(state : ConnectionState) : Receive = {
+    case s : QueryConnectionState if s.vendor == state.vendor && s.provider == state.provider =>
+      context.system.eventStream.publish(ConnectionStateChanged(state))
+  }
+
   // helper methods
 
   // A convenience method to let us know which state we are switching to
@@ -208,6 +214,7 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
         .orElse(jmxOperations(nextState))
         .orElse(handleReconnectRequest(nextState))
         .orElse(controllerStopped(nextState))
+        .orElse(handleQueryState(nextState))
         .orElse(unhandled)
     )
   }

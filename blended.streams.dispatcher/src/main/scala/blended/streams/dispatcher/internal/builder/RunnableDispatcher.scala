@@ -6,7 +6,7 @@ import akka.stream._
 import akka.stream.scaladsl.{Flow, GraphDSL, Source}
 import blended.container.context.api.ContainerContext
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
-import blended.jms.utils.{Connected, ConnectionState, ConnectionStateChanged, IdAwareConnectionFactory, JmsDestination}
+import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory, JmsDestination, QueryConnectionState}
 import blended.jmx.statistics.ServiceInvocationReporter
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
@@ -195,6 +195,8 @@ class RunnableDispatcher(
 
       if (routerCfg.startupMap.nonEmpty) {
 
+        logger.underlying.debug(s"Waiting for JMS connection [${providerCfg.vendor},${providerCfg.provider}] to connect ...")
+
         val stateActor : ActorRef = system.actorOf(Props(new Actor {
 
           val prodSettings: JmsProducerSettings = JmsProducerSettings(
@@ -219,6 +221,10 @@ class RunnableDispatcher(
         }))
 
         system.eventStream.subscribe(stateActor, classOf[ConnectionStateChanged])
+        system.eventStream.publish(QueryConnectionState(providerCfg.vendor, providerCfg.provider))
+
+      } else {
+        logger.underlying.debug("No startup messages configured")
       }
     } catch {
       case NonFatal(e) =>
