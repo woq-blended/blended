@@ -1,7 +1,7 @@
 import blended.sbt.phoenix.osgi.OsgiConfig
 import de.wayofquality.sbt.testlogconfig.TestLogConfig
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
-import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
+//import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
 import phoenix.ProjectConfig
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
@@ -35,7 +35,7 @@ trait ProjectSettings
     }
     Project(name, file(projectDir.getOrElse(projectName)))
   }
-  
+
   private def hasForkAnnotation(clazz: AnalyzedClass): Boolean = {
 
     val c = clazz.api().classApi()
@@ -103,16 +103,12 @@ trait ProjectSettings
         forked ++ Seq(combined)
       },
 
-    ) ++
-      // We need to explicitly load the rb settings again to
-      // make sure the OSGi package is post-processed:
-      ReproducibleBuildsPlugin.projectSettings
-
+    )
   }
 
 
   override def plugins: Seq[AutoPlugin] = super.plugins ++
-    Seq(ReproducibleBuildsPlugin) ++
+    //Seq(ReproducibleBuildsPlugin) ++
     Seq(TestLogConfig)
 
 }
