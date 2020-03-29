@@ -3,7 +3,7 @@ package blended.streams.dispatcher.internal
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
-import blended.jms.bridge.BridgeProviderRegistry
+import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.BlendedStreamsConfig
 import blended.streams.dispatcher.internal.builder.{DispatcherBuilderSupport, RunnableDispatcher}
@@ -26,7 +26,7 @@ class DispatcherActivator extends DominoActivator
           whenServicePresent[BridgeProviderRegistry] { registry =>
 
             try {
-              val internalProvider = registry.internalProvider.get
+              val internalProvider : BridgeProviderConfig = registry.internalProvider.get
               log.info(s"Initializing Dispatcher with internal connection factory [${internalProvider.id}]")
 
               whenAdvancedServicePresent[IdAwareConnectionFactory](internalProvider.osgiBrokerFilter) { cf =>
