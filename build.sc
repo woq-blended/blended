@@ -231,7 +231,6 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
   def classes: T[Seq[Path]] = T {
     Try(os.walk(compile().classes.path)).getOrElse(Seq())
   }
-
 }
 
 trait BlendedJvmModule extends BlendedModule { jvmBase =>
@@ -284,7 +283,7 @@ trait DistModule extends CoursierModule {
 
   /** Sources to put into the dist file. */
   def sources: Sources
-  /** Sources to put into the dist file after filtereing */
+  /** Sources to put into the dist file after filtering */
   def filteredSources: Sources
   /** Filter properties to apply to [[filteredSources]]. */
   def filterProperties: Target[Map[String, String]]
@@ -1697,6 +1696,7 @@ object blended extends Module {
       "JmsRetryProcessorForwardSpec" -> Set("blended.streams.jms.JmsRetryProcessorForwardSpec"),
       "JmsRetryProcessorSendToRetrySpec" -> Set("blended.streams.jms.JmsRetryProcessorSendToRetrySpec"),
       "JmsRetryProcessorRetryCountSpec" -> Set("blended.streams.jms.JmsRetryProcessorRetryCountSpec"),
+      "JmsRetryProcessorMissingDestinationSpec" -> Set("blended.streams.jms.JmsRetryProcessorMissingDestinationSpec"),
       "ParallelFileSourceSpec" -> Set("blended.streams.file.ParallelFileSourceSpec"),
       "FlowTransactionEventSpec" -> Set("blended.streams.transaction.FlowTransactionEventSpec"),
       "JmsRetryProcessorFailedSpec" -> Set("blended.streams.jms.JmsRetryProcessorFailedSpec"),
@@ -2031,6 +2031,19 @@ object blended extends Module {
         s"${blendedModule}.json"
       )
     )}
+
+    override def resources: Sources = T.sources {
+
+      val dest = T.ctx().dest
+
+      val versionResource : PathRef = {
+        val props = s"""version="${blended.version()}""""
+        val versionPath = dest / "generated"
+        os.write(versionPath / "blended" / "websocket" / "internal" / "version.properties", props, createFolders = true)
+        PathRef(versionPath)
+      }
+      super.resources() ++ Seq(versionResource)
+    }
     object test extends Tests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         Deps.akkaTestkit,

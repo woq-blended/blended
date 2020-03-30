@@ -2,7 +2,7 @@ package blended.security.ssl.internal
 
 import java.io.File
 
-import blended.testsupport.BlendedTestSupport
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
@@ -12,6 +12,7 @@ import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 
+@RequiresForkedJVM
 class CertificateActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper

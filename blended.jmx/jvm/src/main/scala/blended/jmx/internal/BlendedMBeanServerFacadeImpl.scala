@@ -9,6 +9,7 @@ import javax.management._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.Try
+import scala.util.control.NonFatal
 
 class BlendedMBeanServerFacadeImpl(svr : MBeanServer) extends BlendedMBeanServerFacade {
 
@@ -33,13 +34,17 @@ class BlendedMBeanServerFacadeImpl(svr : MBeanServer) extends BlendedMBeanServer
     val readableAttrs : Map[String, MBeanAttributeInfo] =
       info.getAttributes().filter(_.isReadable()).map(a => a.getName() -> a).toMap
 
-    val attrNames : Array[String] = readableAttrs.values.map(_.getName()).toArray
-    val attrs : List[Attribute] = svr.getAttributes(objName, attrNames).asList().asScala.toList
+    val attrNames : List[String] = readableAttrs.values.map(_.getName()).toList
 
-    val attributes : Map[String, AttributeValue] = attrs.map { a =>
-      val v = a.getValue()
-      (a. getName(), JmxAttributeCompanion.lift(v).unwrap)
-    }.toMap
+    val attributes : Map[String, AttributeValue] = attrNames.foldLeft(Map.empty[String, AttributeValue]){ case (cur, n) =>
+      val entry : Map[String, AttributeValue] = try {
+        val v = svr.getAttribute(objName, n)
+        Map(n -> JmxAttributeCompanion.lift(v).unwrap)
+      } catch {
+        case NonFatal(_) => Map.empty
+      }
+      cur ++ entry
+    }
 
     val result = JmxBeanInfo(objName, CompositeAttributeValue(attributes))
 
