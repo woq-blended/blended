@@ -1562,13 +1562,18 @@ object blended extends Module {
         Deps.bouncyCastleBcprov,
         Deps.bouncyCastlePkix
       )}
+      override def testGroups: Map[String, Set[String]] = Map(
+        "CertificateActivatorSpec" -> Set("blended.security.ssl.internal.CertificateActivatorSpec")
+      )
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         domino,
         util.logging,
         util,
         mgmt.base
       )
-      object test extends Tests {
+      object test extends Cross[Test](crossTestGroups: _*)
+      class Test(override val testGroup: String) extends ForkedTest {
+        override def otherModule: ForkedTest =  ssl.test(defaultTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T { super.ivyDeps() ++ Agg(
           Deps.scalacheck
         )}
