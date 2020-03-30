@@ -29,7 +29,7 @@ class ScepAppContainerContext(baseDir: String, salt: String) extends AbstractCon
 
   override lazy val containerConfig: Config = {
     val sys = new Properties()
-    sys.putAll(System.getProperties())
+    System.getProperties().forEach((k,v) => sys.put(k,v))
     val sysProps = Parseable.newProperties(sys, ConfigParseOptions.defaults().setOriginDescription("system properties")).parse()
     val envProps = ConfigFactory.systemEnvironment()
 
