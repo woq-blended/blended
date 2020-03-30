@@ -144,9 +144,13 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
   }
 
   val defaultTestGroup = "other"
+  /** A Map of groups with their belonging test suites.
+   * The groups name  [[defaultTestGroup]] is reserved for all tests that don't need to run in an extra JVM. */
   def testGroups: Map[String, Set[String]] = Map()
+  /** Test group names, derived from [[testGroups]]. */
   def crossTestGroups: Seq[String] = (Set(defaultTestGroup) ++ testGroups.keySet).toSeq
 
+  /** A test module that only executed the tests from the configured [[ForkedTest#testGroup]]. */
   trait ForkedTest extends Tests {
 
     def testGroup: String = defaultTestGroup
@@ -2019,6 +2023,7 @@ object blended extends Module {
       blended.security.login.api,
       blended.jmx
     )
+
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
       `Bundle-Activator` = Some(s"${blendedModule}.internal.WebSocketActivator"),
       `Export-Package` = Seq(
