@@ -105,7 +105,11 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
            |    </encoder>
            |  </appender>
            |
-           |  <root level="debug">
+           |  <logger name="blended" level="debug" />
+           |  <logger name="domino" level="debug" />
+           |  <logger name="App" level="debug" />
+           |           |
+           |  <root level="INFO">
            |    <appender-ref ref="FILE" />
            |  </root>
            |
@@ -1747,7 +1751,6 @@ object blended extends Module {
           Deps.activeMqBroker,
           Deps.activeMqKahadbStore,
           Deps.logbackClassic,
-          Deps.travesty,
           Deps.asciiRender,
           Deps.springCore,
           Deps.springBeans,

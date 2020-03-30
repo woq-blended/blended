@@ -137,8 +137,6 @@ object Deps {
   val sttp = ivy"com.softwaremill.sttp::core:1.3.0"
   val sttpAkka = ivy"com.softwaremill.sttp::akka-http-backend:1.3.0"
 
-  val travesty = ivy"net.mikolak::travesty:0.9.1_2.5.17"
-
   val typesafeConfig = ivy"com.typesafe:config:1.3.3"
   val typesafeSslConfigCore = ivy"com.typesafe::ssl-config-core:0.3.6"
 
