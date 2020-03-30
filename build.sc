@@ -108,7 +108,7 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
            |  <logger name="blended" level="debug" />
            |  <logger name="domino" level="debug" />
            |  <logger name="App" level="debug" />
-           |           |
+           |
            |  <root level="INFO">
            |    <appender-ref ref="FILE" />
            |  </root>
@@ -1011,7 +1011,7 @@ object blended extends Module {
       blended.updater.config,
       blended.security.crypto
     )
-    def extraPublish = T{ Seq(
+    override def extraPublish = T{ Seq(
       PublishModule.ExtraPublish(dist.zip(), "zips", ".zip")
     )}
 
@@ -1573,6 +1573,9 @@ object blended extends Module {
       )
       object test extends Cross[Test](crossTestGroups: _*)
       class Test(override val testGroup: String) extends ForkedTest {
+        override def forkArgs: Target[Seq[String]] = T{ super.forkArgs() ++ Seq(
+          s"-Djava.security.properties=${copiedResources()().path.toIO.getPath()}/container/security.properties"
+        )}
         override def otherModule: ForkedTest =  ssl.test(defaultTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T { super.ivyDeps() ++ Agg(
           Deps.scalacheck
