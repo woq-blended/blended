@@ -66,7 +66,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : Act
             c.start()
 
             log.info(s"Successfully connected to [$vendor:$provider] with clientId [${config.clientId}]")
-            val wrappedConnection = new BlendedJMSConnection(c)
+            val wrappedConnection = new BlendedJMSConnection(vendor, provider, c)
             conn = Some(wrappedConnection)
 
             wrappedConnection

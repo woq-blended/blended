@@ -41,7 +41,7 @@ class DummyConnection extends Connection {
 }
 
 class DummyHolder(f : () => Connection, maxConnects : Int = Int.MaxValue)(implicit system : ActorSystem)
-  extends ConnectionHolder(BlendedJMSConnectionConfig.defaultConfig) {
+  extends ConnectionHolder(BlendedJMSConnectionConfig.defaultConfig.copy(clientId = "dummy")) {
 
   private val conCount : AtomicInteger = new AtomicInteger(0)
 

@@ -2,7 +2,7 @@ package blended.jms.utils
 
 import javax.jms._
 
-class BlendedJMSConnection(conn : Connection) extends Connection {
+class BlendedJMSConnection(vendor : String, provider : String, conn : Connection) extends Connection {
 
   protected[utils] def connection : Connection = conn
 
@@ -32,4 +32,6 @@ class BlendedJMSConnection(conn : Connection) extends Connection {
   override def close() : Unit = {}
 
   override def start() : Unit = conn.start()
+
+  override def toString: String = s"BlendedJMSConnection($vendor, $provider, $getClientID)"
 }

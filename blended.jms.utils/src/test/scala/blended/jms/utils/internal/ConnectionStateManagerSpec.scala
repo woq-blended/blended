@@ -20,7 +20,8 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
 
   private val cfg : BlendedJMSConnectionConfig = BlendedJMSConnectionConfig.defaultConfig.copy(
     vendor = vendor,
-    provider = provider
+    provider = provider,
+    clientId = "dummy"
   )
 
   private def connHolder : Int => ConnectionHolder = maxConnects => new DummyHolder(() => new DummyConnection(), maxConnects = maxConnects) {
@@ -53,6 +54,8 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       assert(holder.getConnection().isEmpty)
 
       fishForState(probe)(Disconnected)
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should switch to connected state upon successful connect" in {
@@ -68,6 +71,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
 
       fishForState(probe)(Connected)
       assert(holder.getConnection().isDefined)
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should switch to disconnected state upon successful disconnect" in {
@@ -85,6 +91,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       fishForState(probe)(Disconnected)
 
       assert(holder.getConnection().isEmpty)
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should disconnect upon a MaxKeepAliveExceeded event" in {
@@ -112,6 +121,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       fishForState(probe, 5.seconds)(Connected)
 
       assert(holder.getConnection().isDefined)
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should issue another connect in case the first connect times out" in {
@@ -148,6 +160,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       fishForState(probe)(Connecting)
       fishForState(probe)(Connecting)
       fishForState(probe, 10.seconds)(Connected)
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should initiate a container restart if the initial JMS connection can't be established" in {
@@ -157,6 +172,7 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
 
         override def connect(): Connection = {
           // scalastyle:off magic.number
+          log.info(s"Sleeping 60 seconds before connect")
           Thread.sleep(60000)
           // scalastyle:on magic.number
           super.connect()
@@ -183,6 +199,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
         case s : ConnectionStateChanged if s.state.status.isInstanceOf[RestartContainer] => true
         case _ => false
       }
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should successfully connect even after the connection holder threw unexpected exceptions" in {
@@ -219,6 +238,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
 
       fishForState(probe)(Connecting)
       fishForState(probe, 10.seconds)(Connected)
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should disconnect if the current connection controller dies" in {
@@ -243,6 +265,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
 
       fishForState(probe)(Disconnected)
       fishForState(probe)(Connected)
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should successfully reconnect if a connection level exception is encountered in disconnected state" in {
@@ -267,6 +292,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       csm ! Reconnect(cfg.vendor, cfg.provider, Some(new Exception("Boom")))
 
       fishForState(probe, 10.seconds)(Connected)
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should successfully reconnect in case a connection level exception is thrown" in {
@@ -289,6 +317,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
 
       fishForState(probe, 3.seconds)(Disconnected)
       fishForState(probe, 10.seconds)(Connected)
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should initiate a container restart if the connection can't be established from connecting state" in {
@@ -333,6 +364,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
         case sc : ConnectionStateChanged => sc.state.status.isInstanceOf[RestartContainer]
         case _ => false
       }
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
 
     "should initiate a container restart if it can't reconnect within the maxReconnectInterval" in {
@@ -367,6 +401,9 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       }
 
       assert(holder.getConnection().isEmpty)
+
+      system.stop(csm)
+      system.stop(probe.ref)
     }
   }
 }

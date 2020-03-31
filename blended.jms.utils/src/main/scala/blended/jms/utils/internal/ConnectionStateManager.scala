@@ -120,7 +120,7 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
     // We successfully connected, record the connection and timestamps
     case ConnectResult(t, Right(c)) =>
       if (t == state.lastConnectAttempt.getOrElse(0L)) {
-        conn = Some(new BlendedJMSConnection(c))
+        conn = Some(new BlendedJMSConnection(config.vendor, config.provider, c))
         // checkConnection(schedule)
         switchState(connected(), publishEvents(state, s"Successfully connected to JMS provider").copy(
           status = Connected,
@@ -221,7 +221,7 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
 
   // A convenience method to capture unhandled messages
   private def unhandled : Receive = {
-    case m => log.debug(s"received unhandled message : ${m.toString()}")
+    case m => log.debug(s"received unhandled message in state [${currentState.status}] : ${m.toString()}")
   }
 
   private def controllerStopped(s: ConnectionState) : Receive = {
