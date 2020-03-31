@@ -478,6 +478,9 @@ object blended extends Module {
         `Bundle-Activator` = Some(s"${blendedModule}.internal.BlendedAkkaHttpActivator")
       )}
       object test extends Tests {
+
+        override def forkArgs = T{ super.forkArgs() ++ Seq("-Dsun.net.client.defaultReadTimeout=3000")}
+
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           Deps.akkaTestkit,
           Deps.akkaSlf4j,
