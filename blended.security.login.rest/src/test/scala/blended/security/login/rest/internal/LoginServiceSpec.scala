@@ -6,9 +6,7 @@ import java.security.{KeyFactory, PublicKey}
 import java.util.Base64
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.Source
 import akka.stream.{ActorMaterializer, Materializer}
-import akka.util.ByteString
 import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
@@ -18,13 +16,14 @@ import blended.security.login.impl.LoginActivator
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
-import com.softwaremill.sttp._
-import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
+import sttp.client._
+import sttp.client.akkahttp.AkkaHttpBackend
+import sttp.model.StatusCode
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 import scala.util.Try
 
 @RequiresForkedJVM
@@ -46,10 +45,10 @@ class LoginServiceSpec extends SimplePojoContainerSpec
     "blended.security.login.rest" -> new RestLoginActivator()
   )
 
-  private def withLoginService[T](request : Request[String, Nothing])(f : Response[String] => T) : T = {
+  private def withLoginService[T](request : Request[Either[String, String], Nothing])(f : Response[Either[String, String]] => T) : T = {
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
     implicit val materializer : Materializer = ActorMaterializer()
-    implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
+    implicit val backend = AkkaHttpBackend()
 
     mandatoryService[HttpContext](registry)(None)
 
@@ -61,13 +60,13 @@ class LoginServiceSpec extends SimplePojoContainerSpec
 
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
     implicit val materializer : Materializer = ActorMaterializer()
-    implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
+    implicit val backend = AkkaHttpBackend()
 
-    val request = sttp.get(uri"http://localhost:9995/login/key")
+    val request = basicRequest.get(uri"http://localhost:9995/login/key")
     val response = request.send()
 
     val r = Await.result(response, 3.seconds)
-    r.code should be(StatusCodes.Ok)
+    r.code should be(StatusCode.Ok)
 
     val rawString = r.body.right.get
       .replace("-----BEGIN PUBLIC KEY-----\n", "")
@@ -83,16 +82,16 @@ class LoginServiceSpec extends SimplePojoContainerSpec
   "The login service should" - {
 
     "Respond with Unauthorized used without credentials" in {
-      withLoginService(sttp.post(uri"http://localhost:9995/login/")) { r =>
-        r.code should be(StatusCodes.Unauthorized)
+      withLoginService(basicRequest.post(uri"http://localhost:9995/login/")) { r =>
+        r.code should be(StatusCode.Unauthorized)
       }
     }
 
     "Respond with Unauthorized used with wrong credentials" in {
       withLoginService(
-        sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "foo")
+        basicRequest.post(uri"http://localhost:9995/login/").auth.basic("andreas", "foo")
       ) { r =>
-          r.code should be(StatusCodes.Unauthorized)
+          r.code should be(StatusCode.Unauthorized)
         }
     }
 
@@ -101,9 +100,9 @@ class LoginServiceSpec extends SimplePojoContainerSpec
       val key : PublicKey = serverKey().get
 
       withLoginService(
-        sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
+        basicRequest.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
       ) { r =>
-          r.code should be(StatusCodes.Ok)
+          r.code should be(StatusCode.Ok)
 
           val token = Token(r.body.right.get, key).get
 
@@ -116,14 +115,14 @@ class LoginServiceSpec extends SimplePojoContainerSpec
     "Allow a user to login twice" in {
 
       val key : PublicKey = serverKey().get
-      val request = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
+      val request = basicRequest.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
 
       withLoginService(request) { r1 =>
-        r1.code should be(StatusCodes.Ok)
+        r1.code should be(StatusCode.Ok)
         val t1 = Token(r1.body.right.get, key).get
 
         withLoginService(request) { r2 =>
-          r2.code should be(StatusCodes.Ok)
+          r2.code should be(StatusCode.Ok)
           val t2 = Token(r2.body.right.get, key).get
           assert(t1.id != t2.id)
         }

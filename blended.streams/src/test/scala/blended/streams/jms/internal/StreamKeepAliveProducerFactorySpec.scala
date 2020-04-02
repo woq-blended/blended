@@ -12,11 +12,12 @@ import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFacto
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{EnsureJmsConnectivity, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
+import blended.util.RichTry._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Promise}
@@ -25,6 +26,7 @@ import scala.util.Success
 class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper
+  with EnsureJmsConnectivity
   with Matchers {
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "keepAlive").getAbsolutePath()
@@ -42,6 +44,8 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
   private val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
   private val cf : BlendedSingleConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None).asInstanceOf[BlendedSingleConnectionFactory]
+
+  ensureConnection(cf, 3.seconds).unwrap
 
   private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
 

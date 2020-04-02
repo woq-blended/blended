@@ -8,6 +8,7 @@ import akka.testkit.{ImplicitSender, TestKit}
 import blended.jms.utils._
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.jms.JMSException
+import BlendedJMSConnectionConfig.defaultConfig
 
 import scala.concurrent.duration._
 import scala.util.{Success, Try}
@@ -30,7 +31,10 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
     "should answer with a positive ConnectResult message in case of a successful connect" in {
 
-      val holder = new DummyHolder(() => new DummyConnection())
+      val holder = new DummyHolder(defaultConfig.copy("" +
+        "ctrl", "positive"
+      ))
+
       val testActor = system.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
 
       val t = new Date()
@@ -51,7 +55,9 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
     "should answer with a negative ConnectResult message in case of a failed connect" in {
 
-      val holder = new DummyHolder(() => {
+      val holder = new DummyHolder(cfg = defaultConfig.copy(
+        vendor = "ctrl", provider = "negative"
+      ), c => new DummyConnection(c) {
         throw new JMSException("boom")
       })
 
@@ -67,7 +73,10 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
     }
 
     "should answer with a ConnectionClosed message in case of a successful disconnect" in {
-      val holder = new DummyHolder(() => new DummyConnection())
+      val holder = new DummyHolder(defaultConfig.copy(
+        vendor = "ctrl", provider = "closed"
+      ))
+
       val testActor = system.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
 
       val t = new Date()
@@ -86,7 +95,10 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
     "should answer with a CloseTimeout message in case a connection close timed out" in {
 
       val timeout = 100.millis
-      val holder = new DummyHolder(() => new DummyConnection() {
+
+      val holder = new DummyHolder(defaultConfig.copy(
+        vendor = "ctrl", provider = "closeTimeout"
+      ), c => new DummyConnection(c) {
         override def close() : Unit = {
           Thread.sleep(timeout.toMillis * 2)
           super.close()
@@ -108,7 +120,9 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
     "should answer with a CloseTimeout message in case the CloseActor does not respond" in {
       val timeout = 100.millis
-      val holder = new DummyHolder(() => new DummyConnection())
+      val holder = new DummyHolder(defaultConfig.copy(
+        vendor = "ctrl", provider = "timeout2"
+      ))
 
       val testActor = system.actorOf(JmsConnectionController.props(holder, Props(new EmptyActor())))
 
@@ -126,7 +140,9 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
     "should answer with a ConnectionClosed message in case the close runs into an exception" in {
       val timeout = 50.millis
 
-      val holder = new DummyHolder(() => new DummyConnection() {
+      val holder = new DummyHolder(defaultConfig.copy(
+        vendor = "ctrl", provider = "closeEx"
+      ), c => new DummyConnection(c) {
         override def close() : Unit = {
           throw new JMSException("boom")
         }

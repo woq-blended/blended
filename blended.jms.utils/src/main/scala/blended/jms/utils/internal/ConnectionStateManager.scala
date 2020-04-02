@@ -13,17 +13,17 @@ import scala.concurrent.duration._
 object ConnectionStateManager {
 
   def props(
-    config : ConnectionConfig,
     holder : ConnectionHolder
   ) : Props =
-    Props(new ConnectionStateManager(config, holder))
+    Props(new ConnectionStateManager(holder))
 }
 
-class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
+class ConnectionStateManager(holder: ConnectionHolder)
   extends Actor {
 
   type StateReceive = ConnectionState => Receive
 
+  private val config = holder.config
   private val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
 
   implicit val eCtxt : ExecutionContext = context.system.dispatcher
@@ -36,10 +36,6 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
     vendor = config.vendor,
     provider = config.provider
   )
-
-
-  // To this actor we delegate all connect and close operations for the underlying JMS provider
-  val controller : ActorRef = context.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
 
   // If something causes an unexpected restart, we want to know
   override def preRestart(reason : Throwable, message : Option[Any]) : Unit = {
@@ -131,8 +127,8 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
       }
 
     case ConnectTimeout(t) =>
-      log.debug(s"Encountered Connection timeout (connectAttempt:$t), firstConnectAttempt: ${state.firstReconnectAttempt}, " +
-        s"lastConnectAttempt: ${state.lastConnectAttempt}")
+      log.debug(s"Encountered Connection timeout (connectAttempt:$t), firstReconnectAttempt: ${state.firstReconnectAttempt}, " +
+        s"lastConnectAttempt: ${state.lastConnectAttempt}, maxReconnectTimeout=${config.maxReconnectTimeout}")
       if (!checkRestartForFailedReconnect(state, None)) {
         switchState(connecting(), connect(state))
       }
@@ -227,8 +223,8 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
   private def controllerStopped(s: ConnectionState) : Receive = {
     case Terminated(a) => s.controller match {
       case Some(c) if a == c =>
-        log.warn(s"The current connection controller das stopped unexpectedly, initiating reconnect")
-        reconnect(restartController(s))
+        log.warn(s"The current connection controller has stopped, initiating reconnect")
+        reconnect(restartController(s.copy(controller = None)))
     }
   }
 
@@ -307,16 +303,21 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
   }
 
   private[this] def restartController(s : ConnectionState) : ConnectionState = {
-    val newController : ActorRef = context.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
-    // We start watching the controller, so we can react in case it dies
-    context.watch(newController)
 
-    stopController(s).copy(controller = Some(newController))
+    if (s.controller.isEmpty) {
+      log.debug(s"About to start new JMS controller for [${config.vendor}:${config.provider}]")
+      val newController : ActorRef = context.actorOf(JmsConnectionController.props(holder, ConnectionCloseActor.props(holder)))
+      context.watch(newController)
+      s.copy(controller = Some(newController))
+    } else {
+      s.controller.foreach(context.stop)
+      s
+    }
   }
 
   private[this] def stopController(s: ConnectionState) : ConnectionState = {
     s.controller.foreach{ a =>
-      log.debug(s"Stopping JMS Connection controller")
+      log.debug(s"Stopping JMS Connection controller [${config.vendor}:${config.provider}] - $a")
       context.unwatch(a)
       context.stop(a)
     }
@@ -328,7 +329,7 @@ class ConnectionStateManager(config: ConnectionConfig, holder: ConnectionHolder)
     var result = false
 
     e.foreach{ t =>
-      log.error(t)(s"Error connecting to JMS provider.")
+      log.error(t)(s"Error connecting to JMS provider [${s.vendor}:${s.provider}].")
     }
 
     if (config.maxReconnectTimeout.isDefined && s.firstReconnectAttempt.isDefined) {

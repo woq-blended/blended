@@ -105,7 +105,8 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
 
       system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
       probe.fishForMessage(3.seconds){
-        case ConnectionStateChanged(s) if s.status == Connected => true
+        case s : ConnectionStateChanged =>
+          s.state.status.toString() == Connected.toString
         case _ => false
       }
 

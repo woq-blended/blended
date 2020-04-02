@@ -1825,6 +1825,7 @@ object blended extends Module {
     object pojosr extends BlendedModule {
       override def description = "A simple pojo based test container that can be used in unit testing"
       override def ivyDeps = Agg(
+        Deps.akkaTestkit,
         Deps.scalatest,
         Deps.felixConnect,
         Deps.orgOsgi
@@ -1832,7 +1833,8 @@ object blended extends Module {
       override def moduleDeps = Seq(
         blended.util.logging,
         blended.container.context.impl,
-        blended.domino
+        blended.domino,
+        blended.jms.utils
       )
       object test extends Tests
     }

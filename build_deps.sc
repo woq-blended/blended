@@ -4,8 +4,8 @@ object Deps {
 
   // Versions
   val activeMqVersion = "5.15.6"
-  val akkaVersion = "2.5.21"
-  val akkaHttpVersion = "10.1.7"
+  val akkaVersion = "2.5.26"
+  val akkaHttpVersion = "10.1.11"
   val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.21.v20190926"
@@ -134,8 +134,8 @@ object Deps {
   val springJms = spring("jms")
   val springTx = spring("tx")
 
-  val sttp = ivy"com.softwaremill.sttp::core:1.3.0"
-  val sttpAkka = ivy"com.softwaremill.sttp::akka-http-backend:1.3.0"
+  val sttp = ivy"com.softwaremill.sttp.client::core:2.0.6"
+  val sttpAkka = ivy"com.softwaremill.sttp.client::akka-http-backend:2.0.6"
 
   val typesafeConfig = ivy"com.typesafe:config:1.3.3"
   val typesafeSslConfigCore = ivy"com.typesafe::ssl-config-core:0.3.6"

@@ -1,6 +1,6 @@
 package blended.akka.http.restjms.internal
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -39,7 +39,6 @@ class SimpleRestJmsService(
 
   private val operations : Map[String, JmsOperationConfig] = restConfig.operations
   log.info(s"Starting RestJMS Service with [$operations]")
-
 
   private val pendingRequests : mutable.Map[String, (HttpRequest, Promise[HttpResponse])] = mutable.Map.empty
 
@@ -80,7 +79,11 @@ class SimpleRestJmsService(
   private var responseStream : Option[ActorRef] = None
 
   def start() : Unit = {
-    requestStream = Some(system.actorOf(StreamController.props[FlowEnvelope, ActorRef](s"$name-send", requestSrc, streamsConfig)(a => requestActor = Some(a))))
+    requestStream = Some(system.actorOf(StreamController.props[FlowEnvelope, ActorRef](s"$name-send", requestSrc, streamsConfig){ a =>
+      log.debug(s"Stream actor [$name] has been started : [$a]")
+      osgiCfg.system.actorOf(ActorWatcher.props(a))
+      requestActor = Some(a)
+    }))
     responseStream = Some(system.actorOf(StreamController.props[FlowEnvelope, NotUsed](s"$name-response", responseSrc, streamsConfig)(_ => {} )))
   }
 
@@ -258,4 +261,19 @@ class SimpleRestJmsService(
       case None =>
     }
   }
+
+  private object ActorWatcher {
+    def props(watched : ActorRef) : Props =  Props(new ActorWatcher(watched))
+  }
+
+  private class ActorWatcher(watched: ActorRef) extends Actor {
+
+    override def preStart(): Unit = context.watch(watched)
+
+    override def receive: Receive = {
+      case Terminated(a) =>
+        log.info(s"Actor [$a] has terminated")
+    }
+  }
 }
+

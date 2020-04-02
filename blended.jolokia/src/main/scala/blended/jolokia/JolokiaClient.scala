@@ -3,8 +3,9 @@ package blended.jolokia
 import java.net.URI
 
 import blended.util.logging.Logger
-import com.softwaremill.sttp._
+import sttp.client._
 import spray.json._
+import sttp.model.{Uri, StatusCode}
 
 import scala.util._
 
@@ -44,8 +45,8 @@ class JolokiaClient(address : JolokiaAddress) {
     val uri = Uri(new URI(s"${address.jolokiaUrl}/$operation"))
 
     val request = (address.user, address.password) match {
-      case (Some(u), Some(p)) => sttp.get(uri).auth.basic(u, p)
-      case (_, _)             => sttp.get(uri).header("X-Blended", "jolokia")
+      case (Some(u), Some(p)) => basicRequest.get(uri).auth.basic(u, p)
+      case (_, _)             => basicRequest.get(uri).header("X-Blended", "jolokia")
     }
 
     log.debug(s"Executing Jolokia Request [$request]")
@@ -54,7 +55,7 @@ class JolokiaClient(address : JolokiaAddress) {
     log.debug(s"Jolokia response is [$response]")
 
     response.code match {
-      case StatusCodes.Ok =>
+      case StatusCode.Ok =>
         response.body match {
           case Left(e) => throw new Exception(e)
           case Right(json) =>

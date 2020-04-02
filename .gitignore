@@ -13,6 +13,7 @@ node_modules
 target.tgz
 .sbtopts
 .metals 
+out
 
 blended.sslcontext/notes.txt
 

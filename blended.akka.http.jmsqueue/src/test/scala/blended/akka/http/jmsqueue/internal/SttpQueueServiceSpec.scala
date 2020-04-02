@@ -19,9 +19,10 @@ import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
-import com.softwaremill.sttp._
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
+import sttp.client._
+import sttp.model.{StatusCode, Uri}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{FiniteDuration, _}
@@ -62,31 +63,31 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
   "The Http Queue Service should (STTP client)" - {
 
     "respond with a bad request if the url does not match [provider/queue]" in {
-      val request = sttp.get(Uri(new URI(s"$svcUrlBase/foo")))
+      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/foo")))
       val response = request.send()
 
-      response.code should be(StatusCodes.BadRequest)
+      response.code should be(StatusCode.BadRequest)
     }
 
     "respond with Unauthorised if the requested Queue is not configured" in {
-      val request = sttp.get(Uri(new URI(s"$svcUrlBase/activemq/bar")))
+      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/activemq/bar")))
       val response = request.send()
 
-      response.code should be(StatusCodes.Unauthorized)
+      response.code should be(StatusCode.Unauthorized)
     }
 
     "respond with Unauthorised if the JMS provider is unknown or doesn't have any queues configured" in {
-      val request = sttp.get(Uri(new URI(s"$svcUrlBase/sonic/foo")))
+      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/sonic/foo")))
       val response = request.send()
 
-      response.code should be(StatusCodes.Unauthorized)
+      response.code should be(StatusCode.Unauthorized)
     }
 
     "respond with an empty response if no msg is available" in {
-      val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
+      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
 
-      response.code should be(StatusCodes.NoContent)
+      response.code should be(StatusCode.NoContent)
     }
 
     "respond with a text response if the queue contains a text message" in {
@@ -103,10 +104,10 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
 
       sendMessages(pSettings, envLogger, env)
 
-      val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
+      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
 
-      response.code should be(StatusCodes.Ok)
+      response.code should be(StatusCode.Ok)
       response.body should be(Right("Hello Blended"))
       response.contentType should be(defined)
       assert(response.contentType.forall(_.startsWith("text/plain")))
@@ -126,10 +127,10 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
 
       sendMessages(pSettings, envLogger, env)
 
-      val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
+      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
 
-      response.code should be(StatusCodes.Ok)
+      response.code should be(StatusCode.Ok)
       response.body should be(Right("Hello Blended"))
       response.contentType should be(defined)
       assert(response.contentType.forall(_.startsWith("application/octet-stream")))
@@ -150,10 +151,10 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
 
       sendMessages(pSettings, envLogger, env)
 
-      val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
+      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
 
-      response.code should be (StatusCodes.Ok)
+      response.code should be (StatusCode.Ok)
       response.body should be (Right("Hello Blended"))
       response.contentType should be (defined)
       assert(response.contentType.forall(_.startsWith("application/octet-stream")))
