@@ -36,7 +36,7 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
-  implicit private val timeout : FiniteDuration = 1.second
+  implicit private val timeout : FiniteDuration = 3.seconds
   implicit private val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   implicit private val materializer : Materializer = ActorMaterializer()
   implicit private val eCtxt : ExecutionContext = system.dispatcher
@@ -45,7 +45,7 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
   private val cf : BlendedSingleConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None).asInstanceOf[BlendedSingleConnectionFactory]
 
-  ensureConnection(cf, 3.seconds).unwrap
+  ensureConnection(cf, timeout).unwrap
 
   private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
 
@@ -67,7 +67,7 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
 
       val p : Promise[MessageReceived] = Promise[MessageReceived]()
 
-      val pm = probe.fishForMessage(3.seconds){
+      val pm = probe.fishForMessage(timeout){
         case _ : ProducerMaterialized => true
         case _ => false
       }.asInstanceOf[ProducerMaterialized]
