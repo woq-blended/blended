@@ -74,6 +74,7 @@ object Deps {
 
   protected def jettyOsgi(n: String) = ivy"org.eclipse.jetty.osgi:jetty-${n}:${jettyVersion}"
 
+  val jaxb = ivy"org.glassfish.jaxb:jaxb-runtime:2.3.1"
   val jcip = ivy"net.jcip:jcip-annotations:1.0"
   val jclOverSlf4j = ivy"org.slf4j:jcl-over-slf4j:${slf4jVersion}"
   val jettyOsgiBoot = jettyOsgi("osgi-boot")

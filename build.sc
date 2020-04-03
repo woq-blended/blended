@@ -1809,8 +1809,7 @@ object blended extends Module {
       Deps.akkaActor,
       Deps.akkaTestkit,
       Deps.akkaCamel,
-//      Deps.camelCore,
-//      Deps.camelJms,
+      Deps.jaxb,
       Deps.scalatest,
       Deps.junit,
       Deps.commonsIo
