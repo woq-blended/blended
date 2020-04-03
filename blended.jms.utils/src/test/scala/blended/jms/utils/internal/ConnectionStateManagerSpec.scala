@@ -272,8 +272,8 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
     "should successfully reconnect if a connection level exception is encountered in disconnected state" in {
       val holder : ConnectionHolder = connHolder(defaultConfig.copy(
         vendor = "csm", provider = "connExDisc", clientId = "connExDisc",
-        connectTimeout = 5.seconds,
-        minReconnect = 5.seconds
+        connectTimeout = 1.seconds,
+        minReconnect = 2.seconds
       ))
       val probe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
@@ -300,8 +300,8 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
     "should successfully reconnect in case a connection level exception is thrown" in {
       val holder : ConnectionHolder = connHolder(defaultConfig.copy(
         vendor = "csm", provider = "connEx", clientId = "connEx",
-        connectTimeout = 5.seconds,
-        minReconnect = 5.seconds
+        connectTimeout = 1.seconds,
+        minReconnect = 2.seconds
       ))
 
       val probe = TestProbe()
