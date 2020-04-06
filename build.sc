@@ -1182,9 +1182,6 @@ object blended extends Module {
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Bundle-Activator` = Some(s"${blendedModule}.internal.ArtifactRepoRestActivator")
         )}
-        override def testGroups: Map[String, Set[String]] = Map(
-          "CollectorServicePojosrSpec" -> Set("blended.mgmt.rest.internal.CollectorServicePojosrSpec")
-        )
         object test extends Cross[Test](crossTestGroups: _*)
         class Test(override val testGroup: String) extends ForkedTest {
           override def otherModule: ForkedTest =  rest.test(defaultTestGroup)

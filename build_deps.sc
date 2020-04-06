@@ -9,7 +9,7 @@ object Deps {
   val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.21.v20190926"
-  val jolokiaVersion = "1.6.1"
+  val jolokiaVersion = "1.6.2"
   val microJsonVersion = "1.4"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"

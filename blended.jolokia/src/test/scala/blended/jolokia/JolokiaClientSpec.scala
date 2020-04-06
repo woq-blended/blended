@@ -45,12 +45,12 @@ class JolokiaClientSpec extends WordSpec
 
       val result : JolokiaExecResult = good.exec(OperationExecDef(
         objectName = "java.lang:type=Threading",
-        operationName = "dumpAllThreads",
+        operationName = "dumpAllThreads(boolean,boolean)",
         parameters = List("true", "true")
       )).get
 
       assert(result.objectName == "java.lang:type=Threading")
-      assert(result.operationName == "dumpAllThreads")
+      assert(result.operationName == "dumpAllThreads(boolean,boolean)")
     }
 
     "Respond with a failure if the rest call fails" in {
