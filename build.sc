@@ -45,20 +45,10 @@ trait BlendedCoursierModule extends CoursierModule {
   )
 }
 
-trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishModule with OsgiBundleModule {
-  /** The blended module name. */
-  def blendedModule: String = millModuleSegments.parts.mkString(".")
-  override def artifactName: T[String] = blendedModule
-  /** The module description. */
+trait BlendedPublishModule extends PublishModule {
   def description: String = "Blended module ${blendedModule}"
-  def scalaVersion = Deps.scalaVersion
-  def publishVersion = T { blended.version() }
-  override def millSourcePath: os.Path = baseDir / blendedModule
-  override def resources = T.sources { super.resources() ++ Seq(
-    PathRef(millSourcePath / 'src / 'main / 'binaryResources)
-  )}
-  override def bundleSymbolicName = blendedModule
-  def pomSettings: T[PomSettings] = T {
+  override def publishVersion = T { blended.version() }
+  override def pomSettings: T[PomSettings] = T {
     PomSettings(
       description = description,
       organization = "de.wayofquality.blended",
@@ -71,6 +61,21 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with PublishMod
       )
     )
   }
+}
+
+trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPublishModule with OsgiBundleModule {
+  /** The blended module name. */
+  def blendedModule: String = millModuleSegments.parts.mkString(".")
+  override def artifactName: T[String] = blendedModule
+  /** The module description. */
+  def scalaVersion = Deps.scalaVersion
+
+  override def millSourcePath: os.Path = baseDir / blendedModule
+  override def resources = T.sources { super.resources() ++ Seq(
+    PathRef(millSourcePath / 'src / 'main / 'binaryResources)
+  )}
+  override def bundleSymbolicName = blendedModule
+
   override def scalacOptions = Seq("-deprecation", "-target:jvm-1.8")
 
   trait Tests extends super.Tests {
@@ -253,7 +258,7 @@ trait BlendedJvmModule extends BlendedModule { jvmBase =>
     )}
   }
 
-  trait Js extends ScalaJSModule { jsBase =>
+  trait Js extends ScalaJSModule with BlendedPublishModule { jsBase =>
     override def millSourcePath = jvmBase.millSourcePath / os.up / "js"
     override def scalaJSVersion = Deps.scalaJsVersion
     override def scalaVersion = jvmBase.scalaVersion
@@ -1910,7 +1915,7 @@ object blended extends Module {
       }
 
       object js extends Js {
-        override def moduleDeps: Seq[JavaModule] = Seq(
+        override def moduleDeps: Seq[PublishModule] = Seq(
           blended.security.js
         )
         object test extends Tests {
@@ -2071,7 +2076,7 @@ object blended extends Module {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         Deps.js.prickle
       )}
-      override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
+      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.jmx.js
       )
       object test extends Tests {
