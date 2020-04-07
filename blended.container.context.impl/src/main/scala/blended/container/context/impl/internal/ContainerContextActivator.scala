@@ -16,12 +16,11 @@ class ContainerContextActivator extends DominoActivator {
 
   whenBundleActive {
     try {
+      log.info("Initializing Container Context")
       val ctContext = new ContainerContextImpl()
-
+      log.info(s"Started Container Context [$ctContext]")
       Logger.setProps(mdcMap(ctContext))
       ctContext.providesService[ContainerContext]
-
-      log.info(s"Started Container Context [$ctContext]")
     } catch {
       case NonFatal(e) =>
         log.error(e.getMessage())

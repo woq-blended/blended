@@ -432,6 +432,7 @@ class Launcher private (config : LauncherConfig) {
 
     // Iterate over start levels and activate bundles in the correct order
     1.to(config.startLevel).map { startLevel =>
+
       log.info(s"------ Entering start level [$startLevel] ------")
       frameworkStartLevel.setStartLevel(startLevel, new FrameworkListener() {
         override def frameworkEvent(event : FrameworkEvent) : Unit = {
@@ -448,16 +449,16 @@ class Launcher private (config : LauncherConfig) {
       }
 
       val bundlesToStart = osgiBundles.filter { b =>
-        val startConfigured : Boolean =
-          b.jarBundle.startLevel == startLevel && b.jarBundle.start && !isFragment(b)
-
-        startConfigured || extraStartBundles.contains(b.bundle.getSymbolicName())
+        !isFragment(b) &&
+          b.jarBundle.startLevel == startLevel &&
+          (b.jarBundle.start || extraStartBundles.contains(b.bundle.getSymbolicName()))
       }
 
-      log.info(s"Starting [${bundlesToStart.size}] bundles")
+      log.info(s"Starting [${bundlesToStart.size}] bundles : [${bundlesToStart.map(_.bundle.getSymbolicName()).mkString(",")}]")
 
       val startedBundles = bundlesToStart.map { bundle =>
         val result = Try {
+          log.debug(s"Trying to start bundle : [${bundle.bundle.getSymbolicName()}-${bundle.bundle.getVersion()}]")
           bundle.bundle.start()
         }
         log.info(s"State of [${bundle.bundle.getSymbolicName}] : [${bundle.bundle.getState}]")

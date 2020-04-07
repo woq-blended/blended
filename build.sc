@@ -6,8 +6,8 @@ import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
 import scala.util.Try
 import scala.util.matching.Regex
 import scala.util.matching.Regex.quoteReplacement
-
 import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
+import blended.websocket.blendedModule
 import coursier.Repository
 import coursier.maven.MavenRepository
 import mill.api.{Ctx, Loose, Result}
@@ -69,6 +69,12 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
   override def artifactName: T[String] = blendedModule
   /** The module description. */
   def scalaVersion = Deps.scalaVersion
+
+  def exportPackages : Seq[String] = Seq(blendedModule)
+
+  override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
+    `Export-Package` = exportPackages
+  )}
 
   override def millSourcePath: os.Path = baseDir / blendedModule
   override def resources = T.sources { super.resources() ++ Seq(
@@ -422,8 +428,7 @@ object blended extends Module {
         blended.streams
       )
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-        `Bundle-Activator` = Some(s"${blendedModule}.internal.AmqClientActivator"),
-        `Export-Package` = Seq(blendedModule)
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.AmqClientActivator")
       )}
       object test extends Tests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
@@ -445,17 +450,16 @@ object blended extends Module {
       Deps.akkaActor,
       Deps.domino
     )}
+
     override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
       blended.util.logging,
       blended.container.context.api,
       blended.domino
     )
+
+    override def exportPackages : Seq[String] = super.exportPackages ++ Seq(s"$blendedModule.protocol")
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-      `Bundle-Activator` = Some(s"${blendedModule}.internal.BlendedAkkaActivator"),
-      `Export-Package` = Seq(
-        blendedModule,
-        s"${blendedModule}.protocol"
-      )
+      `Bundle-Activator` = Some(s"${blendedModule}.internal.BlendedAkkaActivator")
     )}
     object test extends Tests {
       override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
@@ -506,8 +510,12 @@ object blended extends Module {
           Deps.akkaHttpCore,
           Deps.akkaParsing
         )}
+        override def exportPackages : Seq[String] = Seq(
+          s"akka.http.*;version=${Deps.akkaHttpVersion};-split-package:=merge-first"
+        )
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Import-Package` = Seq(
+            """scala.compat.*;version="[0.8,1)"""",
             """scala.*;version="[2.12,2.12.50]"""",
             "com.sun.*;resolution:=optional",
             "sun.*;resolution:=optional",
@@ -517,8 +525,10 @@ object blended extends Module {
             "org.json4s.*;resolution:=optional",
             "*"
           ),
-          `Export-Package` = Seq(
-            s"akka.http.*;version=${Deps.akkaHttpVersion};-split-package:=merge-first"
+          `Private-Package` = Seq(
+            "akka.macros.*",
+            "akka.parboiled2.*",
+            "akka.shapeless.*"
           )
         )}
 //        override def exportContents: T[Seq[String]] = T{ Seq(
@@ -806,7 +816,7 @@ object blended extends Module {
         blended.domino,
         blended.util.logging
       )
-      private val jettyVersion = """version="[9,4,20)""""
+      private val jettyVersion = """version="[9.4,20)""""
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Option(s"${blendedModule}.internal.JettyActivator"),
         `Import-Package` = Seq(
@@ -940,13 +950,13 @@ object blended extends Module {
       blended.akka
     )
 
+    override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
+      s"${blendedModule}.json",
+      s"${blendedModule}.statistics"
+    )
+
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-      `Bundle-Activator` = Option(s"${blendedModule}.internal.BlendedJmxActivator"),
-      `Export-Package` = Seq(
-        blendedModule,
-        s"${blendedModule}.json",
-        s"${blendedModule}.statistics"
-      )
+      `Bundle-Activator` = Option(s"${blendedModule}.internal.BlendedJmxActivator")
     )}
     object test extends Tests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
@@ -979,9 +989,6 @@ object blended extends Module {
     override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
       blended.akka
     )
-    override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-      `Export-Package` = Seq(blendedModule)
-    )}
     object test extends Tests {
       override def runIvyDeps: Target[Loose.Agg[Dep]] = T{ super.runIvyDeps() ++ Agg(
         Deps.jolokiaJvmAgent
@@ -1302,9 +1309,9 @@ object blended extends Module {
         util,
         testsupport
       )
+      override def exportPackages : Seq[String] = Seq.empty
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Some(s"${blendedModule}.internal.H2Activator"),
-        `Export-Package` = Seq(),
         `Private-Package` = Seq(
           s"${blendedModule}.internal",
           "blended.persistence.jdbc"
@@ -1378,12 +1385,11 @@ object blended extends Module {
       blended.util,
       blended.security.boot
     )
+    override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
+      s"${blendedModule}.json"
+    )
     override def osgiHeaders = T{ super.osgiHeaders().copy(
-      `Bundle-Activator` = Some(s"${blendedModule}.internal.SecurityActivator"),
-      `Export-Package` = Seq(
-        blendedModule,
-        s"${blendedModule}.json"
-      )
+      `Bundle-Activator` = Some(s"${blendedModule}.internal.SecurityActivator")
     )}
     object test extends Tests {
       override def sources: Sources = T.sources { super.sources() ++ Seq(
@@ -1545,9 +1551,6 @@ object blended extends Module {
       override def osgiHeaders = T { super.osgiHeaders().copy(
         `Import-Package` = Seq(
           "de.tototec.cmdoption;resolution:=optional"
-        ),
-        `Export-Package` = Seq(
-          blendedModule
         )
       )}
       object test extends Tests {
@@ -1579,6 +1582,18 @@ object blended extends Module {
         util,
         mgmt.base
       )
+
+      override def embeddedJars : T[Seq[PathRef]] = T {
+        compileClasspath().toSeq.filter(_.path.last.startsWith("bcp"))
+      }
+
+      override def osgiHeaders = T { super.osgiHeaders().copy(
+        `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last),
+        `Private-Package` = Seq(
+          s"$blendedModule.internal"
+        )
+      )}
+
       object test extends Cross[Test](crossTestGroups: _*)
       class Test(override val testGroup: String) extends ForkedTest {
         override def forkArgs: Target[Seq[String]] = T{ super.forkArgs() ++ Seq(
@@ -1616,6 +1631,19 @@ object blended extends Module {
         security.ssl,
         util.logging
       )
+      private val embeddedPrefixes : Seq[String] = Seq(
+        "bcprov", "bcpkix", "commons-io", "commons-lang", "commons-codec", "jcip-annotations",
+        "jscep"
+      )
+      override def embeddedJars : T[Seq[PathRef]] = T {
+        compileClasspath().toSeq.filter(d => embeddedPrefixes.exists(p => d.path.last.startsWith(p)))
+      }
+      override def osgiHeaders = T { super.osgiHeaders().copy(
+        `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last),
+        `Private-Package` = Seq(
+          s"$blendedModule.internal"
+        )
+      )}
       object test extends Tests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           Deps.logbackClassic
@@ -1683,18 +1711,15 @@ object blended extends Module {
       blended.persistence,
       blended.jmx
     )
-    override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-      `Export-Package` = Seq(
-        blendedModule,
-        s"${blendedModule}.file",
-        s"${blendedModule}.jms",
-        s"${blendedModule}.message",
-        s"${blendedModule}.processor",
-        s"${blendedModule}.persistence",
-        s"${blendedModule}.transaction",
-        s"${blendedModule}.worklist"
-      )
-    )}
+    override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
+      s"${blendedModule}.file",
+      s"${blendedModule}.jms",
+      s"${blendedModule}.message",
+      s"${blendedModule}.processor",
+      s"${blendedModule}.persistence",
+      s"${blendedModule}.transaction",
+      s"${blendedModule}.worklist"
+    )
     override def testGroups: Map[String, Set[String]] = Map(
       "JmsAckSourceSpec" -> Set("blended.streams.jms.JmsAckSourceSpec"),
       "FlowTransactionStreamSpec" -> Set("blended.streams.transaction.FlowTransactionStreamSpec"),
@@ -1746,13 +1771,11 @@ object blended extends Module {
         blended.akka,
         blended.persistence
       )
-
+      override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
+        s"${blendedModule}.cbe"
+      )
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-        `Bundle-Activator` = Some(s"${blendedModule}.internal.DispatcherActivator"),
-        `Export-Package` = Seq(
-          blendedModule,
-          s"${blendedModule}.cbe"
-        )
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.DispatcherActivator")
       )}
       override def testGroups: Map[String, Set[String]] = Map(
         "TransactionOutboundSpec" -> Set("blended.streams.dispatcher.internal.builder.TransactionOutboundSpec"),
@@ -1887,15 +1910,11 @@ object blended extends Module {
         Deps.prickle,
         Deps.typesafeConfig
       )
-      override def osgiHeaders = super.osgiHeaders().copy(
-        `Export-Package` = Seq(
-          // we have files in binaryResources and in classes, so we need to merge
-          s"${blendedModule};-split-package:=merge-first",
-          s"${blendedModule}.json",
-          s"${blendedModule}.util",
-          // we have files in binaryResources and in classes, so we need to merge
-          "blended.launcher.config;-split-package:=merge-first"
-        )
+      override def exportPackages : Seq[String] = Seq(
+        // we have files in binaryResources and in classes, so we need to merge
+        s"${blendedModule};-split-package:=merge-first",
+        s"${blendedModule}.json",
+        s"${blendedModule}.util"
       )
       override def moduleDeps = Seq(
         blended.util.logging,
@@ -1994,12 +2013,9 @@ object blended extends Module {
       Deps.slf4j,
       Deps.typesafeConfig
     )
-    override def osgiHeaders = T { super.osgiHeaders().copy(
-      `Export-Package` = Seq(
-        blendedModule,
-        s"${blendedModule}.config"
-      )
-    )}
+    override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
+      s"${blendedModule}.config"
+    )
     object test extends Tests {
       override def ivyDeps = T{ super.ivyDeps() ++ Agg(
         Deps.akkaTestkit,
@@ -2029,13 +2045,11 @@ object blended extends Module {
       blended.security.login.api,
       blended.jmx
     )
-
+    override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
+      s"${blendedModule}.json"
+    )
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-      `Bundle-Activator` = Some(s"${blendedModule}.internal.WebSocketActivator"),
-      `Export-Package` = Seq(
-        blendedModule,
-        s"${blendedModule}.json"
-      )
+      `Bundle-Activator` = Some(s"${blendedModule}.internal.WebSocketActivator")
     )}
 
     override def resources: Sources = T.sources {
