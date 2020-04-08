@@ -7,10 +7,10 @@ jdk:
 env:
   - NAME="Test (fail fast)"
     TEST_ONLINE="true"
-    SCRIPT_1="travis_wait 30 ./millw -i __.testCached"
+    SCRIPT_1="travis_wait 40 ./millw -i __.testCached"
   - NAME="Test (keep going)"
     TEST_ONLINE="true"
-    SCRIPT_1="travis_wait 30 ./millw -i -k __.testCached"
+    SCRIPT_1="travis_wait 40 ./millw -i -k __.testCached"
   - NAME="Publish into local IVY repo"
     TEST_ONLINE="true"
     SCRIPT_1="./millw -i __.publishLocal"
