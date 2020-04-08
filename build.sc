@@ -1064,6 +1064,7 @@ object blended extends Module {
         Deps.cmdOption,
         Deps.orgOsgi,
         Deps.scalaLibrary(scalaVersion()),
+        Deps.scalaReflect(scalaVersion()),
         Deps.slf4j,
         Deps.splunkjava,
         Deps.httpCore,
