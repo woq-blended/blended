@@ -52,11 +52,13 @@ object Deps {
   val cmdOption = ivy"de.tototec:de.tototec.cmdoption:0.6.0"
   val commonsBeanUtils = ivy"commons-beanutils:commons-beanutils:1.9.3"
   val commonsCodec = ivy"commons-codec:commons-codec:1.11"
+  val commonsCompress = ivy"org.apache.commons:commons-compress:1.13"
   val commonsDaemon = ivy"commons-daemon:commons-daemon:1.0.15"
   val commonsIo = ivy"commons-io:commons-io:2.6"
   val commonsLang2 = ivy"commons-lang:commons-lang:2.6"
   val concurrentLinkedHashMapLru = ivy"com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2"
 
+  val dockerJava = ivy"com.github.docker-java:docker-java:3.0.13"
   val domino = ivy"com.github.domino-osgi::domino:${dominoVersion}"
 
   val felixConnect = ivy"org.apache.felix:org.apache.felix.connect:0.1.0"

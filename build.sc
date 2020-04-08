@@ -2092,4 +2092,47 @@ object blended extends Module {
     }
   }
 
+  object itestsupport extends BlendedModule {
+    override def description = "Integration test helper classes"
+    override def ivyDeps = T { super.ivyDeps() ++  Agg(
+        Deps.activeMqBroker,
+        Deps.akkaActor,
+        Deps.akkaStream,
+        Deps.akkaStreamTestkit,
+        Deps.akkaTestkit,
+        Deps.akkaHttpTestkit,
+        Deps.sttp,
+        Deps.dockerJava,
+        Deps.commonsCompress,
+        Deps.sttp,
+        Deps.sttpAkka
+      )
+    }
+    override def moduleDeps = super.moduleDeps ++ Seq(
+      blended.akka,
+      blended.util,
+      blended.jms.utils,
+      blended.jolokia,
+      blended.security.ssl
+    )
+    object test extends Tests {
+      override def ivyDeps = T { super.ivyDeps() ++ Agg(
+        Deps.jolokiaJvmAgent,
+        Deps.mockitoAll
+      )}
+      override def moduleDeps = super.moduleDeps ++ Seq(
+        blended.testsupport
+      )
+
+      override def forkArgs = T {
+        val jolokiaAgent : PathRef = compileClasspath().filter{ r =>
+          r.path.last.startsWith("jolokia")
+        }.toSeq.head
+
+        super.forkArgs() ++ Seq(
+          s"-javaagent:${jolokiaAgent.path.toIO.getAbsolutePath()}=port=7777,host=localhost"
+        )
+      }
+    }
+  }
 }
