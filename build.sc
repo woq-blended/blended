@@ -70,11 +70,19 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
   /** The module description. */
   def scalaVersion = Deps.scalaVersion
 
-  def exportPackages : Seq[String] = Seq(blendedModule)
-
-  override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-    `Export-Package` = exportPackages
-  )}
+  def exportPackages: Seq[String] = Seq(blendedModule)
+  def essentialImportPackage: Seq[String] = Seq()
+  override def osgiHeaders: T[OsgiHeaders] = T{
+    val scalaBinVersion = scalaVersion().split("[.]").take(2).mkString(".")
+    super.osgiHeaders().copy(
+      `Export-Package` = exportPackages,
+      `Import-Package` =
+        // scala compatible binary version control
+        Seq(s"""scala.*;version="[${scalaBinVersion}.0,${scalaBinVersion}.50]"""") ++
+          essentialImportPackage ++
+          Seq("*")
+    )
+  }
 
   override def millSourcePath: os.Path = baseDir / blendedModule
   override def resources = T.sources { super.resources() ++ Seq(
@@ -697,12 +705,8 @@ object blended extends Module {
         override def ivyDeps = Agg(
           Deps.typesafeConfig
         )
-        override def osgiHeaders = T { super.osgiHeaders().copy(
-          `Import-Package` = Seq(
-            "blended.launcher.runtime;resolution:=optional",
-            "*"
-          )
-        )}
+
+        override def essentialImportPackage: Seq[String] = Seq("blended.launcher.runtime;resolution:=optional")
         override def moduleDeps = Seq(
           blended.util.logging,
           blended.security.crypto
@@ -733,12 +737,9 @@ object blended extends Module {
           blended.updater.config,
           blended.launcher
         )
+        override def essentialImportPackage: Seq[String] = Seq("blended.launcher.runtime;resolution:=optional")
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-          `Bundle-Activator` = Some(s"${blendedModule}.internal.ContainerContextActivator"),
-          `Import-Package` = Seq(
-            "blended.launcher.runtime;resolution:=optional",
-            "*"
-          )
+          `Bundle-Activator` = Some(s"${blendedModule}.internal.ContainerContextActivator")
         )}
         object test extends Tests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
@@ -792,12 +793,12 @@ object blended extends Module {
   object hawtio extends Module {
     object login extends BlendedModule {
       override val description : String = "Adding required imports to the hawtio war bundle"
+      override def essentialImportPackage: Seq[String] = Seq(
+        "blended.security.boot",
+        "com.sun.jndi.ldap;resolution:=optional"
+      )
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-        `Fragment-Host` = Some("io.hawt.hawtio-web"),
-        `Import-Package` = Seq(
-          "blended.security.boot",
-          "com.sun.jndi.ldap;resolution:=optional"
-        )
+        `Fragment-Host` = Some("io.hawt.hawtio-web")
       )}
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.security.boot
@@ -1456,11 +1457,7 @@ object blended extends Module {
           blended.akka,
           blended.security
         )
-        override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-          `Import-Package` = Seq(
-            "android.*;resolution:=optional"
-          )
-        )}
+        override def essentialImportPackage: Seq[String] = Seq("android.*;resolution:=optional")
         object test extends Tests {
           override def moduleDeps = super.moduleDeps ++ Seq(
             blended.testsupport,
@@ -1477,11 +1474,9 @@ object blended extends Module {
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
           blended.security.login.api
         )
+        override def essentialImportPackage: Seq[String] = Seq("android.*;resolution:=optional")
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Bundle-Activator` = Some(s"${blendedModule}.LoginActivator"),
-          `Import-Package` = Seq(
-            "android.*;resolution:=optional"
-          ),
           `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last)
         )}
         override def embeddedJars: T[Seq[PathRef]] = T {
@@ -1548,11 +1543,7 @@ object blended extends Module {
       override def ivyDeps = Agg(
         Deps.cmdOption
       )
-      override def osgiHeaders = T { super.osgiHeaders().copy(
-        `Import-Package` = Seq(
-          "de.tototec.cmdoption;resolution:=optional"
-        )
-      )}
+      override def essentialImportPackage: Seq[String] = Seq("de.tototec.cmdoption;resolution:=optional")
       object test extends Tests {
         override def ivyDeps = super.ivyDeps() ++ Agg(
           Deps.scalacheck,
@@ -1881,11 +1872,9 @@ object blended extends Module {
       blended.container.context.api,
       blended.akka
     )
+    override def essentialImportPackage: Seq[String] = Seq("blended.launcher.runtime;resolution:=optional")
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-      `Bundle-Activator` = Option(s"${blendedModule}.internal.BlendedUpdaterActivator"),
-      `Import-Package` = Seq(
-        "blended.launcher.runtime;resolution:=optional"
-      )
+      `Bundle-Activator` = Option(s"${blendedModule}.internal.BlendedUpdaterActivator")
     )}
     object test extends Tests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
