@@ -1017,12 +1017,12 @@ object blended extends Module {
       Deps.logbackClassic,
       Deps.commonsDaemon
     )
-    override def osgiHeaders = super.osgiHeaders().copy(
-      `Import-Package` = Seq(
-        "org.apache.commons.daemon;resolution:=optional",
-        "de.tototec.cmdoption.*;resolution:=optional"
-      )
+
+    override def essentialImportPackage: Seq[String] = super.essentialImportPackage ++ Seq(
+      "org.apache.commons.daemon;resolution:=optional",
+      "de.tototec.cmdoption.*;resolution:=optional"
     )
+
     // TODO: filter resources
     // TODO: package laucnher distribution zip
     override def moduleDeps = Seq(
@@ -1337,11 +1337,13 @@ object blended extends Module {
       Deps.prickle.exclude("*" -> "*"),
       Deps.microjson.exclude("*" -> "*")
     )
+
+    override def essentialImportPackage = super.essentialImportPackage ++ Seq(
+      "prickle",
+      "microjson"
+    )
+
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-      `Import-Package` = Seq(
-        "prickle",
-        "microjson"
-      ),
       `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last)
     )}
     override def exportContents: T[Seq[String]] = T{ Seq(
