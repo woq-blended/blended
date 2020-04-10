@@ -31,7 +31,7 @@ sealed trait  BlendedJmxMessage extends WithKey
   */
 case class JmxSubscribe(
   objName: Option[JmxObjectName],
-  intervalMS: Long,
+  intervalMS: Long
 ) extends BlendedJmxMessage {
   override def key: String = objName.map(_.objectName).getOrElse("None")
 }

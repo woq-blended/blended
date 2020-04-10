@@ -8,7 +8,7 @@ object Deps {
   val akkaHttpVersion = "10.1.11"
   val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
-  val jettyVersion = "9.4.21.v20190926"
+  val jettyVersion = "9.4.24.v20191120"
   val jolokiaVersion = "1.6.2"
   val microJsonVersion = "1.4"
   val parboiledVersion = "1.1.6"

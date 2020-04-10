@@ -669,6 +669,9 @@ object blended extends Module {
             blended.akka.http,
             blended.akka.http.api
           )
+          override def osgiHeaders = T { super.osgiHeaders().copy(
+            `Bundle-Activator` = Option(s"$blendedModule.internal.HelloworldActivator")
+          )}
           object test extends Tests {
             override def ivyDeps = T{ super.ivyDeps() ++ Agg(
               Deps.slf4jLog4j12,
@@ -1582,6 +1585,7 @@ object blended extends Module {
       }
 
       override def osgiHeaders = T { super.osgiHeaders().copy(
+        `Bundle-Activator` = Option(s"$blendedModule.internal.CertificateActivator"),
         `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last),
         `Private-Package` = Seq(
           s"$blendedModule.internal"
@@ -1633,6 +1637,7 @@ object blended extends Module {
         compileClasspath().toSeq.filter(d => embeddedPrefixes.exists(p => d.path.last.startsWith(p)))
       }
       override def osgiHeaders = T { super.osgiHeaders().copy(
+        `Bundle-Activator` = Option(s"$blendedModule.internal.ScepActivator"),
         `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last),
         `Private-Package` = Seq(
           s"$blendedModule.internal"
@@ -1714,6 +1719,11 @@ object blended extends Module {
       s"${blendedModule}.transaction",
       s"${blendedModule}.worklist"
     )
+
+    override def osgiHeaders = T { super.osgiHeaders().copy(
+      `Bundle-Activator` = Option(s"$blendedModule.internal.BlendedStreamsActivator")
+    )}
+
     override def testGroups: Map[String, Set[String]] = Map(
       "JmsAckSourceSpec" -> Set("blended.streams.jms.JmsAckSourceSpec"),
       "FlowTransactionStreamSpec" -> Set("blended.streams.transaction.FlowTransactionStreamSpec"),
