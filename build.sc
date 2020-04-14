@@ -849,7 +849,7 @@ object blended extends Module {
           "*"
         ),
         `DynamicImport-Package` = Seq(
-          s"org.eclipse.jetty;$jettyVersion"
+          s"org.eclipse.jetty.*;$jettyVersion"
         ),
         `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last)
       )}

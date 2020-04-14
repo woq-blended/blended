@@ -14,7 +14,7 @@ import de.tototec.cmdoption.{CmdlineParser, CmdlineParserException}
 import org.osgi.framework.launch.{Framework, FrameworkFactory}
 import org.osgi.framework.startlevel.{BundleStartLevel, FrameworkStartLevel}
 import org.osgi.framework.wiring.FrameworkWiring
-import org.osgi.framework.{Bundle, Constants, FrameworkEvent, FrameworkListener}
+import org.osgi.framework.{Bundle, BundleContext, Constants, FrameworkEvent, FrameworkListener}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
@@ -30,6 +30,11 @@ object Launcher {
 
   private val containerIdFile : String = "blended.container.context.id"
   private val extraStartBundle : String = "blended.laucher.startbundles"
+
+  val extraStartBundles : List[String] = Option(System.getProperty(Launcher.extraStartBundle)) match {
+    case None    => List.empty
+    case Some(s) => s.split(",").toList
+  }
 
   case class InstalledBundle(jarBundle : LauncherConfig.BundleConfig, bundle : Bundle)
 
@@ -363,13 +368,9 @@ class Launcher private (config : LauncherConfig) {
           None
         }
     }
-
   }
 
-  /**
-   * Run an (embedded) OSGiFramework based of this Launcher's configuration.
-   */
-  def start(cmdLine : Cmdline) : Try[Framework] = Try {
+  private def startFramework() : Try[Framework] = Try {
     log.info(s"Starting OSGi framework based on config: ${config}")
 
     // Try to locate and load the OSGi framework factory
@@ -414,9 +415,12 @@ class Launcher private (config : LauncherConfig) {
       framework.getBundleContext.registerService(classOf[Properties], brandingProps, props)
     }
 
+    framework
+  }
+
+  private def installBundles(context : BundleContext) : Try[Seq[Launcher.InstalledBundle]] = Try {
     log.info(s"Installing [${config.bundles.size}] bundles")
-    val context = framework.getBundleContext()
-    val osgiBundles = config.bundles.map { b =>
+    config.bundles.map { b =>
       log.info(s"Installing Bundle: ${b}")
       // TODO: What happens here, if the JAR is not a bundle?
       val osgiBundle = context.installBundle(new File(b.location).getAbsoluteFile.toURI().normalize().toString())
@@ -426,91 +430,105 @@ class Launcher private (config : LauncherConfig) {
       bundleStartLevel.setStartLevel(b.startLevel)
       InstalledBundle(b, osgiBundle)
     }
-    log.info(s"${osgiBundles.size} bundles installed")
+  }
 
-    def isFragment(b : InstalledBundle) = b.bundle.getHeaders.get(Constants.FRAGMENT_HOST) != null
+  private val isFragment : InstalledBundle => Boolean = b =>
+    Option(b.bundle.getHeaders.get(Constants.FRAGMENT_HOST)).isDefined
 
-    // Iterate over start levels and activate bundles in the correct order
-    1.to(config.startLevel).map { startLevel =>
+  private def resolveBundles(framework : Framework, bundles : Seq[InstalledBundle]) : Try[Seq[InstalledBundle]] = Try {
 
-      log.info(s"------ Entering start level [$startLevel] ------")
-      frameworkStartLevel.setStartLevel(startLevel, new FrameworkListener() {
-        override def frameworkEvent(event : FrameworkEvent) : Unit = {
-          log.debug(s"Active start level [${startLevel}] reached")
+    val frameworkWiring : FrameworkWiring = framework.adapt(classOf[FrameworkWiring])
+    frameworkWiring.resolveBundles(null /* all bundles */) match {
+      case true =>
+        log.info("All bundles resolved successfully")
+        Seq.empty
+      case false =>
+        val unresolved : Seq[InstalledBundle] = bundles.filter{ b =>
+          b.bundle.getState() == Bundle.INSTALLED && !isFragment(b)
         }
-      })
 
-      // A bundle needs to start if it is configured with start=true within the profile or the
-      // bundle symbolic name is set in the Systemproperty blended.laucher.startbundles
+        val msg : String = s"The following bundles could not be resolved : ${
+          unresolved.map(
+            b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}"
+          ).mkString("\n", "\n", "")
+        }"
 
-      val extraStartBundles : List[String] = Option(System.getProperty(Launcher.extraStartBundle)) match {
-        case None    => List.empty
-        case Some(s) => s.split(",").toList
+        System.err.println(msg)
+        log.warn(msg)
+
+        unresolved
+    }
+  }
+
+  def moveToStartlevel(framework: Framework, startLevel : Int, bundles : Seq[InstalledBundle]) : Try[Seq[(InstalledBundle, Option[Throwable])]] = Try {
+    val frameworkStartLevel : FrameworkStartLevel = framework.adapt(classOf[FrameworkStartLevel])
+    log.info(s"------ Entering start level [$startLevel] ------")
+    frameworkStartLevel.setStartLevel(startLevel, new FrameworkListener() {
+      override def frameworkEvent(event : FrameworkEvent) : Unit = {
+        log.debug(s"Active start level [${startLevel}] reached")
       }
+    })
 
-      val bundlesToStart = osgiBundles.filter { b =>
-        !isFragment(b) &&
-          b.jarBundle.startLevel == startLevel &&
-          (b.jarBundle.start || extraStartBundles.contains(b.bundle.getSymbolicName()))
-      }
+    val bundlesToStart : Seq[InstalledBundle] = bundles.filter { b =>
+      !isFragment(b) &&
+        b.jarBundle.startLevel == startLevel &&
+        (b.jarBundle.start || extraStartBundles.contains(b.bundle.getSymbolicName()))
+    }
 
-      log.info(s"Starting [${bundlesToStart.size}] bundles : [${bundlesToStart.map(_.bundle.getSymbolicName()).mkString(",")}]")
+    log.info(s"Starting [${bundlesToStart.size}] bundles : [${bundlesToStart.map(_.bundle.getSymbolicName()).mkString(",")}]")
 
-      val startedBundles = bundlesToStart.map { bundle =>
-        val result = Try {
-          log.debug(s"Trying to start bundle : [${bundle.bundle.getSymbolicName()}-${bundle.bundle.getVersion()}]")
-          bundle.bundle.start()
-        }
-        log.info(s"State of [${bundle.bundle.getSymbolicName}] : [${bundle.bundle.getState}]")
+    val attemptedBundles : Seq[(InstalledBundle, Option[Throwable])] = bundlesToStart.map { bundle =>
 
-        result match {
-          case Success(_) =>
-          case Failure(t) =>
-            val sw = new StringWriter()
-            t.printStackTrace(new PrintWriter(sw))
-            log.error("\n" + sw.getBuffer().toString() + "\n")
-        }
-        bundle -> result
-      }
-      log.info(s"[${startedBundles.filter(_._2.isSuccess).size}] bundles started")
-
-      val failedBundles = startedBundles.filter(_._2.isFailure)
-
-      if (!failedBundles.isEmpty) {
-        log.warn(s"Could not start some bundles:\n${
-          failedBundles.map(failed => s"\n - ${failed._1}\n ---> ${failed._2}")
-        }")
-
-        if (cmdLine.strict) {
-          // in strict mode, bundles that failed to start fail the whole container
-          log.warn("Shutting down container due to bundle start failures.")
-          framework.stop()
-        }
+      log.debug(s"Trying to start bundle : [${bundle.bundle.getSymbolicName()}-${bundle.bundle.getVersion()}]")
+      Try {
+        bundle.bundle.start()
+      } match {
+        case Success(_) =>
+          (bundle, None)
+        case Failure(t) =>
+          val sw = new StringWriter()
+          t.printStackTrace(new PrintWriter(sw))
+          log.error("\n" + sw.getBuffer().toString() + "\n")
+          (bundle, Some(t))
       }
     }
 
-    val bundlesInInstalledState = osgiBundles.filter(b => b.bundle.getState() == Bundle.INSTALLED && !isFragment(b))
+    log.info(s"Started [${attemptedBundles.count(_._2.isEmpty)}] bundles for start level [$startLevel]")
 
-    // now we try to also resolve the remaining bundles
-    if (bundlesInInstalledState.nonEmpty) {
-      log.debug(s"The following bundles are in installed state: ${bundlesInInstalledState.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
-      log.info("Resolving installed bundles")
-      val frameworkWiring = framework.adapt(classOf[FrameworkWiring])
-      frameworkWiring.resolveBundles(null /* all bundles */ )
-      val secondAttemptInstalled = osgiBundles.filter(b => b.bundle.getState() == Bundle.INSTALLED && !isFragment(b))
+    val failedBundles : Seq[(InstalledBundle, Option[Throwable])] = attemptedBundles.filter(_._2.isDefined)
+    if (failedBundles.nonEmpty) {
+      log.warn(s"Could not start some bundles:\n${
+        failedBundles.map(failed => s"\n - ${failed._1}\n ---> ${failed._2}")
+      }")
+    }
 
-      val msg : String = s"The following bundles could not be resolved : ${
-        secondAttemptInstalled.map(
-          b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}"
-        ).mkString("\n", "\n", "")
-      }"
+    failedBundles
+  }
 
-      System.err.println(msg)
-      log.warn(msg)
+  /**
+   * Run an (embedded) OSGiFramework based of this Launcher's configuration.
+   */
+  def start(cmdLine : Cmdline) : Try[Framework] = Try {
 
-      if (secondAttemptInstalled.nonEmpty && cmdLine.strict) {
-        // in strict mode, nor resolved bundles fail the whole container
-        log.error("Shutting down container due to unresolved bundles.")
+    val framework : Framework = startFramework().get
+    val osgiBundles : Seq[InstalledBundle] = installBundles(framework.getBundleContext()).get
+    val frameworkStartLevel : FrameworkStartLevel = framework.adapt(classOf[FrameworkStartLevel])
+
+    /* Make sure all bundles are resolved before attempting the start sequence */
+    val unresolved :Seq[InstalledBundle] = resolveBundles(framework, osgiBundles).get
+    if (unresolved.nonEmpty && cmdLine.strict) {
+      // in strict mode, nor resolved bundles fail the whole container
+      log.error("Shutting down container due to unresolved bundles.")
+      framework.stop()
+    }
+
+    // Iterate over start levels and activate bundles in the correct order
+    1.to(config.startLevel).foreach { startLevel =>
+      val failedBundles : Seq[(InstalledBundle, Option[Throwable])] = moveToStartlevel(framework, startLevel, osgiBundles).get
+
+      if (failedBundles.nonEmpty && cmdLine.strict) {
+        // in strict mode, bundles that failed to start fail the whole container
+        log.warn("Shutting down container due to bundle start failures.")
         framework.stop()
       }
     }
