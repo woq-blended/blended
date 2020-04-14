@@ -14,7 +14,7 @@ import org.scalatest.DoNotDiscover
 import scala.concurrent.duration._
 
 @DoNotDiscover
-class LDAPLoginSpec extends SimplePojoContainerSpec
+abstract class LDAPLoginSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper {
 

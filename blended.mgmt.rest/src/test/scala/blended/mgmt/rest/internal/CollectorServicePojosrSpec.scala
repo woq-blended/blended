@@ -17,8 +17,8 @@ import blended.updater.config.json.PrickleProtocol._
 import blended.updater.config.{ActivateProfile, OverlayConfig, OverlayConfigCompanion, UpdateAction}
 import blended.updater.remote.internal.RemoteUpdaterActivator
 import blended.util.logging.Logger
-import com.softwaremill.sttp
-import com.softwaremill.sttp.UriContext
+import sttp.client._
+import sttp.model.{HeaderNames, MediaType, StatusCode}
 import com.typesafe.config.ConfigFactory
 import domino.DominoActivator
 import org.osgi.framework.BundleActivator
@@ -69,7 +69,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
     }.start(registry.getBundleContext())
   }
 
-  implicit val sttpBackend = sttp.HttpURLConnectionBackend()
+  implicit val sttpBackend = HttpURLConnectionBackend()
   val serverUrl = uri"http://localhost:9995/mgmt"
 
   val versionUrl = uri"${serverUrl}/version"
@@ -78,7 +78,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
     s"GET ${versionUrl} should return the version" in {
       withServer { sr =>
-        val response = sttp.sttp.get(versionUrl).send()
+        val response = basicRequest.get(versionUrl).send()
         assert(response.body === Right("\"0.0.0\""))
       }
     }
@@ -91,18 +91,23 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
         // we currently do not require any permission for GET
         pending
         withServer { server =>
-          val response = sttp.sttp.get(url).send()
+          val response = basicRequest.get(url).send()
           assert(response.code === 401)
         }
       }
 
       "initial GET should return empty overlay list" in logException {
         withServer { server =>
-          val response = sttp.sttp.get(url)
+          val response = basicRequest.get(url)
             .auth.basic("tester", "mysecret")
             .send()
-          assert(response.code === 200)
-          val ocs = Unpickle[Seq[OverlayConfig]].fromString(response.unsafeBody).get
+          assert(response.code === StatusCode.Ok)
+
+          val rBody : String = response.body match {
+            case Right(s) => s
+            case Left(_) => fail("failed to retrieve response")
+          }
+          val ocs = Unpickle[Seq[OverlayConfig]].fromString(rBody).get
           assert(ocs.size === 0)
         }
       }
@@ -121,20 +126,24 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
         val oc = OverlayConfigCompanion.read(ConfigFactory.parseString(o1)).get
 
         withServer { server =>
-          val responsePost = sttp.sttp
+          val responsePost = basicRequest
             .post(url)
             .body(Pickle.intoString(oc))
-            .header(sttp.HeaderNames.ContentType, sttp.MediaTypes.Json)
+            .header(HeaderNames.ContentType, MediaType.ApplicationJson.toString())
             .auth.basic("tester", "mysecret")
             .send()
-          assert(responsePost.code === 200)
-          assert(responsePost.unsafeBody === "\"Registered jvm-medium-1\"")
+          assert(responsePost.code === StatusCode.Ok)
+          assert(responsePost.body === Right("\"Registered jvm-medium-1\""))
 
-          val responseGet = sttp.sttp.get(url)
+          val responseGet = basicRequest.get(url)
             .auth.basic("tester", "mysecret")
             .send()
-          assert(responseGet.code === 200)
-          val ocs = Unpickle[Seq[OverlayConfig]].fromString(responseGet.unsafeBody).get
+          assert(responseGet.code === StatusCode.Ok)
+          val rBody : String = responseGet.body match {
+            case Right(s) => s
+            case Left(_) => fail("failed to retrieve response")
+          }
+          val ocs = Unpickle[Seq[OverlayConfig]].fromString(rBody).get
           assert(ocs.size === 1)
           assert(ocs.find(_.name == "jvm-medium").isDefined)
         }
@@ -156,12 +165,12 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
       "POST with missing credentials fails with 401 Unauthorized" in logException {
         withServer { server =>
-          val responsePost = sttp.sttp
+          val responsePost = basicRequest
             .post(url(ci1))
             .body(Pickle.intoString(ap))
-            .header(sttp.HeaderNames.ContentType, sttp.MediaTypes.Json)
+            .header(HeaderNames.ContentType, MediaType.ApplicationJson.toString())
             .send()
-          assert(responsePost.code === 401)
+          assert(responsePost.code === StatusCode.Unauthorized)
           assert(responsePost.statusText === "Unauthorized")
         }
       }
@@ -169,15 +178,15 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
       "POST an valid ActivateProfile action succeeds" in logException {
 
         withServer { server =>
-          val responsePost = sttp.sttp
+          val responsePost = basicRequest
             .post(url(ci1))
             .body(Pickle.intoString[UpdateAction](ap))
-            .header(sttp.HeaderNames.ContentType, sttp.MediaTypes.Json)
+            .header(HeaderNames.ContentType, MediaType.ApplicationJson.toString())
             .auth.basic("tester", "mysecret")
             .send()
           log.info(s"Response: ${responsePost}")
-          assert(responsePost.code === 200)
-          assert(responsePost.unsafeBody === "\"Added UpdateAction to ci1_ActivateProfile\"")
+          assert(responsePost.code === StatusCode.Ok)
+          assert(responsePost.body === Right("\"Added UpdateAction to ci1_ActivateProfile\""))
         }
       }
     }
@@ -192,11 +201,10 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
         withServer { server =>
           assert(packFile.exists())
 
-          val response = sttp.sttp.
-            multipartBody(sttp.multipartFile("file", emptyPackFile)).
+          val response = basicRequest.multipartBody(multipartFile("file", emptyPackFile)).
             post(uploadUrl).
             send()
-          assert(response.code === 401)
+          assert(response.code === StatusCode.Unauthorized)
         }
       }
 
@@ -204,12 +212,12 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
         withServer { server =>
           assert(packFile.exists())
 
-          val response = sttp.sttp.
-            multipartBody(sttp.multipartFile("file", emptyPackFile)).
+          val response = basicRequest.
+            multipartBody(multipartFile("file", emptyPackFile)).
             auth.basic("unknown", "pass").
             post(uploadUrl).
             send()
-          assert(response.code === 401)
+          assert(response.code === StatusCode.Unauthorized)
         }
       }
 
@@ -217,8 +225,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
         withServer { server =>
           assert(emptyPackFile.exists() === true)
 
-          val response = sttp.sttp.
-            multipartBody(sttp.multipartFile("file", emptyPackFile)).
+          val response = basicRequest.multipartBody(multipartFile("file", emptyPackFile)).
             auth.basic("tester", "mysecret").
             post(uploadUrl).
             send()
@@ -227,7 +234,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
           log.info("headers: " + response.headers)
           log.info("response: " + response)
 
-          assert(response.code === 422)
+          assert(response.code === StatusCode.UnprocessableEntity)
           assert(response.statusText === "Unprocessable Entity")
           assert(response.body.isLeft)
           assert(response.body.left.get ===
@@ -240,8 +247,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
         withServer { server =>
           assert(packFile.exists() === true)
 
-          val response = sttp.sttp.
-            multipartBody(sttp.multipartFile("file", packFile)).
+          val response = basicRequest.multipartBody(multipartFile("file", packFile)).
             auth.basic("tester", "mysecret").
             post(uploadUrl).
             send()
@@ -250,7 +256,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
           log.info("headers: " + response.headers)
           log.info("response: " + response)
 
-          assert(response.code === 200)
+          assert(response.code === StatusCode.Ok)
           assert(response.statusText === "OK")
           assert(response.body.isRight)
           assert(response.body.right.get === "\"Uploaded profile test.pack.minimal 1.0.0\"")

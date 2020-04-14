@@ -7,13 +7,14 @@ import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory, JmsSession}
+import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory, JmsSession, QueryConnectionState}
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{EnsureJmsConnectivity, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.jms._
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
+import blended.util.RichTry._
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -21,6 +22,7 @@ import scala.util.{Failure, Success, Try}
 class JmsSessionManagerSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper
+  with EnsureJmsConnectivity
   with Matchers {
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
@@ -33,16 +35,7 @@ class JmsSessionManagerSpec extends SimplePojoContainerSpec
   private implicit val timeout : FiniteDuration = 3.seconds
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   private val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
-  private val con : Connection = {
-    val probe : TestProbe = TestProbe()
-    system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
-    probe.fishForMessage(3.seconds){
-      case ConnectionStateChanged(state) =>
-        state.vendor == "activemq" && state.provider == "activemq" && state.status == Connected
-    }
-
-    cf.createConnection()
-  }
+  private val con : Connection = ensureConnection(cf, 3.seconds).unwrap
 
   private def createSessionManger(name : String, maxSessions : Int)(sessionOpened : JmsSession => Try[Unit]) : JmsSessionManager = new JmsSessionManager(
     name = name,

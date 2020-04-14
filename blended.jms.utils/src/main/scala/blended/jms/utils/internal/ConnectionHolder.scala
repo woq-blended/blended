@@ -14,7 +14,7 @@ import javax.naming.{Context, InitialContext}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : ActorSystem) {
+abstract class ConnectionHolder(val config : ConnectionConfig)(implicit system : ActorSystem) {
 
   val vendor : String = config.vendor
   val provider : String = config.provider
@@ -66,7 +66,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : Act
             c.start()
 
             log.info(s"Successfully connected to [$vendor:$provider] with clientId [${config.clientId}]")
-            val wrappedConnection = new BlendedJMSConnection(c)
+            val wrappedConnection = new BlendedJMSConnection(vendor, provider, c)
             conn = Some(wrappedConnection)
 
             wrappedConnection

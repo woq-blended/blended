@@ -26,7 +26,7 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
   "The inbound bridge should" - {
 
     "process normal inbound messages without tracking" in {
-      val timeout : FiniteDuration = 5.seconds
+      val timeout : FiniteDuration = 10.seconds
       val msgCount = 2
 
       val switch = sendInbound(msgCount)

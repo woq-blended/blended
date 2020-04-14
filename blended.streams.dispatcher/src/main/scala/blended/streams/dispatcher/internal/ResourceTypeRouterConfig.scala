@@ -20,6 +20,7 @@ object ResourceTypeRouterConfig {
   private[this] val applicationLogHeaderPath = "applicationLogHeader"
   private[this] val defaultHeaderPath = "defaultHeader"
   private[this] val resourcetypesPath = "resourcetypes"
+  private[this] val startupPath = "onStartup"
 
   def create(
     ctCtxt : ContainerContext,
@@ -55,13 +56,16 @@ object ResourceTypeRouterConfig {
       HeaderProcessorConfig.create(cfg)
     }
 
+    val startupMap : Map[String, String] = cfg.getStringMapOption(startupPath).getOrElse(Map.empty).mapValues(s => ctCtxt.resolveString(s).get.toString)
+
     ResourceTypeRouterConfig(
       defaultProvider = internalProvider,
       eventProvider = eventProvider,
       applicationLogHeader = logHeader,
       defaultHeader = defaultHeader,
       resourceTypeConfigs = routes,
-      providerRegistry = provider
+      providerRegistry = provider,
+      startupMap = startupMap
     )
   }
 }
@@ -72,7 +76,8 @@ case class ResourceTypeRouterConfig(
   providerRegistry : BridgeProviderRegistry,
   applicationLogHeader : List[String],
   defaultHeader : List[HeaderProcessorConfig],
-  resourceTypeConfigs : Map[String, ResourceTypeConfig]
+  resourceTypeConfigs : Map[String, ResourceTypeConfig],
+  startupMap : Map[String, String]
 )
 
 object ResourceTypeConfig {

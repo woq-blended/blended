@@ -1,176 +1,19 @@
-language: scala
+language: java
 
-jdk: oraclejdk8
-
-addons:
-  chrome: stable
-
-services:
-  - docker
-
-script:
-  - sbt ciBuild
-
-cache:
-  directories:
-    - .prereq-refs
-    - "$HOME/.m2"
-    - "$HOME/.ivy2"
-    - "$HOME/.sbt"
-
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install graphviz
-  - openssl aes-256-cbc -K $encrypted_e8464d595ae2_key -iv $encrypted_e8464d595ae2_iv -in .dropbox_uploader.enc -out $HOME/.dropbox_uploader -d
-
-install:
-  - wget -N http://chromedriver.storage.googleapis.com/2.40/chromedriver_linux64.zip -P ~/
-  - unzip ~/chromedriver_linux64.zip -d ~/
-  - sudo mkdir -p /opt
-  - sudo mv -f ~/chromedriver /opt
-  - sudo chmod +x /opt/chromedriver
-  - sudo ln -s /opt/chromedriver /usr/local/bin/chromedriver
-
-before_cache:
-  - rm -Rf $HOME/.ivy2/.sbt.ivy.lock
+jdk:
+  - openjdk8
+  - openjdk11
 
 env:
-  global:
-    - TEST_ONLINE="true"
-    - DOCKER_HOST="unix:///var/run/docker.sock"
-    # PGP_PASS
-    - secure: "r048egec7DYp2HXockVYQOQru6FsxYZTABzEmTqZxOIRBpE3/c/km8TrSdKU32te7pZVryTGe2J6DK7xa2U2rHmu9H8Z7ah1a4CZzL0daFP8xZGXJ2aUby8Z++5eoav+CVzqyHWYKZtuB/DEhOlVsvx397rJVRhWIBBQVt5sgxY="
-    # SONATYPE_USERNAME
-    - secure: "b3aSUvpBixtHJ7EuxN5d7/sLzU6zXtD3OGyHXIDyfZWSnc55YOju89yZsfmj7Cnx2SqXvAuHIjb/bXwGtJg30f9LaR9EKueawkFpIBHKuPeEsJKoBAw2Uwu+si2Dn5Kb4joZZUwokJic4SnhmU5MmAI5YVdv6fzCyuBhY+zoFbA="
-    # SONATYPE_PASSWORD
-    - secure: "cve0uZoMzRy5nEzkHWBTz651SBsVLvVNVZQDFoQGPaoDCXcICi+kqGKwP/9n4sgFwgvP6mJVZHYt5i9c8KqUmT1j7KtRzGirlqcj23QIUppt5v5XZLilVt6fSlvU97N008Y4xH3IEURhJGqSGhGTFrKxP3dvr9pnXCAQbqIDT0w="
-    # CODACY_PROJECT_TOKEN
-    - secure: "KBQ2ReAGgCp4UXR/W20H3H2yIjqVTaadyoEJaGjwAujJJHp6wd6BdPDdjBVNMYW6J/CH9+HJotZrX6GyPZWrNKms6G5mAH160o5xdgE+WEoAN56mnIBMrff7Di1rDwfLX+XSjcmh+XCsKvgiY230hOXAtZ6ArnqMR6dc1NKu7Ag="
-    # GITHUB_TOKEN
-    - secure: "IbsIzNJNyNYY13wb8lmbZgoJhU03DsddEaWnjEoGN6p97cag6MIIB6XiDm5GrEshmKoK/IuXQBm0t+ur65pUrH9IYbir9zfn4Jzok7cESPXi9BUdJq8D7bkNRTOy98dWK+MWHF5WtNb054i3g1Fxe0k8ynRM/lIbfo/NjmmAW8k="
-    # DOCKER_USERNAME
-    - secure: "KZskPnjiNor+iXpTQjF/aIlgOjn3mztpkL/WUyEys6Fb0UI2HXK0adzJcSDe46nPxG8En4uSxZ9Sq4oP1CP9MD/sgMPIFZX00r5+nONyDRTYJfFm06YvTyJAMvawGjwqlOdL+nw4DVOH8rJle5R3Uh+caGQiDMV4EMded7lEPdc="
-    # DOCKER_PASSWORD
-    - secure: "r/nYnqfQwO1eGu/5V1eV8enPG/XR0pjmWGV0USmYYEPFQE1qncsUi1Fw1GSbU9o8SClPXOas8CcYJzVEhjcWeEvbQFL6vBCVBvkX2du2qTVbPAJ0YTXmVRHsfe3SrNXnLS+11ZEm6HpuCdx48cL9wA7jiXRNmxOCbVsm5+NgmdA="
+  - NAME="Test (fail fast)"
+    TEST_ONLINE="true"
+    SCRIPT_1="travis_wait 40 ./millw -i __.testCached"
+  - NAME="Test (keep going)"
+    TEST_ONLINE="true"
+    SCRIPT_1="travis_wait 40 ./millw -i -k __.testCached"
+  - NAME="Publish into local IVY repo"
+    TEST_ONLINE="true"
+    SCRIPT_1="./millw -i __.publishLocal"
 
-stages:
-  - name: VerifyPublish
-    if: branch = publish AND type = push
-
-#  - Prerequisites
-
-  - Test
-
-  - name: Deploy
-    if: branch = publish AND type = push
-
-  - name: Site
-    if: branch = master AND type = push
-
-  - name: BuildITest
-    if: branch = master AND type = push
-
-  - name: BuildUI
-    if: branch = master AND type = push
-
-#  - name: BuildPlugin
-#    if: branch = master AND type = push
-
-  - name: IntegrationTest
-    if: branch = master AND type = push
-
-jobs:
-  include:
-  # ------ Stage Verify publish
-  - stage: VerifyPublishz
-    script: $TRAVIS_BUILD_DIR/scripts/verifyPublish.sh
-
-  # ------ Stage Prerequisites
-#  - stage: Prerequisites
-#    script:
-#      - sh -e scripts/build-prereq.sh sbt-testlogconfig
-#      - sh -e scripts/build-prereq.sh sbt-jbake
-#      - sh -e scripts/build-prereq.sh sbt-filterresources
-#      - sh -e scripts/build-prereq.sh sbt-phoenix
-#      - sh -e scripts/build-prereq.sh sbt-blendedbuild
-
-  # ------ Stage Test
-  - stage: Test
-    before_script:
-      - bash $TRAVIS_BUILD_DIR/scripts/checkScripts.sh
-      - bash $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
-    #- bash $TRAVIS_BUILD_DIR/scripts/build-akka.sh
-    script:
-      - sbt clean update publishLocal unidoc cleanCoverage codacyCoverage
-    after_failure:
-      - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
-    after_success:
-      - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
-
-  # ------ Stage Deploy
-  - stage: Deploy
-    script:
-      - bash $TRAVIS_BUILD_DIR/scripts/runPublish.sh
-
-  # ------ Build the integration test support
-  - stage: BuildITest
-    script:
-      - bash $TRAVIS_BUILD_DIR/scripts/buildITest.sh
-
-  # ------ Build and test the management UI
-  - stage: BuildUI
-    script:
-      - bash $TRAVIS_BUILD_DIR/scripts/buildUI.sh
-
-  # ------ Stage Docker Images
-  - stage: IntegrationTest
-    name: blendedItestNode
-    before_script:
-      - git clone --branch master --depth 1 https://github.com/woq-blended/blended.container.git $TRAVIS_BUILD_DIR/container
-    script:
-      - docker info
-      - cd ${TRAVIS_BUILD_DIR}/container
-      - wget "https://cdn.azul.com/zulu/bin/zulu8.33.0.1-jdk8.0.192-linux_x64.tar.gz" -O "docker/blended.docker.base/files/zulu8.33.0.1-jdk8.0.192-linux_x64.tar.gz"
-      - docker build -t atooni/blended-base docker/blended.docker.base
-      - echo -e "-Ddocker.host=${DOCKER_HOST}\n-Ddocker.port=${DOCKER_PORT}\n" > .sbtopts
-      - sbt update blendedItestNode/test
-    after_failure:
-      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.node-test.log
-    after_success:
-      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.node-test.log
-
-  - stage: IntegrationTest
-    name: blendedItestMgmt
-    before_script:
-      - git clone --branch master --depth 1 https://github.com/woq-blended/blended.container.git $TRAVIS_BUILD_DIR/container
-    script:
-#      - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
-      - docker info
-      - cd ${TRAVIS_BUILD_DIR}/container
-      - wget "https://cdn.azul.com/zulu/bin/zulu8.33.0.1-jdk8.0.192-linux_x64.tar.gz" -O "docker/blended.docker.base/files/zulu8.33.0.1-jdk8.0.192-linux_x64.tar.gz"
-      - docker build -t atooni/blended-base docker/blended.docker.base
-      - echo -e "-Ddocker.host=${DOCKER_HOST}\n-Ddocker.port=${DOCKER_PORT}\n" > .sbtopts
-      - sbt update blendedItestMgmt/test
-    after_failure:
-      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.mgmt-test.log
-    after_success:
-      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.mgmt-test.log
-
-    # ------ Stage Site Deploy
-  - stage: Site
-    before_script:
-      - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $TRAVIS_BUILD_DIR/target target
-    script:
-      - sbt jbakeSite
-    deploy:
-      provider: pages
-      local-dir: target/site
-      skip-cleanup: true
-      github-token: $GITHUB_TOKEN
-      keep-history: false
-      target-branch: gh-pages
-      email: andreas@wayofquality.de
-      name: Blended Development
-      verbose: true
-      on:
-        branch: master
+script:
+  - "${SCRIPT_1}"

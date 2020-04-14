@@ -3,12 +3,12 @@ package blended.jms.utils.internal
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
-import blended.jms.utils.BlendedJMSConnectionConfig
+import blended.jms.utils.ConnectionConfig
 import javax.jms._
 
-class DummyConnection extends Connection {
+class DummyConnection(cfg : ConnectionConfig) extends Connection {
 
-  var clientId : String = "clientId"
+  var clientId : String = cfg.provider
   var el : ExceptionListener = _
 
   override def createSession(b : Boolean, i : Int) : Session = ???
@@ -40,19 +40,20 @@ class DummyConnection extends Connection {
   ) : ConnectionConsumer = ???
 }
 
-class DummyHolder(f : () => Connection, maxConnects : Int = Int.MaxValue)(implicit system : ActorSystem)
-  extends ConnectionHolder(BlendedJMSConnectionConfig.defaultConfig) {
+class DummyHolder(
+  cfg : ConnectionConfig,
+  f : ConnectionConfig => Connection = c => new DummyConnection(c),
+  maxConnects : Int = Int.MaxValue
+)(implicit system : ActorSystem)
+  extends ConnectionHolder(cfg) {
 
   private val conCount : AtomicInteger = new AtomicInteger(0)
-
-  override val vendor : String = "dummy"
-  override val provider : String = "dummy"
 
   override def getConnectionFactory(): ConnectionFactory = new ConnectionFactory {
     override def createConnection(): Connection = {
       if (conCount.get() < maxConnects) {
         conCount.incrementAndGet()
-        f()
+        f(cfg)
       } else {
         throw new Exception("Max connects exceeded")
       }

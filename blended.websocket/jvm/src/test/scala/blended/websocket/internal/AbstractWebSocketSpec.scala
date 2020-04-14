@@ -29,11 +29,12 @@ import blended.util.RichTry._
 import blended.util.logging.Logger
 import blended.websocket._
 import blended.websocket.json.PrickleProtocol._
-import com.softwaremill.sttp._
-import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 import prickle._
+import sttp.client._
+import sttp.client.akkahttp.AkkaHttpBackend
+import sttp.model.{StatusCode => SC}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -94,13 +95,13 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
 
   protected def serverKey()(implicit system : ActorSystem, materializer : Materializer) : Try[PublicKey] = Try {
 
-    implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
+    implicit val backend = AkkaHttpBackend()
 
-    val request = sttp.get(uri"http://localhost:9995/login/key")
+    val request = basicRequest.get(uri"http://localhost:9995/login/key")
     val response = request.send()
 
     val r = Await.result(response, 3.seconds)
-    r.code should be(StatusCodes.Ok)
+    r.code should be(SC.Ok)
 
     val rawString = r.body match {
      case Right(k) =>
@@ -119,15 +120,15 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
 
   protected def login(user : String, password : String)(implicit system : ActorSystem, materializer : Materializer) : Try[Token] = {
 
-   implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
+   implicit val backend = AkkaHttpBackend()
 
    val key : PublicKey = serverKey().unwrap
 
-   val request = sttp.post(uri"http://localhost:9995/login/").auth.basic(user, password)
+   val request = basicRequest.post(uri"http://localhost:9995/login/").auth.basic(user, password)
    val response = request.send()
    val r = Await.result(response, 3.seconds)
 
-   r.code should be(StatusCodes.Ok)
+   r.code should be(SC.Ok)
    Token(r.body.right.get, key)
   }
 

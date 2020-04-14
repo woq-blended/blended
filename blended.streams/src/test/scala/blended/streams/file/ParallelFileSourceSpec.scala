@@ -21,7 +21,7 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
 
       val numSrc : Int = 5
       val numMsg : Int = 5000
-      val t : FiniteDuration = 5.seconds
+      val t : FiniteDuration = 30.seconds
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt)
         .copy(sourceDir = BlendedTestSupport.projectTestOutput + "/parallel" )

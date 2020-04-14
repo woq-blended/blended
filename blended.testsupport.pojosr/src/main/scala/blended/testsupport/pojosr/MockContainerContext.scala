@@ -9,6 +9,7 @@ import com.typesafe.config.impl.Parseable
 import com.typesafe.config.{Config, ConfigFactory, ConfigObject, ConfigParseOptions}
 
 import scala.beans.BeanProperty
+import scala.collection.JavaConverters._
 
 class MockContainerContext(baseDir : String, ctid : String) extends AbstractContainerContextImpl {
 
@@ -39,7 +40,9 @@ class MockContainerContext(baseDir : String, ctid : String) extends AbstractCont
     // Avoid ConcurrentModificationException due to parallel setting of system properties by copying properties
     val systemProperties = System.getProperties()
     val systemPropertiesCopy = new Properties()
-    systemPropertiesCopy.putAll(systemProperties)
+    systemProperties.entrySet().asScala.foreach { kv =>
+      systemPropertiesCopy.put(kv.getKey(), kv.getValue())
+    }
     systemPropertiesCopy
   }
 

@@ -35,7 +35,9 @@ class JmsConnectionController(holder: ConnectionHolder, closer : Props) extends 
         caller ! ConnectResult(t, Right(c))
         context.become(connected(c))
       } catch {
-        case NonFatal(e) => caller ! ConnectResult(t, Left(e))
+        case NonFatal(e) =>
+          log.debug(s"Failed to connect to [${holder.vendor}:${holder.provider}] : [${e.getMessage()}]")
+          caller ! ConnectResult(t, Left(e))
       }
     case Disconnect(_) =>
       sender() ! ConnectionClosed

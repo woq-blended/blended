@@ -228,7 +228,7 @@ class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeo
   }
 }
 
-
+@RequiresForkedJVM
 class JmsRetryProcessorMissingDestinationSpec extends ProcessorSpecSupport("missingDest") {
 
   "Consume messages from the retry destination and pass them to the retry failed destination if no original destination is known" in {

@@ -70,11 +70,9 @@ trait JmsStreamSupport {
       }
 
       // if the stream has is finished before sending off all the messages, something went wrong.
-      // TODO: This looks strange
       if (done.isCompleted) {
-        throw new Exception("Failed to create flow.")
+        throw new Exception("Failed to send messages to stream")
       }
-
     } while (!hasException.get && sendCount.get < msgs.size)
 
     killswitch

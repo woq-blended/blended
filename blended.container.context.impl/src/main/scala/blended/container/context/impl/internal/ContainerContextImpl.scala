@@ -143,11 +143,12 @@ class ContainerContextImpl extends AbstractContainerContextImpl {
     val sysProps = ConfigFactory.systemProperties()
     val envProps = ConfigFactory.systemEnvironment()
 
+    val cfgFile : File = new File(profileConfigDirectory, "application.conf")
+    log.debug(s"Trying to resolve config from [${cfgFile.getAbsolutePath()}]")
+
     val appCfg : Config =
-      ConfigFactory.parseFile(
-        new File(profileConfigDirectory, "application.conf"),
-        ConfigParseOptions.defaults().setAllowMissing(false)
-      ).withFallback(sysProps).withFallback(envProps).resolve()
+      ConfigFactory.parseFile(cfgFile, ConfigParseOptions.defaults().setAllowMissing(false))
+        .withFallback(sysProps).withFallback(envProps).resolve()
 
     // we need to make sure that all keys are available in the resulting config,
     // even if they point to null values or empty configs

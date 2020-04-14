@@ -44,27 +44,6 @@ class FileSourceSpec extends AbstractFileSourceSpec {
       getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be(empty)
     }
 
-    "perform a regular file poll from a given directory(bulk)" in {
-
-      val numMsg : Int = 5000
-      val t : FiniteDuration = 10.seconds
-
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/bulkPoll")
-      prepareDirectory(pollCfg.sourceDir)
-      1.to(numMsg).foreach { i => genFile(new File(pollCfg.sourceDir, s"test_$i.txt")) }
-
-      val src : Source[FlowEnvelope, NotUsed] =
-        Source.fromGraph(new FileAckSource(pollCfg, envLogger)).via(new AckProcessor("simplePoll.ack").flow)
-
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, Some(t))
-
-      val result : List[FlowEnvelope] = Await.result(collector.result, t + 100.millis)
-
-      result should have size numMsg
-
-      getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be(empty)
-    }
-
     "restore the original file if the envelope was denied" in {
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/restore")
