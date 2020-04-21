@@ -285,8 +285,7 @@ trait BlendedJvmModule extends BlendedModule { jvmBase =>
     override def artifactName: T[String] = jvmBase.artifactName
     trait Tests extends super.Tests {
       override def sources: Sources = T.sources(
-        jsBase.millSourcePath / "src" / "test" / "scala",
-        jsBase.millSourcePath / os.up / "shared" / "src" / "test" / "scala"
+        jsBase.millSourcePath / "src" / "test" / "scala"
       )
       override def ivyDeps = T{ super.ivyDeps() ++ Agg(
         Deps.js.scalatest
