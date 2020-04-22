@@ -21,12 +21,15 @@ import mill.scalalib.publish._
 import os.{Path, RelPath}
 import sbt.testing.{Fingerprint, Framework}
 
+import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
+import mill.contrib.scoverage.ScoverageModule
+
 // This import the mill-osgi plugin
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.2.0`
 import de.tobiasroeser.mill.osgi._
 
 import $file.build_util
-import build_util.{ZipUtil, FilterUtil}
+import build_util.{FilterUtil, GenDummyFileForScoverage, ZipUtil}
 
 import $file.build_deps
 import build_deps.Deps
@@ -37,7 +40,7 @@ import build_deps.Deps
 /** Project directory. */
 val baseDir: os.Path = build.millSourcePath
 
-
+/** Configure additional repositories. */
 trait BlendedCoursierModule extends CoursierModule {
   private def zincWorker: ZincWorkerModule = mill.scalalib.ZincWorkerModule
   override def repositories: Seq[Repository] = zincWorker.repositories ++ Seq(
@@ -45,6 +48,7 @@ trait BlendedCoursierModule extends CoursierModule {
   )
 }
 
+/** Configure plublish settings. */
 trait BlendedPublishModule extends PublishModule {
   def description: String = "Blended module ${blendedModule}"
   override def publishVersion = T { blended.version() }
@@ -63,7 +67,7 @@ trait BlendedPublishModule extends PublishModule {
   }
 }
 
-trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPublishModule with OsgiBundleModule {
+trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPublishModule with OsgiBundleModule with ScoverageModule { blendedModuleBase =>
   /** The blended module name. */
   def blendedModule: String = millModuleSegments.parts.mkString(".")
   override def artifactName: T[String] = blendedModule
@@ -92,7 +96,11 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
 
   override def scalacOptions = Seq("-deprecation", "-target:jvm-1.8")
 
-  trait Tests extends super.Tests {
+  override def scoverageVersion = Deps.scoverageVersion
+
+  trait Tests extends super.Tests with super.ScoverageTests {
+    /** Ensure we don't include the non-scoverage-enhanced classes. */
+    override def moduleDeps: Seq[JavaModule] = super.moduleDeps.filterNot(_ == blendedModuleBase)
     override def ivyDeps = T{ super.ivyDeps() ++ Agg(
       Deps.scalatest
     )}
@@ -117,7 +125,7 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
         s"""<configuration>
            |
            |  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-           |    <file>${baseDir.toIO.getPath()}/target/test-${moduleSpec}.log</file>
+           |    <file>${baseDir.toString()}/target/test-${moduleSpec}.log</file>
            |
            |    <encoder>
            |      <pattern>%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%t] %logger : %msg%n</pattern>
@@ -158,21 +166,21 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
     }
     override def runClasspath: Target[Seq[PathRef]] = T{ super.runClasspath() ++ Seq(logResources(), copiedResources()()) }
     override def forkArgs: Target[Seq[String]] = T{ super.forkArgs() ++ Seq(
-      s"-DprojectTestOutput=${copiedResources()().path.toIO.getPath()}"
+      s"-DprojectTestOutput=${copiedResources()().path.toString()}"
     )}
   }
 
-  val defaultTestGroup = "other"
+  val otherTestGroup = "other"
   /** A Map of groups with their belonging test suites.
-   * The groups name  [[defaultTestGroup]] is reserved for all tests that don't need to run in an extra JVM. */
+   * The groups name  [[otherTestGroup]] is reserved for all tests that don't need to run in an extra JVM. */
   def testGroups: Map[String, Set[String]] = Map()
   /** Test group names, derived from [[testGroups]]. */
-  def crossTestGroups: Seq[String] = (Set(defaultTestGroup) ++ testGroups.keySet).toSeq
+  def crossTestGroups: Seq[String] = (Set(otherTestGroup) ++ testGroups.keySet).toSeq
 
   /** A test module that only executed the tests from the configured [[ForkedTest#testGroup]]. */
   trait ForkedTest extends Tests {
 
-    def testGroup: String = defaultTestGroup
+    def testGroup: String = otherTestGroup
 
     def detectTestGroups: T[Map[String, Set[String]]] = T {
       if(testFrameworks() != Seq("org.scalatest.tools.Framework")) {
@@ -188,7 +196,7 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
           }
           val isFork = cl.getAnnotations().exists(a => a.toString().contains("blended.testsupport.RequiresForkedJVM") || a.getClass().getName().contains("blended.testsupport.RequiresForkedJVM"))
           if(isFork) cl.getName()
-          else defaultTestGroup
+          else otherTestGroup
         }
         val groupNames: Map[String, Set[String]] = groups.mapValues(_.map(_._1.getName()).toSet)
         cl.close()
@@ -197,24 +205,24 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
     }
 
     /** redirect to "other"-compile */
-    override def compile: T[CompilationResult] = if(testGroup == defaultTestGroup) super.compile else otherModule.compile
+    override def compile: T[CompilationResult] = if(testGroup == otherTestGroup) super.compile else otherModule.compile
     /** Override this to define the target which compiles the test sources */
     def otherModule: ForkedTest
 
     def checkTestGroups(): Command[Unit] = T.command {
-      if(testGroup == defaultTestGroup) T{
+      if(testGroup == otherTestGroup) T{
         // only check in default cross instance "other"
 
-        val anyGroupsDetected = detectTestGroups().keySet != Set(defaultTestGroup)
+        val anyGroupsDetected = detectTestGroups().keySet != Set(otherTestGroup)
         val anyGroupsDefined = testGroups.nonEmpty
         val relevantGroups: PartialFunction[(String, Set[String]), Set[String]] = {
-          case (name, tests) if name != defaultTestGroup => tests
+          case (name, tests) if name != otherTestGroup => tests
         }
         val definedGroupedTests = testGroups.collect(relevantGroups).toSet
         val detectedGroupedTests = detectTestGroups().collect(relevantGroups).toSet
 
         if((anyGroupsDetected || anyGroupsDefined) && definedGroupedTests != detectedGroupedTests) {
-          T.log.error(s"Test groups invalid. Detected the following explicit groups: ${detectTestGroups() - defaultTestGroup}.")
+          T.log.error(s"Test groups invalid. Detected the following explicit groups: ${detectTestGroups() - otherTestGroup}.")
         }
       } else T{
         // depend on the other check
@@ -230,7 +238,7 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
 
     override def testCachedArgs: T[Seq[String]] = T{
       checkTestGroups()()
-      val tests = if(testGroup == defaultTestGroup && testGroups.get(defaultTestGroup).isEmpty) {
+      val tests = if(testGroup == otherTestGroup && testGroups.get(otherTestGroup).isEmpty) {
         val allTests = detectTestGroups().values.toSet.flatten
         val groupTests = testGroups.values.toSet.flatten
         allTests -- groupTests
@@ -244,11 +252,6 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
         tests.toSeq.flatMap(tc => Seq("-w", tc))
       }
     }
-  }
-
-  /** Show all compiled classes: `mill show __.classes` */
-  def classes: T[Seq[Path]] = T {
-    Try(os.walk(compile().classes.path)).getOrElse(Seq())
   }
 }
 
@@ -408,7 +411,7 @@ object blended extends Module {
       )
       object test extends Cross[Test](crossTestGroups: _*)
       class Test(override val testGroup: String) extends ForkedTest {
-        override def otherModule: ForkedTest =  brokerstarter.test(defaultTestGroup)
+        override def otherModule: ForkedTest =  brokerstarter.test(otherTestGroup)
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           Deps.activeMqKahadbStore,
           Deps.springCore,
@@ -510,7 +513,7 @@ object blended extends Module {
         )
       }
 
-      object api extends BlendedModule {
+      object api extends BlendedModule with GenDummyFileForScoverage {
         override val description : String = "Package the Akka Http API into a bundle."
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           Deps.akkaHttp,
@@ -634,7 +637,7 @@ object blended extends Module {
 
         object test extends Cross[Test](crossTestGroups: _*)
         class Test(override val testGroup: String) extends ForkedTest {
-          override def otherModule: ForkedTest = restjms.test(defaultTestGroup)
+          override def otherModule: ForkedTest = restjms.test(otherTestGroup)
           override def ivyDeps = T{ super.ivyDeps() ++ Agg(
             Deps.sttp,
             Deps.sttpAkka,
@@ -793,7 +796,7 @@ object blended extends Module {
   }
 
   object hawtio extends Module {
-    object login extends BlendedModule {
+    object login extends BlendedModule with GenDummyFileForScoverage {
       override val description : String = "Adding required imports to the hawtio war bundle"
       override def essentialImportPackage: Seq[String] = Seq(
         "blended.security.boot",
@@ -893,7 +896,7 @@ object blended extends Module {
       )
       object test extends Cross[Test](crossTestGroups: _*)
       class Test(override val testGroup: String) extends ForkedTest {
-        override def otherModule: ForkedTest =  bridge.test(defaultTestGroup)
+        override def otherModule: ForkedTest =  bridge.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           Deps.activeMqBroker,
           Deps.scalacheck,
@@ -1200,7 +1203,7 @@ object blended extends Module {
         )}
         object test extends Cross[Test](crossTestGroups: _*)
         class Test(override val testGroup: String) extends ForkedTest {
-          override def otherModule: ForkedTest =  rest.test(defaultTestGroup)
+          override def otherModule: ForkedTest =  rest.test(otherTestGroup)
         }
       }
     }
@@ -1333,7 +1336,7 @@ object blended extends Module {
     }
   }
 
-  object prickle extends BlendedModule {
+  object prickle extends BlendedModule with GenDummyFileForScoverage {
     override val description : String = "OSGi package for Prickle and mircojson"
     override def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.prickle.exclude("*" -> "*"),
@@ -1515,7 +1518,7 @@ object blended extends Module {
         )
         object test extends Cross[Test](crossTestGroups: _*)
         class Test(override val testGroup: String) extends ForkedTest {
-          override def otherModule: ForkedTest =  rest.test(defaultTestGroup)
+          override def otherModule: ForkedTest =  rest.test(otherTestGroup)
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             Deps.akkaTestkit,
             Deps.akkaStreamTestkit,
@@ -1596,7 +1599,7 @@ object blended extends Module {
         override def forkArgs: Target[Seq[String]] = T{ super.forkArgs() ++ Seq(
           s"-Djava.security.properties=${copiedResources()().path.toIO.getPath()}/container/security.properties"
         )}
-        override def otherModule: ForkedTest =  ssl.test(defaultTestGroup)
+        override def otherModule: ForkedTest =  ssl.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T { super.ivyDeps() ++ Agg(
           Deps.scalacheck
         )}
@@ -1741,7 +1744,7 @@ object blended extends Module {
     )
     object test extends Cross[Test](crossTestGroups: _*)
     class Test(override val testGroup: String) extends ForkedTest {
-      override def otherModule: ForkedTest = streams.test(defaultTestGroup)
+      override def otherModule: ForkedTest = streams.test(otherTestGroup)
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         Deps.commonsIo,
         Deps.scalacheck,
@@ -1787,7 +1790,7 @@ object blended extends Module {
       )
       object test extends Cross[Test](crossTestGroups: _*)
       class Test(override val testGroup: String) extends ForkedTest {
-        override def otherModule: ForkedTest = dispatcher.test(defaultTestGroup)
+        override def otherModule: ForkedTest = dispatcher.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           Deps.akkaTestkit,
           Deps.akkaSlf4j,

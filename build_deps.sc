@@ -18,6 +18,7 @@ object Deps {
   def scalaBinVersion(scalaVersion: String) = scalaVersion.split("[.]").take(2).mkString(".")
   val scalatestVersion = "3.0.8"
   val scalaCheckVersion = "1.14.0"
+  val scoverageVersion = "1.4.1"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
   val springVersion = "4.3.12.RELEASE_1"

@@ -5,10 +5,10 @@ import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
 import scala.util.matching.Regex
 import scala.util.matching.Regex.quoteReplacement
 
-import mill.{Agg, T}
+import mill.{Agg, PathRef, T}
 import mill.api.{Ctx, Loose, Result}
-import mill.define.{Command, Task}
-import mill.scalalib.{Lib, TestModule, TestRunner}
+import mill.define.{Command, Target, Task}
+import mill.scalalib.{JavaModule, Lib, TestModule, TestRunner}
 import os.{Path, RelPath}
 import sbt.testing.{Fingerprint, Framework}
 
@@ -136,3 +136,23 @@ trait FilterUtil {
 
 }
 object FilterUtil extends FilterUtil
+
+/**
+ * Generate a dummy Scala source file so that scoverage has at least on file to detect.
+ * Use to work around an issue when there are no source files but we want to simple match all
+ * scala modules when generating scoverage converage data.
+ */
+trait GenDummyFileForScoverage extends JavaModule {
+  def generateDummyScalaSource: T[PathRef] = T{
+    val srcFile = T.dest / "dummy.scala"
+    val code =
+      s"""
+         |/*package*/ class Dummy {
+         |  override def toString(): String = s"Dummy"
+         |}
+         |""".stripMargin
+    os.write(srcFile, code)
+    PathRef(T.dest)
+  }
+  override def generatedSources: T[Seq[PathRef]] = T{ super.generatedSources() ++ Seq(generateDummyScalaSource()) }
+}
