@@ -30,7 +30,7 @@ trait JmsEnvelopeHeader {
   val srcProviderHeader : String => String = s => jmsHeaderPrefix(s) + "SrcProvider"
   val srcDestHeader : String => String = s => jmsHeaderPrefix(s) + "SrcDestination"
   val destHeader : String => String = s => jmsHeaderPrefix(s) + "Destination"
-  val corrIdHeader : String => String = s => jmsHeaderPrefix(s) + "CorrelationId"
+  val corrIdHeader : String => String = s => jmsHeaderPrefix(s) + "CorrelationID"
   val priorityHeader : String => String = s => jmsHeaderPrefix(s) + "Priority"
   val expireHeader : String => String = s => jmsHeaderPrefix(s) + "Expiration"
   val deliveryModeHeader : String => String = s => jmsHeaderPrefix(s) + "DeliveryMode"
