@@ -145,11 +145,11 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
       os.write(dest / "logback-test.xml", logConfig)
       PathRef(dest)
     }
-    /** A command, because this needs to run always to be always fresh, as we intend to write into that dir when executing tests.
+    /** A T.input, because this needs to run always to be always fresh, as we intend to write into that dir when executing tests.
      * This is in migration from sbt-like setup.
      */
-    def copiedResources(): Command[PathRef] = T.command {
-      val dest = T.ctx().dest
+    def copiedResources: T[PathRef] = T.input {
+      val dest = T.dest
       testResources().foreach { p =>
         if(os.exists(p.path)) {
           if(os.isDir(p.path)) {
@@ -164,9 +164,9 @@ trait BlendedModule extends SbtModule with BlendedCoursierModule with BlendedPub
       }
       PathRef(dest)
     }
-    override def runClasspath: Target[Seq[PathRef]] = T{ super.runClasspath() ++ Seq(logResources(), copiedResources()()) }
+    override def runClasspath: Target[Seq[PathRef]] = T{ super.runClasspath() ++ Seq(logResources(), copiedResources()) }
     override def forkArgs: Target[Seq[String]] = T{ super.forkArgs() ++ Seq(
-      s"-DprojectTestOutput=${copiedResources()().path.toString()}"
+      s"-DprojectTestOutput=${copiedResources().path.toString()}"
     )}
   }
 
@@ -1597,7 +1597,7 @@ object blended extends Module {
       object test extends Cross[Test](crossTestGroups: _*)
       class Test(override val testGroup: String) extends ForkedTest {
         override def forkArgs: Target[Seq[String]] = T{ super.forkArgs() ++ Seq(
-          s"-Djava.security.properties=${copiedResources()().path.toIO.getPath()}/container/security.properties"
+          s"-Djava.security.properties=${copiedResources().path.toIO.getPath()}/container/security.properties"
         )}
         override def otherModule: ForkedTest =  ssl.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T { super.ivyDeps() ++ Agg(
