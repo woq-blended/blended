@@ -1,0 +1,1550 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/streams/jms/JmsStreamSupport.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.streams.jms
+</span>2 <span style=''>
+</span>3 <span style=''>import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
+</span>4 <span style=''>
+</span>5 <span style=''>import akka.actor.{ActorRef, ActorSystem}
+</span>6 <span style=''>import akka.stream._
+</span>7 <span style=''>import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+</span>8 <span style=''>import akka.{Done, NotUsed}
+</span>9 <span style=''>import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
+</span>10 <span style=''>import blended.streams.{FlowHeaderConfig, StreamFactories}
+</span>11 <span style=''>import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+</span>12 <span style=''>import blended.streams.processor.{AckProcessor, Collector}
+</span>13 <span style=''>import blended.util.logging.LogLevel
+</span>14 <span style=''>
+</span>15 <span style=''>import scala.concurrent.duration._
+</span>16 <span style=''>import scala.concurrent.{Await, ExecutionContext, Future}
+</span>17 <span style=''>import scala.util.Try
+</span>18 <span style=''>
+</span>19 <span style=''>trait JmsStreamSupport {
+</span>20 <span style=''>  /**
+</span>21 <span style=''>   * Process a sequence of messages with a given flow. If any of the processed
+</span>22 <span style=''>   * messages cause an exception in the provided flow, the Stream will terminated
+</span>23 <span style=''>   * with this exception been thrown.
+</span>24 <span style=''>   *
+</span>25 <span style=''>   * The resulting stream will expose a killswitch, so that it stays
+</span>26 <span style=''>   * open and the test code needs to tear it down eventually.
+</span>27 <span style=''>   */
+</span>28 <span style=''>
+</span>29 <span style=''>  def processMessages(
+</span>30 <span style=''>    processFlow : Flow[FlowEnvelope, FlowEnvelope, _],
+</span>31 <span style=''>    msgs : FlowEnvelope*
+</span>32 <span style=''>  )(implicit system : ActorSystem) : Try[KillSwitch] = </span><span style='background: #AEF1AE'>Try {
+</span>33 <span style=''></span><span style='background: #AEF1AE'>
+</span>34 <span style=''></span><span style='background: #AEF1AE'>    implicit val materializer : Materializer = ActorMaterializer()
+</span>35 <span style=''></span><span style='background: #AEF1AE'>    implicit val eCtxt : ExecutionContext = system.dispatcher
+</span>36 <span style=''></span><span style='background: #AEF1AE'>
+</span>37 <span style=''></span><span style='background: #AEF1AE'>    val hasException : AtomicBoolean = new AtomicBoolean(false)
+</span>38 <span style=''></span><span style='background: #AEF1AE'>    val sendCount : AtomicInteger = new AtomicInteger(0)
+</span>39 <span style=''></span><span style='background: #AEF1AE'>
+</span>40 <span style=''></span><span style='background: #AEF1AE'>    val (((actor : ActorRef, killswitch : KillSwitch), done : Future[Done]), errEnv : Future[Option[FlowEnvelope]]) =
+</span>41 <span style=''></span><span style='background: #AEF1AE'>      Source.actorRef[FlowEnvelope](msgs.size, OverflowStrategy.fail)
+</span>42 <span style=''></span><span style='background: #AEF1AE'>        .viaMat(processFlow)(Keep.left)
+</span>43 <span style=''></span><span style='background: #AEF1AE'>        .viaMat(KillSwitches.single)(Keep.both)
+</span>44 <span style=''></span><span style='background: #AEF1AE'>        .watchTermination()(Keep.both)
+</span>45 <span style=''></span><span style='background: #AEF1AE'>        .via(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =&gt;
+</span>46 <span style=''></span><span style='background: #AEF1AE'>          if (env.exception.isDefined) {
+</span>47 <span style=''></span><span style='background: #AEF1AE'>            env.exception.foreach { t =&gt;
+</span>48 <span style=''></span><span style='background: #AEF1AE'>              hasException.set(true)
+</span>49 <span style=''></span><span style='background: #AEF1AE'>              throw t
+</span>50 <span style=''></span><span style='background: #AEF1AE'>            }
+</span>51 <span style=''></span><span style='background: #AEF1AE'>          } else {
+</span>52 <span style=''></span><span style='background: #AEF1AE'>            sendCount.incrementAndGet()
+</span>53 <span style=''></span><span style='background: #AEF1AE'>          }
+</span>54 <span style=''></span><span style='background: #AEF1AE'>          env
+</span>55 <span style=''></span><span style='background: #AEF1AE'>        })
+</span>56 <span style=''></span><span style='background: #AEF1AE'>        .filter(_.exception.isDefined)
+</span>57 <span style=''></span><span style='background: #AEF1AE'>        .toMat(Sink.headOption[FlowEnvelope])(Keep.both)
+</span>58 <span style=''></span><span style='background: #AEF1AE'>        .run()
+</span>59 <span style=''></span><span style='background: #AEF1AE'>
+</span>60 <span style=''></span><span style='background: #AEF1AE'>    // Send all the messages
+</span>61 <span style=''></span><span style='background: #AEF1AE'>    msgs.foreach(m =&gt; actor ! m)
+</span>62 <span style=''></span><span style='background: #AEF1AE'>
+</span>63 <span style=''></span><span style='background: #AEF1AE'>    // We will wait until all messages have passed through the process flow and check if
+</span>64 <span style=''></span><span style='background: #AEF1AE'>    // any have thrown an exception causing the stream to fail
+</span>65 <span style=''></span><span style='background: #AEF1AE'>    do {
+</span>66 <span style=''></span><span style='background: #AEF1AE'>      Thread.sleep(10)
+</span>67 <span style=''></span><span style='background: #AEF1AE'>
+</span>68 <span style=''></span><span style='background: #AEF1AE'>      if (hasException.get()) {
+</span>69 <span style=''></span><span style='background: #AEF1AE'>        Await.result(errEnv, 1.second).flatMap(</span><span style='background: #F0ADAD'>_.exception</span><span style='background: #AEF1AE'>).foreach(t =&gt; </span><span style='background: #F0ADAD'>throw t</span><span style='background: #AEF1AE'>)
+</span>70 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>71 <span style=''></span><span style='background: #AEF1AE'>
+</span>72 <span style=''></span><span style='background: #AEF1AE'>      // if the stream has is finished before sending off all the messages, something went wrong.
+</span>73 <span style=''></span><span style='background: #AEF1AE'>      if (done.isCompleted) {
+</span>74 <span style=''></span><span style='background: #AEF1AE'>        throw new Exception(&quot;Failed to send messages to stream&quot;)
+</span>75 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>76 <span style=''></span><span style='background: #AEF1AE'>    } while (!hasException.get &amp;&amp; sendCount.get &lt; msgs.size)
+</span>77 <span style=''></span><span style='background: #AEF1AE'>
+</span>78 <span style=''></span><span style='background: #AEF1AE'>    killswitch
+</span>79 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>80 <span style=''>
+</span>81 <span style=''>  def sendMessages(
+</span>82 <span style=''>    producerSettings: JmsProducerSettings,
+</span>83 <span style=''>    log : FlowEnvelopeLogger,
+</span>84 <span style=''>    msgs : FlowEnvelope*
+</span>85 <span style=''>  )(implicit system : ActorSystem, materializer : Materializer, ectxt : ExecutionContext) : Try[KillSwitch] = {
+</span>86 <span style=''>
+</span>87 <span style=''>    val producer : Flow[FlowEnvelope, FlowEnvelope, _] = </span><span style='background: #AEF1AE'>jmsProducer(
+</span>88 <span style=''></span><span style='background: #AEF1AE'>      name = producerSettings.jmsDestination.map(_.asString).getOrElse(&quot;producer&quot;),
+</span>89 <span style=''></span><span style='background: #AEF1AE'>      settings = producerSettings,
+</span>90 <span style=''></span><span style='background: #AEF1AE'>      autoAck = true
+</span>91 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>92 <span style=''>
+</span>93 <span style=''>    </span><span style='background: #AEF1AE'>processMessages(
+</span>94 <span style=''></span><span style='background: #AEF1AE'>      processFlow = producer,
+</span>95 <span style=''></span><span style='background: #AEF1AE'>      msgs = msgs : _*
+</span>96 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>97 <span style=''>  }
+</span>98 <span style=''>
+</span>99 <span style=''>  def receiveMessages(
+</span>100 <span style=''>    headerCfg : FlowHeaderConfig,
+</span>101 <span style=''>    cf : IdAwareConnectionFactory,
+</span>102 <span style=''>    dest : JmsDestination,
+</span>103 <span style=''>    log : FlowEnvelopeLogger,
+</span>104 <span style=''>    listener : Integer = 2,
+</span>105 <span style=''>    minMessageDelay : Option[FiniteDuration] = None,
+</span>106 <span style=''>    selector : Option[String] = None,
+</span>107 <span style=''>    completeOn : Option[Seq[FlowEnvelope] =&gt; Boolean] = None,
+</span>108 <span style=''>    timeout : Option[FiniteDuration]
+</span>109 <span style=''>  )(implicit system : ActorSystem, materializer : Materializer) : Collector[FlowEnvelope] = {
+</span>110 <span style=''>
+</span>111 <span style=''>    val listenerCount : Int = if (</span><span style='background: #AEF1AE'>dest.isInstanceOf[JmsQueue]</span><span style=''>) {
+</span>112 <span style=''>      </span><span style='background: #AEF1AE'>listener</span><span style=''>
+</span>113 <span style=''>    } else {
+</span>114 <span style=''>      </span><span style='background: #F0ADAD'>1</span><span style=''>
+</span>115 <span style=''>    }
+</span>116 <span style=''>
+</span>117 <span style=''>    val collected : FlowEnvelope =&gt; Unit = { env =&gt;
+</span>118 <span style=''>      </span><span style='background: #AEF1AE'>log.logEnv(env, LogLevel.Debug, s&quot;Acknowledging envelope [${env.id}]&quot;)</span><span style=''>
+</span>119 <span style=''>      </span><span style='background: #AEF1AE'>env.acknowledge()</span><span style=''>
+</span>120 <span style=''>    }
+</span>121 <span style=''>
+</span>122 <span style=''>    val source : Source[FlowEnvelope, NotUsed] = </span><span style='background: #AEF1AE'>jmsConsumer(
+</span>123 <span style=''></span><span style='background: #AEF1AE'>      name = dest.asString,
+</span>124 <span style=''></span><span style='background: #AEF1AE'>      settings =
+</span>125 <span style=''></span><span style='background: #AEF1AE'>        JmsConsumerSettings(log = log, headerCfg = headerCfg, connectionFactory = cf)
+</span>126 <span style=''></span><span style='background: #AEF1AE'>          .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
+</span>127 <span style=''></span><span style='background: #AEF1AE'>          .withSessionCount(listenerCount)
+</span>128 <span style=''></span><span style='background: #AEF1AE'>          .withDestination(Some(dest))
+</span>129 <span style=''></span><span style='background: #AEF1AE'>          .withSelector(selector),
+</span>130 <span style=''></span><span style='background: #AEF1AE'>      minMessageDelay = minMessageDelay
+</span>131 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>132 <span style=''>
+</span>133 <span style=''>    </span><span style='background: #AEF1AE'>StreamFactories.runSourceWithTimeLimit(
+</span>134 <span style=''></span><span style='background: #AEF1AE'>      name = dest.asString,
+</span>135 <span style=''></span><span style='background: #AEF1AE'>      source = source,
+</span>136 <span style=''></span><span style='background: #AEF1AE'>      timeout = timeout,
+</span>137 <span style=''></span><span style='background: #AEF1AE'>      onCollected = Some(collected),
+</span>138 <span style=''></span><span style='background: #AEF1AE'>      completeOn = completeOn
+</span>139 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>140 <span style=''>  }
+</span>141 <span style=''>
+</span>142 <span style=''>  def jmsProducer(
+</span>143 <span style=''>    name : String,
+</span>144 <span style=''>    settings : JmsProducerSettings,
+</span>145 <span style=''>    autoAck : Boolean
+</span>146 <span style=''>  )(implicit system : ActorSystem) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+</span>147 <span style=''>
+</span>148 <span style=''>    implicit val materializer : Materializer = </span><span style='background: #AEF1AE'>ActorMaterializer()</span><span style=''>
+</span>149 <span style=''>
+</span>150 <span style=''>    val f = </span><span style='background: #AEF1AE'>Flow.fromGraph(new JmsProducerStage(name, settings)).named(name)</span><span style=''>
+</span>151 <span style=''>
+</span>152 <span style=''>    if (autoAck) {
+</span>153 <span style=''>      </span><span style='background: #AEF1AE'>f.via(new AckProcessor(s&quot;ack-$name&quot;).flow.named(s&quot;ack-$name&quot;))</span><span style=''>
+</span>154 <span style=''>    } else {
+</span>155 <span style=''>      </span><span style='background: #AEF1AE'>f</span><span style=''>
+</span>156 <span style=''>    }
+</span>157 <span style=''>  }
+</span>158 <span style=''>
+</span>159 <span style=''>  def jmsConsumer(
+</span>160 <span style=''>    name : String,
+</span>161 <span style=''>    settings : JmsConsumerSettings,
+</span>162 <span style=''>    minMessageDelay : Option[FiniteDuration]
+</span>163 <span style=''>  )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] =
+</span>164 <span style=''>    </span><span style='background: #AEF1AE'>Source.fromGraph(new JmsConsumerStage(name, settings, minMessageDelay))</span><span style=''>
+</span>165 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          22253
+        </td>
+        <td>
+          1189
+          -
+          2846
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          22577
+        </td>
+        <td>
+          1243
+          -
+          1262
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          20867
+        </td>
+        <td>
+          1307
+          -
+          1324
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          21100
+        </td>
+        <td>
+          1365
+          -
+          1389
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          22569
+        </td>
+        <td>
+          1426
+          -
+          1446
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          21092
+        </td>
+        <td>
+          1459
+          -
+          1459
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          20000
+        </td>
+        <td>
+          1477
+          -
+          1477
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          19330
+        </td>
+        <td>
+          1503
+          -
+          1503
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          20994
+        </td>
+        <td>
+          1525
+          -
+          1525
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          61
+        </td>
+        <td>
+          22707
+        </td>
+        <td>
+          2245
+          -
+          2250
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          61
+        </td>
+        <td>
+          23576
+        </td>
+        <td>
+          2245
+          -
+          2254
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          61
+        </td>
+        <td>
+          22238
+        </td>
+        <td>
+          2251
+          -
+          2251
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          61
+        </td>
+        <td>
+          21227
+        </td>
+        <td>
+          2227
+          -
+          2255
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          21481
+        </td>
+        <td>
+          2413
+          -
+          2413
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          22719
+        </td>
+        <td>
+          2413
+          -
+          2413
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          20748
+        </td>
+        <td>
+          2413
+          -
+          2413
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          23764
+        </td>
+        <td>
+          2413
+          -
+          2413
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          19477
+        </td>
+        <td>
+          2424
+          -
+          2440
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          19392
+        </td>
+        <td>
+          2452
+          -
+          2470
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          20872
+        </td>
+        <td>
+          2448
+          -
+          2448
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          19254
+        </td>
+        <td>
+          2448
+          -
+          2448
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          19528
+        </td>
+        <td>
+          2503
+          -
+          2504
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          21475
+        </td>
+        <td>
+          2521
+          -
+          2532
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          22698
+        </td>
+        <td>
+          2547
+          -
+          2554
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          19468
+        </td>
+        <td>
+          2482
+          -
+          2555
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          21374
+        </td>
+        <td>
+          2482
+          -
+          2555
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          22947
+        </td>
+        <td>
+          2503
+          -
+          2511
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          19381
+        </td>
+        <td>
+          2669
+          -
+          2669
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          22228
+        </td>
+        <td>
+          2673
+          -
+          2689
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          19890
+        </td>
+        <td>
+          2669
+          -
+          2669
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          74
+        </td>
+        <td>
+          21097
+        </td>
+        <td>
+          2701
+          -
+          2757
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          74
+        </td>
+        <td>
+          22463
+        </td>
+        <td>
+          2701
+          -
+          2757
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          76
+        </td>
+        <td>
+          22629
+        </td>
+        <td>
+          2800
+          -
+          2825
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          76
+        </td>
+        <td>
+          22242
+        </td>
+        <td>
+          2779
+          -
+          2825
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          76
+        </td>
+        <td>
+          19595
+        </td>
+        <td>
+          2816
+          -
+          2825
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          20819
+        </td>
+        <td>
+          3136
+          -
+          3294
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          23710
+        </td>
+        <td>
+          3300
+          -
+          3375
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          111
+        </td>
+        <td>
+          22178
+        </td>
+        <td>
+          3877
+          -
+          3904
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          112
+        </td>
+        <td>
+          20485
+        </td>
+        <td>
+          3914
+          -
+          3922
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          112
+        </td>
+        <td>
+          19690
+        </td>
+        <td>
+          3914
+          -
+          3922
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          114
+        </td>
+        <td>
+          22517
+        </td>
+        <td>
+          3942
+          -
+          3943
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          114
+        </td>
+        <td>
+          22935
+        </td>
+        <td>
+          3942
+          -
+          3943
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          118
+        </td>
+        <td>
+          22408
+        </td>
+        <td>
+          4009
+          -
+          4079
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          118
+        </td>
+        <td>
+          19465
+        </td>
+        <td>
+          4013
+          -
+          4013
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          118
+        </td>
+        <td>
+          20490
+        </td>
+        <td>
+          4041
+          -
+          4078
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          118
+        </td>
+        <td>
+          21839
+        </td>
+        <td>
+          4069
+          -
+          4075
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          118
+        </td>
+        <td>
+          19267
+        </td>
+        <td>
+          4043
+          -
+          4068
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          118
+        </td>
+        <td>
+          19335
+        </td>
+        <td>
+          4076
+          -
+          4078
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          118
+        </td>
+        <td>
+          20686
+        </td>
+        <td>
+          4025
+          -
+          4039
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          119
+        </td>
+        <td>
+          23719
+        </td>
+        <td>
+          4086
+          -
+          4103
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          122
+        </td>
+        <td>
+          20682
+        </td>
+        <td>
+          4160
+          -
+          4532
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          133
+        </td>
+        <td>
+          22248
+        </td>
+        <td>
+          4538
+          -
+          4726
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          134
+        </td>
+        <td>
+          23655
+        </td>
+        <td>
+          4591
+          -
+          4604
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          137
+        </td>
+        <td>
+          20936
+        </td>
+        <td>
+          4674
+          -
+          4689
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          148
+        </td>
+        <td>
+          20735
+        </td>
+        <td>
+          4959
+          -
+          4978
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          150
+        </td>
+        <td>
+          21218
+        </td>
+        <td>
+          4992
+          -
+          5056
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          153
+        </td>
+        <td>
+          19635
+        </td>
+        <td>
+          5131
+          -
+          5143
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          153
+        </td>
+        <td>
+          19246
+        </td>
+        <td>
+          5089
+          -
+          5144
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          153
+        </td>
+        <td>
+          22891
+        </td>
+        <td>
+          5106
+          -
+          5118
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          153
+        </td>
+        <td>
+          21096
+        </td>
+        <td>
+          5083
+          -
+          5145
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          153
+        </td>
+        <td>
+          22648
+        </td>
+        <td>
+          5083
+          -
+          5145
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          155
+        </td>
+        <td>
+          22303
+        </td>
+        <td>
+          5165
+          -
+          5166
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          164
+        </td>
+        <td>
+          22845
+        </td>
+        <td>
+          5387
+          -
+          5440
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          164
+        </td>
+        <td>
+          21051
+        </td>
+        <td>
+          5370
+          -
+          5441
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

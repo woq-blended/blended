@@ -1,0 +1,513 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/launcher/Cmdline.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.launcher
+</span>2 <span style=''>
+</span>3 <span style=''>import java.io.File
+</span>4 <span style=''>
+</span>5 <span style=''>import de.tototec.cmdoption.CmdOption
+</span>6 <span style=''>
+</span>7 <span style=''>class Cmdline {
+</span>8 <span style=''>
+</span>9 <span style=''>  @CmdOption(names = Array(&quot;--config&quot;, &quot;-c&quot;), args = Array(&quot;FILE&quot;),
+</span>10 <span style=''>    description = &quot;Configuration file&quot;,
+</span>11 <span style=''>    conflictsWith = Array(&quot;--profile&quot;, &quot;--profile-lookup&quot;))
+</span>12 <span style=''>  def setPonfigFile(file : String) : Unit = </span><span style='background: #AEF1AE'>configFile = Option(file)</span><span style=''>
+</span>13 <span style=''>
+</span>14 <span style=''>  var configFile : Option[String] = </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>15 <span style=''>
+</span>16 <span style=''>  @CmdOption(names = Array(&quot;--help&quot;, &quot;-h&quot;), description = &quot;Show this help&quot;, isHelp = true)
+</span>17 <span style=''>  var help : Boolean = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>18 <span style=''>
+</span>19 <span style=''>  @CmdOption(names = Array(&quot;--profile&quot;, &quot;-p&quot;), args = Array(&quot;profile&quot;),
+</span>20 <span style=''>    description = &quot;Start the profile from file or directory {0}&quot;,
+</span>21 <span style=''>    conflictsWith = Array(&quot;--profile-lookup&quot;, &quot;--config&quot;))
+</span>22 <span style=''>  def setProfileDir(dir : String) : Unit = </span><span style='background: #F0ADAD'>profileDir = Option(dir)</span><span style=''>
+</span>23 <span style=''>
+</span>24 <span style=''>  var profileDir : Option[String] = </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>25 <span style=''>
+</span>26 <span style=''>  @CmdOption(names = Array(&quot;--framework-restart&quot;, &quot;-r&quot;), args = Array(&quot;BOOLEAN&quot;),
+</span>27 <span style=''>    description = &quot;Should the launcher restart the framework after updates.&quot; +
+</span>28 <span style=''>      &quot; If disabled and the framework was updated, the exit code is 2.&quot;)
+</span>29 <span style=''>  var handleFrameworkRestart : Boolean = </span><span style='background: #AEF1AE'>true</span><span style=''>
+</span>30 <span style=''>
+</span>31 <span style=''>  @CmdOption(names = Array(&quot;--profile-lookup&quot;, &quot;-P&quot;), args = Array(&quot;config file&quot;),
+</span>32 <span style=''>    description = &quot;Lookup to profile file or directory from the config file {0}&quot;,
+</span>33 <span style=''>    conflictsWith = Array(&quot;--profile&quot;, &quot;--config&quot;))
+</span>34 <span style=''>  def setProfileLookup(file : String) : Unit = </span><span style='background: #F0ADAD'>profileLookup = Option(file)</span><span style=''>
+</span>35 <span style=''>
+</span>36 <span style=''>  var profileLookup : Option[String] = </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>37 <span style=''>
+</span>38 <span style=''>  @CmdOption(
+</span>39 <span style=''>    names = Array(&quot;--reset-container-id&quot;),
+</span>40 <span style=''>    description = &quot;This will generate a new UUID identifying the container regardless one whether it already exists&quot;,
+</span>41 <span style=''>    conflictsWith = Array(&quot;--config&quot;, &quot;--init-container-id&quot;)
+</span>42 <span style=''>  )
+</span>43 <span style=''>  var resetContainerId : Boolean = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>44 <span style=''>
+</span>45 <span style=''>  @CmdOption(
+</span>46 <span style=''>    names = Array(&quot;--init-container-id&quot;),
+</span>47 <span style=''>    description = &quot;This will generate a new UUID identifying the container in case it does not yet exist&quot;,
+</span>48 <span style=''>    conflictsWith = Array(&quot;--config&quot;, &quot;--reset-container-id&quot;)
+</span>49 <span style=''>  )
+</span>50 <span style=''>  var initContainerId : Boolean = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>51 <span style=''>
+</span>52 <span style=''>  @CmdOption(
+</span>53 <span style=''>    names = Array(&quot;--write-system-properties&quot;),
+</span>54 <span style=''>    args = Array(&quot;FILE&quot;),
+</span>55 <span style=''>    description = &quot;Show the additional system properties this launch configuration wants to set and exit&quot;
+</span>56 <span style=''>  )
+</span>57 <span style=''>  def setWriteSystemProperties(file : String) : Unit = </span><span style='background: #F0ADAD'>writeSystemProperties = Option(new File(file).getAbsoluteFile())</span><span style=''>
+</span>58 <span style=''>
+</span>59 <span style=''>  var writeSystemProperties : Option[File] = </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>60 <span style=''>
+</span>61 <span style=''>  @CmdOption(
+</span>62 <span style=''>    names = Array(&quot;--strict&quot;),
+</span>63 <span style=''>    description = &quot;Start the container in strict mode (unresolved bundles or bundles failing to start terminate the container)&quot;
+</span>64 <span style=''>  )
+</span>65 <span style=''>  var strict : Boolean = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>66 <span style=''>
+</span>67 <span style=''>  @CmdOption(
+</span>68 <span style=''>    names = Array(&quot;--test&quot;),
+</span>69 <span style=''>    description = &quot;Just test the framework start and then exit&quot;
+</span>70 <span style=''>  )
+</span>71 <span style=''>  var test : Boolean = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>72 <span style=''>
+</span>73 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          5732
+        </td>
+        <td>
+          328
+          -
+          340
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          6081
+        </td>
+        <td>
+          315
+          -
+          340
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          5453
+        </td>
+        <td>
+          378
+          -
+          382
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          6092
+        </td>
+        <td>
+          498
+          -
+          503
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          5523
+        </td>
+        <td>
+          745
+          -
+          769
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          5850
+        </td>
+        <td>
+          758
+          -
+          769
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          5577
+        </td>
+        <td>
+          807
+          -
+          811
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          5269
+        </td>
+        <td>
+          1088
+          -
+          1092
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          5246
+        </td>
+        <td>
+          1374
+          -
+          1386
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          5422
+        </td>
+        <td>
+          1358
+          -
+          1386
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          5520
+        </td>
+        <td>
+          1427
+          -
+          1431
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          5255
+        </td>
+        <td>
+          1708
+          -
+          1713
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          50
+        </td>
+        <td>
+          5750
+        </td>
+        <td>
+          1978
+          -
+          1983
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          57
+        </td>
+        <td>
+          5197
+        </td>
+        <td>
+          2238
+          -
+          2302
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          57
+        </td>
+        <td>
+          5546
+        </td>
+        <td>
+          2269
+          -
+          2301
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          57
+        </td>
+        <td>
+          5827
+        </td>
+        <td>
+          2262
+          -
+          2302
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          5864
+        </td>
+        <td>
+          2349
+          -
+          2353
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          5825
+        </td>
+        <td>
+          2557
+          -
+          2562
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          71
+        </td>
+        <td>
+          5217
+        </td>
+        <td>
+          2698
+          -
+          2703
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

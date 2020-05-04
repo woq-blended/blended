@@ -1,0 +1,500 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/internal/BlendedConfiguration.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.container.context.api.ContainerContext
+</span>4 <span style=''>import blended.security.boot.BlendedLoginModule
+</span>5 <span style=''>import blended.security.boot.BlendedLoginModule.{propBundle, propModule}
+</span>6 <span style=''>import com.typesafe.config.Config
+</span>7 <span style=''>import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag
+</span>8 <span style=''>import javax.security.auth.login.{AppConfigurationEntry, Configuration}
+</span>9 <span style=''>
+</span>10 <span style=''>import scala.collection.JavaConverters._
+</span>11 <span style=''>
+</span>12 <span style=''>object BlendedConfiguration {
+</span>13 <span style=''>  val configProp = </span><span style='background: #AEF1AE'>&quot;config&quot;</span><span style=''>
+</span>14 <span style=''>  val ctCtxtProp = </span><span style='background: #AEF1AE'>&quot;ctCtxt&quot;</span><span style=''>
+</span>15 <span style=''>}
+</span>16 <span style=''>
+</span>17 <span style=''>class BlendedConfiguration(
+</span>18 <span style=''>  bundleName : String,
+</span>19 <span style=''>  loginModuleClassName : String,
+</span>20 <span style=''>  cfg : Config,
+</span>21 <span style=''>  ctCtxt : ContainerContext
+</span>22 <span style=''>) extends Configuration {
+</span>23 <span style=''>
+</span>24 <span style=''>  import BlendedConfiguration._
+</span>25 <span style=''>
+</span>26 <span style=''>  override def getAppConfigurationEntry(name : String) : Array[AppConfigurationEntry] = {
+</span>27 <span style=''>
+</span>28 <span style=''>    val options : Map[String, Any] = </span><span style='background: #AEF1AE'>Map(
+</span>29 <span style=''></span><span style='background: #AEF1AE'>      propBundle -&gt; bundleName,
+</span>30 <span style=''></span><span style='background: #AEF1AE'>      propModule -&gt; loginModuleClassName,
+</span>31 <span style=''></span><span style='background: #AEF1AE'>      configProp -&gt; cfg,
+</span>32 <span style=''></span><span style='background: #AEF1AE'>      ctCtxtProp -&gt; ctCtxt
+</span>33 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>34 <span style=''>
+</span>35 <span style=''>    val entry = </span><span style='background: #AEF1AE'>new AppConfigurationEntry(classOf[BlendedLoginModule].getName(), LoginModuleControlFlag.REQUISITE, options.asJava)</span><span style=''>
+</span>36 <span style=''>
+</span>37 <span style=''>    </span><span style='background: #AEF1AE'>Array(entry)</span><span style=''>
+</span>38 <span style=''>  }
+</span>39 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          12375
+        </td>
+        <td>
+          486
+          -
+          494
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          12152
+        </td>
+        <td>
+          514
+          -
+          522
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          12365
+        </td>
+        <td>
+          842
+          -
+          978
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          12425
+        </td>
+        <td>
+          853
+          -
+          863
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          12409
+        </td>
+        <td>
+          853
+          -
+          877
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          12247
+        </td>
+        <td>
+          867
+          -
+          877
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          12357
+        </td>
+        <td>
+          899
+          -
+          919
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          12114
+        </td>
+        <td>
+          885
+          -
+          919
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          12110
+        </td>
+        <td>
+          885
+          -
+          895
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          12243
+        </td>
+        <td>
+          927
+          -
+          944
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          12393
+        </td>
+        <td>
+          941
+          -
+          944
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          12205
+        </td>
+        <td>
+          927
+          -
+          937
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          12276
+        </td>
+        <td>
+          952
+          -
+          962
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          12099
+        </td>
+        <td>
+          966
+          -
+          972
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          12266
+        </td>
+        <td>
+          952
+          -
+          972
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          12141
+        </td>
+        <td>
+          1095
+          -
+          1109
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          12143
+        </td>
+        <td>
+          996
+          -
+          1110
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          12397
+        </td>
+        <td>
+          1061
+          -
+          1093
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          12223
+        </td>
+        <td>
+          1022
+          -
+          1059
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          12098
+        </td>
+        <td>
+          1116
+          -
+          1128
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

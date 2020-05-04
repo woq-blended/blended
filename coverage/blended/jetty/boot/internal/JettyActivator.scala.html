@@ -1,0 +1,409 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/jetty/boot/internal/JettyActivator.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.jetty.boot.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import domino.DominoActivator
+</span>4 <span style=''>import javax.net.ssl.SSLContext
+</span>5 <span style=''>import org.eclipse.jetty.osgi.boot.JettyBootstrapActivator
+</span>6 <span style=''>
+</span>7 <span style=''>object JettyActivator {
+</span>8 <span style=''>
+</span>9 <span style=''>  var sslContext : Option[SSLContext] = </span><span style='background: #F0ADAD'>None</span><span style=''>
+</span>10 <span style=''>
+</span>11 <span style=''>}
+</span>12 <span style=''>
+</span>13 <span style=''>class JettyActivator extends DominoActivator {
+</span>14 <span style=''>
+</span>15 <span style=''>  </span><span style='background: #F0ADAD'>whenBundleActive {
+</span>16 <span style=''></span><span style='background: #F0ADAD'>    whenAdvancedServicePresent[SSLContext](&quot;(type=server)&quot;) { sslCtxt =&gt;
+</span>17 <span style=''></span><span style='background: #F0ADAD'>
+</span>18 <span style=''></span><span style='background: #F0ADAD'>      JettyActivator.sslContext = Some(sslCtxt)
+</span>19 <span style=''></span><span style='background: #F0ADAD'>      onStop {
+</span>20 <span style=''></span><span style='background: #F0ADAD'>        JettyActivator.sslContext = None
+</span>21 <span style=''></span><span style='background: #F0ADAD'>      }
+</span>22 <span style=''></span><span style='background: #F0ADAD'>
+</span>23 <span style=''></span><span style='background: #F0ADAD'>      val jettyActivator = new JettyBootstrapActivator()
+</span>24 <span style=''></span><span style='background: #F0ADAD'>
+</span>25 <span style=''></span><span style='background: #F0ADAD'>      jettyActivator.start(bundleContext)
+</span>26 <span style=''></span><span style='background: #F0ADAD'>
+</span>27 <span style=''></span><span style='background: #F0ADAD'>      onStop {
+</span>28 <span style=''></span><span style='background: #F0ADAD'>        jettyActivator.stop(bundleContext)
+</span>29 <span style=''></span><span style='background: #F0ADAD'>      }
+</span>30 <span style=''></span><span style='background: #F0ADAD'>    }
+</span>31 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
+</span>32 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          9
+        </td>
+        <td>
+          1562
+        </td>
+        <td>
+          224
+          -
+          228
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          1572
+        </td>
+        <td>
+          283
+          -
+          665
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          1578
+        </td>
+        <td>
+          306
+          -
+          661
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          1574
+        </td>
+        <td>
+          362
+          -
+          362
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          1567
+        </td>
+        <td>
+          345
+          -
+          360
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1569
+        </td>
+        <td>
+          410
+          -
+          423
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1568
+        </td>
+        <td>
+          382
+          -
+          423
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          1573
+        </td>
+        <td>
+          430
+          -
+          487
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          1560
+        </td>
+        <td>
+          447
+          -
+          479
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          1565
+        </td>
+        <td>
+          475
+          -
+          479
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          1561
+        </td>
+        <td>
+          516
+          -
+          545
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          1575
+        </td>
+        <td>
+          553
+          -
+          588
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          1571
+        </td>
+        <td>
+          574
+          -
+          587
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          1559
+        </td>
+        <td>
+          596
+          -
+          655
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          1577
+        </td>
+        <td>
+          633
+          -
+          646
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          1579
+        </td>
+        <td>
+          613
+          -
+          647
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

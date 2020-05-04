@@ -1,0 +1,314 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/jmx/OpenMBeanExporter.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.jmx
+</span>2 <span style=''>
+</span>3 <span style=''>import javax.management.{InstanceAlreadyExistsException, ObjectName}
+</span>4 <span style=''>
+</span>5 <span style=''>import scala.util.Try
+</span>6 <span style=''>
+</span>7 <span style=''>/**
+</span>8 <span style=''> * MBean registry (server facade) that supports exporting and removal of scala products and therefore scala case classes.
+</span>9 <span style=''> */
+</span>10 <span style=''>trait OpenMBeanExporter {
+</span>11 <span style=''>  import OpenMBeanExporter._
+</span>12 <span style=''>
+</span>13 <span style=''>  /**
+</span>14 <span style=''>   * Exports a scala product / case class.
+</span>15 <span style=''>   * @param product The product
+</span>16 <span style=''>   * @param replaceExisting If `true`, an already registered MBean with the same ObjectName will removed before the registration.
+</span>17 <span style=''>   * @param namingStrategy Used to automatically decide which ObjectName should be used to register the product.
+</span>18 <span style=''>   * @return In case of error, a [[Failure]] of [[InstanceAlreadyExistsException]]
+</span>19 <span style=''>   */
+</span>20 <span style=''>  def export(product: Product, replaceExisting: Boolean = false)(implicit namingStrategy: NamingStrategy): Try[Unit] = {
+</span>21 <span style=''>    </span><span style='background: #AEF1AE'>export(product, namingStrategy(product), replaceExisting)</span><span style=''>
+</span>22 <span style=''>  }
+</span>23 <span style=''>
+</span>24 <span style=''>  /**
+</span>25 <span style=''>   * Exports a scala product / case class under the given ObjectName.
+</span>26 <span style=''>   * @param product The product
+</span>27 <span style=''>   * @param objectName The ObjectName that should be used to register the product.
+</span>28 <span style=''>   * @param replaceExisting If `true`, an already registered MBean with the same ObjectName will removed before the registration.
+</span>29 <span style=''>   */
+</span>30 <span style=''>  def export(product: Product, objectName: ObjectName, replaceExisting: Boolean): Try[Unit]
+</span>31 <span style=''>
+</span>32 <span style=''>  def objectName(product: Product)(implicit namingStrategy: NamingStrategy): ObjectName = </span><span style='background: #AEF1AE'>namingStrategy(product)</span><span style=''>
+</span>33 <span style=''>
+</span>34 <span style=''>  /**
+</span>35 <span style=''>   * Removes a previously registered product or MBean with the given ÒbjectName.
+</span>36 <span style=''>   */
+</span>37 <span style=''>  def remove(objectName: ObjectName): Try[Unit]
+</span>38 <span style=''>
+</span>39 <span style=''>}
+</span>40 <span style=''>
+</span>41 <span style=''>object OpenMBeanExporter {
+</span>42 <span style=''>
+</span>43 <span style=''>  /**
+</span>44 <span style=''>   * Partial function that extracts a [[ObjectName]] from an product.
+</span>45 <span style=''>   */
+</span>46 <span style=''>  type NamingStrategy = PartialFunction[Any, ObjectName]
+</span>47 <span style=''>
+</span>48 <span style=''>  /**
+</span>49 <span style=''>   * NamingStrategy that uses the full classname as ObjectName.
+</span>50 <span style=''>   */
+</span>51 <span style=''>  val UseFullClassName: NamingStrategy = {
+</span>52 <span style=''>    case mbean =&gt;
+</span>53 <span style=''>      val c = </span><span style='background: #AEF1AE'>mbean.getClass()</span><span style=''>
+</span>54 <span style=''>      val domain = </span><span style='background: #AEF1AE'>c.getPackage().getName()</span><span style=''>
+</span>55 <span style=''>      val name = </span><span style='background: #AEF1AE'>c.getSimpleName()</span><span style=''>
+</span>56 <span style=''>      </span><span style='background: #AEF1AE'>new ObjectName(s&quot;${domain}:type=${name}&quot;)</span><span style=''>
+</span>57 <span style=''>  }
+</span>58 <span style=''>
+</span>59 <span style=''>  /**
+</span>60 <span style=''>   * Default naming strategy.
+</span>61 <span style=''>   */
+</span>62 <span style=''>  implicit val namingStrategy: NamingStrategy = </span><span style='background: #AEF1AE'>UseFullClassName</span><span style=''>
+</span>63 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          4832
+        </td>
+        <td>
+          854
+          -
+          877
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          4514
+        </td>
+        <td>
+          838
+          -
+          895
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          5019
+        </td>
+        <td>
+          1411
+          -
+          1434
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          51
+        </td>
+        <td>
+          4774
+        </td>
+        <td>
+          1866
+          -
+          1866
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          4877
+        </td>
+        <td>
+          1900
+          -
+          1916
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          4436
+        </td>
+        <td>
+          1936
+          -
+          1960
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          55
+        </td>
+        <td>
+          5043
+        </td>
+        <td>
+          1978
+          -
+          1995
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          4580
+        </td>
+        <td>
+          2017
+          -
+          2042
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          5099
+        </td>
+        <td>
+          2002
+          -
+          2043
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          62
+        </td>
+        <td>
+          5037
+        </td>
+        <td>
+          2139
+          -
+          2155
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

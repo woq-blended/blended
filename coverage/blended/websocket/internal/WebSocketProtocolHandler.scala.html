@@ -1,0 +1,585 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/websocket/internal/WebSocketProtocolHandler.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.websocket.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import akka.actor.ActorSystem
+</span>4 <span style=''>import akka.http.scaladsl.model.StatusCodes
+</span>5 <span style=''>import akka.http.scaladsl.model.ws.{Message, TextMessage}
+</span>6 <span style=''>import akka.http.scaladsl.server.Directives._
+</span>7 <span style=''>import akka.http.scaladsl.server._
+</span>8 <span style=''>import akka.stream.scaladsl.Flow
+</span>9 <span style=''>import blended.security.login.api.{Token, TokenStore}
+</span>10 <span style=''>import blended.util.logging.Logger
+</span>11 <span style=''>import blended.websocket.{WebSocketCommandPackage, WsMessageEncoded}
+</span>12 <span style=''>
+</span>13 <span style=''>import scala.concurrent.ExecutionContext
+</span>14 <span style=''>import scala.util.{Failure, Success}
+</span>15 <span style=''>
+</span>16 <span style=''>class WebSocketProtocolHandler(system : ActorSystem, store : TokenStore) {
+</span>17 <span style=''>
+</span>18 <span style=''>  private[this] val log = </span><span style='background: #AEF1AE'>Logger[WebSocketProtocolHandler]</span><span style=''>
+</span>19 <span style=''>  private[this] implicit val eCtxt : ExecutionContext = </span><span style='background: #AEF1AE'>system.dispatcher</span><span style=''>
+</span>20 <span style=''>  private[this] val cmdHandler : CommandHandlerManager = </span><span style='background: #AEF1AE'>CommandHandlerManager.create(system)</span><span style=''>
+</span>21 <span style=''>
+</span>22 <span style=''>  def addCommandPackage(pkg : WebSocketCommandPackage) : Unit = </span><span style='background: #AEF1AE'>cmdHandler.addCommandPackage(pkg)</span><span style=''>
+</span>23 <span style=''>  def removeCommandPackage(pkg : WebSocketCommandPackage) : Unit = </span><span style='background: #AEF1AE'>cmdHandler.removeCommandPackage(pkg)</span><span style=''>
+</span>24 <span style=''>
+</span>25 <span style=''>  def route : Route = routeImpl
+</span>26 <span style=''>
+</span>27 <span style=''>  private[this] lazy val routeImpl : Route = pathSingleSlash {
+</span>28 <span style=''>    log.debug(&quot;Received Web Socket upgrade request&quot;)
+</span>29 <span style=''>    parameter(&quot;token&quot;) { token =&gt;
+</span>30 <span style=''>      log.debug(s&quot;Evaluating token [$token]&quot;)
+</span>31 <span style=''>      store.verifyToken(token) match {
+</span>32 <span style=''>        case Failure(e) =&gt;
+</span>33 <span style=''>          log.error(s&quot;Could not verify token [$token] : [${e.getMessage}]&quot;)
+</span>34 <span style=''>          complete(StatusCodes.Unauthorized)
+</span>35 <span style=''>        case Success(verified) =&gt;
+</span>36 <span style=''>          log.info(s&quot;Starting Web Socket message handler for token [${verified.id}]&quot;)
+</span>37 <span style=''>
+</span>38 <span style=''>          store.getToken(verified.id) match {
+</span>39 <span style=''>            case None =&gt;
+</span>40 <span style=''>              complete(StatusCodes.BadRequest)
+</span>41 <span style=''>            case Some(info) =&gt;
+</span>42 <span style=''>              // A web socket handler is simply a flow Message -&gt; Message
+</span>43 <span style=''>              // Inbound messages will be treated as commands coming from the
+</span>44 <span style=''>              // client, outbound message are usually WsEncoded messages that
+</span>45 <span style=''>              // can carry a status code and a JSON encoded payload
+</span>46 <span style=''>              handleWebSocketMessages(handlerFlow(info))
+</span>47 <span style=''>          }
+</span>48 <span style=''>      }
+</span>49 <span style=''>    }
+</span>50 <span style=''>  }
+</span>51 <span style=''>
+</span>52 <span style=''>  private[this] def handlerFlow(info : Token) : Flow[Message, Message, Any] = {
+</span>53 <span style=''>    </span><span style='background: #AEF1AE'>Flow[Message]
+</span>54 <span style=''></span><span style='background: #AEF1AE'>      // We will only process TextMessage.Strict variants for now,
+</span>55 <span style=''></span><span style='background: #AEF1AE'>      // so we use a collect here
+</span>56 <span style=''></span><span style='background: #AEF1AE'>      .collect {
+</span>57 <span style=''></span><span style='background: #AEF1AE'>        case TextMessage.Strict(msg) =&gt; msg
+</span>58 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>59 <span style=''></span><span style='background: #AEF1AE'>      // Incoming Strings are always treated as commands and processed
+</span>60 <span style=''></span><span style='background: #AEF1AE'>      // by the command handler chain. The result for each and every
+</span>61 <span style=''></span><span style='background: #AEF1AE'>      // command is a WsResult, which is passed back to the client here.
+</span>62 <span style=''></span><span style='background: #AEF1AE'>      // A command *might* send additional messages to the client as a
+</span>63 <span style=''></span><span style='background: #AEF1AE'>      // result of executing the command (i.e. when setting up a listener
+</span>64 <span style=''></span><span style='background: #AEF1AE'>      // on Container events).
+</span>65 <span style=''></span><span style='background: #AEF1AE'>      // The additional messages are not passed through, but are sent directly
+</span>66 <span style=''></span><span style='background: #AEF1AE'>      // to the client as websocket messages
+</span>67 <span style=''></span><span style='background: #AEF1AE'>      .via(cmdHandler.newClient(info))
+</span>68 <span style=''></span><span style='background: #AEF1AE'>      .collect {
+</span>69 <span style=''></span><span style='background: #AEF1AE'>        case enc : WsMessageEncoded =&gt;
+</span>70 <span style=''></span><span style='background: #AEF1AE'>          TextMessage.Strict(enc.json)
+</span>71 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>72 <span style=''></span><span style='background: #AEF1AE'>      .via(reportErrorsFlow)</span><span style=''>
+</span>73 <span style=''>  }
+</span>74 <span style=''>
+</span>75 <span style=''>  def reportErrorsFlow[T] : Flow[T, T, Any] =
+</span>76 <span style=''>    </span><span style='background: #AEF1AE'>Flow[T]
+</span>77 <span style=''></span><span style='background: #AEF1AE'>      .watchTermination()((_, f) =&gt; f.onComplete {
+</span>78 <span style=''></span><span style='background: #AEF1AE'>        case Failure(cause) =&gt;
+</span>79 <span style=''></span><span style='background: #AEF1AE'>          </span><span style='background: #F0ADAD'>log.error(cause)(s&quot;WS stream failed : [${cause.getMessage()}]&quot;)</span><span style='background: #AEF1AE'>
+</span>80 <span style=''></span><span style='background: #AEF1AE'>        case _ =&gt; // ignore regular completion
+</span>81 <span style=''></span><span style='background: #AEF1AE'>      })</span><span style=''>
+</span>82 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          16557
+        </td>
+        <td>
+          622
+          -
+          654
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          16568
+        </td>
+        <td>
+          711
+          -
+          728
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          16985
+        </td>
+        <td>
+          786
+          -
+          822
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          16774
+        </td>
+        <td>
+          815
+          -
+          821
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          16928
+        </td>
+        <td>
+          888
+          -
+          921
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          16749
+        </td>
+        <td>
+          989
+          -
+          1025
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          16983
+        </td>
+        <td>
+          2313
+          -
+          2313
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          16604
+        </td>
+        <td>
+          2891
+          -
+          2917
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          16950
+        </td>
+        <td>
+          2934
+          -
+          2934
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          16794
+        </td>
+        <td>
+          2985
+          -
+          3013
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          16811
+        </td>
+        <td>
+          3004
+          -
+          3012
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          16914
+        </td>
+        <td>
+          3033
+          -
+          3049
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          72
+        </td>
+        <td>
+          16577
+        </td>
+        <td>
+          2183
+          -
+          3050
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          16953
+        </td>
+        <td>
+          3150
+          -
+          3324
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          16770
+        </td>
+        <td>
+          3163
+          -
+          3163
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          16607
+        </td>
+        <td>
+          3106
+          -
+          3325
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          79
+        </td>
+        <td>
+          16977
+        </td>
+        <td>
+          3223
+          -
+          3268
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          79
+        </td>
+        <td>
+          16558
+        </td>
+        <td>
+          3206
+          -
+          3269
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          79
+        </td>
+        <td>
+          16571
+        </td>
+        <td>
+          3225
+          -
+          3246
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          79
+        </td>
+        <td>
+          16742
+        </td>
+        <td>
+          3266
+          -
+          3268
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          79
+        </td>
+        <td>
+          16939
+        </td>
+        <td>
+          3247
+          -
+          3265
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          16824
+        </td>
+        <td>
+          3285
+          -
+          3287
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

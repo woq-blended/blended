@@ -1,0 +1,523 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/streams/transaction/FlowTransactionState.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.streams.transaction
+</span>2 <span style=''>
+</span>3 <span style=''>import scala.language.implicitConversions
+</span>4 <span style=''>import scala.util.Try
+</span>5 <span style=''>
+</span>6 <span style=''>sealed trait FlowTransactionState{
+</span>7 <span style=''>  val name : String
+</span>8 <span style=''>  override def toString: String = </span><span style='background: #AEF1AE'>name</span><span style=''>
+</span>9 <span style=''>}
+</span>10 <span style=''>
+</span>11 <span style=''>case object FlowTransactionStateStarted extends FlowTransactionState { override val name: String = </span><span style='background: #AEF1AE'>&quot;Started&quot;</span><span style=''> }
+</span>12 <span style=''>case object FlowTransactionStateUpdated extends FlowTransactionState { override val name: String = </span><span style='background: #AEF1AE'>&quot;Updated&quot;</span><span style=''> }
+</span>13 <span style=''>case object FlowTransactionStateCompleted extends FlowTransactionState { override val name: String = </span><span style='background: #AEF1AE'>&quot;Completed&quot;</span><span style=''> }
+</span>14 <span style=''>case object FlowTransactionStateFailed extends FlowTransactionState { override val name: String = </span><span style='background: #AEF1AE'>&quot;Failed&quot;</span><span style=''> }
+</span>15 <span style=''>
+</span>16 <span style=''>object FlowTransactionState {
+</span>17 <span style=''>  def apply(s: String): Try[FlowTransactionState] = </span><span style='background: #AEF1AE'>Try {
+</span>18 <span style=''></span><span style='background: #AEF1AE'>    s match {
+</span>19 <span style=''></span><span style='background: #AEF1AE'>      case FlowTransactionStateStarted.name =&gt; FlowTransactionStateStarted
+</span>20 <span style=''></span><span style='background: #AEF1AE'>      case FlowTransactionStateUpdated.name =&gt; FlowTransactionStateUpdated
+</span>21 <span style=''></span><span style='background: #AEF1AE'>      case FlowTransactionStateCompleted.name =&gt; FlowTransactionStateCompleted
+</span>22 <span style=''></span><span style='background: #AEF1AE'>      case FlowTransactionStateFailed.name =&gt; FlowTransactionStateFailed
+</span>23 <span style=''></span><span style='background: #AEF1AE'>      case _ =&gt; </span><span style='background: #F0ADAD'>throw new IllegalArgumentException(s&quot;[$s] is not a valid TransactionState&quot;)</span><span style='background: #AEF1AE'>
+</span>24 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>25 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>26 <span style=''>}
+</span>27 <span style=''>
+</span>28 <span style=''>object EventSeverity extends Enumeration {
+</span>29 <span style=''>  type EventSeverity = Value
+</span>30 <span style=''>  val Unknown, Information, Harmless, Warning, Minor, Critical, Fatal = </span><span style='background: #AEF1AE'>Value</span><span style=''>
+</span>31 <span style=''>
+</span>32 <span style=''>  implicit def severityToInt(severity: EventSeverity): Int = severity match {
+</span>33 <span style=''>    case Unknown       =&gt;  </span><span style='background: #F0ADAD'>0</span><span style=''>
+</span>34 <span style=''>    case Information   =&gt; </span><span style='background: #AEF1AE'>10</span><span style=''>
+</span>35 <span style=''>    case Harmless      =&gt; </span><span style='background: #F0ADAD'>20</span><span style=''>
+</span>36 <span style=''>    case Warning       =&gt; </span><span style='background: #F0ADAD'>30</span><span style=''>
+</span>37 <span style=''>    case Minor         =&gt; </span><span style='background: #F0ADAD'>40</span><span style=''>
+</span>38 <span style=''>    case Critical      =&gt; </span><span style='background: #AEF1AE'>50</span><span style=''>
+</span>39 <span style=''>    case Fatal         =&gt; </span><span style='background: #F0ADAD'>60</span><span style=''>
+</span>40 <span style=''>  }
+</span>41 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          8
+        </td>
+        <td>
+          22646
+        </td>
+        <td>
+          191
+          -
+          195
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          11
+        </td>
+        <td>
+          22659
+        </td>
+        <td>
+          298
+          -
+          307
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          23680
+        </td>
+        <td>
+          409
+          -
+          418
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          19559
+        </td>
+        <td>
+          522
+          -
+          533
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          20636
+        </td>
+        <td>
+          634
+          -
+          642
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          20877
+        </td>
+        <td>
+          728
+          -
+          1151
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          20004
+        </td>
+        <td>
+          1066
+          -
+          1141
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          19474
+        </td>
+        <td>
+          1299
+          -
+          1299
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          21388
+        </td>
+        <td>
+          1299
+          -
+          1299
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          21770
+        </td>
+        <td>
+          1299
+          -
+          1299
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          23232
+        </td>
+        <td>
+          1299
+          -
+          1299
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          22460
+        </td>
+        <td>
+          1299
+          -
+          1304
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          20997
+        </td>
+        <td>
+          1299
+          -
+          1299
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          19385
+        </td>
+        <td>
+          1299
+          -
+          1299
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          21365
+        </td>
+        <td>
+          1411
+          -
+          1412
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          22723
+        </td>
+        <td>
+          1439
+          -
+          1441
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          19482
+        </td>
+        <td>
+          1468
+          -
+          1470
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          19396
+        </td>
+        <td>
+          1497
+          -
+          1499
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          20944
+        </td>
+        <td>
+          1526
+          -
+          1528
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          19997
+        </td>
+        <td>
+          1555
+          -
+          1557
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          39
+        </td>
+        <td>
+          23237
+        </td>
+        <td>
+          1584
+          -
+          1586
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

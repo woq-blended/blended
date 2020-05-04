@@ -1,0 +1,452 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/scep/internal/ScepActivator.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security.scep.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.domino.TypesafeConfigWatching
+</span>4 <span style=''>import blended.security.ssl.CertificateProvider
+</span>5 <span style=''>import blended.util.config.Implicits._
+</span>6 <span style=''>import domino.DominoActivator
+</span>7 <span style=''>
+</span>8 <span style=''>class ScepActivator extends DominoActivator with TypesafeConfigWatching {
+</span>9 <span style=''>
+</span>10 <span style=''>  </span><span style='background: #AEF1AE'>whenBundleActive {
+</span>11 <span style=''></span><span style='background: #AEF1AE'>    whenTypesafeConfigAvailable { (cfg, ctCtxt) =&gt;
+</span>12 <span style=''></span><span style='background: #AEF1AE'>
+</span>13 <span style=''></span><span style='background: #AEF1AE'>      val scepUrl = </span><span style='background: #F0ADAD'>cfg.getStringOption(&quot;scepUrl&quot;).map(ctCtxt.resolveString(_).get.asInstanceOf[String])</span><span style='background: #AEF1AE'>
+</span>14 <span style=''></span><span style='background: #AEF1AE'>
+</span>15 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>scepUrl.foreach { url =&gt;
+</span>16 <span style=''></span><span style='background: #F0ADAD'>
+</span>17 <span style=''></span><span style='background: #F0ADAD'>        val profile : Option[String] = cfg.getStringOption(&quot;scepProfile&quot;)
+</span>18 <span style=''></span><span style='background: #F0ADAD'>        val keyLength : Int = cfg.getInt(&quot;keyLength&quot;, 2048)
+</span>19 <span style=''></span><span style='background: #F0ADAD'>        val csrSignAlgorithm : String = cfg.getString(&quot;csrSignAlgorithm&quot;, &quot;SHA1withRSA&quot;)
+</span>20 <span style=''></span><span style='background: #F0ADAD'>        val scepChallenge : String = ctCtxt.resolveString(cfg.getString(&quot;scepChallenge&quot;)).map(_.toString()).get
+</span>21 <span style=''></span><span style='background: #F0ADAD'>
+</span>22 <span style=''></span><span style='background: #F0ADAD'>        val scepCfg = ScepConfig(
+</span>23 <span style=''></span><span style='background: #F0ADAD'>          url = url,
+</span>24 <span style=''></span><span style='background: #F0ADAD'>          profile = profile,
+</span>25 <span style=''></span><span style='background: #F0ADAD'>          keyLength = keyLength,
+</span>26 <span style=''></span><span style='background: #F0ADAD'>          csrSignAlgorithm = csrSignAlgorithm,
+</span>27 <span style=''></span><span style='background: #F0ADAD'>          scepChallenge = scepChallenge
+</span>28 <span style=''></span><span style='background: #F0ADAD'>        )
+</span>29 <span style=''></span><span style='background: #F0ADAD'>        new ScepCertificateProvider(scepCfg).providesService[CertificateProvider](&quot;provider&quot; -&gt; &quot;scep&quot;)
+</span>30 <span style=''></span><span style='background: #F0ADAD'>      }</span><span style='background: #AEF1AE'>
+</span>31 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>32 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>33 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          10
+        </td>
+        <td>
+          2716
+        </td>
+        <td>
+          280
+          -
+          1160
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          11
+        </td>
+        <td>
+          2692
+        </td>
+        <td>
+          303
+          -
+          1156
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          2777
+        </td>
+        <td>
+          406
+          -
+          454
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          2717
+        </td>
+        <td>
+          413
+          -
+          413
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          2675
+        </td>
+        <td>
+          371
+          -
+          455
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          2767
+        </td>
+        <td>
+          391
+          -
+          400
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          2762
+        </td>
+        <td>
+          463
+          -
+          1150
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          2694
+        </td>
+        <td>
+          528
+          -
+          562
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          2763
+        </td>
+        <td>
+          593
+          -
+          622
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          2735
+        </td>
+        <td>
+          663
+          -
+          711
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          2685
+        </td>
+        <td>
+          806
+          -
+          818
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          2768
+        </td>
+        <td>
+          749
+          -
+          823
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          2737
+        </td>
+        <td>
+          770
+          -
+          800
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          2695
+        </td>
+        <td>
+          756
+          -
+          756
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          2724
+        </td>
+        <td>
+          847
+          -
+          1038
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          2676
+        </td>
+        <td>
+          1047
+          -
+          1142
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          2726
+        </td>
+        <td>
+          1047
+          -
+          1083
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          2782
+        </td>
+        <td>
+          1121
+          -
+          1141
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

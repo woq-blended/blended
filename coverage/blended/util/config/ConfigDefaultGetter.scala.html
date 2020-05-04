@@ -1,0 +1,896 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/util/config/ConfigDefaultGetter.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.util.config
+</span>2 <span style=''>
+</span>3 <span style=''>import com.typesafe.config.Config
+</span>4 <span style=''>
+</span>5 <span style=''>import scala.collection.JavaConverters._
+</span>6 <span style=''>import scala.concurrent.duration._
+</span>7 <span style=''>
+</span>8 <span style=''>trait ConfigDefaultGetter extends ConfigAccessor {
+</span>9 <span style=''>
+</span>10 <span style=''>  implicit class RichDefaultConfig(config : Config) {
+</span>11 <span style=''>
+</span>12 <span style=''>    def getLong(key : String, default : Long) : Long =
+</span>13 <span style=''>      if (</span><span style='background: #AEF1AE'>config.hasPath(key)</span><span style=''>) {
+</span>14 <span style=''>        </span><span style='background: #AEF1AE'>config.getLong(key)</span><span style=''>
+</span>15 <span style=''>      } else {
+</span>16 <span style=''>        </span><span style='background: #AEF1AE'>default</span><span style=''>
+</span>17 <span style=''>      }
+</span>18 <span style=''>
+</span>19 <span style=''>    def getAnyRef(key : String, default : AnyRef) : AnyRef =
+</span>20 <span style=''>      if (</span><span style='background: #F0ADAD'>config.hasPath(key)</span><span style=''>) {
+</span>21 <span style=''>        </span><span style='background: #F0ADAD'>config.getAnyRef(key)</span><span style=''>
+</span>22 <span style=''>      } else {
+</span>23 <span style=''>        </span><span style='background: #F0ADAD'>default</span><span style=''>
+</span>24 <span style=''>      }
+</span>25 <span style=''>
+</span>26 <span style=''>    def getString(key : String, default : String) : String =
+</span>27 <span style=''>      if (</span><span style='background: #AEF1AE'>config.hasPath(key)</span><span style=''>) {
+</span>28 <span style=''>        </span><span style='background: #AEF1AE'>config.getString(key)</span><span style=''>
+</span>29 <span style=''>      } else {
+</span>30 <span style=''>        </span><span style='background: #AEF1AE'>default</span><span style=''>
+</span>31 <span style=''>      }
+</span>32 <span style=''>
+</span>33 <span style=''>    def getInt(key : String, default : Int) : Int =
+</span>34 <span style=''>      if (</span><span style='background: #AEF1AE'>config.hasPath(key)</span><span style=''>) {
+</span>35 <span style=''>        </span><span style='background: #AEF1AE'>config.getInt(key)</span><span style=''>
+</span>36 <span style=''>      } else {
+</span>37 <span style=''>        </span><span style='background: #AEF1AE'>default</span><span style=''>
+</span>38 <span style=''>      }
+</span>39 <span style=''>
+</span>40 <span style=''>    def getBoolean(key : String, default : Boolean) : Boolean =
+</span>41 <span style=''>      if (</span><span style='background: #AEF1AE'>config.hasPath(key)</span><span style=''>) {
+</span>42 <span style=''>        </span><span style='background: #AEF1AE'>config.getBoolean(key)</span><span style=''>
+</span>43 <span style=''>      } else {
+</span>44 <span style=''>        </span><span style='background: #AEF1AE'>default</span><span style=''>
+</span>45 <span style=''>      }
+</span>46 <span style=''>
+</span>47 <span style=''>    def getDouble(key : String, default : Double) : Double =
+</span>48 <span style=''>      if (</span><span style='background: #AEF1AE'>config.hasPath(key)</span><span style=''>) {
+</span>49 <span style=''>        </span><span style='background: #F0ADAD'>config.getDouble(key)</span><span style=''>
+</span>50 <span style=''>      } else {
+</span>51 <span style=''>        </span><span style='background: #AEF1AE'>default</span><span style=''>
+</span>52 <span style=''>      }
+</span>53 <span style=''>
+</span>54 <span style=''>    def getDuration(key : String, default : FiniteDuration) : FiniteDuration = {
+</span>55 <span style=''>      if (</span><span style='background: #AEF1AE'>config.hasPath(key)</span><span style=''>) {
+</span>56 <span style=''>        </span><span style='background: #AEF1AE'>config.getDuration(key).toMillis.millis</span><span style=''>
+</span>57 <span style=''>      } else {
+</span>58 <span style=''>        </span><span style='background: #AEF1AE'>default</span><span style=''>
+</span>59 <span style=''>      }
+</span>60 <span style=''>    }
+</span>61 <span style=''>
+</span>62 <span style=''>    def getStringList(key : String, default : List[String]) : List[String] =
+</span>63 <span style=''>      if (</span><span style='background: #AEF1AE'>config.hasPath(key)</span><span style=''>) {
+</span>64 <span style=''>        </span><span style='background: #AEF1AE'>config.getStringList(key).asScala.toList</span><span style=''>
+</span>65 <span style=''>      } else {
+</span>66 <span style=''>        </span><span style='background: #AEF1AE'>default</span><span style=''>
+</span>67 <span style=''>      }
+</span>68 <span style=''>
+</span>69 <span style=''>    def getStringMap(key : String, default : Map[String, String]) : Map[String, String] =
+</span>70 <span style=''>      </span><span style='background: #AEF1AE'>configStringMap(config, key).getOrElse(default)</span><span style=''>
+</span>71 <span style=''>
+</span>72 <span style=''>    def getConfigMap(key : String, default : Map[String, Config]) : Map[String, Config] =
+</span>73 <span style=''>      </span><span style='background: #AEF1AE'>configConfigMap(config, key).getOrElse(default)</span><span style=''>
+</span>74 <span style=''>
+</span>75 <span style=''>    def getConfigList(key : String, default : List[Config]) : List[Config] =
+</span>76 <span style=''>      </span><span style='background: #AEF1AE'>configConfigList(config, key).getOrElse(default)</span><span style=''>
+</span>77 <span style=''>  }
+</span>78 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          10394
+        </td>
+        <td>
+          313
+          -
+          332
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          10339
+        </td>
+        <td>
+          344
+          -
+          363
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          10335
+        </td>
+        <td>
+          344
+          -
+          363
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          10316
+        </td>
+        <td>
+          387
+          -
+          394
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          10378
+        </td>
+        <td>
+          475
+          -
+          494
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          10383
+        </td>
+        <td>
+          506
+          -
+          527
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          10301
+        </td>
+        <td>
+          506
+          -
+          527
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          10356
+        </td>
+        <td>
+          551
+          -
+          558
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          10323
+        </td>
+        <td>
+          639
+          -
+          658
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          10382
+        </td>
+        <td>
+          670
+          -
+          691
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          10336
+        </td>
+        <td>
+          670
+          -
+          691
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          10396
+        </td>
+        <td>
+          715
+          -
+          722
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          10296
+        </td>
+        <td>
+          794
+          -
+          813
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          10361
+        </td>
+        <td>
+          825
+          -
+          843
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          10342
+        </td>
+        <td>
+          825
+          -
+          843
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          10412
+        </td>
+        <td>
+          867
+          -
+          874
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          10300
+        </td>
+        <td>
+          958
+          -
+          977
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          10321
+        </td>
+        <td>
+          989
+          -
+          1011
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          10363
+        </td>
+        <td>
+          989
+          -
+          1011
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          10381
+        </td>
+        <td>
+          1035
+          -
+          1042
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          48
+        </td>
+        <td>
+          10351
+        </td>
+        <td>
+          1123
+          -
+          1142
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          10293
+        </td>
+        <td>
+          1154
+          -
+          1175
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          10344
+        </td>
+        <td>
+          1154
+          -
+          1175
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          51
+        </td>
+        <td>
+          10408
+        </td>
+        <td>
+          1199
+          -
+          1206
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          55
+        </td>
+        <td>
+          10340
+        </td>
+        <td>
+          1307
+          -
+          1326
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          10337
+        </td>
+        <td>
+          1338
+          -
+          1370
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          10297
+        </td>
+        <td>
+          1338
+          -
+          1377
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          10398
+        </td>
+        <td>
+          1338
+          -
+          1377
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          58
+        </td>
+        <td>
+          10320
+        </td>
+        <td>
+          1401
+          -
+          1408
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          63
+        </td>
+        <td>
+          10298
+        </td>
+        <td>
+          1511
+          -
+          1530
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          10341
+        </td>
+        <td>
+          1542
+          -
+          1582
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          10358
+        </td>
+        <td>
+          1542
+          -
+          1582
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          10294
+        </td>
+        <td>
+          1542
+          -
+          1567
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          10407
+        </td>
+        <td>
+          1606
+          -
+          1613
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          10387
+        </td>
+        <td>
+          1719
+          -
+          1766
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          10306
+        </td>
+        <td>
+          1864
+          -
+          1911
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          76
+        </td>
+        <td>
+          10384
+        </td>
+        <td>
+          1996
+          -
+          2044
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

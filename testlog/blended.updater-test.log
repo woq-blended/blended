@@ -1,0 +1,44 @@
+2020-05-04-09:24.11.973 |      348 | INFO  [updater-test-akka.actor.default-dispatcher-3] blended.updater.Updater : Initiating initial scanning for profiles
+2020-05-04-09:24.11.979 |      354 | INFO  [updater-test-akka.actor.default-dispatcher-3] blended.updater.Updater : Auto-staging is disabled
+2020-05-04-09:24.11.980 |      355 | INFO  [updater-test-akka.actor.default-dispatcher-3] blended.updater.Updater : Publishing of service infos and profile infos is disabled
+2020-05-04-09:24.12.093 |      468 | WARN  [updater-test-akka.actor.default-dispatcher-3] blended.updater.ProfileFsHelper : Could not found any overlay configs for profile: /tmp/test8157839328968652482/install/test-with-1-framework-bundle/1.0.0/profile.conf
+2020-05-04-09:24.12.149 |      524 | INFO  [updater-test-akka.actor.default-dispatcher-3] blended.updater.Updater : Initiating initial scanning for profiles
+2020-05-04-09:24.12.150 |      525 | INFO  [updater-test-akka.actor.default-dispatcher-3] blended.updater.Updater : Auto-staging is disabled
+2020-05-04-09:24.12.150 |      525 | INFO  [updater-test-akka.actor.default-dispatcher-3] blended.updater.Updater : Publishing of service infos and profile infos is disabled
+2020-05-04-09:24.12.268 |      643 | INFO  [updater-test-akka.actor.default-dispatcher-2] blended.updater.Updater : Initiating initial scanning for profiles
+2020-05-04-09:24.12.269 |      644 | INFO  [updater-test-akka.actor.default-dispatcher-2] blended.updater.Updater : Auto-staging is disabled
+2020-05-04-09:24.12.269 |      644 | INFO  [updater-test-akka.actor.default-dispatcher-2] blended.updater.Updater : Publishing of service infos and profile infos is disabled
+2020-05-04-09:24.12.277 |      652 | WARN  [updater-test-akka.actor.default-dispatcher-2] blended.updater.ProfileFsHelper : Could not found any overlay configs for profile: /tmp/test6671890932804178545/install/test-with-1-framework-bundle/1.0.0/profile.conf
+2020-05-04-09:24.12.398 |      773 | INFO  [updater-test-akka.actor.default-dispatcher-3] blended.updater.Updater : Initiating initial scanning for profiles
+2020-05-04-09:24.12.398 |      773 | INFO  [updater-test-akka.actor.default-dispatcher-3] blended.updater.Updater : Auto-staging is disabled
+2020-05-04-09:24.12.398 |      773 | INFO  [updater-test-akka.actor.default-dispatcher-3] blended.updater.Updater : Publishing of service infos and profile infos is disabled
+2020-05-04-09:24.12.405 |      780 | WARN  [updater-test-akka.actor.default-dispatcher-3] blended.updater.ProfileFsHelper : Could not found any overlay configs for profile: /tmp/test4439299618209144039/install/test-with-1-framework-bundle/1.0.0/profile.conf
+2020-05-04-09:24.12.610 |      985 | INFO  [updater-test-akka.actor.default-dispatcher-2] blended.updater.Updater : Initiating initial scanning for profiles
+2020-05-04-09:24.12.610 |      985 | INFO  [updater-test-akka.actor.default-dispatcher-2] blended.updater.Updater : Auto-staging is disabled
+2020-05-04-09:24.12.610 |      985 | INFO  [updater-test-akka.actor.default-dispatcher-2] blended.updater.Updater : Publishing of service infos and profile infos is disabled
+2020-05-04-09:24.12.621 |      996 | WARN  [updater-test-akka.actor.default-dispatcher-2] blended.updater.ProfileFsHelper : Could not found any overlay configs for profile: /tmp/test3873938589179575651/install/test-with-3-bundles/1.0.0/profile.conf
+2020-05-04-09:24.13.506 |     1881 | ERROR [test-akka.actor.default-dispatcher-3] blended.updater.ArtifactDownloader : Could not download file [/tmp/test2682298162655297451] from [file:/tmp/test5083782929817981201]
+java.io.FileNotFoundException: /tmp/test5083782929817981201 (No such file or directory)
+	at java.io.FileInputStream.open0(Native Method)
+	at java.io.FileInputStream.open(FileInputStream.java:195)
+	at java.io.FileInputStream.<init>(FileInputStream.java:138)
+	at java.io.FileInputStream.<init>(FileInputStream.java:93)
+	at sun.net.www.protocol.file.FileURLConnection.connect(FileURLConnection.java:90)
+	at sun.net.www.protocol.file.FileURLConnection.getInputStream(FileURLConnection.java:188)
+	at blended.updater.config.RuntimeConfigCompanion$.$anonfun$download$1(RuntimeConfigCompanion.scala:119)
+	at scala.util.Try$.apply(Try.scala:213)
+	at blended.updater.config.RuntimeConfigCompanion$.download(RuntimeConfigCompanion.scala:100)
+	at blended.updater.ArtifactDownloader.blended$updater$ArtifactDownloader$$downloadArtifact(ArtifactDownloader.scala:53)
+	at blended.updater.ArtifactDownloader$$anonfun$receive$1.applyOrElse(ArtifactDownloader.scala:77)
+	at akka.actor.Actor.aroundReceive(Actor.scala:517)
+	at akka.actor.Actor.aroundReceive$(Actor.scala:515)
+	at blended.updater.ArtifactDownloader.aroundReceive(ArtifactDownloader.scala:12)
+	at akka.actor.ActorCell.receiveMessage(ActorCell.scala:592)
+	at akka.actor.ActorCell.invoke(ActorCell.scala:561)
+	at akka.dispatch.Mailbox.processMailbox(Mailbox.scala:258)
+	at akka.dispatch.Mailbox.run(Mailbox.scala:225)
+	at akka.dispatch.Mailbox.exec(Mailbox.scala:235)
+	at akka.dispatch.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)
+	at akka.dispatch.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1339)
+	at akka.dispatch.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)
+	at akka.dispatch.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)

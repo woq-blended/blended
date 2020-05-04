@@ -1,0 +1,307 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/jmx/statistics/ServiceInvocation.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.jmx.statistics
+</span>2 <span style=''>
+</span>3 <span style=''>import java.util.UUID
+</span>4 <span style=''>
+</span>5 <span style=''>import akka.actor.ActorSystem
+</span>6 <span style=''>
+</span>7 <span style=''>sealed trait ServiceInvocationEvent {
+</span>8 <span style=''>  val id : String
+</span>9 <span style=''>  val timestamp : Long
+</span>10 <span style=''>}
+</span>11 <span style=''>
+</span>12 <span style=''>case class ServiceInvocationStarted(
+</span>13 <span style=''>  override val id : String,
+</span>14 <span style=''>  override val timestamp : Long = System.currentTimeMillis(),
+</span>15 <span style=''>  component : String,
+</span>16 <span style=''>  subComponents : Map[String, String] = Map.empty
+</span>17 <span style=''>) extends ServiceInvocationEvent
+</span>18 <span style=''>
+</span>19 <span style=''>case class ServiceInvocationCompleted(
+</span>20 <span style=''>  override val id : String,
+</span>21 <span style=''>  override val timestamp : Long = System.currentTimeMillis(),
+</span>22 <span style=''>) extends ServiceInvocationEvent
+</span>23 <span style=''>
+</span>24 <span style=''>case class ServiceInvocationFailed(
+</span>25 <span style=''>  override val id : String,
+</span>26 <span style=''>  override val timestamp : Long = System.currentTimeMillis(),
+</span>27 <span style=''>) extends ServiceInvocationEvent
+</span>28 <span style=''>
+</span>29 <span style=''>object ServiceInvocationReporter {
+</span>30 <span style=''>
+</span>31 <span style=''>  def invoked(component : String, subComponents : Map[String, String])(implicit system: ActorSystem) : String = {
+</span>32 <span style=''>    val id : String = </span><span style='background: #AEF1AE'>UUID.randomUUID().toString()</span><span style=''>
+</span>33 <span style=''>
+</span>34 <span style=''>    val event : ServiceInvocationEvent = </span><span style='background: #AEF1AE'>ServiceInvocationStarted(
+</span>35 <span style=''></span><span style='background: #AEF1AE'>      id = id,
+</span>36 <span style=''></span><span style='background: #AEF1AE'>      component = component,
+</span>37 <span style=''></span><span style='background: #AEF1AE'>      subComponents = subComponents
+</span>38 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>39 <span style=''>
+</span>40 <span style=''>    </span><span style='background: #AEF1AE'>system.eventStream.publish(event)</span><span style=''>
+</span>41 <span style=''>
+</span>42 <span style=''>    id
+</span>43 <span style=''>  }
+</span>44 <span style=''>
+</span>45 <span style=''>  def completed(id : String)(implicit system: ActorSystem) : Unit = {
+</span>46 <span style=''>    </span><span style='background: #AEF1AE'>system.eventStream.publish(
+</span>47 <span style=''></span><span style='background: #AEF1AE'>      ServiceInvocationCompleted(id)
+</span>48 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>49 <span style=''>  }
+</span>50 <span style=''>
+</span>51 <span style=''>  def failed(id : String)(implicit system: ActorSystem) : Unit = {
+</span>52 <span style=''>    </span><span style='background: #AEF1AE'>system.eventStream.publish(
+</span>53 <span style=''></span><span style='background: #AEF1AE'>      ServiceInvocationFailed(id)
+</span>54 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>55 <span style=''>  }
+</span>56 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          4581
+        </td>
+        <td>
+          896
+          -
+          924
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          5017
+        </td>
+        <td>
+          967
+          -
+          1078
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          4855
+        </td>
+        <td>
+          967
+          -
+          967
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          4518
+        </td>
+        <td>
+          1084
+          -
+          1117
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          46
+        </td>
+        <td>
+          4827
+        </td>
+        <td>
+          1205
+          -
+          1275
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          47
+        </td>
+        <td>
+          5115
+        </td>
+        <td>
+          1239
+          -
+          1239
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          47
+        </td>
+        <td>
+          4489
+        </td>
+        <td>
+          1239
+          -
+          1269
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          52
+        </td>
+        <td>
+          4437
+        </td>
+        <td>
+          1352
+          -
+          1419
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          5046
+        </td>
+        <td>
+          1386
+          -
+          1413
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          4758
+        </td>
+        <td>
+          1386
+          -
+          1386
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

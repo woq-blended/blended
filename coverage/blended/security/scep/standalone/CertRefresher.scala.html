@@ -1,0 +1,719 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/scep/standalone/CertRefresher.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security.scep.standalone
+</span>2 <span style=''>
+</span>3 <span style=''>import java.io.File
+</span>4 <span style=''>import java.util.ServiceLoader
+</span>5 <span style=''>
+</span>6 <span style=''>import blended.container.context.api.ContainerContext
+</span>7 <span style=''>import blended.security.ssl.{CertificateManager, MemoryKeystore}
+</span>8 <span style=''>import blended.util.logging.Logger
+</span>9 <span style=''>import domino.DominoActivator
+</span>10 <span style=''>import org.apache.felix.connect.launch.{ClasspathScanner, PojoServiceRegistryFactory}
+</span>11 <span style=''>import scala.collection.JavaConverters._
+</span>12 <span style=''>import scala.concurrent.{ExecutionContext, Future, Promise}
+</span>13 <span style=''>import scala.util.control.NonFatal
+</span>14 <span style=''>import scala.util.{Failure, Success}
+</span>15 <span style=''>
+</span>16 <span style=''>/**
+</span>17 <span style=''> *
+</span>18 <span style=''> * @param salt
+</span>19 <span style=''> * @param baseDir0 The base dir, used for the internal blended container configuration (etc, log)
+</span>20 <span style=''> */
+</span>21 <span style=''>class CertRefresher(salt: String, baseDir0: File = new File(&quot;.&quot;))
+</span>22 <span style=''>                   (implicit executionContext: ExecutionContext) {
+</span>23 <span style=''>
+</span>24 <span style=''>  private[this] val log = </span><span style='background: #AEF1AE'>Logger[CertRefresher]</span><span style=''>
+</span>25 <span style=''>
+</span>26 <span style=''>  val baseDir = {
+</span>27 <span style=''>    val baseDir = </span><span style='background: #AEF1AE'>baseDir0.getAbsolutePath()</span><span style=''>
+</span>28 <span style=''>    </span><span style='background: #AEF1AE'>System.setProperty(&quot;blended.container.home&quot;, baseDir)</span><span style=''>
+</span>29 <span style=''>    </span><span style='background: #AEF1AE'>System.setProperty(&quot;scepclient.home&quot;, baseDir)</span><span style=''>
+</span>30 <span style=''>    baseDir
+</span>31 <span style=''>  }
+</span>32 <span style=''>
+</span>33 <span style=''>  lazy val registry = {
+</span>34 <span style=''>    // Start Felix Connect Runtime
+</span>35 <span style=''>    log.debug(s&quot;Starting felix connect runtime&quot;)
+</span>36 <span style=''>
+</span>37 <span style=''>    val symbolicNames = List(
+</span>38 <span style=''>      &quot;blended.security.ssl&quot;,
+</span>39 <span style=''>      &quot;blended.security.scep&quot;
+</span>40 <span style=''>    )
+</span>41 <span style=''>    val bundleFilter = s&quot;(|${symbolicNames.map(n =&gt; s&quot;(Bundle-SymbolicName=${n}*)&quot;).mkString(&quot;&quot;)})&quot;
+</span>42 <span style=''>    val bundles = new ClasspathScanner().scanForBundles(bundleFilter, getClass().getClassLoader())
+</span>43 <span style=''>    log.debug(s&quot;Found bundles: ${bundles.asScala.map(b =&gt; s&quot;${b.getHeaders().get(&quot;Bundle-SymbolicName&quot;)} -&gt; ${b}&quot;).mkString(&quot;\n&quot;)}&quot;)
+</span>44 <span style=''>
+</span>45 <span style=''>    val config = Map[String, Object](
+</span>46 <span style=''>      PojoServiceRegistryFactory.BUNDLE_DESCRIPTORS -&gt; bundles
+</span>47 <span style=''>    )
+</span>48 <span style=''>
+</span>49 <span style=''>    val loader = ServiceLoader.load(classOf[PojoServiceRegistryFactory])
+</span>50 <span style=''>    val factory = loader.iterator().next()
+</span>51 <span style=''>    log.debug(s&quot;Found factory: ${factory}&quot;)
+</span>52 <span style=''>
+</span>53 <span style=''>    val registry = factory.newPojoServiceRegistry(config.asJava)
+</span>54 <span style=''>    log.debug(s&quot;Created registry: ${registry}&quot;)
+</span>55 <span style=''>
+</span>56 <span style=''>    val ctxtProvider = new DominoActivator {
+</span>57 <span style=''>      whenBundleActive {
+</span>58 <span style=''>        log.debug(s&quot;Starting ScepAppContainerContext with baseDir=${baseDir}&quot;)
+</span>59 <span style=''>        val ctCtxt = new ScepAppContainerContext(baseDir, salt)
+</span>60 <span style=''>        ctCtxt.providesService[ContainerContext]
+</span>61 <span style=''>        log.debug(s&quot;Provided ContainerContext [$ctCtxt]&quot;)
+</span>62 <span style=''>      }
+</span>63 <span style=''>    }
+</span>64 <span style=''>
+</span>65 <span style=''>    try {
+</span>66 <span style=''>      ctxtProvider.start(registry.getBundleContext())
+</span>67 <span style=''>    } catch {
+</span>68 <span style=''>      case NonFatal(e) =&gt;
+</span>69 <span style=''>        log.warn(s&quot;Failed to start Application Context. ${e.getMessage()}&quot;)
+</span>70 <span style=''>        throw new ExitAppException(exitCode = ExitCode.Error, errMsg = Some(e.getMessage()), cause = e)
+</span>71 <span style=''>    }
+</span>72 <span style=''>
+</span>73 <span style=''>    registry
+</span>74 <span style=''>  }
+</span>75 <span style=''>
+</span>76 <span style=''>  def stop(): Unit = {
+</span>77 <span style=''>    </span><span style='background: #AEF1AE'>registry.getBundleContext().getBundle().stop(0)</span><span style=''>
+</span>78 <span style=''>  }
+</span>79 <span style=''>
+</span>80 <span style=''>  def checkCert(): Future[MemoryKeystore] = {
+</span>81 <span style=''>
+</span>82 <span style=''>    val promise = </span><span style='background: #AEF1AE'>Promise[MemoryKeystore]()</span><span style=''>
+</span>83 <span style=''>
+</span>84 <span style=''>    </span><span style='background: #AEF1AE'>Future {
+</span>85 <span style=''></span><span style='background: #AEF1AE'>      new DominoActivator {
+</span>86 <span style=''></span><span style='background: #AEF1AE'>        whenBundleActive {
+</span>87 <span style=''></span><span style='background: #AEF1AE'>          </span><span style='background: #F0ADAD'>whenServicePresent[CertificateManager] { certMgr =&gt;
+</span>88 <span style=''></span><span style='background: #F0ADAD'>            log.debug(s&quot;About to check and refresh certificates with cert manager [${certMgr}]&quot;)
+</span>89 <span style=''></span><span style='background: #F0ADAD'>            val result = certMgr.checkCertificates() match {
+</span>90 <span style=''></span><span style='background: #F0ADAD'>              case Failure(e) =&gt;
+</span>91 <span style=''></span><span style='background: #F0ADAD'>                Failure(e)
+</span>92 <span style=''></span><span style='background: #F0ADAD'>              case Success(None) =&gt;
+</span>93 <span style=''></span><span style='background: #F0ADAD'>                log.error(&quot;No server certificates configured&quot;)
+</span>94 <span style=''></span><span style='background: #F0ADAD'>                Failure(new Exception(&quot;Server configuration is required to updated server certificates.&quot;))
+</span>95 <span style=''></span><span style='background: #F0ADAD'>              case Success(Some(ms)) =&gt;
+</span>96 <span style=''></span><span style='background: #F0ADAD'>                log.debug(&quot;configured certificates checked successfully&quot;)
+</span>97 <span style=''></span><span style='background: #F0ADAD'>                Success(ms)
+</span>98 <span style=''></span><span style='background: #F0ADAD'>            }
+</span>99 <span style=''></span><span style='background: #F0ADAD'>            promise.complete(result)
+</span>100 <span style=''></span><span style='background: #F0ADAD'>
+</span>101 <span style=''></span><span style='background: #F0ADAD'>            log.debug(&quot;Certificate checking finished, self-stopping bundle&quot;)
+</span>102 <span style=''></span><span style='background: #F0ADAD'>            bundleContext.getBundle().stop()
+</span>103 <span style=''></span><span style='background: #F0ADAD'>          }</span><span style='background: #AEF1AE'>
+</span>104 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>105 <span style=''></span><span style='background: #AEF1AE'>      }.start(registry.getBundleContext())
+</span>106 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>107 <span style=''>
+</span>108 <span style=''>    </span><span style='background: #AEF1AE'>promise.future</span><span style=''>
+</span>109 <span style=''>  }
+</span>110 <span style=''>
+</span>111 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          15890
+        </td>
+        <td>
+          822
+          -
+          843
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          15837
+        </td>
+        <td>
+          881
+          -
+          907
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          15844
+        </td>
+        <td>
+          912
+          -
+          965
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          15965
+        </td>
+        <td>
+          970
+          -
+          1016
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          15767
+        </td>
+        <td>
+          2626
+          -
+          2673
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          15916
+        </td>
+        <td>
+          2744
+          -
+          2769
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          15786
+        </td>
+        <td>
+          2782
+          -
+          2782
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          15908
+        </td>
+        <td>
+          2775
+          -
+          3711
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          85
+        </td>
+        <td>
+          15768
+        </td>
+        <td>
+          2790
+          -
+          2793
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          86
+        </td>
+        <td>
+          15769
+        </td>
+        <td>
+          2820
+          -
+          3662
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          15960
+        </td>
+        <td>
+          2888
+          -
+          2888
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          15836
+        </td>
+        <td>
+          2849
+          -
+          3652
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          15821
+        </td>
+        <td>
+          2923
+          -
+          2996
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          15823
+        </td>
+        <td>
+          2913
+          -
+          2997
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          15850
+        </td>
+        <td>
+          3023
+          -
+          3050
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          15904
+        </td>
+        <td>
+          3108
+          -
+          3118
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          15834
+        </td>
+        <td>
+          3171
+          -
+          3217
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          15838
+        </td>
+        <td>
+          3234
+          -
+          3324
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          94
+        </td>
+        <td>
+          15901
+        </td>
+        <td>
+          3242
+          -
+          3323
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          96
+        </td>
+        <td>
+          15888
+        </td>
+        <td>
+          3381
+          -
+          3438
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          97
+        </td>
+        <td>
+          15822
+        </td>
+        <td>
+          3455
+          -
+          3466
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          99
+        </td>
+        <td>
+          15896
+        </td>
+        <td>
+          3493
+          -
+          3517
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          101
+        </td>
+        <td>
+          15782
+        </td>
+        <td>
+          3531
+          -
+          3595
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          102
+        </td>
+        <td>
+          15886
+        </td>
+        <td>
+          3608
+          -
+          3640
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          15894
+        </td>
+        <td>
+          3677
+          -
+          3704
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          15781
+        </td>
+        <td>
+          2790
+          -
+          3705
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          108
+        </td>
+        <td>
+          15961
+        </td>
+        <td>
+          3717
+          -
+          3731
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

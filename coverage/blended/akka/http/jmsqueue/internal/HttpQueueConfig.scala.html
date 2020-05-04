@@ -1,0 +1,564 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/akka/http/jmsqueue/internal/HttpQueueConfig.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.akka.http.jmsqueue.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.util.config.Implicits._
+</span>4 <span style=''>import com.typesafe.config.Config
+</span>5 <span style=''>
+</span>6 <span style=''>import scala.collection.JavaConverters._
+</span>7 <span style=''>
+</span>8 <span style=''>object HttpQueueConfig {
+</span>9 <span style=''>
+</span>10 <span style=''>  val queuesPath = </span><span style='background: #AEF1AE'>&quot;queues&quot;</span><span style=''>
+</span>11 <span style=''>
+</span>12 <span style=''>  def fromConfig(cfg : Config) : HttpQueueConfig = {
+</span>13 <span style=''>    val queues : Map[(String, String), ProviderQueueConfig] = </span><span style='background: #AEF1AE'>cfg.hasPath(queuesPath)</span><span style=''> match {
+</span>14 <span style=''>      case false =&gt; </span><span style='background: #F0ADAD'>Map.empty</span><span style=''>
+</span>15 <span style=''>      case true =&gt;
+</span>16 <span style=''>        val provider : Seq[(String, String)] =
+</span>17 <span style=''>          </span><span style='background: #AEF1AE'>for (
+</span>18 <span style=''></span><span style='background: #AEF1AE'>            v &lt;- cfg.getObject(queuesPath).keySet().asScala.toSeq;
+</span>19 <span style=''></span><span style='background: #AEF1AE'>            p &lt;- cfg.getConfig(queuesPath).getObject(v).keySet().asScala.toSeq
+</span>20 <span style=''></span><span style='background: #AEF1AE'>          ) yield (v, p)</span><span style=''>
+</span>21 <span style=''>
+</span>22 <span style=''>        </span><span style='background: #AEF1AE'>provider.map {
+</span>23 <span style=''></span><span style='background: #AEF1AE'>          case (v, p) =&gt;
+</span>24 <span style=''></span><span style='background: #AEF1AE'>            val providerCfg = cfg.getConfig(queuesPath).getConfig(v).getConfig(p)
+</span>25 <span style=''></span><span style='background: #AEF1AE'>
+</span>26 <span style=''></span><span style='background: #AEF1AE'>            val path = providerCfg.getString(&quot;path&quot;, p)
+</span>27 <span style=''></span><span style='background: #AEF1AE'>            val queueNames = providerCfg.getStringList(&quot;queues&quot;, List.empty)
+</span>28 <span style=''></span><span style='background: #AEF1AE'>            (v, p) -&gt; ProviderQueueConfig(path, queueNames)
+</span>29 <span style=''></span><span style='background: #AEF1AE'>        }.toMap</span><span style=''>
+</span>30 <span style=''>    }
+</span>31 <span style=''>
+</span>32 <span style=''>    </span><span style='background: #AEF1AE'>HttpQueueConfig(queues)</span><span style=''>
+</span>33 <span style=''>  }
+</span>34 <span style=''>}
+</span>35 <span style=''>
+</span>36 <span style=''>case class ProviderQueueConfig(path : String, queueNames : List[String])
+</span>37 <span style=''>
+</span>38 <span style=''>case class HttpQueueConfig(
+</span>39 <span style=''>  httpQueues : Map[(String, String), ProviderQueueConfig]
+</span>40 <span style=''>)
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          10
+        </td>
+        <td>
+          14138
+        </td>
+        <td>
+          206
+          -
+          214
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          14130
+        </td>
+        <td>
+          331
+          -
+          354
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          13940
+        </td>
+        <td>
+          343
+          -
+          353
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          13952
+        </td>
+        <td>
+          383
+          -
+          392
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          14073
+        </td>
+        <td>
+          489
+          -
+          489
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          13992
+        </td>
+        <td>
+          469
+          -
+          645
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          14008
+        </td>
+        <td>
+          492
+          -
+          526
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          14022
+        </td>
+        <td>
+          556
+          -
+          556
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          13937
+        </td>
+        <td>
+          559
+          -
+          606
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          14074
+        </td>
+        <td>
+          554
+          -
+          645
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          14137
+        </td>
+        <td>
+          639
+          -
+          645
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          13957
+        </td>
+        <td>
+          668
+          -
+          668
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          14089
+        </td>
+        <td>
+          725
+          -
+          776
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          14088
+        </td>
+        <td>
+          801
+          -
+          833
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          14133
+        </td>
+        <td>
+          889
+          -
+          897
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          14016
+        </td>
+        <td>
+          899
+          -
+          909
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          14062
+        </td>
+        <td>
+          863
+          -
+          910
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          14058
+        </td>
+        <td>
+          923
+          -
+          929
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          13997
+        </td>
+        <td>
+          933
+          -
+          970
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          13993
+        </td>
+        <td>
+          923
+          -
+          970
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          14009
+        </td>
+        <td>
+          655
+          -
+          986
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          14003
+        </td>
+        <td>
+          981
+          -
+          981
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          14076
+        </td>
+        <td>
+          998
+          -
+          1021
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

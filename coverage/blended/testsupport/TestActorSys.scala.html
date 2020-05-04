@@ -1,0 +1,467 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/testsupport/TestActorSys.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.testsupport
+</span>2 <span style=''>
+</span>3 <span style=''>import java.util.concurrent.atomic.AtomicInteger
+</span>4 <span style=''>
+</span>5 <span style=''>import akka.actor.ActorSystem
+</span>6 <span style=''>import akka.testkit.TestKit
+</span>7 <span style=''>
+</span>8 <span style=''>import scala.concurrent.Await
+</span>9 <span style=''>import scala.concurrent.duration._
+</span>10 <span style=''>
+</span>11 <span style=''>object TestActorSys {
+</span>12 <span style=''>  val uniqueId = </span><span style='background: #F0ADAD'>new AtomicInteger(0)</span><span style=''>
+</span>13 <span style=''>
+</span>14 <span style=''>  def apply(f : TestKit =&gt; Unit) = </span><span style='background: #F0ADAD'>new TestActorSys(&quot;TestActorSys%05d&quot;.format(uniqueId.incrementAndGet()), f)</span><span style=''>
+</span>15 <span style=''>}
+</span>16 <span style=''>
+</span>17 <span style=''>class TestActorSys(name : String, f : TestKit =&gt; Unit)
+</span>18 <span style=''>  extends TestKit(ActorSystem(name)) {
+</span>19 <span style=''>
+</span>20 <span style=''>  try {
+</span>21 <span style=''>    </span><span style='background: #F0ADAD'>system.log.info(&quot;Start TestKit[{}]&quot;, system.name)
+</span>22 <span style=''></span><span style='background: #F0ADAD'>    f(this)</span><span style=''>
+</span>23 <span style=''>  } finally </span><span style='background: #F0ADAD'>{
+</span>24 <span style=''></span><span style='background: #F0ADAD'>    system.log.info(&quot;Shutting down TestKit[{}]&quot;, system.name)
+</span>25 <span style=''></span><span style='background: #F0ADAD'>    Await.result(system.terminate(), 10.seconds)
+</span>26 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
+</span>27 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          11331
+        </td>
+        <td>
+          243
+          -
+          263
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          11354
+        </td>
+        <td>
+          343
+          -
+          369
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          11333
+        </td>
+        <td>
+          300
+          -
+          374
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          11416
+        </td>
+        <td>
+          317
+          -
+          370
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          11544
+        </td>
+        <td>
+          317
+          -
+          335
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          11235
+        </td>
+        <td>
+          485
+          -
+          546
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11341
+        </td>
+        <td>
+          522
+          -
+          533
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11421
+        </td>
+        <td>
+          485
+          -
+          534
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11439
+        </td>
+        <td>
+          501
+          -
+          520
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          11251
+        </td>
+        <td>
+          539
+          -
+          546
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          11448
+        </td>
+        <td>
+          559
+          -
+          675
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          11525
+        </td>
+        <td>
+          565
+          -
+          622
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          11304
+        </td>
+        <td>
+          581
+          -
+          608
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          11457
+        </td>
+        <td>
+          610
+          -
+          621
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          11558
+        </td>
+        <td>
+          627
+          -
+          671
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          11561
+        </td>
+        <td>
+          660
+          -
+          662
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          11339
+        </td>
+        <td>
+          640
+          -
+          658
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          11308
+        </td>
+        <td>
+          639
+          -
+          639
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          11481
+        </td>
+        <td>
+          660
+          -
+          670
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

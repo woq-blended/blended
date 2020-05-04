@@ -1,0 +1,471 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/testsupport/pojosr/SimplePojoContainerSpec.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.testsupport.pojosr
+</span>2 <span style=''>
+</span>3 <span style=''>import org.osgi.framework.{Bundle, BundleActivator}
+</span>4 <span style=''>import org.scalatest.{BeforeAndAfterAll, TestSuite}
+</span>5 <span style=''>
+</span>6 <span style=''>abstract class SimplePojoContainerSpec
+</span>7 <span style=''>  extends TestSuite
+</span>8 <span style=''>  with BeforeAndAfterAll { this : PojoSrTestHelper =&gt;
+</span>9 <span style=''>
+</span>10 <span style=''>  /**
+</span>11 <span style=''>   * Factory for bundles.
+</span>12 <span style=''>   * A `Seq` of bundle name and activator class.
+</span>13 <span style=''>   */
+</span>14 <span style=''>  def bundles : Seq[(String, BundleActivator)]
+</span>15 <span style=''>
+</span>16 <span style=''>  /**
+</span>17 <span style=''>   * Specify, which properties are mandatory for the simulated container.
+</span>18 <span style=''>   */
+</span>19 <span style=''>  def mandatoryPropertyNames : List[String] = </span><span style='background: #AEF1AE'>List.empty</span><span style=''>
+</span>20 <span style=''>
+</span>21 <span style=''>  /**
+</span>22 <span style=''>   * If required, inject additional system properties when firing up the container.
+</span>23 <span style=''>   */
+</span>24 <span style=''>  def systemProperties : Map[String, String] = </span><span style='background: #AEF1AE'>Map.empty</span><span style=''>
+</span>25 <span style=''>
+</span>26 <span style=''>  def bundleByName(name : String) : Option[Bundle] = </span><span style='background: #F0ADAD'>registry.getBundleContext().getBundles().find {
+</span>27 <span style=''></span><span style='background: #F0ADAD'>    b =&gt; b.getSymbolicName() == name
+</span>28 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
+</span>29 <span style=''>
+</span>30 <span style=''>  override protected def afterAll() : Unit = {
+</span>31 <span style=''>    </span><span style='background: #AEF1AE'>_registry.foreach { r =&gt;
+</span>32 <span style=''></span><span style='background: #AEF1AE'>      stopRegistry(r)
+</span>33 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>34 <span style=''>    // drop registry after stop
+</span>35 <span style=''>    _registry = </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>36 <span style=''>    </span><span style='background: #AEF1AE'>super.afterAll()</span><span style=''>
+</span>37 <span style=''>  }
+</span>38 <span style=''>
+</span>39 <span style=''>  private[this] var _registry : Option[BlendedPojoRegistry] = </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>40 <span style=''>
+</span>41 <span style=''>  def registry : BlendedPojoRegistry = {
+</span>42 <span style=''>    </span><span style='background: #AEF1AE'>_registry.getOrElse {
+</span>43 <span style=''></span><span style='background: #AEF1AE'>      _registry = Some(
+</span>44 <span style=''></span><span style='background: #AEF1AE'>        bundles.foldLeft(createSimpleBlendedContainer(mandatoryPropertyNames, systemProperties).get) {
+</span>45 <span style=''></span><span style='background: #AEF1AE'>          case (current, (name, activator)) =&gt;
+</span>46 <span style=''></span><span style='background: #AEF1AE'>            startBundle(current)(name, activator).get._2
+</span>47 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>48 <span style=''></span><span style='background: #AEF1AE'>      )
+</span>49 <span style=''></span><span style='background: #AEF1AE'>      _registry.get
+</span>50 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>51 <span style=''>  }
+</span>52 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          14148
+        </td>
+        <td>
+          522
+          -
+          532
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          14149
+        </td>
+        <td>
+          677
+          -
+          686
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          14378
+        </td>
+        <td>
+          741
+          -
+          781
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          14285
+        </td>
+        <td>
+          741
+          -
+          829
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          14230
+        </td>
+        <td>
+          798
+          -
+          825
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          14314
+        </td>
+        <td>
+          882
+          -
+          934
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          14300
+        </td>
+        <td>
+          913
+          -
+          928
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          14168
+        </td>
+        <td>
+          983
+          -
+          987
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          14206
+        </td>
+        <td>
+          992
+          -
+          1008
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          39
+        </td>
+        <td>
+          14247
+        </td>
+        <td>
+          1076
+          -
+          1080
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          14327
+        </td>
+        <td>
+          1127
+          -
+          1423
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          14239
+        </td>
+        <td>
+          1167
+          -
+          1397
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          14163
+        </td>
+        <td>
+          1181
+          -
+          1389
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          14207
+        </td>
+        <td>
+          1251
+          -
+          1267
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          14385
+        </td>
+        <td>
+          1227
+          -
+          1249
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          14310
+        </td>
+        <td>
+          1198
+          -
+          1272
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          46
+        </td>
+        <td>
+          14292
+        </td>
+        <td>
+          1335
+          -
+          1379
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          14231
+        </td>
+        <td>
+          1404
+          -
+          1417
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

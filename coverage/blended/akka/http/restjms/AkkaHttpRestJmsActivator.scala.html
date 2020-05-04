@@ -1,0 +1,460 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/akka/http/restjms/AkkaHttpRestJmsActivator.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.akka.http.restjms
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.akka.ActorSystemWatching
+</span>4 <span style=''>import blended.akka.http.restjms.internal.SimpleRestJmsService
+</span>5 <span style=''>import blended.akka.http.{HttpContext, SimpleHttpContext}
+</span>6 <span style=''>import blended.jms.utils.IdAwareConnectionFactory
+</span>7 <span style=''>import blended.streams.BlendedStreamsConfig
+</span>8 <span style=''>import domino.DominoActivator
+</span>9 <span style=''>
+</span>10 <span style=''>class AkkaHttpRestJmsActivator extends DominoActivator with ActorSystemWatching {
+</span>11 <span style=''>
+</span>12 <span style=''>  </span><span style='background: #AEF1AE'>whenBundleActive {
+</span>13 <span style=''></span><span style='background: #AEF1AE'>    whenActorSystemAvailable { cfg =&gt;
+</span>14 <span style=''></span><span style='background: #AEF1AE'>
+</span>15 <span style=''></span><span style='background: #AEF1AE'>      val vendor = cfg.config.getString(&quot;vendor&quot;)
+</span>16 <span style=''></span><span style='background: #AEF1AE'>      val provider = cfg.config.getString(&quot;provider&quot;)
+</span>17 <span style=''></span><span style='background: #AEF1AE'>
+</span>18 <span style=''></span><span style='background: #AEF1AE'>      val webContext : String = cfg.config.getString(&quot;webcontext&quot;)
+</span>19 <span style=''></span><span style='background: #AEF1AE'>
+</span>20 <span style=''></span><span style='background: #AEF1AE'>      whenServicePresent[BlendedStreamsConfig]{ streamsCfg =&gt;
+</span>21 <span style=''></span><span style='background: #AEF1AE'>        whenAdvancedServicePresent[IdAwareConnectionFactory](s&quot;(&amp;(vendor=$vendor)(provider=$provider))&quot;) { cf =&gt;
+</span>22 <span style=''></span><span style='background: #AEF1AE'>
+</span>23 <span style=''></span><span style='background: #AEF1AE'>          val svc = new SimpleRestJmsService(
+</span>24 <span style=''></span><span style='background: #AEF1AE'>            name = webContext,
+</span>25 <span style=''></span><span style='background: #AEF1AE'>            osgiCfg = cfg,
+</span>26 <span style=''></span><span style='background: #AEF1AE'>            streamsConfig = streamsCfg,
+</span>27 <span style=''></span><span style='background: #AEF1AE'>            cf = cf
+</span>28 <span style=''></span><span style='background: #AEF1AE'>          )
+</span>29 <span style=''></span><span style='background: #AEF1AE'>
+</span>30 <span style=''></span><span style='background: #AEF1AE'>          svc.start()
+</span>31 <span style=''></span><span style='background: #AEF1AE'>
+</span>32 <span style=''></span><span style='background: #AEF1AE'>          onStop{
+</span>33 <span style=''></span><span style='background: #AEF1AE'>            </span><span style='background: #F0ADAD'>svc.stop()</span><span style='background: #AEF1AE'>
+</span>34 <span style=''></span><span style='background: #AEF1AE'>          }
+</span>35 <span style=''></span><span style='background: #AEF1AE'>
+</span>36 <span style=''></span><span style='background: #AEF1AE'>          SimpleHttpContext(webContext, svc.httpRoute).providesService[HttpContext]
+</span>37 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>38 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>39 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>40 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>41 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          11747
+        </td>
+        <td>
+          406
+          -
+          1178
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          11725
+        </td>
+        <td>
+          429
+          -
+          1174
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          11997
+        </td>
+        <td>
+          483
+          -
+          513
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          11825
+        </td>
+        <td>
+          535
+          -
+          567
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          12019
+        </td>
+        <td>
+          601
+          -
+          635
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          11983
+        </td>
+        <td>
+          683
+          -
+          683
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          11680
+        </td>
+        <td>
+          643
+          -
+          1168
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11677
+        </td>
+        <td>
+          707
+          -
+          1160
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          12030
+        </td>
+        <td>
+          804
+          -
+          804
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11849
+        </td>
+        <td>
+          760
+          -
+          802
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          11732
+        </td>
+        <td>
+          833
+          -
+          988
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          11985
+        </td>
+        <td>
+          1000
+          -
+          1011
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          11883
+        </td>
+        <td>
+          1023
+          -
+          1065
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          11876
+        </td>
+        <td>
+          1043
+          -
+          1053
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          11845
+        </td>
+        <td>
+          1137
+          -
+          1137
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          11827
+        </td>
+        <td>
+          1107
+          -
+          1120
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          11994
+        </td>
+        <td>
+          1077
+          -
+          1150
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          11703
+        </td>
+        <td>
+          1077
+          -
+          1121
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

@@ -1,0 +1,559 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/mgmt/service/jmx/internal/ServiceJmxCollector.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.mgmt.service.jmx.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import akka.actor.Props
+</span>4 <span style=''>import blended.akka.{OSGIActor, OSGIActorConfig}
+</span>5 <span style=''>import javax.management.MBeanServer
+</span>6 <span style=''>
+</span>7 <span style=''>import scala.concurrent.ExecutionContext
+</span>8 <span style=''>import scala.concurrent.duration._
+</span>9 <span style=''>
+</span>10 <span style=''>object ServiceJmxCollector {
+</span>11 <span style=''>  def props(cfg : OSGIActorConfig, svcConfig : ServiceJmxConfig, server : MBeanServer) : Props =
+</span>12 <span style=''>    </span><span style='background: #F0ADAD'>Props(new ServiceJmxCollector(cfg, svcConfig, server))</span><span style=''>
+</span>13 <span style=''>}
+</span>14 <span style=''>
+</span>15 <span style=''>class ServiceJmxCollector(cfg : OSGIActorConfig, svcConfig : ServiceJmxConfig, server : MBeanServer) extends OSGIActor(cfg) {
+</span>16 <span style=''>
+</span>17 <span style=''>  case object Tick
+</span>18 <span style=''>
+</span>19 <span style=''>  private implicit val eCtxt : ExecutionContext = </span><span style='background: #F0ADAD'>cfg.system.dispatcher</span><span style=''>
+</span>20 <span style=''>
+</span>21 <span style=''>  val analyser = </span><span style='background: #F0ADAD'>new ServiceJmxAnalyser(server, svcConfig)</span><span style=''>
+</span>22 <span style=''>
+</span>23 <span style=''>  override def preStart() : Unit = {
+</span>24 <span style=''>    </span><span style='background: #F0ADAD'>super.preStart()</span><span style=''>
+</span>25 <span style=''>    </span><span style='background: #F0ADAD'>self ! Tick</span><span style=''>
+</span>26 <span style=''>  }
+</span>27 <span style=''>
+</span>28 <span style=''>  override def receive : Receive = {
+</span>29 <span style=''>    case Tick =&gt;
+</span>30 <span style=''>      </span><span style='background: #F0ADAD'>log.debug(&quot;Refreshing Service Information from JMX&quot;)</span><span style=''>
+</span>31 <span style=''>      </span><span style='background: #F0ADAD'>analyser.analyse().foreach(info =&gt; cfg.system.eventStream.publish(info))</span><span style=''>
+</span>32 <span style=''>      </span><span style='background: #F0ADAD'>context.system.scheduler.scheduleOnce(svcConfig.interval.seconds, self, Tick)</span><span style=''>
+</span>33 <span style=''>  }
+</span>34 <span style=''>
+</span>35 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          13793
+        </td>
+        <td>
+          366
+          -
+          413
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          13861
+        </td>
+        <td>
+          360
+          -
+          414
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          13836
+        </td>
+        <td>
+          615
+          -
+          636
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          13795
+        </td>
+        <td>
+          686
+          -
+          695
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          13926
+        </td>
+        <td>
+          678
+          -
+          684
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          13911
+        </td>
+        <td>
+          655
+          -
+          696
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          13786
+        </td>
+        <td>
+          739
+          -
+          755
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          13857
+        </td>
+        <td>
+          765
+          -
+          765
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          13848
+        </td>
+        <td>
+          767
+          -
+          771
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          13907
+        </td>
+        <td>
+          760
+          -
+          771
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          13775
+        </td>
+        <td>
+          760
+          -
+          764
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          13906
+        </td>
+        <td>
+          812
+          -
+          812
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          13800
+        </td>
+        <td>
+          837
+          -
+          889
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          13777
+        </td>
+        <td>
+          896
+          -
+          968
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          13910
+        </td>
+        <td>
+          931
+          -
+          967
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          13837
+        </td>
+        <td>
+          1047
+          -
+          1051
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          13846
+        </td>
+        <td>
+          1012
+          -
+          1012
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          13792
+        </td>
+        <td>
+          1012
+          -
+          1012
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          13752
+        </td>
+        <td>
+          1013
+          -
+          1039
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          13841
+        </td>
+        <td>
+          1012
+          -
+          1012
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          13913
+        </td>
+        <td>
+          1013
+          -
+          1031
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          13862
+        </td>
+        <td>
+          1041
+          -
+          1045
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          13921
+        </td>
+        <td>
+          975
+          -
+          1052
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

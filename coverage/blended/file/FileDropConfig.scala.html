@@ -1,0 +1,190 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/file/FileDropConfig.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.file
+</span>2 <span style=''>
+</span>3 <span style=''>import scala.concurrent.duration.FiniteDuration
+</span>4 <span style=''>
+</span>5 <span style=''>trait FileEnvelopeHeader {
+</span>6 <span style=''>  val fileHeaderPrefix : String =&gt; String = s =&gt; </span><span style='background: #AEF1AE'>s + &quot;File&quot;</span><span style=''>
+</span>7 <span style=''>
+</span>8 <span style=''>  val dirHeader : String =&gt; String = s =&gt; </span><span style='background: #F0ADAD'>fileHeaderPrefix(s) + &quot;Directory&quot;</span><span style=''>
+</span>9 <span style=''>  val fileHeader : String =&gt; String = s =&gt; </span><span style='background: #AEF1AE'>fileHeaderPrefix(s) + &quot;File&quot;</span><span style=''>
+</span>10 <span style=''>  val compressHeader : String =&gt; String = s =&gt; </span><span style='background: #AEF1AE'>fileHeaderPrefix(s) + &quot;Compressed&quot;</span><span style=''>
+</span>11 <span style=''>  val appendHeader : String =&gt; String = s =&gt; </span><span style='background: #AEF1AE'>fileHeaderPrefix(s) + &quot;Append&quot;</span><span style=''>
+</span>12 <span style=''>  val charsetHeader : String =&gt; String = s =&gt; </span><span style='background: #AEF1AE'>fileHeaderPrefix(s) + &quot;CharSet&quot;</span><span style=''>
+</span>13 <span style=''>}
+</span>14 <span style=''>
+</span>15 <span style=''>case class FileDropConfig(
+</span>16 <span style=''>  dirHeader : String,
+</span>17 <span style=''>  fileHeader : String,
+</span>18 <span style=''>  compressHeader : String,
+</span>19 <span style=''>  appendHeader : String,
+</span>20 <span style=''>  charsetHeader : String,
+</span>21 <span style=''>  defaultDir : String,
+</span>22 <span style=''>  dropTimeout : FiniteDuration
+</span>23 <span style=''>)
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          6
+        </td>
+        <td>
+          1481
+        </td>
+        <td>
+          147
+          -
+          157
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          8
+        </td>
+        <td>
+          937
+        </td>
+        <td>
+          201
+          -
+          234
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          9
+        </td>
+        <td>
+          1240
+        </td>
+        <td>
+          278
+          -
+          306
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          10
+        </td>
+        <td>
+          1112
+        </td>
+        <td>
+          354
+          -
+          388
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          11
+        </td>
+        <td>
+          1317
+        </td>
+        <td>
+          434
+          -
+          464
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          1145
+        </td>
+        <td>
+          511
+          -
+          542
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

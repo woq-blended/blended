@@ -1,0 +1,573 @@
+2020-05-04-09:21.40.274 |      405 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher$ : About to read configFile: [/tmp/test3009237095526722713]
+2020-05-04-09:21.40.385 |      516 | WARN  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher$ : Launcher is unable to determine the container id.
+java.nio.file.NoSuchFileException: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/./etc/blended.container.context.id
+	at sun.nio.fs.UnixException.translateToIOException(UnixException.java:86)
+	at sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:102)
+	at sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:107)
+	at sun.nio.fs.UnixFileSystemProvider.newByteChannel(UnixFileSystemProvider.java:214)
+	at java.nio.file.Files.newByteChannel(Files.java:361)
+	at java.nio.file.Files.newByteChannel(Files.java:407)
+	at java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:384)
+	at java.nio.file.Files.newInputStream(Files.java:152)
+	at java.nio.file.Files.newBufferedReader(Files.java:2784)
+	at java.nio.file.Files.readAllLines(Files.java:3202)
+	at java.nio.file.Files.readAllLines(Files.java:3242)
+	at blended.launcher.Launcher$.$anonfun$containerId$3(Launcher.scala:110)
+	at scala.util.Try$.apply(Try.scala:213)
+	at blended.launcher.Launcher$.containerId(Launcher.scala:109)
+	at blended.launcher.Launcher$.createAndPrepareLaunch(Launcher.scala:138)
+	at blended.launcher.Launcher$.run(Launcher.scala:197)
+	at blended.launcher.FelixFrameworkTest.$anonfun$new$4(FelixFrameworkTest.scala:38)
+	at blended.launcher.FelixFrameworkTest.$anonfun$new$4$adapted(FelixFrameworkTest.scala:35)
+	at blended.testsupport.TestFile.$anonfun$withTestFile$4(TestFile.scala:69)
+	at blended.testsupport.TestFile.deleteAfter(TestFile.scala:19)
+	at blended.testsupport.TestFile.deleteAfter$(TestFile.scala:16)
+	at blended.launcher.FelixFrameworkTest.deleteAfter(FelixFrameworkTest.scala:9)
+	at blended.testsupport.TestFile.withTestFile(TestFile.scala:67)
+	at blended.testsupport.TestFile.withTestFile$(TestFile.scala:59)
+	at blended.launcher.FelixFrameworkTest.withTestFile(FelixFrameworkTest.scala:9)
+	at blended.launcher.FelixFrameworkTest.$anonfun$new$3(FelixFrameworkTest.scala:35)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+	at org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+	at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+	at org.scalatest.Transformer.apply(Transformer.scala:22)
+	at org.scalatest.Transformer.apply(Transformer.scala:20)
+	at org.scalatest.FreeSpecLike$$anon$1.apply(FreeSpecLike.scala:407)
+	at org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+	at org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+	at org.scalatest.FreeSpec.withFixture(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.invokeWithFixture$1(FreeSpecLike.scala:405)
+	at org.scalatest.FreeSpecLike.$anonfun$runTest$1(FreeSpecLike.scala:417)
+	at org.scalatest.SuperEngine.runTestImpl(Engine.scala:289)
+	at org.scalatest.FreeSpecLike.runTest(FreeSpecLike.scala:417)
+	at org.scalatest.FreeSpecLike.runTest$(FreeSpecLike.scala:399)
+	at org.scalatest.FreeSpec.runTest(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.$anonfun$runTests$1(FreeSpecLike.scala:476)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:396)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:373)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:410)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:379)
+	at org.scalatest.SuperEngine.runTestsImpl(Engine.scala:461)
+	at org.scalatest.FreeSpecLike.runTests(FreeSpecLike.scala:476)
+	at org.scalatest.FreeSpecLike.runTests$(FreeSpecLike.scala:475)
+	at org.scalatest.FreeSpec.runTests(FreeSpec.scala:1739)
+	at org.scalatest.Suite.run(Suite.scala:1147)
+	at org.scalatest.Suite.run$(Suite.scala:1129)
+	at org.scalatest.FreeSpec.org$scalatest$FreeSpecLike$$super$run(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.$anonfun$run$1(FreeSpecLike.scala:520)
+	at org.scalatest.SuperEngine.runImpl(Engine.scala:521)
+	at org.scalatest.FreeSpecLike.run(FreeSpecLike.scala:520)
+	at org.scalatest.FreeSpecLike.run$(FreeSpecLike.scala:519)
+	at org.scalatest.FreeSpec.run(FreeSpec.scala:1739)
+	at org.scalatest.tools.Framework.org$scalatest$tools$Framework$$runSuite(Framework.scala:314)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:507)
+	at sbt.ForkMain$Run.lambda$runTest$1(ForkMain.java:304)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+2020-05-04-09:21.40.393 |      524 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting OSGi framework based on config: LauncherConfig(frameworkJar=/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.launcher/target/scala-2.12/test-classes/../../test-osgi/org.apache.felix.framework-5.0.0.jar,systemProperties=Map(),frameworkProperties=Map(org.osgi.framework.storage.clean -> onFirstInit),startLevel=10,defaultStartLevel=4,bundles=List(),branding=Map())
+2020-05-04-09:21.40.394 |      525 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Framework Bundle from: file:/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.launcher/target/test-osgi/org.apache.felix.framework-5.0.0.jar
+2020-05-04-09:21.40.400 |      531 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : About to create framework instance...
+2020-05-04-09:21.40.610 |      741 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Framework started. State: 32
+2020-05-04-09:21.40.612 |      743 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Installing [0] bundles
+2020-05-04-09:21.40.614 |      745 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : 0 bundles installed
+2020-05-04-09:21.40.619 |      750 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [1] ------
+2020-05-04-09:21.40.623 |      754 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.626 |      757 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.627 |      758 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [2] ------
+2020-05-04-09:21.40.627 |      758 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.627 |      758 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.627 |      758 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [3] ------
+2020-05-04-09:21.40.628 |      759 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.628 |      759 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.628 |      759 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [4] ------
+2020-05-04-09:21.40.628 |      759 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.629 |      760 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.629 |      760 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [5] ------
+2020-05-04-09:21.40.629 |      760 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.629 |      760 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.630 |      761 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [6] ------
+2020-05-04-09:21.40.630 |      761 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.630 |      761 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.630 |      761 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [7] ------
+2020-05-04-09:21.40.631 |      762 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.631 |      762 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.631 |      762 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [8] ------
+2020-05-04-09:21.40.631 |      762 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.631 |      762 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.631 |      762 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [9] ------
+2020-05-04-09:21.40.632 |      763 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.632 |      763 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.632 |      763 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [10] ------
+2020-05-04-09:21.40.632 |      763 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.633 |      764 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.634 |      765 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Laucher finished starting of framework and bundles. Awaiting framework termination now.
+2020-05-04-09:21.40.640 |      771 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher$ : Framework has been stopped by bundle org.apache.felix.framework [0]
+2020-05-04-09:21.40.688 |      819 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher$ : About to read configFile: [/tmp/test4484103367149849741]
+2020-05-04-09:21.40.695 |      826 | WARN  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher$ : Launcher is unable to determine the container id.
+java.nio.file.NoSuchFileException: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/./etc/blended.container.context.id
+	at sun.nio.fs.UnixException.translateToIOException(UnixException.java:86)
+	at sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:102)
+	at sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:107)
+	at sun.nio.fs.UnixFileSystemProvider.newByteChannel(UnixFileSystemProvider.java:214)
+	at java.nio.file.Files.newByteChannel(Files.java:361)
+	at java.nio.file.Files.newByteChannel(Files.java:407)
+	at java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:384)
+	at java.nio.file.Files.newInputStream(Files.java:152)
+	at java.nio.file.Files.newBufferedReader(Files.java:2784)
+	at java.nio.file.Files.readAllLines(Files.java:3202)
+	at java.nio.file.Files.readAllLines(Files.java:3242)
+	at blended.launcher.Launcher$.$anonfun$containerId$3(Launcher.scala:110)
+	at scala.util.Try$.apply(Try.scala:213)
+	at blended.launcher.Launcher$.containerId(Launcher.scala:109)
+	at blended.launcher.Launcher$.createAndPrepareLaunch(Launcher.scala:138)
+	at blended.launcher.Launcher$.run(Launcher.scala:197)
+	at blended.launcher.FelixFrameworkTest.$anonfun$new$4(FelixFrameworkTest.scala:38)
+	at blended.launcher.FelixFrameworkTest.$anonfun$new$4$adapted(FelixFrameworkTest.scala:35)
+	at blended.testsupport.TestFile.$anonfun$withTestFile$4(TestFile.scala:69)
+	at blended.testsupport.TestFile.deleteAfter(TestFile.scala:19)
+	at blended.testsupport.TestFile.deleteAfter$(TestFile.scala:16)
+	at blended.launcher.FelixFrameworkTest.deleteAfter(FelixFrameworkTest.scala:9)
+	at blended.testsupport.TestFile.withTestFile(TestFile.scala:67)
+	at blended.testsupport.TestFile.withTestFile$(TestFile.scala:59)
+	at blended.launcher.FelixFrameworkTest.withTestFile(FelixFrameworkTest.scala:9)
+	at blended.launcher.FelixFrameworkTest.$anonfun$new$3(FelixFrameworkTest.scala:35)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+	at org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+	at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+	at org.scalatest.Transformer.apply(Transformer.scala:22)
+	at org.scalatest.Transformer.apply(Transformer.scala:20)
+	at org.scalatest.FreeSpecLike$$anon$1.apply(FreeSpecLike.scala:407)
+	at org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+	at org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+	at org.scalatest.FreeSpec.withFixture(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.invokeWithFixture$1(FreeSpecLike.scala:405)
+	at org.scalatest.FreeSpecLike.$anonfun$runTest$1(FreeSpecLike.scala:417)
+	at org.scalatest.SuperEngine.runTestImpl(Engine.scala:289)
+	at org.scalatest.FreeSpecLike.runTest(FreeSpecLike.scala:417)
+	at org.scalatest.FreeSpecLike.runTest$(FreeSpecLike.scala:399)
+	at org.scalatest.FreeSpec.runTest(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.$anonfun$runTests$1(FreeSpecLike.scala:476)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:396)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:373)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:410)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:379)
+	at org.scalatest.SuperEngine.runTestsImpl(Engine.scala:461)
+	at org.scalatest.FreeSpecLike.runTests(FreeSpecLike.scala:476)
+	at org.scalatest.FreeSpecLike.runTests$(FreeSpecLike.scala:475)
+	at org.scalatest.FreeSpec.runTests(FreeSpec.scala:1739)
+	at org.scalatest.Suite.run(Suite.scala:1147)
+	at org.scalatest.Suite.run$(Suite.scala:1129)
+	at org.scalatest.FreeSpec.org$scalatest$FreeSpecLike$$super$run(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.$anonfun$run$1(FreeSpecLike.scala:520)
+	at org.scalatest.SuperEngine.runImpl(Engine.scala:521)
+	at org.scalatest.FreeSpecLike.run(FreeSpecLike.scala:520)
+	at org.scalatest.FreeSpecLike.run$(FreeSpecLike.scala:519)
+	at org.scalatest.FreeSpec.run(FreeSpec.scala:1739)
+	at org.scalatest.tools.Framework.org$scalatest$tools$Framework$$runSuite(Framework.scala:314)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:507)
+	at sbt.ForkMain$Run.lambda$runTest$1(ForkMain.java:304)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+2020-05-04-09:21.40.696 |      827 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting OSGi framework based on config: LauncherConfig(frameworkJar=/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.launcher/target/scala-2.12/test-classes/../../test-osgi/org.apache.felix.framework-5.6.10.jar,systemProperties=Map(),frameworkProperties=Map(org.osgi.framework.storage.clean -> onFirstInit),startLevel=10,defaultStartLevel=4,bundles=List(),branding=Map())
+2020-05-04-09:21.40.697 |      828 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Framework Bundle from: file:/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.launcher/target/test-osgi/org.apache.felix.framework-5.6.10.jar
+2020-05-04-09:21.40.700 |      831 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : About to create framework instance...
+2020-05-04-09:21.40.844 |      975 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Framework started. State: 32
+2020-05-04-09:21.40.845 |      976 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Installing [0] bundles
+2020-05-04-09:21.40.845 |      976 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : 0 bundles installed
+2020-05-04-09:21.40.845 |      976 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [1] ------
+2020-05-04-09:21.40.845 |      976 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.845 |      976 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.845 |      976 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [2] ------
+2020-05-04-09:21.40.846 |      977 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.846 |      977 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.846 |      977 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [3] ------
+2020-05-04-09:21.40.846 |      977 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.846 |      977 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.846 |      977 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [4] ------
+2020-05-04-09:21.40.846 |      977 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.846 |      977 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.847 |      978 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [5] ------
+2020-05-04-09:21.40.847 |      978 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.847 |      978 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.847 |      978 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [6] ------
+2020-05-04-09:21.40.847 |      978 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.847 |      978 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.847 |      978 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [7] ------
+2020-05-04-09:21.40.848 |      979 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.848 |      979 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.848 |      979 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [8] ------
+2020-05-04-09:21.40.848 |      979 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.848 |      979 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.848 |      979 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [9] ------
+2020-05-04-09:21.40.848 |      979 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.848 |      979 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.848 |      979 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : ------ Entering start level [10] ------
+2020-05-04-09:21.40.849 |      980 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.40.849 |      980 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.40.849 |      980 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher : Laucher finished starting of framework and bundles. Awaiting framework termination now.
+2020-05-04-09:21.40.851 |      982 | INFO  [pool-1-thread-1-ScalaTest-running-FelixFrameworkTest] blended.launcher.Launcher$ : Framework has been stopped by bundle org.apache.felix.framework [0]
+2020-05-04-09:21.40.860 |      991 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: Launch with Equinox minimal: just the framework version 3.10.100.v20150529-1857
+2020-05-04-09:21.40.914 |     1045 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher$ : About to read configFile: [/tmp/test1380139666365672580]
+2020-05-04-09:21.40.921 |     1052 | WARN  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher$ : Launcher is unable to determine the container id.
+java.nio.file.NoSuchFileException: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/./etc/blended.container.context.id
+	at sun.nio.fs.UnixException.translateToIOException(UnixException.java:86)
+	at sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:102)
+	at sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:107)
+	at sun.nio.fs.UnixFileSystemProvider.newByteChannel(UnixFileSystemProvider.java:214)
+	at java.nio.file.Files.newByteChannel(Files.java:361)
+	at java.nio.file.Files.newByteChannel(Files.java:407)
+	at java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:384)
+	at java.nio.file.Files.newInputStream(Files.java:152)
+	at java.nio.file.Files.newBufferedReader(Files.java:2784)
+	at java.nio.file.Files.readAllLines(Files.java:3202)
+	at java.nio.file.Files.readAllLines(Files.java:3242)
+	at blended.launcher.Launcher$.$anonfun$containerId$3(Launcher.scala:110)
+	at scala.util.Try$.apply(Try.scala:213)
+	at blended.launcher.Launcher$.containerId(Launcher.scala:109)
+	at blended.launcher.Launcher$.createAndPrepareLaunch(Launcher.scala:138)
+	at blended.launcher.Launcher$.run(Launcher.scala:197)
+	at blended.launcher.EquinoxFrameworkTest.$anonfun$new$4(EquinoxFrameworkTest.scala:40)
+	at blended.launcher.EquinoxFrameworkTest.$anonfun$new$4$adapted(EquinoxFrameworkTest.scala:37)
+	at blended.testsupport.TestFile.$anonfun$withTestFile$4(TestFile.scala:69)
+	at blended.testsupport.TestFile.deleteAfter(TestFile.scala:19)
+	at blended.testsupport.TestFile.deleteAfter$(TestFile.scala:16)
+	at blended.launcher.EquinoxFrameworkTest.deleteAfter(EquinoxFrameworkTest.scala:9)
+	at blended.testsupport.TestFile.withTestFile(TestFile.scala:67)
+	at blended.testsupport.TestFile.withTestFile$(TestFile.scala:59)
+	at blended.launcher.EquinoxFrameworkTest.withTestFile(EquinoxFrameworkTest.scala:9)
+	at blended.launcher.EquinoxFrameworkTest.$anonfun$new$3(EquinoxFrameworkTest.scala:37)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+	at org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+	at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+	at org.scalatest.Transformer.apply(Transformer.scala:22)
+	at org.scalatest.Transformer.apply(Transformer.scala:20)
+	at org.scalatest.FreeSpecLike$$anon$1.apply(FreeSpecLike.scala:407)
+	at org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+	at org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+	at org.scalatest.FreeSpec.withFixture(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.invokeWithFixture$1(FreeSpecLike.scala:405)
+	at org.scalatest.FreeSpecLike.$anonfun$runTest$1(FreeSpecLike.scala:417)
+	at org.scalatest.SuperEngine.runTestImpl(Engine.scala:289)
+	at org.scalatest.FreeSpecLike.runTest(FreeSpecLike.scala:417)
+	at org.scalatest.FreeSpecLike.runTest$(FreeSpecLike.scala:399)
+	at blended.testsupport.scalatest.LoggingFreeSpec.blended$testsupport$scalatest$LoggingFreeSpecLike$$super$runTest(LoggingFreeSpec.scala:55)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest(LoggingFreeSpec.scala:30)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest$(LoggingFreeSpec.scala:25)
+	at blended.testsupport.scalatest.LoggingFreeSpec.runTest(LoggingFreeSpec.scala:55)
+	at org.scalatest.FreeSpecLike.$anonfun$runTests$1(FreeSpecLike.scala:476)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:396)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:373)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:410)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:379)
+	at org.scalatest.SuperEngine.runTestsImpl(Engine.scala:461)
+	at org.scalatest.FreeSpecLike.runTests(FreeSpecLike.scala:476)
+	at org.scalatest.FreeSpecLike.runTests$(FreeSpecLike.scala:475)
+	at org.scalatest.FreeSpec.runTests(FreeSpec.scala:1739)
+	at org.scalatest.Suite.run(Suite.scala:1147)
+	at org.scalatest.Suite.run$(Suite.scala:1129)
+	at org.scalatest.FreeSpec.org$scalatest$FreeSpecLike$$super$run(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.$anonfun$run$1(FreeSpecLike.scala:520)
+	at org.scalatest.SuperEngine.runImpl(Engine.scala:521)
+	at org.scalatest.FreeSpecLike.run(FreeSpecLike.scala:520)
+	at org.scalatest.FreeSpecLike.run$(FreeSpecLike.scala:519)
+	at org.scalatest.FreeSpec.run(FreeSpec.scala:1739)
+	at org.scalatest.tools.Framework.org$scalatest$tools$Framework$$runSuite(Framework.scala:314)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:507)
+	at sbt.ForkMain$Run.lambda$runTest$1(ForkMain.java:304)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+2020-05-04-09:21.40.922 |     1053 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting OSGi framework based on config: LauncherConfig(frameworkJar=/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.launcher/target/scala-2.12/test-classes/../../test-osgi/org.eclipse.osgi-3.10.100.v20150529-1857.jar,systemProperties=Map(),frameworkProperties=Map(org.osgi.framework.storage.clean -> onFirstInit),startLevel=10,defaultStartLevel=4,bundles=List(),branding=Map())
+2020-05-04-09:21.40.922 |     1053 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Framework Bundle from: file:/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.launcher/target/test-osgi/org.eclipse.osgi-3.10.100.v20150529-1857.jar
+2020-05-04-09:21.40.928 |     1059 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : About to create framework instance...
+2020-05-04-09:21.41.152 |     1283 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Framework started. State: 32
+2020-05-04-09:21.41.153 |     1284 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Installing [0] bundles
+2020-05-04-09:21.41.153 |     1284 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : 0 bundles installed
+2020-05-04-09:21.41.153 |     1284 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [1] ------
+2020-05-04-09:21.41.153 |     1284 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.154 |     1285 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.154 |     1285 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [2] ------
+2020-05-04-09:21.41.154 |     1285 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.154 |     1285 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.154 |     1285 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [3] ------
+2020-05-04-09:21.41.154 |     1285 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.154 |     1285 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.154 |     1285 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [4] ------
+2020-05-04-09:21.41.155 |     1286 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.155 |     1286 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.155 |     1286 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [5] ------
+2020-05-04-09:21.41.155 |     1286 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.155 |     1286 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.155 |     1286 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [6] ------
+2020-05-04-09:21.41.155 |     1286 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.155 |     1286 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.156 |     1287 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [7] ------
+2020-05-04-09:21.41.156 |     1287 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.156 |     1287 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.156 |     1287 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [8] ------
+2020-05-04-09:21.41.156 |     1287 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.156 |     1287 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.156 |     1287 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [9] ------
+2020-05-04-09:21.41.156 |     1287 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.157 |     1288 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.157 |     1288 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [10] ------
+2020-05-04-09:21.41.157 |     1288 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.157 |     1288 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.157 |     1288 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Laucher finished starting of framework and bundles. Awaiting framework termination now.
+2020-05-04-09:21.41.320 |     1451 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher$ : Framework has been stopped by bundle org.eclipse.osgi_3.10.100.v20150529-1857 [0]
+2020-05-04-09:21.41.322 |     1453 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: Launch with Equinox minimal: just the framework version 3.10.100.v20150529-1857
+--------------------------------------------------------------------------------
+2020-05-04-09:21.41.323 |     1454 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: Launch with Equinox minimal: just the framework version 3.10.0.v20140606-1445
+2020-05-04-09:21.41.366 |     1497 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher$ : About to read configFile: [/tmp/test7962940681384719925]
+2020-05-04-09:21.41.372 |     1503 | WARN  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher$ : Launcher is unable to determine the container id.
+java.nio.file.NoSuchFileException: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/./etc/blended.container.context.id
+	at sun.nio.fs.UnixException.translateToIOException(UnixException.java:86)
+	at sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:102)
+	at sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:107)
+	at sun.nio.fs.UnixFileSystemProvider.newByteChannel(UnixFileSystemProvider.java:214)
+	at java.nio.file.Files.newByteChannel(Files.java:361)
+	at java.nio.file.Files.newByteChannel(Files.java:407)
+	at java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:384)
+	at java.nio.file.Files.newInputStream(Files.java:152)
+	at java.nio.file.Files.newBufferedReader(Files.java:2784)
+	at java.nio.file.Files.readAllLines(Files.java:3202)
+	at java.nio.file.Files.readAllLines(Files.java:3242)
+	at blended.launcher.Launcher$.$anonfun$containerId$3(Launcher.scala:110)
+	at scala.util.Try$.apply(Try.scala:213)
+	at blended.launcher.Launcher$.containerId(Launcher.scala:109)
+	at blended.launcher.Launcher$.createAndPrepareLaunch(Launcher.scala:138)
+	at blended.launcher.Launcher$.run(Launcher.scala:197)
+	at blended.launcher.EquinoxFrameworkTest.$anonfun$new$4(EquinoxFrameworkTest.scala:40)
+	at blended.launcher.EquinoxFrameworkTest.$anonfun$new$4$adapted(EquinoxFrameworkTest.scala:37)
+	at blended.testsupport.TestFile.$anonfun$withTestFile$4(TestFile.scala:69)
+	at blended.testsupport.TestFile.deleteAfter(TestFile.scala:19)
+	at blended.testsupport.TestFile.deleteAfter$(TestFile.scala:16)
+	at blended.launcher.EquinoxFrameworkTest.deleteAfter(EquinoxFrameworkTest.scala:9)
+	at blended.testsupport.TestFile.withTestFile(TestFile.scala:67)
+	at blended.testsupport.TestFile.withTestFile$(TestFile.scala:59)
+	at blended.launcher.EquinoxFrameworkTest.withTestFile(EquinoxFrameworkTest.scala:9)
+	at blended.launcher.EquinoxFrameworkTest.$anonfun$new$3(EquinoxFrameworkTest.scala:37)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+	at org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+	at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+	at org.scalatest.Transformer.apply(Transformer.scala:22)
+	at org.scalatest.Transformer.apply(Transformer.scala:20)
+	at org.scalatest.FreeSpecLike$$anon$1.apply(FreeSpecLike.scala:407)
+	at org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+	at org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+	at org.scalatest.FreeSpec.withFixture(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.invokeWithFixture$1(FreeSpecLike.scala:405)
+	at org.scalatest.FreeSpecLike.$anonfun$runTest$1(FreeSpecLike.scala:417)
+	at org.scalatest.SuperEngine.runTestImpl(Engine.scala:289)
+	at org.scalatest.FreeSpecLike.runTest(FreeSpecLike.scala:417)
+	at org.scalatest.FreeSpecLike.runTest$(FreeSpecLike.scala:399)
+	at blended.testsupport.scalatest.LoggingFreeSpec.blended$testsupport$scalatest$LoggingFreeSpecLike$$super$runTest(LoggingFreeSpec.scala:55)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest(LoggingFreeSpec.scala:30)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest$(LoggingFreeSpec.scala:25)
+	at blended.testsupport.scalatest.LoggingFreeSpec.runTest(LoggingFreeSpec.scala:55)
+	at org.scalatest.FreeSpecLike.$anonfun$runTests$1(FreeSpecLike.scala:476)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:396)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:373)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:410)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:379)
+	at org.scalatest.SuperEngine.runTestsImpl(Engine.scala:461)
+	at org.scalatest.FreeSpecLike.runTests(FreeSpecLike.scala:476)
+	at org.scalatest.FreeSpecLike.runTests$(FreeSpecLike.scala:475)
+	at org.scalatest.FreeSpec.runTests(FreeSpec.scala:1739)
+	at org.scalatest.Suite.run(Suite.scala:1147)
+	at org.scalatest.Suite.run$(Suite.scala:1129)
+	at org.scalatest.FreeSpec.org$scalatest$FreeSpecLike$$super$run(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.$anonfun$run$1(FreeSpecLike.scala:520)
+	at org.scalatest.SuperEngine.runImpl(Engine.scala:521)
+	at org.scalatest.FreeSpecLike.run(FreeSpecLike.scala:520)
+	at org.scalatest.FreeSpecLike.run$(FreeSpecLike.scala:519)
+	at org.scalatest.FreeSpec.run(FreeSpec.scala:1739)
+	at org.scalatest.tools.Framework.org$scalatest$tools$Framework$$runSuite(Framework.scala:314)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:507)
+	at sbt.ForkMain$Run.lambda$runTest$1(ForkMain.java:304)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+2020-05-04-09:21.41.373 |     1504 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting OSGi framework based on config: LauncherConfig(frameworkJar=/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.launcher/target/scala-2.12/test-classes/../../test-osgi/org.eclipse.osgi-3.10.0.v20140606-1445.jar,systemProperties=Map(),frameworkProperties=Map(org.osgi.framework.storage.clean -> onFirstInit),startLevel=10,defaultStartLevel=4,bundles=List(),branding=Map())
+2020-05-04-09:21.41.373 |     1504 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Framework Bundle from: file:/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.launcher/target/test-osgi/org.eclipse.osgi-3.10.0.v20140606-1445.jar
+2020-05-04-09:21.41.462 |     1593 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : About to create framework instance...
+2020-05-04-09:21.41.657 |     1788 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Framework started. State: 32
+2020-05-04-09:21.41.658 |     1789 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Installing [0] bundles
+2020-05-04-09:21.41.658 |     1789 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : 0 bundles installed
+2020-05-04-09:21.41.658 |     1789 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [1] ------
+2020-05-04-09:21.41.659 |     1790 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.660 |     1791 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.660 |     1791 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [2] ------
+2020-05-04-09:21.41.660 |     1791 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.660 |     1791 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.660 |     1791 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [3] ------
+2020-05-04-09:21.41.660 |     1791 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.661 |     1792 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.661 |     1792 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [4] ------
+2020-05-04-09:21.41.661 |     1792 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.661 |     1792 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.661 |     1792 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [5] ------
+2020-05-04-09:21.41.661 |     1792 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.661 |     1792 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.662 |     1793 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [6] ------
+2020-05-04-09:21.41.662 |     1793 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.662 |     1793 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.662 |     1793 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [7] ------
+2020-05-04-09:21.41.662 |     1793 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.662 |     1793 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.662 |     1793 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [8] ------
+2020-05-04-09:21.41.662 |     1793 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.662 |     1793 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.663 |     1794 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [9] ------
+2020-05-04-09:21.41.663 |     1794 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.663 |     1794 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.663 |     1794 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [10] ------
+2020-05-04-09:21.41.663 |     1794 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.41.663 |     1794 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.41.663 |     1794 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Laucher finished starting of framework and bundles. Awaiting framework termination now.
+2020-05-04-09:21.41.781 |     1912 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher$ : Framework has been stopped by bundle org.eclipse.osgi_3.10.0.v20140606-1445 [0]
+2020-05-04-09:21.41.783 |     1914 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: Launch with Equinox minimal: just the framework version 3.10.0.v20140606-1445
+--------------------------------------------------------------------------------
+2020-05-04-09:21.41.783 |     1914 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: Launch with Equinox minimal: just the framework version 3.12.50
+2020-05-04-09:21.41.821 |     1952 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher$ : About to read configFile: [/tmp/test5524113245108528820]
+2020-05-04-09:21.41.825 |     1956 | WARN  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher$ : Launcher is unable to determine the container id.
+java.nio.file.NoSuchFileException: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/./etc/blended.container.context.id
+	at sun.nio.fs.UnixException.translateToIOException(UnixException.java:86)
+	at sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:102)
+	at sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:107)
+	at sun.nio.fs.UnixFileSystemProvider.newByteChannel(UnixFileSystemProvider.java:214)
+	at java.nio.file.Files.newByteChannel(Files.java:361)
+	at java.nio.file.Files.newByteChannel(Files.java:407)
+	at java.nio.file.spi.FileSystemProvider.newInputStream(FileSystemProvider.java:384)
+	at java.nio.file.Files.newInputStream(Files.java:152)
+	at java.nio.file.Files.newBufferedReader(Files.java:2784)
+	at java.nio.file.Files.readAllLines(Files.java:3202)
+	at java.nio.file.Files.readAllLines(Files.java:3242)
+	at blended.launcher.Launcher$.$anonfun$containerId$3(Launcher.scala:110)
+	at scala.util.Try$.apply(Try.scala:213)
+	at blended.launcher.Launcher$.containerId(Launcher.scala:109)
+	at blended.launcher.Launcher$.createAndPrepareLaunch(Launcher.scala:138)
+	at blended.launcher.Launcher$.run(Launcher.scala:197)
+	at blended.launcher.EquinoxFrameworkTest.$anonfun$new$4(EquinoxFrameworkTest.scala:40)
+	at blended.launcher.EquinoxFrameworkTest.$anonfun$new$4$adapted(EquinoxFrameworkTest.scala:37)
+	at blended.testsupport.TestFile.$anonfun$withTestFile$4(TestFile.scala:69)
+	at blended.testsupport.TestFile.deleteAfter(TestFile.scala:19)
+	at blended.testsupport.TestFile.deleteAfter$(TestFile.scala:16)
+	at blended.launcher.EquinoxFrameworkTest.deleteAfter(EquinoxFrameworkTest.scala:9)
+	at blended.testsupport.TestFile.withTestFile(TestFile.scala:67)
+	at blended.testsupport.TestFile.withTestFile$(TestFile.scala:59)
+	at blended.launcher.EquinoxFrameworkTest.withTestFile(EquinoxFrameworkTest.scala:9)
+	at blended.launcher.EquinoxFrameworkTest.$anonfun$new$3(EquinoxFrameworkTest.scala:37)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+	at org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+	at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+	at org.scalatest.Transformer.apply(Transformer.scala:22)
+	at org.scalatest.Transformer.apply(Transformer.scala:20)
+	at org.scalatest.FreeSpecLike$$anon$1.apply(FreeSpecLike.scala:407)
+	at org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+	at org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+	at org.scalatest.FreeSpec.withFixture(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.invokeWithFixture$1(FreeSpecLike.scala:405)
+	at org.scalatest.FreeSpecLike.$anonfun$runTest$1(FreeSpecLike.scala:417)
+	at org.scalatest.SuperEngine.runTestImpl(Engine.scala:289)
+	at org.scalatest.FreeSpecLike.runTest(FreeSpecLike.scala:417)
+	at org.scalatest.FreeSpecLike.runTest$(FreeSpecLike.scala:399)
+	at blended.testsupport.scalatest.LoggingFreeSpec.blended$testsupport$scalatest$LoggingFreeSpecLike$$super$runTest(LoggingFreeSpec.scala:55)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest(LoggingFreeSpec.scala:30)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest$(LoggingFreeSpec.scala:25)
+	at blended.testsupport.scalatest.LoggingFreeSpec.runTest(LoggingFreeSpec.scala:55)
+	at org.scalatest.FreeSpecLike.$anonfun$runTests$1(FreeSpecLike.scala:476)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:396)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:373)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:410)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:379)
+	at org.scalatest.SuperEngine.runTestsImpl(Engine.scala:461)
+	at org.scalatest.FreeSpecLike.runTests(FreeSpecLike.scala:476)
+	at org.scalatest.FreeSpecLike.runTests$(FreeSpecLike.scala:475)
+	at org.scalatest.FreeSpec.runTests(FreeSpec.scala:1739)
+	at org.scalatest.Suite.run(Suite.scala:1147)
+	at org.scalatest.Suite.run$(Suite.scala:1129)
+	at org.scalatest.FreeSpec.org$scalatest$FreeSpecLike$$super$run(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.$anonfun$run$1(FreeSpecLike.scala:520)
+	at org.scalatest.SuperEngine.runImpl(Engine.scala:521)
+	at org.scalatest.FreeSpecLike.run(FreeSpecLike.scala:520)
+	at org.scalatest.FreeSpecLike.run$(FreeSpecLike.scala:519)
+	at org.scalatest.FreeSpec.run(FreeSpec.scala:1739)
+	at org.scalatest.tools.Framework.org$scalatest$tools$Framework$$runSuite(Framework.scala:314)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:507)
+	at sbt.ForkMain$Run.lambda$runTest$1(ForkMain.java:304)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+2020-05-04-09:21.41.826 |     1957 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting OSGi framework based on config: LauncherConfig(frameworkJar=/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.launcher/target/scala-2.12/test-classes/../../test-osgi/org.eclipse.osgi-3.12.50.jar,systemProperties=Map(),frameworkProperties=Map(org.osgi.framework.storage.clean -> onFirstInit),startLevel=10,defaultStartLevel=4,bundles=List(),branding=Map())
+2020-05-04-09:21.41.826 |     1957 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Framework Bundle from: file:/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.launcher/target/test-osgi/org.eclipse.osgi-3.12.50.jar
+2020-05-04-09:21.41.872 |     2003 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : About to create framework instance...
+2020-05-04-09:21.42.179 |     2310 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Framework started. State: 32
+2020-05-04-09:21.42.179 |     2310 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Installing [0] bundles
+2020-05-04-09:21.42.179 |     2310 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : 0 bundles installed
+2020-05-04-09:21.42.179 |     2310 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [1] ------
+2020-05-04-09:21.42.180 |     2311 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.42.181 |     2312 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.42.181 |     2312 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [2] ------
+2020-05-04-09:21.42.182 |     2313 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.42.182 |     2313 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.42.182 |     2313 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [3] ------
+2020-05-04-09:21.42.182 |     2313 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.42.182 |     2313 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.42.182 |     2313 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [4] ------
+2020-05-04-09:21.42.182 |     2313 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.42.183 |     2314 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.42.183 |     2314 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [5] ------
+2020-05-04-09:21.42.183 |     2314 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.42.183 |     2314 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.42.183 |     2314 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [6] ------
+2020-05-04-09:21.42.183 |     2314 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.42.184 |     2315 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.42.184 |     2315 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [7] ------
+2020-05-04-09:21.42.184 |     2315 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.42.184 |     2315 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.42.184 |     2315 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [8] ------
+2020-05-04-09:21.42.184 |     2315 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.42.184 |     2315 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.42.184 |     2315 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [9] ------
+2020-05-04-09:21.42.185 |     2316 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.42.185 |     2316 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.42.185 |     2316 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : ------ Entering start level [10] ------
+2020-05-04-09:21.42.185 |     2316 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Starting [0] bundles
+2020-05-04-09:21.42.185 |     2316 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : [0] bundles started
+2020-05-04-09:21.42.185 |     2316 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher : Laucher finished starting of framework and bundles. Awaiting framework termination now.
+2020-05-04-09:21.42.322 |     2453 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.launcher.Launcher$ : Framework has been stopped by bundle org.eclipse.osgi_3.12.50.v20170928-1321 [0]
+2020-05-04-09:21.42.324 |     2455 | INFO  [pool-1-thread-1-ScalaTest-running-EquinoxFrameworkTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: Launch with Equinox minimal: just the framework version 3.12.50
+--------------------------------------------------------------------------------

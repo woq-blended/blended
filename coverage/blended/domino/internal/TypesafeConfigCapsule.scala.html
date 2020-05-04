@@ -1,0 +1,438 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/domino/internal/TypesafeConfigCapsule.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.domino.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.container.context.api.ContainerContext
+</span>4 <span style=''>import com.typesafe.config.Config
+</span>5 <span style=''>import domino.DominoImplicits
+</span>6 <span style=''>import domino.capsule.{Capsule, CapsuleContext, CapsuleScope}
+</span>7 <span style=''>import domino.service_watching.ServiceWatching
+</span>8 <span style=''>import org.osgi.framework.BundleContext
+</span>9 <span style=''>
+</span>10 <span style=''>class TypesafeConfigCapsule(
+</span>11 <span style=''>  cCtxt : CapsuleContext,
+</span>12 <span style=''>  f : (Config, ContainerContext) =&gt; Unit,
+</span>13 <span style=''>  bCtxt : BundleContext
+</span>14 <span style=''>) extends Capsule
+</span>15 <span style=''>  with ServiceWatching
+</span>16 <span style=''>  with DominoImplicits {
+</span>17 <span style=''>
+</span>18 <span style=''>  override protected def capsuleContext : CapsuleContext = </span><span style='background: #AEF1AE'>cCtxt</span><span style=''>
+</span>19 <span style=''>  override protected def bundleContext : BundleContext = </span><span style='background: #AEF1AE'>bCtxt</span><span style=''>
+</span>20 <span style=''>
+</span>21 <span style=''>  var optCapsuleScope : Option[CapsuleScope] = </span><span style='background: #AEF1AE'>None</span><span style=''>
+</span>22 <span style=''>
+</span>23 <span style=''>  override def start() : Unit = {
+</span>24 <span style=''>    </span><span style='background: #AEF1AE'>whenServicePresent[ContainerContext] { ctCtxt =&gt;
+</span>25 <span style=''></span><span style='background: #AEF1AE'>
+</span>26 <span style=''></span><span style='background: #AEF1AE'>      val cfg : Config = ctCtxt.getConfig(bundleContext.getBundle().getSymbolicName())
+</span>27 <span style=''></span><span style='background: #AEF1AE'>
+</span>28 <span style=''></span><span style='background: #AEF1AE'>      if (optCapsuleScope.isEmpty) {
+</span>29 <span style=''></span><span style='background: #AEF1AE'>        val newCapsuleScope = capsuleContext.executeWithinNewCapsuleScope {
+</span>30 <span style=''></span><span style='background: #AEF1AE'>          f(cfg, ctCtxt)
+</span>31 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>32 <span style=''></span><span style='background: #AEF1AE'>        optCapsuleScope = Some(newCapsuleScope)
+</span>33 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>34 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>35 <span style=''>  }
+</span>36 <span style=''>
+</span>37 <span style=''>  override def stop() : Unit = {
+</span>38 <span style=''>    </span><span style='background: #AEF1AE'>optCapsuleScope.foreach(_.stop())</span><span style=''>
+</span>39 <span style=''>  }
+</span>40 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          4134
+        </td>
+        <td>
+          548
+          -
+          553
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          4118
+        </td>
+        <td>
+          611
+          -
+          616
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          4121
+        </td>
+        <td>
+          665
+          -
+          669
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          4124
+        </td>
+        <td>
+          709
+          -
+          1056
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          4136
+        </td>
+        <td>
+          746
+          -
+          746
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          4126
+        </td>
+        <td>
+          784
+          -
+          845
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          4138
+        </td>
+        <td>
+          801
+          -
+          844
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          4120
+        </td>
+        <td>
+          857
+          -
+          880
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          4123
+        </td>
+        <td>
+          853
+          -
+          853
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          4130
+        </td>
+        <td>
+          853
+          -
+          853
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          4127
+        </td>
+        <td>
+          882
+          -
+          1050
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          4137
+        </td>
+        <td>
+          914
+          -
+          994
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          4128
+        </td>
+        <td>
+          970
+          -
+          984
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          4119
+        </td>
+        <td>
+          1003
+          -
+          1042
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          4133
+        </td>
+        <td>
+          1021
+          -
+          1042
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          4132
+        </td>
+        <td>
+          1123
+          -
+          1131
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          4131
+        </td>
+        <td>
+          1099
+          -
+          1132
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

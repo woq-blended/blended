@@ -1,0 +1,291 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/jolokia/MBeanSearchDef.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.jolokia
+</span>2 <span style=''>
+</span>3 <span style=''>case class MBeanSearchDef(
+</span>4 <span style=''>  jmxDomain : String,
+</span>5 <span style=''>  searchProperties : Map[String, String] = Map.empty
+</span>6 <span style=''>) {
+</span>7 <span style=''>  def pattern : String = </span><span style='background: #AEF1AE'>searchProperties</span><span style=''> match {
+</span>8 <span style=''>    case m if </span><span style='background: #AEF1AE'>m.isEmpty</span><span style=''> =&gt; </span><span style='background: #AEF1AE'>&quot;&quot;</span><span style=''>
+</span>9 <span style=''>    case m              =&gt; </span><span style='background: #AEF1AE'>m.keys.map(k =&gt; s&quot;$k=${m.get(k).get}&quot;).mkString(&quot;&quot;, &quot;,&quot;, &quot;,&quot;)</span><span style=''>
+</span>10 <span style=''>  }
+</span>11 <span style=''>}
+</span>12 <span style=''>
+</span>13 <span style=''>case class OperationExecDef(
+</span>14 <span style=''>  objectName : String,
+</span>15 <span style=''>  operationName : String,
+</span>16 <span style=''>  parameters : List[String] = List.empty
+</span>17 <span style=''>) {
+</span>18 <span style=''>  def pattern : String = </span><span style='background: #AEF1AE'>s&quot;$objectName/$operationName/&quot; + parameters.mkString(&quot;/&quot;)</span><span style=''>
+</span>19 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          7
+        </td>
+        <td>
+          1811
+        </td>
+        <td>
+          156
+          -
+          172
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          8
+        </td>
+        <td>
+          1833
+        </td>
+        <td>
+          208
+          -
+          210
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          8
+        </td>
+        <td>
+          1852
+        </td>
+        <td>
+          195
+          -
+          204
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          9
+        </td>
+        <td>
+          1879
+        </td>
+        <td>
+          238
+          -
+          299
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1886
+        </td>
+        <td>
+          488
+          -
+          512
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1838
+        </td>
+        <td>
+          468
+          -
+          470
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1820
+        </td>
+        <td>
+          458
+          -
+          468
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1778
+        </td>
+        <td>
+          483
+          -
+          485
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1787
+        </td>
+        <td>
+          470
+          -
+          483
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1870
+        </td>
+        <td>
+          457
+          -
+          458
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1803
+        </td>
+        <td>
+          455
+          -
+          512
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

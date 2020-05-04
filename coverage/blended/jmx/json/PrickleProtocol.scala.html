@@ -1,0 +1,418 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/jmx/json/PrickleProtocol.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.jmx.json
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.jmx._
+</span>4 <span style=''>import prickle._
+</span>5 <span style=''>
+</span>6 <span style=''>import scala.collection.mutable
+</span>7 <span style=''>import scala.util.Try
+</span>8 <span style=''>
+</span>9 <span style=''>object PrickleProtocol {
+</span>10 <span style=''>
+</span>11 <span style=''>  implicit val objNamePickler : Pickler[JmxObjectName] = Pickler.materializePickler[JmxObjectName]
+</span>12 <span style=''>  implicit val objectNameUnpickler : Unpickler[JmxObjectName] = Unpickler.materializeUnpickler[JmxObjectName]
+</span>13 <span style=''>
+</span>14 <span style=''>  implicit val beanInfoPickler : Pickler[JmxBeanInfo] = Pickler.materializePickler[JmxBeanInfo]
+</span>15 <span style=''>  implicit val beanInfoUnpickler : Unpickler[JmxBeanInfo] = Unpickler.materializeUnpickler[JmxBeanInfo]
+</span>16 <span style=''>
+</span>17 <span style=''>  implicit val bigIntPickler : Pickler[BigInt] = </span><span style='background: #AEF1AE'>new</span><span style=''> Pickler[BigInt] {
+</span>18 <span style=''>    override def pickle[P](obj: BigInt, state: PickleState)(implicit config: PConfig[P]): P = {
+</span>19 <span style=''>      </span><span style='background: #AEF1AE'>config.makeString(obj.toString())</span><span style=''>
+</span>20 <span style=''>    }
+</span>21 <span style=''>  }
+</span>22 <span style=''>
+</span>23 <span style=''>  implicit val bigIntUnpickler : Unpickler[BigInt] = </span><span style='background: #AEF1AE'>new</span><span style=''> Unpickler[BigInt] {
+</span>24 <span style=''>
+</span>25 <span style=''>    override def unpickle[P](pickle: P, state: mutable.Map[String, Any])(implicit config: PConfig[P]): Try[BigInt] = {
+</span>26 <span style=''>      val s = </span><span style='background: #AEF1AE'>config.readString(pickle)</span><span style=''>
+</span>27 <span style=''>      </span><span style='background: #AEF1AE'>s.map(BigInt(_))</span><span style=''>
+</span>28 <span style=''>    }
+</span>29 <span style=''>  }
+</span>30 <span style=''>
+</span>31 <span style=''>  implicit val bigDecPickler : Pickler[BigDecimal] = </span><span style='background: #AEF1AE'>new</span><span style=''> Pickler[BigDecimal] {
+</span>32 <span style=''>    override def pickle[P](obj: BigDecimal, state: PickleState)(implicit config: PConfig[P]): P = {
+</span>33 <span style=''>      </span><span style='background: #AEF1AE'>config.makeString(obj.toString())</span><span style=''>
+</span>34 <span style=''>    }
+</span>35 <span style=''>  }
+</span>36 <span style=''>
+</span>37 <span style=''>  implicit val bigDecUnpickler : Unpickler[BigDecimal] = </span><span style='background: #AEF1AE'>new</span><span style=''> Unpickler[BigDecimal] {
+</span>38 <span style=''>
+</span>39 <span style=''>    override def unpickle[P](pickle: P, state: mutable.Map[String, Any])(implicit config: PConfig[P]): Try[BigDecimal] = {
+</span>40 <span style=''>      val s = </span><span style='background: #AEF1AE'>config.readString(pickle)</span><span style=''>
+</span>41 <span style=''>      </span><span style='background: #AEF1AE'>s.map(BigDecimal(_))</span><span style=''>
+</span>42 <span style=''>    }
+</span>43 <span style=''>  }
+</span>44 <span style=''>
+</span>45 <span style=''>  implicit val attributeValuePickler : PicklerPair[AttributeValue] = </span><span style='background: #AEF1AE'>CompositePickler[AttributeValue]
+</span>46 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[StringAttributeValue]
+</span>47 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[UnitAttributeValue]
+</span>48 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[IntAttributeValue]
+</span>49 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[LongAttributeValue]
+</span>50 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[BooleanAttributeValue]
+</span>51 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[ByteAttributeValue]
+</span>52 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[ShortAttributeValue]
+</span>53 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[FloatAttributeValue]
+</span>54 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[DoubleAttributeValue]
+</span>55 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[CharAttributeValue]
+</span>56 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[ObjectNameAttributeValue]
+</span>57 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[ListAttributeValue]
+</span>58 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[TabularAttributeValue]
+</span>59 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[BigIntegerAtrributeValue]
+</span>60 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[BigDecimalAtrributeValue]
+</span>61 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[CompositeAttributeValue]</span><span style=''>
+</span>62 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          4620
+        </td>
+        <td>
+          606
+          -
+          609
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          4883
+        </td>
+        <td>
+          730
+          -
+          763
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          4569
+        </td>
+        <td>
+          748
+          -
+          762
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          4871
+        </td>
+        <td>
+          828
+          -
+          831
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          4673
+        </td>
+        <td>
+          986
+          -
+          1011
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          4894
+        </td>
+        <td>
+          1024
+          -
+          1033
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          5082
+        </td>
+        <td>
+          1018
+          -
+          1034
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          4420
+        </td>
+        <td>
+          1099
+          -
+          1102
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          4901
+        </td>
+        <td>
+          1231
+          -
+          1264
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          5162
+        </td>
+        <td>
+          1249
+          -
+          1263
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          4622
+        </td>
+        <td>
+          1333
+          -
+          1336
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          4837
+        </td>
+        <td>
+          1499
+          -
+          1524
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          5164
+        </td>
+        <td>
+          1531
+          -
+          1551
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          4570
+        </td>
+        <td>
+          1537
+          -
+          1550
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          61
+        </td>
+        <td>
+          5133
+        </td>
+        <td>
+          1632
+          -
+          2306
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

@@ -1,0 +1,593 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/akka/http/proxy/internal/ProxyConfig.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.akka.http.proxy.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.akka.http.proxy.internal.RedirectHeaderPolicy.RedirectHeaderPolicy
+</span>4 <span style=''>import blended.util.config.Implicits._
+</span>5 <span style=''>import com.typesafe.config.Config
+</span>6 <span style=''>
+</span>7 <span style=''>import scala.util.Try
+</span>8 <span style=''>
+</span>9 <span style=''>object RedirectHeaderPolicy extends Enumeration {
+</span>10 <span style=''>
+</span>11 <span style=''>  type RedirectHeaderPolicy = Value
+</span>12 <span style=''>
+</span>13 <span style=''>  val Client_Only = </span><span style='background: #AEF1AE'>Value(&quot;Client_Only&quot;)</span><span style=''>
+</span>14 <span style=''>  val Redirect_Replace = </span><span style='background: #AEF1AE'>Value(&quot;Redirect_Replace&quot;)</span><span style=''>
+</span>15 <span style=''>  val Redirect_Merge = </span><span style='background: #AEF1AE'>Value(&quot;Redirect_Merge&quot;)</span><span style=''>
+</span>16 <span style=''>}
+</span>17 <span style=''>
+</span>18 <span style=''>case class ProxyConfig(
+</span>19 <span style=''>  context : String,
+</span>20 <span style=''>  paths : Seq[ProxyTarget]
+</span>21 <span style=''>)
+</span>22 <span style=''>
+</span>23 <span style=''>object ProxyConfig {
+</span>24 <span style=''>  def parse(cfg : Config) : Try[ProxyConfig] = </span><span style='background: #AEF1AE'>Try {
+</span>25 <span style=''></span><span style='background: #AEF1AE'>    ProxyConfig(
+</span>26 <span style=''></span><span style='background: #AEF1AE'>      cfg.getString(&quot;context&quot;),
+</span>27 <span style=''></span><span style='background: #AEF1AE'>      cfg.getConfigMap(&quot;paths&quot;, Map()).toList.map {
+</span>28 <span style=''></span><span style='background: #AEF1AE'>        case (k, v) =&gt;
+</span>29 <span style=''></span><span style='background: #AEF1AE'>          ProxyTarget(
+</span>30 <span style=''></span><span style='background: #AEF1AE'>            path = k,
+</span>31 <span style=''></span><span style='background: #AEF1AE'>            uri = v.getString(&quot;uri&quot;),
+</span>32 <span style=''></span><span style='background: #AEF1AE'>            user = v.getStringOption(&quot;user&quot;),
+</span>33 <span style=''></span><span style='background: #AEF1AE'>            password = v.getStringOption(&quot;password&quot;),
+</span>34 <span style=''></span><span style='background: #AEF1AE'>            timeout = v.getInt(&quot;timeout&quot;, 10),
+</span>35 <span style=''></span><span style='background: #AEF1AE'>            redirectCount = v.getInt(&quot;redirectCount&quot;, 0),
+</span>36 <span style=''></span><span style='background: #AEF1AE'>            redirectHeaderPolicy = cfg.getStringOption(&quot;headerPolicy&quot;) match {
+</span>37 <span style=''></span><span style='background: #AEF1AE'>              case Some(s) =&gt; try {
+</span>38 <span style=''></span><span style='background: #AEF1AE'>                </span><span style='background: #F0ADAD'>RedirectHeaderPolicy.withName(s)</span><span style='background: #AEF1AE'>
+</span>39 <span style=''></span><span style='background: #AEF1AE'>              } catch {
+</span>40 <span style=''></span><span style='background: #AEF1AE'>                case _ : Throwable =&gt; </span><span style='background: #F0ADAD'>RedirectHeaderPolicy.Client_Only</span><span style='background: #AEF1AE'>
+</span>41 <span style=''></span><span style='background: #AEF1AE'>              }
+</span>42 <span style=''></span><span style='background: #AEF1AE'>              case None =&gt; RedirectHeaderPolicy.Client_Only
+</span>43 <span style=''></span><span style='background: #AEF1AE'>            }
+</span>44 <span style=''></span><span style='background: #AEF1AE'>          )
+</span>45 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>46 <span style=''></span><span style='background: #AEF1AE'>    )
+</span>47 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>48 <span style=''>}
+</span>49 <span style=''>
+</span>50 <span style=''>case class ProxyTarget(
+</span>51 <span style=''>  path: String,
+</span>52 <span style=''>  uri: String,
+</span>53 <span style=''>  timeout: Int,
+</span>54 <span style=''>  user : Option[String] = None,
+</span>55 <span style=''>  password : Option[String] = None,
+</span>56 <span style=''>  redirectCount: Int = 0,
+</span>57 <span style=''>  redirectHeaderPolicy : RedirectHeaderPolicy = RedirectHeaderPolicy.Client_Only
+</span>58 <span style=''>) {
+</span>59 <span style=''>
+</span>60 <span style=''>  def isHttps : Boolean = </span><span style='background: #AEF1AE'>uri.substring(0, 5).equalsIgnoreCase(&quot;https&quot;)</span><span style=''>
+</span>61 <span style=''>
+</span>62 <span style=''>  override def toString() : String = </span><span style='background: #AEF1AE'>getClass().getSimpleName() +
+</span>63 <span style=''></span><span style='background: #AEF1AE'>    &quot;(path=&quot; + path +
+</span>64 <span style=''></span><span style='background: #AEF1AE'>    &quot;,uri=&quot; + uri +
+</span>65 <span style=''></span><span style='background: #AEF1AE'>    &quot;,timeout=&quot; + timeout +
+</span>66 <span style=''></span><span style='background: #AEF1AE'>    &quot;,redirectCount=&quot; + redirectCount +
+</span>67 <span style=''></span><span style='background: #AEF1AE'>    &quot;,redirectHeaderPolicy=&quot; + redirectHeaderPolicy.toString() +
+</span>68 <span style=''></span><span style='background: #AEF1AE'>    &quot;)&quot;</span><span style=''>
+</span>69 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          4211
+        </td>
+        <td>
+          329
+          -
+          349
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          4309
+        </td>
+        <td>
+          375
+          -
+          400
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          4153
+        </td>
+        <td>
+          424
+          -
+          447
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          4165
+        </td>
+        <td>
+          593
+          -
+          1389
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          4355
+        </td>
+        <td>
+          603
+          -
+          1385
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          4275
+        </td>
+        <td>
+          622
+          -
+          646
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          4359
+        </td>
+        <td>
+          698
+          -
+          698
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          4143
+        </td>
+        <td>
+          654
+          -
+          1379
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          4274
+        </td>
+        <td>
+          680
+          -
+          685
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          4253
+        </td>
+        <td>
+          671
+          -
+          678
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          4244
+        </td>
+        <td>
+          733
+          -
+          1371
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          4332
+        </td>
+        <td>
+          786
+          -
+          804
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          4339
+        </td>
+        <td>
+          825
+          -
+          850
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          4268
+        </td>
+        <td>
+          875
+          -
+          904
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          4246
+        </td>
+        <td>
+          928
+          -
+          951
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          4150
+        </td>
+        <td>
+          981
+          -
+          1009
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          4329
+        </td>
+        <td>
+          1046
+          -
+          1081
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          4316
+        </td>
+        <td>
+          1142
+          -
+          1174
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          4166
+        </td>
+        <td>
+          1142
+          -
+          1174
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          4188
+        </td>
+        <td>
+          1237
+          -
+          1269
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          4187
+        </td>
+        <td>
+          1313
+          -
+          1345
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          60
+        </td>
+        <td>
+          4371
+        </td>
+        <td>
+          1670
+          -
+          1715
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          4279
+        </td>
+        <td>
+          1754
+          -
+          1965
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

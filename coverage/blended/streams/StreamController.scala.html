@@ -1,0 +1,441 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/streams/StreamController.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.streams
+</span>2 <span style=''>
+</span>3 <span style=''>import akka.actor.{Actor, Props}
+</span>4 <span style=''>import akka.stream.Materializer
+</span>5 <span style=''>import akka.stream.scaladsl.Source
+</span>6 <span style=''>
+</span>7 <span style=''>import scala.concurrent.ExecutionContext
+</span>8 <span style=''>
+</span>9 <span style=''>object StreamController {
+</span>10 <span style=''>
+</span>11 <span style=''>  case object Start
+</span>12 <span style=''>  case object Stop
+</span>13 <span style=''>  case class Abort(t : Throwable)
+</span>14 <span style=''>  case class StreamTerminated(exception : Option[Throwable])
+</span>15 <span style=''>  case object Reset
+</span>16 <span style=''>
+</span>17 <span style=''>  def props[T, Mat](
+</span>18 <span style=''>    streamName : String,
+</span>19 <span style=''>    src : Source[T, Mat],
+</span>20 <span style=''>    streamCfg : BlendedStreamsConfig
+</span>21 <span style=''>  )(
+</span>22 <span style=''>    onMaterialize : Mat =&gt; Unit = { _ : Mat =&gt; () }
+</span>23 <span style=''>  )(implicit materializer : Materializer) : Props =
+</span>24 <span style=''>
+</span>25 <span style=''>    </span><span style='background: #AEF1AE'>Props(new AbstractStreamController[T, Mat](streamCfg) {
+</span>26 <span style=''></span><span style='background: #AEF1AE'>      override def name: String = streamName
+</span>27 <span style=''></span><span style='background: #AEF1AE'>      override def source() : Source[T, Mat] = src
+</span>28 <span style=''></span><span style='background: #AEF1AE'>      override def materialized(m: Mat): Unit = onMaterialize(m)
+</span>29 <span style=''></span><span style='background: #AEF1AE'>    })</span><span style=''>
+</span>30 <span style=''>}
+</span>31 <span style=''>
+</span>32 <span style=''>abstract class AbstractStreamController[T, Mat](streamCfg : BlendedStreamsConfig)(implicit materializer : Materializer)
+</span>33 <span style=''>  extends Actor
+</span>34 <span style=''>  with StreamControllerSupport[T, Mat] {
+</span>35 <span style=''>
+</span>36 <span style=''>  private[this] implicit val eCtxt : ExecutionContext = </span><span style='background: #AEF1AE'>context.system.dispatcher</span><span style=''>
+</span>37 <span style=''>
+</span>38 <span style=''>  override def preStart() : Unit = </span><span style='background: #AEF1AE'>self ! StreamController.Start</span><span style=''>
+</span>39 <span style=''>
+</span>40 <span style=''>  override def receive : Receive = </span><span style='background: #AEF1AE'>starting(streamCfg, streamCfg.minDelay)</span><span style=''>
+</span>41 <span style=''>
+</span>42 <span style=''>  override def toString : String = </span><span style='background: #AEF1AE'>s&quot;${getClass().getSimpleName()}($streamCfg)&quot;</span><span style=''>
+</span>43 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          23236
+        </td>
+        <td>
+          579
+          -
+          582
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          20275
+        </td>
+        <td>
+          573
+          -
+          796
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          22370
+        </td>
+        <td>
+          773
+          -
+          789
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          23350
+        </td>
+        <td>
+          1034
+          -
+          1059
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          22048
+        </td>
+        <td>
+          1103
+          -
+          1125
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          21625
+        </td>
+        <td>
+          1096
+          -
+          1100
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          23581
+        </td>
+        <td>
+          1101
+          -
+          1101
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          19744
+        </td>
+        <td>
+          1096
+          -
+          1125
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          21995
+        </td>
+        <td>
+          1182
+          -
+          1200
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          23587
+        </td>
+        <td>
+          1162
+          -
+          1201
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          19750
+        </td>
+        <td>
+          1171
+          -
+          1180
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          21571
+        </td>
+        <td>
+          1242
+          -
+          1268
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          22363
+        </td>
+        <td>
+          1238
+          -
+          1282
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          20096
+        </td>
+        <td>
+          1240
+          -
+          1241
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          20361
+        </td>
+        <td>
+          1271
+          -
+          1280
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          23112
+        </td>
+        <td>
+          1280
+          -
+          1282
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          23506
+        </td>
+        <td>
+          1269
+          -
+          1271
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

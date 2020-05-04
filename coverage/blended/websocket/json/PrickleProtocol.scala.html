@@ -1,0 +1,238 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/websocket/json/PrickleProtocol.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.websocket.json
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.websocket._
+</span>4 <span style=''>import prickle._
+</span>5 <span style=''>import blended.jmx.json.PrickleProtocol._
+</span>6 <span style=''>
+</span>7 <span style=''>object PrickleProtocol {
+</span>8 <span style=''>
+</span>9 <span style=''>  implicit val envelopePickler : Pickler[WsMessageEncoded] = Pickler.materializePickler[WsMessageEncoded]
+</span>10 <span style=''>  implicit val envelopeUnpickler : Unpickler[WsMessageEncoded] = Unpickler.materializeUnpickler[WsMessageEncoded]
+</span>11 <span style=''>
+</span>12 <span style=''>  implicit val versionPickler : Pickler[Version] = Pickler.materializePickler[Version]
+</span>13 <span style=''>  implicit val versionUnpickler : Unpickler[Version] = Unpickler.materializeUnpickler[Version]
+</span>14 <span style=''>
+</span>15 <span style=''>  implicit val wsMessagesPicklerPair : PicklerPair[BlendedWsMessage] = </span><span style='background: #AEF1AE'>CompositePickler[BlendedWsMessage]
+</span>16 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[Version]
+</span>17 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[VersionResponse]</span><span style=''>
+</span>18 <span style=''>
+</span>19 <span style=''>  implicit val jmxSubscribePickler : Pickler[JmxSubscribe] = Pickler.materializePickler[JmxSubscribe]
+</span>20 <span style=''>  implicit val jmxSubscribeUnpickler : Unpickler[JmxSubscribe] = Unpickler.materializeUnpickler[JmxSubscribe]
+</span>21 <span style=''>
+</span>22 <span style=''>  implicit val jmxUpdatePickler : Pickler[JmxUpdate] = Pickler.materializePickler[JmxUpdate]
+</span>23 <span style=''>  implicit val JmxUpdateUnpickler : Unpickler[JmxUpdate] = Unpickler.materializeUnpickler[JmxUpdate]
+</span>24 <span style=''>
+</span>25 <span style=''>  implicit val jmxMessagePicklerPair : PicklerPair[BlendedJmxMessage] = </span><span style='background: #AEF1AE'>CompositePickler[BlendedJmxMessage]
+</span>26 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[JmxSubscribe]
+</span>27 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[JmxUnsubscribe]
+</span>28 <span style=''></span><span style='background: #AEF1AE'>    .concreteType[JmxUpdate]</span><span style=''>
+</span>29 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          16483
+        </td>
+        <td>
+          672
+          -
+          672
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          16886
+        </td>
+        <td>
+          672
+          -
+          672
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          16812
+        </td>
+        <td>
+          620
+          -
+          716
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          17022
+        </td>
+        <td>
+          1251
+          -
+          1251
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          16849
+        </td>
+        <td>
+          1251
+          -
+          1251
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          16618
+        </td>
+        <td>
+          1317
+          -
+          1317
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          16988
+        </td>
+        <td>
+          1317
+          -
+          1317
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          16628
+        </td>
+        <td>
+          1198
+          -
+          1328
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

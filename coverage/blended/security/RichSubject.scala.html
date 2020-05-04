@@ -1,0 +1,234 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/RichSubject.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.security.boot.{GroupPrincipal, UserPrincipal}
+</span>4 <span style=''>import javax.security.auth.Subject
+</span>5 <span style=''>
+</span>6 <span style=''>import scala.collection.JavaConverters.asScalaSetConverter
+</span>7 <span style=''>
+</span>8 <span style=''>trait RichSubject {
+</span>9 <span style=''>
+</span>10 <span style=''>  implicit class EnhancedSubject(subj : Subject) {
+</span>11 <span style=''>
+</span>12 <span style=''>    def getPrincipal() : String = {
+</span>13 <span style=''>      </span><span style='background: #AEF1AE'>subj.getPrincipals(classOf[UserPrincipal]).asScala.head.getName()</span><span style=''>
+</span>14 <span style=''>    }
+</span>15 <span style=''>
+</span>16 <span style=''>    def getGroups() : List[String] = {
+</span>17 <span style=''>      </span><span style='background: #F0ADAD'>subj.getPrincipals(classOf[GroupPrincipal]).asScala.toList.map(_.getName())</span><span style=''>
+</span>18 <span style=''>    }
+</span>19 <span style=''>
+</span>20 <span style=''>    def isPermitted(mgr : BlendedPermissionManager, permission : BlendedPermission) : Boolean = {
+</span>21 <span style=''>      </span><span style='background: #AEF1AE'>mgr.permissions(subj).granted.exists { p =&gt; p.allows(permission) }</span><span style=''>
+</span>22 <span style=''>    }
+</span>23 <span style=''>  }
+</span>24 <span style=''>
+</span>25 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          12161
+        </td>
+        <td>
+          298
+          -
+          363
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          12203
+        </td>
+        <td>
+          416
+          -
+          491
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          12275
+        </td>
+        <td>
+          479
+          -
+          490
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          12433
+        </td>
+        <td>
+          416
+          -
+          459
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          12298
+        </td>
+        <td>
+          478
+          -
+          478
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          12167
+        </td>
+        <td>
+          647
+          -
+          667
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          12426
+        </td>
+        <td>
+          619
+          -
+          623
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          12315
+        </td>
+        <td>
+          603
+          -
+          669
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

@@ -1,0 +1,747 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/testsupport/scalatest/LoggingFreeSpec.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.testsupport.scalatest
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.util.logging.Logger
+</span>4 <span style=''>import org.scalatest.{Args, FreeSpec, FreeSpecLike, Status}
+</span>5 <span style=''>
+</span>6 <span style=''>import scala.util.control.NonFatal
+</span>7 <span style=''>
+</span>8 <span style=''>/**
+</span>9 <span style=''> * Same as [[org.scalatest.FreeSpecLike]] but log the start and the end of each test case to SLF4j in Debug level.
+</span>10 <span style=''> *
+</span>11 <span style=''> * If you want also see the last thrown exception of a test case (this is most probably a failed assertion),
+</span>12 <span style=''> * you can use [[LoggingFreeSpec.logException]].
+</span>13 <span style=''> *
+</span>14 <span style=''> * Example:
+</span>15 <span style=''> * {{{
+</span>16 <span style=''> *   &quot;A failing test (that also appears in log file)&quot; in logException {
+</span>17 <span style=''> *     assert(1 == 0)
+</span>18 <span style=''> *   }
+</span>19 <span style=''> * }}}
+</span>20 <span style=''> *
+</span>21 <span style=''> * @see LoggingFreeSpec
+</span>22 <span style=''> */
+</span>23 <span style=''>trait LoggingFreeSpecLike extends FreeSpecLike {
+</span>24 <span style=''>
+</span>25 <span style=''>  abstract protected override def runTest(testName : String, args : Args) : Status = {
+</span>26 <span style=''>    val log : Logger = </span><span style='background: #AEF1AE'>Logger[this.type]</span><span style=''>
+</span>27 <span style=''>    </span><span style='background: #AEF1AE'>log.info(s&quot;Starting test case: ${testName}&quot;)</span><span style=''>
+</span>28 <span style=''>    var reported = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>29 <span style=''>    try {
+</span>30 <span style=''>      </span><span style='background: #AEF1AE'>val status = super.runTest(testName, args)
+</span>31 <span style=''></span><span style='background: #AEF1AE'>      log.info(s&quot;${if (status.succeeds()) &quot;Finished&quot; else </span><span style='background: #F0ADAD'>&quot;Failed&quot;</span><span style='background: #AEF1AE'>} test case: ${testName}\n&quot; + (&quot;-&quot; * 80))
+</span>32 <span style=''></span><span style='background: #AEF1AE'>      reported = true
+</span>33 <span style=''></span><span style='background: #AEF1AE'>      status</span><span style=''>
+</span>34 <span style=''>    } finally {
+</span>35 <span style=''>      </span><span style='background: #AEF1AE'>if (!reported) </span><span style='background: #F0ADAD'>log.info(s&quot;Finished test case: ${testName}\n&quot; + (&quot;-&quot; * 80))</span><span style=''>
+</span>36 <span style=''>    }
+</span>37 <span style=''>  }
+</span>38 <span style=''>
+</span>39 <span style=''>  def logException[T](f : =&gt; T) : T = try {
+</span>40 <span style=''>    </span><span style='background: #AEF1AE'>f</span><span style=''>
+</span>41 <span style=''>  } catch {
+</span>42 <span style=''>    case NonFatal(e) =&gt;
+</span>43 <span style=''>      </span><span style='background: #AEF1AE'>Logger[this.type].error(e)(&quot;Exception caught&quot;)</span><span style=''>
+</span>44 <span style=''>      </span><span style='background: #AEF1AE'>throw e</span><span style=''>
+</span>45 <span style=''>  }
+</span>46 <span style=''>
+</span>47 <span style=''>}
+</span>48 <span style=''>
+</span>49 <span style=''>/**
+</span>50 <span style=''> * Same as [[org.scalatest.FreeSpec]] but with mix-in of [LoggingFreeSpecLike]],
+</span>51 <span style=''> * which logs the start and the end of each test case.
+</span>52 <span style=''> *
+</span>53 <span style=''> * @see LoggingFreeSpecLike
+</span>54 <span style=''> */
+</span>55 <span style=''>class LoggingFreeSpec extends FreeSpec with LoggingFreeSpecLike
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          11438
+        </td>
+        <td>
+          772
+          -
+          789
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          11353
+        </td>
+        <td>
+          794
+          -
+          838
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          11313
+        </td>
+        <td>
+          803
+          -
+          837
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          11447
+        </td>
+        <td>
+          858
+          -
+          863
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          11543
+        </td>
+        <td>
+          880
+          -
+          1065
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          11303
+        </td>
+        <td>
+          893
+          -
+          922
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11564
+        </td>
+        <td>
+          965
+          -
+          975
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11528
+        </td>
+        <td>
+          929
+          -
+          1030
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11318
+        </td>
+        <td>
+          946
+          -
+          963
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11411
+        </td>
+        <td>
+          990
+          -
+          1003
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11312
+        </td>
+        <td>
+          938
+          -
+          1029
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11297
+        </td>
+        <td>
+          965
+          -
+          975
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11461
+        </td>
+        <td>
+          1020
+          -
+          1028
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11242
+        </td>
+        <td>
+          981
+          -
+          989
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11538
+        </td>
+        <td>
+          1013
+          -
+          1016
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11550
+        </td>
+        <td>
+          981
+          -
+          989
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11433
+        </td>
+        <td>
+          940
+          -
+          941
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          11335
+        </td>
+        <td>
+          1048
+          -
+          1052
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11549
+        </td>
+        <td>
+          1088
+          -
+          1162
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11507
+        </td>
+        <td>
+          1103
+          -
+          1162
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11408
+        </td>
+        <td>
+          1088
+          -
+          1088
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11321
+        </td>
+        <td>
+          1152
+          -
+          1160
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11506
+        </td>
+        <td>
+          1092
+          -
+          1101
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11449
+        </td>
+        <td>
+          1088
+          -
+          1088
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11413
+        </td>
+        <td>
+          1145
+          -
+          1148
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11326
+        </td>
+        <td>
+          1112
+          -
+          1161
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11434
+        </td>
+        <td>
+          1114
+          -
+          1135
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11340
+        </td>
+        <td>
+          1103
+          -
+          1162
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          11435
+        </td>
+        <td>
+          1222
+          -
+          1223
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          11557
+        </td>
+        <td>
+          1266
+          -
+          1312
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          11338
+        </td>
+        <td>
+          1319
+          -
+          1326
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

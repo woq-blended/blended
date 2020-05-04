@@ -1,0 +1,541 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/akka/internal/BlendedAkkaActivator.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.akka.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import akka.actor.ActorSystem
+</span>4 <span style=''>import blended.container.context.api.ContainerContext
+</span>5 <span style=''>import blended.util.logging.Logger
+</span>6 <span style=''>import domino.DominoActivator
+</span>7 <span style=''>
+</span>8 <span style=''>import scala.concurrent.Await
+</span>9 <span style=''>import scala.concurrent.duration._
+</span>10 <span style=''>import scala.util.control.NonFatal
+</span>11 <span style=''>
+</span>12 <span style=''>class BlendedAkkaActivator extends DominoActivator {
+</span>13 <span style=''>
+</span>14 <span style=''>  private[this] val log = </span><span style='background: #AEF1AE'>Logger[BlendedAkkaActivator]</span><span style=''>
+</span>15 <span style=''>
+</span>16 <span style=''>  </span><span style='background: #AEF1AE'>whenBundleActive {
+</span>17 <span style=''></span><span style='background: #AEF1AE'>    whenServicePresent[ContainerContext] { ctCtxt =&gt;
+</span>18 <span style=''></span><span style='background: #AEF1AE'>      val ctConfig = ctCtxt.containerConfig
+</span>19 <span style=''></span><span style='background: #AEF1AE'>
+</span>20 <span style=''></span><span style='background: #AEF1AE'>      log.trace(s&quot;$ctConfig&quot;)
+</span>21 <span style=''></span><span style='background: #AEF1AE'>
+</span>22 <span style=''></span><span style='background: #AEF1AE'>      try {
+</span>23 <span style=''></span><span style='background: #AEF1AE'>        val system : ActorSystem = ActorSystem.create(&quot;BlendedActorSystem&quot;, ctConfig, classOf[ActorSystem].getClassLoader())
+</span>24 <span style=''></span><span style='background: #AEF1AE'>        system.providesService[ActorSystem]
+</span>25 <span style=''></span><span style='background: #AEF1AE'>
+</span>26 <span style=''></span><span style='background: #AEF1AE'>        onStop {
+</span>27 <span style=''></span><span style='background: #AEF1AE'>          // TODO: Should we really wait here ?
+</span>28 <span style=''></span><span style='background: #AEF1AE'>          log.info(&quot;Stopping ActorSystem&quot;)
+</span>29 <span style=''></span><span style='background: #AEF1AE'>          Await.result(system.terminate(), 10.seconds)
+</span>30 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>31 <span style=''></span><span style='background: #AEF1AE'>      } catch {
+</span>32 <span style=''></span><span style='background: #AEF1AE'>        case NonFatal(e) =&gt;
+</span>33 <span style=''></span><span style='background: #AEF1AE'>          </span><span style='background: #F0ADAD'>log.error(s&quot;Error starting actor system [$e]&quot;)</span><span style='background: #AEF1AE'>
+</span>34 <span style=''></span><span style='background: #AEF1AE'>          </span><span style='background: #F0ADAD'>throw e</span><span style='background: #AEF1AE'>
+</span>35 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>36 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>37 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>38 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          16445
+        </td>
+        <td>
+          362
+          -
+          390
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          16478
+        </td>
+        <td>
+          394
+          -
+          1033
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          16429
+        </td>
+        <td>
+          417
+          -
+          1029
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          16481
+        </td>
+        <td>
+          454
+          -
+          454
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          16369
+        </td>
+        <td>
+          487
+          -
+          509
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          16450
+        </td>
+        <td>
+          517
+          -
+          540
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          16449
+        </td>
+        <td>
+          527
+          -
+          539
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          16316
+        </td>
+        <td>
+          562
+          -
+          896
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          16421
+        </td>
+        <td>
+          589
+          -
+          678
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          16372
+        </td>
+        <td>
+          640
+          -
+          677
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          16315
+        </td>
+        <td>
+          608
+          -
+          628
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          16327
+        </td>
+        <td>
+          687
+          -
+          722
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          16397
+        </td>
+        <td>
+          732
+          -
+          896
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          16431
+        </td>
+        <td>
+          799
+          -
+          831
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          16370
+        </td>
+        <td>
+          875
+          -
+          885
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          16426
+        </td>
+        <td>
+          854
+          -
+          854
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          16312
+        </td>
+        <td>
+          855
+          -
+          873
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          16386
+        </td>
+        <td>
+          842
+          -
+          886
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          16479
+        </td>
+        <td>
+          875
+          -
+          877
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          16328
+        </td>
+        <td>
+          951
+          -
+          997
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          16362
+        </td>
+        <td>
+          961
+          -
+          996
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          16373
+        </td>
+        <td>
+          1008
+          -
+          1015
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

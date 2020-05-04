@@ -1,0 +1,368 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/updater/LocalProfile.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.updater
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.updater.config._
+</span>4 <span style=''>
+</span>5 <span style=''>object LocalProfile {
+</span>6 <span style=''>
+</span>7 <span style=''>  sealed trait ProfileState
+</span>8 <span style=''>
+</span>9 <span style=''>  /**
+</span>10 <span style=''>   * Profile configs are present, but artifacts are not yet resolved
+</span>11 <span style=''>   */
+</span>12 <span style=''>  final case class Pending(issues : List[String]) extends ProfileState
+</span>13 <span style=''>
+</span>14 <span style=''>  /**
+</span>15 <span style=''>   * Profile configs are present, but there were issues.
+</span>16 <span style=''>   */
+</span>17 <span style=''>  final case class Invalid(issues : List[String]) extends ProfileState
+</span>18 <span style=''>
+</span>19 <span style=''>  //
+</span>20 <span style=''>  //  /**
+</span>21 <span style=''>  //   *
+</span>22 <span style=''>  //   */
+</span>23 <span style=''>  //  final case object Resolved extends ProfileState
+</span>24 <span style=''>
+</span>25 <span style=''>  /**
+</span>26 <span style=''>   * Profile configs and all required artifacts are resolved.
+</span>27 <span style=''>   */
+</span>28 <span style=''>  final case object Staged extends ProfileState
+</span>29 <span style=''>
+</span>30 <span style=''>}
+</span>31 <span style=''>
+</span>32 <span style=''>case class LocalProfile(config : LocalRuntimeConfig, overlays : LocalOverlays, state : LocalProfile.ProfileState) {
+</span>33 <span style=''>  def profileId : ProfileId = </span><span style='background: #F0ADAD'>ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)</span><span style=''>
+</span>34 <span style=''>
+</span>35 <span style=''>  def runtimeConfig : RuntimeConfig = </span><span style='background: #F0ADAD'>config.resolvedRuntimeConfig.runtimeConfig</span><span style=''>
+</span>36 <span style=''>
+</span>37 <span style=''>  def bundles : List[BundleConfig] = </span><span style='background: #F0ADAD'>config.resolvedRuntimeConfig.allBundles</span><span style=''>
+</span>38 <span style=''>
+</span>39 <span style=''>  def toSingleProfile : Profile = {
+</span>40 <span style=''>    val (oState, reason) = state match {
+</span>41 <span style=''>      case LocalProfile.Pending(issues) =&gt; (OverlayState.Pending, Some(issues.mkString(&quot;; &quot;)))
+</span>42 <span style=''>      case LocalProfile.Invalid(issues) =&gt; (OverlayState.Invalid, Some(issues.mkString(&quot;; &quot;)))
+</span>43 <span style=''>      //      case LocalProfile.Resolved =&gt; (OverlayState.Valid, None)
+</span>44 <span style=''>      case LocalProfile.Staged          =&gt; (OverlayState.Valid, None)
+</span>45 <span style=''>    }
+</span>46 <span style=''>
+</span>47 <span style=''>    </span><span style='background: #F0ADAD'>Profile(
+</span>48 <span style=''></span><span style='background: #F0ADAD'>      config.runtimeConfig.name,
+</span>49 <span style=''></span><span style='background: #F0ADAD'>      config.runtimeConfig.version,
+</span>50 <span style=''></span><span style='background: #F0ADAD'>      OverlaySet(overlays.overlayRefs, oState, reason)
+</span>51 <span style=''></span><span style='background: #F0ADAD'>    )</span><span style=''>
+</span>52 <span style=''>  }
+</span>53 <span style=''>
+</span>54 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          12635
+        </td>
+        <td>
+          802
+          -
+          830
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          13615
+        </td>
+        <td>
+          775
+          -
+          800
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          13136
+        </td>
+        <td>
+          832
+          -
+          852
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          13215
+        </td>
+        <td>
+          765
+          -
+          853
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          12745
+        </td>
+        <td>
+          893
+          -
+          935
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          12911
+        </td>
+        <td>
+          974
+          -
+          1013
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          13528
+        </td>
+        <td>
+          1068
+          -
+          1068
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          13282
+        </td>
+        <td>
+          1060
+          -
+          1060
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          47
+        </td>
+        <td>
+          13534
+        </td>
+        <td>
+          1434
+          -
+          1572
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          48
+        </td>
+        <td>
+          13163
+        </td>
+        <td>
+          1449
+          -
+          1474
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          12835
+        </td>
+        <td>
+          1482
+          -
+          1510
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          50
+        </td>
+        <td>
+          12742
+        </td>
+        <td>
+          1529
+          -
+          1549
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          50
+        </td>
+        <td>
+          13603
+        </td>
+        <td>
+          1518
+          -
+          1566
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

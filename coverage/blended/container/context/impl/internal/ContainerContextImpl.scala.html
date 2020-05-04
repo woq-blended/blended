@@ -1,0 +1,242 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/container/context/impl/internal/ContainerContextImpl.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.container.context.impl.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import java.io.File
+</span>4 <span style=''>import java.util.Properties
+</span>5 <span style=''>
+</span>6 <span style=''>import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
+</span>7 <span style=''>import blended.util.logging.Logger
+</span>8 <span style=''>import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+</span>9 <span style=''>import blended.util.RichTry._
+</span>10 <span style=''>
+</span>11 <span style=''>import scala.beans.BeanProperty
+</span>12 <span style=''>import scala.collection.JavaConverters._
+</span>13 <span style=''>import scala.util.{Success, Try}
+</span>14 <span style=''>
+</span>15 <span style=''>class ContainerContextImpl extends AbstractContainerContextImpl {
+</span>16 <span style=''>
+</span>17 <span style=''>  import AbstractContainerContextImpl._
+</span>18 <span style=''>
+</span>19 <span style=''>  private[this] lazy val log : Logger = Logger[ContainerContextImpl]
+</span>20 <span style=''>  </span><span style='background: #AEF1AE'>initialize()</span><span style=''>
+</span>21 <span style=''>
+</span>22 <span style=''>  @BeanProperty
+</span>23 <span style=''>  override lazy val containerDirectory : String =
+</span>24 <span style=''>    new File(System.getProperty(&quot;blended.home&quot;)).getAbsolutePath
+</span>25 <span style=''>
+</span>26 <span style=''>  @BeanProperty
+</span>27 <span style=''>  override lazy val containerHostname : String = {
+</span>28 <span style=''>    try {
+</span>29 <span style=''>      val localMachine = java.net.InetAddress.getLocalHost()
+</span>30 <span style=''>      localMachine.getCanonicalHostName()
+</span>31 <span style=''>    } catch {
+</span>32 <span style=''>      case _ : java.net.UnknownHostException =&gt; &quot;UNKNOWN&quot;
+</span>33 <span style=''>    }
+</span>34 <span style=''>  }
+</span>35 <span style=''>
+</span>36 <span style=''>  @BeanProperty
+</span>37 <span style=''>  override lazy val containerLogDirectory : String = containerLogDir
+</span>38 <span style=''>
+</span>39 <span style=''>  @BeanProperty
+</span>40 <span style=''>  override lazy val profileDirectory : String = profileDir
+</span>41 <span style=''>
+</span>42 <span style=''>  lazy val brandingProperties : Map[String, String] = {
+</span>43 <span style=''>    val props : Properties = (try {
+</span>44 <span style=''>      import blended.launcher.runtime.Branding
+</span>45 <span style=''>      // it is possible, that this optional class is not available at runtime,
+</span>46 <span style=''>      // e.g. when started with another launcher
+</span>47 <span style=''>      log.debug(&quot;About to read launcher branding properties&quot;)
+</span>48 <span style=''>      Option(Branding.getProperties())
+</span>49 <span style=''>    } catch {
+</span>50 <span style=''>      case e : NoClassDefFoundError =&gt; None
+</span>51 <span style=''>    }) getOrElse {
+</span>52 <span style=''>      log.warn(&quot;Could not read launcher branding properies&quot;)
+</span>53 <span style=''>      new Properties()
+</span>54 <span style=''>    }
+</span>55 <span style=''>
+</span>56 <span style=''>    val result : Map[String, String] =
+</span>57 <span style=''>      props.entrySet().asScala.map(e =&gt; e.getKey().toString() -&gt; e.getValue().toString()).toMap
+</span>58 <span style=''>
+</span>59 <span style=''>    log.debug(s&quot;Resolved branding properties : [${result.mkString(&quot;,&quot;)}]&quot;)
+</span>60 <span style=''>
+</span>61 <span style=''>    result
+</span>62 <span style=''>  }
+</span>63 <span style=''>
+</span>64 <span style=''>  private[this] lazy val profileDir : String = {
+</span>65 <span style=''>
+</span>66 <span style=''>    val profileHome =
+</span>67 <span style=''>      brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) orElse {
+</span>68 <span style=''>        log.warn(&quot;Could not read the profile directory from read launcher branding properties&quot;)
+</span>69 <span style=''>        None
+</span>70 <span style=''>      }
+</span>71 <span style=''>
+</span>72 <span style=''>    val dir = profileHome getOrElse {
+</span>73 <span style=''>      Option(System.getProperty(PROP_BLENDED_HOME)) getOrElse {
+</span>74 <span style=''>        Option(System.getProperty(&quot;user.dir&quot;)) getOrElse {
+</span>75 <span style=''>          &quot;.&quot;
+</span>76 <span style=''>        }
+</span>77 <span style=''>      }
+</span>78 <span style=''>    }
+</span>79 <span style=''>    val configDir = new File(dir)
+</span>80 <span style=''>
+</span>81 <span style=''>    if (!configDir.exists()) {
+</span>82 <span style=''>      log.error(s&quot;Container directory [${dir}] does not exist.&quot;)
+</span>83 <span style=''>    } else if (!configDir.isDirectory() || !configDir.canRead()) {
+</span>84 <span style=''>      log.error(s&quot;Container directory [${dir}] is not readable.&quot;)
+</span>85 <span style=''>    }
+</span>86 <span style=''>
+</span>87 <span style=''>    val absDir = configDir.getAbsolutePath
+</span>88 <span style=''>    System.setProperty(&quot;blended.container.home&quot;, absDir)
+</span>89 <span style=''>    absDir
+</span>90 <span style=''>  }
+</span>91 <span style=''>
+</span>92 <span style=''>  private[this] lazy val containerLogDir : String = {
+</span>93 <span style=''>    val f = new File(containerDirectory + &quot;/log&quot;)
+</span>94 <span style=''>    f.getAbsolutePath()
+</span>95 <span style=''>  }
+</span>96 <span style=''>
+</span>97 <span style=''>  @BeanProperty
+</span>98 <span style=''>  override lazy val containerConfigDirectory : String =
+</span>99 <span style=''>    new File(containerDirectory, CONFIG_DIR).getAbsolutePath
+</span>100 <span style=''>
+</span>101 <span style=''>  @BeanProperty
+</span>102 <span style=''>  override lazy val profileConfigDirectory : String = new File(profileDirectory, CONFIG_DIR).getAbsolutePath
+</span>103 <span style=''>
+</span>104 <span style=''>  private lazy val overlayConfig : Config = {
+</span>105 <span style=''>    val cfg : Option[File] = brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) match {
+</span>106 <span style=''>      case Some(profileDir) =&gt;
+</span>107 <span style=''>        brandingProperties.get(RuntimeConfig.Properties.OVERLAYS) match {
+</span>108 <span style=''>          case Some(overlays) =&gt;
+</span>109 <span style=''>            val overlayRefs = overlays.split(&quot;[,]&quot;).toList.map(_.split(&quot;[:]&quot;, 2)).flatMap {
+</span>110 <span style=''>              case Array(n, v) =&gt; Some(OverlayRef(n, v))
+</span>111 <span style=''>              case x =&gt;
+</span>112 <span style=''>                log.debug(&quot;Unsupported overlay: &quot; + x.mkString(&quot;:&quot;))
+</span>113 <span style=''>                None
+</span>114 <span style=''>            }.toSet
+</span>115 <span style=''>            if (overlayRefs.isEmpty) {
+</span>116 <span style=''>              None
+</span>117 <span style=''>            } else {
+</span>118 <span style=''>              val dir = LocalOverlays.materializedDir(overlayRefs, new File(profileDir))
+</span>119 <span style=''>              val confFile = new File(dir, s&quot;$CONFIG_DIR/application_overlay.conf&quot;)
+</span>120 <span style=''>              if (confFile.exists()) {
+</span>121 <span style=''>                log.debug(s&quot;About to read extra application overlay override file: ${confFile}&quot;)
+</span>122 <span style=''>                Some(confFile)
+</span>123 <span style=''>              } else {
+</span>124 <span style=''>                None
+</span>125 <span style=''>              }
+</span>126 <span style=''>            }
+</span>127 <span style=''>          case _ =&gt; None
+</span>128 <span style=''>        }
+</span>129 <span style=''>      case _ =&gt; None
+</span>130 <span style=''>    }
+</span>131 <span style=''>
+</span>132 <span style=''>    val result : Config = cfg match {
+</span>133 <span style=''>      case Some(oc) =&gt; ConfigFactory.parseFile(oc, ConfigParseOptions.defaults().setAllowMissing(false))
+</span>134 <span style=''>      case _        =&gt; ConfigFactory.empty()
+</span>135 <span style=''>    }
+</span>136 <span style=''>
+</span>137 <span style=''>    log.trace(s&quot;After reading overlay config : $result&quot;)
+</span>138 <span style=''>
+</span>139 <span style=''>    result
+</span>140 <span style=''>  }
+</span>141 <span style=''>
+</span>142 <span style=''>  override lazy val containerConfig : Config = {
+</span>143 <span style=''>    val sysProps = ConfigFactory.systemProperties()
+</span>144 <span style=''>    val envProps = ConfigFactory.systemEnvironment()
+</span>145 <span style=''>
+</span>146 <span style=''>    val appCfg : Config =
+</span>147 <span style=''>      ConfigFactory.parseFile(
+</span>148 <span style=''>        new File(profileConfigDirectory, &quot;application.conf&quot;),
+</span>149 <span style=''>        ConfigParseOptions.defaults().setAllowMissing(false)
+</span>150 <span style=''>      ).withFallback(sysProps).withFallback(envProps).resolve()
+</span>151 <span style=''>
+</span>152 <span style=''>    // we need to make sure that all keys are available in the resulting config,
+</span>153 <span style=''>    // even if they point to null values or empty configs
+</span>154 <span style=''>    val allKeys : List[String] = ConfigLocator.fullKeyset(&quot;&quot;, appCfg)
+</span>155 <span style=''>
+</span>156 <span style=''>    val nullKeys = allKeys.filter(s =&gt; appCfg.getIsNull(s)).map(s =&gt; (s -&gt; null)).toMap.asJava
+</span>157 <span style=''>
+</span>158 <span style=''>    val emptyKeys = allKeys.filter { s =&gt;
+</span>159 <span style=''>      Try { appCfg.getConfig(s) } match {
+</span>160 <span style=''>        case Success(c) =&gt; c.isEmpty()
+</span>161 <span style=''>        case _ =&gt; false
+</span>162 <span style=''>      }
+</span>163 <span style=''>    }.map(s =&gt; s -&gt; ConfigFactory.empty().root()).toMap.asJava
+</span>164 <span style=''>
+</span>165 <span style=''>    val evaluated = ConfigLocator.evaluatedConfig(appCfg, this).unwrap
+</span>166 <span style=''>
+</span>167 <span style=''>    log.trace(s&quot;After reading application.conf : $evaluated&quot;)
+</span>168 <span style=''>
+</span>169 <span style=''>    val resolvedCfg : Config = overlayConfig.withFallback(evaluated)
+</span>170 <span style=''>      .withFallback(sysProps)
+</span>171 <span style=''>      .withFallback(envProps)
+</span>172 <span style=''>      .withFallback(ConfigFactory.parseMap(nullKeys))
+</span>173 <span style=''>      .withFallback(ConfigFactory.parseMap(emptyKeys))
+</span>174 <span style=''>      .resolve()
+</span>175 <span style=''>
+</span>176 <span style=''>    log.debug(s&quot;Resolved container config : $resolvedCfg&quot;)
+</span>177 <span style=''>
+</span>178 <span style=''>    resolvedCfg
+</span>179 <span style=''>  }
+</span>180 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          8714
+        </td>
+        <td>
+          594
+          -
+          606
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

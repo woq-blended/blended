@@ -1,0 +1,344 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/updater/config/Artifact.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.updater.config
+</span>2 <span style=''>
+</span>3 <span style=''>/**
+</span>4 <span style=''> * A downloadable resource file with optional checksum.
+</span>5 <span style=''> */
+</span>6 <span style=''>case class Artifact(
+</span>7 <span style=''>  url : String,
+</span>8 <span style=''>  fileName : Option[String],
+</span>9 <span style=''>  sha1Sum : Option[String]
+</span>10 <span style=''>) {
+</span>11 <span style=''>
+</span>12 <span style=''>  override def toString() : String = </span><span style='background: #F0ADAD'>s&quot;${getClass().getSimpleName()}(url=$url,fileName=$fileName,sha1Sum=$sha1Sum)&quot;</span><span style=''>
+</span>13 <span style=''>
+</span>14 <span style=''>}
+</span>15 <span style=''>
+</span>16 <span style=''>object Artifact extends ((String, Option[String], Option[String]) =&gt; Artifact) {
+</span>17 <span style=''>  def apply(
+</span>18 <span style=''>    url : String,
+</span>19 <span style=''>    // scalastyle:off null
+</span>20 <span style=''>    fileName : String = null,
+</span>21 <span style=''>    sha1Sum : String = null
+</span>22 <span style=''>  // scalastyle:on null
+</span>23 <span style=''>  ) : Artifact = {
+</span>24 <span style=''>    </span><span style='background: #AEF1AE'>Artifact(
+</span>25 <span style=''></span><span style='background: #AEF1AE'>      url = url,
+</span>26 <span style=''></span><span style='background: #AEF1AE'>      fileName = Option(fileName),
+</span>27 <span style=''></span><span style='background: #AEF1AE'>      sha1Sum = Option(sha1Sum)
+</span>28 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>29 <span style=''>  }
+</span>30 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          7900
+        </td>
+        <td>
+          271
+          -
+          282
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          6384
+        </td>
+        <td>
+          268
+          -
+          271
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          7197
+        </td>
+        <td>
+          290
+          -
+          300
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          6219
+        </td>
+        <td>
+          233
+          -
+          234
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          6374
+        </td>
+        <td>
+          300
+          -
+          307
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          7119
+        </td>
+        <td>
+          262
+          -
+          268
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          7358
+        </td>
+        <td>
+          235
+          -
+          261
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          7977
+        </td>
+        <td>
+          282
+          -
+          290
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          8114
+        </td>
+        <td>
+          231
+          -
+          309
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          6540
+        </td>
+        <td>
+          307
+          -
+          309
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          7321
+        </td>
+        <td>
+          558
+          -
+          657
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          8153
+        </td>
+        <td>
+          602
+          -
+          618
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          6277
+        </td>
+        <td>
+          636
+          -
+          651
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

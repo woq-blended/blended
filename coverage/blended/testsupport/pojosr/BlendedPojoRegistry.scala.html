@@ -1,0 +1,770 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/testsupport/pojosr/BlendedPojoRegistry.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.testsupport.pojosr
+</span>2 <span style=''>
+</span>3 <span style=''>import java.net.URL
+</span>4 <span style=''>import java.util
+</span>5 <span style=''>import java.util.Collections
+</span>6 <span style=''>
+</span>7 <span style=''>import org.apache.felix.connect.felix.framework.ServiceRegistry
+</span>8 <span style=''>import org.apache.felix.connect.felix.framework.util.EventDispatcher
+</span>9 <span style=''>import org.apache.felix.connect.launch.BundleDescriptor
+</span>10 <span style=''>import org.apache.felix.connect.{BlendedPojoBundle, PojoSR, Revision}
+</span>11 <span style=''>import org.osgi.framework.{Bundle, BundleActivator, Version}
+</span>12 <span style=''>
+</span>13 <span style=''>import scala.collection.JavaConverters._
+</span>14 <span style=''>
+</span>15 <span style=''>class BlendedPojoRegistry(config : Map[String, Any]) extends PojoSR(config.asJava) {
+</span>16 <span style=''>
+</span>17 <span style=''>  import org.osgi.framework.Constants._
+</span>18 <span style=''>
+</span>19 <span style=''>  def startBundle(
+</span>20 <span style=''>    symbolicName : String,
+</span>21 <span style=''>    activator : BundleActivator
+</span>22 <span style=''>  ) : Long = {
+</span>23 <span style=''>
+</span>24 <span style=''>    val url = </span><span style='background: #AEF1AE'>s&quot;file://$symbolicName&quot;</span><span style=''>
+</span>25 <span style=''>
+</span>26 <span style=''>    val revision = </span><span style='background: #AEF1AE'>new</span><span style=''> Revision {
+</span>27 <span style=''>      override def getLastModified : Long = </span><span style='background: #F0ADAD'>System.currentTimeMillis()</span><span style=''>
+</span>28 <span style=''>
+</span>29 <span style=''>      override def getEntries : util.Enumeration[String] = </span><span style='background: #F0ADAD'>Collections.emptyEnumeration()</span><span style=''>
+</span>30 <span style=''>
+</span>31 <span style=''>      override def getEntry(entryName : String) : URL =
+</span>32 <span style=''>        </span><span style='background: #F0ADAD'>getClass().getClassLoader().getResource(entryName)</span><span style=''>
+</span>33 <span style=''>    }
+</span>34 <span style=''>
+</span>35 <span style=''>    val descriptor = </span><span style='background: #AEF1AE'>new BundleDescriptor(
+</span>36 <span style=''></span><span style='background: #AEF1AE'>      getClass().getClassLoader(),
+</span>37 <span style=''></span><span style='background: #AEF1AE'>      url,
+</span>38 <span style=''></span><span style='background: #AEF1AE'>      Map(BUNDLE_SYMBOLICNAME -&gt; symbolicName).asJava
+</span>39 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>40 <span style=''>
+</span>41 <span style=''>    val version = </span><span style='background: #AEF1AE'>Version.emptyVersion</span><span style=''>
+</span>42 <span style=''>
+</span>43 <span style=''>    val bundles = </span><span style='background: #AEF1AE'>getField[java.util.Map[java.lang.Long, Bundle]](&quot;m_bundles&quot;)</span><span style=''>
+</span>44 <span style=''>
+</span>45 <span style=''>    val id = </span><span style='background: #AEF1AE'>bundles.size()</span><span style=''>
+</span>46 <span style=''>
+</span>47 <span style=''>    val bundle = </span><span style='background: #AEF1AE'>new BlendedPojoBundle(
+</span>48 <span style=''></span><span style='background: #AEF1AE'>      activator = activator,
+</span>49 <span style=''></span><span style='background: #AEF1AE'>      registry = getField[ServiceRegistry](&quot;m_registry&quot;),
+</span>50 <span style=''></span><span style='background: #AEF1AE'>      dispatcher = getField[EventDispatcher](&quot;m_dispatcher&quot;),
+</span>51 <span style=''></span><span style='background: #AEF1AE'>      bundles = bundles,
+</span>52 <span style=''></span><span style='background: #AEF1AE'>      location = descriptor.getUrl(),
+</span>53 <span style=''></span><span style='background: #AEF1AE'>      id = id,
+</span>54 <span style=''></span><span style='background: #AEF1AE'>      symbolicName = symbolicName,
+</span>55 <span style=''></span><span style='background: #AEF1AE'>      version = version,
+</span>56 <span style=''></span><span style='background: #AEF1AE'>      revision = revision,
+</span>57 <span style=''></span><span style='background: #AEF1AE'>      headers = descriptor.getHeaders(),
+</span>58 <span style=''></span><span style='background: #AEF1AE'>      config = new util.HashMap[String, Object]()
+</span>59 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>60 <span style=''>
+</span>61 <span style=''>    </span><span style='background: #AEF1AE'>bundles.put(bundles.size().toLong, bundle)</span><span style=''>
+</span>62 <span style=''>    </span><span style='background: #AEF1AE'>bundle.start()</span><span style=''>
+</span>63 <span style=''>
+</span>64 <span style=''>    </span><span style='background: #AEF1AE'>id</span><span style=''>
+</span>65 <span style=''>  }
+</span>66 <span style=''>
+</span>67 <span style=''>  def serviceRegistry() : ServiceRegistry = {
+</span>68 <span style=''>    val field = </span><span style='background: #F0ADAD'>classOf[PojoSR].getDeclaredField(&quot;m_registry&quot;)</span><span style=''>
+</span>69 <span style=''>    </span><span style='background: #F0ADAD'>field.setAccessible(true)</span><span style=''>
+</span>70 <span style=''>    </span><span style='background: #F0ADAD'>field.get(this).asInstanceOf[ServiceRegistry]</span><span style=''>
+</span>71 <span style=''>  }
+</span>72 <span style=''>
+</span>73 <span style=''>  private[this] def getField[T](name : String) : T = {
+</span>74 <span style=''>    val field = </span><span style='background: #AEF1AE'>classOf[PojoSR].getDeclaredField(name)</span><span style=''>
+</span>75 <span style=''>    </span><span style='background: #AEF1AE'>field.setAccessible(true)</span><span style=''>
+</span>76 <span style=''>    </span><span style='background: #AEF1AE'>field.get(this).asInstanceOf[T]</span><span style=''>
+</span>77 <span style=''>  }
+</span>78 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          14344
+        </td>
+        <td>
+          701
+          -
+          724
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          14370
+        </td>
+        <td>
+          745
+          -
+          748
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          14345
+        </td>
+        <td>
+          804
+          -
+          830
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          14212
+        </td>
+        <td>
+          891
+          -
+          921
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          14273
+        </td>
+        <td>
+          987
+          -
+          1037
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          14185
+        </td>
+        <td>
+          1066
+          -
+          1193
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          14181
+        </td>
+        <td>
+          1094
+          -
+          1121
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          14196
+        </td>
+        <td>
+          1140
+          -
+          1187
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          14368
+        </td>
+        <td>
+          1144
+          -
+          1179
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          14271
+        </td>
+        <td>
+          1140
+          -
+          1180
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          14349
+        </td>
+        <td>
+          1213
+          -
+          1233
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          14173
+        </td>
+        <td>
+          1253
+          -
+          1313
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          45
+        </td>
+        <td>
+          14353
+        </td>
+        <td>
+          1328
+          -
+          1342
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          47
+        </td>
+        <td>
+          14293
+        </td>
+        <td>
+          1361
+          -
+          1794
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          14201
+        </td>
+        <td>
+          1430
+          -
+          1469
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          50
+        </td>
+        <td>
+          14369
+        </td>
+        <td>
+          1490
+          -
+          1531
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          52
+        </td>
+        <td>
+          14159
+        </td>
+        <td>
+          1575
+          -
+          1594
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          14184
+        </td>
+        <td>
+          1607
+          -
+          1609
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          57
+        </td>
+        <td>
+          14360
+        </td>
+        <td>
+          1714
+          -
+          1737
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          58
+        </td>
+        <td>
+          14294
+        </td>
+        <td>
+          1754
+          -
+          1788
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          61
+        </td>
+        <td>
+          14267
+        </td>
+        <td>
+          1812
+          -
+          1833
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          61
+        </td>
+        <td>
+          14266
+        </td>
+        <td>
+          1812
+          -
+          1833
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          61
+        </td>
+        <td>
+          14364
+        </td>
+        <td>
+          1800
+          -
+          1842
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          62
+        </td>
+        <td>
+          14281
+        </td>
+        <td>
+          1847
+          -
+          1861
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          14280
+        </td>
+        <td>
+          1867
+          -
+          1869
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          14182
+        </td>
+        <td>
+          1937
+          -
+          1983
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          14284
+        </td>
+        <td>
+          1988
+          -
+          2013
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          14350
+        </td>
+        <td>
+          2018
+          -
+          2063
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          74
+        </td>
+        <td>
+          14193
+        </td>
+        <td>
+          2140
+          -
+          2178
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          75
+        </td>
+        <td>
+          14262
+        </td>
+        <td>
+          2183
+          -
+          2208
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          76
+        </td>
+        <td>
+          14356
+        </td>
+        <td>
+          2213
+          -
+          2244
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

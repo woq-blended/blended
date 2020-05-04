@@ -1,0 +1,410 @@
+2020-05-04-09:24.54.166 |      230 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: Cmdline parser validate cmdline parser (ensure consistent cmdoption setup)
+2020-05-04-09:24.54.199 |      263 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.BooleanOptionHandler@1b8a569d
+2020-05-04-09:24.54.200 |      264 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.BooleanHandler@1062f504
+2020-05-04-09:24.54.200 |      264 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.StringFieldHandler@656598e9
+2020-05-04-09:24.54.200 |      264 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.PutIntoMapHandler@30a51a33
+2020-05-04-09:24.54.200 |      264 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.AddToCollectionHandler@5e2086d6
+2020-05-04-09:24.54.200 |      264 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.StringMethodHandler@314b75f3
+2020-05-04-09:24.54.200 |      264 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.LongHandler@233461c5
+2020-05-04-09:24.54.200 |      264 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.IntegerHandler@5c3b48bb
+2020-05-04-09:24.54.200 |      264 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.ByteHandler@67b2bac5
+2020-05-04-09:24.54.200 |      264 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.EnumHandler@7dd89650
+2020-05-04-09:24.54.221 |      285 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: Cmdline parser validate cmdline parser (ensure consistent cmdoption setup)
+--------------------------------------------------------------------------------
+2020-05-04-09:24.54.223 |      287 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: Cmdline parser cmdline help
+2020-05-04-09:24.54.229 |      293 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.BooleanOptionHandler@481e4878
+2020-05-04-09:24.54.229 |      293 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.BooleanHandler@7aabbca7
+2020-05-04-09:24.54.229 |      293 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.StringFieldHandler@54ba8c6e
+2020-05-04-09:24.54.229 |      293 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.PutIntoMapHandler@d323be
+2020-05-04-09:24.54.229 |      293 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.AddToCollectionHandler@3a34f654
+2020-05-04-09:24.54.229 |      293 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.StringMethodHandler@1d5d2b31
+2020-05-04-09:24.54.229 |      293 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.LongHandler@1d041d08
+2020-05-04-09:24.54.229 |      293 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.IntegerHandler@45303c5
+2020-05-04-09:24.54.229 |      293 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.ByteHandler@19c8c34d
+2020-05-04-09:24.54.229 |      293 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.EnumHandler@6db877e6
+2020-05-04-09:24.54.230 |      294 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : About to start parsing. dryrun: false, detectHelpAndSkipValidation: true, state:   Parameter: null
+  Options: 
+    OptionHandle(names=--help,-h,args=,minCount=0,maxCount=1,description=Show this help,requires=,conflictsWith=,isHidden=false,isHelp=true,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--password,-p,args=seed,minCount=0,maxCount=1,description=Generate a password from a given seed and salt. The salt is either implicitly set or explicitly given with --salt,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--salt,-s,args=salt,minCount=0,maxCount=1,description=Use this salt when generating a password with --password,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--refresh-certs,-r,args=,minCount=0,maxCount=1,description=Refresh or initial create a Java key store containing certificates from SCEP server,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--csr,args=csr-file,minCount=0,maxCount=1,description=Use the given certificate signign request file (CSR) as starting point,requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--cert-info,args=cert-file,minCount=0,maxCount=1,description=Try to give some info about the given {0},requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--timeout,args=sec,minCount=0,maxCount=1,description=Timeout (in seconds) used when refreshing certificates,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.IntegerHandler),
+    OptionHandle(names=--base-dir,args=dir,minCount=0,maxCount=1,description=Alternative base directory (aka 'scepclient.home', used to lookup the 'etc' directory),requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--expect-refresh,args=,minCount=0,maxCount=1,description=Expected a refreshed certificate. If no certificate was refreshed the application will exit with exit code 5,requires=--refresh-certs,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler)
+  Commands: 
+    
+  ResourceBundle: null
+  Locale: null
+  CmdOptionHandlers: 
+    class de.tototec.cmdoption.handler.BooleanOptionHandler=de.tototec.cmdoption.handler.BooleanOptionHandler@481e4878
+    class de.tototec.cmdoption.handler.BooleanHandler=de.tototec.cmdoption.handler.BooleanHandler@7aabbca7
+    class de.tototec.cmdoption.handler.StringFieldHandler=de.tototec.cmdoption.handler.StringFieldHandler@54ba8c6e
+    class de.tototec.cmdoption.handler.PutIntoMapHandler=de.tototec.cmdoption.handler.PutIntoMapHandler@d323be
+    class de.tototec.cmdoption.handler.AddToCollectionHandler=de.tototec.cmdoption.handler.AddToCollectionHandler@3a34f654
+    class de.tototec.cmdoption.handler.StringMethodHandler=de.tototec.cmdoption.handler.StringMethodHandler@1d5d2b31
+    class de.tototec.cmdoption.handler.LongHandler=de.tototec.cmdoption.handler.LongHandler@1d041d08
+    class de.tototec.cmdoption.handler.IntegerHandler=de.tototec.cmdoption.handler.IntegerHandler@45303c5
+    class de.tototec.cmdoption.handler.ByteHandler=de.tototec.cmdoption.handler.ByteHandler@19c8c34d
+    class de.tototec.cmdoption.handler.EnumHandler=de.tototec.cmdoption.handler.EnumHandler@6db877e6
+2020-05-04-09:24.54.231 |      295 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Parsing...
+2020-05-04-09:24.54.231 |      295 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : About to start parsing. dryrun: true, detectHelpAndSkipValidation: true, state:   Parameter: null
+  Options: 
+    OptionHandle(names=--help,-h,args=,minCount=0,maxCount=1,description=Show this help,requires=,conflictsWith=,isHidden=false,isHelp=true,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--password,-p,args=seed,minCount=0,maxCount=1,description=Generate a password from a given seed and salt. The salt is either implicitly set or explicitly given with --salt,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--salt,-s,args=salt,minCount=0,maxCount=1,description=Use this salt when generating a password with --password,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--refresh-certs,-r,args=,minCount=0,maxCount=1,description=Refresh or initial create a Java key store containing certificates from SCEP server,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--csr,args=csr-file,minCount=0,maxCount=1,description=Use the given certificate signign request file (CSR) as starting point,requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--cert-info,args=cert-file,minCount=0,maxCount=1,description=Try to give some info about the given {0},requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--timeout,args=sec,minCount=0,maxCount=1,description=Timeout (in seconds) used when refreshing certificates,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.IntegerHandler),
+    OptionHandle(names=--base-dir,args=dir,minCount=0,maxCount=1,description=Alternative base directory (aka 'scepclient.home', used to lookup the 'etc' directory),requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--expect-refresh,args=,minCount=0,maxCount=1,description=Expected a refreshed certificate. If no certificate was refreshed the application will exit with exit code 5,requires=--refresh-certs,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler)
+  Commands: 
+    
+  ResourceBundle: null
+  Locale: null
+  CmdOptionHandlers: 
+    class de.tototec.cmdoption.handler.BooleanOptionHandler=de.tototec.cmdoption.handler.BooleanOptionHandler@481e4878
+    class de.tototec.cmdoption.handler.BooleanHandler=de.tototec.cmdoption.handler.BooleanHandler@7aabbca7
+    class de.tototec.cmdoption.handler.StringFieldHandler=de.tototec.cmdoption.handler.StringFieldHandler@54ba8c6e
+    class de.tototec.cmdoption.handler.PutIntoMapHandler=de.tototec.cmdoption.handler.PutIntoMapHandler@d323be
+    class de.tototec.cmdoption.handler.AddToCollectionHandler=de.tototec.cmdoption.handler.AddToCollectionHandler@3a34f654
+    class de.tototec.cmdoption.handler.StringMethodHandler=de.tototec.cmdoption.handler.StringMethodHandler@1d5d2b31
+    class de.tototec.cmdoption.handler.LongHandler=de.tototec.cmdoption.handler.LongHandler@1d041d08
+    class de.tototec.cmdoption.handler.IntegerHandler=de.tototec.cmdoption.handler.IntegerHandler@45303c5
+    class de.tototec.cmdoption.handler.ByteHandler=de.tototec.cmdoption.handler.ByteHandler@19c8c34d
+    class de.tototec.cmdoption.handler.EnumHandler=de.tototec.cmdoption.handler.EnumHandler@6db877e6
+2020-05-04-09:24.54.231 |      295 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Detected a help request through: --help
+2020-05-04-09:24.54.231 |      295 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Detected a help request through: --help
+2020-05-04-09:24.54.250 |      314 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: Cmdline parser cmdline help
+--------------------------------------------------------------------------------
+2020-05-04-09:24.54.251 |      315 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: Cmdline parser invalid cmdline args exit with code 2
+2020-05-04-09:24.54.252 |      316 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.BooleanOptionHandler@1d79095
+2020-05-04-09:24.54.252 |      316 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.BooleanHandler@29ab81fd
+2020-05-04-09:24.54.252 |      316 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.StringFieldHandler@4313d2e5
+2020-05-04-09:24.54.252 |      316 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.PutIntoMapHandler@1d4137e1
+2020-05-04-09:24.54.252 |      316 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.AddToCollectionHandler@20af4fe4
+2020-05-04-09:24.54.252 |      316 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.StringMethodHandler@55fe8665
+2020-05-04-09:24.54.252 |      316 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.LongHandler@8a7e2c5
+2020-05-04-09:24.54.252 |      316 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.IntegerHandler@1ccd220f
+2020-05-04-09:24.54.252 |      316 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.ByteHandler@46478e1d
+2020-05-04-09:24.54.252 |      316 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.EnumHandler@67abf51e
+2020-05-04-09:24.54.253 |      317 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : About to start parsing. dryrun: false, detectHelpAndSkipValidation: true, state:   Parameter: null
+  Options: 
+    OptionHandle(names=--help,-h,args=,minCount=0,maxCount=1,description=Show this help,requires=,conflictsWith=,isHidden=false,isHelp=true,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--password,-p,args=seed,minCount=0,maxCount=1,description=Generate a password from a given seed and salt. The salt is either implicitly set or explicitly given with --salt,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--salt,-s,args=salt,minCount=0,maxCount=1,description=Use this salt when generating a password with --password,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--refresh-certs,-r,args=,minCount=0,maxCount=1,description=Refresh or initial create a Java key store containing certificates from SCEP server,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--csr,args=csr-file,minCount=0,maxCount=1,description=Use the given certificate signign request file (CSR) as starting point,requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--cert-info,args=cert-file,minCount=0,maxCount=1,description=Try to give some info about the given {0},requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--timeout,args=sec,minCount=0,maxCount=1,description=Timeout (in seconds) used when refreshing certificates,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.IntegerHandler),
+    OptionHandle(names=--base-dir,args=dir,minCount=0,maxCount=1,description=Alternative base directory (aka 'scepclient.home', used to lookup the 'etc' directory),requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--expect-refresh,args=,minCount=0,maxCount=1,description=Expected a refreshed certificate. If no certificate was refreshed the application will exit with exit code 5,requires=--refresh-certs,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler)
+  Commands: 
+    
+  ResourceBundle: null
+  Locale: null
+  CmdOptionHandlers: 
+    class de.tototec.cmdoption.handler.BooleanOptionHandler=de.tototec.cmdoption.handler.BooleanOptionHandler@1d79095
+    class de.tototec.cmdoption.handler.BooleanHandler=de.tototec.cmdoption.handler.BooleanHandler@29ab81fd
+    class de.tototec.cmdoption.handler.StringFieldHandler=de.tototec.cmdoption.handler.StringFieldHandler@4313d2e5
+    class de.tototec.cmdoption.handler.PutIntoMapHandler=de.tototec.cmdoption.handler.PutIntoMapHandler@1d4137e1
+    class de.tototec.cmdoption.handler.AddToCollectionHandler=de.tototec.cmdoption.handler.AddToCollectionHandler@20af4fe4
+    class de.tototec.cmdoption.handler.StringMethodHandler=de.tototec.cmdoption.handler.StringMethodHandler@55fe8665
+    class de.tototec.cmdoption.handler.LongHandler=de.tototec.cmdoption.handler.LongHandler@8a7e2c5
+    class de.tototec.cmdoption.handler.IntegerHandler=de.tototec.cmdoption.handler.IntegerHandler@1ccd220f
+    class de.tototec.cmdoption.handler.ByteHandler=de.tototec.cmdoption.handler.ByteHandler@46478e1d
+    class de.tototec.cmdoption.handler.EnumHandler=de.tototec.cmdoption.handler.EnumHandler@67abf51e
+2020-05-04-09:24.54.253 |      317 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Parsing...
+2020-05-04-09:24.54.253 |      317 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : About to start parsing. dryrun: true, detectHelpAndSkipValidation: true, state:   Parameter: null
+  Options: 
+    OptionHandle(names=--help,-h,args=,minCount=0,maxCount=1,description=Show this help,requires=,conflictsWith=,isHidden=false,isHelp=true,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--password,-p,args=seed,minCount=0,maxCount=1,description=Generate a password from a given seed and salt. The salt is either implicitly set or explicitly given with --salt,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--salt,-s,args=salt,minCount=0,maxCount=1,description=Use this salt when generating a password with --password,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--refresh-certs,-r,args=,minCount=0,maxCount=1,description=Refresh or initial create a Java key store containing certificates from SCEP server,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--csr,args=csr-file,minCount=0,maxCount=1,description=Use the given certificate signign request file (CSR) as starting point,requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--cert-info,args=cert-file,minCount=0,maxCount=1,description=Try to give some info about the given {0},requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--timeout,args=sec,minCount=0,maxCount=1,description=Timeout (in seconds) used when refreshing certificates,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.IntegerHandler),
+    OptionHandle(names=--base-dir,args=dir,minCount=0,maxCount=1,description=Alternative base directory (aka 'scepclient.home', used to lookup the 'etc' directory),requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--expect-refresh,args=,minCount=0,maxCount=1,description=Expected a refreshed certificate. If no certificate was refreshed the application will exit with exit code 5,requires=--refresh-certs,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler)
+  Commands: 
+    
+  ResourceBundle: null
+  Locale: null
+  CmdOptionHandlers: 
+    class de.tototec.cmdoption.handler.BooleanOptionHandler=de.tototec.cmdoption.handler.BooleanOptionHandler@1d79095
+    class de.tototec.cmdoption.handler.BooleanHandler=de.tototec.cmdoption.handler.BooleanHandler@29ab81fd
+    class de.tototec.cmdoption.handler.StringFieldHandler=de.tototec.cmdoption.handler.StringFieldHandler@4313d2e5
+    class de.tototec.cmdoption.handler.PutIntoMapHandler=de.tototec.cmdoption.handler.PutIntoMapHandler@1d4137e1
+    class de.tototec.cmdoption.handler.AddToCollectionHandler=de.tototec.cmdoption.handler.AddToCollectionHandler@20af4fe4
+    class de.tototec.cmdoption.handler.StringMethodHandler=de.tototec.cmdoption.handler.StringMethodHandler@55fe8665
+    class de.tototec.cmdoption.handler.LongHandler=de.tototec.cmdoption.handler.LongHandler@8a7e2c5
+    class de.tototec.cmdoption.handler.IntegerHandler=de.tototec.cmdoption.handler.IntegerHandler@1ccd220f
+    class de.tototec.cmdoption.handler.ByteHandler=de.tototec.cmdoption.handler.ByteHandler@46478e1d
+    class de.tototec.cmdoption.handler.EnumHandler=de.tototec.cmdoption.handler.EnumHandler@67abf51e
+2020-05-04-09:24.54.256 |      320 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: Cmdline parser invalid cmdline args exit with code 2
+--------------------------------------------------------------------------------
+2020-05-04-09:24.54.257 |      321 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: Cmdline parser hardcoded description contains correct exit code
+2020-05-04-09:24.54.268 |      332 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: Cmdline parser hardcoded description contains correct exit code
+--------------------------------------------------------------------------------
+2020-05-04-09:24.54.280 |      344 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: App should fail with Exception when no config is present
+2020-05-04-09:24.54.287 |      351 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.TestFile : Created temp dir [/tmp/test3104038407339648918]
+2020-05-04-09:24.54.288 |      352 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.BooleanOptionHandler@38f7409
+2020-05-04-09:24.54.288 |      352 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.BooleanHandler@53203a9f
+2020-05-04-09:24.54.289 |      353 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.StringFieldHandler@31918e3d
+2020-05-04-09:24.54.289 |      353 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.PutIntoMapHandler@19115336
+2020-05-04-09:24.54.289 |      353 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.AddToCollectionHandler@61464321
+2020-05-04-09:24.54.289 |      353 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.StringMethodHandler@33607954
+2020-05-04-09:24.54.289 |      353 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.LongHandler@e3de963
+2020-05-04-09:24.54.289 |      353 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.IntegerHandler@1d268371
+2020-05-04-09:24.54.289 |      353 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.ByteHandler@4e2a84bf
+2020-05-04-09:24.54.289 |      353 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Register CmdOptionHandler: de.tototec.cmdoption.handler.EnumHandler@7e30eef7
+2020-05-04-09:24.54.290 |      354 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : About to start parsing. dryrun: false, detectHelpAndSkipValidation: true, state:   Parameter: null
+  Options: 
+    OptionHandle(names=--help,-h,args=,minCount=0,maxCount=1,description=Show this help,requires=,conflictsWith=,isHidden=false,isHelp=true,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--password,-p,args=seed,minCount=0,maxCount=1,description=Generate a password from a given seed and salt. The salt is either implicitly set or explicitly given with --salt,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--salt,-s,args=salt,minCount=0,maxCount=1,description=Use this salt when generating a password with --password,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--refresh-certs,-r,args=,minCount=0,maxCount=1,description=Refresh or initial create a Java key store containing certificates from SCEP server,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--csr,args=csr-file,minCount=0,maxCount=1,description=Use the given certificate signign request file (CSR) as starting point,requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--cert-info,args=cert-file,minCount=0,maxCount=1,description=Try to give some info about the given {0},requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--timeout,args=sec,minCount=0,maxCount=1,description=Timeout (in seconds) used when refreshing certificates,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.IntegerHandler),
+    OptionHandle(names=--base-dir,args=dir,minCount=0,maxCount=1,description=Alternative base directory (aka 'scepclient.home', used to lookup the 'etc' directory),requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--expect-refresh,args=,minCount=0,maxCount=1,description=Expected a refreshed certificate. If no certificate was refreshed the application will exit with exit code 5,requires=--refresh-certs,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler)
+  Commands: 
+    
+  ResourceBundle: null
+  Locale: null
+  CmdOptionHandlers: 
+    class de.tototec.cmdoption.handler.BooleanOptionHandler=de.tototec.cmdoption.handler.BooleanOptionHandler@38f7409
+    class de.tototec.cmdoption.handler.BooleanHandler=de.tototec.cmdoption.handler.BooleanHandler@53203a9f
+    class de.tototec.cmdoption.handler.StringFieldHandler=de.tototec.cmdoption.handler.StringFieldHandler@31918e3d
+    class de.tototec.cmdoption.handler.PutIntoMapHandler=de.tototec.cmdoption.handler.PutIntoMapHandler@19115336
+    class de.tototec.cmdoption.handler.AddToCollectionHandler=de.tototec.cmdoption.handler.AddToCollectionHandler@61464321
+    class de.tototec.cmdoption.handler.StringMethodHandler=de.tototec.cmdoption.handler.StringMethodHandler@33607954
+    class de.tototec.cmdoption.handler.LongHandler=de.tototec.cmdoption.handler.LongHandler@e3de963
+    class de.tototec.cmdoption.handler.IntegerHandler=de.tototec.cmdoption.handler.IntegerHandler@1d268371
+    class de.tototec.cmdoption.handler.ByteHandler=de.tototec.cmdoption.handler.ByteHandler@4e2a84bf
+    class de.tototec.cmdoption.handler.EnumHandler=de.tototec.cmdoption.handler.EnumHandler@7e30eef7
+2020-05-04-09:24.54.290 |      354 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : Parsing...
+2020-05-04-09:24.54.291 |      355 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] de.tototec.cmdoption.CmdlineParser : About to start parsing. dryrun: true, detectHelpAndSkipValidation: true, state:   Parameter: null
+  Options: 
+    OptionHandle(names=--help,-h,args=,minCount=0,maxCount=1,description=Show this help,requires=,conflictsWith=,isHidden=false,isHelp=true,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--password,-p,args=seed,minCount=0,maxCount=1,description=Generate a password from a given seed and salt. The salt is either implicitly set or explicitly given with --salt,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--salt,-s,args=salt,minCount=0,maxCount=1,description=Use this salt when generating a password with --password,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--refresh-certs,-r,args=,minCount=0,maxCount=1,description=Refresh or initial create a Java key store containing certificates from SCEP server,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler),
+    OptionHandle(names=--csr,args=csr-file,minCount=0,maxCount=1,description=Use the given certificate signign request file (CSR) as starting point,requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--cert-info,args=cert-file,minCount=0,maxCount=1,description=Try to give some info about the given {0},requires=,conflictsWith=,isHidden=true,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--timeout,args=sec,minCount=0,maxCount=1,description=Timeout (in seconds) used when refreshing certificates,requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.IntegerHandler),
+    OptionHandle(names=--base-dir,args=dir,minCount=0,maxCount=1,description=Alternative base directory (aka 'scepclient.home', used to lookup the 'etc' directory),requires=,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.StringFieldHandler),
+    OptionHandle(names=--expect-refresh,args=,minCount=0,maxCount=1,description=Expected a refreshed certificate. If no certificate was refreshed the application will exit with exit code 5,requires=--refresh-certs,conflictsWith=,isHidden=false,isHelp=false,handler=de.tototec.cmdoption.handler.BooleanOptionHandler)
+  Commands: 
+    
+  ResourceBundle: null
+  Locale: null
+  CmdOptionHandlers: 
+    class de.tototec.cmdoption.handler.BooleanOptionHandler=de.tototec.cmdoption.handler.BooleanOptionHandler@38f7409
+    class de.tototec.cmdoption.handler.BooleanHandler=de.tototec.cmdoption.handler.BooleanHandler@53203a9f
+    class de.tototec.cmdoption.handler.StringFieldHandler=de.tototec.cmdoption.handler.StringFieldHandler@31918e3d
+    class de.tototec.cmdoption.handler.PutIntoMapHandler=de.tototec.cmdoption.handler.PutIntoMapHandler@19115336
+    class de.tototec.cmdoption.handler.AddToCollectionHandler=de.tototec.cmdoption.handler.AddToCollectionHandler@61464321
+    class de.tototec.cmdoption.handler.StringMethodHandler=de.tototec.cmdoption.handler.StringMethodHandler@33607954
+    class de.tototec.cmdoption.handler.LongHandler=de.tototec.cmdoption.handler.LongHandler@e3de963
+    class de.tototec.cmdoption.handler.IntegerHandler=de.tototec.cmdoption.handler.IntegerHandler@1d268371
+    class de.tototec.cmdoption.handler.ByteHandler=de.tototec.cmdoption.handler.ByteHandler@4e2a84bf
+    class de.tototec.cmdoption.handler.EnumHandler=de.tototec.cmdoption.handler.EnumHandler@7e30eef7
+2020-05-04-09:24.54.338 |      402 | DEBUG [scala-execution-context-global-15] domino.OsgiContext : Registering whenBundleActive for bundle in class blended.security.scep.standalone.CertRefresher$$anon$2
+2020-05-04-09:24.54.339 |      403 | DEBUG [scala-execution-context-global-15] blended.security.scep.standalone.CertRefresher : Starting felix connect runtime
+2020-05-04-09:24.54.568 |      632 | DEBUG [scala-execution-context-global-15] blended.security.scep.standalone.CertRefresher : Found bundles: blended.security.scep -> jar:file:/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.scep/target/scala-2.12/blended.security.scep_2.12-3.1-RC6.jar!/
+blended.security.ssl -> jar:file:/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/blended.security.ssl_2.12-3.1-RC6.jar!/
+2020-05-04-09:24.54.571 |      635 | DEBUG [scala-execution-context-global-15] blended.security.scep.standalone.CertRefresher : Found factory: org.apache.felix.connect.PojoServiceRegistryFactoryImpl@5ef4f364
+2020-05-04-09:24.54.639 |      703 | DEBUG [scala-execution-context-global-15] domino.OsgiContext : Registering whenBundleActive for bundle in class blended.security.scep.internal.ScepActivator
+2020-05-04-09:24.54.640 |      704 | DEBUG [scala-execution-context-global-15] domino.OsgiContext : Bundle blended.security.scep[1]: Starting whenBundleActive
+2020-05-04-09:24.54.652 |      716 | DEBUG [scala-execution-context-global-15] domino.service_watching.ServiceWatcherCapsule : Bundle blended.security.scep[1]: Start tracking services with filter [(objectClass=blended.container.context.api.ContainerContext)]
+2020-05-04-09:24.54.660 |      724 | DEBUG [scala-execution-context-global-15] domino.OsgiContext : Registering whenBundleActive for bundle in class blended.security.ssl.internal.CertificateActivator
+2020-05-04-09:24.54.660 |      724 | DEBUG [scala-execution-context-global-15] domino.OsgiContext : Bundle blended.security.ssl[2]: Starting whenBundleActive
+2020-05-04-09:24.54.661 |      725 | DEBUG [scala-execution-context-global-15] domino.service_watching.ServiceWatcherCapsule : Bundle blended.security.ssl[2]: Start tracking services with filter [(objectClass=blended.container.context.api.ContainerContext)]
+2020-05-04-09:24.54.661 |      725 | DEBUG [scala-execution-context-global-15] blended.security.scep.standalone.CertRefresher : Created registry: org.apache.felix.connect.PojoSR@5895d678
+2020-05-04-09:24.54.665 |      729 | DEBUG [scala-execution-context-global-15] domino.OsgiContext : Registering whenBundleActive for bundle in class blended.security.scep.standalone.CertRefresher$$anon$1
+2020-05-04-09:24.54.665 |      729 | DEBUG [scala-execution-context-global-15] domino.OsgiContext : Bundle org.apache.felix.connect[0]: Starting whenBundleActive
+2020-05-04-09:24.54.666 |      730 | DEBUG [scala-execution-context-global-15] blended.security.scep.standalone.CertRefresher : Starting ScepAppContainerContext with baseDir=/tmp/test3104038407339648918
+2020-05-04-09:24.54.763 |      827 | DEBUG [scala-execution-context-global-15] domino.OsgiContext : Bundle org.apache.felix.connect[0]: Exception thrown while starting whenBundleActive
+com.typesafe.config.ConfigException$IO: /tmp/test3104038407339648918/etc/application.conf: java.io.FileNotFoundException: /tmp/test3104038407339648918/etc/application.conf (No such file or directory)
+	at com.typesafe.config.impl.Parseable.parseValue(Parseable.java:188)
+	at com.typesafe.config.impl.Parseable.parseValue(Parseable.java:174)
+	at com.typesafe.config.impl.Parseable.parse(Parseable.java:299)
+	at com.typesafe.config.ConfigFactory.parseFile(ConfigFactory.java:689)
+	at blended.security.scep.standalone.ScepAppContainerContext.containerConfig$lzycompute(ScepAppContainerContext.scala:38)
+	at blended.security.scep.standalone.ScepAppContainerContext.containerConfig(ScepAppContainerContext.scala:30)
+	at blended.container.context.impl.internal.AbstractContainerContextImpl.toString(AbstractContainerContextImpl.scala:146)
+	at java.lang.String.valueOf(String.java:2994)
+	at java.lang.StringBuilder.append(StringBuilder.java:131)
+	at scala.StringContext.standardInterpolator(StringContext.scala:133)
+	at scala.StringContext.s(StringContext.scala:101)
+	at blended.security.scep.standalone.ScepAppContainerContext.$anonfun$new$1(ScepAppContainerContext.scala:16)
+	at blended.util.logging.LoggerSlf4j.$anonfun$debugMdc$1(LoggerSlf4j.scala:33)
+	at blended.util.logging.LoggerSlf4j.withMDC(LoggerSlf4j.scala:17)
+	at blended.util.logging.LoggerSlf4j.debugMdc(LoggerSlf4j.scala:33)
+	at blended.util.logging.LoggerSlf4j.debug(LoggerSlf4j.scala:50)
+	at blended.security.scep.standalone.ScepAppContainerContext.<init>(ScepAppContainerContext.scala:16)
+	at blended.security.scep.standalone.CertRefresher$$anon$1.$anonfun$new$1(CertRefresher.scala:59)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at scala.util.DynamicVariable.withValue(DynamicVariable.scala:62)
+	at domino.capsule.DynamicCapsuleContext.executeWithinNewCapsuleScope(DynamicCapsuleContext.scala:34)
+	at domino.capsule.DynamicCapsuleContext.executeWithinNewCapsuleScope$(DynamicCapsuleContext.scala:28)
+	at domino.DominoActivator.executeWithinNewCapsuleScope(DominoActivator.scala:66)
+	at domino.OsgiContext.start(OsgiContext.scala:76)
+	at domino.OsgiContext.start$(OsgiContext.scala:59)
+	at domino.DominoActivator.start(DominoActivator.scala:66)
+	at blended.security.scep.standalone.CertRefresher.liftedTree1$1(CertRefresher.scala:66)
+	at blended.security.scep.standalone.CertRefresher.registry$lzycompute(CertRefresher.scala:65)
+	at blended.security.scep.standalone.CertRefresher.registry(CertRefresher.scala:33)
+	at blended.security.scep.standalone.CertRefresher.$anonfun$checkCert$1(CertRefresher.scala:105)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at scala.concurrent.Future$.$anonfun$apply$1(Future.scala:658)
+	at scala.util.Success.$anonfun$map$1(Try.scala:255)
+	at scala.util.Success.map(Try.scala:213)
+	at scala.concurrent.Future.$anonfun$map$1(Future.scala:292)
+	at scala.concurrent.impl.Promise.liftedTree1$1(Promise.scala:33)
+	at scala.concurrent.impl.Promise.$anonfun$transform$1(Promise.scala:33)
+	at scala.concurrent.impl.CallbackRunnable.run(Promise.scala:64)
+	at java.util.concurrent.ForkJoinTask$RunnableExecuteAction.exec(ForkJoinTask.java:1402)
+	at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:289)
+	at java.util.concurrent.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1056)
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1692)
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:157)
+Caused by: java.io.FileNotFoundException: /tmp/test3104038407339648918/etc/application.conf (No such file or directory)
+	at java.io.FileInputStream.open0(Native Method)
+	at java.io.FileInputStream.open(FileInputStream.java:195)
+	at java.io.FileInputStream.<init>(FileInputStream.java:138)
+	at com.typesafe.config.impl.Parseable$ParseableFile.reader(Parseable.java:638)
+	at com.typesafe.config.impl.Parseable.reader(Parseable.java:99)
+	at com.typesafe.config.impl.Parseable.rawParseValue(Parseable.java:231)
+	at com.typesafe.config.impl.Parseable.parseValue(Parseable.java:180)
+	... 42 common frames omitted
+2020-05-04-09:24.54.765 |      829 | WARN  [scala-execution-context-global-15] blended.security.scep.standalone.CertRefresher : Failed to start Application Context. /tmp/test3104038407339648918/etc/application.conf: java.io.FileNotFoundException: /tmp/test3104038407339648918/etc/application.conf (No such file or directory)
+2020-05-04-09:24.59.376 |     5440 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.security.scep.standalone.CertRefresher : Starting felix connect runtime
+2020-05-04-09:24.59.401 |     5465 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.security.scep.standalone.CertRefresher : Found bundles: blended.security.scep -> jar:file:/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.scep/target/scala-2.12/blended.security.scep_2.12-3.1-RC6.jar!/
+blended.security.ssl -> jar:file:/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/blended.security.ssl_2.12-3.1-RC6.jar!/
+2020-05-04-09:24.59.401 |     5465 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.security.scep.standalone.CertRefresher : Found factory: org.apache.felix.connect.PojoServiceRegistryFactoryImpl@210c3b32
+2020-05-04-09:24.59.403 |     5467 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] domino.OsgiContext : Registering whenBundleActive for bundle in class blended.security.scep.internal.ScepActivator
+2020-05-04-09:24.59.403 |     5467 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] domino.OsgiContext : Bundle blended.security.scep[1]: Starting whenBundleActive
+2020-05-04-09:24.59.403 |     5467 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] domino.service_watching.ServiceWatcherCapsule : Bundle blended.security.scep[1]: Start tracking services with filter [(objectClass=blended.container.context.api.ContainerContext)]
+2020-05-04-09:24.59.404 |     5468 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] domino.OsgiContext : Registering whenBundleActive for bundle in class blended.security.ssl.internal.CertificateActivator
+2020-05-04-09:24.59.404 |     5468 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] domino.OsgiContext : Bundle blended.security.ssl[2]: Starting whenBundleActive
+2020-05-04-09:24.59.404 |     5468 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] domino.service_watching.ServiceWatcherCapsule : Bundle blended.security.ssl[2]: Start tracking services with filter [(objectClass=blended.container.context.api.ContainerContext)]
+2020-05-04-09:24.59.404 |     5468 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.security.scep.standalone.CertRefresher : Created registry: org.apache.felix.connect.PojoSR@5cb5a220
+2020-05-04-09:24.59.404 |     5468 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] domino.OsgiContext : Registering whenBundleActive for bundle in class blended.security.scep.standalone.CertRefresher$$anon$1
+2020-05-04-09:24.59.404 |     5468 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] domino.OsgiContext : Bundle org.apache.felix.connect[0]: Starting whenBundleActive
+2020-05-04-09:24.59.405 |     5469 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.security.scep.standalone.CertRefresher : Starting ScepAppContainerContext with baseDir=/tmp/test3104038407339648918
+2020-05-04-09:24.59.408 |     5472 | DEBUG [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] domino.OsgiContext : Bundle org.apache.felix.connect[0]: Exception thrown while starting whenBundleActive
+com.typesafe.config.ConfigException$IO: /tmp/test3104038407339648918/etc/application.conf: java.io.FileNotFoundException: /tmp/test3104038407339648918/etc/application.conf (No such file or directory)
+	at com.typesafe.config.impl.Parseable.parseValue(Parseable.java:188)
+	at com.typesafe.config.impl.Parseable.parseValue(Parseable.java:174)
+	at com.typesafe.config.impl.Parseable.parse(Parseable.java:299)
+	at com.typesafe.config.ConfigFactory.parseFile(ConfigFactory.java:689)
+	at blended.security.scep.standalone.ScepAppContainerContext.containerConfig$lzycompute(ScepAppContainerContext.scala:38)
+	at blended.security.scep.standalone.ScepAppContainerContext.containerConfig(ScepAppContainerContext.scala:30)
+	at blended.container.context.impl.internal.AbstractContainerContextImpl.toString(AbstractContainerContextImpl.scala:146)
+	at java.lang.String.valueOf(String.java:2994)
+	at java.lang.StringBuilder.append(StringBuilder.java:131)
+	at scala.StringContext.standardInterpolator(StringContext.scala:133)
+	at scala.StringContext.s(StringContext.scala:101)
+	at blended.security.scep.standalone.ScepAppContainerContext.$anonfun$new$1(ScepAppContainerContext.scala:16)
+	at blended.util.logging.LoggerSlf4j.$anonfun$debugMdc$1(LoggerSlf4j.scala:33)
+	at blended.util.logging.LoggerSlf4j.withMDC(LoggerSlf4j.scala:17)
+	at blended.util.logging.LoggerSlf4j.debugMdc(LoggerSlf4j.scala:33)
+	at blended.util.logging.LoggerSlf4j.debug(LoggerSlf4j.scala:50)
+	at blended.security.scep.standalone.ScepAppContainerContext.<init>(ScepAppContainerContext.scala:16)
+	at blended.security.scep.standalone.CertRefresher$$anon$1.$anonfun$new$1(CertRefresher.scala:59)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at scala.util.DynamicVariable.withValue(DynamicVariable.scala:62)
+	at domino.capsule.DynamicCapsuleContext.executeWithinNewCapsuleScope(DynamicCapsuleContext.scala:34)
+	at domino.capsule.DynamicCapsuleContext.executeWithinNewCapsuleScope$(DynamicCapsuleContext.scala:28)
+	at domino.DominoActivator.executeWithinNewCapsuleScope(DominoActivator.scala:66)
+	at domino.OsgiContext.start(OsgiContext.scala:76)
+	at domino.OsgiContext.start$(OsgiContext.scala:59)
+	at domino.DominoActivator.start(DominoActivator.scala:66)
+	at blended.security.scep.standalone.CertRefresher.liftedTree1$1(CertRefresher.scala:66)
+	at blended.security.scep.standalone.CertRefresher.registry$lzycompute(CertRefresher.scala:65)
+	at blended.security.scep.standalone.CertRefresher.registry(CertRefresher.scala:33)
+	at blended.security.scep.standalone.CertRefresher.stop(CertRefresher.scala:77)
+	at blended.security.scep.standalone.ScepClientApp$.refreshCert(ScepClientApp.scala:184)
+	at blended.security.scep.standalone.ScepClientApp$.run(ScepClientApp.scala:86)
+	at blended.security.scep.standalone.ScepClientAppTest.$anonfun$new$12(ScepClientAppTest.scala:63)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at org.scalatest.Assertions.intercept(Assertions.scala:805)
+	at org.scalatest.Assertions.intercept$(Assertions.scala:802)
+	at org.scalatest.FreeSpec.intercept(FreeSpec.scala:1739)
+	at blended.security.scep.standalone.ScepClientAppTest.$anonfun$new$11(ScepClientAppTest.scala:62)
+	at blended.testsupport.TestFile.$anonfun$withTestDir$2(TestFile.scala:132)
+	at blended.testsupport.TestFile.deleteAfter(TestFile.scala:19)
+	at blended.testsupport.TestFile.deleteAfter$(TestFile.scala:16)
+	at blended.security.scep.standalone.ScepClientAppTest.deleteAfter(ScepClientAppTest.scala:21)
+	at blended.testsupport.TestFile.withTestDir(TestFile.scala:131)
+	at blended.testsupport.TestFile.withTestDir$(TestFile.scala:125)
+	at blended.security.scep.standalone.ScepClientAppTest.withTestDir(ScepClientAppTest.scala:21)
+	at blended.testsupport.TestFile.withTestDir(TestFile.scala:136)
+	at blended.testsupport.TestFile.withTestDir$(TestFile.scala:136)
+	at blended.security.scep.standalone.ScepClientAppTest.withTestDir(ScepClientAppTest.scala:21)
+	at blended.security.scep.standalone.ScepClientAppTest.$anonfun$new$10(ScepClientAppTest.scala:68)
+	at org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+	at org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+	at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+	at org.scalatest.Transformer.apply(Transformer.scala:22)
+	at org.scalatest.Transformer.apply(Transformer.scala:20)
+	at org.scalatest.FreeSpecLike$$anon$1.apply(FreeSpecLike.scala:407)
+	at org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+	at org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+	at org.scalatest.FreeSpec.withFixture(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.invokeWithFixture$1(FreeSpecLike.scala:405)
+	at org.scalatest.FreeSpecLike.$anonfun$runTest$1(FreeSpecLike.scala:417)
+	at org.scalatest.SuperEngine.runTestImpl(Engine.scala:289)
+	at org.scalatest.FreeSpecLike.runTest(FreeSpecLike.scala:417)
+	at org.scalatest.FreeSpecLike.runTest$(FreeSpecLike.scala:399)
+	at blended.testsupport.scalatest.LoggingFreeSpec.blended$testsupport$scalatest$LoggingFreeSpecLike$$super$runTest(LoggingFreeSpec.scala:55)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest(LoggingFreeSpec.scala:30)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest$(LoggingFreeSpec.scala:25)
+	at blended.testsupport.scalatest.LoggingFreeSpec.runTest(LoggingFreeSpec.scala:55)
+	at org.scalatest.FreeSpecLike.$anonfun$runTests$1(FreeSpecLike.scala:476)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:396)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:379)
+	at org.scalatest.SuperEngine.runTestsImpl(Engine.scala:461)
+	at org.scalatest.FreeSpecLike.runTests(FreeSpecLike.scala:476)
+	at org.scalatest.FreeSpecLike.runTests$(FreeSpecLike.scala:475)
+	at org.scalatest.FreeSpec.runTests(FreeSpec.scala:1739)
+	at org.scalatest.Suite.run(Suite.scala:1147)
+	at org.scalatest.Suite.run$(Suite.scala:1129)
+	at org.scalatest.FreeSpec.org$scalatest$FreeSpecLike$$super$run(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.$anonfun$run$1(FreeSpecLike.scala:520)
+	at org.scalatest.SuperEngine.runImpl(Engine.scala:521)
+	at org.scalatest.FreeSpecLike.run(FreeSpecLike.scala:520)
+	at org.scalatest.FreeSpecLike.run$(FreeSpecLike.scala:519)
+	at org.scalatest.FreeSpec.run(FreeSpec.scala:1739)
+	at org.scalatest.tools.Framework.org$scalatest$tools$Framework$$runSuite(Framework.scala:314)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:507)
+	at sbt.ForkMain$Run.lambda$runTest$1(ForkMain.java:304)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.io.FileNotFoundException: /tmp/test3104038407339648918/etc/application.conf (No such file or directory)
+	at java.io.FileInputStream.open0(Native Method)
+	at java.io.FileInputStream.open(FileInputStream.java:195)
+	at java.io.FileInputStream.<init>(FileInputStream.java:138)
+	at com.typesafe.config.impl.Parseable$ParseableFile.reader(Parseable.java:638)
+	at com.typesafe.config.impl.Parseable.reader(Parseable.java:99)
+	at com.typesafe.config.impl.Parseable.rawParseValue(Parseable.java:231)
+	at com.typesafe.config.impl.Parseable.parseValue(Parseable.java:180)
+	... 90 common frames omitted
+2020-05-04-09:24.59.408 |     5472 | WARN  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.security.scep.standalone.CertRefresher : Failed to start Application Context. /tmp/test3104038407339648918/etc/application.conf: java.io.FileNotFoundException: /tmp/test3104038407339648918/etc/application.conf (No such file or directory)
+2020-05-04-09:24.59.411 |     5475 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: App should fail with Exception when no config is present
+--------------------------------------------------------------------------------
+2020-05-04-09:24.59.413 |     5477 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: Online SCEP server environment specific (TEST_SCEP_CONFIGFILE=null) should get a test certificate from online scep server
+2020-05-04-09:24.59.442 |     5506 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: Online SCEP server environment specific (TEST_SCEP_CONFIGFILE=null) should get a test certificate from online scep server
+--------------------------------------------------------------------------------
+2020-05-04-09:24.59.442 |     5506 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: Online SCEP server environment specific (TEST_SCEP_CONFIGFILE=null) should report a non-refreshed certificate with exit code 5
+2020-05-04-09:24.59.451 |     5515 | INFO  [pool-1-thread-1-ScalaTest-running-ScepClientAppTest] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: Online SCEP server environment specific (TEST_SCEP_CONFIGFILE=null) should report a non-refreshed certificate with exit code 5
+--------------------------------------------------------------------------------

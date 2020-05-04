@@ -1,0 +1,197 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/updater/config/OverlayConfig.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.updater.config
+</span>2 <span style=''>
+</span>3 <span style=''>/**
+</span>4 <span style=''> * Definition of an overlay.
+</span>5 <span style=''> *
+</span>6 <span style=''> * @param name The name of the overlay.
+</span>7 <span style=''> * @param version The version of the overlay.
+</span>8 <span style=''> * @param generatedConfigs
+</span>9 <span style=''> *   The config file generators.
+</span>10 <span style=''> * @param properties
+</span>11 <span style=''> *   Additional system properties.
+</span>12 <span style=''> */
+</span>13 <span style=''>final case class OverlayConfig(
+</span>14 <span style=''>  name : String,
+</span>15 <span style=''>  version : String,
+</span>16 <span style=''>  generatedConfigs : List[GeneratedConfig] = List.empty,
+</span>17 <span style=''>  properties : Map[String, String] = Map.empty
+</span>18 <span style=''>) extends Ordered[OverlayConfig] {
+</span>19 <span style=''>
+</span>20 <span style=''>  override def compare(other : OverlayConfig) : Int = </span><span style='background: #F0ADAD'>overlayRef.compare(other.overlayRef)</span><span style=''>
+</span>21 <span style=''>
+</span>22 <span style=''>  def overlayRef : OverlayRef = </span><span style='background: #AEF1AE'>OverlayRef(name, version)</span><span style=''>
+</span>23 <span style=''>
+</span>24 <span style=''>  override def toString() : String = </span><span style='background: #AEF1AE'>getClass().getSimpleName() +
+</span>25 <span style=''></span><span style='background: #AEF1AE'>    &quot;(name=&quot; + name +
+</span>26 <span style=''></span><span style='background: #AEF1AE'>    &quot;,version=&quot; + version +
+</span>27 <span style=''></span><span style='background: #AEF1AE'>    &quot;,generatedConfigs=&quot; + generatedConfigs +
+</span>28 <span style=''></span><span style='background: #AEF1AE'>    &quot;,properties=&quot; + properties +
+</span>29 <span style=''></span><span style='background: #AEF1AE'>    &quot;)&quot;</span><span style=''>
+</span>30 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          7687
+        </td>
+        <td>
+          537
+          -
+          573
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          6217
+        </td>
+        <td>
+          556
+          -
+          572
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          8031
+        </td>
+        <td>
+          618
+          -
+          622
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          7035
+        </td>
+        <td>
+          607
+          -
+          632
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          8443
+        </td>
+        <td>
+          624
+          -
+          631
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          6931
+        </td>
+        <td>
+          671
+          -
+          837
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

@@ -1,0 +1,770 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/updater/remote/PersistentContainerStatePersistor.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.updater.remote
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.persistence.PersistenceService
+</span>4 <span style=''>import blended.util.logging.Logger
+</span>5 <span style=''>
+</span>6 <span style=''>import scala.collection.JavaConverters._
+</span>7 <span style=''>
+</span>8 <span style=''>class PersistentContainerStatePersistor(persistenceService : PersistenceService) extends ContainerStatePersistor {
+</span>9 <span style=''>
+</span>10 <span style=''>  import PersistentContainerStatePersistor._
+</span>11 <span style=''>
+</span>12 <span style=''>  private[this] val log = </span><span style='background: #AEF1AE'>Logger[PersistentContainerStatePersistor]</span><span style=''>
+</span>13 <span style=''>
+</span>14 <span style=''>  override def findAllContainerStates() : List[ContainerState] = {
+</span>15 <span style=''>    val state = </span><span style='background: #F0ADAD'>persistenceService.findAll(pClassName)</span><span style=''>
+</span>16 <span style=''>    </span><span style='background: #F0ADAD'>state.flatMap(s =&gt; Mapper.unmapContainerState(s).toOption).toList</span><span style=''>
+</span>17 <span style=''>  }
+</span>18 <span style=''>
+</span>19 <span style=''>  override def findContainerState(containerId : String) : Option[ContainerState] = {
+</span>20 <span style=''>    // TODO: ensure, we take the newest
+</span>21 <span style=''>    val state = </span><span style='background: #AEF1AE'>persistenceService.findByExample(pClassName, Map(&quot;containerId&quot; -&gt; containerId).asJava)</span><span style=''>
+</span>22 <span style=''>    </span><span style='background: #AEF1AE'>state.flatMap(s =&gt; Mapper.unmapContainerState(s).toOption).headOption</span><span style=''>
+</span>23 <span style=''>  }
+</span>24 <span style=''>
+</span>25 <span style=''>  override def updateContainerState(containerState : ContainerState) : Unit = {
+</span>26 <span style=''>    </span><span style='background: #AEF1AE'>log.debug(</span><span style='background: #F0ADAD'>s&quot;About to update (=delete/persist) container state: ${containerState}&quot;</span><span style='background: #AEF1AE'>)</span><span style=''>
+</span>27 <span style=''>    val deleteCount = </span><span style='background: #AEF1AE'>persistenceService.deleteByExample(pClassName, Map(&quot;containerId&quot; -&gt; containerState.containerId).asJava)</span><span style=''>
+</span>28 <span style=''>    </span><span style='background: #AEF1AE'>log.debug(</span><span style='background: #F0ADAD'>s&quot;deleted ${deleteCount} old entries&quot;</span><span style='background: #AEF1AE'>)</span><span style=''>
+</span>29 <span style=''>    val entry = </span><span style='background: #AEF1AE'>persistenceService.persist(pClassName, Mapper.mapContainerState(containerState))</span><span style=''>
+</span>30 <span style=''>    </span><span style='background: #AEF1AE'>log.debug(</span><span style='background: #F0ADAD'>s&quot;persisted 1 new entry: ${entry}&quot;</span><span style='background: #AEF1AE'>)</span><span style=''>
+</span>31 <span style=''>  }
+</span>32 <span style=''>}
+</span>33 <span style=''>
+</span>34 <span style=''>object PersistentContainerStatePersistor {
+</span>35 <span style=''>  val pClassName = </span><span style='background: #AEF1AE'>&quot;ContainerState&quot;</span><span style=''>
+</span>36 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          10919
+        </td>
+        <td>
+          344
+          -
+          385
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          10742
+        </td>
+        <td>
+          470
+          -
+          508
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          11064
+        </td>
+        <td>
+          497
+          -
+          507
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          11043
+        </td>
+        <td>
+          532
+          -
+          570
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          10920
+        </td>
+        <td>
+          526
+          -
+          526
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          10773
+        </td>
+        <td>
+          513
+          -
+          578
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          10874
+        </td>
+        <td>
+          532
+          -
+          570
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          10873
+        </td>
+        <td>
+          770
+          -
+          810
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          10741
+        </td>
+        <td>
+          774
+          -
+          802
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11072
+        </td>
+        <td>
+          725
+          -
+          811
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          10710
+        </td>
+        <td>
+          770
+          -
+          803
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          10575
+        </td>
+        <td>
+          758
+          -
+          768
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          10907
+        </td>
+        <td>
+          816
+          -
+          885
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          11042
+        </td>
+        <td>
+          835
+          -
+          873
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          10946
+        </td>
+        <td>
+          829
+          -
+          829
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          10772
+        </td>
+        <td>
+          835
+          -
+          873
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          10879
+        </td>
+        <td>
+          985
+          -
+          1056
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          10915
+        </td>
+        <td>
+          975
+          -
+          1057
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          10577
+        </td>
+        <td>
+          1127
+          -
+          1182
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          10864
+        </td>
+        <td>
+          1148
+          -
+          1174
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          10753
+        </td>
+        <td>
+          1131
+          -
+          1174
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          10573
+        </td>
+        <td>
+          1080
+          -
+          1183
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          10916
+        </td>
+        <td>
+          1115
+          -
+          1125
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          10608
+        </td>
+        <td>
+          1131
+          -
+          1144
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          10754
+        </td>
+        <td>
+          1127
+          -
+          1175
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          10771
+        </td>
+        <td>
+          1198
+          -
+          1235
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          10703
+        </td>
+        <td>
+          1188
+          -
+          1236
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          10945
+        </td>
+        <td>
+          1292
+          -
+          1332
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          10783
+        </td>
+        <td>
+          1253
+          -
+          1333
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          10723
+        </td>
+        <td>
+          1280
+          -
+          1290
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          11056
+        </td>
+        <td>
+          1348
+          -
+          1382
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          11070
+        </td>
+        <td>
+          1338
+          -
+          1383
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          10616
+        </td>
+        <td>
+          1453
+          -
+          1469
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

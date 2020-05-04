@@ -1,0 +1,583 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/updater/config/FeatureConfig.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.updater.config
+</span>2 <span style=''>
+</span>3 <span style=''>/**
+</span>4 <span style=''> * A Feature configuration, holds a collection of [[BundleConfig]]s to build up a [[RuntimeConfig]].
+</span>5 <span style=''> */
+</span>6 <span style=''>case class FeatureConfig(
+</span>7 <span style=''>  name : String,
+</span>8 <span style=''>  version : String,
+</span>9 <span style=''>  url : Option[String],
+</span>10 <span style=''>  bundles : List[BundleConfig],
+</span>11 <span style=''>  features : List[FeatureRef]
+</span>12 <span style=''>) {
+</span>13 <span style=''>
+</span>14 <span style=''>  override def toString() : String = </span><span style='background: #F0ADAD'>s&quot;${getClass().getSimpleName()}(name=${name},version=${version},url=${url},bundles=${bundles},features=${features})&quot;</span><span style=''>
+</span>15 <span style=''>
+</span>16 <span style=''>  def featureRef : FeatureRef = </span><span style='background: #F0ADAD'>FeatureRef(name = name, version = version, url = url)</span><span style=''>
+</span>17 <span style=''>}
+</span>18 <span style=''>
+</span>19 <span style=''>object FeatureConfig extends ((String, String, Option[String], List[BundleConfig], List[FeatureRef]) =&gt; FeatureConfig) {
+</span>20 <span style=''>  /**
+</span>21 <span style=''>   * Conveniently create a [[FeatureConfig]].
+</span>22 <span style=''>   */
+</span>23 <span style=''>  def apply(
+</span>24 <span style=''>    name : String,
+</span>25 <span style=''>    version : String,
+</span>26 <span style=''>    url : String = null,
+</span>27 <span style=''>    bundles : List[BundleConfig] = null,
+</span>28 <span style=''>    features : List[FeatureRef] = null
+</span>29 <span style=''>  ) : FeatureConfig = {
+</span>30 <span style=''>    </span><span style='background: #AEF1AE'>FeatureConfig(
+</span>31 <span style=''></span><span style='background: #AEF1AE'>      name = name,
+</span>32 <span style=''></span><span style='background: #AEF1AE'>      version = version,
+</span>33 <span style=''></span><span style='background: #AEF1AE'>      url = Option(url),
+</span>34 <span style=''></span><span style='background: #AEF1AE'>      bundles = Option(bundles).getOrElse(</span><span style='background: #F0ADAD'>List.empty</span><span style='background: #AEF1AE'>),
+</span>35 <span style=''></span><span style='background: #AEF1AE'>      features = Option(features).getOrElse(List.empty)
+</span>36 <span style=''></span><span style='background: #AEF1AE'>    )</span><span style=''>
+</span>37 <span style=''>  }
+</span>38 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          7754
+        </td>
+        <td>
+          425
+          -
+          436
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          7380
+        </td>
+        <td>
+          336
+          -
+          362
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          8334
+        </td>
+        <td>
+          332
+          -
+          448
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          6722
+        </td>
+        <td>
+          376
+          -
+          386
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          7631
+        </td>
+        <td>
+          437
+          -
+          445
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          8136
+        </td>
+        <td>
+          395
+          -
+          401
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          6832
+        </td>
+        <td>
+          406
+          -
+          416
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          7564
+        </td>
+        <td>
+          387
+          -
+          394
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          8174
+        </td>
+        <td>
+          417
+          -
+          424
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          6834
+        </td>
+        <td>
+          446
+          -
+          448
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          8458
+        </td>
+        <td>
+          402
+          -
+          405
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          6550
+        </td>
+        <td>
+          363
+          -
+          370
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          7602
+        </td>
+        <td>
+          371
+          -
+          375
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          6636
+        </td>
+        <td>
+          334
+          -
+          335
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          8331
+        </td>
+        <td>
+          482
+          -
+          535
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          8455
+        </td>
+        <td>
+          500
+          -
+          504
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          7016
+        </td>
+        <td>
+          516
+          -
+          523
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          7429
+        </td>
+        <td>
+          531
+          -
+          534
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          6605
+        </td>
+        <td>
+          905
+          -
+          1105
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          8368
+        </td>
+        <td>
+          976
+          -
+          987
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          8298
+        </td>
+        <td>
+          1005
+          -
+          1042
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          6554
+        </td>
+        <td>
+          1031
+          -
+          1041
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          7385
+        </td>
+        <td>
+          1061
+          -
+          1099
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          7567
+        </td>
+        <td>
+          1088
+          -
+          1098
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

@@ -1,0 +1,193 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/scep/standalone/ScepAppContainerContext.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security.scep.standalone
+</span>2 <span style=''>
+</span>3 <span style=''>import java.io.File
+</span>4 <span style=''>import java.util.Properties
+</span>5 <span style=''>
+</span>6 <span style=''>import blended.container.context.impl.internal.AbstractContainerContextImpl
+</span>7 <span style=''>import blended.util.logging.Logger
+</span>8 <span style=''>import com.typesafe.config.impl.Parseable
+</span>9 <span style=''>import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+</span>10 <span style=''>
+</span>11 <span style=''>import scala.beans.BeanProperty
+</span>12 <span style=''>
+</span>13 <span style=''>class ScepAppContainerContext(baseDir: String, salt: String) extends AbstractContainerContextImpl {
+</span>14 <span style=''>
+</span>15 <span style=''>  private[this] val log = </span><span style='background: #AEF1AE'>Logger[this.type]</span><span style=''>
+</span>16 <span style=''>  </span><span style='background: #AEF1AE'>log.debug(s&quot;Starting [$this]&quot;)</span><span style=''>
+</span>17 <span style=''>
+</span>18 <span style=''>  @BeanProperty override lazy val containerDirectory: String = baseDir
+</span>19 <span style=''>
+</span>20 <span style=''>  @BeanProperty override lazy val containerConfigDirectory: String = containerDirectory + &quot;/etc&quot;
+</span>21 <span style=''>
+</span>22 <span style=''>  @BeanProperty override lazy val containerLogDirectory: String = baseDir
+</span>23 <span style=''>
+</span>24 <span style=''>  @BeanProperty override lazy val profileDirectory: String = containerDirectory
+</span>25 <span style=''>
+</span>26 <span style=''>  @BeanProperty override lazy val profileConfigDirectory: String = containerConfigDirectory
+</span>27 <span style=''>
+</span>28 <span style=''>  @BeanProperty override lazy val containerHostname: String = &quot;localhost&quot;
+</span>29 <span style=''>
+</span>30 <span style=''>  override lazy val containerConfig: Config = {
+</span>31 <span style=''>    val sys = new Properties()
+</span>32 <span style=''>    sys.putAll(System.getProperties())
+</span>33 <span style=''>    val sysProps = Parseable.newProperties(sys, ConfigParseOptions.defaults().setOriginDescription(&quot;system properties&quot;)).parse()
+</span>34 <span style=''>    val envProps = ConfigFactory.systemEnvironment()
+</span>35 <span style=''>
+</span>36 <span style=''>    ConfigFactory.parseFile(
+</span>37 <span style=''>      new File(profileConfigDirectory, &quot;application.conf&quot;),
+</span>38 <span style=''>      ConfigParseOptions.defaults().setAllowMissing(false)
+</span>39 <span style=''>    ).
+</span>40 <span style=''>      withFallback(sysProps).
+</span>41 <span style=''>      withFallback(envProps).
+</span>42 <span style=''>      withFallback(ConfigFactory.parseResources(getClass().getClassLoader(), &quot;application-defaults.conf&quot;)).
+</span>43 <span style=''>      resolve()
+</span>44 <span style=''>  }
+</span>45 <span style=''>
+</span>46 <span style=''>  override lazy val uuid: String = salt
+</span>47 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          15958
+        </td>
+        <td>
+          476
+          -
+          493
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          15766
+        </td>
+        <td>
+          508
+          -
+          519
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          15917
+        </td>
+        <td>
+          523
+          -
+          525
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          15902
+        </td>
+        <td>
+          496
+          -
+          526
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          15826
+        </td>
+        <td>
+          506
+          -
+          525
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

@@ -1,0 +1,431 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/scep/standalone/Cmdline.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security.scep.standalone
+</span>2 <span style=''>
+</span>3 <span style=''>import de.tototec.cmdoption.CmdOption
+</span>4 <span style=''>
+</span>5 <span style=''>class Cmdline {
+</span>6 <span style=''>
+</span>7 <span style=''>  private val defaultTimeout: Int = </span><span style='background: #AEF1AE'>20</span><span style=''>
+</span>8 <span style=''>
+</span>9 <span style=''>  @CmdOption(names = Array(&quot;--help&quot;, &quot;-h&quot;), description = &quot;Show this help&quot;, isHelp = true)
+</span>10 <span style=''>  var help: Boolean = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>11 <span style=''>
+</span>12 <span style=''>  @CmdOption(
+</span>13 <span style=''>    names = Array(&quot;--password&quot;, &quot;-p&quot;),
+</span>14 <span style=''>    args = Array(&quot;seed&quot;),
+</span>15 <span style=''>    description = &quot;Generate a password from a given seed and salt. The salt is either implicitly set or explicitly given with --salt&quot;
+</span>16 <span style=''>  )
+</span>17 <span style=''>  var _password: String = _
+</span>18 <span style=''>  def password: Option[String] = </span><span style='background: #AEF1AE'>Option(_password)</span><span style=''>
+</span>19 <span style=''>
+</span>20 <span style=''>  @CmdOption(
+</span>21 <span style=''>    names = Array(&quot;--salt&quot;, &quot;-s&quot;),
+</span>22 <span style=''>    args = Array(&quot;salt&quot;),
+</span>23 <span style=''>    description = &quot;Use this salt when generating a password with --password&quot;
+</span>24 <span style=''>  )
+</span>25 <span style=''>  var _salt: String = _
+</span>26 <span style=''>  def salt: Option[String] = </span><span style='background: #AEF1AE'>Option(_salt)</span><span style=''>
+</span>27 <span style=''>
+</span>28 <span style=''>  @CmdOption(
+</span>29 <span style=''>    names = Array(&quot;--refresh-certs&quot;, &quot;-r&quot;),
+</span>30 <span style=''>    description = &quot;Refresh or initial create a Java key store containing certificates from SCEP server&quot;
+</span>31 <span style=''>  )
+</span>32 <span style=''>  var refreshCerts: Boolean = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>33 <span style=''>
+</span>34 <span style=''>  @CmdOption(
+</span>35 <span style=''>    names = Array(&quot;--csr&quot;),
+</span>36 <span style=''>    args = Array(&quot;csr-file&quot;),
+</span>37 <span style=''>    description = &quot;Use the given certificate signign request file (CSR) as starting point&quot;,
+</span>38 <span style=''>    hidden = true
+</span>39 <span style=''>  )
+</span>40 <span style=''>  var _csrFile: String = _
+</span>41 <span style=''>  def csrFile: Option[String] = </span><span style='background: #AEF1AE'>Option(_csrFile)</span><span style=''>
+</span>42 <span style=''>
+</span>43 <span style=''>  @CmdOption(
+</span>44 <span style=''>    names = Array(&quot;--cert-info&quot;),
+</span>45 <span style=''>    args = Array(&quot;cert-file&quot;),
+</span>46 <span style=''>    description = &quot;Try to give some info about the given {0}&quot;,
+</span>47 <span style=''>    // hidden, because only implemented partially
+</span>48 <span style=''>    hidden = true
+</span>49 <span style=''>  )
+</span>50 <span style=''>  var _infoFile: String = _
+</span>51 <span style=''>  def infoFile: Option[String] = </span><span style='background: #AEF1AE'>Option(_infoFile)</span><span style=''>
+</span>52 <span style=''>
+</span>53 <span style=''>  @CmdOption(
+</span>54 <span style=''>    names = Array(&quot;--timeout&quot;),
+</span>55 <span style=''>    args = Array(&quot;sec&quot;),
+</span>56 <span style=''>    description = &quot;Timeout (in seconds) used when refreshing certificates&quot;
+</span>57 <span style=''>  )
+</span>58 <span style=''>  var timeout: Int = </span><span style='background: #AEF1AE'>defaultTimeout</span><span style=''>
+</span>59 <span style=''>
+</span>60 <span style=''>  @CmdOption(
+</span>61 <span style=''>    names = Array(&quot;--base-dir&quot;),
+</span>62 <span style=''>    args = Array(&quot;dir&quot;),
+</span>63 <span style=''>    description = &quot;Alternative base directory (aka 'scepclient.home', used to lookup the 'etc' directory)&quot;
+</span>64 <span style=''>  )
+</span>65 <span style=''>  var _baseDir: String = _
+</span>66 <span style=''>  def baseDir: Option[String] = </span><span style='background: #AEF1AE'>Option(_baseDir)</span><span style=''>
+</span>67 <span style=''>
+</span>68 <span style=''>  // Must use the hardcoded exit code here, otherwise doc generation fails
+</span>69 <span style=''>  @CmdOption(
+</span>70 <span style=''>    names = Array(&quot;--expect-refresh&quot;),
+</span>71 <span style=''>    description = &quot;Expected a refreshed certificate. If no certificate was refreshed the application will exit with exit code 5&quot;,
+</span>72 <span style=''>    requires = Array(&quot;--refresh-certs&quot;)
+</span>73 <span style=''>  )
+</span>74 <span style=''>  var expectRefresh: Boolean = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>75 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          7
+        </td>
+        <td>
+          15832
+        </td>
+        <td>
+          134
+          -
+          136
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          10
+        </td>
+        <td>
+          15785
+        </td>
+        <td>
+          251
+          -
+          256
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          15900
+        </td>
+        <td>
+          536
+          -
+          553
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          15824
+        </td>
+        <td>
+          543
+          -
+          552
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          15963
+        </td>
+        <td>
+          764
+          -
+          777
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          15833
+        </td>
+        <td>
+          771
+          -
+          776
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          15911
+        </td>
+        <td>
+          975
+          -
+          980
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          15840
+        </td>
+        <td>
+          1227
+          -
+          1243
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          15925
+        </td>
+        <td>
+          1234
+          -
+          1242
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          51
+        </td>
+        <td>
+          15839
+        </td>
+        <td>
+          1520
+          -
+          1537
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          51
+        </td>
+        <td>
+          15772
+        </td>
+        <td>
+          1527
+          -
+          1536
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          58
+        </td>
+        <td>
+          15964
+        </td>
+        <td>
+          1710
+          -
+          1724
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          15787
+        </td>
+        <td>
+          1968
+          -
+          1984
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          15907
+        </td>
+        <td>
+          1975
+          -
+          1983
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          74
+        </td>
+        <td>
+          15931
+        </td>
+        <td>
+          2319
+          -
+          2324
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

@@ -1,0 +1,514 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/websocket/internal/BlendedCommandPackage.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.websocket.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import java.util.Properties
+</span>4 <span style=''>
+</span>5 <span style=''>import akka.actor.ActorSystem
+</span>6 <span style=''>import blended.security.login.api.Token
+</span>7 <span style=''>import blended.websocket.WsUpdateEmitter.emit
+</span>8 <span style=''>import blended.websocket._
+</span>9 <span style=''>import blended.websocket.json.PrickleProtocol._
+</span>10 <span style=''>import prickle._
+</span>11 <span style=''>
+</span>12 <span style=''>object BlendedCommandPackage {
+</span>13 <span style=''>
+</span>14 <span style=''>  val version : String = {
+</span>15 <span style=''>    val props : Properties = </span><span style='background: #AEF1AE'>new Properties()</span><span style=''>
+</span>16 <span style=''>    </span><span style='background: #AEF1AE'>props.load(getClass().getResourceAsStream(&quot;version.properties&quot;))</span><span style=''>
+</span>17 <span style=''>    </span><span style='background: #AEF1AE'>Option(props.get(&quot;version&quot;)).map(_.toString).getOrElse(&quot;&quot;)</span><span style=''>
+</span>18 <span style=''>  }
+</span>19 <span style=''>}
+</span>20 <span style=''>
+</span>21 <span style=''>class BlendedCommandPackage(
+</span>22 <span style=''>  override val namespace : String = &quot;blended&quot;
+</span>23 <span style=''>)(implicit system: ActorSystem) extends WebSocketCommandPackage {
+</span>24 <span style=''>
+</span>25 <span style=''>  override type T = BlendedWsMessage
+</span>26 <span style=''>
+</span>27 <span style=''>  override def unpickler: Unpickler[T] = </span><span style='background: #AEF1AE'>wsMessagesPicklerPair.unpickler</span><span style=''>
+</span>28 <span style=''>
+</span>29 <span style=''>  private class VersionCommand(
+</span>30 <span style=''>    override val cmdPackage : WebSocketCommandPackage
+</span>31 <span style=''>  ) extends WebSocketCommandHandler[T] {
+</span>32 <span style=''>
+</span>33 <span style=''>    override val name : String = </span><span style='background: #AEF1AE'>&quot;version&quot;</span><span style=''>
+</span>34 <span style=''>    override val description: String = </span><span style='background: #AEF1AE'>&quot;Return the blended version&quot;</span><span style=''>
+</span>35 <span style=''>
+</span>36 <span style=''>    override def doHandleCommand: PartialFunction[BlendedWsMessage, Token =&gt; WsContext] = {
+</span>37 <span style=''>      case _ : Version =&gt; t =&gt;
+</span>38 <span style=''>        val ctxt : WsContext = </span><span style='background: #AEF1AE'>WsContext(namespace = namespace, name = name)</span><span style=''>
+</span>39 <span style=''>        // This is a side effect, which will push the version info to the client
+</span>40 <span style=''>        </span><span style='background: #AEF1AE'>emit[BlendedWsMessage](
+</span>41 <span style=''></span><span style='background: #AEF1AE'>          msg = VersionResponse(BlendedCommandPackage.version),
+</span>42 <span style=''></span><span style='background: #AEF1AE'>          token = t,
+</span>43 <span style=''></span><span style='background: #AEF1AE'>          context = ctxt,
+</span>44 <span style=''></span><span style='background: #AEF1AE'>          pickler = wsMessagesPicklerPair.pickler
+</span>45 <span style=''></span><span style='background: #AEF1AE'>        )(system)</span><span style=''>
+</span>46 <span style=''>        ctxt
+</span>47 <span style=''>    }
+</span>48 <span style=''>  }
+</span>49 <span style=''>
+</span>50 <span style=''>  override def commands: Seq[WebSocketCommandHandler[T]] = </span><span style='background: #AEF1AE'>Seq(
+</span>51 <span style=''></span><span style='background: #AEF1AE'>    new VersionCommand(this)
+</span>52 <span style=''></span><span style='background: #AEF1AE'>  )</span><span style=''>
+</span>53 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          16615
+        </td>
+        <td>
+          362
+          -
+          378
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          16809
+        </td>
+        <td>
+          394
+          -
+          446
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          16904
+        </td>
+        <td>
+          383
+          -
+          447
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          16962
+        </td>
+        <td>
+          452
+          -
+          510
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          16576
+        </td>
+        <td>
+          739
+          -
+          770
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          16889
+        </td>
+        <td>
+          933
+          -
+          942
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          16671
+        </td>
+        <td>
+          982
+          -
+          1010
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          16509
+        </td>
+        <td>
+          1102
+          -
+          1102
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          16585
+        </td>
+        <td>
+          1166
+          -
+          1166
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          16555
+        </td>
+        <td>
+          1188
+          -
+          1197
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          16713
+        </td>
+        <td>
+          1206
+          -
+          1210
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          16590
+        </td>
+        <td>
+          1166
+          -
+          1211
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          16972
+        </td>
+        <td>
+          1166
+          -
+          1166
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          16938
+        </td>
+        <td>
+          1357
+          -
+          1386
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          16765
+        </td>
+        <td>
+          1341
+          -
+          1387
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          16936
+        </td>
+        <td>
+          1456
+          -
+          1485
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          45
+        </td>
+        <td>
+          16686
+        </td>
+        <td>
+          1496
+          -
+          1502
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          45
+        </td>
+        <td>
+          16892
+        </td>
+        <td>
+          1301
+          -
+          1503
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          50
+        </td>
+        <td>
+          16747
+        </td>
+        <td>
+          1587
+          -
+          1624
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          51
+        </td>
+        <td>
+          16638
+        </td>
+        <td>
+          1596
+          -
+          1620
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

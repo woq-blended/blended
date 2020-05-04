@@ -1,0 +1,356 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/streams/dispatcher/internal/ProviderResolver.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.streams.dispatcher.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.container.context.api.ContainerContext
+</span>4 <span style=''>import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
+</span>5 <span style=''>import blended.util.config.Implicits._
+</span>6 <span style=''>import com.typesafe.config.Config
+</span>7 <span style=''>
+</span>8 <span style=''>import scala.util.Try
+</span>9 <span style=''>
+</span>10 <span style=''>object ProviderResolver {
+</span>11 <span style=''>
+</span>12 <span style=''>  private[dispatcher] def providerFromConfig(
+</span>13 <span style=''>    ctCtxt : ContainerContext,
+</span>14 <span style=''>    registry : BridgeProviderRegistry,
+</span>15 <span style=''>    cfg : Config,
+</span>16 <span style=''>    vendorPath : String,
+</span>17 <span style=''>    providerPath : String
+</span>18 <span style=''>  ) : Try[Option[BridgeProviderConfig]] = </span><span style='background: #AEF1AE'>Try {
+</span>19 <span style=''></span><span style='background: #AEF1AE'>
+</span>20 <span style=''></span><span style='background: #AEF1AE'>    (cfg.getStringOption(vendorPath), cfg.getStringOption(providerPath)) match {
+</span>21 <span style=''></span><span style='background: #AEF1AE'>      case (Some(v), Some(p)) =&gt;
+</span>22 <span style=''></span><span style='background: #AEF1AE'>        Some(getProvider(
+</span>23 <span style=''></span><span style='background: #AEF1AE'>          registry,
+</span>24 <span style=''></span><span style='background: #AEF1AE'>          ctCtxt.resolveString(v).map(_.toString()).get,
+</span>25 <span style=''></span><span style='background: #AEF1AE'>          ctCtxt.resolveString(p).map(_.toString()).get
+</span>26 <span style=''></span><span style='background: #AEF1AE'>        ).get)
+</span>27 <span style=''></span><span style='background: #AEF1AE'>      case (_, _) =&gt;
+</span>28 <span style=''></span><span style='background: #AEF1AE'>        None
+</span>29 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>30 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>31 <span style=''>
+</span>32 <span style=''>  private[dispatcher] def getProvider(
+</span>33 <span style=''>    registry : BridgeProviderRegistry,
+</span>34 <span style=''>    vendor : String,
+</span>35 <span style=''>    provider : String
+</span>36 <span style=''>  ) : Try[BridgeProviderConfig] = </span><span style='background: #AEF1AE'>Try {
+</span>37 <span style=''></span><span style='background: #AEF1AE'>    registry.jmsProvider(vendor, provider) match {
+</span>38 <span style=''></span><span style='background: #AEF1AE'>      case None    =&gt; </span><span style='background: #F0ADAD'>throw new Exception(s&quot;Event provider [$vendor:$provider] is not configured in provider registry.&quot;)</span><span style='background: #AEF1AE'>
+</span>39 <span style=''></span><span style='background: #AEF1AE'>      case Some(p) =&gt; p
+</span>40 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>41 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>42 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          15694
+        </td>
+        <td>
+          523
+          -
+          861
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          15337
+        </td>
+        <td>
+          652
+          -
+          817
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          14895
+        </td>
+        <td>
+          728
+          -
+          740
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          14907
+        </td>
+        <td>
+          707
+          -
+          707
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          15264
+        </td>
+        <td>
+          700
+          -
+          745
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          15688
+        </td>
+        <td>
+          764
+          -
+          764
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          14749
+        </td>
+        <td>
+          757
+          -
+          802
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          14512
+        </td>
+        <td>
+          785
+          -
+          797
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          15187
+        </td>
+        <td>
+          657
+          -
+          816
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          14415
+        </td>
+        <td>
+          847
+          -
+          851
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          15175
+        </td>
+        <td>
+          1018
+          -
+          1229
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          14417
+        </td>
+        <td>
+          1028
+          -
+          1066
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          14950
+        </td>
+        <td>
+          1097
+          -
+          1195
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

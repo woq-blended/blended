@@ -1,0 +1,348 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/jmx/internal/BlendedJmxActivator.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.jmx.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import java.lang.management.ManagementFactory
+</span>4 <span style=''>
+</span>5 <span style=''>import blended.akka.ActorSystemWatching
+</span>6 <span style=''>import blended.jmx.statistics.StatisticsActor
+</span>7 <span style=''>import blended.jmx.{BlendedMBeanServerFacade, OpenMBeanExporter, OpenMBeanMapper}
+</span>8 <span style=''>import domino.DominoActivator
+</span>9 <span style=''>import javax.management.MBeanServer
+</span>10 <span style=''>
+</span>11 <span style=''>class BlendedJmxActivator extends DominoActivator with ActorSystemWatching {
+</span>12 <span style=''>
+</span>13 <span style=''>  </span><span style='background: #AEF1AE'>whenBundleActive {
+</span>14 <span style=''></span><span style='background: #AEF1AE'>    val mbeanServer0 : MBeanServer = ManagementFactory.getPlatformMBeanServer()
+</span>15 <span style=''></span><span style='background: #AEF1AE'>    mbeanServer0.providesService[MBeanServer]
+</span>16 <span style=''></span><span style='background: #AEF1AE'>
+</span>17 <span style=''></span><span style='background: #AEF1AE'>    val facade : BlendedMBeanServerFacade = new BlendedMBeanServerFacadeImpl(mbeanServer0)
+</span>18 <span style=''></span><span style='background: #AEF1AE'>    facade.providesService[BlendedMBeanServerFacade]
+</span>19 <span style=''></span><span style='background: #AEF1AE'>
+</span>20 <span style=''></span><span style='background: #AEF1AE'>    val mbeanMapper = new OpenMBeanMapperImpl()
+</span>21 <span style=''></span><span style='background: #AEF1AE'>    mbeanMapper.providesService[OpenMBeanMapper]
+</span>22 <span style=''></span><span style='background: #AEF1AE'>
+</span>23 <span style=''></span><span style='background: #AEF1AE'>    val mbeanExporter = new OpenMBeanExporterImpl(mbeanMapper) {
+</span>24 <span style=''></span><span style='background: #AEF1AE'>      override protected def mbeanServer: MBeanServer = mbeanServer0
+</span>25 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>26 <span style=''></span><span style='background: #AEF1AE'>    mbeanExporter.providesService[OpenMBeanExporter]
+</span>27 <span style=''></span><span style='background: #AEF1AE'>
+</span>28 <span style=''></span><span style='background: #AEF1AE'>    whenActorSystemAvailable { osgiConfig =&gt;
+</span>29 <span style=''></span><span style='background: #AEF1AE'>      osgiConfig.system.actorOf(StatisticsActor.props(mbeanExporter))
+</span>30 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>31 <span style=''></span><span style='background: #AEF1AE'>
+</span>32 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>33 <span style=''>
+</span>34 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          4659
+        </td>
+        <td>
+          392
+          -
+          1100
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          5138
+        </td>
+        <td>
+          448
+          -
+          490
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          4671
+        </td>
+        <td>
+          495
+          -
+          536
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          4453
+        </td>
+        <td>
+          582
+          -
+          628
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          4850
+        </td>
+        <td>
+          633
+          -
+          681
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          4939
+        </td>
+        <td>
+          705
+          -
+          730
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          4690
+        </td>
+        <td>
+          735
+          -
+          779
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          5139
+        </td>
+        <td>
+          805
+          -
+          808
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          4597
+        </td>
+        <td>
+          925
+          -
+          973
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          4922
+        </td>
+        <td>
+          979
+          -
+          1095
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          4403
+        </td>
+        <td>
+          1052
+          -
+          1088
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          4444
+        </td>
+        <td>
+          1051
+          -
+          1051
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          4943
+        </td>
+        <td>
+          1026
+          -
+          1089
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

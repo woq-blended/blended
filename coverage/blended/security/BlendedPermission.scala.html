@@ -1,0 +1,1155 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/BlendedPermission.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.security.json.PrickleProtocol._
+</span>4 <span style=''>import prickle.Unpickle
+</span>5 <span style=''>
+</span>6 <span style=''>import scala.collection.{immutable =&gt; sci}
+</span>7 <span style=''>import scala.util.Try
+</span>8 <span style=''>
+</span>9 <span style=''>/**
+</span>10 <span style=''> *
+</span>11 <span style=''> * @param permissionClass The name of the entity that is controlled, i.e. container. If &lt;code&gt;None&lt;/code&gt;,
+</span>12 <span style=''> *                        the permission won't grant access to any object.
+</span>13 <span style=''> * @param properties Properties restricting the access to controlled object, further specified in the
+</span>14 <span style=''> *                   &lt;[[allows()]] method.
+</span>15 <span style=''> */
+</span>16 <span style=''>case class BlendedPermission(
+</span>17 <span style=''>  permissionClass : Option[String],
+</span>18 <span style=''>  properties : Map[String, sci.Seq[String]] = Map.empty
+</span>19 <span style=''>) {
+</span>20 <span style=''>
+</span>21 <span style=''>  def allows(other : BlendedPermission) : Boolean = {
+</span>22 <span style=''>
+</span>23 <span style=''>    def checkProperties : Boolean = {
+</span>24 <span style=''>
+</span>25 <span style=''>      val props : Seq[(String, Seq[String], Option[Seq[String]])] = </span><span style='background: #AEF1AE'>properties.map(p =&gt; (p._1, p._2, other.properties.get(p._1))).toSeq</span><span style=''>
+</span>26 <span style=''>
+</span>27 <span style=''>      </span><span style='background: #AEF1AE'>props.forall { p =&gt;
+</span>28 <span style=''></span><span style='background: #AEF1AE'>        p._3 match {
+</span>29 <span style=''></span><span style='background: #AEF1AE'>          case None    =&gt; false
+</span>30 <span style=''></span><span style='background: #AEF1AE'>          case Some(l) =&gt; l.forall(s =&gt; p._2.contains(s))
+</span>31 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>32 <span style=''></span><span style='background: #AEF1AE'>      }</span><span style=''>
+</span>33 <span style=''>    }
+</span>34 <span style=''>
+</span>35 <span style=''>    </span><span style='background: #AEF1AE'>permissionClass.equals(other.permissionClass) &amp;&amp; checkProperties</span><span style=''>
+</span>36 <span style=''>  }
+</span>37 <span style=''>
+</span>38 <span style=''>  /**
+</span>39 <span style=''>   * Merge this permission with another permission.
+</span>40 <span style=''>   *
+</span>41 <span style=''>   * If one of the permissions to be merged has an empty permission class, the result wil always
+</span>42 <span style=''>   * have an empty permission class as well, in other words the result will not grant access to
+</span>43 <span style=''>   * any object.
+</span>44 <span style=''>   *
+</span>45 <span style=''>   * Also if the permission classes of the two permissions are different, the result will have
+</span>46 <span style=''>   * an empty permission class.
+</span>47 <span style=''>   *
+</span>48 <span style=''>   * @param other The permission to merged.
+</span>49 <span style=''>   * @return The resulting permission.
+</span>50 <span style=''>   */
+</span>51 <span style=''>  def merge(other : BlendedPermission) : BlendedPermission = {
+</span>52 <span style=''>    (permissionClass, other.permissionClass) match {
+</span>53 <span style=''>      case (None, _) =&gt; </span><span style='background: #AEF1AE'>BlendedPermission(None)</span><span style=''>
+</span>54 <span style=''>      case (_, None) =&gt; </span><span style='background: #AEF1AE'>BlendedPermission(None)</span><span style=''>
+</span>55 <span style=''>      case (Some(c1), Some(c2)) =&gt; if (</span><span style='background: #AEF1AE'>c1 != c2</span><span style=''>) {
+</span>56 <span style=''>        </span><span style='background: #AEF1AE'>BlendedPermission(None)</span><span style=''>
+</span>57 <span style=''>      } else </span><span style='background: #AEF1AE'>{
+</span>58 <span style=''></span><span style='background: #AEF1AE'>
+</span>59 <span style=''></span><span style='background: #AEF1AE'>        // if for any given property one of the permissions does not have a restriction defined
+</span>60 <span style=''></span><span style='background: #AEF1AE'>        // the result will also not restrict on that property.
+</span>61 <span style=''></span><span style='background: #AEF1AE'>
+</span>62 <span style=''></span><span style='background: #AEF1AE'>        val props = properties
+</span>63 <span style=''></span><span style='background: #AEF1AE'>          // we need the properties defined in both permissions
+</span>64 <span style=''></span><span style='background: #AEF1AE'>          .filterKeys(k =&gt; other.properties.get(k).isDefined)
+</span>65 <span style=''></span><span style='background: #AEF1AE'>          // then we combine the properties of both permissions
+</span>66 <span style=''></span><span style='background: #AEF1AE'>          .map { case (k, v) =&gt; (k, (v ++ other.properties.getOrElse(k, </span><span style='background: #F0ADAD'>sci.Seq.empty</span><span style='background: #AEF1AE'>)).distinct) }
+</span>67 <span style=''></span><span style='background: #AEF1AE'>
+</span>68 <span style=''></span><span style='background: #AEF1AE'>        BlendedPermission(
+</span>69 <span style=''></span><span style='background: #AEF1AE'>          permissionClass = permissionClass,
+</span>70 <span style=''></span><span style='background: #AEF1AE'>          properties = props
+</span>71 <span style=''></span><span style='background: #AEF1AE'>        )
+</span>72 <span style=''></span><span style='background: #AEF1AE'>      }</span><span style=''>
+</span>73 <span style=''>    }
+</span>74 <span style=''>  }
+</span>75 <span style=''>}
+</span>76 <span style=''>
+</span>77 <span style=''>object BlendedPermissions {
+</span>78 <span style=''>  def fromJson(json : String) : Try[BlendedPermissions] = </span><span style='background: #F0ADAD'>Unpickle[BlendedPermissions].fromString(json)</span><span style=''>
+</span>79 <span style=''>}
+</span>80 <span style=''>
+</span>81 <span style=''>case class BlendedPermissions(granted : sci.Seq[BlendedPermission] = sci.Seq.empty[BlendedPermission]) {
+</span>82 <span style=''>
+</span>83 <span style=''>  /**
+</span>84 <span style=''>   * Merge all permissions in a sequence from left to right
+</span>85 <span style=''>   * @param permissions The permissions to merged
+</span>86 <span style=''>   * @return The merged permission
+</span>87 <span style=''>   *
+</span>88 <span style=''>   * @see [[BlendedPermission.merge()]]
+</span>89 <span style=''>   */
+</span>90 <span style=''>  def merge(permissions : Seq[BlendedPermission]) : BlendedPermission = permissions match {
+</span>91 <span style=''>    case Seq()          =&gt; </span><span style='background: #F0ADAD'>BlendedPermission(None)</span><span style=''>
+</span>92 <span style=''>    case h +: Seq()     =&gt; h
+</span>93 <span style=''>    case h +: s +: rest =&gt; </span><span style='background: #AEF1AE'>merge(h.merge(s) +: rest)</span><span style=''>
+</span>94 <span style=''>  }
+</span>95 <span style=''>
+</span>96 <span style=''>  /**
+</span>97 <span style=''>   * Return a BlendedPermissions object where all permissions with the same permissionClass
+</span>98 <span style=''>   * are merged
+</span>99 <span style=''>   */
+</span>100 <span style=''>  lazy val merged : BlendedPermissions = {
+</span>101 <span style=''>    val grouped = granted.groupBy(_.permissionClass)
+</span>102 <span style=''>    BlendedPermissions(grouped.values.map(merge).toList)
+</span>103 <span style=''>  }
+</span>104 <span style=''>
+</span>105 <span style=''>  def allows(p : BlendedPermission) : Boolean = </span><span style='background: #F0ADAD'>granted.exists { g =&gt; g.allows(p) }</span><span style=''>
+</span>106 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          12261
+        </td>
+        <td>
+          791
+          -
+          858
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          12386
+        </td>
+        <td>
+          845
+          -
+          849
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          12117
+        </td>
+        <td>
+          812
+          -
+          816
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          12242
+        </td>
+        <td>
+          805
+          -
+          805
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          12164
+        </td>
+        <td>
+          824
+          -
+          850
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          12241
+        </td>
+        <td>
+          811
+          -
+          851
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          12384
+        </td>
+        <td>
+          818
+          -
+          822
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          12136
+        </td>
+        <td>
+          866
+          -
+          1014
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          12291
+        </td>
+        <td>
+          894
+          -
+          898
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          12283
+        </td>
+        <td>
+          933
+          -
+          938
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          12156
+        </td>
+        <td>
+          965
+          -
+          996
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          12374
+        </td>
+        <td>
+          979
+          -
+          995
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          12413
+        </td>
+        <td>
+          1026
+          -
+          1090
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          12279
+        </td>
+        <td>
+          1735
+          -
+          1735
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          12403
+        </td>
+        <td>
+          1753
+          -
+          1757
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          12121
+        </td>
+        <td>
+          1735
+          -
+          1758
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          12303
+        </td>
+        <td>
+          1783
+          -
+          1806
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          12398
+        </td>
+        <td>
+          1783
+          -
+          1783
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          12373
+        </td>
+        <td>
+          1801
+          -
+          1805
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          55
+        </td>
+        <td>
+          12155
+        </td>
+        <td>
+          1846
+          -
+          1854
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          12257
+        </td>
+        <td>
+          1866
+          -
+          1889
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          12412
+        </td>
+        <td>
+          1866
+          -
+          1889
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          12086
+        </td>
+        <td>
+          1866
+          -
+          1866
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          12103
+        </td>
+        <td>
+          1884
+          -
+          1888
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          57
+        </td>
+        <td>
+          12120
+        </td>
+        <td>
+          1903
+          -
+          2506
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          12278
+        </td>
+        <td>
+          2188
+          -
+          2221
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          12249
+        </td>
+        <td>
+          2319
+          -
+          2384
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          12302
+        </td>
+        <td>
+          2359
+          -
+          2372
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          12248
+        </td>
+        <td>
+          2326
+          -
+          2326
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          12179
+        </td>
+        <td>
+          2086
+          -
+          2386
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          12145
+        </td>
+        <td>
+          2329
+          -
+          2373
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          12378
+        </td>
+        <td>
+          2324
+          -
+          2383
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          12408
+        </td>
+        <td>
+          2302
+          -
+          2302
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          12366
+        </td>
+        <td>
+          2396
+          -
+          2498
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          12115
+        </td>
+        <td>
+          2443
+          -
+          2458
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          12236
+        </td>
+        <td>
+          2606
+          -
+          2651
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          12146
+        </td>
+        <td>
+          2635
+          -
+          2635
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          12104
+        </td>
+        <td>
+          2614
+          -
+          2614
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          12405
+        </td>
+        <td>
+          2645
+          -
+          2645
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          12399
+        </td>
+        <td>
+          2606
+          -
+          2634
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          12269
+        </td>
+        <td>
+          3100
+          -
+          3104
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          12209
+        </td>
+        <td>
+          3082
+          -
+          3105
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          12376
+        </td>
+        <td>
+          3082
+          -
+          3082
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          12353
+        </td>
+        <td>
+          3162
+          -
+          3187
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          12148
+        </td>
+        <td>
+          3179
+          -
+          3186
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          12118
+        </td>
+        <td>
+          3179
+          -
+          3179
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          12287
+        </td>
+        <td>
+          3519
+          -
+          3554
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          105
+        </td>
+        <td>
+          12367
+        </td>
+        <td>
+          3541
+          -
+          3552
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

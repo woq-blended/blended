@@ -1,0 +1,513 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/streams/StreamFactories.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.streams
+</span>2 <span style=''>
+</span>3 <span style=''>import java.util.concurrent.atomic.AtomicBoolean
+</span>4 <span style=''>
+</span>5 <span style=''>import akka.actor.{ActorRef, ActorSystem}
+</span>6 <span style=''>import akka.stream._
+</span>7 <span style=''>import akka.stream.scaladsl.{Keep, Sink, Source}
+</span>8 <span style=''>import akka.{Done, NotUsed}
+</span>9 <span style=''>import blended.streams.processor.{CollectingActor, Collector}
+</span>10 <span style=''>import blended.util.logging.Logger
+</span>11 <span style=''>
+</span>12 <span style=''>import scala.concurrent.duration.FiniteDuration
+</span>13 <span style=''>import scala.concurrent.{ExecutionContext, Future}
+</span>14 <span style=''>import scala.reflect.ClassTag
+</span>15 <span style=''>
+</span>16 <span style=''>object StreamFactories {
+</span>17 <span style=''>
+</span>18 <span style=''>  private val log : Logger = </span><span style='background: #AEF1AE'>Logger[StreamFactories.type]</span><span style=''>
+</span>19 <span style=''>
+</span>20 <span style=''>  def runSourceWithTimeLimit[T](
+</span>21 <span style=''>    name : String,
+</span>22 <span style=''>    source : Source[T, NotUsed],
+</span>23 <span style=''>    timeout : Option[FiniteDuration],
+</span>24 <span style=''>    onCollected : Option[T =&gt; Unit] = None,
+</span>25 <span style=''>    completeOn : Option[Seq[T] =&gt; Boolean] = None
+</span>26 <span style=''>  )(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : Collector[T] =
+</span>27 <span style=''>    </span><span style='background: #AEF1AE'>runMatSourceWithTimeLimit(name, source, timeout, onCollected, completeOn)._2</span><span style=''>
+</span>28 <span style=''>
+</span>29 <span style=''>  def runMatSourceWithTimeLimit[T, Mat](
+</span>30 <span style=''>    name : String,
+</span>31 <span style=''>    source : Source[T, Mat],
+</span>32 <span style=''>    timeout : Option[FiniteDuration],
+</span>33 <span style=''>    onCollected : Option[T =&gt; Unit] = None,
+</span>34 <span style=''>    completeOn : Option[Seq[T] =&gt; Boolean] = None
+</span>35 <span style=''>  )(implicit system : ActorSystem, materializer : Materializer, clazz : ClassTag[T]) : (Mat, Collector[T]) = {
+</span>36 <span style=''>
+</span>37 <span style=''>    implicit val eCtxt : ExecutionContext = </span><span style='background: #AEF1AE'>system.dispatcher</span><span style=''>
+</span>38 <span style=''>    val stopped = </span><span style='background: #AEF1AE'>new AtomicBoolean(false)</span><span style=''>
+</span>39 <span style=''>
+</span>40 <span style=''>    val collector = </span><span style='background: #AEF1AE'>Collector[T](name = name, onCollected = onCollected, completeOn = completeOn)</span><span style=''>
+</span>41 <span style=''>
+</span>42 <span style=''>    val sink = </span><span style='background: #AEF1AE'>Sink.actorRef(collector.actor, CollectingActor.Completed)</span><span style=''>
+</span>43 <span style=''>
+</span>44 <span style=''>    val ((mat, killswitch), done) = source
+</span>45 <span style=''>      .viaMat(KillSwitches.single)(Keep.both)
+</span>46 <span style=''>      .watchTermination()(Keep.both)
+</span>47 <span style=''>      .toMat(sink)(Keep.left)
+</span>48 <span style=''>      .run()
+</span>49 <span style=''>
+</span>50 <span style=''>    </span><span style='background: #AEF1AE'>done.onComplete {
+</span>51 <span style=''></span><span style='background: #AEF1AE'>      case _ =&gt; stopped.set(true)
+</span>52 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>53 <span style=''>
+</span>54 <span style=''>    </span><span style='background: #AEF1AE'>timeout.foreach{ t =&gt;
+</span>55 <span style=''></span><span style='background: #AEF1AE'>      akka.pattern.after(t, system.scheduler) {
+</span>56 <span style=''></span><span style='background: #AEF1AE'>        if (!stopped.get()) {
+</span>57 <span style=''></span><span style='background: #AEF1AE'>          log.info(s&quot;Stopping collector [$name] after [${timeout}]&quot;)
+</span>58 <span style=''></span><span style='background: #AEF1AE'>          killswitch.shutdown()
+</span>59 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>60 <span style=''></span><span style='background: #AEF1AE'>        Future { Done }
+</span>61 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>62 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>63 <span style=''>
+</span>64 <span style=''>    </span><span style='background: #AEF1AE'>(mat, collector)</span><span style=''>
+</span>65 <span style=''>  }
+</span>66 <span style=''>
+</span>67 <span style=''>  def keepAliveSource[T](bufferSize : Int)(implicit system : ActorSystem, materializer : Materializer) : Source[T, (ActorRef, KillSwitch)] = {
+</span>68 <span style=''>
+</span>69 <span style=''>    </span><span style='background: #AEF1AE'>Source
+</span>70 <span style=''></span><span style='background: #AEF1AE'>      .actorRef[T](bufferSize, OverflowStrategy.fail)
+</span>71 <span style=''></span><span style='background: #AEF1AE'>      .viaMat(KillSwitches.single)(Keep.both)</span><span style=''>
+</span>72 <span style=''>  }
+</span>73 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          22064
+        </td>
+        <td>
+          498
+          -
+          526
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          23351
+        </td>
+        <td>
+          851
+          -
+          927
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          21615
+        </td>
+        <td>
+          1306
+          -
+          1323
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          20137
+        </td>
+        <td>
+          1342
+          -
+          1366
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          22112
+        </td>
+        <td>
+          1388
+          -
+          1465
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          22329
+        </td>
+        <td>
+          1513
+          -
+          1538
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          23788
+        </td>
+        <td>
+          1496
+          -
+          1511
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          20145
+        </td>
+        <td>
+          1482
+          -
+          1539
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          19201
+        </td>
+        <td>
+          1569
+          -
+          1569
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          22006
+        </td>
+        <td>
+          1551
+          -
+          1551
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          20543
+        </td>
+        <td>
+          1556
+          -
+          1556
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          50
+        </td>
+        <td>
+          23392
+        </td>
+        <td>
+          1715
+          -
+          1772
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          20427
+        </td>
+        <td>
+          1778
+          -
+          2026
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          55
+        </td>
+        <td>
+          19258
+        </td>
+        <td>
+          1806
+          -
+          2020
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          20628
+        </td>
+        <td>
+          2032
+          -
+          2048
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          21627
+        </td>
+        <td>
+          2240
+          -
+          2261
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          71
+        </td>
+        <td>
+          23582
+        </td>
+        <td>
+          2298
+          -
+          2307
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          71
+        </td>
+        <td>
+          22050
+        </td>
+        <td>
+          2277
+          -
+          2296
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          71
+        </td>
+        <td>
+          20635
+        </td>
+        <td>
+          2202
+          -
+          2308
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

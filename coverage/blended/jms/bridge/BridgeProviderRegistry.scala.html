@@ -1,0 +1,304 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/jms/bridge/BridgeProviderRegistry.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.jms.bridge
+</span>2 <span style=''>
+</span>3 <span style=''>import scala.util.Try
+</span>4 <span style=''>
+</span>5 <span style=''>class NoInternalBridgeProviderException extends Exception(&quot;No internal provider configured in Jms Bridge&quot;)
+</span>6 <span style=''>class BridgeProviderNotFoundException(vendor : String, provider : String)
+</span>7 <span style=''>  extends Exception(s&quot;No bridge provider found for [$vendor:$provider]&quot;)
+</span>8 <span style=''>
+</span>9 <span style=''>class BridgeProviderRegistry(
+</span>10 <span style=''>  provider : List[BridgeProviderConfig]
+</span>11 <span style=''>) {
+</span>12 <span style=''>
+</span>13 <span style=''>  val allProvider : List[BridgeProviderConfig] = </span><span style='background: #AEF1AE'>provider</span><span style=''>
+</span>14 <span style=''>
+</span>15 <span style=''>  def internalProvider : Try[BridgeProviderConfig] = </span><span style='background: #AEF1AE'>Try {
+</span>16 <span style=''></span><span style='background: #AEF1AE'>    provider.find(_.internal) match {
+</span>17 <span style=''></span><span style='background: #AEF1AE'>      case None    =&gt; </span><span style='background: #F0ADAD'>throw new NoInternalBridgeProviderException</span><span style='background: #AEF1AE'>
+</span>18 <span style=''></span><span style='background: #AEF1AE'>      case Some(p) =&gt; p
+</span>19 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>20 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>21 <span style=''>
+</span>22 <span style=''>  def mandatoryProvider(v : String, p : String) : Try[BridgeProviderConfig] = </span><span style='background: #AEF1AE'>Try {
+</span>23 <span style=''></span><span style='background: #AEF1AE'>    jmsProvider(v, p) match {
+</span>24 <span style=''></span><span style='background: #AEF1AE'>      case None      =&gt; </span><span style='background: #F0ADAD'>throw new BridgeProviderNotFoundException(v, p)</span><span style='background: #AEF1AE'>
+</span>25 <span style=''></span><span style='background: #AEF1AE'>      case Some(cfg) =&gt; cfg
+</span>26 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>27 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>28 <span style=''>
+</span>29 <span style=''>  def jmsProvider(v : String, p : String) : Option[BridgeProviderConfig] =
+</span>30 <span style=''>    </span><span style='background: #AEF1AE'>provider.find(bp =&gt; bp.vendor == v &amp;&amp; bp.provider == p)</span><span style=''>
+</span>31 <span style=''>
+</span>32 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          465
+        </td>
+        <td>
+          430
+          -
+          438
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          408
+        </td>
+        <td>
+          493
+          -
+          636
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          710
+        </td>
+        <td>
+          503
+          -
+          528
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          117
+        </td>
+        <td>
+          517
+          -
+          527
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          207
+        </td>
+        <td>
+          559
+          -
+          602
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          369
+        </td>
+        <td>
+          716
+          -
+          861
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          655
+        </td>
+        <td>
+          726
+          -
+          743
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          193
+        </td>
+        <td>
+          776
+          -
+          823
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          451
+        </td>
+        <td>
+          980
+          -
+          996
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          639
+        </td>
+        <td>
+          962
+          -
+          996
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          157
+        </td>
+        <td>
+          942
+          -
+          997
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

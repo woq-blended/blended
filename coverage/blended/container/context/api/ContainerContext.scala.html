@@ -1,0 +1,240 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/container/context/api/ContainerContext.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.container.context.api
+</span>2 <span style=''>
+</span>3 <span style=''>import java.util.concurrent.atomic.AtomicLong
+</span>4 <span style=''>
+</span>5 <span style=''>import blended.security.crypto.ContainerCryptoSupport
+</span>6 <span style=''>import com.typesafe.config.Config
+</span>7 <span style=''>
+</span>8 <span style=''>import scala.beans.BeanProperty
+</span>9 <span style=''>import scala.util.Try
+</span>10 <span style=''>
+</span>11 <span style=''>class PropertyResolverException(msg : String) extends Exception(msg)
+</span>12 <span style=''>
+</span>13 <span style=''>object ContainerContext {
+</span>14 <span style=''>
+</span>15 <span style=''>  val containerId : String = </span><span style='background: #AEF1AE'>&quot;uuid&quot;</span><span style=''>
+</span>16 <span style=''>
+</span>17 <span style=''>  object NextTransactionCounter extends (() =&gt; Long) {
+</span>18 <span style=''>    private val transactionCounter = </span><span style='background: #AEF1AE'>new AtomicLong(0)</span><span style=''>
+</span>19 <span style=''>    def apply(): Long = {
+</span>20 <span style=''>      </span><span style='background: #AEF1AE'>transactionCounter.compareAndSet(Long.MaxValue, 0L)</span><span style=''>;
+</span>21 <span style=''>      </span><span style='background: #AEF1AE'>transactionCounter.incrementAndGet()</span><span style=''>
+</span>22 <span style=''>    }
+</span>23 <span style=''>  }
+</span>24 <span style=''>}
+</span>25 <span style=''>
+</span>26 <span style=''>trait ContainerContext {
+</span>27 <span style=''>
+</span>28 <span style=''>  /**
+</span>29 <span style=''>   * The home directory of the container, usually defined by the system property &lt;code&gt;blended.home&lt;/code&gt;
+</span>30 <span style=''>   */
+</span>31 <span style=''>  @BeanProperty
+</span>32 <span style=''>  val containerDirectory : String
+</span>33 <span style=''>
+</span>34 <span style=''>
+</span>35 <span style=''>  @BeanProperty
+</span>36 <span style=''>  val containerConfigDirectory : String
+</span>37 <span style=''>
+</span>38 <span style=''>  /**
+</span>39 <span style=''>   * The target directory for the container log files
+</span>40 <span style=''>   */
+</span>41 <span style=''>  @BeanProperty
+</span>42 <span style=''>  val containerLogDirectory : String
+</span>43 <span style=''>
+</span>44 <span style=''>  /**
+</span>45 <span style=''>   * The base directory for the current container profile
+</span>46 <span style=''>   */
+</span>47 <span style=''>  @BeanProperty
+</span>48 <span style=''>  val profileDirectory : String
+</span>49 <span style=''>
+</span>50 <span style=''>  /**
+</span>51 <span style=''>   * The config directory for all profile specific configuration files. Usually this is
+</span>52 <span style=''>   * &lt;code&gt;profileDirectory/etc&lt;/code&gt;. This is the main config directory.
+</span>53 <span style=''>   */
+</span>54 <span style=''>  @BeanProperty
+</span>55 <span style=''>  val profileConfigDirectory : String
+</span>56 <span style=''>
+</span>57 <span style=''>  /**
+</span>58 <span style=''>   * The hostname of the current container as defined by the netowrk layer.
+</span>59 <span style=''>   */
+</span>60 <span style=''>  @BeanProperty
+</span>61 <span style=''>  val containerHostname : String
+</span>62 <span style=''>
+</span>63 <span style=''>  /**
+</span>64 <span style=''>   * Provide access to encryption and decryption facilities, optionally secured with a secret file.
+</span>65 <span style=''>   */
+</span>66 <span style=''>  val cryptoSupport : ContainerCryptoSupport
+</span>67 <span style=''>
+</span>68 <span style=''>  /**
+</span>69 <span style=''>   * The application.conf, optionally modified with an overlay.
+</span>70 <span style=''>    */
+</span>71 <span style=''>  val containerConfig : Config
+</span>72 <span style=''>
+</span>73 <span style=''>  /**
+</span>74 <span style=''>   * Read a config with a given id from the profile config directory and apply all blended
+</span>75 <span style=''>   * replacements in the result.
+</span>76 <span style=''>   * @param id The id to retrieve the config for. This is usually the bundle symbolic name.
+</span>77 <span style=''>   */
+</span>78 <span style=''>  def getConfig(id : String) : Config
+</span>79 <span style=''>
+</span>80 <span style=''>  @BeanProperty
+</span>81 <span style=''>  val uuid : String
+</span>82 <span style=''>
+</span>83 <span style=''>  val properties : Map[String, String]
+</span>84 <span style=''>
+</span>85 <span style=''>  /**
+</span>86 <span style=''>   * Access to a blended resolver for config values
+</span>87 <span style=''>   */
+</span>88 <span style=''>  def resolveString(s : String, additionalProps : Map[String, Any] = Map.empty) : Try[AnyRef]
+</span>89 <span style=''>
+</span>90 <span style=''>  /**
+</span>91 <span style=''>   * Provide access to the next transaction number
+</span>92 <span style=''>   */
+</span>93 <span style=''>  def getNextTransactionCounter() : Long = </span><span style='background: #AEF1AE'>ContainerContext.NextTransactionCounter()</span><span style=''>
+</span>94 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          15758
+        </td>
+        <td>
+          356
+          -
+          362
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          15760
+        </td>
+        <td>
+          456
+          -
+          473
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          15761
+        </td>
+        <td>
+          506
+          -
+          557
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          15757
+        </td>
+        <td>
+          565
+          -
+          601
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          93
+        </td>
+        <td>
+          15759
+        </td>
+        <td>
+          2352
+          -
+          2393
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

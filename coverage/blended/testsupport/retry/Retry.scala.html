@@ -1,0 +1,271 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/testsupport/retry/Retry.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.testsupport.retry
+</span>2 <span style=''>
+</span>3 <span style=''>import akka.actor.Scheduler
+</span>4 <span style=''>import blended.util.logging.Logger
+</span>5 <span style=''>
+</span>6 <span style=''>import scala.concurrent.duration._
+</span>7 <span style=''>import scala.concurrent.{Await, ExecutionContext, Future}
+</span>8 <span style=''>
+</span>9 <span style=''>object Retry {
+</span>10 <span style=''>
+</span>11 <span style=''>  /**
+</span>12 <span style=''>   * Executed and in case of an failure retries an operation `op`. As long as there are retries left, the next retry starts after `delay` times.
+</span>13 <span style=''>   *
+</span>14 <span style=''>   * @param delay The time between a failure and the next retry.
+</span>15 <span style=''>   * @param retries The max count of retries, before giving up.
+</span>16 <span style=''>   * @param onRetry Action to be run before a retry.
+</span>17 <span style=''>   * @param op The operation to be executed and, iff failed, retried.
+</span>18 <span style=''>   * @param ec ExecutionContext to run the inner futures with.
+</span>19 <span style=''>   * @param s The Scheduler used to schedule the next retry.
+</span>20 <span style=''>   *
+</span>21 <span style=''>   * @return The Future containing the result of `op` or the last failure.
+</span>22 <span style=''>   */
+</span>23 <span style=''>  def retry[T](
+</span>24 <span style=''>    delay : FiniteDuration,
+</span>25 <span style=''>    retries : Int,
+</span>26 <span style=''>    onRetry : (Int, Throwable) =&gt; Unit = (n, e) =&gt; Logger[Retry.type].debug(e)(s&quot;Retrying after failed execution (${n} retries left)&quot;)
+</span>27 <span style=''>  )(
+</span>28 <span style=''>    op : =&gt; T
+</span>29 <span style=''>  )(implicit ec : ExecutionContext, s : Scheduler) : Future[T] =
+</span>30 <span style=''>    </span><span style='background: #AEF1AE'>Future { op } recoverWith {
+</span>31 <span style=''></span><span style='background: #AEF1AE'>      case e : Throwable if retries &gt; 0 =&gt; akka.pattern.after(delay, s)({
+</span>32 <span style=''></span><span style='background: #AEF1AE'>        onRetry(retries - 1, e)
+</span>33 <span style=''></span><span style='background: #AEF1AE'>        retry(delay, retries - 1, onRetry)(op)(ec, s)
+</span>34 <span style=''></span><span style='background: #AEF1AE'>      })
+</span>35 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>36 <span style=''>
+</span>37 <span style=''>  /**
+</span>38 <span style=''>   * Executed and in case of an failure retries an operation `op`. As long as there are retries left, the next retry starts after `delay` times.
+</span>39 <span style=''>   *
+</span>40 <span style=''>   * @param delay The time between a failure and the next retry.
+</span>41 <span style=''>   * @param retries The max count of retries, before giving up.
+</span>42 <span style=''>   * @param onRetry Action to be run before a retry.
+</span>43 <span style=''>   * @param finalDelay The overall delay forwarded to [[Await]], before failing the whole retry block.
+</span>44 <span style=''>   * @param op The operation to be executed and, iff failed, retried.
+</span>45 <span style=''>   * @param ex ExecutionContext to run the inner futures with.
+</span>46 <span style=''>   * @param s The Scheduler used to schedule the next retry.
+</span>47 <span style=''>   *
+</span>48 <span style=''>   * @return The result of `op` or throws an exception.
+</span>49 <span style=''>   */
+</span>50 <span style=''>  def unsafeRetry[T](
+</span>51 <span style=''>    delay : FiniteDuration,
+</span>52 <span style=''>    retries : Int,
+</span>53 <span style=''>    onRetry : (Int, Throwable) =&gt; Unit = (n, e) =&gt; Logger[Retry.type].debug(e)(s&quot;Retrying after failed execution (${n} retries left)&quot;),
+</span>54 <span style=''>    finalDelay : Option[FiniteDuration] = None
+</span>55 <span style=''>  )(
+</span>56 <span style=''>    op : =&gt; T
+</span>57 <span style=''>  )(implicit ec : ExecutionContext, s : Scheduler) : T = {
+</span>58 <span style=''>    val res = </span><span style='background: #AEF1AE'>retry(delay, retries, onRetry)(op)(ec, s)</span><span style=''>
+</span>59 <span style=''>    </span><span style='background: #AEF1AE'>Await.result(res, finalDelay.getOrElse(delay * retries + 2.seconds))</span><span style=''>
+</span>60 <span style=''>  }
+</span>61 <span style=''>
+</span>62 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          11556
+        </td>
+        <td>
+          1113
+          -
+          1315
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          58
+        </td>
+        <td>
+          11327
+        </td>
+        <td>
+          2363
+          -
+          2404
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          11247
+        </td>
+        <td>
+          2448
+          -
+          2475
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          11440
+        </td>
+        <td>
+          2466
+          -
+          2467
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          11458
+        </td>
+        <td>
+          2409
+          -
+          2477
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          11302
+        </td>
+        <td>
+          2456
+          -
+          2463
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          11532
+        </td>
+        <td>
+          2466
+          -
+          2475
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          11409
+        </td>
+        <td>
+          2427
+          -
+          2476
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

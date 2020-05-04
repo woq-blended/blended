@@ -1,0 +1,258 @@
+2020-05-04-09:25.09.926 |      210 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Java Keystore should Initialise to an empty store if the keystore file does not exist
+2020-05-04-09:25.09.949 |      233 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [PKCS12] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.09.968 |      252 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.10.002 |      286 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Java Keystore should Initialise to an empty store if the keystore file does not exist
+--------------------------------------------------------------------------------
+2020-05-04-09:25.10.002 |      286 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Java Keystore should Initialize from a given keystore
+2020-05-04-09:25.10.004 |      288 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/cacerts] ...
+2020-05-04-09:25.10.258 |      542 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Java Keystore should Initialize from a given keystore
+--------------------------------------------------------------------------------
+2020-05-04-09:25.10.258 |      542 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Java Keystore should Allow to store a new certificate (with private key)
+2020-05-04-09:25.10.259 |      543 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [PKCS12] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.10.259 |      543 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.10.661 |      945 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=test] and change state [Added]
+2020-05-04-09:25.10.662 |      946 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.MemoryKeystore : Updated keystore aliases : [Set(test)]
+2020-05-04-09:25.10.663 |      947 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [PKCS12] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.10.663 |      947 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.10.746 |     1030 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Storing [1] certificates to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks]
+2020-05-04-09:25.10.819 |     1103 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Successfully written key store to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] with storePass [storepass]
+2020-05-04-09:25.10.828 |     1112 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Java Keystore should Allow to store a new certificate (with private key)
+--------------------------------------------------------------------------------
+2020-05-04-09:25.10.829 |     1113 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Java Keystore should Allow to store a new certificate (without private key)
+2020-05-04-09:25.10.829 |     1113 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.10.830 |     1114 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.11.013 |     1297 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=test] and change state [Added]
+2020-05-04-09:25.11.014 |     1298 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.MemoryKeystore : Updated keystore aliases : [Set(test)]
+2020-05-04-09:25.11.014 |     1298 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.11.014 |     1298 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.11.014 |     1298 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Storing [1] certificates to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks]
+2020-05-04-09:25.11.015 |     1299 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Successfully written key store to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] with storePass [storepass]
+2020-05-04-09:25.11.015 |     1299 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.11.019 |     1303 | INFO  [pool-1-thread-1-ScalaTest-running-JavaKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Java Keystore should Allow to store a new certificate (without private key)
+--------------------------------------------------------------------------------
+2020-05-04-09:25.11.047 |     1331 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateHolderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The certificate holder should Refuse an empty chain
+2020-05-04-09:25.11.224 |     1508 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateHolderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The certificate holder should Refuse an empty chain
+--------------------------------------------------------------------------------
+2020-05-04-09:25.11.224 |     1508 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateHolderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The certificate holder should Ensure the certificate chain does have a root certificate
+2020-05-04-09:25.11.530 |     1814 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateHolderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The certificate holder should Ensure the certificate chain does have a root certificate
+--------------------------------------------------------------------------------
+2020-05-04-09:25.11.530 |     1814 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateHolderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The certificate holder should Ensure the signature links are correct
+2020-05-04-09:25.11.761 |     2045 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateHolderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The certificate holder should Ensure the signature links are correct
+--------------------------------------------------------------------------------
+2020-05-04-09:25.11.761 |     2045 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateHolderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The certificate holder should Support chains of an arbitrary, yet reasonable length
+2020-05-04-09:25.19.244 |     9528 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateHolderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The certificate holder should Support chains of an arbitrary, yet reasonable length
+--------------------------------------------------------------------------------
+2020-05-04-09:25.19.250 |     9534 | INFO  [pool-1-thread-1-ScalaTest-running-SelfSignedProviderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The self signed certificate provider should create a self signed certificate with the hostname populated signed with it's own key
+2020-05-04-09:25.20.550 |    10834 | INFO  [pool-1-thread-1-ScalaTest-running-SelfSignedProviderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The self signed certificate provider should create a self signed certificate with the hostname populated signed with it's own key
+--------------------------------------------------------------------------------
+2020-05-04-09:25.20.551 |    10835 | INFO  [pool-1-thread-1-ScalaTest-running-SelfSignedProviderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The self signed certificate provider should update a self signed certificate by maintaining the same key pair and increasing the serial number
+2020-05-04-09:25.20.614 |    10898 | INFO  [pool-1-thread-1-ScalaTest-running-SelfSignedProviderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The self signed certificate provider should update a self signed certificate by maintaining the same key pair and increasing the serial number
+--------------------------------------------------------------------------------
+2020-05-04-09:25.20.614 |    10898 | INFO  [pool-1-thread-1-ScalaTest-running-SelfSignedProviderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The self signed certificate provider should requires a private key in in the old key to refresh
+2020-05-04-09:25.20.719 |    11003 | INFO  [pool-1-thread-1-ScalaTest-running-SelfSignedProviderSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The self signed certificate provider should requires a private key in in the old key to refresh
+--------------------------------------------------------------------------------
+2020-05-04-09:25.20.724 |    11008 | INFO  [pool-1-thread-1-ScalaTest-running-PasswordHasherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The password hasher should yield the same string if used with the same salt and pwd
+2020-05-04-09:25.20.752 |    11036 | INFO  [pool-1-thread-1-ScalaTest-running-PasswordHasherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The password hasher should yield the same string if used with the same salt and pwd
+--------------------------------------------------------------------------------
+2020-05-04-09:25.20.752 |    11036 | INFO  [pool-1-thread-1-ScalaTest-running-PasswordHasherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The password hasher should yield a different string for different passwords
+2020-05-04-09:25.20.768 |    11052 | INFO  [pool-1-thread-1-ScalaTest-running-PasswordHasherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The password hasher should yield a different string for different passwords
+--------------------------------------------------------------------------------
+2020-05-04-09:25.20.769 |    11053 | INFO  [pool-1-thread-1-ScalaTest-running-PasswordHasherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The password hasher should yield a different string for different salts and the same password
+2020-05-04-09:25.20.808 |    11092 | INFO  [pool-1-thread-1-ScalaTest-running-PasswordHasherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The password hasher should yield a different string for different salts and the same password
+--------------------------------------------------------------------------------
+2020-05-04-09:25.20.940 |    11224 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The truststore refresher not update anything if the truststore properties are not set
+2020-05-04-09:25.20.943 |    11227 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The truststore refresher not update anything if the truststore properties are not set
+--------------------------------------------------------------------------------
+2020-05-04-09:25.20.943 |    11227 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The truststore refresher update the truststore with all missing root certificates from a given key store
+2020-05-04-09:25.20.944 |    11228 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.TrustStoreRefresher : Reading trust store certificates from [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks]
+2020-05-04-09:25.20.944 |    11228 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] ...
+2020-05-04-09:25.20.944 |    11228 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] ...
+2020-05-04-09:25.20.946 |    11230 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.TrustStoreRefresher : Checking trusted certificate for [CN=root]
+2020-05-04-09:25.20.947 |    11231 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.TrustStoreRefresher : Updating trust store with certificate for [CN=root]
+2020-05-04-09:25.20.947 |    11231 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=CN=root] and change state [Added]
+2020-05-04-09:25.20.947 |    11231 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.MemoryKeystore : Updated keystore aliases : [Set(CN=root)]
+2020-05-04-09:25.20.947 |    11231 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] ...
+2020-05-04-09:25.20.947 |    11231 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] ...
+2020-05-04-09:25.20.948 |    11232 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Storing [1] certificates to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks]
+2020-05-04-09:25.20.948 |    11232 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Successfully written key store to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] with storePass [trust]
+2020-05-04-09:25.20.950 |    11234 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] ...
+2020-05-04-09:25.20.951 |    11235 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The truststore refresher update the truststore with all missing root certificates from a given key store
+--------------------------------------------------------------------------------
+2020-05-04-09:25.20.951 |    11235 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The truststore refresher do not update the truststore if all root certificates from a given keystore already exist
+2020-05-04-09:25.20.952 |    11236 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] ...
+2020-05-04-09:25.20.952 |    11236 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] ...
+2020-05-04-09:25.20.952 |    11236 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Storing [1] certificates to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks]
+2020-05-04-09:25.20.952 |    11236 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Successfully written key store to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] with storePass [trust]
+2020-05-04-09:25.20.952 |    11236 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.TrustStoreRefresher : Reading trust store certificates from [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks]
+2020-05-04-09:25.20.953 |    11237 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] ...
+2020-05-04-09:25.20.953 |    11237 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.TrustStoreRefresher : Checking trusted certificate for [CN=root]
+2020-05-04-09:25.20.954 |    11238 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.TrustStoreRefresher : Certificate for [CN=root] already exists in trust store.
+2020-05-04-09:25.20.954 |    11238 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] ...
+2020-05-04-09:25.20.954 |    11238 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Storing [1] certificates to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks]
+2020-05-04-09:25.20.954 |    11238 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Successfully written key store to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] with storePass [trust]
+2020-05-04-09:25.20.955 |    11239 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [jks] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/trust.jks] ...
+2020-05-04-09:25.20.955 |    11239 | INFO  [pool-1-thread-1-ScalaTest-running-TrustStoreRefresherSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The truststore refresher do not update the truststore if all root certificates from a given keystore already exist
+--------------------------------------------------------------------------------
+2020-05-04-09:25.20.961 |    11245 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Certificate Activator should start up and provide a server and a client SSL Context
+2020-05-04-09:25.21.171 |    11455 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.container.context.api] with id [1]
+2020-05-04-09:25.21.218 |    11502 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.CertificateActivator : Waiting for certificate provider [default]
+2020-05-04-09:25.21.219 |    11503 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.CertificateActivator : Certificate provider [default] available.
+2020-05-04-09:25.21.225 |    11509 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [PKCS12] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/container/etc/keystore] ...
+2020-05-04-09:25.21.225 |    11509 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/container/etc/keystore] ...
+2020-05-04-09:25.21.227 |    11511 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.MemoryKeystore : Certificate with alias [logical] does not yet exist.
+2020-05-04-09:25.21.378 |    11662 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.MemoryKeystore : Obtained certificate for alias [logical] : [
+X509CertificateInfo(cn=CN=server2, O=blended, C=DE,altNames=[(2,server2)],issuer=CN=server2, O=blended, C=DE,notBefore=2020-05-03-09:25:21.000,notAfter=2020-05-14-09:25:21.000,serial=1,sigAlg=SHA256withRSA)]
+2020-05-04-09:25.21.379 |    11663 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=logical] and change state [Added]
+2020-05-04-09:25.21.379 |    11663 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.MemoryKeystore : Updated keystore aliases : [Set(logical)]
+2020-05-04-09:25.21.379 |    11663 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.MemoryKeystore : Certificate with alias [default] does not yet exist.
+2020-05-04-09:25.21.442 |    11726 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.MemoryKeystore : Obtained certificate for alias [default] : [
+X509CertificateInfo(cn=CN=server1, O=blended, C=DE,altNames=[(2,server1)],issuer=CN=server1, O=blended, C=DE,notBefore=2020-05-03-09:25:21.000,notAfter=2020-05-14-09:25:21.000,serial=1,sigAlg=SHA256withRSA)]
+2020-05-04-09:25.21.442 |    11726 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=default] and change state [Added]
+2020-05-04-09:25.21.442 |    11726 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.MemoryKeystore : Updated keystore aliases : [Set(logical, default)]
+2020-05-04-09:25.21.443 |    11727 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [PKCS12] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/container/etc/keystore] ...
+2020-05-04-09:25.21.444 |    11728 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/container/etc/keystore] ...
+2020-05-04-09:25.21.551 |    11835 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.JavaKeystore : Storing [2] certificates to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/container/etc/keystore]
+2020-05-04-09:25.21.623 |    11907 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.JavaKeystore : Successfully written key store to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/container/etc/keystore] with storePass [e2e63a747c4c633e11d5f41f0297c020]
+2020-05-04-09:25.21.625 |    11909 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [PKCS12] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/container/etc/keystore] ...
+2020-05-04-09:25.21.830 |    12114 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.CertificateManagerImpl : Server SSLContext : SSLContextInfo(protocol=TLSv1.2,enabledProtocols=TLSv1.2,
+enabledCyphers=TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384,
+TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
+TLS_RSA_WITH_AES_256_CBC_SHA256,
+TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384,
+TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384,
+TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+TLS_RSA_WITH_AES_256_GCM_SHA384,
+TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384,
+TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
+invalidCyphers=
+)
+2020-05-04-09:25.21.832 |    12116 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [PKCS12] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/container/etc/keystore] ...
+2020-05-04-09:25.22.010 |    12294 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.security.ssl] with id [2]
+2020-05-04-09:25.22.012 |    12296 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [PKCS12] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/container/etc/keystore] ...
+2020-05-04-09:25.22.185 |    12469 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Certificate Activator should start up and provide a server and a client SSL Context
+--------------------------------------------------------------------------------
+2020-05-04-09:25.22.186 |    12470 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Certificate Activator should Only support selected CypherSuites and protocols
+2020-05-04-09:25.22.187 |    12471 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.security.ssl.internal.CertificateActivatorSpec : Invalid CypherSuites [0] : [
+
+]
+2020-05-04-09:25.22.188 |    12472 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateActivatorSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Certificate Activator should Only support selected CypherSuites and protocols
+--------------------------------------------------------------------------------
+2020-05-04-09:25.22.201 |    12485 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The certificate checker should Report failing certificate checks
+2020-05-04-09:25.22.202 |    12486 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [PKCS12] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.22.202 |    12486 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.22.302 |    12586 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=root] and change state [Added]
+2020-05-04-09:25.22.303 |    12587 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.MemoryKeystore : Updated keystore aliases : [Set(root)]
+2020-05-04-09:25.22.354 |    12638 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=host1] and change state [Added]
+2020-05-04-09:25.22.354 |    12638 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.MemoryKeystore : Updated keystore aliases : [Set(root, host1)]
+2020-05-04-09:25.22.437 |    12721 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=host2] and change state [Added]
+2020-05-04-09:25.22.438 |    12722 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.MemoryKeystore : Updated keystore aliases : [Set(root, host1, host2)]
+2020-05-04-09:25.22.438 |    12722 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.internal.JavaKeystore : Initializing key store of type [PKCS12] from file [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.22.438 |    12722 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.internal.JavaKeystore : Loading empty key store [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] ...
+2020-05-04-09:25.22.589 |    12873 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.internal.JavaKeystore : Storing [3] certificates to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks]
+2020-05-04-09:25.22.657 |    12941 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.security.ssl.internal.JavaKeystore : Successfully written key store to [/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.security.ssl/target/scala-2.12/test-classes/dummy.jks] with storePass [storepass]
+2020-05-04-09:25.22.664 |    12948 | INFO  [pool-1-thread-1-ScalaTest-running-CertificateCheckerSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The certificate checker should Report failing certificate checks
+--------------------------------------------------------------------------------
+2020-05-04-09:25.22.671 |    12955 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Memory key store calculate the next certificate timeout correctly from an empty store
+2020-05-04-09:25.22.673 |    12957 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Memory key store calculate the next certificate timeout correctly from an empty store
+--------------------------------------------------------------------------------
+2020-05-04-09:25.22.673 |    12957 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Memory key store calculate the next certificate timeout correctly from an non-empty store
+2020-05-04-09:25.22.718 |    13002 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Memory key store calculate the next certificate timeout correctly from an non-empty store
+--------------------------------------------------------------------------------
+2020-05-04-09:25.22.719 |    13003 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Memory key store not allow inconsistent updates
+2020-05-04-09:25.22.824 |    13108 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=host] and change state [Added]
+2020-05-04-09:25.22.825 |    13109 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Memory key store not allow inconsistent updates
+--------------------------------------------------------------------------------
+2020-05-04-09:25.22.826 |    13110 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Memory key store should retrieve certificates that are not yet present in the keystore
+2020-05-04-09:25.22.826 |    13110 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Certificate with alias [cert] does not yet exist.
+2020-05-04-09:25.22.881 |    13165 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Obtained certificate for alias [cert] : [
+X509CertificateInfo(cn=CN=host,altNames=[],issuer=CN=host,notBefore=2020-05-03-09:25:22.000,notAfter=2020-05-24-09:25:22.000,serial=1,sigAlg=SHA256withRSA)]
+2020-05-04-09:25.22.882 |    13166 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=cert] and change state [Added]
+2020-05-04-09:25.22.882 |    13166 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Updated keystore aliases : [Set(cert)]
+2020-05-04-09:25.22.889 |    13173 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Memory key store should retrieve certificates that are not yet present in the keystore
+--------------------------------------------------------------------------------
+2020-05-04-09:25.22.889 |    13173 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Memory key store should not update the certificates if the required provider can't be found (empty store)
+2020-05-04-09:25.22.889 |    13173 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Certificate with alias [cert] does not yet exist.
+2020-05-04-09:25.22.890 |    13174 | WARN  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Certificate provider [selfsigned] not found, not updating certificate [cert]
+2020-05-04-09:25.22.891 |    13175 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Memory key store should not update the certificates if the required provider can't be found (empty store)
+--------------------------------------------------------------------------------
+2020-05-04-09:25.22.891 |    13175 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Memory key store should not update the certificates if the required provider can't be found (non-empty store)
+2020-05-04-09:25.22.981 |    13265 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Certificate [cert] is about to expire in 9.999988668981482 days...refreshing certificate
+2020-05-04-09:25.22.981 |    13265 | WARN  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Certificate provider [selfsigned] not found, not updating certificate [cert]
+2020-05-04-09:25.22.982 |    13266 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Memory key store should not update the certificates if the required provider can't be found (non-empty store)
+--------------------------------------------------------------------------------
+2020-05-04-09:25.22.982 |    13266 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Memory key store should update the certificates that are about to expire
+2020-05-04-09:25.23.141 |    13425 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Certificate [timingOut] is about to expire in 9.999998368055556 days...refreshing certificate
+2020-05-04-09:25.23.143 |    13427 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Obtained certificate for alias [timingOut] : [
+X509CertificateInfo(cn=CN=host,altNames=[],issuer=CN=host,notBefore=2020-05-03-09:25:23.000,notAfter=2020-05-24-09:25:23.000,serial=2,sigAlg=SHA256withRSA)]
+2020-05-04-09:25.23.151 |    13435 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Updating memory keystore [alias=timingOut] and change state [Updated]
+2020-05-04-09:25.23.151 |    13435 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Updated keystore aliases : [Set(timingOut, stillValid)]
+2020-05-04-09:25.23.152 |    13436 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Server certificate [stillValid] is still valid.
+2020-05-04-09:25.23.153 |    13437 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Memory key store should update the certificates that are about to expire
+--------------------------------------------------------------------------------
+2020-05-04-09:25.23.153 |    13437 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Memory key store should not update the keystore if the refresh has failed
+2020-05-04-09:25.23.384 |    13668 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Certificate [timingOut] is about to expire in 9.999995555555556 days...refreshing certificate
+2020-05-04-09:25.23.387 |    13671 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Could not refresh certificate [timingOut], reusing the existing one.
+java.lang.Exception: Boom
+	at blended.security.ssl.internal.MemoryKeystoreSpec.blended$security$ssl$internal$MemoryKeystoreSpec$$$anonfun$new$11(MemoryKeystoreSpec.scala:140)
+	at blended.security.ssl.internal.MemoryKeystoreSpec$$anonfun$1.refreshCertificate(MemoryKeystoreSpec.scala:139)
+	at blended.security.ssl.MemoryKeystore.$anonfun$refreshCertificate$1(MemoryKeystore.scala:83)
+	at scala.util.Try$.apply(Try.scala:213)
+	at blended.security.ssl.MemoryKeystore.refreshCertificate(MemoryKeystore.scala:78)
+	at blended.security.ssl.MemoryKeystore.$anonfun$changed$1(MemoryKeystore.scala:110)
+	at scala.util.Try$.apply(Try.scala:213)
+	at blended.security.ssl.MemoryKeystore.changed(MemoryKeystore.scala:94)
+	at blended.security.ssl.MemoryKeystore.refreshCertificates(MemoryKeystore.scala:144)
+	at blended.security.ssl.internal.MemoryKeystoreSpec.$anonfun$new$10(MemoryKeystoreSpec.scala:152)
+	at org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+	at org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+	at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+	at org.scalatest.Transformer.apply(Transformer.scala:22)
+	at org.scalatest.Transformer.apply(Transformer.scala:20)
+	at org.scalatest.FreeSpecLike$$anon$1.apply(FreeSpecLike.scala:407)
+	at org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+	at org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+	at org.scalatest.FreeSpec.withFixture(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.invokeWithFixture$1(FreeSpecLike.scala:405)
+	at org.scalatest.FreeSpecLike.$anonfun$runTest$1(FreeSpecLike.scala:417)
+	at org.scalatest.SuperEngine.runTestImpl(Engine.scala:289)
+	at org.scalatest.FreeSpecLike.runTest(FreeSpecLike.scala:417)
+	at org.scalatest.FreeSpecLike.runTest$(FreeSpecLike.scala:399)
+	at blended.testsupport.scalatest.LoggingFreeSpec.blended$testsupport$scalatest$LoggingFreeSpecLike$$super$runTest(LoggingFreeSpec.scala:55)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest(LoggingFreeSpec.scala:30)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest$(LoggingFreeSpec.scala:25)
+	at blended.testsupport.scalatest.LoggingFreeSpec.runTest(LoggingFreeSpec.scala:55)
+	at org.scalatest.FreeSpecLike.$anonfun$runTests$1(FreeSpecLike.scala:476)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:396)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:373)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:410)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:379)
+	at org.scalatest.SuperEngine.runTestsImpl(Engine.scala:461)
+	at org.scalatest.FreeSpecLike.runTests(FreeSpecLike.scala:476)
+	at org.scalatest.FreeSpecLike.runTests$(FreeSpecLike.scala:475)
+	at org.scalatest.FreeSpec.runTests(FreeSpec.scala:1739)
+	at org.scalatest.Suite.run(Suite.scala:1147)
+	at org.scalatest.Suite.run$(Suite.scala:1129)
+	at org.scalatest.FreeSpec.org$scalatest$FreeSpecLike$$super$run(FreeSpec.scala:1739)
+	at org.scalatest.FreeSpecLike.$anonfun$run$1(FreeSpecLike.scala:520)
+	at org.scalatest.SuperEngine.runImpl(Engine.scala:521)
+	at org.scalatest.FreeSpecLike.run(FreeSpecLike.scala:520)
+	at org.scalatest.FreeSpecLike.run$(FreeSpecLike.scala:519)
+	at org.scalatest.FreeSpec.run(FreeSpec.scala:1739)
+	at org.scalatest.tools.Framework.org$scalatest$tools$Framework$$runSuite(Framework.scala:314)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:507)
+	at sbt.ForkMain$Run.lambda$runTest$1(ForkMain.java:304)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+2020-05-04-09:25.23.388 |    13672 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.security.ssl.MemoryKeystore : Server certificate [stillValid] is still valid.
+2020-05-04-09:25.23.388 |    13672 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Memory key store should not update the keystore if the refresh has failed
+--------------------------------------------------------------------------------
+2020-05-04-09:25.23.389 |    13673 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Memory key store should allow to look up a certificate by the subjectPrincipal
+2020-05-04-09:25.23.559 |    13843 | INFO  [pool-1-thread-1-ScalaTest-running-MemoryKeystoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Memory key store should allow to look up a certificate by the subjectPrincipal
+--------------------------------------------------------------------------------

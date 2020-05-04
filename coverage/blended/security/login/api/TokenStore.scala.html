@@ -1,0 +1,601 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/login/api/TokenStore.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security.login.api
+</span>2 <span style=''>
+</span>3 <span style=''>import java.security.PublicKey
+</span>4 <span style=''>
+</span>5 <span style=''>import blended.security.BlendedPermissions
+</span>6 <span style=''>import blended.security.boot.{GroupPrincipal, UserPrincipal}
+</span>7 <span style=''>import blended.security.json.PrickleProtocol._
+</span>8 <span style=''>import io.jsonwebtoken.Jwts
+</span>9 <span style=''>import javax.security.auth.Subject
+</span>10 <span style=''>import prickle.Unpickle
+</span>11 <span style=''>
+</span>12 <span style=''>import scala.concurrent.ExecutionContext
+</span>13 <span style=''>import scala.concurrent.duration.FiniteDuration
+</span>14 <span style=''>import scala.util.Try
+</span>15 <span style=''>
+</span>16 <span style=''>object Token {
+</span>17 <span style=''>  def apply(webToken : String, key : PublicKey) : Try[Token] = </span><span style='background: #AEF1AE'>Try {
+</span>18 <span style=''></span><span style='background: #AEF1AE'>    val claims = Jwts.parser().setSigningKey(key).parseClaimsJws(webToken)
+</span>19 <span style=''></span><span style='background: #AEF1AE'>
+</span>20 <span style=''></span><span style='background: #AEF1AE'>    val permissionsJson = claims.getBody().get(&quot;permissions&quot;, classOf[String])
+</span>21 <span style=''></span><span style='background: #AEF1AE'>    val permissions = Unpickle[BlendedPermissions].fromString(permissionsJson)
+</span>22 <span style=''></span><span style='background: #AEF1AE'>
+</span>23 <span style=''></span><span style='background: #AEF1AE'>    val user : UserPrincipal = new UserPrincipal(claims.getBody().get(&quot;user&quot;, classOf[String]))
+</span>24 <span style=''></span><span style='background: #AEF1AE'>    val groups : List[GroupPrincipal] = Option(
+</span>25 <span style=''></span><span style='background: #AEF1AE'>      claims.getBody().get(&quot;groups&quot;, classOf[String])
+</span>26 <span style=''></span><span style='background: #AEF1AE'>    ) match {
+</span>27 <span style=''></span><span style='background: #AEF1AE'>        case None    =&gt; </span><span style='background: #F0ADAD'>List.empty</span><span style='background: #AEF1AE'>
+</span>28 <span style=''></span><span style='background: #AEF1AE'>        case Some(s) =&gt; s.split(&quot;,&quot;).map(sg =&gt; new GroupPrincipal(sg)).toList
+</span>29 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>30 <span style=''></span><span style='background: #AEF1AE'>
+</span>31 <span style=''></span><span style='background: #AEF1AE'>    Token(
+</span>32 <span style=''></span><span style='background: #AEF1AE'>      claims.getBody.getId,
+</span>33 <span style=''></span><span style='background: #AEF1AE'>      user,
+</span>34 <span style=''></span><span style='background: #AEF1AE'>      groups,
+</span>35 <span style=''></span><span style='background: #AEF1AE'>      Option(claims.getBody.getExpiration).map(_.getTime).getOrElse(0),
+</span>36 <span style=''></span><span style='background: #AEF1AE'>      permissions.get,
+</span>37 <span style=''></span><span style='background: #AEF1AE'>      webToken = webToken
+</span>38 <span style=''></span><span style='background: #AEF1AE'>    )
+</span>39 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>40 <span style=''>}
+</span>41 <span style=''>/**
+</span>42 <span style=''> * A class encapsulating a security token identified by a unique key
+</span>43 <span style=''> * @param id the key to identify the token
+</span>44 <span style=''> * @param expiresAt the timestamp when this particular token will expire, if 0 it will never expire
+</span>45 <span style=''> * @param webToken The token String, this is normally the compact form ao a JSON Web Token
+</span>46 <span style=''> */
+</span>47 <span style=''>case class Token(
+</span>48 <span style=''>  id : String,
+</span>49 <span style=''>  user : UserPrincipal,
+</span>50 <span style=''>  groups : List[GroupPrincipal],
+</span>51 <span style=''>  expiresAt : Long,
+</span>52 <span style=''>  permissions : BlendedPermissions,
+</span>53 <span style=''>  webToken : String
+</span>54 <span style=''>)
+</span>55 <span style=''>
+</span>56 <span style=''>trait TokenStore {
+</span>57 <span style=''>
+</span>58 <span style=''>  /**
+</span>59 <span style=''>   * Retrieve a token from the store with its identifier.
+</span>60 <span style=''>   * @param id the identifier to retrieve the token
+</span>61 <span style=''>   * @return the token if it exists or None, wrapped in a Future
+</span>62 <span style=''>   */
+</span>63 <span style=''>  def getToken(id : String) : Option[Token]
+</span>64 <span style=''>
+</span>65 <span style=''>  /**
+</span>66 <span style=''>   * Remove a token from the store with its identifier.
+</span>67 <span style=''>   * @param id The identifier identifying the token to be removed
+</span>68 <span style=''>   * @return the token that has been removed, if it was present or None, wrapped in a Future
+</span>69 <span style=''>   */
+</span>70 <span style=''>  def removeToken(id : String) : Option[Token]
+</span>71 <span style=''>
+</span>72 <span style=''>  def removeAllTokens() : Unit
+</span>73 <span style=''>
+</span>74 <span style=''>  /**
+</span>75 <span style=''>   * Store a given token in the store. If the token already exists, an exception is thrown.
+</span>76 <span style=''>   * @param token The token to be stored
+</span>77 <span style=''>   * @return Success(token) if the store was successful, Failure(_) otherwise, wrapped in a Future.
+</span>78 <span style=''>   */
+</span>79 <span style=''>  def storeToken(token : Token) : Try[Token]
+</span>80 <span style=''>  /**
+</span>81 <span style=''>   * Create a token with a given user name / password.
+</span>82 <span style=''>   * The implementation will use the standard container LoginContext to perform a login()
+</span>83 <span style=''>   * using the credentials provided. Afterwards, we use a [[blended.security.BlendedPermissionManager]] to
+</span>84 <span style=''>   * map the [[blended.security.boot.GroupPrincipal]]s contained in the subject to permissions.
+</span>85 <span style=''>   * Finally, the token will be created for the user with the retrieved permissions.
+</span>86 <span style=''>   * @param user the username, which will identify the new token
+</span>87 <span style=''>   * @param ttl The validatity for the new token
+</span>88 <span style=''>   * @return Success(token) if the token can be created, Failure(_) otherwise, wrapped in a Future
+</span>89 <span style=''>   */
+</span>90 <span style=''>  def newToken(subj : Subject, ttl : Option[FiniteDuration])(implicit eCtxt : ExecutionContext) : Try[Token]
+</span>91 <span style=''>
+</span>92 <span style=''>  def listTokens() : Seq[Token]
+</span>93 <span style=''>
+</span>94 <span style=''>  def publicKey() : PublicKey
+</span>95 <span style=''>
+</span>96 <span style=''>  def verifyToken(token : String) : Try[Token]
+</span>97 <span style=''>
+</span>98 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          11606
+        </td>
+        <td>
+          497
+          -
+          1267
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          11602
+        </td>
+        <td>
+          520
+          -
+          577
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          11600
+        </td>
+        <td>
+          605
+          -
+          657
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11579
+        </td>
+        <td>
+          709
+          -
+          709
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11599
+        </td>
+        <td>
+          680
+          -
+          736
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11608
+        </td>
+        <td>
+          719
+          -
+          719
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11578
+        </td>
+        <td>
+          688
+          -
+          688
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          11586
+        </td>
+        <td>
+          680
+          -
+          708
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          11598
+        </td>
+        <td>
+          787
+          -
+          832
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          11592
+        </td>
+        <td>
+          769
+          -
+          833
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          11573
+        </td>
+        <td>
+          874
+          -
+          941
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          11584
+        </td>
+        <td>
+          888
+          -
+          935
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          11601
+        </td>
+        <td>
+          974
+          -
+          984
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          11594
+        </td>
+        <td>
+          1009
+          -
+          1055
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          11585
+        </td>
+        <td>
+          1025
+          -
+          1025
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          11570
+        </td>
+        <td>
+          1009
+          -
+          1062
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          11581
+        </td>
+        <td>
+          1032
+          -
+          1054
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          11571
+        </td>
+        <td>
+          1009
+          -
+          1021
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          11582
+        </td>
+        <td>
+          1076
+          -
+          1263
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          11576
+        </td>
+        <td>
+          1089
+          -
+          1109
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          11577
+        </td>
+        <td>
+          1143
+          -
+          1207
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          11591
+        </td>
+        <td>
+          1215
+          -
+          1230
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

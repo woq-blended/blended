@@ -1,0 +1,328 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/jms/utils/BlendedJMSConnection.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.jms.utils
+</span>2 <span style=''>
+</span>3 <span style=''>import javax.jms._
+</span>4 <span style=''>
+</span>5 <span style=''>class BlendedJMSConnection(conn : Connection) extends Connection {
+</span>6 <span style=''>
+</span>7 <span style=''>  protected[utils] def connection : Connection = </span><span style='background: #AEF1AE'>conn</span><span style=''>
+</span>8 <span style=''>
+</span>9 <span style=''>  override def createDurableConnectionConsumer(topic : Topic, s : String, s1 : String, serverSessionPool : ServerSessionPool, i : Int) : ConnectionConsumer =
+</span>10 <span style=''>    </span><span style='background: #F0ADAD'>conn.createDurableConnectionConsumer(topic, s, s1, serverSessionPool, i)</span><span style=''>
+</span>11 <span style=''>
+</span>12 <span style=''>  override def stop() : Unit = </span><span style='background: #F0ADAD'>{}</span><span style=''>
+</span>13 <span style=''>
+</span>14 <span style=''>  override def createSession(b : Boolean, i : Int) : Session = </span><span style='background: #AEF1AE'>conn.createSession(b, i)</span><span style=''>
+</span>15 <span style=''>
+</span>16 <span style=''>  override def getClientID : String = </span><span style='background: #F0ADAD'>conn.getClientID</span><span style=''>
+</span>17 <span style=''>
+</span>18 <span style=''>  override def createConnectionConsumer(
+</span>19 <span style=''>    destination : Destination, s : String,
+</span>20 <span style=''>    serverSessionPool : ServerSessionPool,
+</span>21 <span style=''>    i : Int
+</span>22 <span style=''>  ) : ConnectionConsumer = </span><span style='background: #F0ADAD'>conn.createConnectionConsumer(destination, s, serverSessionPool, i)</span><span style=''>
+</span>23 <span style=''>
+</span>24 <span style=''>  override def getMetaData : ConnectionMetaData = </span><span style='background: #F0ADAD'>conn.getMetaData</span><span style=''>
+</span>25 <span style=''>
+</span>26 <span style=''>  override def setExceptionListener(exceptionListener : ExceptionListener) : Unit = </span><span style='background: #F0ADAD'>conn.setExceptionListener(exceptionListener)</span><span style=''>
+</span>27 <span style=''>
+</span>28 <span style=''>  override def setClientID(s : String) : Unit = </span><span style='background: #F0ADAD'>conn.setClientID(s)</span><span style=''>
+</span>29 <span style=''>
+</span>30 <span style=''>  override def getExceptionListener : ExceptionListener = </span><span style='background: #F0ADAD'>conn.getExceptionListener</span><span style=''>
+</span>31 <span style=''>
+</span>32 <span style=''>  override def close() : Unit = </span><span style='background: #AEF1AE'>{}</span><span style=''>
+</span>33 <span style=''>
+</span>34 <span style=''>  override def start() : Unit = </span><span style='background: #AEF1AE'>conn.start()</span><span style=''>
+</span>35 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          7
+        </td>
+        <td>
+          18934
+        </td>
+        <td>
+          164
+          -
+          168
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          10
+        </td>
+        <td>
+          17712
+        </td>
+        <td>
+          332
+          -
+          404
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          18722
+        </td>
+        <td>
+          437
+          -
+          439
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          18191
+        </td>
+        <td>
+          504
+          -
+          528
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          17814
+        </td>
+        <td>
+          568
+          -
+          584
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          18841
+        </td>
+        <td>
+          752
+          -
+          819
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          18219
+        </td>
+        <td>
+          871
+          -
+          887
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          17908
+        </td>
+        <td>
+          973
+          -
+          1017
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          18356
+        </td>
+        <td>
+          1067
+          -
+          1086
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          18377
+        </td>
+        <td>
+          1146
+          -
+          1171
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          18637
+        </td>
+        <td>
+          1205
+          -
+          1207
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          17709
+        </td>
+        <td>
+          1241
+          -
+          1253
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

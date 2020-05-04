@@ -1,0 +1,163 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/jms/utils/Protocol.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.jms.utils
+</span>2 <span style=''>
+</span>3 <span style=''>import java.util.Date
+</span>4 <span style=''>
+</span>5 <span style=''>import akka.actor.ActorRef
+</span>6 <span style=''>import javax.jms.Connection
+</span>7 <span style=''>
+</span>8 <span style=''>import scala.concurrent.duration.FiniteDuration
+</span>9 <span style=''>
+</span>10 <span style=''>case class CheckConnection(now : Boolean)
+</span>11 <span style=''>case object ConnectionClosed
+</span>12 <span style=''>case object CloseTimeout
+</span>13 <span style=''>case class ConnectTimeout(t : Date)
+</span>14 <span style=''>
+</span>15 <span style=''>sealed trait KeepAliveEvent
+</span>16 <span style=''>case class AddedConnectionFactory(cfg : IdAwareConnectionFactory) extends KeepAliveEvent
+</span>17 <span style=''>case class RemovedConnectionFactory(cfg : IdAwareConnectionFactory) extends KeepAliveEvent
+</span>18 <span style=''>case class MessageReceived(vendor : String, provider : String, id : String) extends KeepAliveEvent
+</span>19 <span style=''>case class ProducerMaterialized(vendor: String, provider: String, prod : ActorRef)
+</span>20 <span style=''>case class KeepAliveMissed(vendor : String, provider : String, count : Int) extends KeepAliveEvent
+</span>21 <span style=''>case class MaxKeepAliveExceeded(vendor : String, provider : String) extends KeepAliveEvent
+</span>22 <span style=''>
+</span>23 <span style=''>/**
+</span>24 <span style=''> * Command message to establish a JMS Connection
+</span>25 <span style=''> */
+</span>26 <span style=''>case class Connect(ts : Date, id : String)
+</span>27 <span style=''>
+</span>28 <span style=''>/**
+</span>29 <span style=''> * Command message to close a JMS Connection within a given timeout
+</span>30 <span style=''> */
+</span>31 <span style=''>case class Disconnect(timeout : FiniteDuration)
+</span>32 <span style=''>
+</span>33 <span style=''>/**
+</span>34 <span style=''> * Outcome of a connect
+</span>35 <span style=''> */
+</span>36 <span style=''>case class ConnectResult(ts : Date, r : Either[Throwable, Connection])
+</span>37 <span style=''>
+</span>38 <span style=''>case class ConnectionStateChanged(state : ConnectionState)
+</span>39 <span style=''>
+</span>40 <span style=''>case class QueryConnectionState(
+</span>41 <span style=''>  vendor : String,
+</span>42 <span style=''>  provider : String
+</span>43 <span style=''>)
+</span>44 <span style=''>
+</span>45 <span style=''>case class ConnectionCommand(
+</span>46 <span style=''>  vendor : String,
+</span>47 <span style=''>  provider : String,
+</span>48 <span style=''>  maxEvents : Int = 0,
+</span>49 <span style=''>  disconnectPending : Boolean = false,
+</span>50 <span style=''>  connectPending : Boolean = false,
+</span>51 <span style=''>  reconnectNow : Boolean = false
+</span>52 <span style=''>)
+</span>53 <span style=''>
+</span>54 <span style=''>object Reconnect {
+</span>55 <span style=''>  def apply(cf : IdAwareConnectionFactory, e : Option[Throwable]) : Reconnect =
+</span>56 <span style=''>    </span><span style='background: #F0ADAD'>new Reconnect(cf.vendor, cf.provider, e)</span><span style=''>
+</span>57 <span style=''>}
+</span>58 <span style=''>
+</span>59 <span style=''>case class Reconnect(vendor : String, provider : String, e : Option[Throwable])
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          18242
+        </td>
+        <td>
+          1641
+          -
+          1681
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          17918
+        </td>
+        <td>
+          1666
+          -
+          1677
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          18838
+        </td>
+        <td>
+          1655
+          -
+          1664
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

@@ -1,0 +1,291 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/ssl/internal/SslContextProvider.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security.ssl.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import java.io.FileInputStream
+</span>4 <span style=''>import java.security.KeyStore
+</span>5 <span style=''>
+</span>6 <span style=''>import blended.util.logging.Logger
+</span>7 <span style=''>import javax.net.ssl._
+</span>8 <span style=''>
+</span>9 <span style=''>object SslContextProvider {
+</span>10 <span style=''>  private[ssl] val propTrustStore = </span><span style='background: #AEF1AE'>&quot;javax.net.ssl.trustStore&quot;</span><span style=''>
+</span>11 <span style=''>  private[ssl] val propTrustStorePwd = </span><span style='background: #AEF1AE'>&quot;javax.net.ssl.trustStorePassword&quot;</span><span style=''>
+</span>12 <span style=''>}
+</span>13 <span style=''>
+</span>14 <span style=''>// scalastyle:off null
+</span>15 <span style=''>class SslContextProvider {
+</span>16 <span style=''>
+</span>17 <span style=''>  import SslContextProvider.{propTrustStore, propTrustStorePwd}
+</span>18 <span style=''>
+</span>19 <span style=''>  private[this] val log = </span><span style='background: #AEF1AE'>Logger[SslContextProvider]</span><span style=''>
+</span>20 <span style=''>
+</span>21 <span style=''>  private[this] lazy val trustManager : Array[TrustManager] = (
+</span>22 <span style=''>    Option(System.getProperty(propTrustStore)),
+</span>23 <span style=''>    Option(System.getProperty(propTrustStorePwd))
+</span>24 <span style=''>  ) match {
+</span>25 <span style=''>      case (Some(trustStore), Some(trustStorePassword)) =&gt;
+</span>26 <span style=''>        log.debug(&quot;Configuring trust store from System Properties&quot;)
+</span>27 <span style=''>
+</span>28 <span style=''>        val tks = KeyStore.getInstance(KeyStore.getDefaultType)
+</span>29 <span style=''>        tks.load(new FileInputStream(trustStore), trustStorePassword.toCharArray)
+</span>30 <span style=''>
+</span>31 <span style=''>        val tmf : TrustManagerFactory = TrustManagerFactory.getInstance(&quot;SunX509&quot;)
+</span>32 <span style=''>        tmf.init(tks)
+</span>33 <span style=''>
+</span>34 <span style=''>        tmf.getTrustManagers
+</span>35 <span style=''>      case (_, _) =&gt;
+</span>36 <span style=''>        log.debug(&quot;Using default JVM trust manager&quot;)
+</span>37 <span style=''>        null
+</span>38 <span style=''>    }
+</span>39 <span style=''>
+</span>40 <span style=''>  def serverContext(keystore : KeyStore, keyPass : Array[Char]) : SSLContext = {
+</span>41 <span style=''>
+</span>42 <span style=''>    val keyManager : Array[KeyManager] = {
+</span>43 <span style=''>      val kmf = </span><span style='background: #AEF1AE'>KeyManagerFactory.getInstance(&quot;SunX509&quot;)</span><span style=''>
+</span>44 <span style=''>      </span><span style='background: #AEF1AE'>kmf.init(keystore, keyPass)</span><span style=''>
+</span>45 <span style=''>      </span><span style='background: #AEF1AE'>kmf.getKeyManagers</span><span style=''>
+</span>46 <span style=''>    }
+</span>47 <span style=''>
+</span>48 <span style=''>    val result = </span><span style='background: #AEF1AE'>SSLContext.getInstance(&quot;TLSv1.2&quot;)</span><span style=''>
+</span>49 <span style=''>    </span><span style='background: #AEF1AE'>result.init(keyManager, trustManager, null)</span><span style=''>
+</span>50 <span style=''>
+</span>51 <span style=''>    result
+</span>52 <span style=''>  }
+</span>53 <span style=''>
+</span>54 <span style=''>  lazy val clientContext : SSLContext = {
+</span>55 <span style=''>    val ctxt = SSLContext.getInstance(&quot;TLSv1.2&quot;)
+</span>56 <span style=''>    ctxt.init(null, trustManager, null)
+</span>57 <span style=''>
+</span>58 <span style=''>    ctxt
+</span>59 <span style=''>  }
+</span>60 <span style=''>}
+</span>61 <span style=''>// scalastyle:on null
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          10
+        </td>
+        <td>
+          10206
+        </td>
+        <td>
+          224
+          -
+          250
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          11
+        </td>
+        <td>
+          9673
+        </td>
+        <td>
+          290
+          -
+          324
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          9915
+        </td>
+        <td>
+          470
+          -
+          496
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          10255
+        </td>
+        <td>
+          1317
+          -
+          1357
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          9753
+        </td>
+        <td>
+          1364
+          -
+          1391
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          45
+        </td>
+        <td>
+          9643
+        </td>
+        <td>
+          1398
+          -
+          1416
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          48
+        </td>
+        <td>
+          9966
+        </td>
+        <td>
+          1441
+          -
+          1474
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          9991
+        </td>
+        <td>
+          1517
+          -
+          1521
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          10182
+        </td>
+        <td>
+          1479
+          -
+          1522
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

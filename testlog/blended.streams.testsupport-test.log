@@ -1,0 +1,6 @@
+2020-05-04-09:25.39.424 |      151 | INFO  [pool-1-thread-1-ScalaTest-running-FlowMessageAssertionSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The FlowMessageAssertions should support to check expected string bodies
+2020-05-04-09:25.39.493 |      220 | INFO  [pool-1-thread-1-ScalaTest-running-FlowMessageAssertionSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The FlowMessageAssertions should support to check expected string bodies
+--------------------------------------------------------------------------------
+2020-05-04-09:25.39.494 |      221 | INFO  [pool-1-thread-1-ScalaTest-running-FlowMessageAssertionSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The FlowMessageAssertions should support to check expected byte string bodies
+2020-05-04-09:25.39.512 |      239 | INFO  [pool-1-thread-1-ScalaTest-running-FlowMessageAssertionSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The FlowMessageAssertions should support to check expected byte string bodies
+--------------------------------------------------------------------------------

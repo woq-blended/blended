@@ -1,0 +1,6 @@
+2020-05-04-09:23.08.798 |      236 | INFO  [pool-1-thread-1-ScalaTest-running-MgmtBaseActivatorSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Mgmt base activator should register the framework as OSGi service
+2020-05-04-09:23.09.065 |      503 | INFO  [pool-1-thread-1-ScalaTest-running-MgmtBaseActivatorSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.container.context.api] with id [1]
+2020-05-04-09:23.09.082 |      520 | INFO  [pool-1-thread-1-ScalaTest-running-MgmtBaseActivatorSpec] blended.mgmt.base.internal.MgmtBaseActivator : Creating Framework Service instance...
+2020-05-04-09:23.09.092 |      530 | INFO  [pool-1-thread-1-ScalaTest-running-MgmtBaseActivatorSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.mgmt.base] with id [2]
+2020-05-04-09:23.09.110 |      548 | INFO  [pool-1-thread-1-ScalaTest-running-MgmtBaseActivatorSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Mgmt base activator should register the framework as OSGi service
+--------------------------------------------------------------------------------

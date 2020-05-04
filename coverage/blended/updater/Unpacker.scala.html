@@ -1,0 +1,464 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/updater/Unpacker.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.updater
+</span>2 <span style=''>
+</span>3 <span style=''>import java.io.File
+</span>4 <span style=''>
+</span>5 <span style=''>import akka.actor.{Actor, ActorLogging, ActorRef, Props, actorRef2Scala}
+</span>6 <span style=''>import akka.event.LoggingReceive
+</span>7 <span style=''>import blended.updater.config.util.Unzipper
+</span>8 <span style=''>
+</span>9 <span style=''>import scala.collection.immutable._
+</span>10 <span style=''>import scala.util.{Failure, Success}
+</span>11 <span style=''>
+</span>12 <span style=''>object Unpacker {
+</span>13 <span style=''>
+</span>14 <span style=''>  // Messages
+</span>15 <span style=''>  case class Unpack(reqId : String, requestRef : ActorRef, archiveFile : File, targetDir : File)
+</span>16 <span style=''>
+</span>17 <span style=''>  // Replies
+</span>18 <span style=''>  sealed trait UnpackReply {
+</span>19 <span style=''>    def reqId : String
+</span>20 <span style=''>  }
+</span>21 <span style=''>  final case class UnpackingFinished(reqId : String) extends UnpackReply
+</span>22 <span style=''>  final case class UnpackingFailed(reqId : String, error : Throwable) extends UnpackReply
+</span>23 <span style=''>
+</span>24 <span style=''>  def props() : Props = </span><span style='background: #AEF1AE'>Props(new Unpacker())</span><span style=''>
+</span>25 <span style=''>
+</span>26 <span style=''>}
+</span>27 <span style=''>
+</span>28 <span style=''>/**
+</span>29 <span style=''> * Blocking unpacker for ZIP files.
+</span>30 <span style=''> */
+</span>31 <span style=''>class Unpacker() extends Actor with ActorLogging {
+</span>32 <span style=''>  import Unpacker._
+</span>33 <span style=''>
+</span>34 <span style=''>  def receive : Actor.Receive = </span><span style='background: #AEF1AE'>LoggingReceive {
+</span>35 <span style=''></span><span style='background: #AEF1AE'>    case Unpack(reqId, requestRef, archiveFile, targetDir) =&gt;
+</span>36 <span style=''></span><span style='background: #AEF1AE'>      val blacklist = </span><span style='background: #F0ADAD'>List(&quot;profile.conf&quot;, &quot;bundles&quot;, &quot;resources&quot;)</span><span style='background: #AEF1AE'>
+</span>37 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>Unzipper.unzip(archiveFile, targetDir, Nil,
+</span>38 <span style=''></span><span style='background: #F0ADAD'>        fileSelector = Some { fileName : String =&gt; !blacklist.exists(fileName == _) },
+</span>39 <span style=''></span><span style='background: #F0ADAD'>        placeholderReplacer = None)</span><span style='background: #AEF1AE'> match {
+</span>40 <span style=''></span><span style='background: #AEF1AE'>          case Success(files) =&gt; </span><span style='background: #F0ADAD'>requestRef ! UnpackingFinished(reqId)</span><span style='background: #AEF1AE'>
+</span>41 <span style=''></span><span style='background: #AEF1AE'>          case Failure(e)     =&gt; </span><span style='background: #F0ADAD'>requestRef ! UnpackingFailed(reqId, e)</span><span style='background: #AEF1AE'>
+</span>42 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>43 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>44 <span style=''>
+</span>45 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          13502
+        </td>
+        <td>
+          659
+          -
+          680
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          13286
+        </td>
+        <td>
+          665
+          -
+          679
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          13104
+        </td>
+        <td>
+          833
+          -
+          1316
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          13587
+        </td>
+        <td>
+          848
+          -
+          848
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          13246
+        </td>
+        <td>
+          848
+          -
+          848
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          13609
+        </td>
+        <td>
+          934
+          -
+          978
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          12733
+        </td>
+        <td>
+          1024
+          -
+          1027
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          13589
+        </td>
+        <td>
+          985
+          -
+          1151
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          13507
+        </td>
+        <td>
+          1052
+          -
+          1114
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          13620
+        </td>
+        <td>
+          1098
+          -
+          1111
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          13195
+        </td>
+        <td>
+          1080
+          -
+          1112
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          39
+        </td>
+        <td>
+          12812
+        </td>
+        <td>
+          1146
+          -
+          1150
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          13140
+        </td>
+        <td>
+          1204
+          -
+          1204
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          12694
+        </td>
+        <td>
+          1193
+          -
+          1230
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          12815
+        </td>
+        <td>
+          1206
+          -
+          1230
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          13217
+        </td>
+        <td>
+          1277
+          -
+          1302
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          12738
+        </td>
+        <td>
+          1264
+          -
+          1302
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          12687
+        </td>
+        <td>
+          1275
+          -
+          1275
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

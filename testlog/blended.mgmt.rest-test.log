@@ -1,0 +1,284 @@
+2020-05-04-09:25.26.227 |      363 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt GET http://localhost:9995/mgmt/version should return the version
+2020-05-04-09:25.26.248 |      384 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Server path: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container
+2020-05-04-09:25.26.592 |      728 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.container.context.api] with id [1]
+2020-05-04-09:25.26.955 |     1091 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] akka.event.slf4j.Slf4jLogger : Slf4jLogger started
+2020-05-04-09:25.27.015 |     1151 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.akka] with id [2]
+2020-05-04-09:25.27.138 |     1274 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.akka.http.internal.BlendedAkkaHttpActivator : Starting HTTP server at [0.0.0.0:9995]
+2020-05-04-09:25.27.827 |     1963 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.akka.http.internal.RouteProvider : Listening for HttpContext registrations...
+2020-05-04-09:25.27.831 |     1967 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.akka.http.internal.RouteProvider : Listening for Route registrations...
+2020-05-04-09:25.27.842 |     1978 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.akka.http] with id [3]
+2020-05-04-09:25.27.845 |     1981 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.security.internal.SecurityActivator : Initialising Blended Login Module with implementation [simple]
+2020-05-04-09:25.27.846 |     1982 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.security.internal.SecurityActivator : Initialising security manager with LoginModule [blended.security.ConfigLoginModule].
+2020-05-04-09:25.27.848 |     1984 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.security.internal.SecurityActivator : Using ConfigPermissionManager
+2020-05-04-09:25.27.856 |     1992 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.security] with id [4]
+2020-05-04-09:25.27.856 |     1992 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.repo.internal.ArtifactRepoActivator : About to activate bundle: blended.mgmt.repo
+2020-05-04-09:25.27.859 |     1995 | WARN  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.repo.internal.ArtifactRepoActivator : baseDir for artifact repository does not exist: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container/repositories/artifacts
+2020-05-04-09:25.27.860 |     1996 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.akka.http.internal.BlendedAkkaHttpActivator : Started HTTP server at /0:0:0:0:0:0:0:0:9995
+2020-05-04-09:25.27.862 |     1998 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.repo.internal.ArtifactRepoActivator : Created service: FileArtifactRepo(repoId=artifacts,baseDir=/var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container/repositories/artifacts)
+2020-05-04-09:25.27.865 |     2001 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.mgmt.repo] with id [5]
+2020-05-04-09:25.27.869 |     2005 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.mgmt.rest] with id [6]
+2020-05-04-09:25.27.875 |     2011 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.updater.remote] with id [7]
+2020-05-04-09:25.27.930 |     2066 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] com.zaxxer.hikari.HikariDataSource : HikariPool-1 - Starting...
+2020-05-04-09:25.28.131 |     2267 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] com.zaxxer.hikari.HikariDataSource : HikariPool-1 - Start completed.
+2020-05-04-09:25.28.748 |     2884 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : SELECT COUNT(*) FROM PUBLIC.DATABASECHANGELOGLOCK
+2020-05-04-09:25.28.763 |     2899 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : CREATE TABLE PUBLIC.DATABASECHANGELOGLOCK (ID INT NOT NULL, LOCKED BOOLEAN NOT NULL, LOCKGRANTED TIMESTAMP, LOCKEDBY VARCHAR(255), CONSTRAINT PK_DATABASECHANGELOGLOCK PRIMARY KEY (ID))
+2020-05-04-09:25.28.769 |     2905 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : SELECT COUNT(*) FROM PUBLIC.DATABASECHANGELOGLOCK
+2020-05-04-09:25.28.773 |     2909 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : DELETE FROM PUBLIC.DATABASECHANGELOGLOCK
+2020-05-04-09:25.28.774 |     2910 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : INSERT INTO PUBLIC.DATABASECHANGELOGLOCK (ID, LOCKED) VALUES (1, FALSE)
+2020-05-04-09:25.28.776 |     2912 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : SELECT LOCKED FROM PUBLIC.DATABASECHANGELOGLOCK WHERE ID=1
+2020-05-04-09:25.28.784 |     2920 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.lockservice.StandardLockService : Successfully acquired change log lock
+2020-05-04-09:25.29.482 |     3618 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.changelog.StandardChangeLogHistoryService : Creating database history table with name: PUBLIC.DATABASECHANGELOG
+2020-05-04-09:25.29.483 |     3619 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : CREATE TABLE PUBLIC.DATABASECHANGELOG (ID VARCHAR(255) NOT NULL, AUTHOR VARCHAR(255) NOT NULL, FILENAME VARCHAR(255) NOT NULL, DATEEXECUTED TIMESTAMP NOT NULL, ORDEREXECUTED INT NOT NULL, EXECTYPE VARCHAR(10) NOT NULL, MD5SUM VARCHAR(35), DESCRIPTION VARCHAR(255), COMMENTS VARCHAR(255), TAG VARCHAR(255), LIQUIBASE VARCHAR(20), CONTEXTS VARCHAR(255), LABELS VARCHAR(255), DEPLOYMENT_ID VARCHAR(10))
+2020-05-04-09:25.29.485 |     3621 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : SELECT COUNT(*) FROM PUBLIC.DATABASECHANGELOG
+2020-05-04-09:25.29.485 |     3621 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.changelog.StandardChangeLogHistoryService : Reading from PUBLIC.DATABASECHANGELOG
+2020-05-04-09:25.29.485 |     3621 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : SELECT * FROM PUBLIC.DATABASECHANGELOG ORDER BY DATEEXECUTED ASC, ORDEREXECUTED ASC
+2020-05-04-09:25.29.486 |     3622 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : SELECT COUNT(*) FROM PUBLIC.DATABASECHANGELOGLOCK
+2020-05-04-09:25.29.503 |     3639 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : CREATE TABLE PUBLIC.PersistedClass (id BIGINT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, CONSTRAINT PK_PERSISTEDCLASS PRIMARY KEY (id))
+2020-05-04-09:25.29.508 |     3644 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.changelog.ChangeSet : Table PersistedClass created
+2020-05-04-09:25.29.509 |     3645 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : CREATE TABLE PUBLIC.PersistedField (id BIGINT AUTO_INCREMENT NOT NULL, holderId BIGINT NOT NULL, fieldId BIGINT NOT NULL, baseFieldId BIGINT, name VARCHAR(100) NOT NULL, valueLong BIGINT, valueDouble DOUBLE, valueString VARCHAR(200), typeName VARCHAR(10) NOT NULL, CONSTRAINT PK_PERSISTEDFIELD PRIMARY KEY (id), CONSTRAINT FK_PersistedField_holderId FOREIGN KEY (holderId) REFERENCES PUBLIC.PersistedClass(id) ON DELETE CASCADE)
+2020-05-04-09:25.29.516 |     3652 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.changelog.ChangeSet : Table PersistedField created
+2020-05-04-09:25.29.516 |     3652 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.changelog.ChangeSet : ChangeSet blended/persistence/jdbc/PersistedClassDao-changelog.xml::PersistedClassDao-1::TobiasRoeser ran successfully in 14ms
+2020-05-04-09:25.29.517 |     3653 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : SELECT MAX(ORDEREXECUTED) FROM PUBLIC.DATABASECHANGELOG
+2020-05-04-09:25.29.522 |     3658 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.executor.jvm.JdbcExecutor : INSERT INTO PUBLIC.DATABASECHANGELOG (ID, AUTHOR, FILENAME, DATEEXECUTED, ORDEREXECUTED, MD5SUM, DESCRIPTION, COMMENTS, EXECTYPE, CONTEXTS, LABELS, LIQUIBASE, DEPLOYMENT_ID) VALUES ('PersistedClassDao-1', 'TobiasRoeser', 'blended/persistence/jdbc/PersistedClassDao-changelog.xml', NOW(), 1, '8:d1e1435c9881ccd0184a0874f4558a56', 'createTable tableName=PersistedClass; createTable tableName=PersistedField', '', 'EXECUTED', NULL, NULL, '3.6.1', '8577129486')
+2020-05-04-09:25.29.524 |     3660 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] liquibase.lockservice.StandardLockService : Successfully released change log lock
+2020-05-04-09:25.29.526 |     3662 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.persistence.h2.internal.H2Activator : Database initialized successfully
+2020-05-04-09:25.29.562 |     3698 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServiceImpl : This is CollectorServiceImpl(updater=blended.updater.remote.RemoteUpdater@496cf736,remoteContainerStatePersistor=blended.mgmt.rest.internal.RemoteContainerStatePersistor@3b77cb93,mgr=blended.security.internal.ConfigPermissionManager@56cca962,version=0.0.0)
+2020-05-04-09:25.29.565 |     3701 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.akka.http.internal.RouteProvider : Adding http context: SimpleHttpContext(mgmt,akka.http.scaladsl.server.directives.BasicDirectives$$Lambda$986/539945310@4378332c)
+2020-05-04-09:25.29.572 |     3708 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.persistence.h2] with id [8]
+2020-05-04-09:25.29.573 |     3709 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Test-Server up and running. Starting test case...
+2020-05-04-09:25.29.863 |     3999 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt GET http://localhost:9995/mgmt/version should return the version
+--------------------------------------------------------------------------------
+2020-05-04-09:25.29.865 |     4001 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt OverlayConfig GET without credentials should fail with 401 - pending until feature is enabled
+2020-05-04-09:25.29.869 |     4005 | ERROR [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Exception caught
+org.scalatest.exceptions.TestPendingException: null
+	at org.scalatest.Assertions.pending(Assertions.scala:1285)
+	at org.scalatest.Assertions.pending$(Assertions.scala:1285)
+	at blended.testsupport.pojosr.SimplePojoContainerSpec.pending(SimplePojoContainerSpec.scala:6)
+	at blended.mgmt.rest.internal.CollectorServicePojosrSpec.$anonfun$new$10(CollectorServicePojosrSpec.scala:92)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.logException(LoggingFreeSpec.scala:40)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.logException$(LoggingFreeSpec.scala:39)
+	at blended.mgmt.rest.internal.CollectorServicePojosrSpec.logException(CollectorServicePojosrSpec.scala:29)
+	at blended.mgmt.rest.internal.CollectorServicePojosrSpec.$anonfun$new$9(CollectorServicePojosrSpec.scala:90)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+	at org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+	at org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+	at org.scalatest.Transformer.apply(Transformer.scala:22)
+	at org.scalatest.Transformer.apply(Transformer.scala:20)
+	at org.scalatest.FreeSpecLike$$anon$1.apply(FreeSpecLike.scala:407)
+	at org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+	at org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+	at blended.testsupport.pojosr.SimplePojoContainerSpec.withFixture(SimplePojoContainerSpec.scala:6)
+	at org.scalatest.FreeSpecLike.invokeWithFixture$1(FreeSpecLike.scala:405)
+	at org.scalatest.FreeSpecLike.$anonfun$runTest$1(FreeSpecLike.scala:417)
+	at org.scalatest.SuperEngine.runTestImpl(Engine.scala:289)
+	at org.scalatest.FreeSpecLike.runTest(FreeSpecLike.scala:417)
+	at org.scalatest.FreeSpecLike.runTest$(FreeSpecLike.scala:399)
+	at blended.mgmt.rest.internal.CollectorServicePojosrSpec.blended$testsupport$scalatest$LoggingFreeSpecLike$$super$runTest(CollectorServicePojosrSpec.scala:29)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest(LoggingFreeSpec.scala:30)
+	at blended.testsupport.scalatest.LoggingFreeSpecLike.runTest$(LoggingFreeSpec.scala:25)
+	at blended.mgmt.rest.internal.CollectorServicePojosrSpec.runTest(CollectorServicePojosrSpec.scala:29)
+	at org.scalatest.FreeSpecLike.$anonfun$runTests$1(FreeSpecLike.scala:476)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:396)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:373)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:410)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:373)
+	at org.scalatest.SuperEngine.$anonfun$runTestsInBranch$1(Engine.scala:410)
+	at scala.collection.immutable.List.foreach(List.scala:392)
+	at org.scalatest.SuperEngine.traverseSubNodes$1(Engine.scala:384)
+	at org.scalatest.SuperEngine.runTestsInBranch(Engine.scala:379)
+	at org.scalatest.SuperEngine.runTestsImpl(Engine.scala:461)
+	at org.scalatest.FreeSpecLike.runTests(FreeSpecLike.scala:476)
+	at org.scalatest.FreeSpecLike.runTests$(FreeSpecLike.scala:475)
+	at blended.mgmt.rest.internal.CollectorServicePojosrSpec.runTests(CollectorServicePojosrSpec.scala:29)
+	at org.scalatest.Suite.run(Suite.scala:1147)
+	at org.scalatest.Suite.run$(Suite.scala:1129)
+	at blended.testsupport.pojosr.SimplePojoContainerSpec.org$scalatest$BeforeAndAfterAll$$super$run(SimplePojoContainerSpec.scala:6)
+	at org.scalatest.BeforeAndAfterAll.liftedTree1$1(BeforeAndAfterAll.scala:213)
+	at org.scalatest.BeforeAndAfterAll.run(BeforeAndAfterAll.scala:210)
+	at org.scalatest.BeforeAndAfterAll.run$(BeforeAndAfterAll.scala:208)
+	at blended.mgmt.rest.internal.CollectorServicePojosrSpec.org$scalatest$FreeSpecLike$$super$run(CollectorServicePojosrSpec.scala:29)
+	at org.scalatest.FreeSpecLike.$anonfun$run$1(FreeSpecLike.scala:520)
+	at org.scalatest.SuperEngine.runImpl(Engine.scala:521)
+	at org.scalatest.FreeSpecLike.run(FreeSpecLike.scala:520)
+	at org.scalatest.FreeSpecLike.run$(FreeSpecLike.scala:519)
+	at blended.mgmt.rest.internal.CollectorServicePojosrSpec.run(CollectorServicePojosrSpec.scala:29)
+	at org.scalatest.tools.Framework.org$scalatest$tools$Framework$$runSuite(Framework.scala:314)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:507)
+	at sbt.ForkMain$Run.lambda$runTest$1(ForkMain.java:304)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+2020-05-04-09:25.29.874 |     4010 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt OverlayConfig GET without credentials should fail with 401 - pending until feature is enabled
+--------------------------------------------------------------------------------
+2020-05-04-09:25.29.874 |     4010 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt OverlayConfig initial GET should return empty overlay list
+2020-05-04-09:25.29.875 |     4011 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Server path: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container
+2020-05-04-09:25.29.877 |     4013 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Test-Server up and running. Starting test case...
+2020-05-04-09:25.29.906 |     4042 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt OverlayConfig initial GET should return empty overlay list
+--------------------------------------------------------------------------------
+2020-05-04-09:25.29.906 |     4042 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt OverlayConfig POST allows upload of new OverlayConfig
+2020-05-04-09:25.29.913 |     4049 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Server path: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container
+2020-05-04-09:25.29.914 |     4050 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Test-Server up and running. Starting test case...
+2020-05-04-09:25.29.972 |     4108 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:25.29.976 |     4112 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Authenticating user [tester]
+2020-05-04-09:25.29.985 |     4121 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.security.akka.http.JAASSecurityDirectives : subject: Subject:
+	Principal: UserPrincipal(tester)
+	Principal: GroupPrincipal(admins)
+	Principal: GroupPrincipal(blended)
+ with principal: tester
+2020-05-04-09:25.29.999 |     4135 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.security.akka.http.JAASSecurityDirectives : subject/principal: tester has required permissions: BlendedPermission(Some(profile:update),Map())
+2020-05-04-09:25.30.045 |     4181 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt OverlayConfig POST allows upload of new OverlayConfig
+--------------------------------------------------------------------------------
+2020-05-04-09:25.30.051 |     4187 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt ActivateProfile POST with missing credentials fails with 401 Unauthorized
+2020-05-04-09:25.30.053 |     4189 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Server path: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container
+2020-05-04-09:25.30.054 |     4190 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Test-Server up and running. Starting test case...
+2020-05-04-09:25.30.108 |     4244 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt ActivateProfile POST with missing credentials fails with 401 Unauthorized
+--------------------------------------------------------------------------------
+2020-05-04-09:25.30.108 |     4244 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt ActivateProfile POST an valid ActivateProfile action succeeds
+2020-05-04-09:25.30.110 |     4246 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Server path: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container
+2020-05-04-09:25.30.111 |     4247 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Test-Server up and running. Starting test case...
+2020-05-04-09:25.30.118 |     4254 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:25.30.118 |     4254 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Authenticating user [tester]
+2020-05-04-09:25.30.119 |     4255 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.security.akka.http.JAASSecurityDirectives : subject: Subject:
+	Principal: UserPrincipal(tester)
+	Principal: GroupPrincipal(admins)
+	Principal: GroupPrincipal(blended)
+ with principal: tester
+2020-05-04-09:25.30.120 |     4256 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.security.akka.http.JAASSecurityDirectives : subject/principal: tester has required permissions: BlendedPermission(Some(profile:update),Map())
+2020-05-04-09:25.30.218 |     4354 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Response: Response(Right("Added UpdateAction to ci1_ActivateProfile"),200,OK,Vector((Server,akka-http/10.1.7), (Access-Control-Allow-Origin,*), (Content-Length,43), (Date,Mon, 04 May 2020 07:25:30 GMT), (Content-Type,application/json)),List())
+2020-05-04-09:25.30.220 |     4356 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt ActivateProfile POST an valid ActivateProfile action succeeds
+--------------------------------------------------------------------------------
+2020-05-04-09:25.30.221 |     4357 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt Upload deployment pack Uploading with missing credentials should fail with 401
+2020-05-04-09:25.30.223 |     4359 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Server path: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container
+2020-05-04-09:25.30.224 |     4360 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Test-Server up and running. Starting test case...
+2020-05-04-09:25.30.270 |     4406 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt Upload deployment pack Uploading with missing credentials should fail with 401
+--------------------------------------------------------------------------------
+2020-05-04-09:25.30.271 |     4407 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt Upload deployment pack Uploading with wrong credentials should fail with 401
+2020-05-04-09:25.30.272 |     4408 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Server path: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container
+2020-05-04-09:25.30.274 |     4410 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Test-Server up and running. Starting test case...
+2020-05-04-09:25.30.284 |     4420 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:25.30.284 |     4420 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Authenticating user [unknown]
+2020-05-04-09:25.30.285 |     4421 | ERROR [scala-execution-context-global-29] blended.security.akka.http.JAASSecurityDirectives : Login failed for [unknown]
+javax.security.auth.login.LoginException: User [unknown] not found in module [simple]
+	at blended.security.ConfigLoginModule.doLogin(ConfigLoginModule.scala:16)
+	at blended.security.AbstractLoginModule.login(AbstractLoginModule.scala:80)
+	at blended.security.boot.BlendedLoginModule.login(BlendedLoginModule.scala:96)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at javax.security.auth.login.LoginContext.invoke(LoginContext.java:755)
+	at javax.security.auth.login.LoginContext.access$000(LoginContext.java:195)
+	at javax.security.auth.login.LoginContext$4.run(LoginContext.java:682)
+	at javax.security.auth.login.LoginContext$4.run(LoginContext.java:680)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at javax.security.auth.login.LoginContext.invokePriv(LoginContext.java:680)
+	at javax.security.auth.login.LoginContext.login(LoginContext.java:587)
+	at blended.security.akka.http.JAASSecurityDirectives.auth(JAASSecurityDirectives.scala:46)
+	at blended.security.akka.http.JAASSecurityDirectives.$anonfun$myUserPassAuthenticator$1(JAASSecurityDirectives.scala:58)
+	at scala.concurrent.Future$.$anonfun$apply$1(Future.scala:658)
+	at scala.util.Success.$anonfun$map$1(Try.scala:255)
+	at scala.util.Success.map(Try.scala:213)
+	at scala.concurrent.Future.$anonfun$map$1(Future.scala:292)
+	at scala.concurrent.impl.Promise.liftedTree1$1(Promise.scala:33)
+	at scala.concurrent.impl.Promise.$anonfun$transform$1(Promise.scala:33)
+	at scala.concurrent.impl.CallbackRunnable.run(Promise.scala:64)
+	at java.util.concurrent.ForkJoinTask$RunnableExecuteAction.exec(ForkJoinTask.java:1402)
+	at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:289)
+	at java.util.concurrent.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1056)
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1692)
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:157)
+2020-05-04-09:25.30.291 |     4427 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt Upload deployment pack Uploading with wrong credentials should fail with 401
+--------------------------------------------------------------------------------
+2020-05-04-09:25.30.291 |     4427 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt Upload deployment pack Multipart POST with empty profile (no bundles) should fail with validation errors
+2020-05-04-09:25.30.293 |     4429 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Server path: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container
+2020-05-04-09:25.30.294 |     4430 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Test-Server up and running. Starting test case...
+2020-05-04-09:25.30.302 |     4438 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:25.30.302 |     4438 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Authenticating user [tester]
+2020-05-04-09:25.30.303 |     4439 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.security.akka.http.JAASSecurityDirectives : subject: Subject:
+	Principal: UserPrincipal(tester)
+	Principal: GroupPrincipal(admins)
+	Principal: GroupPrincipal(blended)
+ with principal: tester
+2020-05-04-09:25.30.303 |     4439 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.security.akka.http.JAASSecurityDirectives : subject/principal: tester has required permissions: BlendedPermission(Some(profile:update),Map())
+2020-05-04-09:25.30.304 |     4440 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:25.30.304 |     4440 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Authenticating user [tester]
+2020-05-04-09:25.30.304 |     4440 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.security.akka.http.JAASSecurityDirectives : subject: Subject:
+	Principal: UserPrincipal(tester)
+	Principal: GroupPrincipal(admins)
+	Principal: GroupPrincipal(blended)
+ with principal: tester
+2020-05-04-09:25.30.305 |     4441 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.security.akka.http.JAASSecurityDirectives : subject/principal: tester has required permissions: BlendedPermission(Some(repository:upload:artifacts),Map())
+2020-05-04-09:25.30.393 |     4529 | ERROR [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.mgmt.rest.internal.CollectorService : Could not process uploaded deployment pack file [/tmp/profile-upload-deploymentpack1622514464641129502.tmp]
+java.lang.IllegalArgumentException: requirement failed: A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): 0
+	at scala.Predef$.require(Predef.scala:281)
+	at blended.updater.config.ResolvedRuntimeConfig.<init>(ResolvedRuntimeConfig.scala:64)
+	at blended.updater.config.ResolvedRuntimeConfig$.apply(ResolvedRuntimeConfig.scala:81)
+	at blended.updater.config.RuntimeConfig.$anonfun$resolve$1(RuntimeConfig.scala:43)
+	at scala.util.Try$.apply(Try.scala:213)
+	at blended.updater.config.RuntimeConfig.resolve(RuntimeConfig.scala:43)
+	at blended.mgmt.rest.internal.CollectorService.$anonfun$processDeploymentPack$6(CollectorService.scala:292)
+	at scala.util.Success.flatMap(Try.scala:251)
+	at blended.mgmt.rest.internal.CollectorService.$anonfun$processDeploymentPack$3(CollectorService.scala:292)
+	at scala.util.Try$.apply(Try.scala:213)
+	at blended.mgmt.rest.internal.CollectorService.$anonfun$processDeploymentPack$2(CollectorService.scala:286)
+	at scala.util.Success.flatMap(Try.scala:251)
+	at blended.mgmt.rest.internal.CollectorService.processDeploymentPack(CollectorService.scala:285)
+	at blended.mgmt.rest.internal.CollectorService.processDeploymentPack$(CollectorService.scala:269)
+	at blended.mgmt.rest.internal.CollectorServiceImpl.processDeploymentPack(CollectorServiceImpl.scala:27)
+	at blended.mgmt.rest.internal.CollectorService.$anonfun$uploadDeploymentPackRoute$8(CollectorService.scala:238)
+	at akka.http.scaladsl.server.util.ApplyConverterInstances$$anon$2.$anonfun$apply$2(ApplyConverterInstances.scala:20)
+	at akka.http.scaladsl.server.directives.OnSuccessMagnet$$anon$1.$anonfun$directive$3(FutureDirectives.scala:97)
+	at akka.http.scaladsl.util.FastFuture$.strictTransform$1(FastFuture.scala:41)
+	at akka.http.scaladsl.util.FastFuture$.$anonfun$transformWith$3(FastFuture.scala:51)
+	at scala.concurrent.impl.CallbackRunnable.run(Promise.scala:64)
+	at akka.dispatch.BatchingExecutor$AbstractBatch.processBatch(BatchingExecutor.scala:55)
+	at akka.dispatch.BatchingExecutor$BlockableBatch.$anonfun$run$1(BatchingExecutor.scala:91)
+	at scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.java:23)
+	at scala.concurrent.BlockContext$.withBlockContext(BlockContext.scala:85)
+	at akka.dispatch.BatchingExecutor$BlockableBatch.run(BatchingExecutor.scala:91)
+	at akka.dispatch.TaskInvocation.run(AbstractDispatcher.scala:40)
+	at akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinTask.exec(ForkJoinExecutorConfigurator.scala:44)
+	at akka.dispatch.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)
+	at akka.dispatch.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1339)
+	at akka.dispatch.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)
+	at akka.dispatch.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)
+2020-05-04-09:25.30.399 |     4535 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : body: Left(Could not process the uploaded deployment pack file. Reason: requirement failed: A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): 0)
+2020-05-04-09:25.30.400 |     4536 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : headers: Vector((Server,akka-http/10.1.7), (Access-Control-Allow-Origin,*), (Content-Length,181), (Date,Mon, 04 May 2020 07:25:30 GMT), (Content-Type,text/plain; charset=UTF-8))
+2020-05-04-09:25.30.401 |     4537 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : response: Response(Left(Could not process the uploaded deployment pack file. Reason: requirement failed: A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): 0),422,Unprocessable Entity,Vector((Server,akka-http/10.1.7), (Access-Control-Allow-Origin,*), (Content-Length,181), (Date,Mon, 04 May 2020 07:25:30 GMT), (Content-Type,text/plain; charset=UTF-8)),List())
+2020-05-04-09:25.30.403 |     4539 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt Upload deployment pack Multipart POST with empty profile (no bundles) should fail with validation errors
+--------------------------------------------------------------------------------
+2020-05-04-09:25.30.403 |     4539 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt Upload deployment pack Multipart POST with minimal profile (one bundles) should succeed
+2020-05-04-09:25.30.405 |     4541 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Server path: /var/lib/jenkins/workspace/oq-blended_blended_release-3.1.x/blended.mgmt.rest/target/scala-2.12/test-classes/container
+2020-05-04-09:25.30.406 |     4542 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : Test-Server up and running. Starting test case...
+2020-05-04-09:25.30.413 |     4549 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:25.30.413 |     4549 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Authenticating user [tester]
+2020-05-04-09:25.30.414 |     4550 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-2] blended.security.akka.http.JAASSecurityDirectives : subject: Subject:
+	Principal: UserPrincipal(tester)
+	Principal: GroupPrincipal(admins)
+	Principal: GroupPrincipal(blended)
+ with principal: tester
+2020-05-04-09:25.30.415 |     4551 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-2] blended.security.akka.http.JAASSecurityDirectives : subject/principal: tester has required permissions: BlendedPermission(Some(profile:update),Map())
+2020-05-04-09:25.30.415 |     4551 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:25.30.415 |     4551 | INFO  [scala-execution-context-global-29] blended.security.AbstractLoginModule : Authenticating user [tester]
+2020-05-04-09:25.30.416 |     4552 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-2] blended.security.akka.http.JAASSecurityDirectives : subject: Subject:
+	Principal: UserPrincipal(tester)
+	Principal: GroupPrincipal(admins)
+	Principal: GroupPrincipal(blended)
+ with principal: tester
+2020-05-04-09:25.30.417 |     4553 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-2] blended.security.akka.http.JAASSecurityDirectives : subject/principal: tester has required permissions: BlendedPermission(Some(repository:upload:artifacts),Map())
+2020-05-04-09:25.30.548 |     4684 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : body: Right("Uploaded profile test.pack.minimal 1.0.0")
+2020-05-04-09:25.30.548 |     4684 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : headers: Vector((Server,akka-http/10.1.7), (Access-Control-Allow-Origin,*), (Content-Length,42), (Date,Mon, 04 May 2020 07:25:30 GMT), (Content-Type,application/json))
+2020-05-04-09:25.30.548 |     4684 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.mgmt.rest.internal.CollectorServicePojosrSpec : response: Response(Right("Uploaded profile test.pack.minimal 1.0.0"),200,OK,Vector((Server,akka-http/10.1.7), (Access-Control-Allow-Origin,*), (Content-Length,42), (Date,Mon, 04 May 2020 07:25:30 GMT), (Content-Type,application/json)),List())
+2020-05-04-09:25.30.550 |     4686 | INFO  [pool-1-thread-1-ScalaTest-running-CollectorServicePojosrSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: REST-API with a self-hosted HTTP server at http://localhost:9995/mgmt Upload deployment pack Multipart POST with minimal profile (one bundles) should succeed
+--------------------------------------------------------------------------------
+2020-05-04-09:25.30.563 |     4699 | INFO  [pool-1-thread-1] com.zaxxer.hikari.HikariDataSource : HikariPool-1 - Shutdown initiated...
+2020-05-04-09:25.30.573 |     4709 | INFO  [pool-1-thread-1] com.zaxxer.hikari.HikariDataSource : HikariPool-1 - Shutdown completed.
+2020-05-04-09:25.30.575 |     4711 | INFO  [pool-1-thread-1] blended.akka.http.internal.BlendedAkkaHttpActivator : Stopping HTTP server at [0.0.0.0:9995]
+2020-05-04-09:25.30.576 |     4712 | INFO  [pool-1-thread-1] blended.akka.internal.BlendedAkkaActivator : Stopping ActorSystem

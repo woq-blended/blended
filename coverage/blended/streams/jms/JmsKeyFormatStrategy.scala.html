@@ -1,0 +1,409 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/streams/jms/JmsKeyFormatStrategy.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.streams.jms
+</span>2 <span style=''>
+</span>3 <span style=''>trait JmsKeyFormatStrategy {
+</span>4 <span style=''>  def handleReceivedKey(key : String) : String
+</span>5 <span style=''>  def handleSendKey(key : String) : String
+</span>6 <span style=''>}
+</span>7 <span style=''>
+</span>8 <span style=''>object DefaultKeyFormatStrategy {
+</span>9 <span style=''>  val hyphen : String = </span><span style='background: #AEF1AE'>&quot;-&quot;</span><span style=''>
+</span>10 <span style=''>  val dot : String = </span><span style='background: #AEF1AE'>&quot;.&quot;</span><span style=''>
+</span>11 <span style=''>  val hyphen_repl : String = </span><span style='background: #AEF1AE'>&quot;_HYPHEN_&quot;</span><span style=''>
+</span>12 <span style=''>  val dot_repl : String = </span><span style='background: #AEF1AE'>&quot;_DOT_&quot;</span><span style=''>
+</span>13 <span style=''>}
+</span>14 <span style=''>
+</span>15 <span style=''>class DefaultKeyFormatStrategy extends JmsKeyFormatStrategy {
+</span>16 <span style=''>
+</span>17 <span style=''> import DefaultKeyFormatStrategy._
+</span>18 <span style=''>
+</span>19 <span style=''>  override def handleReceivedKey(key: String): String = </span><span style='background: #AEF1AE'>key
+</span>20 <span style=''></span><span style='background: #AEF1AE'>    .replaceAll(hyphen_repl, hyphen)
+</span>21 <span style=''></span><span style='background: #AEF1AE'>    .replaceAll(dot_repl, dot)</span><span style=''>
+</span>22 <span style=''>
+</span>23 <span style=''>  override def handleSendKey(key: String): String = </span><span style='background: #AEF1AE'>key
+</span>24 <span style=''></span><span style='background: #AEF1AE'>    .replaceAll(hyphen, hyphen_repl)
+</span>25 <span style=''></span><span style='background: #AEF1AE'>    .replaceAll(&quot;\\&quot; + dot, dot_repl)</span><span style=''>
+</span>26 <span style=''>}
+</span>27 <span style=''>
+</span>28 <span style=''>class PassThroughKeyFormatStrategy extends JmsKeyFormatStrategy {
+</span>29 <span style=''>
+</span>30 <span style=''>  override def handleReceivedKey(key: String): String = key
+</span>31 <span style=''>  override def handleSendKey(key: String): String = key
+</span>32 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          9
+        </td>
+        <td>
+          23681
+        </td>
+        <td>
+          209
+          -
+          212
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          10
+        </td>
+        <td>
+          19168
+        </td>
+        <td>
+          234
+          -
+          237
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          11
+        </td>
+        <td>
+          21193
+        </td>
+        <td>
+          267
+          -
+          277
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          22901
+        </td>
+        <td>
+          304
+          -
+          311
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          20458
+        </td>
+        <td>
+          503
+          -
+          509
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          22670
+        </td>
+        <td>
+          490
+          -
+          501
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          20649
+        </td>
+        <td>
+          537
+          -
+          540
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          19652
+        </td>
+        <td>
+          470
+          -
+          541
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          22131
+        </td>
+        <td>
+          527
+          -
+          535
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          22542
+        </td>
+        <td>
+          623
+          -
+          634
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          19288
+        </td>
+        <td>
+          615
+          -
+          621
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          21019
+        </td>
+        <td>
+          595
+          -
+          673
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          22200
+        </td>
+        <td>
+          659
+          -
+          662
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          19714
+        </td>
+        <td>
+          664
+          -
+          672
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          21260
+        </td>
+        <td>
+          652
+          -
+          656
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          20644
+        </td>
+        <td>
+          652
+          -
+          662
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

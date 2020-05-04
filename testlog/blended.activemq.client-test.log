@@ -1,0 +1,234 @@
+2020-05-04-09:25.42.295 |      473 | INFO  [pool-1-thread-1] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.container.context.api] with id [1]
+2020-05-04-09:25.42.304 |      482 | INFO  [pool-1-thread-1] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [failing] with id [2]
+2020-05-04-09:25.42.711 |      889 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] akka.event.slf4j.Slf4jLogger : Slf4jLogger started
+2020-05-04-09:25.42.784 |      962 | INFO  [pool-1-thread-1] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.akka] with id [3]
+2020-05-04-09:25.42.803 |      981 | INFO  [pool-1-thread-1] blended.activemq.client.internal.AmqClientActivator : ActiveMQ Client connections using verifier [failing]
+2020-05-04-09:25.42.803 |      981 | INFO  [pool-1-thread-1] blended.activemq.client.internal.AmqClientActivator : Using verification failed handler [failing]
+2020-05-04-09:25.42.809 |      987 | INFO  [pool-1-thread-1] blended.activemq.client.internal.AmqClientActivator : Verifying ActiveMQ client connection(s) : [Config(SimpleConfigObject({"properties":{"brokerURL":"vm://conn2?create=false","clientId":"bar"}})),Config(SimpleConfigObject({"properties":{"brokerURL":"vm://conn1?create=false","clientId":"foo"}}))]
+2020-05-04-09:25.42.890 |     1068 | INFO  [pool-1-thread-1] blended.jms.utils.BlendedSingleConnectionFactory : Connection State Monitor [JMS-activemq-conn2] created.
+2020-05-04-09:25.42.899 |     1077 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.42.901 |     1079 | INFO  [pool-1-thread-1] blended.jms.utils.BlendedSingleConnectionFactory : Connection State Monitor [JMS-activemq-conn1] created.
+2020-05-04-09:25.42.901 |     1079 | WARN  [BlendedActorSystem-akka.actor.default-dispatcher-5] blended.activemq.client.internal.AmqClientActivator : Failed to verify connection [activemq:conn2]...invoking failed handler
+2020-05-04-09:25.42.902 |     1080 | WARN  [BlendedActorSystem-akka.actor.default-dispatcher-8] blended.activemq.client.internal.AmqClientActivator : Failed to verify connection [activemq:conn1]...invoking failed handler
+2020-05-04-09:25.42.902 |     1080 | INFO  [pool-1-thread-1] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.activemq.client] with id [4]
+2020-05-04-09:25.42.902 |     1080 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.42.912 |     1090 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Creating connection to JMS
+2020-05-04-09:25.42.912 |     1090 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Creating connection to JMS
+2020-05-04-09:25.42.913 |     1091 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Connection State Manager switching to state [Connecting]
+2020-05-04-09:25.42.913 |     1091 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Connection State Manager switching to state [Connecting]
+2020-05-04-09:25.42.913 |     1091 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-8] blended.jms.utils.internal.ConnectionHolder : Creating underlying connection for provider [activemq:conn2] as user [None] with client id [$[[uuid]]]
+2020-05-04-09:25.42.913 |     1091 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.jms.utils.internal.ConnectionHolder : Creating underlying connection for provider [activemq:conn1] as user [None] with client id [$[[uuid]]]
+2020-05-04-09:25.42.914 |     1092 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-8] blended.jms.utils.internal.ReflectionConfigHolder : Configuring connection factory of type [org.apache.activemq.ActiveMQConnectionFactory].
+2020-05-04-09:25.42.914 |     1092 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.jms.utils.internal.ReflectionConfigHolder : Configuring connection factory of type [org.apache.activemq.ActiveMQConnectionFactory].
+2020-05-04-09:25.42.945 |     1123 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.jms.utils.internal.ReflectionConfigHolder : Setting property [brokerURL] for connection factory [activemq:conn1] to [vm://conn1?create=false].
+2020-05-04-09:25.42.945 |     1123 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-8] blended.jms.utils.internal.ReflectionConfigHolder : Setting property [clientId] for connection factory [activemq:conn2] to [bar].
+2020-05-04-09:25.42.950 |     1128 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.jms.utils.internal.ReflectionConfigHolder : Setting property [clientId] for connection factory [activemq:conn1] to [foo].
+2020-05-04-09:25.42.951 |     1129 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-8] blended.jms.utils.internal.ReflectionConfigHolder : Setting property [brokerURL] for connection factory [activemq:conn2] to [vm://conn2?create=false].
+2020-05-04-09:25.42.958 |     1136 | WARN  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.jms.utils.internal.ConnectionHolder : Error creating connection [activemq:conn1] : [Could not create Transport. Reason: java.io.IOException: Broker named 'conn1' does not exist.]
+2020-05-04-09:25.42.959 |     1137 | WARN  [BlendedActorSystem-akka.actor.default-dispatcher-8] blended.jms.utils.internal.ConnectionHolder : Error creating connection [activemq:conn2] : [Could not create Transport. Reason: java.io.IOException: Broker named 'conn2' does not exist.]
+2020-05-04-09:25.42.963 |     1141 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-2] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.42.963 |     1141 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.42.967 |     1145 | ERROR [BlendedActorSystem-akka.actor.default-dispatcher-2] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Error connecting to JMS provider.
+javax.jms.JMSException: Error creating connection [activemq:conn2] : [Could not create Transport. Reason: java.io.IOException: Broker named 'conn2' does not exist.]
+	at blended.jms.utils.internal.ConnectionHolder.connect(ConnectionHolder.scala:77)
+	at blended.jms.utils.internal.JmsConnectionController$$anonfun$blended$jms$utils$internal$JmsConnectionController$$disconnected$1.applyOrElse(JmsConnectionController.scala:33)
+	at akka.actor.Actor.aroundReceive(Actor.scala:517)
+	at akka.actor.Actor.aroundReceive$(Actor.scala:515)
+	at blended.jms.utils.internal.JmsConnectionController.aroundReceive(JmsConnectionController.scala:19)
+	at akka.actor.ActorCell.receiveMessage(ActorCell.scala:592)
+	at akka.actor.ActorCell.invoke(ActorCell.scala:561)
+	at akka.dispatch.Mailbox.processMailbox(Mailbox.scala:258)
+	at akka.dispatch.Mailbox.run(Mailbox.scala:225)
+	at akka.dispatch.Mailbox.exec(Mailbox.scala:235)
+	at akka.dispatch.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)
+	at akka.dispatch.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1339)
+	at akka.dispatch.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)
+	at akka.dispatch.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)
+2020-05-04-09:25.42.967 |     1145 | ERROR [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Error connecting to JMS provider.
+javax.jms.JMSException: Error creating connection [activemq:conn1] : [Could not create Transport. Reason: java.io.IOException: Broker named 'conn1' does not exist.]
+	at blended.jms.utils.internal.ConnectionHolder.connect(ConnectionHolder.scala:77)
+	at blended.jms.utils.internal.JmsConnectionController$$anonfun$blended$jms$utils$internal$JmsConnectionController$$disconnected$1.applyOrElse(JmsConnectionController.scala:33)
+	at akka.actor.Actor.aroundReceive(Actor.scala:517)
+	at akka.actor.Actor.aroundReceive$(Actor.scala:515)
+	at blended.jms.utils.internal.JmsConnectionController.aroundReceive(JmsConnectionController.scala:19)
+	at akka.actor.ActorCell.receiveMessage(ActorCell.scala:592)
+	at akka.actor.ActorCell.invoke(ActorCell.scala:561)
+	at akka.dispatch.Mailbox.processMailbox(Mailbox.scala:258)
+	at akka.dispatch.Mailbox.run(Mailbox.scala:225)
+	at akka.dispatch.Mailbox.exec(Mailbox.scala:235)
+	at akka.dispatch.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)
+	at akka.dispatch.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1339)
+	at akka.dispatch.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)
+	at akka.dispatch.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)
+2020-05-04-09:25.42.968 |     1146 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-2] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Scheduling JMS connection check in [5 minutes]
+2020-05-04-09:25.42.968 |     1146 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Scheduling JMS connection check in [5 minutes]
+2020-05-04-09:25.42.976 |     1154 | INFO  [pool-1-thread-1-ScalaTest-running-FailingClientActivatorSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The ActiveMQ Client Activator should reject to create a Connection Factory if the connection verification failed
+2020-05-04-09:25.49.014 |     7192 | INFO  [pool-1-thread-1-ScalaTest-running-FailingClientActivatorSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The ActiveMQ Client Activator should reject to create a Connection Factory if the connection verification failed
+--------------------------------------------------------------------------------
+2020-05-04-09:25.49.030 |     7208 | INFO  [pool-1-thread-1] blended.akka.internal.BlendedAkkaActivator : Stopping ActorSystem
+2020-05-04-09:25.49.035 |     7213 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Stopping Connection State Manager
+2020-05-04-09:25.49.035 |     7213 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Stopping Connection State Manager
+2020-05-04-09:25.49.038 |     7216 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Connection State Manager switching to state [Closing]
+2020-05-04-09:25.49.038 |     7216 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Connection State Manager switching to state [Closing]
+2020-05-04-09:25.49.040 |     7218 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-11] akka.actor.RepointableActorRef : Message [blended.jms.utils.ConnectionStateChanged] without sender to Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn2#-1317620567] was not delivered. [1] dead letters encountered. If this is not an expected behavior, then [Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn2#-1317620567]] may have terminated unexpectedly, This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2020-05-04-09:25.49.042 |     7220 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-11] akka.actor.RepointableActorRef : Message [blended.jms.utils.ConnectionStateChanged] without sender to Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn2#-1317620567] was not delivered. [2] dead letters encountered. If this is not an expected behavior, then [Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn2#-1317620567]] may have terminated unexpectedly, This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2020-05-04-09:25.49.042 |     7220 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-11] akka.actor.RepointableActorRef : Message [blended.jms.utils.ConnectionStateChanged] without sender to Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn1#-1830102085] was not delivered. [3] dead letters encountered. If this is not an expected behavior, then [Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn1#-1830102085]] may have terminated unexpectedly, This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2020-05-04-09:25.49.042 |     7220 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-11] akka.actor.RepointableActorRef : Message [blended.jms.utils.ConnectionStateChanged] without sender to Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn1#-1830102085] was not delivered. [4] dead letters encountered. If this is not an expected behavior, then [Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn1#-1830102085]] may have terminated unexpectedly, This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2020-05-04-09:25.49.095 |     7273 | INFO  [pool-1-thread-1] org.apache.activemq.broker.BrokerService : Using Persistence Adapter: MemoryPersistenceAdapter
+2020-05-04-09:25.49.240 |     7418 | INFO  [pool-1-thread-1] org.apache.activemq.broker.BrokerService : Apache ActiveMQ 5.15.6 (roundtrip, ID:devel.wayofquality.de-35931-1588577149105-0:1) is starting
+2020-05-04-09:25.49.245 |     7423 | INFO  [pool-1-thread-1] org.apache.activemq.broker.BrokerService : Apache ActiveMQ 5.15.6 (roundtrip, ID:devel.wayofquality.de-35931-1588577149105-0:1) started
+2020-05-04-09:25.49.245 |     7423 | INFO  [pool-1-thread-1] org.apache.activemq.broker.BrokerService : For help or more information please see: http://activemq.apache.org
+2020-05-04-09:25.49.278 |     7456 | INFO  [roundtrip-akka.actor.default-dispatcher-3] akka.event.slf4j.Slf4jLogger : Slf4jLogger started
+2020-05-04-09:25.49.295 |     7473 | INFO  [pool-1-thread-1] blended.jms.utils.BlendedSingleConnectionFactory : Connection State Monitor [JMS-activemq-activemq] created.
+2020-05-04-09:25.49.296 |     7474 | INFO  [roundtrip-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.49.298 |     7476 | INFO  [roundtrip-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Creating connection to JMS
+2020-05-04-09:25.49.299 |     7477 | INFO  [roundtrip-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Connection State Manager switching to state [Connecting]
+2020-05-04-09:25.49.299 |     7477 | INFO  [roundtrip-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionHolder : Creating underlying connection for provider [activemq:activemq] as user [None] with client id [spec]
+2020-05-04-09:25.49.300 |     7478 | INFO  [pool-1-thread-1-ScalaTest-running-RoundtripConnectionVerifierSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The RoundtripConnectionVerifier should succeed upon a successfull request / response cycle
+2020-05-04-09:25.49.305 |     7483 | INFO  [roundtrip-akka.actor.default-dispatcher-5] org.apache.activemq.broker.TransportConnector : Connector vm://roundtrip started
+2020-05-04-09:25.49.336 |     7514 | INFO  [roundtrip-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionHolder : Successfully connected to [activemq:activemq] with clientId [spec]
+2020-05-04-09:25.49.338 |     7516 | INFO  [roundtrip-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Successfully connected to JMS provider
+2020-05-04-09:25.49.339 |     7517 | INFO  [roundtrip-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Connection State Manager switching to state [Connected]
+2020-05-04-09:25.49.399 |     7577 | INFO  [roundtrip-akka.actor.default-dispatcher-5] blended.activemq.client.RoundtripConnectionVerifier : Running verification probe for connection [activemq:activemq]
+2020-05-04-09:25.49.612 |     7790 | INFO  [roundtrip-akka.actor.default-dispatcher-5] blended.activemq.client.RoundtripConnectionVerifier : Request message sent successfully to [roundtrip] : [FlowEnvelope[e3a7cc43-67b3-4088-a08c-9cee1af02858][false][TextFlowMessage(content-size [12])(Map(AppJMSCorrelationID -> "5748e037-ea34-4129-9def-0e72cc30ee1d", AppJMSReplyTo -> "roundtrip"))]]
+2020-05-04-09:25.49.824 |     8002 | INFO  [roundtrip-akka.actor.default-dispatcher-5] blended.activemq.client.RoundtripConnectionVerifier : Message received [e3a7cc43-67b3-4088-a08c-9cee1af02858][Some(roundtrip)] after [225]ms in [roundtrip-1] : TextFlowMessage(content-size [12])(Map(JMSCorrelationID -> "5748e037-ea34-4129-9def-0e72cc30ee1d", AppJMSSrcDestination -> "roundtrip", AppJMSReplyTo -> "roundtrip", AppJMSSrcProvider -> "activemq", AppTransactionId -> "e3a7cc43-67b3-4088-a08c-9cee1af02858", AppJMSDeliveryMode -> "NonPersistent", AppJMSType -> (), AppJMSMessageId -> "ID:devel.wayofquality.de-35931-1588577149105-4:1:1:1:1", AppJMSTimestamp -> 1588577149595, AppJMSPriority -> 4, AppJMSCorrelationID -> "5748e037-ea34-4129-9def-0e72cc30ee1d", AppJMSExpiration -> 1588577150095, AppJMSSrcVendor -> "activemq"))
+2020-05-04-09:25.49.905 |     8083 | INFO  [roundtrip-akka.actor.default-dispatcher-2] blended.streams.StreamFactories$ : Stopping collector [roundtrip] after [Some(250 milliseconds)]
+2020-05-04-09:25.49.917 |     8095 | INFO  [roundtrip-akka.actor.default-dispatcher-6] blended.activemq.client.RoundtripConnectionVerifier : Verification result for client connection [activemq:activemq] is [true]
+2020-05-04-09:25.49.921 |     8099 | INFO  [pool-1-thread-1-ScalaTest-running-RoundtripConnectionVerifierSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The RoundtripConnectionVerifier should succeed upon a successfull request / response cycle
+--------------------------------------------------------------------------------
+2020-05-04-09:25.49.921 |     8099 | INFO  [pool-1-thread-1-ScalaTest-running-RoundtripConnectionVerifierSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The RoundtripConnectionVerifier should fail if the response message could not be verified
+2020-05-04-09:25.49.945 |     8123 | INFO  [roundtrip-akka.actor.default-dispatcher-4] blended.activemq.client.RoundtripConnectionVerifier : Running verification probe for connection [activemq:activemq]
+2020-05-04-09:25.49.979 |     8157 | INFO  [roundtrip-akka.actor.default-dispatcher-4] blended.activemq.client.RoundtripConnectionVerifier : Request message sent successfully to [roundtrip] : [FlowEnvelope[63ece98a-77aa-4b91-b735-a205e1df1b49][false][TextFlowMessage(content-size [12])(Map(AppJMSCorrelationID -> "e65d7a13-2308-484d-99b9-43374e71f0b9", AppJMSReplyTo -> "roundtrip"))]]
+2020-05-04-09:25.49.990 |     8168 | INFO  [roundtrip-akka.actor.default-dispatcher-7] blended.activemq.client.RoundtripConnectionVerifier : Message received [63ece98a-77aa-4b91-b735-a205e1df1b49][Some(roundtrip)] after [15]ms in [roundtrip-1] : TextFlowMessage(content-size [12])(Map(JMSCorrelationID -> "e65d7a13-2308-484d-99b9-43374e71f0b9", AppJMSSrcDestination -> "roundtrip", AppJMSReplyTo -> "roundtrip", AppJMSSrcProvider -> "activemq", AppTransactionId -> "63ece98a-77aa-4b91-b735-a205e1df1b49", AppJMSDeliveryMode -> "NonPersistent", AppJMSType -> (), AppJMSMessageId -> "ID:devel.wayofquality.de-35931-1588577149105-4:1:3:1:1", AppJMSTimestamp -> 1588577149975, AppJMSPriority -> 4, AppJMSCorrelationID -> "e65d7a13-2308-484d-99b9-43374e71f0b9", AppJMSExpiration -> 1588577150475, AppJMSSrcVendor -> "activemq"))
+2020-05-04-09:25.50.245 |     8423 | INFO  [roundtrip-akka.actor.default-dispatcher-12] blended.streams.StreamFactories$ : Stopping collector [roundtrip] after [Some(250 milliseconds)]
+2020-05-04-09:25.50.247 |     8425 | INFO  [roundtrip-akka.actor.default-dispatcher-6] blended.activemq.client.RoundtripConnectionVerifier : Verification result for client connection [activemq:activemq] is [false]
+2020-05-04-09:25.50.250 |     8428 | INFO  [pool-1-thread-1-ScalaTest-running-RoundtripConnectionVerifierSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The RoundtripConnectionVerifier should fail if the response message could not be verified
+--------------------------------------------------------------------------------
+2020-05-04-09:25.50.251 |     8429 | INFO  [pool-1-thread-1-ScalaTest-running-RoundtripConnectionVerifierSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The RoundtripConnectionVerifier should stay unresolved if the connection to the broker did not succeed
+2020-05-04-09:25.50.254 |     8432 | INFO  [pool-1-thread-1-ScalaTest-running-RoundtripConnectionVerifierSpec] blended.jms.utils.BlendedSingleConnectionFactory : Connection State Monitor [JMS-amq-unresolved] created.
+2020-05-04-09:25.50.255 |     8433 | INFO  [roundtrip-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.amq.unresolved : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.50.258 |     8436 | INFO  [roundtrip-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.amq.unresolved : Creating connection to JMS
+2020-05-04-09:25.50.259 |     8437 | INFO  [roundtrip-akka.actor.default-dispatcher-12] blended.jms.utils.internal.ConnectionHolder : Creating underlying connection for provider [amq:unresolved] as user [None] with client id [spec]
+2020-05-04-09:25.50.259 |     8437 | INFO  [roundtrip-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.amq.unresolved : Connection State Manager switching to state [Connecting]
+2020-05-04-09:25.50.259 |     8437 | WARN  [roundtrip-akka.actor.default-dispatcher-12] blended.jms.utils.internal.ConnectionHolder : Error creating connection [amq:unresolved] : [Could not create Transport. Reason: java.io.IOException: Broker named 'unresolved' does not exist.]
+2020-05-04-09:25.50.259 |     8437 | INFO  [roundtrip-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.amq.unresolved : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.50.260 |     8438 | ERROR [roundtrip-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.amq.unresolved : Error connecting to JMS provider.
+javax.jms.JMSException: Error creating connection [amq:unresolved] : [Could not create Transport. Reason: java.io.IOException: Broker named 'unresolved' does not exist.]
+	at blended.jms.utils.internal.ConnectionHolder.connect(ConnectionHolder.scala:77)
+	at blended.jms.utils.internal.JmsConnectionController$$anonfun$blended$jms$utils$internal$JmsConnectionController$$disconnected$1.applyOrElse(JmsConnectionController.scala:33)
+	at akka.actor.Actor.aroundReceive(Actor.scala:517)
+	at akka.actor.Actor.aroundReceive$(Actor.scala:515)
+	at blended.jms.utils.internal.JmsConnectionController.aroundReceive(JmsConnectionController.scala:19)
+	at akka.actor.ActorCell.receiveMessage(ActorCell.scala:592)
+	at akka.actor.ActorCell.invoke(ActorCell.scala:561)
+	at akka.dispatch.Mailbox.processMailbox(Mailbox.scala:258)
+	at akka.dispatch.Mailbox.run(Mailbox.scala:225)
+	at akka.dispatch.Mailbox.exec(Mailbox.scala:235)
+	at akka.dispatch.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)
+	at akka.dispatch.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1339)
+	at akka.dispatch.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)
+	at akka.dispatch.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)
+2020-05-04-09:25.50.260 |     8438 | INFO  [roundtrip-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.amq.unresolved : Scheduling JMS connection check in [5 minutes]
+2020-05-04-09:25.50.285 |     8463 | INFO  [roundtrip-akka.actor.default-dispatcher-3] blended.activemq.client.RoundtripConnectionVerifier : Running verification probe for connection [amq:unresolved]
+2020-05-04-09:25.50.290 |     8468 | ERROR [roundtrip-akka.actor.default-dispatcher-3] blended.jms.utils.BlendedSingleConnectionFactory : Error getting Connection Factory [Error connecting to [SimpleIdAwareConnectionFactory(amq:unresolved)(spec)].]
+2020-05-04-09:25.51.317 |     9495 | INFO  [roundtrip-akka.actor.default-dispatcher-3] blended.activemq.client.RoundtripConnectionVerifier : Running verification probe for connection [amq:unresolved]
+2020-05-04-09:25.51.322 |     9500 | ERROR [roundtrip-akka.actor.default-dispatcher-3] blended.jms.utils.BlendedSingleConnectionFactory : Error getting Connection Factory [Error connecting to [SimpleIdAwareConnectionFactory(amq:unresolved)(spec)].]
+2020-05-04-09:25.52.346 |    10524 | INFO  [roundtrip-akka.actor.default-dispatcher-7] blended.activemq.client.RoundtripConnectionVerifier : Running verification probe for connection [amq:unresolved]
+2020-05-04-09:25.52.350 |    10528 | ERROR [roundtrip-akka.actor.default-dispatcher-7] blended.jms.utils.BlendedSingleConnectionFactory : Error getting Connection Factory [Error connecting to [SimpleIdAwareConnectionFactory(amq:unresolved)(spec)].]
+2020-05-04-09:25.53.376 |    11554 | INFO  [roundtrip-akka.actor.default-dispatcher-7] blended.activemq.client.RoundtripConnectionVerifier : Running verification probe for connection [amq:unresolved]
+2020-05-04-09:25.53.380 |    11558 | ERROR [roundtrip-akka.actor.default-dispatcher-7] blended.jms.utils.BlendedSingleConnectionFactory : Error getting Connection Factory [Error connecting to [SimpleIdAwareConnectionFactory(amq:unresolved)(spec)].]
+2020-05-04-09:25.54.406 |    12584 | INFO  [roundtrip-akka.actor.default-dispatcher-7] blended.activemq.client.RoundtripConnectionVerifier : Running verification probe for connection [amq:unresolved]
+2020-05-04-09:25.54.409 |    12587 | ERROR [roundtrip-akka.actor.default-dispatcher-7] blended.jms.utils.BlendedSingleConnectionFactory : Error getting Connection Factory [Error connecting to [SimpleIdAwareConnectionFactory(amq:unresolved)(spec)].]
+2020-05-04-09:25.55.258 |    13436 | INFO  [pool-1-thread-1-ScalaTest-running-RoundtripConnectionVerifierSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The RoundtripConnectionVerifier should stay unresolved if the connection to the broker did not succeed
+--------------------------------------------------------------------------------
+2020-05-04-09:25.55.263 |    13441 | INFO  [pool-1-thread-1] org.apache.activemq.broker.BrokerService : Apache ActiveMQ 5.15.6 (roundtrip, ID:devel.wayofquality.de-35931-1588577149105-0:1) is shutting down
+2020-05-04-09:25.55.286 |    13464 | WARN  [ActiveMQ Connection Executor: vm://roundtrip#0] blended.jms.utils.internal.ConnectionHolder : Exception encountered in connection for provider [activemq:activemq] : peer (vm://roundtrip#1) stopped.
+2020-05-04-09:25.55.288 |    13466 | INFO  [pool-1-thread-1] org.apache.activemq.broker.TransportConnector : Connector vm://roundtrip stopped
+2020-05-04-09:25.55.290 |    13468 | INFO  [roundtrip-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Initiating JMS reconnect after connection exception [peer (vm://roundtrip#1) stopped.]
+2020-05-04-09:25.55.291 |    13469 | INFO  [roundtrip-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Connection State Manager switching to state [Closing]
+2020-05-04-09:25.55.294 |    13472 | INFO  [roundtrip-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Restarting JMS connection in [5 minutes]
+2020-05-04-09:25.55.295 |    13473 | INFO  [roundtrip-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Scheduling JMS connection check in [5 minutes]
+2020-05-04-09:25.55.296 |    13474 | INFO  [pool-1-thread-1] org.apache.activemq.broker.BrokerService : Apache ActiveMQ 5.15.6 (roundtrip, ID:devel.wayofquality.de-35931-1588577149105-0:1) uptime 6.202 seconds
+2020-05-04-09:25.55.296 |    13474 | INFO  [pool-1-thread-1] org.apache.activemq.broker.BrokerService : Apache ActiveMQ 5.15.6 (roundtrip, ID:devel.wayofquality.de-35931-1588577149105-0:1) is shutdown
+2020-05-04-09:25.55.297 |    13475 | INFO  [roundtrip-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionStateManager.amq.unresolved : Stopping Connection State Manager
+2020-05-04-09:25.55.297 |    13475 | INFO  [roundtrip-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionStateManager.amq.unresolved : Connection State Manager switching to state [Closing]
+2020-05-04-09:25.55.298 |    13476 | INFO  [roundtrip-akka.actor.default-dispatcher-11] akka.actor.RepointableActorRef : Message [blended.jms.utils.ConnectionStateChanged] without sender to Actor[akka://roundtrip/user/Monitor-activemq-activemq#-54794726] was not delivered. [1] dead letters encountered. If this is not an expected behavior, then [Actor[akka://roundtrip/user/Monitor-activemq-activemq#-54794726]] may have terminated unexpectedly, This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2020-05-04-09:25.55.298 |    13476 | INFO  [roundtrip-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Stopping Connection State Manager
+2020-05-04-09:25.55.299 |    13477 | INFO  [roundtrip-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionStateManager.activemq.activemq : Connection State Manager switching to state [Closing]
+2020-05-04-09:25.55.299 |    13477 | INFO  [roundtrip-akka.actor.default-dispatcher-11] akka.actor.RepointableActorRef : Message [blended.jms.utils.ConnectionStateChanged] without sender to Actor[akka://roundtrip/user/Monitor-amq-unresolved#-493935021] was not delivered. [2] dead letters encountered. If this is not an expected behavior, then [Actor[akka://roundtrip/user/Monitor-amq-unresolved#-493935021]] may have terminated unexpectedly, This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2020-05-04-09:25.55.299 |    13477 | INFO  [roundtrip-akka.actor.default-dispatcher-9] blended.jms.utils.internal.ConnectionHolder : Closing underlying connection for provider [activemq]
+2020-05-04-09:25.55.299 |    13477 | INFO  [roundtrip-akka.actor.default-dispatcher-11] akka.actor.LocalActorRef : Message [blended.jms.utils.Disconnect] from Actor[akka://roundtrip/user/JMS-activemq-activemq#1402766043] to Actor[akka://roundtrip/user/JMS-activemq-activemq/$b#253278354] was not delivered. [3] dead letters encountered. If this is not an expected behavior, then [Actor[akka://roundtrip/user/JMS-activemq-activemq/$b#253278354]] may have terminated unexpectedly, This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2020-05-04-09:25.55.311 |    13489 | INFO  [pool-1-thread-1] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.container.context.api] with id [1]
+2020-05-04-09:25.55.319 |    13497 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-2] akka.event.slf4j.Slf4jLogger : Slf4jLogger started
+2020-05-04-09:25.55.332 |    13510 | INFO  [pool-1-thread-1] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.akka] with id [2]
+2020-05-04-09:25.55.334 |    13512 | INFO  [pool-1-thread-1] blended.activemq.client.internal.AmqClientActivator : ActiveMQ Client connections using verifier [default]
+2020-05-04-09:25.55.334 |    13512 | INFO  [pool-1-thread-1] blended.activemq.client.internal.AmqClientActivator : Using verification failed handler [default]
+2020-05-04-09:25.55.335 |    13513 | INFO  [pool-1-thread-1] blended.activemq.client.internal.AmqClientActivator : Verifying ActiveMQ client connection(s) : [Config(SimpleConfigObject({"properties":{"brokerURL":"vm://conn2?create=false","clientId":"bar"}})),Config(SimpleConfigObject({"properties":{"brokerURL":"vm://conn1?create=false","clientId":"foo"}}))]
+2020-05-04-09:25.55.336 |    13514 | INFO  [pool-1-thread-1] blended.jms.utils.BlendedSingleConnectionFactory : Connection State Monitor [JMS-activemq-conn2] created.
+2020-05-04-09:25.55.336 |    13514 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.55.338 |    13516 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-5] blended.activemq.client.internal.AmqClientActivator : Connection [activemq:conn2] verified and ready to use.
+2020-05-04-09:25.55.338 |    13516 | INFO  [pool-1-thread-1] blended.jms.utils.BlendedSingleConnectionFactory : Connection State Monitor [JMS-activemq-conn1] created.
+2020-05-04-09:25.55.339 |    13517 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Creating connection to JMS
+2020-05-04-09:25.55.339 |    13517 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ConnectionHolder : Creating underlying connection for provider [activemq:conn2] as user [None] with client id [$[[uuid]]]
+2020-05-04-09:25.55.339 |    13517 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ReflectionConfigHolder : Configuring connection factory of type [org.apache.activemq.ActiveMQConnectionFactory].
+2020-05-04-09:25.55.339 |    13517 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Connection State Manager switching to state [Connecting]
+2020-05-04-09:25.55.339 |    13517 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ReflectionConfigHolder : Setting property [clientId] for connection factory [activemq:conn2] to [bar].
+2020-05-04-09:25.55.340 |    13518 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.55.340 |    13518 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-8] blended.activemq.client.internal.AmqClientActivator : Connection [activemq:conn1] verified and ready to use.
+2020-05-04-09:25.55.340 |    13518 | INFO  [pool-1-thread-1] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.activemq.client] with id [3]
+2020-05-04-09:25.55.341 |    13519 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ReflectionConfigHolder : Setting property [brokerURL] for connection factory [activemq:conn2] to [vm://conn2?create=false].
+2020-05-04-09:25.55.341 |    13519 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Creating connection to JMS
+2020-05-04-09:25.55.341 |    13519 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Connection State Manager switching to state [Connecting]
+2020-05-04-09:25.55.341 |    13519 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionHolder : Creating underlying connection for provider [activemq:conn1] as user [None] with client id [$[[uuid]]]
+2020-05-04-09:25.55.341 |    13519 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ReflectionConfigHolder : Configuring connection factory of type [org.apache.activemq.ActiveMQConnectionFactory].
+2020-05-04-09:25.55.341 |    13519 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ReflectionConfigHolder : Setting property [brokerURL] for connection factory [activemq:conn1] to [vm://conn1?create=false].
+2020-05-04-09:25.55.342 |    13520 | WARN  [BlendedActorSystem-akka.actor.default-dispatcher-7] blended.jms.utils.internal.ConnectionHolder : Error creating connection [activemq:conn2] : [Could not create Transport. Reason: java.io.IOException: Broker named 'conn2' does not exist.]
+2020-05-04-09:25.55.342 |    13520 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ReflectionConfigHolder : Setting property [clientId] for connection factory [activemq:conn1] to [foo].
+2020-05-04-09:25.55.342 |    13520 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.55.343 |    13521 | ERROR [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Error connecting to JMS provider.
+javax.jms.JMSException: Error creating connection [activemq:conn2] : [Could not create Transport. Reason: java.io.IOException: Broker named 'conn2' does not exist.]
+	at blended.jms.utils.internal.ConnectionHolder.connect(ConnectionHolder.scala:77)
+	at blended.jms.utils.internal.JmsConnectionController$$anonfun$blended$jms$utils$internal$JmsConnectionController$$disconnected$1.applyOrElse(JmsConnectionController.scala:33)
+	at akka.actor.Actor.aroundReceive(Actor.scala:517)
+	at akka.actor.Actor.aroundReceive$(Actor.scala:515)
+	at blended.jms.utils.internal.JmsConnectionController.aroundReceive(JmsConnectionController.scala:19)
+	at akka.actor.ActorCell.receiveMessage(ActorCell.scala:592)
+	at akka.actor.ActorCell.invoke(ActorCell.scala:561)
+	at akka.dispatch.Mailbox.processMailbox(Mailbox.scala:258)
+	at akka.dispatch.Mailbox.run(Mailbox.scala:225)
+	at akka.dispatch.Mailbox.exec(Mailbox.scala:235)
+	at akka.dispatch.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)
+	at akka.dispatch.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1339)
+	at akka.dispatch.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)
+	at akka.dispatch.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)
+2020-05-04-09:25.55.343 |    13521 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Scheduling JMS connection check in [5 minutes]
+2020-05-04-09:25.55.344 |    13522 | WARN  [BlendedActorSystem-akka.actor.default-dispatcher-4] blended.jms.utils.internal.ConnectionHolder : Error creating connection [activemq:conn1] : [Could not create Transport. Reason: java.io.IOException: Broker named 'conn1' does not exist.]
+2020-05-04-09:25.55.344 |    13522 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Connection State Manager switching to state [Disconnected]
+2020-05-04-09:25.55.344 |    13522 | ERROR [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Error connecting to JMS provider.
+javax.jms.JMSException: Error creating connection [activemq:conn1] : [Could not create Transport. Reason: java.io.IOException: Broker named 'conn1' does not exist.]
+	at blended.jms.utils.internal.ConnectionHolder.connect(ConnectionHolder.scala:77)
+	at blended.jms.utils.internal.JmsConnectionController$$anonfun$blended$jms$utils$internal$JmsConnectionController$$disconnected$1.applyOrElse(JmsConnectionController.scala:33)
+	at akka.actor.Actor.aroundReceive(Actor.scala:517)
+	at akka.actor.Actor.aroundReceive$(Actor.scala:515)
+	at blended.jms.utils.internal.JmsConnectionController.aroundReceive(JmsConnectionController.scala:19)
+	at akka.actor.ActorCell.receiveMessage(ActorCell.scala:592)
+	at akka.actor.ActorCell.invoke(ActorCell.scala:561)
+	at akka.dispatch.Mailbox.processMailbox(Mailbox.scala:258)
+	at akka.dispatch.Mailbox.run(Mailbox.scala:225)
+	at akka.dispatch.Mailbox.exec(Mailbox.scala:235)
+	at akka.dispatch.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)
+	at akka.dispatch.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1339)
+	at akka.dispatch.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)
+	at akka.dispatch.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)
+2020-05-04-09:25.55.345 |    13523 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-3] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Scheduling JMS connection check in [5 minutes]
+2020-05-04-09:25.55.346 |    13524 | INFO  [pool-1-thread-1-ScalaTest-running-DefaultClientActivatorSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The ActiveMQ Client Activator should create a Connection Factory for each configured client connection
+2020-05-04-09:25.55.347 |    13525 | INFO  [pool-1-thread-1-ScalaTest-running-DefaultClientActivatorSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The ActiveMQ Client Activator should create a Connection Factory for each configured client connection
+--------------------------------------------------------------------------------
+2020-05-04-09:25.55.349 |    13527 | INFO  [pool-1-thread-1] blended.akka.internal.BlendedAkkaActivator : Stopping ActorSystem
+2020-05-04-09:25.55.349 |    13527 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Stopping Connection State Manager
+2020-05-04-09:25.55.349 |    13527 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Stopping Connection State Manager
+2020-05-04-09:25.55.349 |    13527 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-5] blended.jms.utils.internal.ConnectionStateManager.activemq.conn1 : Connection State Manager switching to state [Closing]
+2020-05-04-09:25.55.349 |    13527 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-6] blended.jms.utils.internal.ConnectionStateManager.activemq.conn2 : Connection State Manager switching to state [Closing]
+2020-05-04-09:25.55.350 |    13528 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-7] akka.actor.RepointableActorRef : Message [blended.jms.utils.ConnectionStateChanged] without sender to Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn2#95504396] was not delivered. [1] dead letters encountered. If this is not an expected behavior, then [Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn2#95504396]] may have terminated unexpectedly, This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2020-05-04-09:25.55.351 |    13529 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-7] akka.actor.RepointableActorRef : Message [blended.jms.utils.ConnectionStateChanged] without sender to Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn1#-802296270] was not delivered. [2] dead letters encountered. If this is not an expected behavior, then [Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn1#-802296270]] may have terminated unexpectedly, This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2020-05-04-09:25.55.351 |    13529 | INFO  [BlendedActorSystem-akka.actor.default-dispatcher-7] akka.actor.RepointableActorRef : Message [blended.jms.utils.ConnectionStateChanged] without sender to Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn2#95504396] was not delivered. [3] dead letters encountered. If this is not an expected behavior, then [Actor[akka://BlendedActorSystem/user/Monitor-activemq-conn2#95504396]] may have terminated unexpectedly, This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.

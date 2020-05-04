@@ -1,0 +1,1848 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/streams/file/DirectorySource.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.streams.file
+</span>2 <span style=''>
+</span>3 <span style=''>import java.io.File
+</span>4 <span style=''>import java.nio.file.{DirectoryStream, Files, Path}
+</span>5 <span style=''>
+</span>6 <span style=''>import blended.util.logging.Logger
+</span>7 <span style=''>
+</span>8 <span style=''>import scala.collection.JavaConverters._
+</span>9 <span style=''>import scala.util.control.NonFatal
+</span>10 <span style=''>
+</span>11 <span style=''>class DirectorySource(pollCfg : FilePollConfig) {
+</span>12 <span style=''>
+</span>13 <span style=''>  private val log : Logger = </span><span style='background: #AEF1AE'>Logger[DirectorySource]</span><span style=''>
+</span>14 <span style=''>  private var pendingFiles : Map[File, Option[Long]] = </span><span style='background: #AEF1AE'>Map.empty</span><span style=''>
+</span>15 <span style=''>
+</span>16 <span style=''>  private val srcDir = </span><span style='background: #AEF1AE'>new File(pollCfg.sourceDir)</span><span style=''>
+</span>17 <span style=''>
+</span>18 <span style=''>  // First we make sure the poll directory exists
+</span>19 <span style=''>  if (</span><span style='background: #AEF1AE'>!srcDir.exists()</span><span style=''>) {
+</span>20 <span style=''>    </span><span style='background: #F0ADAD'>srcDir.mkdirs()</span><span style=''>
+</span>21 <span style=''>  }
+</span>22 <span style=''>
+</span>23 <span style=''>  def nextFile() : Option[File] = {
+</span>24 <span style=''>    // If the directory does not yet exist or is not readable, we log a warning
+</span>25 <span style=''>    if (</span><span style='background: #AEF1AE'>!srcDir.exists() || !srcDir.isDirectory() || !srcDir.canRead()</span><span style=''>) </span><span style='background: #F0ADAD'>{
+</span>26 <span style=''></span><span style='background: #F0ADAD'>      log.warn(s&quot;Directory [$srcDir] for [${pollCfg.id}] does not exist or is not readable.&quot;)
+</span>27 <span style=''></span><span style='background: #F0ADAD'>      None
+</span>28 <span style=''></span><span style='background: #F0ADAD'>    }</span><span style=''> else </span><span style='background: #AEF1AE'>{
+</span>29 <span style=''></span><span style='background: #AEF1AE'>
+</span>30 <span style=''></span><span style='background: #AEF1AE'>      // first we clear all entries from the pending files that have been delivered to a file poller longer
+</span>31 <span style=''></span><span style='background: #AEF1AE'>      // than the poll interval ago
+</span>32 <span style=''></span><span style='background: #AEF1AE'>      cleanup()
+</span>33 <span style=''></span><span style='background: #AEF1AE'>
+</span>34 <span style=''></span><span style='background: #AEF1AE'>      // If we don't have a current file to deliver we will scan the directory again
+</span>35 <span style=''></span><span style='background: #AEF1AE'>      if (file().isEmpty) {
+</span>36 <span style=''></span><span style='background: #AEF1AE'>        scanDirectory()
+</span>37 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>38 <span style=''></span><span style='background: #AEF1AE'>
+</span>39 <span style=''></span><span style='background: #AEF1AE'>      val result : Option[File] = file() match {
+</span>40 <span style=''></span><span style='background: #AEF1AE'>        case None =&gt; None
+</span>41 <span style=''></span><span style='background: #AEF1AE'>        case Some(f) =&gt;
+</span>42 <span style=''></span><span style='background: #AEF1AE'>          pendingFiles = pendingFiles.filterKeys(_ != f) + (f -&gt; Some(System.currentTimeMillis()))
+</span>43 <span style=''></span><span style='background: #AEF1AE'>          Some(f)
+</span>44 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>45 <span style=''></span><span style='background: #AEF1AE'>
+</span>46 <span style=''></span><span style='background: #AEF1AE'>      result
+</span>47 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>48 <span style=''>  }
+</span>49 <span style=''>
+</span>50 <span style=''>  private def cleanup() : Unit = {
+</span>51 <span style=''>    val now : Long = </span><span style='background: #AEF1AE'>System.currentTimeMillis()</span><span style=''>
+</span>52 <span style=''>    </span><span style='background: #AEF1AE'>pendingFiles = pendingFiles.filter {
+</span>53 <span style=''></span><span style='background: #AEF1AE'>      case (_, Some(v)) =&gt;  now - v &lt; pollCfg.interval.toMillis
+</span>54 <span style=''></span><span style='background: #AEF1AE'>      case (_, None) =&gt; true
+</span>55 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>56 <span style=''>  }
+</span>57 <span style=''>
+</span>58 <span style=''>  private def scanDirectory() : Unit = {
+</span>59 <span style=''>    </span><span style='background: #AEF1AE'>log.info(s&quot;Executing directory scan for directory [${pollCfg.sourceDir}] with pattern [${pollCfg.pattern}]&quot;)</span><span style=''>
+</span>60 <span style=''>
+</span>61 <span style=''>    val filter : DirectoryStream.Filter[Path] = </span><span style='background: #AEF1AE'>new</span><span style=''> DirectoryStream.Filter[Path] {
+</span>62 <span style=''>      override def accept(entry: Path): Boolean = {
+</span>63 <span style=''>        </span><span style='background: #AEF1AE'>entry.getParent().toFile().equals(srcDir) &amp;&amp;
+</span>64 <span style=''></span><span style='background: #AEF1AE'>          pollCfg.pattern.forall(p =&gt; entry.toFile().getName().matches(p)) &amp;&amp;
+</span>65 <span style=''></span><span style='background: #AEF1AE'>          !pendingFiles.contains(entry.toFile())</span><span style=''>
+</span>66 <span style=''>      }
+</span>67 <span style=''>    }
+</span>68 <span style=''>
+</span>69 <span style=''>    val dirStream : DirectoryStream[Path] = </span><span style='background: #AEF1AE'>Files.newDirectoryStream(srcDir.toPath(), filter)</span><span style=''>
+</span>70 <span style=''>
+</span>71 <span style=''>    try {
+</span>72 <span style=''>      // scalastyle:off magic.number
+</span>73 <span style=''>      </span><span style='background: #AEF1AE'>dirStream.iterator().asScala.take(100).map(_.toFile()).foreach(f =&gt; pendingFiles += (f -&gt; None))</span><span style=''>
+</span>74 <span style=''>      // scalastyle:on magic.number
+</span>75 <span style=''>    } catch {
+</span>76 <span style=''>      case NonFatal(e) =&gt;
+</span>77 <span style=''>        </span><span style='background: #F0ADAD'>log.warn(s&quot;Error reading directory [${srcDir.getAbsolutePath()}] : [${e.getMessage()}]&quot;)</span><span style=''>
+</span>78 <span style=''>        </span><span style='background: #F0ADAD'>None</span><span style=''>
+</span>79 <span style=''>    } finally {
+</span>80 <span style=''>      </span><span style='background: #AEF1AE'>dirStream.close()</span><span style=''>
+</span>81 <span style=''>    }
+</span>82 <span style=''>  }
+</span>83 <span style=''>
+</span>84 <span style=''>  private def file() : Option[File] = </span><span style='background: #AEF1AE'>pendingFiles.find{ case (_, v) =&gt; v.isEmpty }.map(_._1)</span><span style=''>
+</span>85 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          21066
+        </td>
+        <td>
+          296
+          -
+          319
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          21589
+        </td>
+        <td>
+          375
+          -
+          384
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          19217
+        </td>
+        <td>
+          409
+          -
+          436
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          23064
+        </td>
+        <td>
+          418
+          -
+          435
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          19606
+        </td>
+        <td>
+          490
+          -
+          490
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          20012
+        </td>
+        <td>
+          494
+          -
+          510
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          22476
+        </td>
+        <td>
+          490
+          -
+          490
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          22734
+        </td>
+        <td>
+          518
+          -
+          533
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          21247
+        </td>
+        <td>
+          518
+          -
+          533
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          21492
+        </td>
+        <td>
+          663
+          -
+          725
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          19491
+        </td>
+        <td>
+          727
+          -
+          839
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          22915
+        </td>
+        <td>
+          683
+          -
+          704
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          22591
+        </td>
+        <td>
+          708
+          -
+          725
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          19363
+        </td>
+        <td>
+          735
+          -
+          822
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          19225
+        </td>
+        <td>
+          744
+          -
+          821
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          21549
+        </td>
+        <td>
+          784
+          -
+          821
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          22194
+        </td>
+        <td>
+          746
+          -
+          758
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          19604
+        </td>
+        <td>
+          758
+          -
+          764
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          21200
+        </td>
+        <td>
+          773
+          -
+          783
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          19352
+        </td>
+        <td>
+          764
+          -
+          772
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          20714
+        </td>
+        <td>
+          829
+          -
+          833
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          21064
+        </td>
+        <td>
+          845
+          -
+          1398
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          23215
+        </td>
+        <td>
+          998
+          -
+          1007
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          22678
+        </td>
+        <td>
+          1104
+          -
+          1118
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          22962
+        </td>
+        <td>
+          1100
+          -
+          1100
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          19424
+        </td>
+        <td>
+          1100
+          -
+          1100
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          22601
+        </td>
+        <td>
+          1130
+          -
+          1145
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          19724
+        </td>
+        <td>
+          1130
+          -
+          1145
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          39
+        </td>
+        <td>
+          19988
+        </td>
+        <td>
+          1189
+          -
+          1195
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          19979
+        </td>
+        <td>
+          1225
+          -
+          1229
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          21454
+        </td>
+        <td>
+          1324
+          -
+          1350
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          22485
+        </td>
+        <td>
+          1314
+          -
+          1351
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          23070
+        </td>
+        <td>
+          1303
+          -
+          1309
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          21120
+        </td>
+        <td>
+          1319
+          -
+          1351
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          23207
+        </td>
+        <td>
+          1264
+          -
+          1352
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          20689
+        </td>
+        <td>
+          1279
+          -
+          1352
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          21109
+        </td>
+        <td>
+          1363
+          -
+          1370
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          51
+        </td>
+        <td>
+          23369
+        </td>
+        <td>
+          1460
+          -
+          1486
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          52
+        </td>
+        <td>
+          22804
+        </td>
+        <td>
+          1491
+          -
+          1626
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          52
+        </td>
+        <td>
+          19696
+        </td>
+        <td>
+          1506
+          -
+          1626
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          21244
+        </td>
+        <td>
+          1566
+          -
+          1591
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          19765
+        </td>
+        <td>
+          1556
+          -
+          1591
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          21787
+        </td>
+        <td>
+          1616
+          -
+          1620
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          22862
+        </td>
+        <td>
+          1782
+          -
+          1784
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          19644
+        </td>
+        <td>
+          1688
+          -
+          1729
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          21576
+        </td>
+        <td>
+          1730
+          -
+          1747
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          21172
+        </td>
+        <td>
+          1748
+          -
+          1765
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          20106
+        </td>
+        <td>
+          1686
+          -
+          1784
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          21114
+        </td>
+        <td>
+          1677
+          -
+          1785
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          22651
+        </td>
+        <td>
+          1766
+          -
+          1781
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          61
+        </td>
+        <td>
+          21643
+        </td>
+        <td>
+          1835
+          -
+          1838
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          63
+        </td>
+        <td>
+          19758
+        </td>
+        <td>
+          1964
+          -
+          1970
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          22794
+        </td>
+        <td>
+          1985
+          -
+          2049
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          20110
+        </td>
+        <td>
+          2013
+          -
+          2048
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          64
+        </td>
+        <td>
+          21060
+        </td>
+        <td>
+          1930
+          -
+          2101
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          23003
+        </td>
+        <td>
+          2063
+          -
+          2101
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          23360
+        </td>
+        <td>
+          2086
+          -
+          2100
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          23126
+        </td>
+        <td>
+          2186
+          -
+          2201
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          69
+        </td>
+        <td>
+          22904
+        </td>
+        <td>
+          2161
+          -
+          2210
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          21125
+        </td>
+        <td>
+          2350
+          -
+          2359
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          20099
+        </td>
+        <td>
+          2265
+          -
+          2361
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          22970
+        </td>
+        <td>
+          2308
+          -
+          2318
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          21253
+        </td>
+        <td>
+          2333
+          -
+          2360
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          19910
+        </td>
+        <td>
+          2299
+          -
+          2302
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          21399
+        </td>
+        <td>
+          2265
+          -
+          2361
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          21500
+        </td>
+        <td>
+          2265
+          -
+          2285
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          22663
+        </td>
+        <td>
+          2333
+          -
+          2360
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          20118
+        </td>
+        <td>
+          2355
+          -
+          2359
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          19208
+        </td>
+        <td>
+          2516
+          -
+          2530
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          19728
+        </td>
+        <td>
+          2455
+          -
+          2533
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          22470
+        </td>
+        <td>
+          2509
+          -
+          2515
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          21262
+        </td>
+        <td>
+          2531
+          -
+          2533
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          19775
+        </td>
+        <td>
+          2457
+          -
+          2483
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          23249
+        </td>
+        <td>
+          2484
+          -
+          2508
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          77
+        </td>
+        <td>
+          19708
+        </td>
+        <td>
+          2446
+          -
+          2534
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          21185
+        </td>
+        <td>
+          2543
+          -
+          2543
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          19657
+        </td>
+        <td>
+          2543
+          -
+          2547
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          21582
+        </td>
+        <td>
+          2570
+          -
+          2587
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          80
+        </td>
+        <td>
+          22897
+        </td>
+        <td>
+          2570
+          -
+          2587
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          19423
+        </td>
+        <td>
+          2637
+          -
+          2692
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          22997
+        </td>
+        <td>
+          2687
+          -
+          2691
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          21309
+        </td>
+        <td>
+          2671
+          -
+          2680
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

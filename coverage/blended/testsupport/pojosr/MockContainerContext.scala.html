@@ -1,0 +1,214 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/testsupport/pojosr/MockContainerContext.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.testsupport.pojosr
+</span>2 <span style=''>
+</span>3 <span style=''>import java.io.File
+</span>4 <span style=''>import java.nio.file.Files
+</span>5 <span style=''>import java.util.Properties
+</span>6 <span style=''>
+</span>7 <span style=''>import blended.container.context.impl.internal.AbstractContainerContextImpl
+</span>8 <span style=''>import com.typesafe.config.impl.Parseable
+</span>9 <span style=''>import com.typesafe.config.{Config, ConfigFactory, ConfigObject, ConfigParseOptions}
+</span>10 <span style=''>
+</span>11 <span style=''>import scala.beans.BeanProperty
+</span>12 <span style=''>
+</span>13 <span style=''>class MockContainerContext(baseDir : String, ctid : String) extends AbstractContainerContextImpl {
+</span>14 <span style=''>
+</span>15 <span style=''>  </span><span style='background: #AEF1AE'>initialize()</span><span style=''>
+</span>16 <span style=''>
+</span>17 <span style=''>  @BeanProperty
+</span>18 <span style=''>  override lazy val containerDirectory : String = baseDir
+</span>19 <span style=''>
+</span>20 <span style=''>  @BeanProperty
+</span>21 <span style=''>  override lazy val containerConfigDirectory : String = containerDirectory + &quot;/etc&quot;
+</span>22 <span style=''>
+</span>23 <span style=''>  @BeanProperty
+</span>24 <span style=''>  override lazy val containerLogDirectory : String = baseDir
+</span>25 <span style=''>
+</span>26 <span style=''>  @BeanProperty
+</span>27 <span style=''>  override lazy val profileDirectory : String = containerDirectory
+</span>28 <span style=''>
+</span>29 <span style=''>  @BeanProperty
+</span>30 <span style=''>  override lazy val profileConfigDirectory : String = containerConfigDirectory
+</span>31 <span style=''>
+</span>32 <span style=''>  @BeanProperty
+</span>33 <span style=''>  override lazy val containerHostname : String = &quot;localhost&quot;
+</span>34 <span style=''>
+</span>35 <span style=''>  @BeanProperty
+</span>36 <span style=''>  override lazy val uuid : String = ctid
+</span>37 <span style=''>
+</span>38 <span style=''>  private def getSystemProperties() : Properties = {
+</span>39 <span style=''>    // Avoid ConcurrentModificationException due to parallel setting of system properties by copying properties
+</span>40 <span style=''>    val systemProperties = </span><span style='background: #AEF1AE'>System.getProperties()</span><span style=''>
+</span>41 <span style=''>    val systemPropertiesCopy = </span><span style='background: #AEF1AE'>new Properties()</span><span style=''>
+</span>42 <span style=''>    </span><span style='background: #AEF1AE'>systemPropertiesCopy.putAll(systemProperties)</span><span style=''>
+</span>43 <span style=''>    systemPropertiesCopy
+</span>44 <span style=''>  }
+</span>45 <span style=''>
+</span>46 <span style=''>  private def loadSystemProperties() : ConfigObject = {
+</span>47 <span style=''>    </span><span style='background: #AEF1AE'>Parseable
+</span>48 <span style=''></span><span style='background: #AEF1AE'>      .newProperties(
+</span>49 <span style=''></span><span style='background: #AEF1AE'>        getSystemProperties(),
+</span>50 <span style=''></span><span style='background: #AEF1AE'>        ConfigParseOptions.defaults().setOriginDescription(&quot;system properties&quot;)
+</span>51 <span style=''></span><span style='background: #AEF1AE'>      )
+</span>52 <span style=''></span><span style='background: #AEF1AE'>      .parse()</span><span style=''>
+</span>53 <span style=''>  }
+</span>54 <span style=''>
+</span>55 <span style=''>  override lazy val containerConfig : Config = {
+</span>56 <span style=''>    val sysProps = loadSystemProperties()
+</span>57 <span style=''>    val envProps = ConfigFactory.systemEnvironment()
+</span>58 <span style=''>
+</span>59 <span style=''>    ConfigFactory
+</span>60 <span style=''>      .parseFile(
+</span>61 <span style=''>        new File(profileConfigDirectory, &quot;application.conf&quot;),
+</span>62 <span style=''>        ConfigParseOptions.defaults().setAllowMissing(false)
+</span>63 <span style=''>      )
+</span>64 <span style=''>      .withFallback(sysProps)
+</span>65 <span style=''>      .withFallback(envProps)
+</span>66 <span style=''>      .resolve()
+</span>67 <span style=''>  }
+</span>68 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          14289
+        </td>
+        <td>
+          451
+          -
+          463
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          14205
+        </td>
+        <td>
+          1227
+          -
+          1249
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          14261
+        </td>
+        <td>
+          1281
+          -
+          1297
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          42
+        </td>
+        <td>
+          14354
+        </td>
+        <td>
+          1302
+          -
+          1347
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          52
+        </td>
+        <td>
+          14202
+        </td>
+        <td>
+          1438
+          -
+          1603
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

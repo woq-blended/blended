@@ -1,0 +1,567 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/mgmt/repo/rest/internal/ArtifactRepoRestActivator.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.mgmt.repo.rest.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.akka.http.{HttpContext, SimpleHttpContext}
+</span>4 <span style=''>import blended.domino.TypesafeConfigWatching
+</span>5 <span style=''>import blended.mgmt.repo.ArtifactRepo
+</span>6 <span style=''>import blended.security.BlendedPermissionManager
+</span>7 <span style=''>import blended.util.logging.Logger
+</span>8 <span style=''>import domino.DominoActivator
+</span>9 <span style=''>import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedService, RemovedService}
+</span>10 <span style=''>
+</span>11 <span style=''>class ArtifactRepoRestActivator
+</span>12 <span style=''>  extends DominoActivator
+</span>13 <span style=''>  with TypesafeConfigWatching {
+</span>14 <span style=''>
+</span>15 <span style=''>  private[this] val log = </span><span style='background: #F0ADAD'>Logger[ArtifactRepoRestActivator]</span><span style=''>
+</span>16 <span style=''>
+</span>17 <span style=''>  </span><span style='background: #F0ADAD'>whenBundleActive {
+</span>18 <span style=''></span><span style='background: #F0ADAD'>    log.info(s&quot;Activating bundle ${bundleContext.getBundle().getSymbolicName()}&quot;)
+</span>19 <span style=''></span><span style='background: #F0ADAD'>    whenServicePresent[BlendedPermissionManager] { mgr =&gt;
+</span>20 <span style=''></span><span style='background: #F0ADAD'>
+</span>21 <span style=''></span><span style='background: #F0ADAD'>      val repoRoutes = new ArtifactRepoRoutesImpl(mgr)
+</span>22 <span style=''></span><span style='background: #F0ADAD'>
+</span>23 <span style=''></span><span style='background: #F0ADAD'>      onStop {
+</span>24 <span style=''></span><span style='background: #F0ADAD'>        repoRoutes.clearRepos()
+</span>25 <span style=''></span><span style='background: #F0ADAD'>      }
+</span>26 <span style=''></span><span style='background: #F0ADAD'>
+</span>27 <span style=''></span><span style='background: #F0ADAD'>      log.info(&quot;Registering route under context path: repo&quot;)
+</span>28 <span style=''></span><span style='background: #F0ADAD'>      SimpleHttpContext(&quot;repo&quot;, repoRoutes.httpRoute).providesService[HttpContext]
+</span>29 <span style=''></span><span style='background: #F0ADAD'>
+</span>30 <span style=''></span><span style='background: #F0ADAD'>      watchServices[ArtifactRepo] {
+</span>31 <span style=''></span><span style='background: #F0ADAD'>        case AddingService(repo, _) =&gt;
+</span>32 <span style=''></span><span style='background: #F0ADAD'>          repoRoutes.addRepo(repo)
+</span>33 <span style=''></span><span style='background: #F0ADAD'>        case ModifiedService(repo, _) =&gt;
+</span>34 <span style=''></span><span style='background: #F0ADAD'>          repoRoutes.removeRepo(repo)
+</span>35 <span style=''></span><span style='background: #F0ADAD'>          repoRoutes.addRepo(repo)
+</span>36 <span style=''></span><span style='background: #F0ADAD'>        case RemovedService(repo, _) =&gt;
+</span>37 <span style=''></span><span style='background: #F0ADAD'>          repoRoutes.removeRepo(repo)
+</span>38 <span style=''></span><span style='background: #F0ADAD'>      }
+</span>39 <span style=''></span><span style='background: #F0ADAD'>
+</span>40 <span style=''></span><span style='background: #F0ADAD'>    }
+</span>41 <span style=''></span><span style='background: #F0ADAD'>
+</span>42 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
+</span>43 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          1958
+        </td>
+        <td>
+          514
+          -
+          547
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          1924
+        </td>
+        <td>
+          551
+          -
+          1289
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1961
+        </td>
+        <td>
+          585
+          -
+          604
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          2000
+        </td>
+        <td>
+          574
+          -
+          651
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1910
+        </td>
+        <td>
+          583
+          -
+          650
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1923
+        </td>
+        <td>
+          605
+          -
+          648
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          1944
+        </td>
+        <td>
+          649
+          -
+          650
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          1925
+        </td>
+        <td>
+          656
+          -
+          1284
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          1996
+        </td>
+        <td>
+          701
+          -
+          701
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          1905
+        </td>
+        <td>
+          734
+          -
+          765
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          1977
+        </td>
+        <td>
+          773
+          -
+          821
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          1995
+        </td>
+        <td>
+          790
+          -
+          813
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          27
+        </td>
+        <td>
+          1999
+        </td>
+        <td>
+          829
+          -
+          883
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          1964
+        </td>
+        <td>
+          890
+          -
+          937
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          1906
+        </td>
+        <td>
+          908
+          -
+          914
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          1983
+        </td>
+        <td>
+          890
+          -
+          966
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          1986
+        </td>
+        <td>
+          916
+          -
+          936
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          2001
+        </td>
+        <td>
+          1002
+          -
+          1002
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          1911
+        </td>
+        <td>
+          974
+          -
+          1277
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          1903
+        </td>
+        <td>
+          1053
+          -
+          1077
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          1945
+        </td>
+        <td>
+          1129
+          -
+          1156
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          1950
+        </td>
+        <td>
+          1167
+          -
+          1191
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          1932
+        </td>
+        <td>
+          1242
+          -
+          1269
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

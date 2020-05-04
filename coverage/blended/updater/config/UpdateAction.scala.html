@@ -1,0 +1,432 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/updater/config/UpdateAction.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.updater.config
+</span>2 <span style=''>
+</span>3 <span style=''>object UpdateAction {
+</span>4 <span style=''>  val KindAddOverlayConfig : String = </span><span style='background: #AEF1AE'>classOf[AddOverlayConfig].getSimpleName()</span><span style=''>
+</span>5 <span style=''>  val KindAddRuntimeConfig : String = </span><span style='background: #AEF1AE'>classOf[AddRuntimeConfig].getSimpleName()</span><span style=''>
+</span>6 <span style=''>  val KindStageProfile : String = </span><span style='background: #AEF1AE'>classOf[StageProfile].getSimpleName()</span><span style=''>
+</span>7 <span style=''>  val KindActivateProfile : String = </span><span style='background: #AEF1AE'>classOf[ActivateProfile].getSimpleName()</span><span style=''>
+</span>8 <span style=''>}
+</span>9 <span style=''>
+</span>10 <span style=''>sealed trait UpdateAction {
+</span>11 <span style=''>  def id : String
+</span>12 <span style=''>
+</span>13 <span style=''>  /**
+</span>14 <span style=''>   * Copy this action and use the given ID.
+</span>15 <span style=''>   */
+</span>16 <span style=''>  def withId(id : String) : UpdateAction = this match {
+</span>17 <span style=''>    case a : AddRuntimeConfig =&gt;
+</span>18 <span style=''>      </span><span style='background: #AEF1AE'>a.copy(id = id)</span><span style=''>
+</span>19 <span style=''>    case a : AddOverlayConfig =&gt;
+</span>20 <span style=''>      </span><span style='background: #AEF1AE'>a.copy(id = id)</span><span style=''>
+</span>21 <span style=''>    case a : StageProfile =&gt;
+</span>22 <span style=''>      </span><span style='background: #AEF1AE'>a.copy(id = id)</span><span style=''>
+</span>23 <span style=''>    case a : ActivateProfile =&gt;
+</span>24 <span style=''>      </span><span style='background: #AEF1AE'>a.copy(id = id)</span><span style=''>
+</span>25 <span style=''>  }
+</span>26 <span style=''>}
+</span>27 <span style=''>
+</span>28 <span style=''>final case class AddRuntimeConfig(
+</span>29 <span style=''>  id : String,
+</span>30 <span style=''>  runtimeConfig : RuntimeConfig
+</span>31 <span style=''>) extends UpdateAction
+</span>32 <span style=''>
+</span>33 <span style=''>final case class AddOverlayConfig(
+</span>34 <span style=''>  id : String,
+</span>35 <span style=''>  overlay : OverlayConfig
+</span>36 <span style=''>) extends UpdateAction
+</span>37 <span style=''>
+</span>38 <span style=''>final case class StageProfile(
+</span>39 <span style=''>  id : String,
+</span>40 <span style=''>  profileName : String,
+</span>41 <span style=''>  profileVersion : String,
+</span>42 <span style=''>  overlays : Set[OverlayRef]
+</span>43 <span style=''>) extends UpdateAction
+</span>44 <span style=''>
+</span>45 <span style=''>final case class ActivateProfile(
+</span>46 <span style=''>  id : String,
+</span>47 <span style=''>  profileName : String,
+</span>48 <span style=''>  profileVersion : String,
+</span>49 <span style=''>  overlays : Set[OverlayRef]
+</span>50 <span style=''>) extends UpdateAction
+</span>51 <span style=''>
+</span>52 <span style=''>/**
+</span>53 <span style=''> * Message published to the event stream when an update action with the same `id` was applied.
+</span>54 <span style=''> */
+</span>55 <span style=''>case class UpdateActionApplied(id : String, error : Option[String] = None)
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          4
+        </td>
+        <td>
+          7891
+        </td>
+        <td>
+          92
+          -
+          133
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          5
+        </td>
+        <td>
+          6413
+        </td>
+        <td>
+          172
+          -
+          213
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          6
+        </td>
+        <td>
+          7201
+        </td>
+        <td>
+          248
+          -
+          285
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          7
+        </td>
+        <td>
+          7365
+        </td>
+        <td>
+          323
+          -
+          363
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          6465
+        </td>
+        <td>
+          565
+          -
+          580
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          6369
+        </td>
+        <td>
+          567
+          -
+          567
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          7111
+        </td>
+        <td>
+          622
+          -
+          622
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          7895
+        </td>
+        <td>
+          620
+          -
+          635
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          8202
+        </td>
+        <td>
+          673
+          -
+          673
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          6730
+        </td>
+        <td>
+          671
+          -
+          686
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          7152
+        </td>
+        <td>
+          673
+          -
+          673
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          7400
+        </td>
+        <td>
+          673
+          -
+          673
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          7207
+        </td>
+        <td>
+          727
+          -
+          727
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          7999
+        </td>
+        <td>
+          725
+          -
+          740
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          6581
+        </td>
+        <td>
+          727
+          -
+          727
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          7937
+        </td>
+        <td>
+          727
+          -
+          727
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

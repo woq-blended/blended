@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Blended</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://woq-blended.github.io/blended/js/jquery.min.js"></script>
+  <script src="https://woq-blended.github.io/blended/js/bootstrap.min.js"></script>
+  <script src="https://woq-blended.github.io/blended/js/perfect-scrollbar.js"></script>
+  <script src="https://woq-blended.github.io/blended/js/highlight/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  <link rel="stylesheet" href="https://woq-blended.github.io/blended/css/blended-asciidoctor.css">
+  <link rel="stylesheet" href="https://woq-blended.github.io/blended/css/perfect-scrollbar.css">
+  <link rel="stylesheet" href="https://woq-blended.github.io/blended/js/highlight/styles/agate.css">
+  <link rel="stylesheet" href="https://woq-blended.github.io/blended/css/blended-bootstrap.css">
+</head>
+<nav class="navbar navbar-expand-md fixed-top navbar-fixed-top">
+  <a class="navbar-brand nav-link" href="https://woq-blended.github.io/blended">Blended</a>
+  <ul class="navbar-nav mr-auto">
+    <li class="nav-item">
+      <a class="nav-link" href="https://github.com/woq-blended/blended">GitHub</a>
+    </li>
+  </ul>
+</nav>
+
+<div id="content" class="row">
+
+<div class="col-md-2 bg-light">
+</div>
+
+<div class="col-md-8 scrollbars" id="page">
+
+  <div class="container">
+  <div class="sect1">
+<h2 id="_build_file_structure">Build file structure</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Blended</em> uses <code>sbt 1.2.8</code> to build. Currently we have a bit more than 60 submodules in <em>Blended</em>, so that the build
+file structure needs a bit of explanation:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The main build file ist <code>build.sbt</code> in the root directory of the checkout. The build file is augmented with <code>.scala</code> files in the <code>project</code>-directory.</p>
+</li>
+<li>
+<p>The <code>project</code>-directory contains <strong>exactly 1</strong> scala file per sub module. These file can be seen as factories for sbt project references, so that each submodule scala file creates the project reference for that particular submodule.</p>
+</li>
+<li>
+<p>All submodule specific settings live in the corresponding scala file, <strong>no exceptions (NONE !)</strong>.</p>
+</li>
+<li>
+<p>A sample scala file would be <code>BlendedActivemqClient.scala</code>:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-scala" data-lang="scala">import blended.sbt.Dependencies
+import blended.sbt.phoenix.osgi.OsgiBundle
+import phoenix.ProjectFactory
+import sbt._
+
+object BlendedActivemqClient extends ProjectFactory {
+
+  // scalastyle:off object.name
+  object config extends ProjectSettings {
+  // scalastyle:on object.name
+    override val projectName : String = "blended.activemq.client"
+    override val description : String = "An Active MQ Connection factory as a service"
+
+    override def deps : Seq[ModuleID] = Seq(
+      Dependencies.activeMqClient,
+      Dependencies.activeMqBroker % Test,
+      Dependencies.activeMqKahadbStore % Test,
+      Dependencies.springCore % Test,
+      Dependencies.springBeans % Test,
+      Dependencies.springContext % Test,
+      Dependencies.springExpression % Test,
+      Dependencies.commonsLogging % Test
+    )
+
+    override def bundle : OsgiBundle = super.bundle.copy(
+      bundleActivator = s"$projectName.internal.AmqClientActivator",
+      exportPackage = Seq(projectName)
+    )
+
+    override def dependsOn : Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedUtil.project,
+      BlendedUtilLogging.project,
+      BlendedJmsUtils.project,
+      BlendedAkka.project,
+      BlendedStreams.project,
+
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test
+    )
+  }
+}</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>All sub module files mix in the trait <code>ProjectFactory</code>, which means they have to expose a <code>val</code> of type <code>Project</code>.</p>
+</li>
+<li>
+<p>Internally we are using a SettingsFactory <code>ProjectSettings</code>. This factory is a class which encapsulates the settings for our submodules based on a handful of configuration parameters which are passed to the factory as constructor arguments.</p>
+</li>
+<li>
+<p>The factory exposes a variable `baseProject' which needs to be enriched with the dependencies to other submodules within the project. These dependencies are simply the exposed projects of other sub modules.</p>
+</li>
+<li>
+<p>As most of our sub modules are OSGi bundles, the constructor argument <code>adaptBundle</code> allows to modify the default bundle settings encapsulated in <code>BlendedBundle</code> simply by using the copy method. The resulting OSGi settings will be part of the generated sub module settings.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To complete the example, here is how the sub module above is referenced in the <code>build.sbt</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-scala" data-lang="scala">lazy val blendedActivemqClient = BlendedActivemqClient.project</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_special_cases">Special cases</h3>
+<div class="paragraph">
+<p>There are more complex project definitions, e.g. when the submodule needs to generate an extra artifact in the form of a zip file. An example for such a setup can be seen in <a href="https://github.com/woq-blended/blended/blob/master/project/BlendedLauncher.scala"><code>BlendedLauncher</code></a>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_set_up_for_automated_releases_via_travis">Set up for Automated releases via travis</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>TODO</p>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+    <script>var pageBar = new PerfectScrollbar('#page');</script>
+
+    <nav class="navbar navbar-expand-md navbar-fixed-bottom">
+      <ul class="navbar-nav mr-auto">
+        <li class="navbar-text">
+          &copy; 2018 | Mixed with
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="http://getbootstrap.com/">Bootstrap v4.1.3</a>
+        </li>
+        <li class="navbar-text">
+          - Baked with
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="http://jbake.org">JBake v2.6.4</a>
+        </li>
+      </ul>
+    </nav>
+ </body>
+</html>

@@ -1,0 +1,767 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/crypto/BlendedEncryptor.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security.crypto
+</span>2 <span style=''>
+</span>3 <span style=''>import scala.io.Source
+</span>4 <span style=''>
+</span>5 <span style=''>import de.tototec.cmdoption.{CmdOption, CmdlineParser}
+</span>6 <span style=''>import scala.util.{Failure, Success}
+</span>7 <span style=''>
+</span>8 <span style=''>object BlendedEncryptor {
+</span>9 <span style=''>
+</span>10 <span style=''>  def main(args : Array[String]) : Unit = </span><span style='background: #AEF1AE'>run(args)</span><span style=''>
+</span>11 <span style=''>
+</span>12 <span style=''>  def run(args : Array[String]) : Unit = {
+</span>13 <span style=''>
+</span>14 <span style=''>    val cmdLine = </span><span style='background: #AEF1AE'>new CmdLine()</span><span style=''>
+</span>15 <span style=''>    val cp = </span><span style='background: #AEF1AE'>new CmdlineParser(cmdLine)</span><span style=''>
+</span>16 <span style=''>    </span><span style='background: #AEF1AE'>cp.setAboutLine(&quot;Standalone client to encrypt plain Strings to be included in the config files.&quot;)</span><span style=''>
+</span>17 <span style=''>    </span><span style='background: #AEF1AE'>cp.parse(args : _*)</span><span style=''>
+</span>18 <span style=''>
+</span>19 <span style=''>    if (</span><span style='background: #AEF1AE'>cmdLine.help || args.isEmpty</span><span style=''>) {
+</span>20 <span style=''>      </span><span style='background: #AEF1AE'>cp.usage()</span><span style=''>
+</span>21 <span style=''>    } else </span><span style='background: #AEF1AE'>{
+</span>22 <span style=''></span><span style='background: #AEF1AE'>      val cs : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport(cmdLine.secret)
+</span>23 <span style=''></span><span style='background: #AEF1AE'>
+</span>24 <span style=''></span><span style='background: #AEF1AE'>      // scalastyle:off regex
+</span>25 <span style=''></span><span style='background: #AEF1AE'>      cmdLine.plain.foreach { p =&gt;
+</span>26 <span style=''></span><span style='background: #AEF1AE'>        val text = p match {
+</span>27 <span style=''></span><span style='background: #AEF1AE'>          case &quot;-&quot; =&gt;
+</span>28 <span style=''></span><span style='background: #AEF1AE'>            // read from stdin
+</span>29 <span style=''></span><span style='background: #AEF1AE'>            Source.stdin.getLines().mkString(&quot;\n&quot;)
+</span>30 <span style=''></span><span style='background: #AEF1AE'>          case x =&gt; x
+</span>31 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>32 <span style=''></span><span style='background: #AEF1AE'>
+</span>33 <span style=''></span><span style='background: #AEF1AE'>        cs.encrypt(text) match {
+</span>34 <span style=''></span><span style='background: #AEF1AE'>          case Failure(e) =&gt;
+</span>35 <span style=''></span><span style='background: #AEF1AE'>            </span><span style='background: #F0ADAD'>System.err.println(s&quot;Could not encrypt value [${e.getMessage()}]&quot;)</span><span style='background: #AEF1AE'>
+</span>36 <span style=''></span><span style='background: #AEF1AE'>          case Success(e) =&gt;
+</span>37 <span style=''></span><span style='background: #AEF1AE'>            if(cmdLine.verbose) {
+</span>38 <span style=''></span><span style='background: #AEF1AE'>              </span><span style='background: #F0ADAD'>System.out.println(s&quot;Encrypted value for [$text] : [$e]&quot;)</span><span style='background: #AEF1AE'>
+</span>39 <span style=''></span><span style='background: #AEF1AE'>            } else {
+</span>40 <span style=''></span><span style='background: #AEF1AE'>              System.out.println(e)
+</span>41 <span style=''></span><span style='background: #AEF1AE'>            }
+</span>42 <span style=''></span><span style='background: #AEF1AE'>        }
+</span>43 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>44 <span style=''></span><span style='background: #AEF1AE'>      // scalastyle:on regex
+</span>45 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>46 <span style=''>  }
+</span>47 <span style=''>
+</span>48 <span style=''>  private[crypto] class CmdLine {
+</span>49 <span style=''>
+</span>50 <span style=''>    @CmdOption(names = Array(&quot;--help&quot;, &quot;-h&quot;), description = &quot;Show this help&quot;, isHelp = true)
+</span>51 <span style=''>    var help : Boolean = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>52 <span style=''>
+</span>53 <span style=''>    @CmdOption(
+</span>54 <span style=''>      names = Array(&quot;--secret&quot;, &quot;-s&quot;),
+</span>55 <span style=''>      args = Array(&quot;file&quot;),
+</span>56 <span style=''>      description = &quot;The name of the file containing the secret for encrypting the plain string.&quot;
+</span>57 <span style=''>    )
+</span>58 <span style=''>    var _secret : String = _
+</span>59 <span style=''>    def secret : String = </span><span style='background: #AEF1AE'>Option(_secret).getOrElse(&quot;secret&quot;)</span><span style=''>
+</span>60 <span style=''>
+</span>61 <span style=''>    @CmdOption(
+</span>62 <span style=''>      names = Array(&quot;--plain&quot;, &quot;-p&quot;),
+</span>63 <span style=''>      args = Array(&quot;text&quot;),
+</span>64 <span style=''>      description = &quot;The plain text to encrypt. Use '-' to read text from STDIN&quot;
+</span>65 <span style=''>    )
+</span>66 <span style=''>    var _plain : String = _
+</span>67 <span style=''>    def plain = </span><span style='background: #AEF1AE'>Option(_plain)</span><span style=''>
+</span>68 <span style=''>
+</span>69 <span style=''>    @CmdOption(
+</span>70 <span style=''>      names = Array(&quot;--verbose&quot;, &quot;-v&quot;),
+</span>71 <span style=''>      description = &quot;Be more verbose&quot;
+</span>72 <span style=''>    )
+</span>73 <span style=''>    var verbose: Boolean = </span><span style='background: #AEF1AE'>false</span><span style=''>
+</span>74 <span style=''>  }
+</span>75 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          10
+        </td>
+        <td>
+          780
+        </td>
+        <td>
+          219
+          -
+          228
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          14
+        </td>
+        <td>
+          800
+        </td>
+        <td>
+          292
+          -
+          305
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          820
+        </td>
+        <td>
+          319
+          -
+          345
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          781
+        </td>
+        <td>
+          350
+          -
+          447
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          802
+        </td>
+        <td>
+          452
+          -
+          471
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          833
+        </td>
+        <td>
+          497
+          -
+          509
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          849
+        </td>
+        <td>
+          481
+          -
+          509
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          814
+        </td>
+        <td>
+          519
+          -
+          529
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          867
+        </td>
+        <td>
+          519
+          -
+          529
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          819
+        </td>
+        <td>
+          541
+          -
+          1269
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          834
+        </td>
+        <td>
+          583
+          -
+          637
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          798
+        </td>
+        <td>
+          622
+          -
+          636
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          828
+        </td>
+        <td>
+          675
+          -
+          1234
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          785
+        </td>
+        <td>
+          798
+          -
+          836
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          855
+        </td>
+        <td>
+          878
+          -
+          894
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          851
+        </td>
+        <td>
+          944
+          -
+          1010
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          854
+        </td>
+        <td>
+          965
+          -
+          991
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          784
+        </td>
+        <td>
+          992
+          -
+          1006
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          799
+        </td>
+        <td>
+          1007
+          -
+          1009
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          790
+        </td>
+        <td>
+          963
+          -
+          1009
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          832
+        </td>
+        <td>
+          1055
+          -
+          1070
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          813
+        </td>
+        <td>
+          1088
+          -
+          1145
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          848
+        </td>
+        <td>
+          1107
+          -
+          1144
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          865
+        </td>
+        <td>
+          1088
+          -
+          1145
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          846
+        </td>
+        <td>
+          1181
+          -
+          1202
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          817
+        </td>
+        <td>
+          1181
+          -
+          1202
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          51
+        </td>
+        <td>
+          847
+        </td>
+        <td>
+          1428
+          -
+          1433
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          830
+        </td>
+        <td>
+          1677
+          -
+          1712
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          866
+        </td>
+        <td>
+          1934
+          -
+          1940
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          821
+        </td>
+        <td>
+          1927
+          -
+          1941
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          783
+        </td>
+        <td>
+          2070
+          -
+          2075
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

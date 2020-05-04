@@ -1,0 +1,479 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          blended/security/internal/LDAPLoginConfig.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier;'>1 <span style=''>package blended.security.internal
+</span>2 <span style=''>
+</span>3 <span style=''>import blended.container.context.api.ContainerContext
+</span>4 <span style=''>import blended.util.config.Implicits._
+</span>5 <span style=''>import com.typesafe.config.Config
+</span>6 <span style=''>
+</span>7 <span style=''>object LDAPLoginConfig {
+</span>8 <span style=''>
+</span>9 <span style=''>  // TODO: Review passing of ContainerIdentifierService
+</span>10 <span style=''>  def fromConfig(cfg : Config, ctCtxt : ContainerContext) : LDAPLoginConfig = {
+</span>11 <span style=''>
+</span>12 <span style=''>    val resolve : String =&gt; String = s =&gt;
+</span>13 <span style=''>      </span><span style='background: #F0ADAD'>ctCtxt.resolveString(s).map(_.toString).get</span><span style=''>
+</span>14 <span style=''>
+</span>15 <span style=''>    </span><span style='background: #F0ADAD'>LDAPLoginConfig(
+</span>16 <span style=''></span><span style='background: #F0ADAD'>      url = resolve(cfg.getString(&quot;url&quot;)),
+</span>17 <span style=''></span><span style='background: #F0ADAD'>      systemUser = cfg.getStringOption(&quot;systemUser&quot;).map(resolve),
+</span>18 <span style=''></span><span style='background: #F0ADAD'>      systemPassword = cfg.getStringOption(&quot;systemPassword&quot;).map(resolve),
+</span>19 <span style=''></span><span style='background: #F0ADAD'>      userBase = resolve(cfg.getString(&quot;userBase&quot;)),
+</span>20 <span style=''></span><span style='background: #F0ADAD'>      userSearch = resolve(cfg.getString(&quot;userSearch&quot;)),
+</span>21 <span style=''></span><span style='background: #F0ADAD'>      groupBase = resolve(cfg.getString(&quot;groupBase&quot;)),
+</span>22 <span style=''></span><span style='background: #F0ADAD'>      groupSearch = resolve(cfg.getString(&quot;groupSearch&quot;)),
+</span>23 <span style=''></span><span style='background: #F0ADAD'>      groupAttribute = resolve(cfg.getString(&quot;groupAttribute&quot;)),
+</span>24 <span style=''></span><span style='background: #F0ADAD'>      expandSearch = cfg.getStringOption(&quot;expandSearch&quot;).map(resolve)
+</span>25 <span style=''></span><span style='background: #F0ADAD'>    )</span><span style=''>
+</span>26 <span style=''>  }
+</span>27 <span style=''>}
+</span>28 <span style=''>
+</span>29 <span style=''>case class LDAPLoginConfig(
+</span>30 <span style=''>  url : String,
+</span>31 <span style=''>  systemUser : Option[String],
+</span>32 <span style=''>  systemPassword : Option[String],
+</span>33 <span style=''>  userBase : String,
+</span>34 <span style=''>  userSearch : String,
+</span>35 <span style=''>  groupBase : String,
+</span>36 <span style=''>  groupSearch : String,
+</span>37 <span style=''>  groupAttribute : String,
+</span>38 <span style=''>  expandSearch : Option[String]
+</span>39 <span style=''>)
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          12108
+        </td>
+        <td>
+          402
+          -
+          412
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          12382
+        </td>
+        <td>
+          381
+          -
+          381
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          12256
+        </td>
+        <td>
+          374
+          -
+          417
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          12259
+        </td>
+        <td>
+          423
+          -
+          989
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          12290
+        </td>
+        <td>
+          452
+          -
+          481
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          12371
+        </td>
+        <td>
+          460
+          -
+          480
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          12364
+        </td>
+        <td>
+          502
+          -
+          548
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          12301
+        </td>
+        <td>
+          573
+          -
+          623
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          12240
+        </td>
+        <td>
+          650
+          -
+          675
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          12402
+        </td>
+        <td>
+          642
+          -
+          676
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          12410
+        </td>
+        <td>
+          697
+          -
+          733
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          12235
+        </td>
+        <td>
+          705
+          -
+          732
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          12116
+        </td>
+        <td>
+          753
+          -
+          788
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          21
+        </td>
+        <td>
+          12119
+        </td>
+        <td>
+          761
+          -
+          787
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          12144
+        </td>
+        <td>
+          818
+          -
+          846
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          22
+        </td>
+        <td>
+          12227
+        </td>
+        <td>
+          810
+          -
+          847
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          12147
+        </td>
+        <td>
+          880
+          -
+          911
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          12380
+        </td>
+        <td>
+          872
+          -
+          912
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          12109
+        </td>
+        <td>
+          935
+          -
+          983
+        </td>
+        <td>
+          
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

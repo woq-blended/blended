@@ -1,0 +1,39 @@
+2020-05-04-09:24.22.494 |      230 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Simple Login Module should allow a user to login and determine the group memberships
+2020-05-04-09:24.22.775 |      511 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.container.context.api] with id [1]
+2020-05-04-09:24.22.806 |      542 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.security.internal.SecurityActivator : Initialising Blended Login Module with implementation [simple]
+2020-05-04-09:24.22.808 |      544 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.security.internal.SecurityActivator : Initialising security manager with LoginModule [blended.security.ConfigLoginModule].
+2020-05-04-09:24.22.844 |      580 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.security.internal.SecurityActivator : Using GroupPermissionManager
+2020-05-04-09:24.22.848 |      584 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.security] with id [2]
+2020-05-04-09:24.22.861 |      597 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:24.22.864 |      600 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.security.AbstractLoginModule : Authenticating user [andreas]
+2020-05-04-09:24.22.897 |      633 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Simple Login Module should allow a user to login and determine the group memberships
+--------------------------------------------------------------------------------
+2020-05-04-09:24.22.897 |      633 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Simple Login Module should deny a login for an unknown user
+2020-05-04-09:24.22.898 |      634 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:24.22.899 |      635 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.security.AbstractLoginModule : Authenticating user [foo]
+2020-05-04-09:24.22.901 |      637 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Simple Login Module should deny a login for an unknown user
+--------------------------------------------------------------------------------
+2020-05-04-09:24.22.901 |      637 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The Simple Login Module should deny a login for a known user using wrong credentials
+2020-05-04-09:24.22.902 |      638 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:24.22.902 |      638 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.security.AbstractLoginModule : Authenticating user [andreas]
+2020-05-04-09:24.22.904 |      640 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigLoginSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The Simple Login Module should deny a login for a known user using wrong credentials
+--------------------------------------------------------------------------------
+2020-05-04-09:24.22.933 |      669 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The ConfigPermissionManager should map the JAAS groups to permissions
+2020-05-04-09:24.22.940 |      676 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.container.context.api] with id [1]
+2020-05-04-09:24.22.941 |      677 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.internal.SecurityActivator : Initialising Blended Login Module with implementation [simple]
+2020-05-04-09:24.22.942 |      678 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.internal.SecurityActivator : Initialising security manager with LoginModule [blended.security.ConfigLoginModule].
+2020-05-04-09:24.22.942 |      678 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.internal.SecurityActivator : Using ConfigPermissionManager
+2020-05-04-09:24.22.949 |      685 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.security] with id [2]
+2020-05-04-09:24.22.950 |      686 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:24.22.950 |      686 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.AbstractLoginModule : Authenticating user [andreas]
+2020-05-04-09:24.22.956 |      692 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:24.22.956 |      692 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.AbstractLoginModule : Authenticating user [tobias]
+2020-05-04-09:24.22.961 |      697 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The ConfigPermissionManager should map the JAAS groups to permissions
+--------------------------------------------------------------------------------
+2020-05-04-09:24.22.961 |      697 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The ConfigPermissionManager should merge configured permissions correctly
+2020-05-04-09:24.22.962 |      698 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:24.22.963 |      699 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.AbstractLoginModule : Authenticating user [john]
+2020-05-04-09:24.22.968 |      704 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:24.22.969 |      705 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.security.AbstractLoginModule : Authenticating user [tommy]
+2020-05-04-09:24.22.970 |      706 | INFO  [pool-1-thread-1-ScalaTest-running-ConfigPermissionManagerSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The ConfigPermissionManager should merge configured permissions correctly
+--------------------------------------------------------------------------------

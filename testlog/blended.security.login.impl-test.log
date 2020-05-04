@@ -1,0 +1,21 @@
+2020-05-04-09:23.04.612 |      216 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The token store should start empty
+2020-05-04-09:23.04.897 |      501 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.container.context.api] with id [1]
+2020-05-04-09:23.05.515 |     1119 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.akka] with id [2]
+2020-05-04-09:23.05.526 |     1130 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.security.internal.SecurityActivator : Initialising Blended Login Module with implementation [simple]
+2020-05-04-09:23.05.528 |     1132 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.security.internal.SecurityActivator : Initialising security manager with LoginModule [blended.security.ConfigLoginModule].
+2020-05-04-09:23.05.530 |     1134 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.security.internal.SecurityActivator : Using GroupPermissionManager
+2020-05-04-09:23.05.533 |     1137 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.security] with id [3]
+2020-05-04-09:23.05.800 |     1404 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.testsupport.pojosr.PojoSrTestHelper : Started bundle [blended.security.login] with id [4]
+2020-05-04-09:23.05.849 |     1453 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The token store should start empty
+--------------------------------------------------------------------------------
+2020-05-04-09:23.05.849 |     1453 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The token store should allow to create a new token
+2020-05-04-09:23.05.859 |     1463 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:23.05.861 |     1465 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.security.AbstractLoginModule : Authenticating user [andreas]
+2020-05-04-09:23.06.274 |     1878 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The token store should allow to create a new token
+--------------------------------------------------------------------------------
+2020-05-04-09:23.06.275 |     1879 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Starting test case: The token store should allow to get and delete an existing token
+2020-05-04-09:23.06.277 |     1881 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.security.AbstractLoginModule : Initialising Login module ...[simple]
+2020-05-04-09:23.06.277 |     1881 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.security.AbstractLoginModule : Authenticating user [andreas]
+2020-05-04-09:23.06.289 |     1893 | INFO  [pool-1-thread-1-ScalaTest-running-TokenStoreSpec] blended.testsupport.scalatest.LoggingFreeSpecLike : Finished test case: The token store should allow to get and delete an existing token
+--------------------------------------------------------------------------------
+2020-05-04-09:23.06.305 |     1909 | INFO  [pool-1-thread-1] blended.akka.internal.BlendedAkkaActivator : Stopping ActorSystem
