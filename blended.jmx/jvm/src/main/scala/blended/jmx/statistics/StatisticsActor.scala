@@ -70,7 +70,7 @@ case class StatisticsState(
 
     entry.foreach { e =>
       val toPublish : PublishEntry = PublishEntry.create(e)
-      log.debug(s"Exporting/updating JMX entry [${toPublish.name}] : [$toPublish]")
+      log.trace(s"Exporting/updating JMX entry [${toPublish.name}] : [$toPublish]")
       mbeanExporter.export(toPublish, toPublish.name, replaceExisting = true).recover {
         case NonFatal(e) =>
           log.warn(e)(s"Could not register mbean with name [${toPublish.name}]")
@@ -81,7 +81,7 @@ case class StatisticsState(
   }
 
   private def complete(evt : ServiceInvocationEvent) : (StatisticsState, Option[Entry]) = {
-    log.debug(s"Recording Service invocation event [$evt]")
+    log.trace(s"Recording Service invocation event [$evt]")
     invocations.get(evt.id) match {
       case None =>
         log.debug(s"No active service invocation found for [${evt.id}]")
@@ -111,7 +111,7 @@ case class StatisticsState(
   private def invocationStarted(evt : ServiceInvocationStarted) : (StatisticsState, Option[Entry]) = {
     invocations.get(evt.id) match {
       case None =>
-        log.debug(s"Recording Service invocation start [$evt]")
+        log.trace(s"Recording Service invocation start [$evt]")
         val key : String = datakey(evt)
         val newEntry : Entry = entries.getOrElse(key, Entry(evt.component, evt.subComponents)).update(evt, evt)
 

@@ -34,7 +34,7 @@ object PublishEntry {
       Map("component" -> e.component) ++ e.subComponents
     ).objectName
 
-    log.debug(s"Using object name to publish entry [$objectName]")
+    log.trace(s"Using object name to publish entry [$objectName]")
 
     PublishEntry(
       name = new ObjectName(objectName),
