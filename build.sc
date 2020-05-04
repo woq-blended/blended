@@ -1,13 +1,5 @@
-import java.io.FileOutputStream
-import java.util.zip.ZipEntry
-
-import scala.collection.immutable
 import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
-import scala.util.Try
-import scala.util.matching.Regex
-import scala.util.matching.Regex.quoteReplacement
 import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
-import blended.websocket.blendedModule
 import coursier.Repository
 import coursier.maven.MavenRepository
 import mill.api.{Ctx, Loose, Result}
