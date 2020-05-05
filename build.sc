@@ -1028,7 +1028,7 @@ object blended extends Module {
       blended.security.crypto
     )
     override def extraPublish = T{ Seq(
-      PublishModule.ExtraPublish(dist.zip(), "zips", ".zip")
+      PublishModule.ExtraPublish(dist.zip(), "jars", "-dist.jar")
     )}
 
     object dist extends DistModule with BlendedCoursierModule {
@@ -1056,7 +1056,6 @@ object blended extends Module {
         "jsonsimple.version" -> Deps.jsonSimple.dep.version
       )}
 
-      override def scalaVersion: Target[String] = T{ blended.launcher.scalaVersion() }
       override def libIvyDeps = T{ Agg(
         Deps.cmdOption,
         Deps.orgOsgi,
@@ -1071,7 +1070,8 @@ object blended extends Module {
         Deps.commonsLogging,
         Deps.jsonSimple
       )}
-      override def libModules = Seq(
+
+      override def libModules : Seq[PublishModule] = Seq(
         blended.domino,
         blended.launcher,
         blended.util.logging,
