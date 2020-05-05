@@ -7,9 +7,10 @@ import akka.stream.scaladsl.{Flow, Source}
 import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
 import blended.streams.jms._
+import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 
 import scala.concurrent.duration._
 import scala.util.Try
@@ -59,10 +60,13 @@ class JMSResponder(
         }
 
         val replyTo : String = env.header[String](replyToHeader(headerCfg.prefix)).get
+        val responseHeader : FlowMessageProps = env.flowMessage.header.filterNot{ case (k,_) => k.startsWith(headerCfg.prefix) }
 
-        env.copy(flowMessage =
-          FlowMessage(body)(env.flowMessage.header))
-          .withHeader(destHeader(headerCfg.prefix), replyTo).get
+        envLogger.logEnv(env, LogLevel.Info, s"Responding to envelope [$env]")
+
+        FlowEnvelope(FlowMessage(body)(responseHeader))
+        .withHeader(destHeader(headerCfg.prefix), replyTo)
+        .get
 
       }})
       .via(Flow.fromGraph(new JmsProducerStage("requestor-respond", producerSettings)))

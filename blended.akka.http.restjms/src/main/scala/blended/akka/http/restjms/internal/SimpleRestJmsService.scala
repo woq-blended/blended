@@ -1,4 +1,6 @@
 package blended.akka.http.restjms.internal
+import java.util.UUID
+
 import akka.NotUsed
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.http.scaladsl.model._
@@ -13,6 +15,7 @@ import blended.streams.jms._
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowEnvelopeLogger, FlowMessage, TextFlowMessage}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
+import scala.collection.JavaConverters._
 
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -32,6 +35,8 @@ class SimpleRestJmsService(
   private val log : Logger = Logger(s"${getClass().getName()}.$name")
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(osgiCfg.ctContext)
   private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
+
+  private val idSeparator : String = "##"
 
   private val defaultContentTypes = List("application/json", "text/xml")
   private val restConfig : RestJMSConfig = RestJMSConfig.fromConfig(osgiCfg.config)
@@ -56,7 +61,8 @@ class SimpleRestJmsService(
     connectionFactory = cf,
     jmsDestination = Some(responseDestination),
     logLevel = _ => LogLevel.Debug,
-    selector = Some(s"${corrIdHeader(headerCfg.prefix)} = '${osgiCfg.ctContext.uuid}'"),
+    // We use the real JMSCorrelation Id here, not the one we keep in our ap properties
+    selector = Some(s"${corrIdHeader("")} LIKE '${osgiCfg.ctContext.uuid}%'"),
     keyFormatStrategy = new PassThroughKeyFormatStrategy()
   )
 
@@ -65,8 +71,14 @@ class SimpleRestJmsService(
   private val responseSrc : Source[FlowEnvelope, NotUsed] =
     Source.fromGraph(new JmsConsumerStage(s"$name-response", consumerSettings))
     .via(FlowProcessor.fromFunction("handleResponse", envLogger){ env => Try {
-      handleResponse(env)
-      env
+      val corrId : String = env.headerWithDefault(corrIdHeader(""), env.id)
+      val responseEnv : FlowEnvelope = if (corrId.split(idSeparator).size == 2) {
+        FlowEnvelope(env.flowMessage, corrId.split(idSeparator).toSeq.last)
+      } else {
+        env
+      }
+      handleResponse(responseEnv)
+      responseEnv
     }})
 
   private val requestSrc : Source[FlowEnvelope, ActorRef] =
@@ -168,14 +180,16 @@ class SimpleRestJmsService(
     data.map { result =>
       val content: Array[Byte] = result.flatten.toArray
 
+      val envId : String = UUID.randomUUID().toString()
+
       val header : Seq[(String, Any)] = Seq(
         destHeader(headerCfg.prefix) -> opCfg.destination,
         replyToHeader(headerCfg.prefix) -> s"${responseDestination.name}",
-        corrIdHeader(headerCfg.prefix) -> osgiCfg.ctContext.uuid,
+        corrIdHeader(headerCfg.prefix) -> s"${osgiCfg.ctContext.uuid}##$envId",
         "Content-Type" -> cType.mediaType.value
       ) ++ opCfg.header.map{ case (k,v) => k -> v }
 
-      val env: FlowEnvelope = FlowEnvelope(FlowMessage(content)(FlowMessage.props(header:_*).get))
+      val env: FlowEnvelope = FlowEnvelope(FlowMessage(content)(FlowMessage.props(header:_*).get), envId)
 
       log.debug(s"Received request [${env.id}] of length [${content.length}], encoding [${opCfg.encoding}], content type [${cType.mediaType}]")
       log.debug(s"Request envelope is [$env]")
@@ -239,8 +253,8 @@ class SimpleRestJmsService(
   private def handleResponse(env : FlowEnvelope) : Unit = synchronized {
 
     def createEntity(req : HttpRequest, msg : FlowMessage) : ResponseEntity = msg match {
-      case tMsg : TextFlowMessage => HttpEntity(req.entity.contentType, tMsg.getText().getBytes())
-      case bMsg : BinaryFlowMessage => HttpEntity(req.entity.contentType, bMsg.getBytes())
+      case tMsg: TextFlowMessage => HttpEntity(req.entity.contentType, tMsg.getText().getBytes())
+      case bMsg: BinaryFlowMessage => HttpEntity(req.entity.contentType, bMsg.getBytes())
       case _ => HttpEntity(req.entity.contentType, ByteString.empty)
     }
 
@@ -259,6 +273,7 @@ class SimpleRestJmsService(
             )))
         }
       case None =>
+        log.warn(s"No pending request for received response [$env]")
     }
   }
 

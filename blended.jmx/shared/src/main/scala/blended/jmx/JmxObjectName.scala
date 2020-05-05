@@ -43,7 +43,12 @@ case class JmxObjectName (
   properties : Map[String,String]
 ) {
 
-  val sortedProps : List[String] = properties.toList.sorted.map{ case (k,v) => s"$k=$v" }
+  val sortedProps : List[String] = properties
+    .mapValues(_.replaceAll(":", "/"))
+    .toList
+    .sorted
+    .map{ case (k,v) => s"$k=$v" }
+
   val objectName : String = s"$domain:${sortedProps.mkString(",")}"
 
   override val toString: String = {

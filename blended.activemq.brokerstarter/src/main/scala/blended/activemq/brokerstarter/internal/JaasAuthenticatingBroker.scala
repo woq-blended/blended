@@ -55,7 +55,7 @@ class JaasAuthenticatingBroker(parent : Broker, brokerCfg : BrokerConfig) extend
 
     (Option(username), Option(password)) match {
       case (Some(u), _) =>
-        log.info(s"Trying to authenticate [$username] for broker [${getBrokerName()}]")
+        log.debug(s"Trying to authenticate [$username] for broker [${getBrokerName()}]")
         try {
           val lc = new LoginContext("Test", new PasswordCallbackHandler(u, Option(password).map(_.toCharArray()).getOrElse(Array.empty)))
           lc.login()
@@ -72,7 +72,7 @@ class JaasAuthenticatingBroker(parent : Broker, brokerCfg : BrokerConfig) extend
       case (None, _) =>
         brokerCfg.anonymousUser match {
           case Some(u) =>
-            log.info(s"Authenticating anonymous user name [$u] to broker [${getBrokerName()}] with groups [${brokerCfg.anonymousGroups}]")
+            log.debug(s"Authenticating anonymous user name [$u] to broker [${getBrokerName()}] with groups [${brokerCfg.anonymousGroups}]")
             val groups : Set[Principal] = brokerCfg.anonymousGroups.map(g => new GroupPrincipal(g)).toSet
             new SecurityContext(u) {
               override def getPrincipals: util.Set[Principal] = groups.asJava

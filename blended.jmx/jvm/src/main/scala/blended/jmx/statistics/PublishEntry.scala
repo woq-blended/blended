@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import blended.jmx.JmxObjectName
+import blended.util.logging.Logger
 import javax.management.ObjectName
 
 case class PublishEntry private (
@@ -24,16 +25,19 @@ case class PublishEntry private (
 
 object PublishEntry {
 
+  private val log : Logger = Logger[PublishEntry]
   private val sdf : SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS")
 
   def create(e : Entry) : PublishEntry = {
 
-    val objectName : ObjectName = new ObjectName(JmxObjectName(properties =
+    val objectName : String = JmxObjectName(properties =
       Map("component" -> e.component) ++ e.subComponents
-    ).objectName)
+    ).objectName
+
+    log.trace(s"Using object name to publish entry [$objectName]")
 
     PublishEntry(
-      name = objectName,
+      name = new ObjectName(objectName),
       successCount = e.success.count,
       totalSuccessMsec = e.success.totalMsec,
       avgSuccessMsec = e.success.avg,
