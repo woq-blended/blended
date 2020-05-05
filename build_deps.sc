@@ -1,6 +1,6 @@
 import mill.scalalib._
 
-object Deps {
+trait Deps { deps =>
 
   // Versions
   val activeMqVersion = "5.15.6"
@@ -13,8 +13,8 @@ object Deps {
   val microJsonVersion = "1.4"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
-  val scalaJsVersion = "0.6.32"
-  val scalaVersion = "2.12.11"
+  def scalaJsVersion = "0.6.32"
+  def scalaVersion = "2.12.11"
   def scalaBinVersion(scalaVersion: String) = scalaVersion.split("[.]").take(2).mkString(".")
   val scalatestVersion = "3.0.8"
   val scalaCheckVersion = "1.14.0"
@@ -154,10 +154,17 @@ object Deps {
   val jsonSimple = ivy"com.googlecode.json-simple:json-simple:1.1.1"
 
   object js {
-    val log4s = ivy"org.log4s::log4s::${Deps.log4s.dep.version}"
+    val log4s = ivy"org.log4s::log4s::${deps.log4s.dep.version}"
     val prickle = ivy"com.github.benhutchison::prickle::${prickleVersion}"
     val scalatest = ivy"org.scalatest::scalatest::${scalatestVersion}"
     val scalacheck = ivy"org.scalacheck::scalacheck::${scalaCheckVersion}"
   }
 
+}
+
+object Deps {
+  object Deps_2_12 extends Deps
+  object Deps_2_13 extends Deps {
+    override def scalaVersion: String = "2.13.2"
+  }
 }
