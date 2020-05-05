@@ -163,6 +163,8 @@ trait Deps { deps =>
 }
 
 object Deps {
+  val scalaVersions: Map[String, Deps] = Seq(Deps_2_12, Deps_2_13).map(d => d.scalaVersion -> d).toMap
+
   object Deps_2_12 extends Deps
   object Deps_2_13 extends Deps {
     override def scalaVersion: String = "2.13.2"
