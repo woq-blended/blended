@@ -355,7 +355,7 @@ trait DistModule extends CoursierModule {
   /** Creates the distribution zip file */
   def zip : T[PathRef] = T{
 
-    val dirs : Agg[PathRef] =
+    val dirs  =
       sources().map(_.path) ++ Seq(
         expandedFilteredSources().path,
         resolvedLibs().path
@@ -1021,7 +1021,7 @@ object blended extends Module {
       blended.security.crypto
     )
     override def extraPublish = T{ Seq(
-      PublishModule.ExtraPublish(dist.zip(), "jars", "-dist.jar")
+      PublishModule.ExtraPublish(dist.zip(), "dists", "-dist.jar")
     )}
 
     object dist extends DistModule with BlendedCoursierModule {
