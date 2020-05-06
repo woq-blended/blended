@@ -1,5 +1,4 @@
 import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
-import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
 import coursier.Repository
 import coursier.maven.MavenRepository
 import mill.api.{Ctx, Loose, Result}
@@ -16,6 +15,8 @@ import sbt.testing.{Fingerprint, Framework}
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
 import mill.contrib.scoverage.ScoverageModule
 
+import mill.modules.Jvm
+
 // This import the mill-osgi plugin
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.2.0`
 import de.tobiasroeser.mill.osgi._
@@ -25,8 +26,6 @@ import build_util.{FilterUtil, GenDummyFileForScoverage, ZipUtil}
 
 import $file.build_deps
 import build_deps.Deps
-
-
 
 
 /** Project directory. */
@@ -354,21 +353,15 @@ trait DistModule extends CoursierModule {
   }
 
   /** Creates the distribution zip file */
-  def zip = T{
-    val dest = T.ctx().dest
-    val zip = dest / s"${distName()}.zip"
+  def zip : T[PathRef] = T{
 
-    val dirs =
+    val dirs : Agg[PathRef] =
       sources().map(_.path) ++ Seq(
         expandedFilteredSources().path,
         resolvedLibs().path
       )
 
-    ZipUtil.createZip(
-      outputPath = zip,
-      inputPaths = dirs
-    )
-    PathRef(zip)
+    Jvm.createJar(dirs)
   }
 }
 
