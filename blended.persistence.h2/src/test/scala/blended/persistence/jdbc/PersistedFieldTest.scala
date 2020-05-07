@@ -4,7 +4,7 @@ import java.{util => ju}
 
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalacheck.Arbitrary
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.JavaConverters._
 import scala.reflect.{ClassTag, classTag}
@@ -12,7 +12,7 @@ import scala.util.{Success, Try}
 
 class PersistedFieldTest
   extends LoggingFreeSpec
-  with PropertyChecks {
+  with ScalaCheckPropertyChecks {
 
   val testData = Seq(
     ("Null",

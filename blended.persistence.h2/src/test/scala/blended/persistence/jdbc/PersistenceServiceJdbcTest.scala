@@ -6,7 +6,7 @@ import java.{lang => jl, util => ju}
 import blended.testsupport.TestFile
 import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.springframework.transaction.PlatformTransactionManager
 
 import scala.collection.JavaConverters._

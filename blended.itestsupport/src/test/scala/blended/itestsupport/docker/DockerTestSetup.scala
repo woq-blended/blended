@@ -12,7 +12,7 @@ import com.github.dockerjava.api.model._
 import com.typesafe.config.ConfigFactory
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 
 
 trait DockerTestSetup { this : MockitoSugar =>

@@ -4,7 +4,7 @@ import akka.event.LoggingAdapter
 import blended.itestsupport.ContainerUnderTest
 import blended.testsupport.TestActorSys
 import com.typesafe.config.Config
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
 class ContainerUnderTestSpec extends WordSpec

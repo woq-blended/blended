@@ -4,7 +4,7 @@ import akka.actor.Props
 import akka.testkit.TestProbe
 import blended.itestsupport.ContainerUnderTest
 import blended.testsupport.TestActorSys
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.duration._

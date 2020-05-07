@@ -907,6 +907,7 @@ class BlendedCross(crossScalaVersion: String) extends Module { blended =>
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.activeMqBroker,
           deps.scalacheck,
+          deps.scalatestplusScalacheck,
           deps.springCore,
           deps.springBeans,
           deps.springContext,
@@ -973,10 +974,8 @@ class BlendedCross(crossScalaVersion: String) extends Module { blended =>
     )}
     object test extends Tests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-        deps.scalacheck
-      )}
-      override def runIvyDeps: Target[Loose.Agg[Dep]] = T{ super.runIvyDeps() ++ Agg(
-//        deps.springExpression
+        deps.scalacheck,
+        deps.scalatestplusScalacheck
       )}
       override def moduleDeps = super.moduleDeps ++ Seq(
         blended.testsupport,
@@ -1558,6 +1557,7 @@ class BlendedCross(crossScalaVersion: String) extends Module { blended =>
       object test extends Tests {
         override def ivyDeps = super.ivyDeps() ++ Agg(
           deps.scalacheck,
+          deps.scalatestplusScalacheck,
           deps.logbackCore,
           deps.logbackClassic,
           deps.osLib
@@ -1604,7 +1604,8 @@ class BlendedCross(crossScalaVersion: String) extends Module { blended =>
         )}
         override def otherModule: ForkedTest =  ssl.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T { super.ivyDeps() ++ Agg(
-          deps.scalacheck
+          deps.scalacheck,
+          deps.scalatestplusScalacheck
         )}
         override def runIvyDeps: Target[Loose.Agg[Dep]] = T { super.runIvyDeps() ++ Agg(
           deps.logbackClassic,
@@ -2135,6 +2136,7 @@ class BlendedCross(crossScalaVersion: String) extends Module { blended =>
     object test extends Tests {
       override def ivyDeps = T { super.ivyDeps() ++ Agg(
         deps.jolokiaJvmAgent,
+        deps.scalatestplusMockito,
         deps.mockitoAll
       )}
       override def moduleDeps = super.moduleDeps ++ Seq(

@@ -7,7 +7,7 @@ import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.docker.protocol._
 import blended.itestsupport.{ContainerLink, ContainerUnderTest}
 import blended.testsupport.TestActorSys
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
 class DependentContainerActorSpec extends WordSpec

@@ -1,3 +1,4 @@
+import coursier.Dependency
 import mill.scalalib._
 
 trait Deps { deps =>
@@ -99,7 +100,7 @@ trait Deps { deps =>
 
   def microjson = ivy"com.github.benhutchison::microjson:${microJsonVersion}"
   def mimepull = ivy"org.jvnet.mimepull:mimepull:1.9.5"
-  def mockitoAll = ivy"org.mockito:mockito-all:1.9.5"
+  def mockitoAll = ivy"org.mockito:mockito-all:1.10.19"
 
   def orgOsgi = ivy"org.osgi:org.osgi.core:6.0.0"
   def orgOsgiCompendium = ivy"org.osgi:org.osgi.compendium:5.0.0"
@@ -118,6 +119,7 @@ trait Deps { deps =>
   def scalacheck = ivy"org.scalacheck::scalacheck:1.14.0"
   def scalatest = ivy"org.scalatest::scalatest:${scalatestVersion}"
   def scalatestplusScalacheck = ivy"org.scalatestplus::scalacheck-1-14:3.1.1.1"
+  def scalatestplusMockito = ivy"org.scalatestplus::mockito-1-10:3.1.0.0"
   def shapeless = ivy"com.chuusai::shapeless:1.2.4"
   def slf4j = ivy"org.slf4j:slf4j-api:${slf4jVersion}"
   def slf4jLog4j12 = ivy"org.slf4j:slf4j-log4j12:${slf4jVersion}"
@@ -153,10 +155,15 @@ trait Deps { deps =>
   def jsonSimple = ivy"com.googlecode.json-simple:json-simple:1.1.1"
 
   object js {
-    def prickle = ivy"com.github.benhutchison::prickle::${prickleVersion}"
-    def scalatest = ivy"org.scalatest::scalatest::${scalatestVersion}"
-    def scalacheck = ivy"org.scalacheck::scalacheck::${scalaCheckVersion}"
-    def scalatestplusScalacheck = ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1"
+    /** Convert a scala dependency into a scala.js dependency */
+    protected def toJs(dep: Dep) = {
+      val base = dep.dep
+      ivy"${base.module.organization.value}::${base.module.name.value}:${base.version}"
+    }
+    def prickle = toJs(deps.prickle)
+    def scalatest = toJs(deps.scalatest)
+    def scalacheck = toJs(deps.scalacheck)
+    def scalatestplusScalacheck = toJs(deps.scalatestplusScalacheck)
   }
 
 }

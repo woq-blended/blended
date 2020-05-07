@@ -6,11 +6,11 @@ import java.security.cert.X509Certificate
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalacheck.Gen
 import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class SelfSignedProviderSpec extends LoggingFreeSpec
   with Matchers
-  with PropertyChecks
+  with ScalaCheckPropertyChecks
   with SecurityTestSupport
   with CertificateRequestBuilder
   with CertificateSigner {

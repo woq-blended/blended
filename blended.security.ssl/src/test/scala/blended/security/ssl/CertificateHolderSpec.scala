@@ -5,13 +5,13 @@ import java.security.{KeyPair, SignatureException}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalacheck.Gen
 import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.util.{Success, Try}
 
 class CertificateHolderSpec extends LoggingFreeSpec
   with Matchers
-  with PropertyChecks
+  with ScalaCheckPropertyChecks
   with SecurityTestSupport
   with CertificateRequestBuilder
   with CertificateSigner {

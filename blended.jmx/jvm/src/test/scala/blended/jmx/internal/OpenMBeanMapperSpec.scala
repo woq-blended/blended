@@ -10,12 +10,12 @@ import javax.management.ObjectName
 import javax.management.openmbean.{ArrayType, SimpleType, TabularData}
 import org.scalacheck.Arbitrary
 import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.JavaConverters._
 import scala.reflect.{ClassTag, classTag}
 
-class OpenMBeanMapperSpec extends LoggingFreeSpec with PropertyChecks with Matchers {
+class OpenMBeanMapperSpec extends LoggingFreeSpec with ScalaCheckPropertyChecks with Matchers {
 
   import OpenMBeanMapperSpec._
   import blended.jmx.internal.TestData._
