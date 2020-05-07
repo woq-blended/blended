@@ -16,8 +16,8 @@ trait Deps { deps =>
   def scalaJsVersion = "0.6.32"
   def scalaVersion = "2.12.11"
   def scalaBinVersion(scalaVersion: String) = scalaVersion.split("[.]").take(2).mkString(".")
-  def scalatestVersion = "3.0.8"
-  def scalaCheckVersion = "1.14.0"
+  def scalatestVersion = "3.1.1"
+  def scalaCheckVersion = "1.14.3"
   def scoverageVersion = "1.4.1"
   def slf4jVersion = "1.7.25"
   def sprayVersion = "1.3.4"
@@ -94,8 +94,6 @@ trait Deps { deps =>
   def levelDbJava = ivy"org.iq80.leveldb:leveldb:0.9"
   def levelDbJni = ivy"org.fusesource.leveldbjni:leveldbjni-all:1.8"
   def liquibase = ivy"org.liquibase:liquibase-core:3.6.1"
-  /** Only for use in test that also runs in JS */
-  def log4s = ivy"org.log4s::log4s:1.6.1"
   def logbackCore = ivy"ch.qos.logback:logback-core:1.2.3"
   def logbackClassic = ivy"ch.qos.logback:logback-classic:1.2.3"
 
@@ -119,6 +117,7 @@ trait Deps { deps =>
 
   def scalacheck = ivy"org.scalacheck::scalacheck:1.14.0"
   def scalatest = ivy"org.scalatest::scalatest:${scalatestVersion}"
+  def scalatestplusScalacheck = ivy"org.scalatestplus::scalacheck-1-14:3.1.1.1"
   def shapeless = ivy"com.chuusai::shapeless:1.2.4"
   def slf4j = ivy"org.slf4j:slf4j-api:${slf4jVersion}"
   def slf4jLog4j12 = ivy"org.slf4j:slf4j-log4j12:${slf4jVersion}"
@@ -154,10 +153,10 @@ trait Deps { deps =>
   def jsonSimple = ivy"com.googlecode.json-simple:json-simple:1.1.1"
 
   object js {
-    def log4s = ivy"org.log4s::log4s::${deps.log4s.dep.version}"
     def prickle = ivy"com.github.benhutchison::prickle::${prickleVersion}"
     def scalatest = ivy"org.scalatest::scalatest::${scalatestVersion}"
     def scalacheck = ivy"org.scalacheck::scalacheck::${scalaCheckVersion}"
+    def scalatestplusScalacheck = ivy"org.scalatestplus::scalacheck-1-14::3.1.1.1"
   }
 
 }
@@ -168,6 +167,7 @@ object Deps {
   object Deps_2_12 extends Deps
   object Deps_2_13 extends Deps {
     override def scalaVersion = "2.13.2"
+    override def scalaJsVersion = "1.0.1"
     override def prickleVersion = "1.1.16"
     override def microJsonVersion = "1.4"
   }

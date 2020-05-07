@@ -4,12 +4,12 @@ import java.{util => ju}
 
 import org.scalacheck.Arbitrary
 import org.scalatest.FreeSpec
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.reflect.{ClassTag, classTag}
 import scala.util.{Success, Try}
 
-class MapperSpec extends FreeSpec with PropertyChecks {
+class MapperSpec extends FreeSpec with ScalaCheckPropertyChecks {
 
   "Mapper maps and unmaps to identity" - {
 
