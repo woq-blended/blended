@@ -6,7 +6,7 @@ import com.github.dockerjava.api.model.{Container, Image}
 import com.github.dockerjava.core.{DefaultDockerClientConfig, DockerClientBuilder}
 import com.typesafe.config.Config
 
-import scala.collection.convert.Wrappers.JListWrapper
+import scala.collection.JavaConverters._
 
 object DockerClientFactory {
 
@@ -67,11 +67,9 @@ trait Docker {
     matched
   }
 
-  def images : List[Image] =
-    JListWrapper(client.listImagesCmd().exec()).toList
+  def images : List[Image] = client.listImagesCmd().exec().asScala.toList
     
-  def running : List[Container] =
-    JListWrapper(client.listContainersCmd().exec()).toList
+  def running : List[Container] = client.listContainersCmd().exec().asScala.toList
 
   def search(f : Image => Boolean) = {
     val li = images

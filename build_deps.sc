@@ -21,7 +21,7 @@ trait Deps { deps =>
   def scalaCheckVersion = "1.14.3"
   def scoverageVersion = "1.4.1"
   def slf4jVersion = "1.7.25"
-  def sprayVersion = "1.3.4"
+  def sprayVersion = "1.3.5"
   def springVersion = "4.3.12.RELEASE_1"
 
   def activeMqBroker = ivy"org.apache.activemq:activemq-broker:${activeMqVersion}"
@@ -176,6 +176,5 @@ object Deps {
     override def scalaVersion = "2.13.2"
     override def scalaJsVersion = "1.0.1"
     override def prickleVersion = "1.1.16"
-    override def microJsonVersion = "1.4"
   }
 }

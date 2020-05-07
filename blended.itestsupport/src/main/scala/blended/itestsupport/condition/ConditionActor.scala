@@ -49,7 +49,7 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
   case object Check
 
   implicit val ctxt : ExecutionContext = context.system.dispatcher
-  private var start : Long = 0l
+  private var start : Long = 0L
 
   def receive: Receive = initializing
 

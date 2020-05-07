@@ -1,6 +1,6 @@
 package blended.itestsupport.docker
 
-import scala.collection.convert.Wrappers.JListWrapper
+import scala.collection.JavaConverters._
 
 import akka.actor.{Actor, ActorLogging}
 import akka.event.LoggingReceive
@@ -55,7 +55,7 @@ class DockerContainerMapperActor extends Actor with ActorLogging {
 
   private[docker] def dockerContainer(cut: ContainerUnderTest, client: DockerClient) : List[Container] = {
 
-    val dc = JListWrapper(client.listContainersCmd().exec()).toList
+    val dc = client.listContainersCmd().exec().asScala.toList
 
     dockerContainerByName(cut, dc) match {
       case e if e.isEmpty => dockerContainerByImage(cut, dc)

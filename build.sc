@@ -390,6 +390,12 @@ class BlendedCross(crossScalaVersion: String) extends Module { blended =>
     // remove the scala version
     override def blendedModule: String = millModuleSegments.parts.filterNot(crossScalaVersion == _).mkString(".")
     override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_12.scalaVersion
+    trait Tests extends super.Tests {
+      override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_12.scalaVersion
+    }
+    trait ForkedTests extends super.ForkedTest {
+      override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_12.scalaVersion
+    }
   }
 
   object activemq extends Module {

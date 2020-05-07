@@ -232,7 +232,7 @@ trait CollectorService {
           log.debug(s"upload to repo [${repoId}] requested. Checking permissions...")
           requirePermission("profile:update") {
             requirePermission(s"repository:upload:${repoId}") {
-              storeUploadedFile("file", _ ⇒ File.createTempFile("profile-upload-deploymentpack", ".tmp")) {
+              storeUploadedFile("file", _ => File.createTempFile("profile-upload-deploymentpack", ".tmp")) {
                 case (metadata, file) =>
                   try {
                     processDeploymentPack(repoId, file) match {

@@ -14,25 +14,25 @@ private[internal] case class CommandHandlerState(
   def addClient(info : ClientInfo) : CommandHandlerState = {
     log.info(s"Adding new WS client [${info.t.id}]")
     copy(
-      clients = clients.filterKeys(_ != info.t.id) ++ Map(info.t.id -> info)
+      clients = clients.filterKeys(_ != info.t.id).toMap ++ Map(info.t.id -> info)
     )
   }
 
   def removeClient(t : Token) : CommandHandlerState = {
     log.info(s"Removing WS client [${t.id}]")
     copy(
-      clients = clients.filterKeys(_ != t.id)
+      clients = clients.filterKeys(_ != t.id).toMap
     )
   }
 
   def addHandler(h : WebSocketCommandPackage) : CommandHandlerState = {
     log.info(s"Adding command handler for namespace [${h.namespace}]")
-    copy(handler = handler.filterKeys(_ != h.namespace) ++ Map(h.namespace -> h))
+    copy(handler = handler.filterKeys(_ != h.namespace).toMap ++ Map(h.namespace -> h))
   }
 
   def removeHandler(h : WebSocketCommandPackage) : CommandHandlerState = {
     log.info(s"Removing command package for namespace [${h.namespace}]")
-    copy(handler = handler.filterKeys(_ != h.namespace))
+    copy(handler = handler.filterKeys(_ != h.namespace).toMap)
   }
 
   def clientByToken(t : Token) : Option[ClientInfo] = clients.values.find(_.t.id == t.id)
