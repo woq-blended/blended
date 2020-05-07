@@ -57,7 +57,7 @@ case class DispatcherFanout(
           // if the block does not have a condition, the header block will be used
           case None => true
           case Some(c) =>
-            val resolve = ctCtxt.resolveString(c, env.flowMessage.header.mapValues(_.value))
+            val resolve = ctCtxt.resolveString(c, env.flowMessage.header.mapValues(_.value).toMap)
             streamLogger.logEnv(env, LogLevel.Debug, s"Resolved condition to [$resolve][${resolve.map(_.getClass().getName())}]")
             val use = resolve.map(_.asInstanceOf[Boolean]).unwrap
 
@@ -90,7 +90,7 @@ case class DispatcherFanout(
             .withHeader(deliveryModeHeader(bs.headerConfig.prefix), oh.deliveryMode).unwrap
 
         oh.header.foreach { case (header, value) =>
-          val resolved = ctCtxt.resolveString(value, env.flowMessage.header.mapValues(_.value)).get
+          val resolved = ctCtxt.resolveString(value, env.flowMessage.header.mapValues(_.value).toMap).get
           streamLogger.logEnv(env, LogLevel.Trace,s"[${newEnv.id}]:[${outCfg.id}] - resolved property [$header] to [$resolved]")
           newEnv = newEnv.withHeader(header, resolved).unwrap
         }

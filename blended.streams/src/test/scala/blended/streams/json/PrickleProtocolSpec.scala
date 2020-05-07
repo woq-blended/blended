@@ -5,12 +5,12 @@ import blended.streams.message.MsgProperty
 import blended.streams.transaction.{FlowTransaction, FlowTransactionGen}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import prickle._
 
 class PrickleProtocolSpec extends LoggingFreeSpec
   with Matchers
-  with PropertyChecks {
+  with ScalaCheckPropertyChecks {
 
   "A MsgProperty should" - {
 

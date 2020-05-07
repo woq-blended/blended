@@ -56,7 +56,12 @@ object ResourceTypeRouterConfig {
       HeaderProcessorConfig.create(cfg)
     }
 
-    val startupMap : Map[String, String] = cfg.getStringMapOption(startupPath).getOrElse(Map.empty).mapValues(s => ctCtxt.resolveString(s).get.toString)
+    val startupMap : Map[String, String] =
+      cfg
+        .getStringMapOption(startupPath)
+        .getOrElse(Map.empty)
+        .mapValues(s => ctCtxt.resolveString(s).get.toString)
+        .toMap
 
     ResourceTypeRouterConfig(
       defaultProvider = internalProvider,

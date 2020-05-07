@@ -1751,6 +1751,7 @@ class BlendedCross(crossScalaVersion: String) extends Module { blended =>
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.commonsIo,
         deps.scalacheck,
+        deps.scalatestplusScalacheck,
         deps.akkaTestkit,
         deps.akkaSlf4j,
         deps.activeMqBroker,

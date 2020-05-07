@@ -33,7 +33,7 @@ object LogEnvelope {
         }
 
         val headerString : Map[String, String] = logHeader match {
-          case Nil => env.flowMessage.header.mapValues(_.toString)
+          case Nil => env.flowMessage.header.mapValues(_.toString).toMap
           case l => l.map { h =>
             (h -> env.flowMessage.header.get(h).map(_.toString()).getOrElse("UNKNOWN"))
           }.toMap
