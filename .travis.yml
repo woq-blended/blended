@@ -5,9 +5,12 @@ jdk:
   - openjdk11
 
 env:
-  - NAME="Test (fail fast)"
+  - NAME="Test Scala 2.12 (fail fast)"
     TEST_ONLINE="true"
-    SCRIPT_1="travis_wait 40 ./millw -i __.testCached"
+    SCRIPT_1="travis_wait 40 ./millw -i blended[2.12.11].__.testCached"
+  - NAME="Test Scala 2.13 (fail fast)"
+    TEST_ONLINE="true"
+    SCRIPT_1="travis_wait 40 ./millw -i blended[2.13.2].__.testCached"
   - NAME="Test (keep going)"
     TEST_ONLINE="true"
     SCRIPT_1="travis_wait 40 ./millw -i -k __.testCached"
