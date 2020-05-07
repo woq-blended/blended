@@ -1021,7 +1021,7 @@ object blended extends Module {
       blended.security.crypto
     )
     override def extraPublish = T{ Seq(
-      PublishModule.ExtraPublish(dist.zip(), "dists", "-dist.jar")
+      ExtraPublish(file = dist.zip(), ivyClassifier=Some("dist"))
     )}
 
     object dist extends DistModule with BlendedCoursierModule {
