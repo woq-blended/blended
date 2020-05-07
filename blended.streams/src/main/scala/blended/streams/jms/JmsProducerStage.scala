@@ -47,7 +47,7 @@ final class JmsProducerStage(
 
     private[this] def removeProducer(s : String) : Unit = {
       if (producer.contains(s)) {
-        producer = producer.filterKeys(_ != s)
+        producer = producer.filterKeys(_ != s).toMap
         producerSettings.log.underlying.debug(s"Producer count of [$id] is [${producer.size}]")
       }
     }

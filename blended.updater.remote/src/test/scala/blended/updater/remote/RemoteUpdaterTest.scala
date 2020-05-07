@@ -7,7 +7,7 @@ import blended.persistence.jdbc.{PersistedClassDao, PersistenceServiceJdbc}
 import blended.testsupport.TestFile
 import blended.testsupport.TestFile.DeleteWhenNoFailure
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.updater.config._
+import blended.updater.config.{ Mapper => BaseMapper, _ }
 import blended.util.logging.Logger
 import org.h2.jdbcx.{JdbcConnectionPool, JdbcDataSource}
 import org.springframework.jdbc.datasource.DataSourceTransactionManager

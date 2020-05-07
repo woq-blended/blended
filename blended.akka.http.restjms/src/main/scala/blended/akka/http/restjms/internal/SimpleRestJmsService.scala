@@ -135,7 +135,7 @@ class SimpleRestJmsService(
 
   private def filterHeaders(headers : Seq[HttpHeader]) : collection.immutable.Seq[HttpHeader] = {
     val notAllowedInResponses : Seq[String] = Seq("Host", "Accept-Encoding", "User-Agent", "Timeout-Access")
-    headers.filterNot(h => notAllowedInResponses.contains(h.name())).to[collection.immutable.Seq]
+    headers.filterNot(h => notAllowedInResponses.contains(h.name())).toList
   }
 
   private def performRequest(opKey : String, request : HttpRequest, actor : ActorRef): Future[HttpResponse] = {

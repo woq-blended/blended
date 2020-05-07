@@ -205,7 +205,7 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
           types
         )
 
-        val value = new CompositeDataSupport(openType, fields.mapValues(_._1).asJava)
+        val value = new CompositeDataSupport(openType, fields.mapValues(_._1).toMap.asJava)
 
         value -> openType
     }

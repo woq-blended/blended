@@ -148,7 +148,7 @@ class PersistedClassDao(dataSource : DataSource) {
     paramMap.addValue("className", pClass)
     val rowMapper = fieldRowMapper()
     val allFields = jdbcTemplate.query(sql, paramMap, rowMapper)
-    inferPersistedClassesFromFields(pClass, allFields.asScala)
+    inferPersistedClassesFromFields(pClass, allFields.asScala.toSeq)
   }
 
   def inferPersistedClassesFromFields(pClass : String, fields : Seq[(Long, PersistedField)]) : sci.Seq[PersistedClass] = {
@@ -263,7 +263,7 @@ class PersistedClassDao(dataSource : DataSource) {
     log.trace(s"parameter map: [${queryParams.getValues}]")
 
     val allFields = jdbcTemplate.query(sql, queryParams, fieldRowMapper())
-    inferPersistedClassesFromFields(pClass, allFields.asScala)
+    inferPersistedClassesFromFields(pClass, allFields.asScala.toSeq)
   }
 
   def deleteByFields(pClass : String, fields : Seq[PersistedField]) : Long = {

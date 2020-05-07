@@ -133,7 +133,7 @@ sealed abstract class FlowMessage(msgHeader : FlowMessageProps) {
       classOf[Byte] -> (s => s.toByte),
       classOf[Float] -> (s => s.toFloat),
       classOf[Double] -> (s => s.toDouble),
-      classOf[Unit] -> (_ => Unit)
+      classOf[Unit] -> (_ => ())
     )
 
     resMap.get(clazz.runtimeClass).map(_(v)).map(_.asInstanceOf[T])
@@ -172,11 +172,11 @@ sealed abstract class FlowMessage(msgHeader : FlowMessageProps) {
 
   def withHeader(key : String, value : Any, overwrite : Boolean = true) : Try[FlowMessage]
 
-  protected def doRemoveHeader(keys : String*) : FlowMessageProps = header.filterKeys(k => !keys.contains(k))
+  protected def doRemoveHeader(keys : String*) : FlowMessageProps = header.filterKeys(k => !keys.contains(k)).toMap
 
   protected def newHeader(key : String, value : Any, overwrite : Boolean) : Try[FlowMessageProps] = Try {
     if (overwrite) {
-      header.filterKeys(_ != key) + (key -> MsgProperty(value).unwrap)
+      header.filterKeys(_ != key).toMap + (key -> MsgProperty(value).unwrap)
     } else {
       if (header.isDefinedAt(key)) {
         header

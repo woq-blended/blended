@@ -72,7 +72,7 @@ class Updater(
       ))
     } else if (state.artifactsToDownload.isEmpty && state.artifactsToUnpack.isEmpty) {
 
-      stagingInProgress = stagingInProgress.filterKeys(id != _)
+      stagingInProgress = stagingInProgress.filterKeys(id != _).toMap
       val (profileState, msg) = state.issues match {
         case Seq()  => LocalProfile.Staged -> OperationSucceeded(id)
         case issues => LocalProfile.Invalid(issues) -> OperationFailed(id, issues.mkString("; "))
