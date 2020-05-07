@@ -1453,25 +1453,21 @@ class BlendedCross(crossScalaVersion: String) extends Module { blended =>
     }
     object js extends Js {
       override def ivyDeps = Agg(
-        ivy"com.github.benhutchison::prickle::1.1.14"
+        Deps.js.prickle
       )
-      object test extends Tests {
-        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-          Deps.js.prickle
-        )}
-      }
+      object test extends Tests
     }
 
     object akka extends Module {
       object http extends BlendedModule {
         override val description : String = "Some security aware Akka HTTP routes for the blended container"
-        override def ivyDeps = super.ivyDeps() ++ Agg(
+        override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           Deps.akkaHttp,
           Deps.akkaStream,
           Deps.orgOsgi,
           Deps.orgOsgiCompendium,
           Deps.slf4j
-        )
+        )}
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
           blended.akka,
           blended.security,
