@@ -337,7 +337,7 @@ object RuntimeConfigBuilder {
       case None =>
         ConfigWriter.write(RuntimeConfigCompanion.toConfig(newRuntimeConfig), Console.out, None)
       case Some(f) =>
-        infoLog("Writing config file: " + f.getAbsolutePath())
+        debug("Writing config file: " + f.getAbsolutePath())
         ConfigWriter.write(RuntimeConfigCompanion.toConfig(newRuntimeConfig), f, None)
     }
 
