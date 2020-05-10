@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success}
 
 class RoundtripConnectionVerifier(
-  probeMsg : () => FlowEnvelope,
+  probeMsg : String => FlowEnvelope,
   verify : FlowEnvelope => Boolean,
   requestDest : JmsDestination,
   responseDest : JmsDestination,
@@ -49,7 +49,7 @@ class RoundtripConnectionVerifier(
 
     val id : String = UUID.randomUUID().toString()
 
-    val probeEnv : FlowEnvelope = probeMsg()
+    val probeEnv : FlowEnvelope = probeMsg(id)
       .withHeader(corrIdHeader(headerConfig.prefix), id, true).get
       .withHeader(replyToHeader(headerConfig.prefix), responseDest.asString).get
 

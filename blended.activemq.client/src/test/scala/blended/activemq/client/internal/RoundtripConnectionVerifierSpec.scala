@@ -53,8 +53,8 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
     "succeed upon a successfull request / response cycle" in {
 
       val verifier : ConnectionVerifier = new RoundtripConnectionVerifier(
-        probeMsg = () => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps)),
-        verify = env => true,
+        probeMsg = id => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps), id),
+        verify = _ => true,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
         headerConfig = FlowHeaderConfig.create(prefix = "App")
@@ -66,8 +66,8 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
 
     "fail if the response message could not be verified" in {
       val verifier : ConnectionVerifier = new RoundtripConnectionVerifier(
-        probeMsg = () => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps)),
-        verify = env => false,
+        probeMsg = id => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps), id),
+        verify = _ => false,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
         headerConfig = FlowHeaderConfig.create(prefix = "App")
@@ -87,8 +87,8 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
       )
 
       val verifier : ConnectionVerifier = new RoundtripConnectionVerifier(
-        probeMsg = () => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps)),
-        verify = env => false,
+        probeMsg = id => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps), id),
+        verify = _ => false,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
         headerConfig = FlowHeaderConfig.create(prefix = "App")
