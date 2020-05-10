@@ -377,7 +377,8 @@ trait DistModule extends CoursierModule {
 }
 
 object blended extends Cross[BlendedCross](Deps.scalaVersions.keys.toSeq: _*)
-class BlendedCross(crossScalaVersion: String) extends Module { blended =>
+class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
+  override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_12.scalaVersion
 
   // correct the unneeded cross sub-dir
   override def millSourcePath: Path = super.millSourcePath / os.up
@@ -1048,7 +1049,7 @@ class BlendedCross(crossScalaVersion: String) extends Module { blended =>
       blended.security.crypto
     )
     override def extraPublish = T{ Seq(
-      PublishModule.ExtraPublish(dist.zip(), "zips", ".zip")
+      PublishInfo(dist.zip(), ivyType =  "zip", ext = "zip", ivyConfig = "dist")
     )}
 
     object dist extends DistModule with BlendedCoursierModule {
