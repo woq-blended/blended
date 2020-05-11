@@ -295,7 +295,7 @@ trait BlendedJvmModule extends BlendedBaseModule { jvmBase =>
 }
 
 trait DistModule extends CoursierModule {
-  def deps: Deps = Deps.Deps_2_12
+  def deps: Deps
   override def millSourcePath: Path = super.millSourcePath / os.up
 
   /** Sources to put into the dist file. */
@@ -1046,6 +1046,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     )}
 
     object dist extends DistModule with BlendedCoursierModule {
+      override def deps = blended.launcher.deps
       override def distName: T[String] = T{ s"${blended.launcher.artifactId()}-${blended.launcher.publishVersion()}" }
       override def sources: Sources = T.sources(millSourcePath / "src" / "runner" / "binaryResources")
       override def filteredSources: Sources = T.sources(millSourcePath / "src" / "runner" / "resources")
