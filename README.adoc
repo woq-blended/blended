@@ -1,7 +1,8 @@
 = Blended - a Scala based Integration framework
 :toc:
 :toc-placement: preamble
-:sbt-version: 1.2.8
+:scala2_12: 2.12.11
+:scala2_13: 2.13.2
 
 ifdef::env-github[]
 image:https://circleci.com/gh/woq-blended/blended.svg?style=svg["CircleCI", link="https://circleci.com/gh/woq-blended/blended"]
@@ -24,11 +25,10 @@ The _Blended test framework_ allows to execute functional cross-component tests 
 The _Blended integration test framework_ uses docker to create and deploy docker images from within the build process and supports the developer in creating integration tests for the final container.
 
 ====
-_Blended_ is the backend for a distributed retail communication software. All components and services not directly related to the actual business components are licensed under the https://www.apache.org/licenses/LICENSE-2.0.html[Apache 2.0 license].
+_Blended_ is the backend for a distributed retail communication software.
+All components and services not directly related to the actual business components are licensed under the https://www.apache.org/licenses/LICENSE-2.0.html[Apache 2.0 license].
 
 Currently blended is in it's 3rd generation and in production since ~2014.
-
-The next upcoming release will complete the migration to https://www.scala-lang.org/[Scala 2.12] and finalize the migration from maven to https://www.scala-sbt.org/[sbt].
 ====
 
 == Related projects
@@ -44,37 +44,43 @@ https://github.com/woq-blended/blended.container[Blended example container and i
 
 == Build from source
 
-We use `sbt {sbt-version}` to build blended.
-
-====
-The build files are *not* compatible with sbt versions 0.13.x as they intensively use the new unified syntax to reference properties.
-====
+We use https://github.com/lihaoyi/mill[Mill build tool] to build blended.
 
 As we have some shared modules between Scala and Scala.Js, `node` and `yarn` is also required on the developer machine.
 
-After cloning the repository, simply navigate to the checkout directory and start sbt with a bit more memory (2GB or more):
+After cloning the repository, simply navigate to the checkout directory and use the bundled mill script `./mill`, which is a copy of https://github.com/lefou/millw[lefou/millw].
 
-```
-sbt -mem 2048
-```
+We currently target Java 8 and Java 11 and cross build to _Scala 2.12 with Scala.js 0.6_ and _Scala 2.13 with Scala.js 1_.
 
-The first start might take a moment as sbt needs to download the required dependencies.
+=== Selected build targets / commands
 
-For convenience we have defined some command aliases for sbt:
+|===
+| mill command | Description
 
-cleanPublish::
-  `; clean ; coverageOff ; publishM2`
+| `mill __.publishLocal`
+| Build and publish all publishable artifacts into a local ivy2 repository.
 
-cleanCoverage::
-  `; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff`
+| `mill __.publishM2Local`
+| Build and publish all publishable artifacts into a local Maven2 repository.
+
+| `mill blended[{scala2_12}].__.osgiBundle`
+| Build all OSGi bundles for Scala {scala2_12}
+
+| `mill blended[{scala2_13}].__.testCached`
+| Run all tests for Scala {scala2_13}
+
+| `mill -j 0 -k __.testCached`
+| Run all unit test in parallel and keep mill going even a test failure occured
+|===
 
 === IDE support
 
-We use https://www.jetbrains.com/idea/[IntelliJ] in our project and the project opens well enough in IntelliJ, though the import of the sbt file can take a moment.
+We use https://www.jetbrains.com/idea/[IntelliJ] in our project.
+You can generate IntelliJ IDEA project files with mill with the following commandline:
 
-====
-There is an experimental support for the Scala Compile Server, https://github.com/scalacenter/bloop[bloop]. Currently we cannot use it as there seems to be an issue with loading mixed JVM / JS projects. Once that is solved, the bloop support should give a very good performance loading / refreshing and compiling the project.
-====
+----
+mill mill.scalalib.GenIdea/idea
+----
 
 == Download  artifacts from Maven Central
 
