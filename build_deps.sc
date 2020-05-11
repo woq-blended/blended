@@ -18,7 +18,6 @@ trait Deps { deps =>
   def scalaVersion = "2.12.11"
   def scalaBinVersion(scalaVersion: String) = scalaVersion.split("[.]").take(2).mkString(".")
   def scalatestVersion = "3.1.1"
-  def scalaCheckVersion = "1.14.3"
   def scoverageVersion = "1.4.1"
   def slf4jVersion = "1.7.25"
   def sprayVersion = "1.3.5"
@@ -116,7 +115,7 @@ trait Deps { deps =>
   def scalaParser = ivy"org.scala-lang.modules::scala-parser-combinators:1.1.1"
   def scalaXml = ivy"org.scala-lang.modules::scala-xml:1.1.0"
 
-  def scalacheck = ivy"org.scalacheck::scalacheck:1.14.0"
+  def scalacheck = ivy"org.scalacheck::scalacheck:1.14.3"
   def scalatest = ivy"org.scalatest::scalatest:${scalatestVersion}"
   def scalatestplusScalacheck = ivy"org.scalatestplus::scalacheck-1-14:3.1.1.1"
   def scalatestplusMockito = ivy"org.scalatestplus::mockito-1-10:3.1.0.0"
@@ -158,7 +157,7 @@ trait Deps { deps =>
     /** Convert a scala dependency into a scala.js dependency */
     protected def toJs(dep: Dep) = {
       val base = dep.dep
-      ivy"${base.module.organization.value}::${base.module.name.value}:${base.version}"
+      ivy"${base.module.organization.value}::${base.module.name.value}::${base.version}"
     }
     def prickle = toJs(deps.prickle)
     def scalatest = toJs(deps.scalatest)
