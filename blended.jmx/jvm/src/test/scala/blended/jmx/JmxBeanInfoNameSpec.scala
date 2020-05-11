@@ -3,7 +3,7 @@ package blended.jmx
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.RichTry._
 import javax.management.ObjectName
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 class JmxBeanInfoNameSpec extends LoggingFreeSpec
   with Matchers {

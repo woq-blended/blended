@@ -3,11 +3,11 @@ package blended.testsupport
 import java.io.File
 
 import blended.testsupport.TestFile.{DeleteAlways, DeleteNever, DeletePolicy, DeleteWhenNoFailure}
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
 import scala.io.Source
 
-class TestFileTest extends FreeSpec with TestFile {
+class TestFileTest extends AnyFreeSpec with TestFile {
 
   "withTestFile" - {
 

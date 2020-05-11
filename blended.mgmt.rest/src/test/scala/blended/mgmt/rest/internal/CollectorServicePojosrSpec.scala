@@ -22,7 +22,7 @@ import sttp.model.{HeaderNames, MediaType, StatusCode}
 import com.typesafe.config.ConfigFactory
 import domino.DominoActivator
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import prickle.{Pickle, Unpickle}
 
 @RequiresForkedJVM

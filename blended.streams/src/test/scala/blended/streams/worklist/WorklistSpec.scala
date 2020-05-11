@@ -9,7 +9,7 @@ import blended.streams.FlowHeaderConfig
 import blended.streams.message.FlowEnvelopeLogger
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}

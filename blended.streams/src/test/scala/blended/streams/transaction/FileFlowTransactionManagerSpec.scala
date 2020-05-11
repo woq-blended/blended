@@ -12,8 +12,8 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import com.sun.management.UnixOperatingSystemMXBean
-import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.mutable
 import scala.concurrent.Await
@@ -30,7 +30,7 @@ trait FTMFactory {
 trait FlowTransactionManagerSpec
   extends LoggingFreeSpecLike
   with Matchers
-  with PropertyChecks { this : FTMFactory =>
+  with ScalaCheckPropertyChecks { this : FTMFactory =>
 
   private def updateTest[T](ftm : FlowTransactionManager, event : FlowTransactionEvent)(f : FlowTransaction => T) : T = {
     ftm.updateTransaction(event) match {
@@ -206,7 +206,7 @@ trait FlowTransactionManagerSpec
 class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
   with LoggingFreeSpecLike
   with Matchers
-  with PropertyChecks
+  with ScalaCheckPropertyChecks
   with FTMFactory {
 
   private val log : Logger = Logger[BulkCleanupSpec]
@@ -292,7 +292,7 @@ class BulkCleanupSpec extends TestKit(ActorSystem("bulk"))
 class FileFlowTransactionManagerSpec extends FlowTransactionManagerSpec
   with LoggingFreeSpecLike
   with Matchers
-  with PropertyChecks
+  with ScalaCheckPropertyChecks
   with FTMFactory {
 
   private val kit : TestKit = new TestKit(ActorSystem("bulk"))

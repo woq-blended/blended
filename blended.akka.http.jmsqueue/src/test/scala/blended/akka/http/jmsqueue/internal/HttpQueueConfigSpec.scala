@@ -1,9 +1,9 @@
 package blended.akka.http.jmsqueue.internal
 
 import com.typesafe.config.ConfigFactory
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class HttpQueueConfigSpec extends FreeSpec {
+class HttpQueueConfigSpec extends AnyFreeSpec {
 
   "The HttpQueueConfig should" - {
 

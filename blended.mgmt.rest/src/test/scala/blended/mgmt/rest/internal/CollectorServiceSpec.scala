@@ -8,15 +8,16 @@ import blended.prickle.akka.http.PrickleSupport
 import blended.security.akka.http.DummyBlendedSecurityDirectives
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
-import org.scalatest.{FreeSpec, Matchers}
-
 import scala.collection.{immutable => sci}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Try
 
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
+
 class CollectorServiceSpec
-  extends FreeSpec
+  extends AnyFreeSpec
   with Matchers
   with ScalatestRouteTest
   with CollectorService

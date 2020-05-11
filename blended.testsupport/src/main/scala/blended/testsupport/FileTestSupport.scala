@@ -6,8 +6,7 @@ import java.util.zip._
 import akka.util.ByteString
 import blended.util.logging.Logger
 import org.apache.commons.io.FileUtils
-import org.scalatest.Matchers
-
+import org.scalatest.matchers.should.Matchers
 import scala.io.Source
 import scala.util.control.NonFatal
 

@@ -1,12 +1,12 @@
 package blended.security.ssl.internal
 
 import blended.testsupport.scalatest.LoggingFreeSpec
-import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class PasswordHasherSpec extends LoggingFreeSpec
   with Matchers
-  with PropertyChecks {
+  with ScalaCheckPropertyChecks {
 
   "The password hasher should" - {
 

@@ -45,7 +45,7 @@ class JavaKeystore(
     }
 
     saveKeyStoreToFile(ks).get
-    MemoryKeystore(ms.certificates.mapValues(_.copy(change = CertificateChange.Unchanged)))
+    MemoryKeystore(ms.certificates.mapValues(_.copy(change = CertificateChange.Unchanged)).toMap)
   }
 
   private[ssl] def loadKeyStoreFromFile() : Try[KeyStore] = Try {

@@ -1,7 +1,7 @@
 package blended.websocket.internal
 
 import blended.testsupport.scalatest.LoggingFreeSpec
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 class CommandHandlerStateSpec extends LoggingFreeSpec
   with Matchers {

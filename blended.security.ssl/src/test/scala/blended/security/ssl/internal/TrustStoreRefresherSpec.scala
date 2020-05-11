@@ -5,7 +5,7 @@ import java.io.File
 import blended.security.ssl.{CertificateChange, CertificateRequestBuilder, CertificateSigner, MemoryKeystore, SecurityTestSupport}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 class TrustStoreRefresherSpec extends LoggingFreeSpec
   with Matchers

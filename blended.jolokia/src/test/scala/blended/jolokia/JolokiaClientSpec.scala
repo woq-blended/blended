@@ -1,8 +1,9 @@
 package blended.jolokia
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.should.Matchers
 
-class JolokiaClientSpec extends WordSpec
+class JolokiaClientSpec extends AnyWordSpec
   with Matchers {
 
   val good = new JolokiaClient(JolokiaAddress(

@@ -2,19 +2,21 @@ package blended.updater.config
 
 import java.util.UUID
 
+import blended.util.logging.Logger
 import blended.updater.config.json.PrickleProtocol._
 import org.scalacheck.Arbitrary
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import prickle._
-
 import scala.reflect.{ClassTag, classTag}
 import scala.util.Success
 import scala.util.control.NonFatal
 
-class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
-  private[this] val log = org.log4s.getLogger
+class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
+
+  private[this] val log = Logger[PrickleSpec]
 
   "Prickle real world test cases" - {
     "1. deserialize a container info" in logException {

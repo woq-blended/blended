@@ -13,7 +13,7 @@ import blended.testsupport.pojosr.{EnsureJmsConnectivity, PojoSrTestHelper, Simp
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.jms._
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import blended.util.RichTry._
 
 import scala.concurrent.duration._

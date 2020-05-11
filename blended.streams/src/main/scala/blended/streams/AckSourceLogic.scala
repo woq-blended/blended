@@ -260,7 +260,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   }
 
   protected def pending() : Map[String, T] =
-    inflightMap.filter { case (_, (_, state)) => state == AckState.Pending }.toMap.mapValues(_._1)
+    inflightMap.filter { case (_, (_, state)) => state == AckState.Pending }.toMap.mapValues(_._1).toMap
 
   override protected def onTimer(timerKey : Any) : Unit = {
     timerKey match {

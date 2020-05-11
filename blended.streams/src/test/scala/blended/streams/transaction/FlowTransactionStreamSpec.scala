@@ -17,8 +17,8 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
@@ -28,7 +28,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
   with PojoSrTestHelper
-  with PropertyChecks {
+  with ScalaCheckPropertyChecks {
 
   System.setProperty("testName", "stream")
 

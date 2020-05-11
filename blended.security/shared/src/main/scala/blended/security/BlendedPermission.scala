@@ -64,6 +64,7 @@ case class BlendedPermission(
           .filterKeys(k => other.properties.get(k).isDefined)
           // then we combine the properties of both permissions
           .map { case (k, v) => (k, (v ++ other.properties.getOrElse(k, sci.Seq.empty)).distinct) }
+          .toMap
 
         BlendedPermission(
           permissionClass = permissionClass,

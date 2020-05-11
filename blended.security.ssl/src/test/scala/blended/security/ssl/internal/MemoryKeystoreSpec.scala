@@ -5,7 +5,7 @@ import java.math.BigInteger
 import blended.security.ssl._
 import blended.testsupport.scalatest.LoggingFreeSpec
 import javax.security.auth.x500.X500Principal
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.util.{Failure, Success}
 

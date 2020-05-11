@@ -4,11 +4,12 @@ import blended.container.context.api.{ContainerContext, PropertyResolverExceptio
 import blended.testsupport.BlendedTestSupport
 import blended.updater.config.RuntimeConfig
 import blended.util.RichTry._
-import org.scalatest.{FreeSpec, Matchers}
-
 import scala.util.control.NonFatal
 
-class PropertyResolverSpec extends FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
+
+class PropertyResolverSpec extends AnyFreeSpec
   with Matchers {
 
   System.setProperty("COUNTRY", "cc")

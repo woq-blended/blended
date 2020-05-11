@@ -2,9 +2,10 @@ package blended.mgmt.service.jmx
 
 import blended.mgmt.service.jmx.internal.ServiceJmxConfig
 import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
-class ServiceJmxConfigSpec extends FreeSpec
+class ServiceJmxConfigSpec extends AnyFreeSpec
   with Matchers {
 
   val cfg : Config = ConfigFactory.load("collector.conf")

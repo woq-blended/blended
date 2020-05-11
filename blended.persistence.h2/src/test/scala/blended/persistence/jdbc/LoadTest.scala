@@ -8,7 +8,7 @@ import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalacheck.Arbitrary
 import org.scalatest.DoNotDiscover
-import org.scalatest.prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.JavaConverters._
 import scala.reflect.{ClassTag, classTag}
@@ -17,7 +17,7 @@ import scala.util.Try
 @DoNotDiscover
 class LoadTest
   extends LoggingFreeSpec
-  with PropertyChecks
+  with ScalaCheckPropertyChecks
   with DbFactory {
 
   private[this] val log = Logger[this.type]

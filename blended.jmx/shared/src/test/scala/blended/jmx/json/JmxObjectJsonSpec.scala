@@ -3,13 +3,14 @@ package blended.jmx.json
 import blended.jmx._
 import blended.jmx.json.PrickleProtocol._
 import org.scalacheck.Gen
-import org.scalatest.prop.PropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import prickle._
 
-class JmxObjectJsonSpec extends FreeSpec
+class JmxObjectJsonSpec extends AnyFreeSpec
   with Matchers
-  with PropertyChecks {
+  with ScalaCheckPropertyChecks {
 
   private val words : Seq[String] = Seq(
     "chemical", "meaty", "start", "atten", "tub", "four", "nut", "tread", "immolate", "straw", "toothpaste",

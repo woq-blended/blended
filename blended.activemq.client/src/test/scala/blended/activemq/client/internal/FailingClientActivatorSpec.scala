@@ -11,7 +11,7 @@ import blended.testsupport.pojosr.{MandatoryServiceUnavailable, PojoSrTestHelper
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import domino.DominoActivator
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}

@@ -29,7 +29,7 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
       def countWords(l : Seq[String]) : Map[String, Int] = l.foldLeft(Map.empty[String, Int]){ (current, s) =>
         current.get(s) match {
           case None => current + (s -> 1)
-          case Some(v) => current.filterKeys(_ != s) + (s -> (v + 1))
+          case Some(v) => current.filterKeys(_ != s).toMap + (s -> (v + 1))
         }
       }
 

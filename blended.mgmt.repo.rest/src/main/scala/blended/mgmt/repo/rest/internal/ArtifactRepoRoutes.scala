@@ -29,8 +29,8 @@ trait ArtifactRepoRoutes {
             getFromFile(file)
           case None =>
             log.debug(s"Could not find file at path: [$path]")
-            repository.listFiles(path) match {
-              case Iterator.empty => complete(StatusCodes.NotFound)
+            repository.listFiles(path).toSeq match {
+              case Seq() => complete(StatusCodes.NotFound)
               case files =>
                 //                respondWithMediaType(MediaTypes.`text/html`) &
                 complete {

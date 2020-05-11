@@ -2,12 +2,12 @@ package blended.security.crypto
 
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
-import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class BlendedCryptoSupportSpec extends LoggingFreeSpec
   with Matchers
-  with PropertyChecks {
+  with ScalaCheckPropertyChecks {
 
   private val log : Logger = Logger[BlendedCryptoSupport]
 

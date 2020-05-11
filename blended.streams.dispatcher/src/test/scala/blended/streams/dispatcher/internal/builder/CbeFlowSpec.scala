@@ -12,7 +12,7 @@ import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent}
 import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.pojosr.PojoSrTestHelper
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}

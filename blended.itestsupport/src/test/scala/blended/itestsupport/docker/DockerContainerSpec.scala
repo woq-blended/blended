@@ -4,7 +4,7 @@ import blended.itestsupport.ContainerUnderTest
 import blended.util.logging.Logger
 import org.mockito.Mockito._
 import org.scalatest.{ Matchers, WordSpec }
-import org.scalatest.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 
 class DockerContainerSpec extends WordSpec
   with Matchers

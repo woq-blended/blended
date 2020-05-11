@@ -19,8 +19,8 @@ import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, Simple
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
@@ -32,7 +32,7 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   with Matchers
   with JmsStreamSupport
   with JmsEnvelopeHeader
-  with PropertyChecks {
+  with ScalaCheckPropertyChecks {
 
   protected implicit val to : FiniteDuration = 5.seconds
   protected val log = Logger(getClass().getName())

@@ -3,6 +3,8 @@ package blended.security.login.rest.internal
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
 
+import scala.collection.immutable
+
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpHeader, HttpMethods, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
@@ -12,7 +14,6 @@ import blended.security.akka.http.JAASSecurityDirectives
 import blended.security.login.api.TokenStore
 import blended.util.logging.Logger
 import javax.security.auth.Subject
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
@@ -53,7 +54,7 @@ class LoginService(
   private[this] val loginRoute = {
 
     // scalastyle:off magic.number
-    val header : Seq[HttpHeader] = Seq(
+    val header : immutable.Seq[HttpHeader] = immutable.Seq(
       `Access-Control-Allow-Origin`.*,
       `Access-Control-Allow-Methods`(HttpMethods.GET, HttpMethods.POST, HttpMethods.OPTIONS),
       `Access-Control-Max-Age`(1000),
@@ -64,12 +65,12 @@ class LoginService(
     pathSingleSlash {
       options {
         complete(
-          HttpResponse(StatusCodes.OK).withHeaders(header : _*)
+          HttpResponse(StatusCodes.OK).withHeaders(header)
         )
       } ~
         get {
           log.warn("Login must be executed with a HTTP Post")
-          complete(HttpResponse(StatusCodes.Forbidden).withHeaders(header : _*))
+          complete(HttpResponse(StatusCodes.Forbidden).withHeaders(header))
         } ~
         post {
           // TODO: Make timeout for token expiry configurable
@@ -77,10 +78,10 @@ class LoginService(
             complete(tokenstore.newToken(subj, Some(1.minute)) match {
               case Failure(e) =>
                 log.error(s"Could not create token : [${e.getMessage()}]")
-                HttpResponse(StatusCodes.BadRequest).withHeaders(header : _*)
+                HttpResponse(StatusCodes.BadRequest).withHeaders(header)
               case Success(t) =>
                 log.info(s"User [${t.user}] logged in successfully, token-id is [${t.id}]")
-                HttpResponse(StatusCodes.OK, entity = t.webToken).withHeaders(header : _*)
+                HttpResponse(StatusCodes.OK, entity = t.webToken).withHeaders(header)
             })
           }
         }

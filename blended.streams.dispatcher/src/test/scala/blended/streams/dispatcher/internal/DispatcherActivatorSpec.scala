@@ -19,7 +19,7 @@ import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import blended.util.RichTry._
 
 import scala.concurrent.duration._

@@ -1,10 +1,11 @@
 package blended.websocket
 
 import blended.websocket.json.PrickleProtocol._
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import prickle._
 
-class JsonSpec extends FreeSpec
+class JsonSpec extends AnyFreeSpec
   with Matchers {
 
   def decodeTest[T](t: T)(implicit p: Pickler[T], up: Unpickler[T]): T = {

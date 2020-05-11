@@ -8,7 +8,7 @@ import blended.streams.worklist._
 import blended.streams.{FlowHeaderConfig, transaction}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.collection.JavaConverters._
 import scala.util.Try

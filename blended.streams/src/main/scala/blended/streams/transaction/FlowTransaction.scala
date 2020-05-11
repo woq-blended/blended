@@ -68,7 +68,7 @@ object FlowTransaction {
               b(0) -> b(1).split(stateSeparator).toList
             }.toMap
 
-        branches.mapValues(s => s.map(i => WorklistState.apply(i).get))
+        branches.mapValues(s => s.map(i => WorklistState.apply(i).get)).toMap
       }
     }.getOrElse(Map.empty[String, List[WorklistState]])
 
@@ -173,7 +173,7 @@ case class FlowTransaction(
 
     // We keep everything that is not in the update
     val newWorklist : Map[String, List[WorklistState]] =
-      worklist.filterKeys { id => !updatedItemIds.contains(id) } ++ updatedItemIds
+      worklist.filterKeys(id => !updatedItemIds.contains(id)).toMap ++ updatedItemIds
 
     copy(
       worklist = newWorklist,

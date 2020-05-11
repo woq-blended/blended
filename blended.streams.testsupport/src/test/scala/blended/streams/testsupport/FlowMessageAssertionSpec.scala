@@ -3,7 +3,7 @@ package blended.streams.testsupport
 import akka.util.ByteString
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.scalatest.LoggingFreeSpec
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 class FlowMessageAssertionSpec extends LoggingFreeSpec
   with Matchers {

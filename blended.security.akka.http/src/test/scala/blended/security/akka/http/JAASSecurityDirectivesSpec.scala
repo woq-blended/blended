@@ -10,10 +10,11 @@ import blended.security.SubjectImplicits._
 import blended.security.internal.GroupPermissionManager
 import blended.testsupport.security.DummyLoginConfiguration
 import javax.security.auth.login.Configuration
+import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.{BeforeAndAfterAll, FreeSpec}
 
 class JAASSecurityDirectivesSpec
-  extends FreeSpec
+  extends AnyFreeSpec
   with ScalatestRouteTest
   with BeforeAndAfterAll {
 

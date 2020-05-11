@@ -7,12 +7,12 @@ import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.PojoSrTestHelper
 import domino.DominoActivator
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
 import scala.util.Try
 
 class RouteProviderSpec
-  extends FreeSpec
+  extends AnyFreeSpec
   with ScalatestRouteTest
   with PojoSrTestHelper {
 

@@ -25,8 +25,6 @@ import scala.concurrent.{Await, ExecutionContext}
 import scala.util.{Failure, Success}
 import blended.util.RichTry._
 
-import scala.collection.generic.AtomicIndexFlag
-
 @RequiresForkedJVM
 class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
   with LoggingFreeSpecLike

@@ -48,7 +48,7 @@ case class LocalRuntimeConfig(
 
     val artifactIssues = {
       var checkedFiles : Map[File, String] = Map()
-      artifacts.par.flatMap {
+      artifacts.flatMap {
         case (file, artifact) =>
           val issue = if (!file.exists()) {
             Some(s"Missing file: ${file.getName()}")
@@ -63,7 +63,7 @@ case class LocalRuntimeConfig(
                 Some(s"Could not evaluate checksum of bundle jar: ${file.getName()}")
             }
           }
-          issue.toList
+          issue
       }.seq
     }
 

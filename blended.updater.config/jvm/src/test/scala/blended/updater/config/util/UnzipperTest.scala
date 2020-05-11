@@ -3,12 +3,12 @@ package blended.updater.config.util
 import java.io.File
 
 import blended.testsupport.{BlendedTestSupport, TestFile}
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
 import scala.io.Source
 import scala.util.Failure
 
-class UnzipperTest extends FreeSpec
+class UnzipperTest extends AnyFreeSpec
   with TestFile {
 
   implicit val deletePolicy = TestFile.DeleteWhenNoFailure

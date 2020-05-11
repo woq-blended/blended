@@ -1,12 +1,13 @@
 package blended.updater.config
 
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{FreeSpecLike, Matchers}
-
 import scala.util.Success
 
+import org.scalatest.freespec.AnyFreeSpecLike
+import org.scalatest.matchers.should.Matchers
+
 class ResolvedRuntimeConfigSpec
-  extends FreeSpecLike
+  extends AnyFreeSpecLike
   with Matchers {
 
   "A Config with features references" - {

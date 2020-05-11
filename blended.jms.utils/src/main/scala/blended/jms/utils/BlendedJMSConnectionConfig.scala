@@ -70,6 +70,7 @@ object BlendedJMSConnectionConfig {
             case Success(s) => s.toString()
           }
         }
+        .toMap
     }
 
     val clientId : Config => Try[String] = cfg => Try {

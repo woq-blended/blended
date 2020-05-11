@@ -8,7 +8,7 @@ import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
 import blended.streams.transaction._
 import blended.streams.worklist._
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}

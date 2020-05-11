@@ -3,14 +3,14 @@ package blended.streams.message
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.RichTry._
-import org.scalatest.Matchers
-import org.scalatest.prop.PropertyChecks
+import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.util.Success
 
 class FlowMessageSpec extends LoggingFreeSpec
   with Matchers
-  with PropertyChecks {
+  with ScalaCheckPropertyChecks {
 
   "A Flow Message should" - {
 

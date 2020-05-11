@@ -2,9 +2,10 @@ package blended.itestsupport.compress
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, InputStream}
 
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
-class TarHandlerSpec extends FreeSpec with Matchers {
+class TarHandlerSpec extends AnyFreeSpec with Matchers {
 
   "The Tar file handler" - {
 

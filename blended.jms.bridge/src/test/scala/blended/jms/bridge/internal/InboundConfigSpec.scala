@@ -11,7 +11,7 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.RichTry._
 import com.typesafe.config.ConfigFactory
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 

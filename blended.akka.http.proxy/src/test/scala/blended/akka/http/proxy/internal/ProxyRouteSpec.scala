@@ -13,11 +13,11 @@ import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import blended.util.logging.Logger
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
 import scala.concurrent.duration._
 
-class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
+class ProxyRouteSpec extends AnyFreeSpec with ScalatestRouteTest {
 
   private[this] val log = Logger[ProxyRouteSpec]
 

@@ -13,14 +13,15 @@ import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import javax.jms.ConnectionFactory
 import org.apache.activemq.broker.BrokerService
-import org.scalatest.{BeforeAndAfterAll, FreeSpec, FreeSpecLike, Matchers}
-
+import org.scalatest.{BeforeAndAfterAll, Matchers}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 
-class HttpQueueServiceSpec extends FreeSpec
+import org.scalatest.freespec.{AnyFreeSpec, AnyFreeSpecLike}
+
+class HttpQueueServiceSpec extends AnyFreeSpec
   with ScalatestRouteTest
-  with FreeSpecLike
+  with AnyFreeSpecLike
   with Matchers
   with AmqBrokerSupport
   with BeforeAndAfterAll

@@ -7,7 +7,7 @@ import blended.jmx.json.PrickleProtocol._
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.RichTry._
 import blended.util.logging.Logger
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import prickle._
 
 class JmxAttributeCompanionSpec extends LoggingFreeSpec

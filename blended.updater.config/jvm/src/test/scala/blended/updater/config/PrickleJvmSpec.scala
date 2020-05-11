@@ -2,10 +2,11 @@ package blended.updater.config
 
 import blended.updater.config.json.PrickleProtocol._
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 import prickle._
 
-class PrickleJvmSpec extends FreeSpec with Matchers {
+class PrickleJvmSpec extends AnyFreeSpec with Matchers {
 
   "JVM: Prickle should (de)serialize" - {
 

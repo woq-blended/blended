@@ -3,7 +3,7 @@ package blended.akka
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 class SemaphoreActorSpec extends TestKit(ActorSystem("semaphore"))
   with LoggingFreeSpecLike

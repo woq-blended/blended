@@ -114,7 +114,7 @@ object CommandHandlerManager {
         context.become(handling(state.addClient(ClientInfo(info, clientActor))))
       case ClientClosed(t) =>
         state.clients.get(t.id).foreach { ci =>
-          ci.clientActor ! actor.Status.Success(Unit)
+          ci.clientActor ! actor.Status.Success(())
         }
         context.become(handling(state.removeClient(t)))
       case Terminated(ca) =>

@@ -198,7 +198,7 @@ object RuntimeConfigBuilder {
 
     def downloadUrls(b : Artifact) : Seq[String] = {
       val directUrl = MvnGavSupport.downloadUrls(mvnGavs, b, options.debug)
-      directUrl.map(Seq(_)).getOrElse(mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(b.url, Option(baseUrl)).toOption).to[Seq])
+      directUrl.map(Seq(_)).getOrElse(mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(b.url, Option(baseUrl)).toOption).toList)
     }
 
     if (options.downloadMissing) {
@@ -208,7 +208,7 @@ object RuntimeConfigBuilder {
       } ++ resolved.runtimeConfig.resources.map(r =>
         RuntimeConfigCompanion.resourceArchiveLocation(r, dir) -> downloadUrls(r))
 
-      val states = files.par.map {
+      val states = files.map {
         case (file, urls) =>
           if (!file.exists()) {
             urls.find { url =>
@@ -221,7 +221,7 @@ object RuntimeConfigBuilder {
               sys.error(msg)
             }
           } else file -> Try(file)
-      }.seq
+      }
 
       val issues = states.collect {
         case (file, Failure(e)) =>

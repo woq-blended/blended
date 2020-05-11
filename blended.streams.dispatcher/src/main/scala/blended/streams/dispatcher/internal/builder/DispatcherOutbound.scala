@@ -46,7 +46,7 @@ object DispatcherOutbound {
 
           val name : String = ctCtxt.resolveString(
             s = d,
-            additionalProps = env.flowMessage.header.mapValues(_.value)
+            additionalProps = env.flowMessage.header.mapValues(_.value).toMap
           ).map(_.toString()).get
 
           JmsDestination.create(name).get

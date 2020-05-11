@@ -135,8 +135,8 @@ trait MgmtReporter extends Actor with PrickleSupport {
         log.debug("Update profile info to: " + pi)
         context.become(reporting(state.copy(lastProfileInfo = pi)))
       } else {
-        log.debug(s"Ignoring profile info with timestamp [${timestamp.underlying()}] which is older than "
-          + s"[${state.lastProfileInfo.timeStamp.underlying()}]: $pi")
+        log.debug(s"Ignoring profile info with timestamp [${timestamp}] which is older than "
+          + s"[${state.lastProfileInfo.timeStamp}]: $pi")
       }
 
     case UpdateActionApplied(id, _) =>
