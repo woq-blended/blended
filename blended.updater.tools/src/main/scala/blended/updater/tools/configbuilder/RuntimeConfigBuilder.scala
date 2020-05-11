@@ -211,7 +211,6 @@ object RuntimeConfigBuilder {
       val states = files.map {
         case (file, urls) =>
           if (!file.exists()) {
-            infoLog(s"Fetching: [$file]")
             urls.find { url =>
               debug(s"Downloading [${file.getName()}] from [$url]")
               RuntimeConfigCompanion.download(url, file).isSuccess
@@ -241,7 +240,7 @@ object RuntimeConfigBuilder {
         checkedFiles.get(file).orElse(RuntimeConfigCompanion.digestFile(file)).map { checksum =>
           checkedFiles += file -> checksum
           if (r.sha1Sum != Option(checksum)) {
-            infoLog(s"${if (r.sha1Sum.isDefined) "Updating" else "Creating"} checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
+            debug(s"${if (r.sha1Sum.isDefined) "Updating" else "Creating"} checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
             r.copy(sha1Sum = Option(checksum))
           } else r
         }.getOrElse(r)
@@ -338,7 +337,7 @@ object RuntimeConfigBuilder {
       case None =>
         ConfigWriter.write(RuntimeConfigCompanion.toConfig(newRuntimeConfig), Console.out, None)
       case Some(f) =>
-        debug("Writing config file: " + configFile)
+        debug("Writing config file: " + f.getAbsolutePath())
         ConfigWriter.write(RuntimeConfigCompanion.toConfig(newRuntimeConfig), f, None)
     }
 

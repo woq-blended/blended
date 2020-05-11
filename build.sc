@@ -1042,7 +1042,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       blended.security.crypto
     )
     override def extraPublish = T{ Seq(
-      PublishInfo(dist.zip(), ivyType =  "zip", ext = "zip", ivyConfig = "dist")
+      PublishInfo(file = dist.zip(), classifier = Some("dist"), ivyConfig = "compile")
     )}
 
     object dist extends DistModule with BlendedCoursierModule {

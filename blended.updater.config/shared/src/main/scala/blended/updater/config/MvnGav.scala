@@ -32,7 +32,10 @@ object MvnGav {
   def parse(gav : String) : Try[MvnGav] = Try {
     val m = ParseCompactPattern.matcher(gav)
     if (m.matches()) {
-      MvnGav(m.group(1), m.group(2), m.group(3))
+      MvnGav(
+        group = m.group(1),
+        artifact = m.group(2),
+        version = m.group(3))
     } else {
       val m2 = ParseFullPattern.matcher(gav)
       if (m2.matches()) {
@@ -45,7 +48,13 @@ object MvnGav {
           case null | ""                              => "jar"
           case t                                      => t
         }
-        MvnGav(m2.group(1), m2.group(2), m2.group(4), classifier = classifier, fileExt = fileExt)
+        MvnGav(
+          group = m2.group(1),
+          artifact = m2.group(2),
+          version = m2.group(4),
+          classifier = classifier,
+          fileExt = fileExt
+        )
       } else
         sys.error("Invalid GAV coordinates: " + gav)
     }
