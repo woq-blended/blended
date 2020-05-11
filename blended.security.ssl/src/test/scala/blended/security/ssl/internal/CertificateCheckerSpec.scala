@@ -2,7 +2,7 @@ package blended.security.ssl.internal
 
 import blended.security.ssl._
 import blended.testsupport.scalatest.LoggingFreeSpec
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 class CertificateCheckerSpec extends LoggingFreeSpec
   with Matchers

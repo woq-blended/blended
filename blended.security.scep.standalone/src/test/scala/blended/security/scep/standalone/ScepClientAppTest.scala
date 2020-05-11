@@ -15,7 +15,7 @@ import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import de.tototec.cmdoption.{CmdOption, CmdlineParser}
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import os.CommandResult
 
 class ScepClientAppTest extends LoggingFreeSpec with TestFile with Matchers {

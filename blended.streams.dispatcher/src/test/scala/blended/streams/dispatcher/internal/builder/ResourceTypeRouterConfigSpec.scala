@@ -1,7 +1,7 @@
 package blended.streams.dispatcher.internal.builder
 
 import blended.jms.utils.JmsQueue
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
   with Matchers {

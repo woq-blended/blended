@@ -30,7 +30,7 @@ import blended.util.logging.Logger
 import blended.websocket._
 import blended.websocket.json.PrickleProtocol._
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import prickle._
 import sttp.client._
 import sttp.client.akkahttp.AkkaHttpBackend

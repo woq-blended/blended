@@ -9,7 +9,7 @@ import blended.util.logging.Logger
 import javax.management.ObjectName
 import javax.management.openmbean.{ArrayType, SimpleType, TabularData}
 import org.scalacheck.Arbitrary
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.JavaConverters._

@@ -8,13 +8,14 @@ import blended.testsupport.TestFile
 import blended.testsupport.TestFile.DeleteNever
 import blended.updater.config._
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
-
+import org.scalatest.BeforeAndAfterAll
 import scala.collection.JavaConverters._
+
+import org.scalatest.freespec.AnyFreeSpecLike
 
 class UpdaterTest
   extends TestKit(ActorSystem("updater-test"))
-  with FreeSpecLike
+  with AnyFreeSpecLike
   with TestFile
   with ImplicitSender
   with BeforeAndAfterAll {

@@ -6,14 +6,15 @@ import blended.util.logging.Logger
 import blended.updater.config.json.PrickleProtocol._
 import org.scalacheck.Arbitrary
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import org.scalatest.{FreeSpec, Matchers}
 import prickle._
-
 import scala.reflect.{ClassTag, classTag}
 import scala.util.Success
 import scala.util.control.NonFatal
 
-class PrickleSpec extends FreeSpec with Matchers with ScalaCheckPropertyChecks {
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
+
+class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
 
   private[this] val log = Logger[PrickleSpec]
 

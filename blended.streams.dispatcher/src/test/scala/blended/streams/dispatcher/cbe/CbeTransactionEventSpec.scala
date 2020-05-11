@@ -5,7 +5,7 @@ import java.util.Date
 import blended.streams.transaction.{EventSeverity, FlowTransactionStateStarted}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.XMLSupport
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 

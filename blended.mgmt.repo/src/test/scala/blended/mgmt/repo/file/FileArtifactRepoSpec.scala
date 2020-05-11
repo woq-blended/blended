@@ -5,11 +5,12 @@ import java.io.{ByteArrayInputStream, File}
 import blended.testsupport.TestFile
 import blended.testsupport.TestFile.DeletePolicy
 import de.tobiasroeser.lambdatest.TempFile
-import org.scalatest.{FreeSpec, Matchers}
-
 import scala.util.Success
 
-class FileArtifactRepoSpec extends FreeSpec with TestFile with Matchers {
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
+
+class FileArtifactRepoSpec extends AnyFreeSpec with TestFile with Matchers {
 
   private implicit val deletePolicy : DeletePolicy = TestFile.DeleteWhenNoFailure
 

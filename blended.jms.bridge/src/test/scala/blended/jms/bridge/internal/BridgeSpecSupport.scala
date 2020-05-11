@@ -19,7 +19,7 @@ import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, Simple
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.concurrent.duration._

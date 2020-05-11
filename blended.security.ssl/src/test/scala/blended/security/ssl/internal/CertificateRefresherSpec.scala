@@ -5,9 +5,9 @@ import java.util.{Calendar, Date, GregorianCalendar}
 
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.PojoSrTestHelper
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class CertificateRefresherSpec extends FreeSpec with PojoSrTestHelper {
+class CertificateRefresherSpec extends AnyFreeSpec with PojoSrTestHelper {
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput).getAbsolutePath()
 

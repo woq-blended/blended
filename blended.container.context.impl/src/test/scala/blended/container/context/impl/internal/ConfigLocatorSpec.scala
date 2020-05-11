@@ -5,7 +5,7 @@ import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.updater.config.RuntimeConfig
 import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 class ConfigLocatorSpec extends LoggingFreeSpec
   with Matchers {

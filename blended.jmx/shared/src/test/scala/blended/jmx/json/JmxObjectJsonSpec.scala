@@ -4,11 +4,11 @@ import blended.jmx._
 import blended.jmx.json.PrickleProtocol._
 import org.scalacheck.Gen
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import prickle._
 
-class JmxObjectJsonSpec extends FreeSpec
+class JmxObjectJsonSpec extends AnyFreeSpec
   with Matchers
   with ScalaCheckPropertyChecks {
 

@@ -6,7 +6,7 @@ import akka.stream.scaladsl.Flow
 import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.util.{Failure, Success}
 

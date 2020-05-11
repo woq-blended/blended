@@ -5,9 +5,10 @@ import java.lang.management.ManagementFactory
 import blended.jmx.JmxObjectNameCompanion._
 import blended.jmx.internal.BlendedMBeanServerFacadeImpl
 import blended.util.RichTry._
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
-class MbeanServerFacadeSpec extends FreeSpec
+class MbeanServerFacadeSpec extends AnyFreeSpec
   with Matchers {
 
   private val mbf : BlendedMBeanServerFacade = new BlendedMBeanServerFacadeImpl(

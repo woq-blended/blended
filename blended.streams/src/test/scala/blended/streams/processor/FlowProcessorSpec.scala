@@ -10,7 +10,7 @@ import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.{FlowHeaderConfig, FlowProcessor}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

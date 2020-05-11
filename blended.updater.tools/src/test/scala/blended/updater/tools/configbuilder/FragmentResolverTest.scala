@@ -1,8 +1,8 @@
 package blended.updater.tools.configbuilder
 
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class FragmentResolverTest extends FreeSpec {
+class FragmentResolverTest extends AnyFreeSpec {
 
   "test" in {
     //    val features = Seq(FeatureConfig(name = "a", version = "1"))

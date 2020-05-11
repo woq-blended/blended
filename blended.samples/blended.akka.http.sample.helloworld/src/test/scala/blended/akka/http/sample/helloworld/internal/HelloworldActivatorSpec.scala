@@ -2,9 +2,9 @@ package blended.akka.http.sample.helloworld.internal
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class HelloworldActivatorSpec extends FreeSpec with ScalatestRouteTest {
+class HelloworldActivatorSpec extends AnyFreeSpec with ScalatestRouteTest {
 
   "The helloRoute should" - {
 

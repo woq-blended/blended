@@ -9,7 +9,7 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.RichTry._
 import blended.util.logging.{LogLevel, Logger}
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 

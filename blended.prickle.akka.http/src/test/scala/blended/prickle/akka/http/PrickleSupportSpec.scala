@@ -5,12 +5,12 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import blended.util.logging.Logger
 import microjson.JsValue
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 import prickle._
 
 import scala.util.Success
 
-class PrickleSupportSpec extends FreeSpec with ScalatestRouteTest with PrickleSupport {
+class PrickleSupportSpec extends AnyFreeSpec with ScalatestRouteTest with PrickleSupport {
 
   private[this] val log = Logger[PrickleSupportSpec]
 

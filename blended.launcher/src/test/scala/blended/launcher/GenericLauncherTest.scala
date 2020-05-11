@@ -1,8 +1,8 @@
 package blended.launcher
 
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class GenericLauncherTest extends FreeSpec {
+class GenericLauncherTest extends AnyFreeSpec {
   "Launcher prints help without errors" in {
     val ex = intercept[LauncherException] {
       Launcher.run(Array("--help"))

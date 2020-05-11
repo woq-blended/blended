@@ -3,13 +3,13 @@ package blended.updater.config
 import java.{util => ju}
 
 import org.scalacheck.Arbitrary
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.reflect.{ClassTag, classTag}
 import scala.util.{Success, Try}
 
-class MapperSpec extends FreeSpec with ScalaCheckPropertyChecks {
+class MapperSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
 
   "Mapper maps and unmaps to identity" - {
 

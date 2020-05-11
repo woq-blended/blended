@@ -5,7 +5,7 @@ import java.lang.management.ManagementFactory
 import blended.jmx.OpenMBeanExporter._
 import blended.testsupport.scalatest.LoggingFreeSpec
 import javax.management.{InstanceAlreadyExistsException, MBeanServer}
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class OpenMBeanExporterSpec extends LoggingFreeSpec with ScalaCheckPropertyChecks with Matchers {

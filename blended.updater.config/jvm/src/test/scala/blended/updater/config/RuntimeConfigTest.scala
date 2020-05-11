@@ -2,13 +2,14 @@ package blended.updater.config
 
 import blended.testsupport.TestFile
 import com.typesafe.config.{ConfigException, ConfigFactory}
-import org.scalatest.{FreeSpecLike, Matchers}
-
 import scala.io.Source
 import scala.util.Success
 
+import org.scalatest.freespec.AnyFreeSpecLike
+import org.scalatest.matchers.should.Matchers
+
 class RuntimeConfigTest
-  extends FreeSpecLike
+  extends AnyFreeSpecLike
   with Matchers
   with TestFile {
 

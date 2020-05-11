@@ -1,9 +1,9 @@
 package blended.util.config
 
 import com.typesafe.config.ConfigFactory
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class ConfigAccessorSpec extends FreeSpec with ConfigAccessor {
+class ConfigAccessorSpec extends AnyFreeSpec with ConfigAccessor {
 
   "config as map" in {
 

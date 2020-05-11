@@ -5,9 +5,10 @@ import java.lang.management.ManagementFactory
 import blended.mgmt.service.jmx.internal.{ServiceJmxAnalyser, ServiceJmxConfig}
 import com.typesafe.config.ConfigFactory
 import javax.management.MBeanServer
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
-class ServiceJMXAnalyserSpec extends FreeSpec
+class ServiceJMXAnalyserSpec extends AnyFreeSpec
   with Matchers {
 
   private val server : MBeanServer = ManagementFactory.getPlatformMBeanServer()

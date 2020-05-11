@@ -7,13 +7,13 @@ import akka.testkit.{ImplicitSender, TestKit}
 import blended.testsupport.TestFile
 import blended.testsupport.TestFile.{DeletePolicy, DeleteWhenNoFailure}
 import blended.updater.config.Artifact
-import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
-
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.freespec.AnyFreeSpecLike
 import scala.io.Source
 
 class ArtifactDownloaderTest
   extends TestKit(ActorSystem("test"))
-  with FreeSpecLike
+  with AnyFreeSpecLike
   with ImplicitSender
   with BeforeAndAfterAll
   with TestFile {

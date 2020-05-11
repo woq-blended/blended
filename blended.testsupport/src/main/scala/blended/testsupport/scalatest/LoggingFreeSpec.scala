@@ -1,12 +1,13 @@
 package blended.testsupport.scalatest
 
 import blended.util.logging.Logger
-import org.scalatest.{Args, FreeSpec, FreeSpecLike, Status}
-
+import org.scalatest.{Args, Status}
 import scala.util.control.NonFatal
 
+import org.scalatest.freespec.{AnyFreeSpec, AnyFreeSpecLike}
+
 /**
- * Same as [[org.scalatest.FreeSpecLike]] but log the start and the end of each test case to SLF4j in Debug level.
+ * Same as [[org.scalatest.freespec.AnyFreeSpecLike]] but log the start and the end of each test case to SLF4j in Debug level.
  *
  * If you want also see the last thrown exception of a test case (this is most probably a failed assertion),
  * you can use [[LoggingFreeSpec.logException]].
@@ -20,7 +21,7 @@ import scala.util.control.NonFatal
  *
  * @see LoggingFreeSpec
  */
-trait LoggingFreeSpecLike extends FreeSpecLike {
+trait LoggingFreeSpecLike extends AnyFreeSpecLike {
 
   abstract protected override def runTest(testName : String, args : Args) : Status = {
     val log : Logger = Logger[this.type]
@@ -47,9 +48,9 @@ trait LoggingFreeSpecLike extends FreeSpecLike {
 }
 
 /**
- * Same as [[org.scalatest.FreeSpec]] but with mix-in of [LoggingFreeSpecLike]],
+ * Same as [[org.scalatest.freespec.AnyFreeSpec]] but with mix-in of [LoggingFreeSpecLike]],
  * which logs the start and the end of each test case.
  *
  * @see LoggingFreeSpecLike
  */
-class LoggingFreeSpec extends FreeSpec with LoggingFreeSpecLike
+class LoggingFreeSpec extends AnyFreeSpec with LoggingFreeSpecLike

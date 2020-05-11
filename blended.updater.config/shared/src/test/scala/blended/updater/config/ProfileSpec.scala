@@ -1,9 +1,9 @@
 package blended.updater.config
 
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-class ProfileSpec extends FreeSpec with ScalaCheckPropertyChecks {
+class ProfileSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
 
   import TestData._
 

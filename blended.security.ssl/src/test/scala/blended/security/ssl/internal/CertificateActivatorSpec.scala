@@ -8,7 +8,7 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import javax.net.ssl.SSLContext
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 

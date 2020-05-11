@@ -2,7 +2,7 @@ package blended.security.crypto
 
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class BlendedCryptoSupportSpec extends LoggingFreeSpec

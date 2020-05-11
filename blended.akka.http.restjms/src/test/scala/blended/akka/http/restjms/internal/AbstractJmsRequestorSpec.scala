@@ -15,9 +15,10 @@ import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import org.osgi.framework.BundleActivator
-import org.scalatest.{BeforeAndAfterAll, Matchers}
-
+import org.scalatest.BeforeAndAfterAll
 import scala.concurrent.duration._
+
+import org.scalatest.matchers.should.Matchers
 
 abstract class AbstractJmsRequestorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike

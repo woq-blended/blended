@@ -2,9 +2,9 @@ package blended.launcher.config
 
 import blended.launcher.config.LauncherConfig.{read, toConfig}
 import com.typesafe.config.{ConfigException, ConfigFactory}
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class LauncherConfigTest extends FreeSpec {
+class LauncherConfigTest extends AnyFreeSpec {
 
   val minimalConfig = """
     |startLevel = 10

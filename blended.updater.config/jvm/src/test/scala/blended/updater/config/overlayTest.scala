@@ -7,12 +7,14 @@ import blended.testsupport.TestFile.{DeletePolicy, DeleteWhenNoFailure}
 import blended.updater.config.util.ConfigPropertyMapConverter
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{Args, FreeSpec, Matchers, Status}
-
+import org.scalatest.{Args, Status}
 import scala.collection.JavaConverters._
 import scala.util.Success
 
-class OverlaysTest extends FreeSpec with Matchers with TestFile {
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
+
+class OverlaysTest extends AnyFreeSpec with Matchers with TestFile {
 
   private[this] val log = Logger[OverlaysTest]
 

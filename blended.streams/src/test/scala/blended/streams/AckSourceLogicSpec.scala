@@ -12,7 +12,7 @@ import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowEnvelopeLo
 import blended.streams.processor.{AckProcessor, Collector}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}

@@ -1,9 +1,9 @@
 package blended.util.config
 
 import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.FreeSpec
+import org.scalatest.freespec.AnyFreeSpec
 
-class ConfigDefaultGetterSpec extends FreeSpec with ConfigDefaultGetter {
+class ConfigDefaultGetterSpec extends AnyFreeSpec with ConfigDefaultGetter {
 
   val config1 : String =
     """|string1 = val1

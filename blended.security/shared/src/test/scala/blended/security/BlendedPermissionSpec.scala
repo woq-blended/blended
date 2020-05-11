@@ -1,8 +1,9 @@
 package blended.security
 
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.freespec.AnyFreeSpec
+import org.scalatest.matchers.should.Matchers
 
-class BlendedPermissionSpec extends FreeSpec
+class BlendedPermissionSpec extends AnyFreeSpec
   with Matchers {
 
   private val noCountries = List("ro")

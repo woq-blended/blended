@@ -4,7 +4,7 @@ import blended.streams.json.PrickleProtocol._
 import blended.streams.message.MsgProperty
 import blended.streams.transaction.{FlowTransaction, FlowTransactionGen}
 import blended.testsupport.scalatest.LoggingFreeSpec
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import prickle._
 
