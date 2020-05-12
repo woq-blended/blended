@@ -4,17 +4,19 @@ import coursier.Repository
 import coursier.maven.MavenRepository
 import mill.api.{Ctx, Loose, Result}
 import mill.{PathRef, _}
-import mill.define.{Command, Input, Sources, Target, Task}
+import mill.define.{Command, ExternalModule, Input, Sources, Target, Task, Worker}
 import mill.scalajslib.ScalaJSModule
 import mill.scalajslib.api.ModuleKind
 import mill.scalalib._
 import mill.scalalib.api.CompilationResult
 import mill.scalalib.publish._
-import os.{Path, RelPath}
+import os.Path
 import sbt.testing.{Fingerprint, Framework}
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
-import mill.contrib.scoverage.ScoverageModule
-
+import mill.contrib.scoverage.api.ScoverageReportWorkerApi.ReportType
+import mill.contrib.scoverage.{ScoverageModule, ScoverageReportWorker}
+import mill.eval.Evaluator
+import mill.main.RunScript
 import mill.modules.Jvm
 
 // This import the mill-osgi plugin
@@ -22,7 +24,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.2.0`
 import de.tobiasroeser.mill.osgi._
 
 import $file.build_util
-import build_util.{FilterUtil, GenDummyFileForScoverage, ZipUtil}
+import build_util.{FilterUtil, ZipUtil}
 
 import $file.build_deps
 import build_deps.Deps
@@ -96,6 +98,15 @@ trait BlendedBaseModule extends SbtModule with BlendedCoursierModule with Blende
   trait Tests extends super.Tests with super.ScoverageTests {
     /** Ensure we don't include the non-scoverage-enhanced classes. */
     override def moduleDeps: Seq[JavaModule] = super.moduleDeps.filterNot(_ == blendedModuleBase)
+//    def mapModules(m: JavaModule) = m match {
+//      case module: ScoverageModule =>
+//        // instead of depending on the base module, we depend on it's inner scoverage module
+//        module.scoverage
+//      case module => module
+//    }
+//    override def moduleDeps: Seq[JavaModule] = super.moduleDeps.map(mapModules)
+//    override def recursiveModuleDeps: Seq[JavaModule] = super.recursiveModuleDeps.map(mapModules)
+
     override def ivyDeps = T{ super.ivyDeps() ++ Agg(
       deps.scalatest
     )}
@@ -520,7 +531,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
 
-      object api extends BlendedModule with GenDummyFileForScoverage {
+      object api extends BlendedModule {
         override val description : String = "Package the Akka Http API into a bundle."
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           deps.akkaHttp,
@@ -803,7 +814,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   }
 
   object hawtio extends Module {
-    object login extends BlendedModule with GenDummyFileForScoverage {
+    object login extends BlendedModule {
       override val description : String = "Adding required imports to the hawtio war bundle"
       override def essentialImportPackage: Seq[String] = Seq(
         "blended.security.boot",
@@ -1343,7 +1354,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object prickle extends BlendedModule with GenDummyFileForScoverage {
+  object prickle extends BlendedModule {
     override val description : String = "OSGi package for Prickle and mircojson"
     override def ivyDeps = super.ivyDeps() ++ Agg(
       deps.prickle.exclude("*" -> "*"),
@@ -2155,4 +2166,80 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
   }
+}
+//
+//object Scoverage extends ExternalModule {
+//  def worker: Worker[ScoverageReportWorker] = T.worker { ScoverageReportWorker.scoverageReportWorker() }
+//  object workerModule extends ScoverageModule {
+//    override def scalaVersion = Deps.scalaVersion
+//    override def scoverageVersion = Deps.scoverageVersion
+//  }
+//  def htmlReportAll(sources: mill.main.Tasks[Seq[PathRef]], dataTargets: mill.main.Tasks[PathRef]): Command[Unit] = T.command {
+//    val sourcePaths: Seq[Path] = T.sequence(sources.value)().flatten.map(_.path)
+//    val dataPaths: Seq[Path] = T.sequence(dataTargets.value)().map(_.path)
+//    worker()
+//      .bridge(workerModule.toolsClasspath().map(_.path))
+//      .report(ReportType.Html, sourcePaths, dataPaths)
+//  }
+//
+//  // parse tasks
+//  implicit def millScoptTargetReads[T]: scopt.Read[Tasks[T]] = new mill.main.Tasks.Scopt[T]()
+////   find modules
+//  lazy val millDiscover: mill.define.Discover[this.type] = mill.define.Discover[this.type]
+//}
+
+object Scoverage extends Module {
+  def worker: Worker[ScoverageReportWorker] = T.worker { ScoverageReportWorker.scoverageReportWorker() }
+  def deps = Deps.Deps_2_12
+  object workerModule extends ScoverageModule {
+    override def scalaVersion = deps.scalaVersion
+    override def scoverageVersion = deps.scoverageVersion
+  }
+  def targetPrefix = s"blended[${deps.scalaVersion}]"
+
+  def htmlReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
+    reportTask(evaluator, ReportType.Html, sources, dataTargets)()
+  }
+
+  def xmlReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
+    reportTask(evaluator, ReportType.Xml, sources, dataTargets)()
+  }
+
+  def consoleReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
+    reportTask(evaluator,ReportType.Console, sources, dataTargets)()
+  }
+
+  def reportTask(evaluator: Evaluator, reportType: ReportType, sources: String, dataTargets: String): Task[Unit] = {
+    val sourcesTasks: Seq[Task[Seq[PathRef]]] = RunScript.resolveTasks(
+      mill.main.ResolveTasks,
+      evaluator,
+      Seq(sources),
+      multiSelect = false
+    ) match{
+      case Left(err) => throw new Exception(err)
+      case Right(tasks) => tasks.asInstanceOf[Seq[Task[Seq[PathRef]]]]
+    }
+    val dataTasks: Seq[Task[PathRef]] = RunScript.resolveTasks(
+      mill.main.ResolveTasks,
+      evaluator,
+      Seq(dataTargets),
+      multiSelect = false
+    ) match{
+      case Left(err) => throw new Exception(err)
+      case Right(tasks) => tasks.asInstanceOf[Seq[Task[PathRef]]]
+    }
+
+    T.task {
+      val sourcePaths: Seq[Path] = T.sequence(sourcesTasks)().flatten.map(_.path)
+      val dataPaths: Seq[Path] = T.sequence(dataTasks)().map(_.path)
+      worker()
+        .bridge(workerModule.toolsClasspath().map(_.path))
+        .report(reportType, sourcePaths, dataPaths)
+    }
+  }
+
+  // parse tasks
+//  implicit def millScoptTargetReads[T]: scopt.Read[Tasks[T]] = new mill.main.Tasks.Scopt[T]()
+  //   find modules
+//  lazy val millDiscover: mill.define.Discover[this.type] = mill.define.Discover[this.type]
 }
