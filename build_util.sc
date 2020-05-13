@@ -8,7 +8,7 @@ import mill.{PathRef, T}
 import mill.api.Ctx
 import mill.contrib.scoverage.{ScoverageModule, ScoverageReportWorker}
 import mill.contrib.scoverage.api.ScoverageReportWorkerApi.ReportType
-import mill.define.{Command, Task}
+import mill.define.{Command, Module, Task}
 import mill.eval.Evaluator
 import mill.main.RunScript
 import os.{Path, RelPath}
@@ -136,32 +136,51 @@ trait FilterUtil {
 }
 object FilterUtil extends FilterUtil
 
-trait ScoverageReport { outer =>
+//
+//object Scoverage extends ExternalModule {
+//  def worker: Worker[ScoverageReportWorker] = T.worker { ScoverageReportWorker.scoverageReportWorker() }
+//  object workerModule extends ScoverageModule {
+//    override def scalaVersion = Deps.scalaVersion
+//    override def scoverageVersion = Deps.scoverageVersion
+//  }
+//  def htmlReportAll(sources: mill.main.Tasks[Seq[PathRef]], dataTargets: mill.main.Tasks[PathRef]): Command[Unit] = T.command {
+//    val sourcePaths: Seq[Path] = T.sequence(sources.value)().flatten.map(_.path)
+//    val dataPaths: Seq[Path] = T.sequence(dataTargets.value)().map(_.path)
+//    worker()
+//      .bridge(workerModule.toolsClasspath().map(_.path))
+//      .report(ReportType.Html, sourcePaths, dataPaths)
+//  }
+//
+//  // parse tasks
+//  implicit def millScoptTargetReads[T]: scopt.Read[Tasks[T]] = new mill.main.Tasks.Scopt[T]()
+////   find modules
+//  lazy val millDiscover: mill.define.Discover[this.type] = mill.define.Discover[this.type]
+//}
+
+trait ScoverageReport extends Module { outer =>
   def scalaVersion: T[String]
   def scoverageVersion: T[String]
 
-  def scoverageReportWorkerModule = ScoverageReportWorker
+  def scoverageReportWorkerModule: ScoverageReportWorker.type = ScoverageReportWorker
   /** We use this only to get access to the right classpaths */
   object workerModule extends ScoverageModule {
     override def scalaVersion = outer.scalaVersion
     override def scoverageVersion = outer.scoverageVersion
   }
 
-  def targetPrefix = s"blended[${outer.scalaVersion}]"
-
-  def htmlReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
+  def htmlReportAll(evaluator: Evaluator, sources: String = "__.allSources", dataTargets: String = "__.scoverage.data"): Command[PathRef] = T.command {
     reportTask(evaluator, ReportType.Html, sources, dataTargets)()
   }
 
-  def xmlReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
+  def xmlReportAll(evaluator: Evaluator, sources: String = "__.allSources", dataTargets: String = "__.scoverage.data"): Command[PathRef] = T.command {
     reportTask(evaluator, ReportType.Xml, sources, dataTargets)()
   }
 
-  def consoleReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
+  def consoleReportAll(evaluator: Evaluator, sources: String = "__.allSources", dataTargets: String = "__.scoverage.data"): Command[PathRef] = T.command {
     reportTask(evaluator,ReportType.Console, sources, dataTargets)()
   }
 
-  def reportTask(evaluator: Evaluator, reportType: ReportType, sources: String, dataTargets: String): Task[Unit] = {
+  def reportTask(evaluator: Evaluator, reportType: ReportType, sources: String, dataTargets: String): Task[PathRef] = {
     val sourcesTasks: Seq[Task[Seq[PathRef]]] = RunScript.resolveTasks(
       mill.main.ResolveTasks,
       evaluator,
@@ -187,6 +206,7 @@ trait ScoverageReport { outer =>
       scoverageReportWorkerModule.scoverageReportWorker()
         .bridge(workerModule.toolsClasspath().map(_.path))
         .report(reportType, sourcePaths, dataPaths)
+      PathRef(T.dest)
     }
   }
 

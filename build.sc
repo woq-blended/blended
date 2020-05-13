@@ -2167,29 +2167,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object scoverage extends Module with ScoverageReport {
-    override def scalaVersion = deps.scalaVersion
-    override def scoverageVersion = deps.scoverageVersion
-  }
 }
-//
-//object Scoverage extends ExternalModule {
-//  def worker: Worker[ScoverageReportWorker] = T.worker { ScoverageReportWorker.scoverageReportWorker() }
-//  object workerModule extends ScoverageModule {
-//    override def scalaVersion = Deps.scalaVersion
-//    override def scoverageVersion = Deps.scoverageVersion
-//  }
-//  def htmlReportAll(sources: mill.main.Tasks[Seq[PathRef]], dataTargets: mill.main.Tasks[PathRef]): Command[Unit] = T.command {
-//    val sourcePaths: Seq[Path] = T.sequence(sources.value)().flatten.map(_.path)
-//    val dataPaths: Seq[Path] = T.sequence(dataTargets.value)().map(_.path)
-//    worker()
-//      .bridge(workerModule.toolsClasspath().map(_.path))
-//      .report(ReportType.Html, sourcePaths, dataPaths)
-//  }
-//
-//  // parse tasks
-//  implicit def millScoptTargetReads[T]: scopt.Read[Tasks[T]] = new mill.main.Tasks.Scopt[T]()
-////   find modules
-//  lazy val millDiscover: mill.define.Discover[this.type] = mill.define.Discover[this.type]
-//}
 
+object scoverage extends ScoverageReport {
+  override def scalaVersion = Deps.Deps_2_12.scalaVersion
+  override def scoverageVersion = Deps.Deps_2_12.scoverageVersion
+}
