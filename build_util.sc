@@ -1,18 +1,17 @@
 import java.io.FileOutputStream
 import java.util.zip.ZipEntry
 
-import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
 import scala.util.matching.Regex
 import scala.util.matching.Regex.quoteReplacement
 
-import mill.{Agg, PathRef, T}
-import mill.api.{Ctx, Loose, Result}
-import mill.define.{Command, Target, Task}
-import mill.scalalib.{JavaModule, Lib, TestModule, TestRunner}
+import mill.{PathRef, T}
+import mill.api.Ctx
+import mill.contrib.scoverage.{ScoverageModule, ScoverageReportWorker}
+import mill.contrib.scoverage.api.ScoverageReportWorkerApi.ReportType
+import mill.define.{Command, Task}
+import mill.eval.Evaluator
+import mill.main.RunScript
 import os.{Path, RelPath}
-import sbt.testing.{Fingerprint, Framework}
-
-
 
 trait ZipUtil {
 
@@ -136,3 +135,63 @@ trait FilterUtil {
 
 }
 object FilterUtil extends FilterUtil
+
+trait ScoverageReport { outer =>
+  def scalaVersion: T[String]
+  def scoverageVersion: T[String]
+
+  def scoverageReportWorkerModule = ScoverageReportWorker
+  /** We use this only to get access to the right classpaths */
+  object workerModule extends ScoverageModule {
+    override def scalaVersion = outer.scalaVersion
+    override def scoverageVersion = outer.scoverageVersion
+  }
+
+  def targetPrefix = s"blended[${outer.scalaVersion}]"
+
+  def htmlReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
+    reportTask(evaluator, ReportType.Html, sources, dataTargets)()
+  }
+
+  def xmlReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
+    reportTask(evaluator, ReportType.Xml, sources, dataTargets)()
+  }
+
+  def consoleReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
+    reportTask(evaluator,ReportType.Console, sources, dataTargets)()
+  }
+
+  def reportTask(evaluator: Evaluator, reportType: ReportType, sources: String, dataTargets: String): Task[Unit] = {
+    val sourcesTasks: Seq[Task[Seq[PathRef]]] = RunScript.resolveTasks(
+      mill.main.ResolveTasks,
+      evaluator,
+      Seq(sources),
+      multiSelect = false
+    ) match{
+      case Left(err) => throw new Exception(err)
+      case Right(tasks) => tasks.asInstanceOf[Seq[Task[Seq[PathRef]]]]
+    }
+    val dataTasks: Seq[Task[PathRef]] = RunScript.resolveTasks(
+      mill.main.ResolveTasks,
+      evaluator,
+      Seq(dataTargets),
+      multiSelect = false
+    ) match{
+      case Left(err) => throw new Exception(err)
+      case Right(tasks) => tasks.asInstanceOf[Seq[Task[PathRef]]]
+    }
+
+    T.task {
+      val sourcePaths: Seq[Path] = T.sequence(sourcesTasks)().flatten.map(_.path)
+      val dataPaths: Seq[Path] = T.sequence(dataTasks)().map(_.path)
+      scoverageReportWorkerModule.scoverageReportWorker()
+        .bridge(workerModule.toolsClasspath().map(_.path))
+        .report(reportType, sourcePaths, dataPaths)
+    }
+  }
+
+  // parse tasks
+  //  implicit def millScoptTargetReads[T]: scopt.Read[Tasks[T]] = new mill.main.Tasks.Scopt[T]()
+  //   find modules
+  //  lazy val millDiscover: mill.define.Discover[this.type] = mill.define.Discover[this.type]
+}

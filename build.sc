@@ -24,7 +24,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.2.0`
 import de.tobiasroeser.mill.osgi._
 
 import $file.build_util
-import build_util.{FilterUtil, ZipUtil}
+import build_util.{FilterUtil, ScoverageReport, ZipUtil}
 
 import $file.build_deps
 import build_deps.Deps
@@ -2166,6 +2166,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
   }
+
+  object scoverage extends Module with ScoverageReport {
+    override def scalaVersion = deps.scalaVersion
+    override def scoverageVersion = deps.scoverageVersion
+  }
 }
 //
 //object Scoverage extends ExternalModule {
@@ -2188,58 +2193,3 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 //  lazy val millDiscover: mill.define.Discover[this.type] = mill.define.Discover[this.type]
 //}
 
-object Scoverage extends Module {
-  def worker: Worker[ScoverageReportWorker] = T.worker { ScoverageReportWorker.scoverageReportWorker() }
-  def deps = Deps.Deps_2_12
-  object workerModule extends ScoverageModule {
-    override def scalaVersion = deps.scalaVersion
-    override def scoverageVersion = deps.scoverageVersion
-  }
-  def targetPrefix = s"blended[${deps.scalaVersion}]"
-
-  def htmlReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
-    reportTask(evaluator, ReportType.Html, sources, dataTargets)()
-  }
-
-  def xmlReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
-    reportTask(evaluator, ReportType.Xml, sources, dataTargets)()
-  }
-
-  def consoleReportAll(evaluator: Evaluator, sources: String = targetPrefix + ".__.allSources", dataTargets: String = targetPrefix + ".__.scoverage.data"): Command[Unit] = T.command {
-    reportTask(evaluator,ReportType.Console, sources, dataTargets)()
-  }
-
-  def reportTask(evaluator: Evaluator, reportType: ReportType, sources: String, dataTargets: String): Task[Unit] = {
-    val sourcesTasks: Seq[Task[Seq[PathRef]]] = RunScript.resolveTasks(
-      mill.main.ResolveTasks,
-      evaluator,
-      Seq(sources),
-      multiSelect = false
-    ) match{
-      case Left(err) => throw new Exception(err)
-      case Right(tasks) => tasks.asInstanceOf[Seq[Task[Seq[PathRef]]]]
-    }
-    val dataTasks: Seq[Task[PathRef]] = RunScript.resolveTasks(
-      mill.main.ResolveTasks,
-      evaluator,
-      Seq(dataTargets),
-      multiSelect = false
-    ) match{
-      case Left(err) => throw new Exception(err)
-      case Right(tasks) => tasks.asInstanceOf[Seq[Task[PathRef]]]
-    }
-
-    T.task {
-      val sourcePaths: Seq[Path] = T.sequence(sourcesTasks)().flatten.map(_.path)
-      val dataPaths: Seq[Path] = T.sequence(dataTasks)().map(_.path)
-      worker()
-        .bridge(workerModule.toolsClasspath().map(_.path))
-        .report(reportType, sourcePaths, dataPaths)
-    }
-  }
-
-  // parse tasks
-//  implicit def millScoptTargetReads[T]: scopt.Read[Tasks[T]] = new mill.main.Tasks.Scopt[T]()
-  //   find modules
-//  lazy val millDiscover: mill.define.Discover[this.type] = mill.define.Discover[this.type]
-}
