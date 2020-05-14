@@ -12,7 +12,7 @@ import scala.beans.BeanProperty
 import scala.collection.JavaConverters._
 import scala.util.{Success, Try}
 
-class ContainerContextImpl extends AbstractContainerContextImpl {
+class ContainerContextImpl() extends AbstractContainerContextImpl {
 
   import AbstractContainerContextImpl._
 
