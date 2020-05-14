@@ -6,7 +6,7 @@ import java.nio.file.{Files, Paths}
 import java.util.{Hashtable, Properties, ServiceLoader, UUID}
 
 import blended.launcher.config.LauncherConfig
-import blended.launcher.internal.ARM
+import blended.util.arm.ARM
 import blended.updater.config._
 import blended.util.logging.Logger
 import com.typesafe.config.{ConfigFactory, ConfigParseOptions}

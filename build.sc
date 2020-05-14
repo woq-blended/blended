@@ -1046,8 +1046,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     )
 
     // TODO: filter resources
-    // TODO: package laucnher distribution zip
+    // TODO: package launcher distribution zip
     override def moduleDeps = Seq(
+      blended.util,
       blended.util.logging,
       blended.updater.config,
       blended.security.crypto
@@ -1064,6 +1065,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def filterProperties: Target[Map[String, String]] = T{ Map(
         "blended.launcher.version" -> blended.launcher.publishVersion(),
         "blended.updater.config.version" -> blended.updater.config.publishVersion(),
+        "blended.util.version" -> blended.util.publishVersion(),
         "blended.util.logging.version" -> blended.util.logging.publishVersion(),
         "blended.security.crypto.version" -> blended.security.crypto.publishVersion(),
         "cmdoption.version" -> deps.cmdOption.dep.version,
@@ -2035,7 +2037,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       deps.typesafeConfig
     )
     override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
-      s"${blendedModule}.config"
+      s"${blendedModule}.config",
+      s"${blendedModule}.arm"
     )
     object test extends Tests {
       override def ivyDeps = T{ super.ivyDeps() ++ Agg(

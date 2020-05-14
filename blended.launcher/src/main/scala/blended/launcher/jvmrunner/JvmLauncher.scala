@@ -3,7 +3,7 @@ package blended.launcher.jvmrunner
 import java.io.{File, FileInputStream}
 import java.util.Properties
 
-import blended.launcher.internal.ARM
+import blended.util.arm.ARM
 import blended.updater.config.OverlayConfigCompanion
 import blended.util.logging.Logger
 
