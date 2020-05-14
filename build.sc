@@ -95,18 +95,32 @@ trait BlendedBaseModule extends SbtModule with BlendedCoursierModule with Blende
 
   override def scoverageVersion = deps.scoverageVersion
 
+  def mapToScoverageModule(m: JavaModule) = m match {
+    case module: ScoverageModule =>
+      // instead of depending on the base module, we depend on it's inner scoverage module
+      module.scoverage
+    case module => module
+  }
+
+  override val scoverage: ScoverageData = new ScoverageData(implicitly)
+  class ScoverageData(ctx0: mill.define.Ctx) extends super.ScoverageData(ctx0) with OsgiBundleModule {
+    // we ensure, out scoverage enhancer is also a valid OSGi module to drop-in replace it in all tests
+    override def bundleSymbolicName: T[String] = T{ blendedModuleBase.bundleSymbolicName() }
+    override def bundleVersion: T[String] = T{ blendedModuleBase.bundleVersion() }
+    override def osgiHeaders: T[OsgiHeaders] = T{ blendedModuleBase.osgiHeaders() }
+    override def reproducibleBundle: T[Boolean] = T{ blendedModuleBase.reproducibleBundle() }
+    override def embeddedJars: T[Seq[PathRef]] = T{ blendedModuleBase.embeddedJars() }
+    override def explodedJars: T[Seq[PathRef]] = T{ blendedModuleBase.explodedJars() }
+    override def moduleDeps: Seq[JavaModule] = blendedModuleBase.moduleDeps.map(mapToScoverageModule)
+    override def recursiveModuleDeps: Seq[JavaModule] = blendedModuleBase.recursiveModuleDeps.map(mapToScoverageModule)
+  }
+
   trait Tests extends super.Tests with super.ScoverageTests {
     /** Ensure we don't include the non-scoverage-enhanced classes. */
-    override def moduleDeps: Seq[JavaModule] = super.moduleDeps.filterNot(_ == blendedModuleBase)
-//    def mapModules(m: JavaModule) = m match {
-//      case module: ScoverageModule =>
-//        // instead of depending on the base module, we depend on it's inner scoverage module
-//        module.scoverage
-//      case module => module
-//    }
-//    override def moduleDeps: Seq[JavaModule] = super.moduleDeps.map(mapModules)
-//    override def recursiveModuleDeps: Seq[JavaModule] = super.recursiveModuleDeps.map(mapModules)
-
+//    override def moduleDeps: Seq[JavaModule] = super.moduleDeps.filterNot(_ == blendedModuleBase)
+    override def moduleDeps: Seq[JavaModule] = super.moduleDeps.map(mapToScoverageModule)
+    override def recursiveModuleDeps: Seq[JavaModule] = super.recursiveModuleDeps.map(mapToScoverageModule)
+    override def transitiveLocalClasspath: T[Loose.Agg[PathRef]] = T { T.traverse(recursiveModuleDeps)(m => m.jar)() }
     override def ivyDeps = T{ super.ivyDeps() ++ Agg(
       deps.scalatest
     )}
