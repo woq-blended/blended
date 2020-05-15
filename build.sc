@@ -20,7 +20,7 @@ import mill.main.RunScript
 import mill.modules.Jvm
 
 // This import the mill-osgi plugin
-import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.2.0`
+import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 import $file.build_util
@@ -218,7 +218,7 @@ trait BlendedBaseModule extends SbtModule with BlendedCoursierModule with Blende
           if(isFork) cl.getName()
           else otherTestGroup
         }
-        val groupNames: Map[String, Set[String]] = groups.mapValues(_.map(_._1.getName()).toSet)
+        val groupNames: Map[String, Set[String]] = groups.mapValues(_.map(_._1.getName()).toSet).toMap
         cl.close()
         Result.Success(groupNames)
       }
