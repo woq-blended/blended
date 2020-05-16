@@ -19,9 +19,9 @@ class ContainerContextImpl() extends AbstractContainerContextImpl {
   private[this] lazy val log : Logger = Logger[ContainerContextImpl]
   initialize()
 
+  private def normalizePath(f : File) : String = f.getAbsolutePath().replaceAll("\\\\", "/")
   @BeanProperty
-  override lazy val containerDirectory : String =
-    new File(System.getProperty("blended.home")).getAbsolutePath
+  override lazy val containerDirectory : String = normalizePath(new File(System.getProperty("blended.home")))
 
   @BeanProperty
   override lazy val containerHostname : String = {
@@ -91,15 +91,15 @@ class ContainerContextImpl() extends AbstractContainerContextImpl {
 
   private[this] lazy val containerLogDir : String = {
     val f = new File(containerDirectory + "/log")
-    f.getAbsolutePath()
+    normalizePath(f)
   }
 
   @BeanProperty
   override lazy val containerConfigDirectory : String =
-    new File(containerDirectory, CONFIG_DIR).getAbsolutePath
+    normalizePath(new File(containerDirectory, CONFIG_DIR))
 
   @BeanProperty
-  override lazy val profileConfigDirectory : String = new File(profileDirectory, CONFIG_DIR).getAbsolutePath
+  override lazy val profileConfigDirectory : String = normalizePath(new File(profileDirectory, CONFIG_DIR))
 
   private lazy val overlayConfig : Config = {
     val cfg : Option[File] = brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) match {

@@ -19,15 +19,15 @@ object BlendedActivemqBrokerstarter extends ProjectFactory {
     override def deps : Seq[ModuleID] = Seq(
       Dependencies.activeMqBroker,
       Dependencies.activeMqSpring,
+      Dependencies.springCore,
+      Dependencies.springBeans,
+      Dependencies.springContext,
+      Dependencies.springExpression,
 
       Dependencies.scalatest % Test,
       Dependencies.logbackCore % Test,
       Dependencies.logbackClassic % Test,
       Dependencies.activeMqKahadbStore,
-      Dependencies.springCore % Test,
-      Dependencies.springBeans % Test,
-      Dependencies.springContext % Test,
-      Dependencies.springExpression % Test,
       Dependencies.commonsLogging % Test
     )
 

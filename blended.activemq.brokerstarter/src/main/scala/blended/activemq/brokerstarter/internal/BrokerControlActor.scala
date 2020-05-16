@@ -1,7 +1,7 @@
 package blended.activemq.brokerstarter.internal
 
+import java.io.File
 import java.lang.management.ManagementFactory
-import java.net.URI
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
@@ -16,6 +16,7 @@ import javax.net.ssl.SSLContext
 import org.apache.activemq.broker.{BrokerFactory, BrokerPlugin, BrokerService, DefaultBrokerFactory}
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
+import org.springframework.core.io.{FileSystemResource, Resource}
 
 import scala.util.control.NonFatal
 
@@ -94,21 +95,27 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
-    val cfgDir = cfg.ctContext.profileConfigDirectory
-    val uri = s"file://$cfgDir/${brokerCfg.file}"
 
     try {
-      log.info(s"Starting ActiveMQ broker [${brokerCfg.brokerName}] with config file [$uri] ")
+      val cfgDir = cfg.ctContext.profileConfigDirectory
+      val f : File = new File(cfgDir, brokerCfg.file).getAbsoluteFile()
+      assert(f.exists() && f.isFile() && f.canRead())
+
+      val resource : Resource = new FileSystemResource(f)
+
+      log.info(s"Loading ActiveMQ broker [${brokerCfg.brokerName}] with config file [${f.getAbsolutePath()}] ")
 
       Thread.currentThread().setContextClassLoader(classOf[DefaultBrokerFactory].getClassLoader())
 
       BrokerFactory.setStartDefault(false)
       val brokerFactory = new XBeanBrokerFactory()
 
-      val b : BrokerService = brokerFactory.createBroker(new URI(uri))
+      val b : BrokerService = brokerFactory.createBroker(resource.getURI())
+      log.debug(s"Configuring ActiveMQ broker [${brokerCfg.brokerName}]")
       broker = Some(b)
 
       if (brokerCfg.withAuthentication) {
+        log.info(s"The broker [${brokerCfg.brokerName}] will start with authentication")
         val plugins : List[BrokerPlugin] = new JaasAuthenticationPlugin(brokerCfg) :: Option(b.getPlugins()).map(_.toList).getOrElse(List.empty)
         b.setPlugins(plugins.toArray)
       } else {
@@ -125,6 +132,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
 
       // TODO: set Datadirectories from Code ??
       b.setBrokerName(brokerCfg.brokerName)
+      log.info(s"About to start Active MQ broker [${brokerCfg.brokerName}]")
       b.setStartAsync(false)
       b.setSchedulerSupport(true)
       b.start()
@@ -216,4 +224,33 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
       log.trace(s"Received StopBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
       stopBroker()
   }
+
+//  private class BlendedBrokerFactory(location : String) extends XBeanBrokerFactory {
+//
+//    def createApplicationContext(): ApplicationContext = new FileSystemXmlApplicationContext(location)
+//
+//    def createBroker() : Try[BrokerService] = Try {
+//
+//      val context: ApplicationContext = createApplicationContext()
+//
+//      val broker: Option[BrokerService] = Try {
+//        context.getBean("broker").asInstanceOf[BrokerService]
+//      } match {
+//        case Success(b) =>
+//          Some(b)
+//        case Failure(_) =>
+//          context.getBeanNamesForType(classOf[BrokerService]).headOption.map { n => context.getBean(n).asInstanceOf[BrokerService] }
+//      }
+//
+//      broker match {
+//        case Some(b) =>
+//          val springBrokerContext: SpringBrokerContext = new SpringBrokerContext()
+//          springBrokerContext.setApplicationContext(context)
+//          springBrokerContext.setConfigurationUrl(location)
+//          b.setBrokerContext(springBrokerContext)
+//          b
+//        case None => throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + location)
+//      }
+//    }
+//  }
 }
