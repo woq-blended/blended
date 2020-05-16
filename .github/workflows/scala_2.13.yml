@@ -1,0 +1,30 @@
+name: Scala 2.13
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+
+    - name: Run tests
+      run: ./millw -k blended[2.13.2].__.testCached
+
+    - name: Upload test logs
+      uses: actions/upload-artifact@v2
+      if: failure()
+      with:
+        name: test-logs
+        path: target/
