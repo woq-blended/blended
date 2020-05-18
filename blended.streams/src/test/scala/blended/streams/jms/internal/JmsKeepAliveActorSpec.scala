@@ -13,6 +13,7 @@ import blended.streams.message.FlowEnvelope
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
+import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
 
@@ -58,8 +59,11 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
 
     override def start(bcf : BlendedSingleConnectionFactory): Unit = {
       val actor : ActorRef = system.actorOf(Props(new Actor() {
+
+        private val log : Logger = Logger[DummyKeepAliveProducer]
         override def receive: Receive = {
           case env : FlowEnvelope =>
+            log.info(s"Received keep alive event [$env]")
             keepAliveEvents.append(env)
         }
       }))
@@ -93,13 +97,13 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
       }
       // scalastyle:on magic.number
 
-      val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
-      assert(envelopes.size == cfg.maxKeepAliveMissed)
-      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.uuid)))
-
       probe.fishForMessage(3.seconds){
         case _ : MaxKeepAliveExceeded => true
       }
+
+      val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
+      assert(envelopes.size == cfg.maxKeepAliveMissed)
+      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.uuid)))
 
       ctrl ! RemovedConnectionFactory(cf)
 
