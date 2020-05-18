@@ -259,11 +259,12 @@ class ConnectionStateManager(holder: ConnectionHolder)
     // if we were ever disconnected from the JMS provider since the container start we will check
     // whether the reconnect interval has passed, otherwise we will connect immediately
     if (!now && s.lastDisconnect.isDefined && remaining > 0) {
+      val remainInSeconds : Double = (remaining / 1000.0)
       switchState(
         currentReceive,
-        publishEvents(s, s"Container is waiting to reconnect, remaining wait time [${remaining / 1000.0}]s")
+        publishEvents(s, s"Container is waiting to reconnect, remaining wait time [$remainInSeconds]s")
       )
-      checkConnection((remaining + 1).seconds)
+      checkConnection((remainInSeconds.floor  + 1).seconds)
     } else {
       switchState(connecting(), connect(s))
     }

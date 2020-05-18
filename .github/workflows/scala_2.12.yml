@@ -20,14 +20,17 @@ jobs:
         java-version: 1.8
 
     - name: Run tests
-      run: ./millw -k blended[2.12.11].__.testCached
+      run: ./millw -i -k blended[2.12.11].__.testCached
 
     - name: Upload test logs
       uses: actions/upload-artifact@v2
       if: failure()
       with:
         name: test-logs
-        path: target/
+        path: out/testlog-2.12/
+
+    - name: Generate coverage report
+      run: ./millw -i scoverage.xmlReportAll
 
     - name: Upload coverage
       run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml

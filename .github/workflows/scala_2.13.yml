@@ -27,4 +27,4 @@ jobs:
       if: failure()
       with:
         name: test-logs
-        path: target/
+        path: out/testlog-2.13/

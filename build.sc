@@ -70,16 +70,16 @@ trait BlendedBaseModule extends SbtModule with BlendedCoursierModule with Blende
   def blendedModule: String = millModuleSegments.parts.mkString(".")
   override def artifactName: T[String] = blendedModule
   def scalaVersion = T{ deps.scalaVersion }
+  def scalaBinVersion = T { scalaVersion().split("[.]").take(2).mkString(".") }
 
   def exportPackages: Seq[String] = Seq(blendedModule)
   def essentialImportPackage: Seq[String] = Seq()
   override def osgiHeaders: T[OsgiHeaders] = T{
-    val scalaBinVersion = scalaVersion().split("[.]").take(2).mkString(".")
     super.osgiHeaders().copy(
       `Export-Package` = exportPackages,
       `Import-Package` =
         // scala compatible binary version control
-        Seq(s"""scala.*;version="[${scalaBinVersion}.0,${scalaBinVersion}.50]"""") ++
+        Seq(s"""scala.*;version="[${scalaBinVersion()}.0,${scalaBinVersion()}.50]"""") ++
           essentialImportPackage ++
           Seq("*")
     )
@@ -145,7 +145,7 @@ trait BlendedBaseModule extends SbtModule with BlendedCoursierModule with Blende
         s"""<configuration>
            |
            |  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-           |    <file>${baseDir.toString()}/target/test-${moduleSpec}.log</file>
+           |    <file>${baseDir.toString()}/out/testlog-${scalaBinVersion()}/test-${moduleSpec}.log</file>
            |
            |    <encoder>
            |      <pattern>%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%t] %logger : %msg%n</pattern>
