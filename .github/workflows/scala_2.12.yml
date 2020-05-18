@@ -28,3 +28,6 @@ jobs:
       with:
         name: test-logs
         path: target/
+
+    - name: Upload coverage
+      run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml

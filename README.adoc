@@ -34,9 +34,6 @@ Currently blended is in it's 3rd generation and in production since ~2014.
 
 == Related projects
 
-https://github.com/woq-blended/blended.itestsupport[Blended Integration Test Framework]::
-  The _Blended Integration Test Framework_ to create docker based integration tests.
-
 https://github.com/woq-blended/blended.mgmt.ui[Blended Management UI]::
   A web front end the _Blended Management Framework_ built with Scala.Js.
 
