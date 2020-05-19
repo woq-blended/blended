@@ -1,8 +1,10 @@
 package blended.jmx
 
+import blended.util.logging.Logger
+
 import javax.management.{InstanceAlreadyExistsException, ObjectName}
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
  * MBean registry (server facade) that supports exporting and removal of scala products and therefore scala case classes.
@@ -29,12 +31,25 @@ trait OpenMBeanExporter {
    */
   def export(product: Product, objectName: ObjectName, replaceExisting: Boolean): Try[Unit]
 
+  def exportSafe(product: Product, objectName: ObjectName, replaceExisting : Boolean)(log : Logger) : Unit =
+    export(product, objectName, replaceExisting) match {
+      case Success(_) =>
+      case Failure(e) =>
+        log.warn(e, stackTrace = true)(s"Jmx update for [${objectName.toString()}] with [$product], replaceExisting [$replaceExisting] failed : [${e.getMessage()}]")
+    }
+
   def objectName(product: Product)(implicit namingStrategy: NamingStrategy): ObjectName = namingStrategy(product)
 
   /**
    * Removes a previously registered product or MBean with the given ÒbjectName.
    */
   def remove(objectName: ObjectName): Try[Unit]
+
+  def removeSafe(objectName : ObjectName)(log : Logger) =
+    remove(objectName) match {
+      case Success(_) =>
+      case Failure(e) => log.warn(s"Remove og JMX MBean [${objectName.toString()}] failed : [${e.getMessage()}]")
+    }
 
 }
 

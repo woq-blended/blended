@@ -55,6 +55,13 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
 
   def fieldToElement(name: String, field: Any): Element = {
 
+    object OptionMatcher {
+      def unapply(arg : Any) : Option[_] = arg match {
+        case x : Option[_] => Option(x)
+        case _ =>  None
+      }
+    }
+
     object SeqMatcher {
       def unapply(arg: Any): Option[Iterable[_]] = arg match {
         case x: Seq[_] => Some(x)
@@ -129,6 +136,8 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
       case x: Array[jm.BigInteger] => x -> new ArrayType(1, SimpleType.BIGINTEGER)
       case x: Array[Date] => x -> new ArrayType(1, SimpleType.DATE)
       case x: Array[ObjectName] => x -> new ArrayType(1, SimpleType.OBJECTNAME)
+
+      case x : Option[_] => fieldToElement(name, x.getOrElse(null))
 
       // we are empty and readonly, so the element type doesn't matter
       case SeqMatcher(x) if x.isEmpty => (null: Void) -> SimpleType.VOID

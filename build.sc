@@ -532,7 +532,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.domino,
         blended.util,
         blended.util.logging,
-        blended.akka
+        blended.akka,
+        blended.jmx
       )
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Some(s"${blendedModule}.internal.BlendedAkkaHttpActivator")

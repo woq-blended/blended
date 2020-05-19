@@ -33,16 +33,20 @@ class LoggerSlf4j(underlying : Slf4jLogger) extends Logger {
   override def debugMdc(mdc : Map[String, String])(msg: => String) : Unit = if (underlying.isDebugEnabled) withMDC (mdc) { underlying.debug(msg) }
   override def traceMdc(mdc : Map[String, String])(msg: => String) : Unit = if (underlying.isTraceEnabled) withMDC (mdc) { underlying.trace(msg) }
 
-  override def errorMdc(e : Throwable)(mdc : Map[String, String])(msg: => String) : Unit =
-    if (underlying.isErrorEnabled) withMDC (mdc) { underlying.error(msg, e) }
-  override def warnMdc(e : Throwable)(mdc : Map[String, String])(msg: => String) : Unit =
-    if (underlying.isWarnEnabled) withMDC (mdc) { underlying.warn(msg, e) }
-  override def infoMdc(e : Throwable)(mdc : Map[String, String])(msg: => String) : Unit =
-    if (underlying.isInfoEnabled) withMDC (mdc) { underlying.info(msg, e) }
-  override def debugMdc(e : Throwable)(mdc : Map[String, String])(msg: => String) : Unit =
-    if (underlying.isDebugEnabled) withMDC (mdc) { underlying.debug(msg, e) }
-  override def traceMdc(e : Throwable)(mdc : Map[String, String])(msg: => String) : Unit =
-    if (underlying.isTraceEnabled) withMDC (mdc) { underlying.trace(msg, e) }
+  override def errorMdc(e : Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit =
+    if (underlying.isErrorEnabled) withMDC (mdc) { underlying.error(includeStacktrace(e, stacktrace)(msg), e) }
+
+  override def warnMdc(e : Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit =
+    if (underlying.isWarnEnabled) withMDC (mdc) { underlying.warn(includeStacktrace(e, stacktrace)(msg), e) }
+
+  override def infoMdc(e : Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit =
+    if (underlying.isInfoEnabled) withMDC (mdc) { underlying.info(includeStacktrace(e, stacktrace)(msg), e) }
+
+  override def debugMdc(e : Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit =
+    if (underlying.isDebugEnabled) withMDC (mdc) { underlying.debug(includeStacktrace(e, stacktrace)(msg), e) }
+
+  override def traceMdc(e : Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit =
+    if (underlying.isTraceEnabled) withMDC (mdc) { underlying.trace(includeStacktrace(e, stacktrace)(msg), e) }
 
   override def error(msg: => String): Unit = if (underlying.isErrorEnabled) errorMdc(Map.empty[String, String])(msg)
   override def warn(msg: => String): Unit = if (underlying.isWarnEnabled) warnMdc(Map.empty[String, String])(msg)
@@ -50,11 +54,11 @@ class LoggerSlf4j(underlying : Slf4jLogger) extends Logger {
   override def debug(msg: => String): Unit = if (underlying.isDebugEnabled) debugMdc(Map.empty[String, String])(msg)
   override def trace(msg: => String): Unit = if (underlying.isTraceEnabled) traceMdc(Map.empty[String, String])(msg)
 
-  override def error(e: Throwable)(msg: => String): Unit = if (underlying.isErrorEnabled) errorMdc(e)(Map.empty[String, String])(msg)
-  override def warn(e: Throwable)(msg: => String): Unit = if (underlying.isWarnEnabled) warnMdc(e)(Map.empty[String, String])(msg)
-  override def info(e: Throwable)(msg: => String): Unit = if (underlying.isInfoEnabled) infoMdc(e)(Map.empty[String, String])(msg)
-  override def debug(e: Throwable)(msg: => String): Unit = if (underlying.isDebugEnabled) debugMdc(e)(Map.empty[String, String])(msg)
-  override def trace(e: Throwable)(msg: => String): Unit = if (underlying.isTraceEnabled) traceMdc(e)(Map.empty[String, String])(msg)
+  override def error(e: Throwable, stacktrace : Boolean = false)(msg: => String): Unit = errorMdc(e, stacktrace)(Map.empty[String, String])(msg)
+  override def warn(e: Throwable, stacktrace : Boolean = false)(msg: => String): Unit = warnMdc(e, stacktrace)(Map.empty[String, String])(msg)
+  override def info(e: Throwable, stacktrace : Boolean = false)(msg: => String): Unit = infoMdc(e, stacktrace)(Map.empty[String, String])(msg)
+  override def debug(e: Throwable, stacktrace : Boolean = false)(msg: => String): Unit = debugMdc(e, stacktrace)(Map.empty[String, String])(msg)
+  override def trace(e: Throwable, stacktrace : Boolean = false)(msg: => String): Unit = traceMdc(e, stacktrace)(Map.empty[String, String])(msg)
 
 }
 

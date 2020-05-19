@@ -10,14 +10,15 @@ import blended.akka.http.restjms.AkkaHttpRestJmsActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerContext
 import blended.jms.utils.IdAwareConnectionFactory
+import blended.jmx.internal.BlendedJmxActivator
 import blended.streams.internal.BlendedStreamsActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import org.osgi.framework.BundleActivator
 import org.scalatest.BeforeAndAfterAll
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import org.scalatest.matchers.should.Matchers
 
 abstract class AbstractJmsRequestorSpec extends SimplePojoContainerSpec
@@ -29,6 +30,7 @@ abstract class AbstractJmsRequestorSpec extends SimplePojoContainerSpec
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
+    "blended.jmx" -> new BlendedJmxActivator(),
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator(),
     "blended.streams" -> new BlendedStreamsActivator(),

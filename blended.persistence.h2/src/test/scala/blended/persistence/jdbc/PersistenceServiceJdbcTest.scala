@@ -8,6 +8,7 @@ import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
 import org.scalatest.matchers.should.Matchers
 import org.springframework.transaction.PlatformTransactionManager
+import blended.testsupport.BlendedTestSupport._
 
 import scala.collection.JavaConverters._
 
@@ -228,7 +229,7 @@ class PersistenceServiceJdbcTest
         |}""".stripMargin
     )
 
-    withTestDir(new java.io.File("target/tmp")) { dir =>
+    withTestDir(new java.io.File(s"$projectTestOutput/tmp")) { dir =>
       // config.root().unwrapped()
 
       withTestPersistenceService(Some(dir)) { (persistenceService, _) =>
