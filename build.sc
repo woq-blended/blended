@@ -547,7 +547,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           deps.akkaSlf4j,
           deps.mockitoAll,
           deps.akkaHttpTestkit,
-          deps.akkaStreamTestkit
+          deps.akkaStreamTestkit,
+          deps.sttp,
+          deps.sttpAkka
         )}
         override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
           blended.testsupport,
@@ -1047,7 +1049,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         val jarFile = runClasspath().find(f => f.path.last.startsWith("jolokia-jvm-")).get.path
         println(s"Using Jolokia agent from: $jarFile")
         super.forkArgs() ++ Seq(
-          s"-javaagent:${jarFile.toIO.getPath()}=port=7777,host=localhost"
+          s"-javaagent:${jarFile.toIO.getPath()}=port=0,host=localhost"
         )
       }
     }

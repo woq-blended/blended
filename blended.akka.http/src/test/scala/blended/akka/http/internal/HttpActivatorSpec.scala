@@ -1,6 +1,7 @@
 package blended.akka.http.internal
 
 import java.io.File
+import java.net.URI
 
 import akka.actor.{ActorSystem, Scheduler}
 import blended.akka.internal.BlendedAkkaActivator
@@ -15,6 +16,8 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
+import sttp.client._
+import sttp.model.{StatusCode, Uri}
 
 class HttpActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
@@ -23,6 +26,7 @@ class HttpActivatorSpec extends SimplePojoContainerSpec
   with AkkaHttpServerJmxSupport{
 
   private implicit val timeout : FiniteDuration = 3.seconds
+  private implicit val backend = HttpURLConnectionBackend()
 
   override def objName: JmxObjectName = JmxObjectName(properties = Map("type" -> "AkkaHttpServer"))
 
@@ -51,6 +55,11 @@ class HttpActivatorSpec extends SimplePojoContainerSpec
       assert(info.port.nonEmpty)
       assert(info.port.forall(_ != 0))
       assert(info.routes.isEmpty)
+
+      val request = basicRequest.get(Uri(new URI(s"http://localhost:${info.port.get}/about")))
+      val response = request.send()
+
+      assert(response.code == StatusCode.Ok)
     }
   }
 }

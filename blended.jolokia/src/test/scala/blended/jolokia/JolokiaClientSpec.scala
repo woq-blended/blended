@@ -1,18 +1,28 @@
 package blended.jolokia
 
+import java.net.{InetAddress, InetSocketAddress}
+
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import scala.collection.JavaConverters._
+
+import scala.concurrent.duration._
 
 class JolokiaClientSpec extends AnyWordSpec
   with Matchers {
 
-  val good = new JolokiaClient(JolokiaAddress(
-    jolokiaUrl = "http://localhost:7777/jolokia"
-  ))
+  val good = {
+    val url = System.getProperty("jolokia.agent")
+    new JolokiaClient(JolokiaAddress(jolokiaUrl = url))
+  }
 
-  val bad = new JolokiaClient(JolokiaAddress(
-    jolokiaUrl = "http://localhost:43888/jolokia"
-  ))
+  val bad = {
+    // Choose a port that is currently not in use
+    val freePort = new InetSocketAddress(0).getPort()
+    new JolokiaClient(JolokiaAddress(
+      jolokiaUrl = s"http://localhost:${freePort}/jolokia"
+    ))
+  }
 
   "The Jolokia client" should {
 
