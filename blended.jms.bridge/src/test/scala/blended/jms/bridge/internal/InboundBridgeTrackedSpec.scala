@@ -1,7 +1,8 @@
 package blended.jms.bridge.internal
 
+import akka.actor.ActorSystem
 import akka.stream.KillSwitch
-import blended.jms.utils.JmsQueue
+import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
 import blended.streams.jms.JmsProducerSettings
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionStarted}
@@ -12,14 +13,14 @@ import scala.concurrent.duration._
 @RequiresForkedJVM
 class InboundBridgeTrackedSpec extends BridgeSpecSupport {
 
-  private def sendInbound(msgCount : Int) : KillSwitch = {
+  private def sendInbound(cf : IdAwareConnectionFactory, msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
         .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
     }.get
 
 
-    sendMessages("sampleIn", external)(msgs:_*)
+    sendMessages("sampleIn", cf)(msgs:_*)
   }
 
   "The Inbound Bridge should" - {
@@ -29,10 +30,14 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
       val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
-      val switch = sendInbound(msgCount)
+      val actorSys : ActorSystem = system(registry)
+
+      val (internal, external) = getConnectionFactories(registry)
+
+      val switch = sendInbound(external, msgCount)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(system, materializer).get
+        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(actorSys).get
 
       messages should have size(msgCount)
 
@@ -40,7 +45,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be (Some(()))
       }
 
-      val envelopes : List[FlowTransactionEvent] = consumeEvents(timeout).get
+      val envelopes : List[FlowTransactionEvent] = consumeEvents(internal, timeout)(actorSys).get
 
       envelopes should have size(msgCount)
       assert(envelopes.forall(_.isInstanceOf[FlowTransactionStarted]))
@@ -50,6 +55,9 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
 
     "process messages with optional header configs" in {
 
+      val (internal, external) = getConnectionFactories(registry)
+      val actorSys : ActorSystem = system(registry)
+
       val desc = "TestDesc"
 
       val env : FlowEnvelope = FlowEnvelope(FlowMessage("Header")(FlowMessage.props(
@@ -58,16 +66,9 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
         headerCfg.headerTrack -> false
       ).get))
 
-      val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = envLogger,
-        headerCfg = headerCfg,
-        connectionFactory = external,
-        jmsDestination = Some(JmsQueue("SampleHeaderIn"))
-      )
+      val switch : KillSwitch = sendMessages("SampleHeaderIn", external)(env)
 
-      val switch : KillSwitch = sendMessages(pSettings, envLogger, env).get
-
-      val result : List[FlowEnvelope] = consumeMessages(internal, "bridge.data.in.activemq.external", 5.seconds).get
+      val result : List[FlowEnvelope] = consumeMessages(internal, "bridge.data.in.activemq.external", 5.seconds)(actorSys).get
 
       result should have size 1
       result.head.header[String]("ResourceType") should be (Some(desc))

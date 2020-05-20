@@ -2,7 +2,6 @@ package blended.jms.bridge.internal
 
 import java.io.File
 
-import blended.container.context.api.ContainerContext
 import blended.jms.utils.{JmsDurableTopic, JmsQueue}
 import blended.streams.processor.HeaderProcessorConfig
 import blended.testsupport.BlendedTestSupport
@@ -24,8 +23,6 @@ class InboundConfigSpec extends SimplePojoContainerSpec
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles: Seq[(String, BundleActivator)] = Seq.empty
-
-  protected val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
 
   "The inbound config should" - {
 

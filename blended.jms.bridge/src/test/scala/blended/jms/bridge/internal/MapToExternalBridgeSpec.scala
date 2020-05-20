@@ -16,6 +16,8 @@ class MapToExternalBridgeSpec extends BridgeSpecSupport {
     "Forward messages that are meant to an external provider even if send via the internal provider" in {
       val msgCount : Int = 1
 
+      val (internal, external) = getConnectionFactories(registry)
+
       val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
         env
           .withHeader(headerCfg.headerBridgeVendor, "activemq").get
@@ -26,7 +28,7 @@ class MapToExternalBridgeSpec extends BridgeSpecSupport {
       val switch : KillSwitch = sendMessages("bridge.data.out", internal)(msgs:_*)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(external, "sampleOut", to)(system, materializer).get
+        consumeMessages(external, "sampleOut", timeout)(actorSystem).get
 
       messages should have size(msgCount)
 

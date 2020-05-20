@@ -6,6 +6,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge}
 import akka.stream.{FlowShape, Graph, KillSwitch, Materializer}
+import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.message.FlowEnvelope
 import blended.streams.{BlendedStreamsConfig, FlowProcessor}
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
@@ -21,7 +22,7 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withRetries").getAbsolutePath()
 
-  private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
+  private def sendOutbound(cf : IdAwareConnectionFactory, msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
         .withHeader(headerCfg.headerBridgeVendor, "activemq").get
@@ -32,7 +33,7 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
     }.get
 
 
-    sendMessages("bridge.data.out", internal)(msgs:_*)
+    sendMessages("bridge.data.out", cf)(msgs:_*)
   }
 
   // We override the send flow with a flow simply triggering an exception, so that the
@@ -77,7 +78,10 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
       val timeout : FiniteDuration = 1.second
       val msgCount = 1
 
-      val switch = sendOutbound(msgCount, true)
+      val actorSys = system(registry)
+      val (internal, external) = getConnectionFactories(registry)
+
+      val switch = sendOutbound(internal, msgCount, true)
 
       println("Waiting for the retry loop to complete ...")
       0.to(15).foreach{ i =>
@@ -86,12 +90,12 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
       }
       println()
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries", timeout).get
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries", timeout)(actorSys).get
       retried should be (empty)
 
-      consumeEvents(timeout).get should not be empty
+      consumeEvents(internal, timeout)(actorSys).get should not be empty
 
-      consumeMessages(external, "sampleOut", timeout).get should have size(msgCount)
+      consumeMessages(external, "sampleOut", timeout)(actorSys).get should have size(msgCount)
 
       switch.shutdown()
     }

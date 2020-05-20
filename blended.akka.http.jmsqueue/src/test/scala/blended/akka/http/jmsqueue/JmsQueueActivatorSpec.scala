@@ -31,7 +31,7 @@ class JmsQueueActivatorSpec extends SimplePojoContainerSpec
     "should register a webcontext for the configured destinations" in {
 
       implicit val timeout : FiniteDuration = 3.seconds
-      mandatoryService[HttpContext](registry)(None)
+      mandatoryService[HttpContext](registry)
     }
   }
 }

@@ -15,7 +15,7 @@ import blended.streams.processor.Collector
 import blended.streams.transaction.FlowTransactionEvent
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{BlendedPojoRegistry, JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
@@ -32,10 +32,13 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   with Matchers
   with JmsStreamSupport
   with JmsEnvelopeHeader
-  with ScalaCheckPropertyChecks {
+  with ScalaCheckPropertyChecks
+  with JmsConnectionHelper {
 
-  protected implicit val to : FiniteDuration = 5.seconds
-  protected val log = Logger(getClass().getName())
+  override def timeout: FiniteDuration = 5.seconds
+  private implicit val to : FiniteDuration = timeout
+
+  protected val log : Logger = Logger(getClass().getName())
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withRetries").getAbsolutePath()
 
@@ -48,23 +51,14 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
     "blended.jms.bridge" -> bridgeActivator,
   )
 
-  protected implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-  protected implicit val materializer : ActorMaterializer = ActorMaterializer()
-  protected implicit val ectxt : ExecutionContext = system.dispatcher
-
-  protected val streamsCfg : BlendedStreamsConfig = mandatoryService[BlendedStreamsConfig](registry)(None)
-
-  protected val (internal, external) = getConnectionFactories(registry)
-  protected val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
-
-  protected val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
-  protected val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
+  protected val system : BlendedPojoRegistry => ActorSystem = r => mandatoryService[ActorSystem](r)
+  protected val streamsCfg : BlendedPojoRegistry => BlendedStreamsConfig = r => mandatoryService[BlendedStreamsConfig](r)
 
   protected def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"
 
   protected def getConnectionFactories(sr: BlendedPojoRegistry) : (IdAwareConnectionFactory, IdAwareConnectionFactory) = {
-    val cf1 = mandatoryService[IdAwareConnectionFactory](sr)(Some(brokerFilter("internal")))
-    val cf2 = mandatoryService[IdAwareConnectionFactory](sr)(Some(brokerFilter("external")))
+    val cf1 =  namedJmsConnectionFactory(sr, mustConnect = true, timeout = timeout)(vendor = "activemq", provider = "internal").get
+    val cf2 =  namedJmsConnectionFactory(sr, mustConnect = true, timeout = timeout)(vendor = "activemq", provider = "external").get
     (cf1, cf2)
   }
 
@@ -72,22 +66,23 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
     cf: IdAwareConnectionFactory,
     destName : String,
     timeout : FiniteDuration
-  )(implicit system : ActorSystem, materializer: Materializer) : Try[List[FlowEnvelope]] = Try {
+  )(implicit system : ActorSystem) : Try[List[FlowEnvelope]] = Try {
 
     val coll : Collector[FlowEnvelope] = receiveMessages(
       headerCfg = headerCfg,
       cf = cf,
       dest = JmsDestination.create(destName).get,
-      log = envLogger,
+      log = envLogger(log),
       timeout = Some(timeout)
     )
     Await.result(coll.result, timeout + 100.millis)
   }
 
   protected def consumeEvents(
+    cf : IdAwareConnectionFactory,
     timeout : FiniteDuration
-  )(implicit system : ActorSystem, materializer: Materializer) : Try[List[FlowTransactionEvent]] = Try {
-    consumeMessages(cf = internal, destName = "internal.transactions", timeout = timeout).get.map{ env : FlowEnvelope =>
+  )(implicit system : ActorSystem) : Try[List[FlowTransactionEvent]] = Try {
+    consumeMessages(cf = cf, destName = "internal.transactions", timeout = timeout).get.map{ env : FlowEnvelope =>
       FlowTransactionEvent.envelope2event(headerCfg)(env).get
     }
   }
@@ -102,12 +97,12 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
 
   protected def sendMessages(destName : String, cf : IdAwareConnectionFactory)(msgs : FlowEnvelope*) : KillSwitch = {
     val pSettings : JmsProducerSettings = JmsProducerSettings(
-      log = envLogger,
+      log = envLogger(log),
       headerCfg = headerCfg,
       connectionFactory = cf,
       jmsDestination = Some(JmsDestination.create(destName).get)
     )
 
-    sendMessages(pSettings, envLogger, msgs:_*).get
+    sendMessages(pSettings, envLogger(log), msgs:_*)(system(registry)).get
   }
 }

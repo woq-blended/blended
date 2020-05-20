@@ -18,7 +18,7 @@ trait AkkaHttpServerTestHelper extends AkkaHttpServerJmxSupport { this : PojoSrT
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
     implicit val eCtxt : ExecutionContext = system.dispatcher
     implicit val scheduler : Scheduler = system.scheduler
-    val mbeanSvr : BlendedMBeanServerFacade = mandatoryService(registry)
+    val mbeanSvr : BlendedMBeanServerFacade = mandatoryService[BlendedMBeanServerFacade](registry)
 
     val f : Future[AkkaHttpServerInfo] = Retry.retry(delay = 1.second, retries = 3){
       readFromJmx(mbeanSvr).get

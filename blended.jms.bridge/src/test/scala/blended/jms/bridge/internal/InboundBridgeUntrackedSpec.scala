@@ -3,6 +3,7 @@ package blended.jms.bridge.internal
 import java.io.File
 
 import akka.stream.KillSwitch
+import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage}
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 
@@ -13,14 +14,14 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withoutTracking").getAbsolutePath()
 
-  private def sendInbound(msgCount : Int) : KillSwitch = {
+  private def sendInbound(cf : IdAwareConnectionFactory, msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
         .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
     }.get
 
 
-    sendMessages("sampleIn", external)(msgs:_*)
+    sendMessages("sampleIn", cf)(msgs:_*)
   }
 
   "The inbound bridge should" - {
@@ -28,11 +29,13 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
     "process normal inbound messages without tracking" in {
       val timeout : FiniteDuration = 10.seconds
       val msgCount = 2
+      val actorSys = system(registry)
+      val (internal, external) = getConnectionFactories(registry)
 
-      val switch = sendInbound(msgCount)
+      val switch = sendInbound(external, msgCount)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(system, materializer).get
+        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(actorSys).get
 
       messages should have size msgCount
 
@@ -40,14 +43,16 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be (Some(()))
       }
 
-      consumeEvents(timeout).get should be (empty)
+      consumeEvents(internal, timeout)(actorSys).get should be (empty)
 
       switch.shutdown()
     }
 
     "process text messages with a null body" in {
-
       val timeout : FiniteDuration = 1.second
+
+      val actorSys = system(registry)
+      val (internal, external) = getConnectionFactories(registry)
 
       val msg : FlowMessage = TextFlowMessage(null, FlowMessage.noProps)
       val msgs : Seq[FlowEnvelope] = Seq(FlowEnvelope(msg))
@@ -55,11 +60,11 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val switch : KillSwitch = sendMessages("sampleIn", external)(msgs:_*)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(system, materializer).get
+        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(actorSys).get
 
       messages should have size msgs.size
 
-      consumeEvents(timeout).get should be (empty)
+      consumeEvents(internal, timeout)(actorSys).get should be (empty)
 
       switch.shutdown()
     }
@@ -67,17 +72,20 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
     "process messages with an empty binary body" in {
       val timeout : FiniteDuration = 1.second
 
+      val actorSys = system(registry)
+      val (internal, external) = getConnectionFactories(registry)
+
       val msg : FlowMessage = BinaryFlowMessage(Array.empty[Byte], FlowMessage.noProps)
       val msgs : Seq[FlowEnvelope] = Seq(FlowEnvelope(msg))
 
       val switch : KillSwitch = sendMessages("sampleIn", external)(msgs:_*)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(system, materializer).get
+        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(actorSys).get
 
       messages should have size msgs.size
 
-      consumeEvents(timeout).get should be (empty)
+      consumeEvents(internal, timeout)(actorSys).get should be (empty)
 
       switch.shutdown()
     }

@@ -4,6 +4,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.Flow
+import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.BlendedStreamsConfig
 import blended.streams.message.FlowEnvelope
 import blended.testsupport.RequiresForkedJVM
@@ -13,14 +14,14 @@ import scala.concurrent.duration._
 @RequiresForkedJVM
 class InboundRejectBridgeSpec extends BridgeSpecSupport {
 
-  private def sendInbound(msgCount : Int) : KillSwitch = {
+  private def sendInbound(cf : IdAwareConnectionFactory, msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
         .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
     }.get
 
 
-    sendMessages("sampleIn", external)(msgs:_*)
+    sendMessages("sampleIn", cf)(msgs:_*)
   }
 
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
@@ -40,12 +41,15 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
       val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
-      val switch = sendInbound(msgCount)
+      val actorSys = system(registry)
+      val (internal, external) = getConnectionFactories(registry)
 
-      consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(system, materializer).get should be (empty)
-      consumeEvents(timeout).get should be (empty)
+      val switch = sendInbound(external, msgCount)
 
-      consumeMessages(external, "sampleIn", timeout).get should have size(msgCount)
+      consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(actorSys).get should be (empty)
+      consumeEvents(internal, timeout)(actorSys).get should be (empty)
+
+      consumeMessages(external, "sampleIn", timeout)(actorSys).get should have size(msgCount)
 
       switch.shutdown()
     }
