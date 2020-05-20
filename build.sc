@@ -24,17 +24,26 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 import $file.build_util
-import build_util.{FilterUtil, ScoverageReport, ZipUtil}
+import build_util.{FilterUtil, ScoverageReport, ZipUtil, GitModule}
 
 import $file.build_deps
 import build_deps.Deps
-
 
 /** Project directory. */
 val baseDir: os.Path = build.millSourcePath
 
 def blendedVersion = T.input {
-  os.read(baseDir / "version.txt").trim()
+  T.env.get("CI") match {
+    case Some(ci @ ("1" | "true")) =>
+      val version = GitSupport.publishVersion()._2
+      T.log.info(s"Using git-based version: ${version} (CI=${ci})")
+      version
+    case _ => os.read(baseDir / "version.txt").trim()
+  }
+}
+
+object GitSupport extends GitModule {
+  override def millSourcePath: Path = baseDir
 }
 
 /** Configure additional repositories. */
