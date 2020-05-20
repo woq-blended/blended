@@ -14,9 +14,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - run: |
-        git fetch --prune --unshallow
-      -
+    - run: git fetch --prune --unshallow
+
     - name: Blended version
       run: ./millw -i show blendedVersion
 
