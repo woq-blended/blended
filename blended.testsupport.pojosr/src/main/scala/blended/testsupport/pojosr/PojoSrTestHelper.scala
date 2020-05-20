@@ -152,6 +152,9 @@ trait PojoSrTestHelper {
 
     do {
       result = serviceReferences[T](sr)(filter).headOption.map(ref => sr.getService(ref))
+      if (result.isEmpty) {
+        Thread.sleep((timeout / 10).toMillis)
+      }
     } while (System.currentTimeMillis() - start < timeout.toMillis && result.isEmpty)
 
     result

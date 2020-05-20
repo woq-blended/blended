@@ -46,10 +46,15 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
 
       val switch = sendInbound(external, msgCount)
 
-      consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(actorSys).get should be (empty)
+      consumeMessages(cf = internal, destName = "bridge.data.in.activemq.external", timeout = timeout)(actorSys).get should be (empty)
       consumeEvents(internal, timeout)(actorSys).get should be (empty)
 
-      consumeMessages(external, "sampleIn", timeout)(actorSys).get should have size(msgCount)
+      consumeMessages(
+        cf = external,
+        destName = "sampleIn",
+        expected = msgCount,
+        timeout = timeout
+      )(actorSys).get should have size(msgCount)
 
       switch.shutdown()
     }

@@ -25,7 +25,7 @@ jobs:
         java-version: ${{ matrix.java-version }}
 
     - name: Run tests
-      run: ./millw -i -k blended[${{ matrix.scala-version }}].__.testCached
+      run: ./millw -i -j 0 -k blended[${{ matrix.scala-version }}].__.testCached
 
     - name: Upload test logs
       uses: actions/upload-artifact@v2

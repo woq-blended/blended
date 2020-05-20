@@ -1,5 +1,7 @@
 package blended.testsupport.pojosr
 
+import java.net.ServerSocket
+
 import akka.actor.ActorSystem
 import blended.container.context.api.ContainerContext
 import blended.streams.FlowHeaderConfig
@@ -15,7 +17,7 @@ abstract class SimplePojoContainerSpec
   extends TestSuite
   with BeforeAndAfterAll { this : PojoSrTestHelper =>
 
-  def timeout : FiniteDuration = 3.seconds
+  def timeout : FiniteDuration = 5.seconds
 
   private var _registry : Option[BlendedPojoRegistry] = None
 

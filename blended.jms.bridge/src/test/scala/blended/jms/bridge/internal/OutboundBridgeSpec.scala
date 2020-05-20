@@ -34,7 +34,12 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       val switch = sendOutbound(internal, msgCount, track = false)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(external, "sampleOut", timeout)(actorSys).get
+        consumeMessages(
+          cf = external,
+          destName = "sampleOut",
+          expected = msgCount,
+          timeout = timeout
+        )(actorSys).get
 
       messages should have size(msgCount)
 
@@ -57,7 +62,12 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       val switch = sendOutbound(internal, msgCount, true)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(external, "sampleOut", timeout)(actorSys).get
+        consumeMessages(
+          cf = external,
+          destName = "sampleOut",
+          expected = msgCount,
+          timeout = timeout
+        )(actorSys).get
 
       messages should have size(msgCount)
 

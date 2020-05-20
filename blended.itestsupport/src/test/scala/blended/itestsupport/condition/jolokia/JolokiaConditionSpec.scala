@@ -4,14 +4,16 @@ import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.condition.{Condition, ConditionActor}
 import blended.itestsupport.jolokia.JolokiaAvailableCondition
 import blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.duration._
 import blended.itestsupport.condition.ConditionActor.CheckCondition
 import blended.itestsupport.condition.ConditionActor.ConditionCheckResult
 import blended.jolokia.{JolokiaAddress, JolokiaClient}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import blended.testsupport.BlendedTestSupport.freePort
 
-class JolokiaConditionSpec extends WordSpec
+class JolokiaConditionSpec extends AnyWordSpec
   with Matchers {
 
   "The JolokiaAvailableCondition" should {
@@ -22,7 +24,7 @@ class JolokiaConditionSpec extends WordSpec
 
       val t = 10.seconds
 
-      val client : JolokiaClient = new JolokiaClient(JolokiaAddress("http://localhost:7777/jolokia"))
+      val client : JolokiaClient = new JolokiaClient(JolokiaAddress(System.getProperty("jolokia.agent")))
       val condition = JolokiaAvailableCondition(client, Some(t))
 
       val checker = TestActorRef(ConditionActor.props(cond = condition))
@@ -37,7 +39,7 @@ class JolokiaConditionSpec extends WordSpec
 
       val t = 5.seconds
 
-      val client : JolokiaClient = new JolokiaClient(JolokiaAddress("http://localhost:8888/jolokia"))
+      val client : JolokiaClient = new JolokiaClient(JolokiaAddress(s"http://localhost:$freePort/jolokia"))
       val condition = JolokiaAvailableCondition(client, Some(t))
 
       val checker = TestActorRef(ConditionActor.props(cond = condition))

@@ -35,7 +35,6 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   with ScalaCheckPropertyChecks
   with JmsConnectionHelper {
 
-  override def timeout: FiniteDuration = 5.seconds
   private implicit val to : FiniteDuration = timeout
 
   protected val log : Logger = Logger(getClass().getName())
@@ -65,6 +64,16 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   protected def consumeMessages(
     cf: IdAwareConnectionFactory,
     destName : String,
+    expected : Int,
+    timeout : FiniteDuration
+  )(implicit system : ActorSystem) : Try[List[FlowEnvelope]] = consumeMessages(
+    cf = cf, destName = destName, completeOn = Some(l => l.size == expected), timeout = timeout
+  )
+
+  protected def consumeMessages(
+    cf: IdAwareConnectionFactory,
+    destName : String,
+    completeOn : Option[Seq[FlowEnvelope] => Boolean] = None,
     timeout : FiniteDuration
   )(implicit system : ActorSystem) : Try[List[FlowEnvelope]] = Try {
 
@@ -73,6 +82,7 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
       cf = cf,
       dest = JmsDestination.create(destName).get,
       log = envLogger(log),
+      completeOn = completeOn,
       timeout = Some(timeout)
     )
     Await.result(coll.result, timeout + 100.millis)

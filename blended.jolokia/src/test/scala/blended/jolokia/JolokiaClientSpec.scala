@@ -1,7 +1,6 @@
 package blended.jolokia
 
-import java.net.ServerSocket
-
+import blended.testsupport.BlendedTestSupport
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -15,11 +14,8 @@ class JolokiaClientSpec extends AnyWordSpec
 
   private val bad = {
     // Choose a port that is currently not in use
-    val socket = new ServerSocket(0)
-    val freePort = socket.getLocalPort()
-    socket.close()
     new JolokiaClient(JolokiaAddress(
-      jolokiaUrl = s"http://localhost:${freePort}/jolokia"
+      jolokiaUrl = s"http://localhost:${BlendedTestSupport.freePort}/jolokia"
     ))
   }
 

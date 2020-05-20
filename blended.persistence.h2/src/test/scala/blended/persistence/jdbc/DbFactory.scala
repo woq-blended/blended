@@ -60,7 +60,7 @@ trait DbFactory extends TestFile {
     dir match {
       case Some(d) => worker(d)
       case None =>
-        withTestDir(new File("target/tmp")) { dir =>
+        withTestDir(new File("out/tmp")) { dir =>
           worker(dir)
         }(deletePolicy)
     }

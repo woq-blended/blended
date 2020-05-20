@@ -52,12 +52,17 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
 
       val switch = sendOutbound(internal, msgCount, true)
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries", timeout)(actorSys).get
+      val retried : List[FlowEnvelope] = consumeMessages(cf = internal, destName = "retries", timeout = timeout)(actorSys).get
       retried should be (empty)
 
       consumeEvents(internal, timeout)(actorSys).get should be (empty)
 
-      consumeMessages(internal, "bridge.data.out.activemq.external", timeout)(actorSys).get should have size(2)
+      consumeMessages(
+        cf = internal,
+        destName = "bridge.data.out.activemq.external",
+        expected = msgCount,
+        timeout = timeout
+      )(actorSys).get should have size(msgCount)
 
       switch.shutdown()
     }

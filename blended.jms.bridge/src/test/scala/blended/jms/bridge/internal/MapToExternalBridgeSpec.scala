@@ -28,7 +28,12 @@ class MapToExternalBridgeSpec extends BridgeSpecSupport {
       val switch : KillSwitch = sendMessages("bridge.data.out", internal)(msgs:_*)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(external, "sampleOut", timeout)(actorSystem).get
+        consumeMessages(
+          cf = external,
+          destName = "sampleOut",
+          expected = msgCount,
+          timeout = timeout
+        )(actorSystem).get
 
       messages should have size(msgCount)
 

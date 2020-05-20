@@ -41,7 +41,6 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
   "The outbound bridge should " - {
 
     "pass messages to the retry destination if the send of the transaction envelope fails" in {
-      val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
       val actorSys = system(registry)
@@ -49,7 +48,12 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
 
       val switch = sendOutbound(internal, msgCount, true)
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries", timeout)(actorSys).get
+      val retried : List[FlowEnvelope] = consumeMessages(
+        cf = internal,
+        destName = "retries",
+        expected = 2,
+        timeout = timeout
+      )(actorSys).get
       retried should have size (msgCount)
 
       consumeEvents(internal, timeout)(actorSys).get should be (empty)
@@ -58,7 +62,11 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
         env.header[Unit]("UnitProperty") should be (Some(()))
       }
 
-      consumeMessages(internal, "bridge.data.out.activemq.external", timeout)(actorSys).get should be (empty)
+      consumeMessages(
+        cf = internal,
+        destName = "bridge.data.out.activemq.external",
+        timeout = timeout
+      )(actorSys).get should be (empty)
 
       switch.shutdown()
     }

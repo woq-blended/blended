@@ -53,7 +53,7 @@ class LoginServiceSpec extends SimplePojoContainerSpec
     mandatoryService[HttpContext](registry, None)
 
     val response = request.send()
-    f(Await.result(response, 3.seconds))
+    f(Await.result(response, timeout))
   }
 
   private def serverKey() : Try[PublicKey] = Try {

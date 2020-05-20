@@ -22,8 +22,6 @@ class WebSocketSubscriptionActorSpec extends AbstractWebSocketSpec {
     ManagementFactory.getPlatformMBeanServer()
   )
 
-  private val interval : FiniteDuration = 200.millis
-
   "The Subscription actor should" - {
 
     def withJmxSubscription(sub : JmxSubscribe)(f : TestProbe => Unit) : Unit = {
@@ -64,12 +62,14 @@ class WebSocketSubscriptionActorSpec extends AbstractWebSocketSpec {
     }
 
     "emit regular updates if an interval is set" in {
+
+      val interval : FiniteDuration = 500.millis
+
       withJmxSubscription(JmxSubscribe(Some(JmxObjectName("java.lang:type=Memory").unwrap), interval.toMillis)) { probe =>
-        probe.expectNoMessage((interval.toMillis * 0.7).millis)
 
         // scalastyle:off magic.number
         1.to(10).foreach { i =>
-          fishForWsUpdate[BlendedJmxMessage](interval + (interval.toMillis/2).millis)(probe){ upd =>
+          fishForWsUpdate[BlendedJmxMessage](interval * 2)(probe){ upd =>
             upd.isInstanceOf[JmxUpdate] &&
             upd.asInstanceOf[JmxUpdate].beans.nonEmpty
           }

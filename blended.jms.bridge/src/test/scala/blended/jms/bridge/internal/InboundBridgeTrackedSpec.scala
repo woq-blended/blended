@@ -37,7 +37,11 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
       val switch = sendInbound(external, msgCount)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(actorSys).get
+        consumeMessages(
+          cf = internal,
+          destName = "bridge.data.in.activemq.external",
+          timeout = timeout
+        )(actorSys).get
 
       messages should have size(msgCount)
 
@@ -68,7 +72,12 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
 
       val switch : KillSwitch = sendMessages("SampleHeaderIn", external)(env)
 
-      val result : List[FlowEnvelope] = consumeMessages(internal, "bridge.data.in.activemq.external", 5.seconds)(actorSys).get
+      val result : List[FlowEnvelope] = consumeMessages(
+        cf = internal,
+        destName = "bridge.data.in.activemq.external",
+        expected = 1,
+        timeout = timeout
+      )(actorSys).get
 
       result should have size 1
       result.head.header[String]("ResourceType") should be (Some(desc))

@@ -90,12 +90,24 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
       }
       println()
 
-      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries", timeout)(actorSys).get
+      val retried : List[FlowEnvelope] = consumeMessages(
+        cf = internal,
+        destName = "retries",
+        timeout = timeout
+      )(actorSys).get
       retried should be (empty)
 
       consumeEvents(internal, timeout)(actorSys).get should not be empty
 
-      consumeMessages(external, "sampleOut", timeout)(actorSys).get should have size(msgCount)
+      val messages : List[FlowEnvelope] =
+        consumeMessages(
+          cf = external,
+          destName = "sampleOut",
+          expected = msgCount,
+          timeout = timeout
+        )(actorSys).get
+
+      messages should have size(msgCount)
 
       switch.shutdown()
     }

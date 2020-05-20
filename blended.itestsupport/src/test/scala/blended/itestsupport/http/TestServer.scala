@@ -13,24 +13,21 @@ object TestServer {
 
   private[this] val log = Logger[TestServer.type]
 
-  def withServer(
-    port: Int,
-    route: Route
-  )(
-    f: => Unit
+  def withServer(route: Route)(
+    f : Int => Unit
   )(
     implicit
     actorSystem: ActorSystem,
     actorMaterializer: ActorMaterializer
   ): Unit = {
 
-    val serverFut = Http().bindAndHandle(route, "localhost", port)
+    val serverFut = Http().bindAndHandle(route, "localhost", 0)
     val server = Await.result(serverFut, 10.seconds)
     try {
-      log.info(s"Started test HTTP server on localhost:$port")
-      f
+      log.info(s"Started test HTTP server on ${server.localAddress}")
+      f(server.localAddress.getPort)
     } finally {
-      log.info(s"Stopping test HTTP server on localhost:$port")
+      log.info(s"Stopping test HTTP server on ${server.localAddress}")
       Await.result(server.unbind(), 10.seconds)
     }
   }

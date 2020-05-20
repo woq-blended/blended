@@ -2,12 +2,13 @@ package blended.streams.transaction
 
 import java.io.File
 import java.lang.management.{ManagementFactory, OperatingSystemMXBean}
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Scheduler}
 import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.internal.FileFlowTransactionManager
+import blended.testsupport.retry.{ResultPoller, Retry}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
@@ -16,9 +17,9 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.mutable
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 trait FTMFactory {
   def createTransactionManager(dir : String) : FlowTransactionManager =
@@ -31,6 +32,11 @@ trait FlowTransactionManagerSpec
   extends LoggingFreeSpecLike
   with Matchers
   with ScalaCheckPropertyChecks { this : FTMFactory =>
+
+  val actorSys : ActorSystem
+
+  val pollInterval : FiniteDuration = 100.millis
+  val timeout : FiniteDuration = 10.seconds
 
   private def updateTest[T](ftm : FlowTransactionManager, event : FlowTransactionEvent)(f : FlowTransaction => T) : T = {
     ftm.updateTransaction(event) match {
@@ -49,11 +55,10 @@ trait FlowTransactionManagerSpec
         val env : FlowEnvelope = FlowEnvelope(t.creationProps)
 
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))) { t =>
-
-          Await.result(tMgr.findTransaction(t.tid), 3.seconds) match {
-            case None => fail()
-            case Some(t2) => assert(t === t2)
-          }
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
+            case None =>
+            case Some(v) => assert(t === v)
+          }).isSuccess should be (true)
         }
       }
     }
@@ -73,11 +78,10 @@ trait FlowTransactionManagerSpec
 
       val tMgr2 : FlowTransactionManager = createTransactionManager("restart")
       assert(ids.distinct.toList.forall{ id =>
-
-        Await.result(tMgr2.findTransaction(id), 3.seconds) match {
-          case Some(_) => true
-          case _ => false
-        }
+        (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr2.findTransaction(id)).execute {
+          case Some(_) =>
+          case _ => fail()
+        }).isSuccess
       })
     }
 
@@ -91,10 +95,10 @@ trait FlowTransactionManagerSpec
 
           tMgr.removeTransaction(t.tid)
 
-          Await.result(tMgr.findTransaction(t.tid), 3.seconds) match {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
             case None =>
             case Some(_) => fail()
-          }
+          }).isSuccess should be (true)
         }
       }
     }
@@ -108,14 +112,14 @@ trait FlowTransactionManagerSpec
         val env : FlowEnvelope = FlowEnvelope(t.creationProps)
 
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))) { t =>
-          Await.result(tMgr.findTransaction(t.tid), 3.seconds) match {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
             case None => fail()
             case Some(trans) => transactions.append(trans.tid)
-          }
+          }).isSuccess should be (true)
         }
       }
 
-      Await.result( tMgr.withAll{ t => assert(transactions.contains(t.tid)) ; true }, 3.seconds ) should be (transactions.size)
+      Await.result( tMgr.withAll{ t => assert(transactions.contains(t.tid)) ; true }, timeout ) should be (transactions.size)
     }
 
     "allow to retrieve all transactions im completed state" in {
@@ -127,10 +131,10 @@ trait FlowTransactionManagerSpec
         val env : FlowEnvelope = FlowEnvelope(t.creationProps)
 
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))) { t =>
-          Await.result(tMgr.findTransaction(t.tid), 3.seconds) match {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
             case None => fail()
             case Some(trans) => transactions.append(trans)
-          }
+          }).isSuccess should be (true)
         }
       }
 
@@ -142,7 +146,7 @@ trait FlowTransactionManagerSpec
         case Failure(t) => fail(t)
       }
 
-      Await.result( tMgr.withCompleted{ _ => }, 3.seconds ) should be (1)
+      Await.result( tMgr.withCompleted{ _ => }, timeout ) should be (1)
     }
 
     "allow to clear all transactions from the persistence store" in {
@@ -152,15 +156,15 @@ trait FlowTransactionManagerSpec
         val env : FlowEnvelope = FlowEnvelope(t.creationProps)
 
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))) { t =>
-          Await.result(tMgr.findTransaction(t.tid), 3.seconds) match {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
             case None => fail()
-            case Some(_) =>
-          }
+            case Some(trans) =>
+          }).isSuccess should be (true)
         }
       }
 
-      Await.result(tMgr.clearTransactions(), 3.seconds)
-      Await.result(tMgr.withAll{_ => true}, 3.seconds) should be (0)
+      Await.result(tMgr.clearTransactions(), timeout)
+      Await.result(tMgr.withAll{_ => true}, timeout) should be (0)
     }
 
     "cleanup closed and failed transaction after the configured retain interval" in {
@@ -180,24 +184,24 @@ trait FlowTransactionManagerSpec
         val env : FlowEnvelope = FlowEnvelope(t.creationProps)
 
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))) { t =>
-          Await.result(tMgr.findTransaction(t.tid), 3.seconds) match {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
             case None => fail()
             case Some(trans) => transactions.append(trans)
-          }
+          }).isSuccess should be (true)
         }
       }
 
-      Await.result( tMgr.withCompleted{ _ => }, 3.seconds ) should be (0)
+      Await.result( tMgr.withCompleted{ _ => }, timeout) should be (0)
 
       val toComplete : FlowTransaction = transactions.head
       tMgr.updateTransaction(FlowTransactionCompleted(toComplete.tid, toComplete.creationProps))
-      Await.result( tMgr.withCompleted{ _ => }, 3.seconds ) should be (1)
+      Await.result( tMgr.withCompleted{ _ => }, timeout) should be (1)
 
       Thread.sleep(cfg.retainCompleted.toMillis * 2)
       Await.result(tMgr.cleanUp(), 3.seconds)
 
-      Await.result(tMgr.withAll{_ => true}, 3.seconds) should be (transactions.size - 1)
-      Await.result( tMgr.withCompleted{ _ => }, 3.seconds ) should be (0)
+      Await.result(tMgr.withAll{_ => true}, timeout) should be (transactions.size - 1)
+      Await.result( tMgr.withCompleted{ _ => }, timeout) should be (0)
     }
   }
 }
@@ -296,8 +300,8 @@ class FileFlowTransactionManagerSpec extends FlowTransactionManagerSpec
   with FTMFactory {
 
   private val kit : TestKit = new TestKit(ActorSystem("bulk"))
-  private implicit val system : ActorSystem = kit.system
+  override val actorSys : ActorSystem = kit.system
 
   override def createTransactionManager(cfg: FlowTransactionManagerConfig): FlowTransactionManager =
-    new FileFlowTransactionManager(cfg)
+    new FileFlowTransactionManager(cfg)(actorSys)
 }

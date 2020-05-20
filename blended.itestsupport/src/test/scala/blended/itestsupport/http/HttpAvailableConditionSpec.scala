@@ -12,6 +12,7 @@ import blended.itestsupport.condition.ConditionActor.CheckCondition
 import blended.itestsupport.condition.ConditionActor.ConditionCheckResult
 import blended.testsupport.TestActorSys
 import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.testsupport.BlendedTestSupport.freePort
 
 class HttpAvailableConditionSpec extends LoggingFreeSpec with ScalatestRouteTest {
 
@@ -24,7 +25,7 @@ class HttpAvailableConditionSpec extends LoggingFreeSpec with ScalatestRouteTest
 
       val t = 5.seconds
 
-      val condition = HttpAvailableCondition("http://localhost:8888/nonExisting", Some(t))
+      val condition = HttpAvailableCondition(s"http://localhost:$freePort/nonExisting", Some(t))
 
       val checker = TestActorRef(ConditionActor.props(cond = condition))
       checker.tell(CheckCondition, probe.ref)
@@ -36,17 +37,16 @@ class HttpAvailableConditionSpec extends LoggingFreeSpec with ScalatestRouteTest
       implicit val system = testkit.system
       val probe = TestProbe()
 
-      val localPort = 9999
       val route = get {
         path("hello") {
           complete("Hello")
         }
       }
 
-      TestServer.withServer(localPort, route) { () =>
+      TestServer.withServer(route) { port =>
         val t = 10.seconds
 
-        val condition = HttpAvailableCondition(s"http://localhost:${localPort}/hello", Some(t))
+        val condition = HttpAvailableCondition(s"http://localhost:${port}/hello", Some(t))
 
         val checker = TestActorRef(ConditionActor.props(cond = condition))
         checker.tell(CheckCondition, probe.ref)
@@ -59,22 +59,21 @@ class HttpAvailableConditionSpec extends LoggingFreeSpec with ScalatestRouteTest
       implicit val system = testkit.system
       val probe = TestProbe()
 
-      val localPort = 9999
       val route = get {
         path("hello") {
           complete("Hello")
         }
       }
 
-      TestServer.withServer(localPort, route) { () =>
-        val t = 10.seconds
+      TestServer.withServer(route) { port =>
+        val t = 5.seconds
 
-        val condition = HttpAvailableCondition(s"http://localhost:${localPort}/missing", Some(t))
+        val condition = HttpAvailableCondition(s"http://localhost:${port}/missing", Some(t))
 
         val checker = TestActorRef(ConditionActor.props(cond = condition))
         checker.tell(CheckCondition, probe.ref)
 
-        probe.expectMsg(t, ConditionCheckResult(List.empty[Condition], List.empty[Condition]))
+        probe.expectMsg(t + 1.second, ConditionCheckResult(List.empty[Condition], List(condition)))
       }
     }
 

@@ -2195,7 +2195,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         }.toSeq.head
 
         super.forkArgs() ++ Seq(
-          s"-javaagent:${jolokiaAgent.path.toIO.getAbsolutePath()}=port=7777,host=localhost"
+          s"-javaagent:${jolokiaAgent.path.toIO.getAbsolutePath()}=port=0,host=localhost"
         )
       }
     }

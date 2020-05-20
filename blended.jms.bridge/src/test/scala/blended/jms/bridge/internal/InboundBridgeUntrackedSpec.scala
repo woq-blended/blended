@@ -35,7 +35,12 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val switch = sendInbound(external, msgCount)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(actorSys).get
+        consumeMessages(
+          cf = internal,
+          destName = "bridge.data.in.activemq.external",
+          expected = msgCount,
+          timeout = timeout
+        )(actorSys).get
 
       messages should have size msgCount
 
@@ -60,11 +65,16 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val switch : KillSwitch = sendMessages("sampleIn", external)(msgs:_*)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(actorSys).get
+        consumeMessages(
+          cf = internal,
+          destName = "bridge.data.in.activemq.external",
+          expected = msgs.size,
+          timeout = timeout
+        )(actorSys).get
 
       messages should have size msgs.size
 
-      consumeEvents(internal, timeout)(actorSys).get should be (empty)
+      consumeEvents(cf = internal, timeout = timeout)(actorSys).get should be (empty)
 
       switch.shutdown()
     }
@@ -81,7 +91,12 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val switch : KillSwitch = sendMessages("sampleIn", external)(msgs:_*)
 
       val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "bridge.data.in.activemq.external", timeout)(actorSys).get
+        consumeMessages(
+          cf = internal,
+          destName = "bridge.data.in.activemq.external",
+          expected = msgs.size,
+          timeout = timeout
+        )(actorSys).get
 
       messages should have size msgs.size
 

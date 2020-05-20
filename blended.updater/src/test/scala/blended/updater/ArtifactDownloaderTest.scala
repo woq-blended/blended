@@ -41,7 +41,7 @@ class ArtifactDownloaderTest
 
     "Download of a local file (without checksum) with Maven coordinates should work" in {
       val id = nextId()
-      withTestDir(new File("target/tmp")) { dir =>
+      withTestDir(new File("out/tmp")) { dir =>
         val mvnRepo = dir.toURI().toString()
         val sourceFile = new File(dir, s"g1/g2/art/1/art-1.jar")
         sourceFile.getParentFile().mkdirs()
