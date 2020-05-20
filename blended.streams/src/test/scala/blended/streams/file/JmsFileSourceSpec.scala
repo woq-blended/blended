@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.Source
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerContext
@@ -16,7 +15,7 @@ import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.AckProcessor
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.RichTry._
 import blended.util.logging.Logger
@@ -35,7 +34,8 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
   with JmsStreamSupport
-  with FileSourceTestSupport {
+  with FileSourceTestSupport
+  with JmsConnectionHelper {
 
   override def baseDir : String = s"${BlendedTestSupport.projectTestOutput}/container"
 
@@ -43,27 +43,24 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     "blended.akka" -> new BlendedAkkaActivator()
   )
 
-  private implicit val timeout : FiniteDuration = 1.second
-  private val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
-  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
-
-  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-  private implicit val materializer : Materializer = ActorMaterializer()
-
   private val log : Logger = Logger[JmsFileSourceSpec]
-  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   private case class EnvelopeReceived(env : FlowEnvelope)
 
   private val cfCnt : AtomicInteger = new AtomicInteger(0)
-  private def amqCf(p : Int) : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
-    vendor = "amq",
-    provider = s"${cfCnt.incrementAndGet()}",
-    clientId = "spec",
-    cf = new ActiveMQConnectionFactory(s"tcp://localhost:$p?jms.prefetchPolicy.queuePrefetch=10"),
-    minReconnect = 5.seconds
-  )
+  private def amqCf(p : Int) : IdAwareConnectionFactory = {
+
+    implicit val to : FiniteDuration = timeout
+    val system : ActorSystem = mandatoryService[ActorSystem](registry)
+
+    SimpleIdAwareConnectionFactory(
+      vendor = "amq",
+      provider = s"${cfCnt.incrementAndGet()}",
+      clientId = "spec",
+      cf = new ActiveMQConnectionFactory(s"tcp://localhost:$p?jms.prefetchPolicy.queuePrefetch=10"),
+      minReconnect = 5.seconds
+    )(system)
+  }
 
   private def startBroker(brokerName : String, port : Int = 0) : (BrokerService, Int) = {
 
@@ -96,6 +93,11 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     cf : IdAwareConnectionFactory,
     destName : String
   ) : Source[FlowEnvelope, NotUsed] = {
+    implicit val to : FiniteDuration = timeout
+    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
+
+    val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
+    val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
     val dest = JmsDestination.create(destName).unwrap
 
@@ -119,6 +121,11 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     cf : IdAwareConnectionFactory,
     destName : String
   ) : JmsProducerSettings = {
+    implicit val to : FiniteDuration = timeout
+    val system : ActorSystem = mandatoryService[ActorSystem](registry)
+
+    val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
+    val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
     val dest : JmsDestination = JmsDestination.create(destName).unwrap
     JmsProducerSettings(
@@ -131,16 +138,23 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
   "A file source connected to a JmsSinkStage should" - {
 
-    val rawCfg : Config = ctCtxt.containerConfig.getConfig("simplePoll")
-
     def setupStreams(
       name : String,
       destName : String,
       cf : IdAwareConnectionFactory,
-      srcDir : String
+      srcDir : String,
+      ctxt : ContainerContext
     ) : Seq[ActorRef] = {
+      implicit val to : FiniteDuration = timeout
+      implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(
+      val rawCfg : Config = ctxt.containerConfig.getConfig("simplePoll")
+
+      val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
+      val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
+      val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
+
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctxt).copy(
         sourceDir = BlendedTestSupport.projectTestOutput + s"/$srcDir"
       )
 
@@ -167,12 +181,11 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       Seq(fileController, msgController)
     }
 
-    def testWithJms(
+    def testWithJms(system : ActorSystem)(
       t : FiniteDuration,
       srcDir : String
     ) : Unit = {
-
-      val probe : TestProbe = TestProbe()
+      val probe : TestProbe = TestProbe()(system)
       system.eventStream.subscribe(probe.ref, classOf[EnvelopeReceived])
 
       genFile(new File(BlendedTestSupport.projectTestOutput + "/" + srcDir, "test.txt"))
@@ -183,12 +196,15 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
     "pickup files and send them to JMS" in {
 
+      implicit val to : FiniteDuration = timeout
+      val system : ActorSystem = mandatoryService[ActorSystem](registry)
+
       val (b, p) = startBroker("normal")
       val cf = amqCf(p)
       val srcDir = "jmsPoll"
 
-      val controller : Seq[ActorRef] = setupStreams("simple", "simpleJmsPoll", cf, srcDir)
-      testWithJms(10.seconds, srcDir)
+      val controller : Seq[ActorRef] = setupStreams("simple", "simpleJmsPoll", cf, srcDir, ctCtxt)
+      testWithJms(system)(10.seconds, srcDir)
 
       controller.foreach(_ ! StreamController.Stop)
       // scalastyle:off magic.number
@@ -200,14 +216,17 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
     "recover to send JMS messages in case the JMS connection fails and comes back" in {
 
+      implicit val to : FiniteDuration = timeout
+      val system : ActorSystem = mandatoryService[ActorSystem](registry)
+
       val (b, p) = startBroker("failover1")
       val cf = amqCf(p)
       val srcDir = "jmsFailOver"
 
-      val controller : Seq[ActorRef] = setupStreams("failOver", "failOverPoll", cf, srcDir)
-      testWithJms(10.seconds, srcDir)
+      val controller : Seq[ActorRef] = setupStreams("failOver", "failOverPoll", cf, srcDir, ctCtxt)
+      testWithJms(system)(10.seconds, srcDir)
 
-      val probe : TestProbe = TestProbe()
+      val probe : TestProbe = TestProbe()(system)
       system.eventStream.subscribe(probe.ref, classOf[EnvelopeReceived])
 
       probe.expectNoMessage(3.seconds)
@@ -217,7 +236,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       probe.expectNoMessage(3.seconds)
 
       startBroker("failover2", p)
-      testWithJms(30.seconds, srcDir)
+      testWithJms(system)(30.seconds, srcDir)
 
       controller.foreach(_ ! StreamController.Stop)
     }

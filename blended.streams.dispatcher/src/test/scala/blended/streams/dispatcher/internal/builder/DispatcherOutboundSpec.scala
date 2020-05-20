@@ -52,7 +52,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
   }
 
   def testOutbound(expectedState : WorklistState, send : Flow[FlowEnvelope, FlowEnvelope, NotUsed]) : Unit = {
-    withDispatcherConfig { ctxt =>
+    withDispatcherConfig(registry) { ctxt =>
 
       implicit val system : ActorSystem = ctxt.system
       implicit val eCtxt : ExecutionContext = system.dispatcher
@@ -123,8 +123,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
     "resolve a replyTo destination if no outbound destination is set in resource type router" in {
 
-      withDispatcherConfig { ctxt =>
-
+      withDispatcherConfig(registry) { ctxt =>
         val env : FlowEnvelope = FlowEnvelope(
           FlowMessage(FlowMessage.noProps)
         )
@@ -149,7 +148,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
     "resolve a replyTo destination if the outbound destination is set to 'replyTo' in the config" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
 
         val env : FlowEnvelope = FlowEnvelope(
           FlowMessage(FlowMessage.noProps)
@@ -174,7 +173,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
     }
 
     "resolve to the configured target destination" in {
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
 
         val env : FlowEnvelope = FlowEnvelope(
           FlowMessage(FlowMessage.noProps)

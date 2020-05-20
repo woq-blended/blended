@@ -52,7 +52,7 @@ class DispatcherSpec extends DispatcherSpecSupport
   }
 
   private def runTest[T](testMsg : DispatcherExecContext => Seq[FlowEnvelope])(f : List[FlowTransactionEvent] => T) : Future[T] = {
-    withDispatcherConfig { ctxt =>
+    withDispatcherConfig(registry) { ctxt =>
       implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
       val (actor, killswitch, coll) = runDispatcher(ctxt, goodSend)

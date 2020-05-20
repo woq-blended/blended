@@ -19,7 +19,7 @@ final case class JmsSession(
     val p : Promise[Unit] = Promise()
 
     Future { closeSession() }.onComplete[Unit] {
-      case Success(_) => p.success()
+      case Success(_) => p.success(())
       case Failure(t) => p.failure(t)
     }
 

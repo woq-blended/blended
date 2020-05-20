@@ -16,7 +16,7 @@ class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
 
     "resolve the configured bridge providers correctly" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
         val cfg = ctxt.cfg
 
         cfg.defaultProvider.id should be(amqId)
@@ -27,7 +27,7 @@ class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
     }
 
     "resolve a simple dispatcher element correctly" in {
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
         val cfg = ctxt.cfg
 
         val sagTest = cfg.resourceTypeConfigs.get("SagTest").get
@@ -48,7 +48,7 @@ class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
 
     "evaluate an optional inbound destination correctly" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
         val cfg = ctxt.cfg
 
         val dataFromPosClient = cfg.resourceTypeConfigs.get("DataClient").get
@@ -73,7 +73,7 @@ class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
 
     "evaluate multiple outbound configs destination correctly" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
         val cfg = ctxt.cfg
 
         val fanout = cfg.resourceTypeConfigs.get("FanOut").get

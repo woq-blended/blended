@@ -18,12 +18,13 @@ import blended.util.logging.Logger
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
-import org.scalatest.{BeforeAndAfterAll, Matchers}
+import org.scalatest.BeforeAndAfterAll
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.{Failure, Success}
 import blended.util.RichTry._
+import org.scalatest.matchers.should.Matchers
 
 @RequiresForkedJVM
 class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))

@@ -1,11 +1,19 @@
 package blended.testsupport.pojosr
 
-import org.osgi.framework.{Bundle, BundleActivator}
+import blended.container.context.api.ContainerContext
+import blended.streams.FlowHeaderConfig
+import blended.streams.message.FlowEnvelopeLogger
+import blended.util.logging.Logger
+import org.osgi.framework.Bundle
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
+
+import scala.concurrent.duration._
 
 abstract class SimplePojoContainerSpec
   extends TestSuite
   with BeforeAndAfterAll { this : PojoSrTestHelper =>
+
+  def timeout : FiniteDuration = 3.seconds
 
   private var _registry : Option[BlendedPojoRegistry] = None
 
@@ -13,6 +21,15 @@ abstract class SimplePojoContainerSpec
     case Some(r) => r
     case None => throw new Exception("Pojo Registry not yet defined")
   }
+
+  private var _ctCtxt : Option[ContainerContext] = None
+  def ctCtxt : ContainerContext = _ctCtxt match {
+    case Some(c) => c
+    case None => throw new Exception("Container Context not yet available")
+  }
+
+  def headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
+  def envLogger : Logger => FlowEnvelopeLogger = log => FlowEnvelopeLogger.create(headerCfg, log)
 
   /**
    * Specify, which properties are mandatory for the simulated container.
@@ -29,12 +46,16 @@ abstract class SimplePojoContainerSpec
   }
 
   override protected def beforeAll(): Unit = {
+
+    implicit val to : FiniteDuration = timeout
+
     super.beforeAll()
     val reg = createSimpleBlendedContainer(mandatoryPropertyNames, systemProperties).get
     bundles.foldLeft(reg) {
       case (current, (name, activator)) => startBundle(current)(name, activator).get._2
     }
-   _registry = Some(reg)
+    _registry = Some(reg)
+    _ctCtxt = Some(mandatoryService[ContainerContext](registry))
   }
 
   override protected def afterAll() : Unit = {

@@ -82,7 +82,7 @@ trait JmsStreamSupport {
     producerSettings: JmsProducerSettings,
     log : FlowEnvelopeLogger,
     msgs : FlowEnvelope*
-  )(implicit system : ActorSystem, materializer : Materializer, ectxt : ExecutionContext) : Try[KillSwitch] = {
+  )(implicit system : ActorSystem) : Try[KillSwitch] = {
 
     val producer : Flow[FlowEnvelope, FlowEnvelope, _] = jmsProducer(
       name = producerSettings.jmsDestination.map(_.asString).getOrElse("producer"),
@@ -106,8 +106,9 @@ trait JmsStreamSupport {
     selector : Option[String] = None,
     completeOn : Option[Seq[FlowEnvelope] => Boolean] = None,
     timeout : Option[FiniteDuration]
-  )(implicit system : ActorSystem, materializer : Materializer) : Collector[FlowEnvelope] = {
+  )(implicit system : ActorSystem) : Collector[FlowEnvelope] = {
 
+    implicit val materializer : Materializer = ActorMaterializer()(system)
     val listenerCount : Int = if (dest.isInstanceOf[JmsQueue]) {
       listener
     } else {

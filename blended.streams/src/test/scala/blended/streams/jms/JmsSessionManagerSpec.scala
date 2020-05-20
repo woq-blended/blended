@@ -3,18 +3,16 @@ package blended.streams.jms
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
-import akka.actor.ActorSystem
-import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory, JmsSession, QueryConnectionState}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsSession}
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{EnsureJmsConnectivity, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.util.RichTry._
 import javax.jms._
 import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
-import blended.util.RichTry._
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -22,7 +20,7 @@ import scala.util.{Failure, Success, Try}
 class JmsSessionManagerSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper
-  with EnsureJmsConnectivity
+  with JmsConnectionHelper
   with Matchers {
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
@@ -32,17 +30,19 @@ class JmsSessionManagerSpec extends SimplePojoContainerSpec
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
-  private implicit val timeout : FiniteDuration = 3.seconds
-  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-  private val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
-  private val con : Connection = ensureConnection(cf, 3.seconds).unwrap
+  private def createSessionManger(name : String, maxSessions : Int)(sessionOpened : JmsSession => Try[Unit]) : JmsSessionManager = {
+    implicit val to : FiniteDuration = timeout
 
-  private def createSessionManger(name : String, maxSessions : Int)(sessionOpened : JmsSession => Try[Unit]) : JmsSessionManager = new JmsSessionManager(
-    name = name,
-    conn = con,
-    maxSessions = maxSessions
-  ) {
-    override def onSessionOpen: JmsSession => Try[Unit] = sessionOpened
+    val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)
+    val con : Connection = ensureConnection(registry)(cf, 3.seconds).unwrap
+
+    new JmsSessionManager(
+      name = name,
+      conn = con,
+      maxSessions = maxSessions
+    ) {
+      override def onSessionOpen: JmsSession => Try[Unit] = sessionOpened
+    }
   }
 
   private def checkForSession(sessionCount : AtomicInteger, mgr : JmsSessionManager) : Unit = {

@@ -38,19 +38,18 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
     "blended.akka" -> new BlendedAkkaActivator()
   )
 
-  private implicit val timeout : FiniteDuration = 1.second
-  private val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
-  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-  private implicit val eCtxt : ExecutionContext = system.dispatcher
-  private implicit val materializer : Materializer = ActorMaterializer()
-  private val log : Logger = Logger("spec.flow.stream")
-
-  private val tMgr : FlowTransactionManager =
-    FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "streamSpec"))
-
   "The FlowTransactionStream should" - {
 
     "record an incoming FlowTransactionUpdate correctly" in {
+
+      implicit val to : FiniteDuration = timeout
+      implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
+      implicit val materializer : Materializer = ActorMaterializer()
+      implicit val eCtxt : ExecutionContext = system.dispatcher
+      val log : Logger = Logger("spec.flow.stream")
+
+      val tMgr : FlowTransactionManager =
+        FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "streamSpec"))
 
       def singleTest(event : FlowTransactionEvent)(f : List[FlowEnvelope] => Unit) : Unit = {
 

@@ -20,7 +20,7 @@ object StreamController {
     streamCfg : BlendedStreamsConfig
   )(
     onMaterialize : Mat => Unit = { _ : Mat => () }
-  )(implicit materializer : Materializer) : Props =
+  ) : Props =
 
     Props(new AbstractStreamController[T, Mat](streamCfg) {
       override def name: String = streamName
@@ -29,7 +29,7 @@ object StreamController {
     })
 }
 
-abstract class AbstractStreamController[T, Mat](streamCfg : BlendedStreamsConfig)(implicit materializer : Materializer)
+abstract class AbstractStreamController[T, Mat](streamCfg : BlendedStreamsConfig)
   extends Actor
   with StreamControllerSupport[T, Mat] {
 

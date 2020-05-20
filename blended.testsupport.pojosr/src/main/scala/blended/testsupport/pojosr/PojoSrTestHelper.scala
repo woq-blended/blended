@@ -157,7 +157,7 @@ trait PojoSrTestHelper {
     result
   }
 
-  def mandatoryService[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout : FiniteDuration) : T = {
+  def mandatoryService[T](sr : BlendedPojoRegistry, filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout : FiniteDuration) : T = {
     waitOnService[T](sr)(filter) match {
       case Some(s) => s
       case None    => throw new MandatoryServiceUnavailable(clazz.runtimeClass, filter)

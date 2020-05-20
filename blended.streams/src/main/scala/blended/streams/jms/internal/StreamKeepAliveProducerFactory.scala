@@ -3,7 +3,7 @@ package blended.streams.jms.internal
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{Materializer, OverflowStrategy}
+import akka.stream.OverflowStrategy
 import blended.container.context.api.ContainerContext
 import blended.jms.utils.{BlendedSingleConnectionFactory, JmsDestination, ProducerMaterialized}
 import blended.streams.jms._
@@ -15,7 +15,7 @@ class StreamKeepAliveProducerFactory(
   log : BlendedSingleConnectionFactory => FlowEnvelopeLogger,
   ctCtxt : ContainerContext,
   streamsCfg : BlendedStreamsConfig
-)(implicit system: ActorSystem, materializer : Materializer) extends KeepAliveProducerFactory with JmsStreamSupport {
+)(implicit system: ActorSystem) extends KeepAliveProducerFactory with JmsStreamSupport {
 
   private var stream : Option[ActorRef] = None
 

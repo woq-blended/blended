@@ -1913,6 +1913,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.jms.utils,
         blended.jmx,
         blended.akka.http,
+        blended.streams,
+        blended.streams.dispatcher
       )
       object test extends Tests
     }

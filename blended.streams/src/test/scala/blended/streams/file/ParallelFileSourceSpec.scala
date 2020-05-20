@@ -3,6 +3,7 @@ package blended.streams.file
 import java.io.File
 
 import akka.NotUsed
+import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
@@ -10,7 +11,7 @@ import blended.streams.processor.{AckProcessor, Collector}
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 @RequiresForkedJVM
 class ParallelFileSourceSpec extends AbstractFileSourceSpec {
@@ -23,7 +24,11 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
       val numMsg : Int = 5000
       val t : FiniteDuration = 30.seconds
 
-      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt)
+      implicit val to : FiniteDuration = timeout
+      implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
+      implicit val eCtxt : ExecutionContext = system.dispatcher
+
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg(ctCtxt), ctCtxt)
         .copy(sourceDir = BlendedTestSupport.projectTestOutput + "/parallel" )
 
       def countWords(l : Seq[String]) : Map[String, Int] = l.foldLeft(Map.empty[String, Int]){ (current, s) =>
@@ -36,7 +41,7 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
       def createCollector(subId : Int, startDelay : Option[FiniteDuration] = None) : Collector[FlowEnvelope] = {
         val src : Source[FlowEnvelope, NotUsed] =
           Source.fromGraph(new FileAckSource(
-            pollCfg.copy(id = s"poller$subId", interval = 100.millis), envLogger
+            pollCfg.copy(id = s"poller$subId", interval = 100.millis), envLogger(log)
           )).async.via(new AckProcessor(s"simplePoll$subId.ack").flow)
 
         startDelay.foreach(d => Thread.sleep(d.toMillis))

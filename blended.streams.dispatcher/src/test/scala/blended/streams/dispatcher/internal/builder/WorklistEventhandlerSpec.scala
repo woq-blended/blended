@@ -60,7 +60,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
   }
 
   private def run(vendor : String, provider : String, autoComplete : Boolean*)(f : (FlowEnvelope, List[FlowTransactionEvent]) => Unit) =
-    withDispatcherConfig { ctxt =>
+    withDispatcherConfig(registry) { ctxt =>
       implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
       val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
@@ -94,7 +94,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
 
     "Generate a Transaction update when a new worklist is started" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
@@ -123,7 +123,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
     }
 
     "Generate a transaction failed event when the worklist has failed" in {
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
@@ -150,7 +150,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
     }
 
     "Generate a transaction failed event when the worklist times out" in {
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
@@ -178,7 +178,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
 
       val ackCount : AtomicInteger = new AtomicInteger(0)
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)

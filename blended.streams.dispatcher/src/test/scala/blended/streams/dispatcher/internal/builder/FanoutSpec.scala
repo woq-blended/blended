@@ -35,7 +35,7 @@ class FanoutSpec extends DispatcherSpecSupport
 
     "create one FlowEnvelope per outbound config" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
 
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)
         val envelope = FlowEnvelope(FlowMessage.noProps)
@@ -55,7 +55,7 @@ class FanoutSpec extends DispatcherSpecSupport
 
     "create a workliststarted event for a configured resourceType" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)
 
         ctxt.cfg.resourceTypeConfigs.keys.filter(_ != "NoOutbound").foreach { resType =>
@@ -109,7 +109,7 @@ class FanoutSpec extends DispatcherSpecSupport
         (envColl, wlColl, source.toMat(sinkGraph)(Keep.left))
       }
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig(registry) { ctxt =>
         implicit val system : ActorSystem = ctxt.system
         implicit val materializer : Materializer = ActorMaterializer()
         implicit val eCtxt : ExecutionContext = system.dispatcher

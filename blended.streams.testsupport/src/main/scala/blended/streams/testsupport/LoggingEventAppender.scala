@@ -2,12 +2,14 @@ package blended.streams.testsupport
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.stream.{KillSwitch, KillSwitches, Materializer, OverflowStrategy}
+import akka.stream.{ActorMaterializer, KillSwitch, KillSwitches, Materializer, OverflowStrategy}
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.{Appender, AppenderBase}
 import org.slf4j.LoggerFactory
 
-class LoggingEventAppender[T](loggerName : String)(implicit system : ActorSystem, materializer : Materializer) {
+class LoggingEventAppender[T](system : ActorSystem)(loggerName : String) {
+
+  implicit val materializer : Materializer = ActorMaterializer()(system)
 
   val root = LoggerFactory.getLogger(loggerName).asInstanceOf[ch.qos.logback.classic.Logger]
 

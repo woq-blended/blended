@@ -3,30 +3,32 @@ package blended.streams.dispatcher.internal.builder
 import java.io.File
 
 import akka.actor.ActorSystem
+import akka.stream.{ActorMaterializer, Materializer}
+import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerContext
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.streams.BlendedStreamsConfig
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.internal.BlendedStreamsActivator
 import blended.streams.message.FlowEnvelopeLogger
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{BlendedPojoRegistry, JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import com.typesafe.config.Config
-import javax.jms.Connection
 import org.osgi.framework.BundleActivator
+import org.scalatest.BeforeAndAfterAll
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
 
 trait DispatcherSpecSupport extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
-  with PojoSrTestHelper {
+  with PojoSrTestHelper
+  with BeforeAndAfterAll
+  with JmsConnectionHelper {
 
   case class DispatcherExecContext(
     cfg : ResourceTypeRouterConfig,
@@ -34,16 +36,32 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     system : ActorSystem,
     bs : DispatcherBuilderSupport,
     envLogger : FlowEnvelopeLogger
-  )
+  ) {
+    val materializer : Materializer = ActorMaterializer()(system)
+    val execCtxt : ExecutionContext = system.dispatcher
+  }
 
   def country : String = "cc"
   def location : String = "09999"
+
+  private var _dispCtxt : Option[DispatcherExecContext] = None
+  def dispCtxt : DispatcherExecContext = _dispCtxt match {
+    case Some(c) => c
+    case None => throw new Exception(s"Dispatcher exec context not yet defined.")
+  }
+
+  private var _cf : Option[IdAwareConnectionFactory] = None
+  def cf : IdAwareConnectionFactory = _cf match {
+    case Some(c) => c
+    case None => throw new Exception(s"Connection factory  not yet defined.")
+  }
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.streams" -> new BlendedStreamsActivator(),
+    "blended.activemq.brokerstarter" -> new BrokerActivator(),
     "blended.jms.bridge" -> new BridgeActivator()
   )
 
@@ -56,53 +74,11 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
   def providerId(vendor : String, provider : String) : String =
     classOf[BridgeProviderConfig].getSimpleName() + s"($vendor:$provider)"
 
-  def jmsConnectionFactory(sr : BlendedPojoRegistry, ctxt : DispatcherExecContext)(
-    vendor : String, provider : String, timeout : FiniteDuration
-  ) : Try[IdAwareConnectionFactory] = {
-
+  def createDispatcherExecContext(r : BlendedPojoRegistry) : DispatcherExecContext = {
     implicit val to : FiniteDuration = timeout
-    val started = System.currentTimeMillis()
 
-    val cf = mandatoryService[IdAwareConnectionFactory](sr)(Some(s"(&(vendor=$vendor)(provider=$provider))"))
-    var con : Option[Connection] = None
-
-    do {
-      // scalastyle:off magic.number
-      Thread.sleep(100)
-      // scalastyle:on magic.number
-      con = Try {
-        cf.createConnection()
-      } match {
-        case Success(c) => Some(c)
-        case Failure(t) => None
-      }
-    } while (con.isEmpty && System.currentTimeMillis() - started <= timeout.toMillis)
-
-    con match {
-      case Some(_) =>
-        logger.info(s"Successfully connected to [$cf]")
-        Success(cf)
-      case _ => Failure(new Exception(s"Unable to connect to [${cf.vendor}:${cf.provider}]"))
-    }
-  }
-
-  def createDispatcherExecContext() : DispatcherExecContext = {
-    val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)(
-      clazz = ClassTag(classOf[ContainerContext]),
-      timeout = 3.seconds
-    )
-
-    val streamsCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
-
-    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
-      clazz = ClassTag(classOf[ActorSystem]),
-      timeout = 3.seconds
-    )
-
-    val provider : BridgeProviderRegistry = mandatoryService[BridgeProviderRegistry](registry)(None)(
-      clazz = ClassTag(classOf[BridgeProviderRegistry]),
-      timeout = 3.seconds
-    )
+    implicit val system : ActorSystem = mandatoryService[ActorSystem](r)
+    val provider : BridgeProviderRegistry = mandatoryService[BridgeProviderRegistry](r)
 
     val cfg = ResourceTypeRouterConfig.create(
       ctCtxt,
@@ -123,6 +99,21 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     )
   }
 
-  def withDispatcherConfig[T](f : DispatcherExecContext => T) : T = f(createDispatcherExecContext())
+  def withDispatcherConfig[T](r : BlendedPojoRegistry)(f : DispatcherExecContext => T) : T = f(createDispatcherExecContext(r))
+
+  override protected def beforeAll(): Unit = {
+    super.beforeAll()
+
+    implicit val to : FiniteDuration = timeout
+    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
+
+    val dispCtxt = createDispatcherExecContext(registry)
+    implicit val bs : DispatcherBuilderSupport = dispCtxt.bs
+
+    val (internalVendor, internalProvider) = dispCtxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).get
+
+    _cf  = Some(namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)(vendor = internalVendor, provider = internalProvider).get)
+    _dispCtxt = Some(dispCtxt)
+  }
 }
 

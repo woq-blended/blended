@@ -12,7 +12,7 @@ import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFacto
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{EnsureJmsConnectivity, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
@@ -26,7 +26,7 @@ import scala.util.Success
 class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper
-  with EnsureJmsConnectivity
+  with JmsConnectionHelper
   with Matchers {
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "keepAlive").getAbsolutePath()
@@ -36,24 +36,19 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
-  implicit private val timeout : FiniteDuration = 3.seconds
-  implicit private val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-  implicit private val materializer : Materializer = ActorMaterializer()
-  implicit private val eCtxt : ExecutionContext = system.dispatcher
-
-  private val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
-  private val cf : BlendedSingleConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None).asInstanceOf[BlendedSingleConnectionFactory]
-
-  ensureConnection(cf, timeout).unwrap
-
-  private val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
+//
 
   "The stream based keep alive producer should" - {
 
     "create a stream to send keep alives for a given connection factory" in {
+      implicit val to : FiniteDuration = timeout
+      implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
-      val probe : TestProbe = TestProbe()
+      val cf : BlendedSingleConnectionFactory = jmsConnectionFactory(registry, mustConnect = true).get.asInstanceOf[BlendedSingleConnectionFactory]
+
+      val streamCfg : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
+
+      val probe : TestProbe = TestProbe()(system)
       system.eventStream.subscribe(probe.ref, classOf[MessageReceived])
       system.eventStream.subscribe(probe.ref, classOf[ProducerMaterialized])
 

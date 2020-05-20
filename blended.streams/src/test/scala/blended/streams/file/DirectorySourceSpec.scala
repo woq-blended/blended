@@ -3,12 +3,15 @@ package blended.streams.file
 import java.io.File
 
 import blended.testsupport.BlendedTestSupport
+import com.typesafe.config.Config
 
 class DirectorySourceSpec extends AbstractFileSourceSpec {
 
   "The Directory Source should" - {
 
     "not deliver the same file within the poll interval" in {
+
+      val rawCfg : Config = ctCtxt.containerConfig.getConfig("simplePoll")
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg, ctCtxt).copy(
         sourceDir = BlendedTestSupport.projectTestOutput + "/dirSource",

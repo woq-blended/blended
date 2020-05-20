@@ -3,8 +3,7 @@ package blended.streams.dispatcher.internal.builder
 import java.io.File
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
+import akka.stream.KillSwitch
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.BlendedStreamsConfig
@@ -14,58 +13,42 @@ import blended.streams.processor.Collector
 import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionUpdate}
 import blended.streams.worklist._
+import blended.testsupport.pojosr.JmsConnectionHelper
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
-import blended.util.logging.Logger
-import org.osgi.framework.BundleActivator
-import org.scalatest.{BeforeAndAfterAll, Matchers}
-
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
-import scala.reflect.ClassTag
 import blended.util.RichTry._
+import org.osgi.framework.BundleActivator
+import org.scalatest.matchers.should.Matchers
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 @RequiresForkedJVM
 class TransactionOutboundSpec extends DispatcherSpecSupport
   with Matchers
   with JmsStreamSupport
-  with BeforeAndAfterAll {
-
-  private implicit val timeout : FiniteDuration = 3.seconds
+  with JmsConnectionHelper {
 
   System.setProperty("testName", "trans")
   override def loggerName: String = "outbound"
 
-  override def bundles: Seq[(String, BundleActivator)] = super.bundles ++ Seq(
-    "blended.activemq.brokerstarter" -> new BrokerActivator()
-  )
-
-  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
-    clazz = ClassTag(classOf[ActorSystem]),
-    timeout = timeout
-  )
-
-  private implicit val materializer : Materializer = ActorMaterializer()
-  private implicit val eCtxt : ExecutionContext = system.dispatcher
-
-  private val ctxt = createDispatcherExecContext()
-
-  val (internalVendor, internalProvider) =
-    ctxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).unwrap
-  private val cf = jmsConnectionFactory(registry, ctxt)(internalVendor, internalProvider, 3.seconds).unwrap
-
-  private val tMgr : FlowTransactionManager = FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "transOutbound"))
-  private val streamsCfg : BlendedStreamsConfig = mandatoryService[BlendedStreamsConfig](registry)(None)
-
   override protected def beforeAll(): Unit = {
-    implicit val bs : DispatcherBuilderSupport = ctxt.bs
+    super.beforeAll()
+
+    implicit val to : FiniteDuration = timeout
+    val bs : DispatcherBuilderSupport = dispCtxt.bs
+
+    val tMgr : FlowTransactionManager =
+      FileFlowTransactionManager(new File(BlendedTestSupport.projectTestOutput, "transOutbound"))(dispCtxt.system)
+    val streamsCfg : BlendedStreamsConfig = mandatoryService[BlendedStreamsConfig](registry)
+
     new TransactionOutbound(
-      headerConfig = ctxt.bs.headerConfig,
+      headerConfig = bs.headerConfig,
       tMgr = tMgr,
-      dispatcherCfg = ctxt.cfg,
+      dispatcherCfg = dispCtxt.cfg,
       internalCf = cf,
       streamsCfg = streamsCfg,
-      log = ctxt.envLogger
-    ).build()
+      log = dispCtxt.envLogger
+    )(system = dispCtxt.system, bs = bs).build()
   }
 
   def transactionEnvelope(ctxt : DispatcherExecContext, event : FlowTransactionEvent) : FlowEnvelope = {
@@ -75,8 +58,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       .withHeader(ctxt.bs.headerEventDest, JmsDestination.create("cbeOut").unwrap.asString).unwrap
   }
 
-  def sendTransactions(ctxt: DispatcherExecContext, cf : IdAwareConnectionFactory)(envelopes: FlowEnvelope*)
-    (implicit system : ActorSystem, materializer : Materializer, eCtxt: ExecutionContext) : KillSwitch = {
+  def sendTransactions(ctxt: DispatcherExecContext, cf : IdAwareConnectionFactory)(envelopes: FlowEnvelope*) : KillSwitch = {
 
     val pSettings : JmsProducerSettings = JmsProducerSettings(
       log = ctxt.envLogger,
@@ -89,26 +71,26 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       pSettings,
       log = ctxt.envLogger,
       envelopes: _*
-    ).unwrap
+    )(ctxt.system).unwrap
   }
 
   def receiveCbes: Collector[FlowEnvelope] = receiveMessages(
-    headerCfg = ctxt.bs.headerConfig,
+    headerCfg = dispCtxt.bs.headerConfig,
     cf = cf,
     dest = JmsQueue("cbeOut"),
-    log = ctxt.envLogger,
+    log = dispCtxt.envLogger,
     timeout = Some(timeout)
-  )
+  )(dispCtxt.system)
 
   "The transaction outbound handler should" - {
 
     "do not send a cbe event if the FlowEnvelope doesn't have a CBE header" in {
 
       val envelopes = Seq(
-        transactionEnvelope(ctxt, FlowTransaction.startEvent()),
+        transactionEnvelope(dispCtxt, FlowTransaction.startEvent()),
       )
 
-      val switch = sendTransactions(ctxt, cf)(envelopes:_*)
+      val switch = sendTransactions(dispCtxt, cf)(envelopes:_*)
       val collector = receiveCbes
 
       val cbes = Await.result(collector.result, timeout + 1.second)
@@ -119,10 +101,10 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     "send a cbe event if the FlowEnvelope does have a CBE header = true" in {
 
       val envelopes = Seq(
-        transactionEnvelope(ctxt, FlowTransaction.startEvent()).withHeader(ctxt.bs.headerCbeEnabled, true).get
+        transactionEnvelope(dispCtxt, FlowTransaction.startEvent()).withHeader(dispCtxt.bs.headerCbeEnabled, true).get
       )
 
-      val switch = sendTransactions(ctxt, cf)(envelopes:_*)
+      val switch = sendTransactions(dispCtxt, cf)(envelopes:_*)
       val collector = receiveCbes
 
       val cbes = Await.result(collector.result, timeout + 1.second)
@@ -133,10 +115,10 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     "do not send a cbe event if the FlowEnvelope does have a CBE header = false" in {
 
       val envelopes = Seq(
-        transactionEnvelope(ctxt, FlowTransaction.startEvent()).withHeader(ctxt.bs.headerCbeEnabled, false).get
+        transactionEnvelope(dispCtxt, FlowTransaction.startEvent()).withHeader(dispCtxt.bs.headerCbeEnabled, false).get
       )
 
-      val switch = sendTransactions(ctxt, cf)(envelopes:_*)
+      val switch = sendTransactions(dispCtxt, cf)(envelopes:_*)
       val collector = receiveCbes
 
       val cbes = Await.result(collector.result, timeout + 1.second)
@@ -146,14 +128,14 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
 
     "do not send Cbes for transaction updates" in {
 
-      val envStart = transactionEnvelope(ctxt, FlowTransactionUpdate(
+      val envStart = transactionEnvelope(dispCtxt, FlowTransactionUpdate(
         transactionId = UUID.randomUUID().toString(),
         properties = FlowMessage.noProps,
         updatedState = WorklistStateCompleted,
         branchIds = "foo, bar"
-      )).withHeader(ctxt.bs.headerCbeEnabled, true).unwrap
+      )).withHeader(dispCtxt.bs.headerCbeEnabled, true).unwrap
 
-      val switch = sendTransactions(ctxt, cf)(envStart)
+      val switch = sendTransactions(dispCtxt, cf)(envStart)
       val collector = receiveCbes
 
       val cbes = Await.result(collector.result, timeout + 1.second)

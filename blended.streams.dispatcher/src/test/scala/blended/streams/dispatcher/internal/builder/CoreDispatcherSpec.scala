@@ -118,7 +118,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
       }
     }
 
-    withDispatcherConfig{ ctxt =>
+    withDispatcherConfig(registry) { ctxt =>
 
       implicit val system : ActorSystem = ctxt.system
       implicit val eCtxt : ExecutionContext = system.dispatcher

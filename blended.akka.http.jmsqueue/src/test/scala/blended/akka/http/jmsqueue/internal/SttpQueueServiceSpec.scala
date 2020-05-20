@@ -12,11 +12,12 @@ import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.http.jmsqueue.BlendedAkkaHttpJmsqueueActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
+import blended.jmx.internal.BlendedJmxActivator
 import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{AkkaHttpServerTestHelper, BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
@@ -33,14 +34,15 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
   with PojoSrTestHelper
-  with JmsStreamSupport {
+  with JmsStreamSupport
+  with AkkaHttpServerTestHelper {
 
   private val log : Logger = Logger[SttpQueueServiceSpec]
 
   private implicit val timeout : FiniteDuration = 3.seconds
   private implicit val backend = HttpURLConnectionBackend()
 
-  private val svcUrlBase : String = "http://localhost:9995/httpqueue"
+  private val svcUrlBase : BlendedPojoRegistry => String = r => s"${plainServerUrl(r)}/httpqueue"
 
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
   private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
@@ -48,6 +50,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
+    "blended.jmx" -> new BlendedJmxActivator(),
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator(),
     "blended.akka.http" -> new BlendedAkkaHttpActivator(),
@@ -63,28 +66,28 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
   "The Http Queue Service should (STTP client)" - {
 
     "respond with a bad request if the url does not match [provider/queue]" in {
-      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/foo")))
+      val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/foo")))
       val response = request.send()
 
       response.code should be(StatusCode.BadRequest)
     }
 
     "respond with Unauthorised if the requested Queue is not configured" in {
-      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/activemq/bar")))
+      val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/activemq/bar")))
       val response = request.send()
 
       response.code should be(StatusCode.Unauthorized)
     }
 
     "respond with Unauthorised if the JMS provider is unknown or doesn't have any queues configured" in {
-      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/sonic/foo")))
+      val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/sonic/foo")))
       val response = request.send()
 
       response.code should be(StatusCode.Unauthorized)
     }
 
     "respond with an empty response if no msg is available" in {
-      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
+      val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/blended/Queue1")))
       val response = request.send()
 
       response.code should be(StatusCode.NoContent)
@@ -104,7 +107,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
 
       sendMessages(pSettings, envLogger, env)
 
-      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
+      val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/blended/Queue1")))
       val response = request.send()
 
       response.code should be(StatusCode.Ok)
@@ -127,7 +130,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
 
       sendMessages(pSettings, envLogger, env)
 
-      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
+      val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/blended/Queue1")))
       val response = request.send()
 
       response.code should be(StatusCode.Ok)
@@ -151,7 +154,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
 
       sendMessages(pSettings, envLogger, env)
 
-      val request = basicRequest.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
+      val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/blended/Queue1")))
       val response = request.send()
 
       response.code should be (StatusCode.Ok)
@@ -159,6 +162,5 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       response.contentType should be (defined)
       assert(response.contentType.forall(_.startsWith("application/octet-stream")))
     }
-
   }
 }

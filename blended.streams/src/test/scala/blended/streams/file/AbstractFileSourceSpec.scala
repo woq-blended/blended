@@ -5,7 +5,6 @@ import java.io.File
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerContext
@@ -37,24 +36,23 @@ abstract class AbstractFileSourceSpec extends SimplePojoContainerSpec
     "blended.akka" -> new BlendedAkkaActivator()
   )
 
-  implicit val timeout : FiniteDuration = 1.second
-  protected val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
-  protected implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-  protected implicit val eCtxt : ExecutionContext = system.dispatcher
-  protected implicit val materializer : Materializer = ActorMaterializer()
-  protected val log : Logger = Logger[FileSourceSpec]
-  protected val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create(ctCtxt), log)
+  protected val rawCfg : ContainerContext => Config = c => c.containerConfig.getConfig("simplePoll")
 
-  val rawCfg : Config = ctCtxt.containerConfig.getConfig("simplePoll")
+  protected val log : Logger = Logger[FileSourceSpec]
 
   protected def testWithLock(srcDir : File, lockFile : File, pollCfg : FilePollConfig): Unit = {
+
+    implicit val to : FiniteDuration = timeout
+
+    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
+    implicit val eCtxt : ExecutionContext = system.dispatcher
 
     case class FilePolled(env : FlowEnvelope)
 
     def pollFiles(t : FiniteDuration) : List[FlowEnvelope] = {
       val src : Source[FlowEnvelope, NotUsed] =
-        Source.fromGraph(new FileAckSource(pollCfg, envLogger))
-          .via(FlowProcessor.fromFunction("event", envLogger){ env => Try {
+        Source.fromGraph(new FileAckSource(pollCfg, envLogger(log)))
+          .via(FlowProcessor.fromFunction("event", envLogger(log)){ env => Try {
             system.eventStream.publish(FilePolled(env))
             env
           }})
@@ -80,5 +78,4 @@ abstract class AbstractFileSourceSpec extends SimplePojoContainerSpec
     probe.expectNoMessage(timeout)
     pollFiles(timeout * 3) should have size(1)
   }
-
 }

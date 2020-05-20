@@ -35,8 +35,6 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
   System.setProperty("AppCountry", country)
   System.setProperty("AppLocation", location)
 
-  implicit val timeout : FiniteDuration = 5.seconds
-
   override def loggerName : String = classOf[DispatcherActivatorSpec].getName()
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
@@ -48,27 +46,18 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     "blended.streams.dispatcher" -> new DispatcherActivator()
   )
 
-  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-  private implicit val materializer : Materializer = ActorMaterializer()
-  private implicit val eCtxt : ExecutionContext = system.dispatcher
-
-  private val ctxt : DispatcherExecContext = createDispatcherExecContext()
-
-  // make sure we can connect to all connection factories
-  private val amq = jmsConnectionFactory(registry, ctxt)("activemq", "activemq", timeout).unwrap
-  private val sonic = jmsConnectionFactory(registry, ctxt)("sonic75", "central", timeout).unwrap
-  private val ccQueue = jmsConnectionFactory(registry, ctxt)("sagum", s"${country}_queue", timeout).unwrap
-
   private def getResults(cf : IdAwareConnectionFactory, dest : JmsDestination*) : Seq[List[FlowEnvelope]] = {
+
+    implicit val eCtxt : ExecutionContext = dispCtxt.execCtxt
 
     val collectors = dest.map { d =>
       receiveMessages(
-        headerCfg = ctxt.bs.headerConfig,
+        headerCfg = dispCtxt.bs.headerConfig,
         cf = cf,
         dest = d,
-        log = ctxt.envLogger,
+        log = dispCtxt.envLogger,
         timeout = Some(timeout)
-      )
+      )(dispCtxt.system)
     }
 
     Await.result(Future.sequence(collectors.map(_.result)), timeout + 1.second)
@@ -78,25 +67,31 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
     "process inbound messages with a wrong ResourceType" in {
 
+      // make sure we can connect to all connection factories
+      val amq = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
+      val sonic = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sonic75", "central").unwrap
+      val ccQueue = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
+
       val logSink = Flow[ILoggingEvent]
         .filter{ event =>
           event.getLevel() == Level.INFO || event.getLevel() == Level.WARN
         }
         .toMat(Sink.seq[ILoggingEvent])(Keep.right)
 
-      val appender = new LoggingEventAppender[Future[Seq[ILoggingEvent]]]("App.transactions")
+      val appender = new LoggingEventAppender[Future[Seq[ILoggingEvent]]](dispCtxt.system)("App.transactions")
       val logEventsFut = appender.attachAndStart(logSink)
 
-      val env : FlowEnvelope = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").unwrap
+      val env : FlowEnvelope = FlowEnvelope().withHeader(dispCtxt.bs.headerResourceType, "Dummy").unwrap
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = ctxt.envLogger,
-        headerCfg = ctxt.bs.headerConfig,
+        log = dispCtxt.envLogger,
+        headerCfg = dispCtxt.bs.headerConfig,
         connectionFactory = sonic,
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
 
-      val switch : KillSwitch = sendMessages(pSettings, ctxt.envLogger, env).unwrap
+      val switch : KillSwitch =
+        sendMessages(pSettings, dispCtxt.envLogger, env)(dispCtxt.system).unwrap
 
       val results = getResults(
         cf = sonic,
@@ -124,25 +119,32 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
     "process inbound messages with a correct ResourceType" in {
 
+      // make sure we can connect to all connection factories
+      val amq = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
+      val sonic = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sonic75", "central").unwrap
+      val ccQueue = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
+
       val logSink = Flow[ILoggingEvent]
         .filter { event =>
           event.getLevel() == Level.INFO
         }
         .toMat(Sink.seq[ILoggingEvent])(Keep.right)
 
-      val appender = new LoggingEventAppender[Future[Seq[ILoggingEvent]]]("App.transactions")
+      val appender =
+        new LoggingEventAppender[Future[Seq[ILoggingEvent]]](dispCtxt.system)("App.transactions")
+
       val logEventsFut = appender.attachAndStart(logSink)
 
-      val env : FlowEnvelope = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoCbe").unwrap
+      val env : FlowEnvelope = FlowEnvelope().withHeader(dispCtxt.bs.headerResourceType, "NoCbe").unwrap
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = ctxt.envLogger,
-        headerCfg = ctxt.bs.headerConfig,
+        log = dispCtxt.envLogger,
+        headerCfg = dispCtxt.bs.headerConfig,
         connectionFactory = sonic,
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
 
-      val switch : KillSwitch = sendMessages(pSettings, ctxt.envLogger, env).unwrap
+      val switch : KillSwitch = sendMessages(pSettings, dispCtxt.envLogger, env)(dispCtxt.system).unwrap
 
       val results = getResults(
         cf = sonic,
@@ -169,6 +171,12 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     }
 
     "send configured startup messages" in {
+
+      // make sure we can connect to all connection factories
+      val amq = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
+      val sonic = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sonic75", "central").unwrap
+      val ccQueue = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
+
       val results = getResults(
         cf = sonic,
         JmsQueue("global.error"),
@@ -181,7 +189,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       errors should be (empty)
       out should have size(1)
 
-      out.head.header[String](ctxt.bs.headerConfig.headerResourceType) should be (Some("DispatcherStarted"))
+      out.head.header[String](dispCtxt.bs.headerConfig.headerResourceType) should be (Some("DispatcherStarted"))
       out.head.flowMessage.body() should be (s"$country;${location.substring(1)}")
     }
   }

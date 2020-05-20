@@ -32,9 +32,6 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
   private val log = Logger[HeaderProcessorSpec]
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  private[this] val ctCtxt = mandatoryService[ContainerContext](registry)(None)
-  private[this] val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
-  private[this] val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
   override def bundles: Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator()
@@ -44,15 +41,19 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
   private val src = Source.single(FlowEnvelope(msg))
   private val sink = Sink.seq[FlowEnvelope]
 
-  private val flow : (List[HeaderProcessorConfig], Option[ContainerContext]) => RunnableGraph[Future[Seq[FlowEnvelope]]] = (rules, ctCtxt) =>
-    src.via(HeaderTransformProcessor(name = "t", log = envLogger, rules = rules, ctCtxt = ctCtxt).flow(envLogger)).toMat(sink)(Keep.right)
+  private val flow : (List[HeaderProcessorConfig]) => RunnableGraph[Future[Seq[FlowEnvelope]]] = rules => {
+    src.via(
+      HeaderTransformProcessor(name = "t", log = envLogger(log), rules = rules, ctCtxt = Some(ctCtxt)).flow(envLogger(log))
+    )
+    .toMat(sink)(Keep.right)
+  }
 
-  private val result : (List[HeaderProcessorConfig], Option[ContainerContext]) => Seq[FlowEnvelope] = { (rules, ctCtxt) =>
+  private val result : List[HeaderProcessorConfig] => Seq[FlowEnvelope] = { rules =>
 
-    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
     implicit val materializer : Materializer = ActorMaterializer()
 
-    Await.result(flow(rules, ctCtxt).run(), 3.seconds)
+    Await.result(flow(rules).run(), 3.seconds)
   }
 
   "The HeaderProcessor should" - {
@@ -61,7 +62,7 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
 
       val r = result(List(
         HeaderProcessorConfig("foo", Some("bar"), overwrite = true)
-      ), None)
+      ))
 
       r should have size 1
       r.head.header[String]("foo") should be(Some("bar"))
@@ -69,13 +70,11 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
 
     "perform the normal resolution of container context properties" in {
 
-      ctCtxt.resolveString("$[[Country]]").get should be ("cc")
-
       val r = result(List(
         HeaderProcessorConfig("foo", Some("""$[[Country]]"""), overwrite = true),
         HeaderProcessorConfig("foo2", Some("""${{#foo}}"""), overwrite = true),
         HeaderProcessorConfig("test", Some("${{42}}"), overwrite = true)
-      ), Some(ctCtxt))
+      ))
 
       // scalastyle:off magic.number
       log.info(r.toString())
