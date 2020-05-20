@@ -11,9 +11,9 @@ class JMSRequestorSpec extends AbstractJmsRequestorSpec {
   private val log : Logger = Logger[JMSRequestorSpec]
   private implicit val backend = HttpURLConnectionBackend()
 
-  def performRequest(uri : String, cType : String, body : String) = {
+  private def performRequest(uri : String, cType : String, body : String) = {
     log.info(s"Performing post to [$uri] : [$body]")
-    basicRequest.post(uri"$svcUrlBase/$uri")
+    basicRequest.post(uri"${plainServerUrl(registry)}/restjms/$uri")
       .body(body)
       .header("Content-Type", cType, true)
   }

@@ -34,8 +34,6 @@ class LoginServiceSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper
   with AkkaHttpServerTestHelper {
 
-  private implicit val timeout : FiniteDuration = 3.seconds
-
   override def baseDir : String =
     new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
@@ -49,11 +47,10 @@ class LoginServiceSpec extends SimplePojoContainerSpec
   )
 
   private def withLoginService[T](request : Request[Either[String, String], Nothing])(f : Response[Either[String, String]] => T) : T = {
-    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-    implicit val materializer : Materializer = ActorMaterializer()
-    implicit val backend = AkkaHttpBackend()
+    implicit val to : FiniteDuration = timeout
 
-    mandatoryService[HttpContext](registry)(None)
+    implicit val backend = AkkaHttpBackend()
+    mandatoryService[HttpContext](registry, None)
 
     val response = request.send()
     f(Await.result(response, 3.seconds))
@@ -61,8 +58,6 @@ class LoginServiceSpec extends SimplePojoContainerSpec
 
   private def serverKey() : Try[PublicKey] = Try {
 
-    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-    implicit val materializer : Materializer = ActorMaterializer()
     implicit val backend = AkkaHttpBackend()
 
     val request = basicRequest.get(uri"${plainServerUrl(registry)}/login/key")

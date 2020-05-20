@@ -8,7 +8,6 @@ import scala.concurrent.duration._
 
 class ConfigPermissionManagerSpec extends AbstractLoginSpec {
 
-  private implicit val timeout = 3.seconds
   override val baseDir = new File(BlendedTestSupport.projectTestOutput, "permissions").getAbsolutePath()
 
   "The ConfigPermissionManager" - {
@@ -33,8 +32,8 @@ class ConfigPermissionManagerSpec extends AbstractLoginSpec {
     }
 
     "should map the JAAS groups to permissions" in {
-
-      val mgr = mandatoryService[BlendedPermissionManager](registry)(None)
+      implicit val to : FiniteDuration = timeout
+      val mgr = mandatoryService[BlendedPermissionManager](registry, None)
 
       assertPermissions(
         mgr.permissions(login("andreas", "mysecret").get),
@@ -50,8 +49,8 @@ class ConfigPermissionManagerSpec extends AbstractLoginSpec {
     }
 
     "should merge configured permissions correctly" in {
-
-      val mgr = mandatoryService[BlendedPermissionManager](registry)(None)
+      implicit val to : FiniteDuration = timeout
+      val mgr = mandatoryService[BlendedPermissionManager](registry, None)
 
       assertPermissions(
         mgr.permissions(login("john", "secret").get),

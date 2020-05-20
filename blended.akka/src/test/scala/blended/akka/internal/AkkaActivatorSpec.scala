@@ -26,8 +26,8 @@ class AkkaActivatorSpec extends SimplePojoContainerSpec
 
     "should register a container wide Actor system as a service" in {
 
-      implicit val timeout : FiniteDuration = 3.seconds
-      mandatoryService[ActorSystem](registry)(None)
+      implicit val to : FiniteDuration = timeout
+      mandatoryService[ActorSystem](registry, None)
 
     }
   }

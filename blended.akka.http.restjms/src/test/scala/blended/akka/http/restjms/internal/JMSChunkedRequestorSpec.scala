@@ -15,13 +15,13 @@ import scala.concurrent.duration._
 @RequiresForkedJVM
 class JMSChunkedRequestorSpec extends AbstractJmsRequestorSpec {
 
-  implicit val backend = AkkaHttpBackend.usingActorSystem(system)
-
   "The Jms Requestor should " - {
 
     "behave correctly with streamed or chunked bodies" in {
 
-      val uri = Uri(new URI(s"$svcUrlBase/leergut.redeem"))
+      implicit val backend = AkkaHttpBackend.usingActorSystem(actorSystem)
+
+      val uri = Uri(new URI(s"${plainServerUrl(registry)}/restjms/leergut.redeem"))
       val request = basicRequest
         .streamBody(Source.single(ByteString("test")))
         //.body("test")
@@ -35,7 +35,9 @@ class JMSChunkedRequestorSpec extends AbstractJmsRequestorSpec {
 
     "behave correctly with non-streamed bodies" in {
 
-      val uri = Uri(new URI(s"$svcUrlBase/leergut.redeem"))
+      implicit val backend = AkkaHttpBackend.usingActorSystem(actorSystem)
+
+      val uri = Uri(new URI(s"${plainServerUrl(registry)}/restjms/leergut.redeem"))
       val request = basicRequest
         .body("test")
         .contentType("application/json")

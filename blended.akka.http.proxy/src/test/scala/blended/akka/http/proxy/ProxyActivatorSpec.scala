@@ -25,9 +25,8 @@ class ProxyActivatorSpec extends SimplePojoContainerSpec
   "The HTTP proxy activator" - {
 
     "should register the proxy routes as Simple Http context services" in {
-
-      implicit val timeout : FiniteDuration = 3.seconds
-      mandatoryService[HttpContext](registry)(None)
+      implicit val to : FiniteDuration = timeout
+      mandatoryService[HttpContext](registry, None)
     }
   }
 }

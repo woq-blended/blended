@@ -37,8 +37,8 @@ abstract class LDAPLoginSpec extends SimplePojoContainerSpec
 
       val sub = lc.getSubject()
 
-      implicit val timeout = 3.seconds
-      val mgr = mandatoryService[BlendedPermissionManager](registry)(None)
+      implicit val to = timeout
+      val mgr = mandatoryService[BlendedPermissionManager](registry, None)
 
       val groups = mgr.permissions(sub)
 

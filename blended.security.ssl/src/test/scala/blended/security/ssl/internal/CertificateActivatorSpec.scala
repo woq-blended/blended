@@ -26,14 +26,13 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
 
   private val log = Logger[CertificateActivatorSpec]
 
-  private implicit val timeout : FiniteDuration = 3.seconds
-
   "The Certificate Activator should" - {
 
     "start up and provide a server and a client SSL Context" in {
+      implicit  val to : FiniteDuration = timeout
 
-      mandatoryService[SSLContext](registry)(Some("(type=server)"))
-      mandatoryService[SSLContext](registry)(Some("(type=client)"))
+      mandatoryService[SSLContext](registry, Some("(type=server)"))
+      mandatoryService[SSLContext](registry, Some("(type=client)"))
 
       val jks : JavaKeystore = new JavaKeystore(
         store = new File(baseDir, "etc/keystore"),
@@ -46,8 +45,9 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
     }
 
     "Only support selected CypherSuites and protocols" in {
+      implicit  val to : FiniteDuration = timeout
 
-      val sslInfo : blended.security.ssl.SslContextInfo = mandatoryService[blended.security.ssl.SslContextInfo](registry)(None)
+      val sslInfo : blended.security.ssl.SslContextInfo = mandatoryService[blended.security.ssl.SslContextInfo](registry)
 
       val invalid = sslInfo.getInvalidCypherSuites()
       log.info(s"Invalid CypherSuites [${invalid.length}] : [\n${invalid.mkString("\n")}\n]")

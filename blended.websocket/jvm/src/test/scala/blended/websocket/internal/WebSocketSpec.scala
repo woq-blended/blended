@@ -23,7 +23,7 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
    "reject clients without token" in {
      withWebSocketServer {
-       implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+       implicit val system: ActorSystem = actorSystem
        implicit val materializer: Materializer = ActorMaterializer()
 
        val flow = Http().webSocketClientFlow(WebSocketRequest(websocketUrl(registry)))
@@ -41,7 +41,7 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
    "reject clients with a fantasy token" in {
      withWebSocketServer {
-       implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+       implicit val system: ActorSystem = actorSystem
        implicit val materializer: Materializer = ActorMaterializer()
 
        val flow = Http().webSocketClientFlow(WebSocketRequest(s"${websocketUrl(registry)}/?token=foo"))
@@ -59,7 +59,7 @@ class WebSocketSpec extends AbstractWebSocketSpec {
    "accept clients with a real token" in {
 
      withWebSocketServer {
-       implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+       implicit val system: ActorSystem = actorSystem
        implicit val materializer: Materializer = ActorMaterializer()
 
        // login and retrieve the token
@@ -79,7 +79,7 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
    "respond to a malformed web socket request with BAD_REQUEST" in {
      withWebSocketServer {
-       implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+       implicit val system: ActorSystem = actorSystem
        implicit val materializer: Materializer = ActorMaterializer()
 
        val probe: TestProbe = TestProbe()
@@ -94,7 +94,7 @@ class WebSocketSpec extends AbstractWebSocketSpec {
    "respond to an unknown command with a NOT_FOUND" in {
 
      withWebSocketServer {
-       implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+       implicit val system: ActorSystem = actorSystem
        implicit val materializer: Materializer = ActorMaterializer()
 
        val probe: TestProbe = TestProbe()
@@ -110,7 +110,7 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
     "respond to a valid Web Socket request" in {
       withWebSocketServer {
-        implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+        implicit val system: ActorSystem = actorSystem
         implicit val materializer: Materializer = ActorMaterializer()
 
         val probe: TestProbe = TestProbe()

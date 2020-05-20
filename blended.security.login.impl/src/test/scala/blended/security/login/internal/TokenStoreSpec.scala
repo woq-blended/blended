@@ -34,7 +34,7 @@ class TokenStoreSpec extends SimplePojoContainerSpec
 
   private def withTokenStore[T](f : TokenStore => T) : T = {
     implicit val to = 3.seconds
-    val store = mandatoryService[TokenStore](registry)(None)
+    val store = mandatoryService[TokenStore](registry, None)
     val result = f(store)
 
     store.removeAllTokens()

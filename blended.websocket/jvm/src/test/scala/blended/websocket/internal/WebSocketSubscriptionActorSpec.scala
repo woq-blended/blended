@@ -28,7 +28,7 @@ class WebSocketSubscriptionActorSpec extends AbstractWebSocketSpec {
 
     def withJmxSubscription(sub : JmxSubscribe)(f : TestProbe => Unit) : Unit = {
       withWebSocketServer {
-        implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+        implicit val system: ActorSystem = actorSystem
         implicit val materializer: Materializer = ActorMaterializer()
 
         val wsProbe : TestProbe = TestProbe()

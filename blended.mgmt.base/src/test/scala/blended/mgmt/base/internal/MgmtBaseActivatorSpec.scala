@@ -23,10 +23,8 @@ class MgmtBaseActivatorSpec extends SimplePojoContainerSpec
   "The Mgmt base activator" - {
 
     "should register the framework as OSGi service" in {
-
-      implicit val timeout : FiniteDuration = 3.seconds
-      mandatoryService[blended.mgmt.base.FrameworkService](registry)(None)
-
+      implicit val to : FiniteDuration = timeout
+      mandatoryService[blended.mgmt.base.FrameworkService](registry, None)
     }
   }
 }

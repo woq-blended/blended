@@ -8,14 +8,13 @@ import scala.concurrent.duration._
 
 class ConfigLoginSpec extends AbstractLoginSpec {
 
-  private implicit val timeout : FiniteDuration = 3.seconds
   override val baseDir : String = new File(BlendedTestSupport.projectTestOutput, "simple").getAbsolutePath()
 
   "The Simple Login Module should" - {
 
     "allow a user to login and determine the group memberships" in {
-
-      val mgr = mandatoryService[BlendedPermissionManager](registry)(None)
+      implicit val to : FiniteDuration = timeout
+      val mgr = mandatoryService[BlendedPermissionManager](registry, None)
       val sub = login("andreas", "mysecret")
 
       val groups = mgr.permissions(sub.get)

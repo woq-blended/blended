@@ -2,7 +2,6 @@ package blended.akka.http.restjms.internal
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, PoisonPill}
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Flow, Source}
 import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
@@ -28,7 +27,7 @@ object MockResponses {
 
 class JMSResponder(
   cf : IdAwareConnectionFactory, ctCtxt : ContainerContext
-)(implicit system : ActorSystem, materializer : ActorMaterializer) extends JmsEnvelopeHeader {
+)(implicit system : ActorSystem) extends JmsEnvelopeHeader {
 
   private val log : Logger = Logger[JMSResponder]
   private var streamActor : Option[ActorRef] = None

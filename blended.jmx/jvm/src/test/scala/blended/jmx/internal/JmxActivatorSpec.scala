@@ -24,15 +24,15 @@ class JmxActivatorSpec extends SimplePojoContainerSpec
   "The JMX Activator" - {
 
     "should expose the platform MBean Server and a BlendedMBeanServerFacade as a service" in {
-      implicit val timeout : FiniteDuration = 3.seconds
-      mandatoryService[MBeanServer](registry)(None)
-      mandatoryService[BlendedMBeanServerFacade](registry)(None)
+      implicit val to : FiniteDuration = timeout
+      mandatoryService[MBeanServer](registry, None)
+      mandatoryService[BlendedMBeanServerFacade](registry, None)
     }
 
     "should expose a OpenMBeanMapper and a OpenMBeanExporter as a service" in {
-      implicit val timeout : FiniteDuration = 3.seconds
-      mandatoryService[OpenMBeanMapper](registry)(None)
-      mandatoryService[OpenMBeanExporter](registry)(None)
+      implicit val to : FiniteDuration = timeout
+      mandatoryService[OpenMBeanMapper](registry, None)
+      mandatoryService[OpenMBeanExporter](registry, None)
     }
 
 

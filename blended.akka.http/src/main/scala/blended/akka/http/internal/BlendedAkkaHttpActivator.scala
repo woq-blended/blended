@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
+import blended.akka.http.SimpleHttpContext
 import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName, OpenMBeanExporter}
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
@@ -92,6 +93,7 @@ class BlendedAkkaHttpActivator extends DominoActivator
           }
 
           // Consume routes from OSGi Service Registry (white-board pattern)
+          log.info(s"Listening for routes packaged in [${classOf[SimpleHttpContext].getSimpleName()}]")
           dynamicRoutes.dynamicAdapt(capsuleContext, bundleContext)
         }
       }

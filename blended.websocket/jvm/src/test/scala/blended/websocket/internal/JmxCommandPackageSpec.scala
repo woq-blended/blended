@@ -30,7 +30,7 @@ class JmxCommandPackageSpec extends AbstractWebSocketSpec {
     def withjmxSubscription(sub : BlendedJmxMessage)(f : TestProbe => Unit) : Unit = {
 
       withWebSocketServer {
-        implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+        implicit val system: ActorSystem = actorSystem
         implicit val materializer: Materializer = ActorMaterializer()
 
         val probe : TestProbe = TestProbe()

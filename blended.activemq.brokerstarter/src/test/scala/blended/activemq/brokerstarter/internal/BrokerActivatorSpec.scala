@@ -2,7 +2,6 @@ package blended.activemq.brokerstarter.internal
 
 import java.io.File
 
-import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{Connected, ConnectionStateChanged}
@@ -29,17 +28,17 @@ class BrokerActivatorSpec extends SimplePojoContainerSpec
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
-  private implicit val timeout : FiniteDuration = 5.seconds
-  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+  override def timeout: FiniteDuration = 5.seconds
 
   "The BrokerActivator should" - {
 
     "start the configured brokers correctly" in {
 
+      implicit val actorSys = actorSystem
       var connected : List[String] = List.empty
 
       val probe : TestProbe = TestProbe()
-      system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+      actorSys.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
 
       1.to(2).foreach{ _ =>
         probe.fishForMessage(timeout){

@@ -48,7 +48,6 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
   with AkkaHttpServerTestHelper {
 
   private val log : Logger = Logger(getClass().getName())
-  protected implicit val timeout : FiniteDuration = 3.seconds
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
@@ -83,7 +82,7 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
     probe: ActorRef
   )(f : ActorRef => Token => T) : T = {
 
-    implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+    implicit val system: ActorSystem = actorSystem
     implicit val materializer: Materializer = ActorMaterializer()
 
     val (switch, actor, token) = wsConnect(user, pwd, probe)
@@ -157,7 +156,7 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
     status : StatusCode = AkkaStatusCodes.OK
   )(f : T => Boolean)(implicit up : Unpickler[T]) : Any = {
 
-    implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+    implicit val system: ActorSystem = actorSystem
     implicit val materializer: Materializer = ActorMaterializer()
 
     val msg : TextMessage = probe.expectMsgType[TextMessage](t)

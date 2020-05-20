@@ -23,14 +23,12 @@ class DefaultClientActivatorSpec extends SimplePojoContainerSpec
     "blended.activemq.client" -> new AmqClientActivator()
   )
 
-  private implicit val timeout : FiniteDuration = 3.seconds
-  mandatoryService[ContainerContext](registry)(None)
-
   "The ActiveMQ Client Activator should" - {
 
     "create a Connection Factory for each configured client connection" in {
-      mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn1))"))
-      mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn2))"))
+      implicit val to : FiniteDuration = timeout
+      mandatoryService[IdAwareConnectionFactory](registry, Some("(&(vendor=activemq)(provider=conn1))"))
+      mandatoryService[IdAwareConnectionFactory](registry, Some("(&(vendor=activemq)(provider=conn2))"))
     }
   }
 }

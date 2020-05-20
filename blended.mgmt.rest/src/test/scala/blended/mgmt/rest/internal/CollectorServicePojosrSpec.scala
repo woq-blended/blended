@@ -13,7 +13,7 @@ import blended.mgmt.repo.WritableArtifactRepo
 import blended.mgmt.repo.internal.ArtifactRepoActivator
 import blended.persistence.h2.internal.H2Activator
 import blended.security.internal.SecurityActivator
-import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{AkkaHttpServerTestHelper, BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.retry.Retry
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM, TestFile}
@@ -38,7 +38,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
   with Matchers
   with PojoSrTestHelper
   with TestFile
-  with AkkaHttpServerJmxSupport {
+  with AkkaHttpServerTestHelper {
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
@@ -56,6 +56,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
   )
 
   private[this] val log = Logger[this.type]
+  implicit val sttpBackend = HttpURLConnectionBackend()
 
   case class Server(serviceRegistry : BlendedPojoRegistry, dir : File)
 
@@ -80,27 +81,11 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
     }.start(registry.getBundleContext())
   }
 
-  private implicit val timeout : FiniteDuration = 3.seconds
-  private val mbeanSvr : BlendedMBeanServerFacade = mandatoryService[BlendedMBeanServerFacade](registry)(None)
-  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-  private implicit val eCtxt : ExecutionContext = system.dispatcher
-  private implicit val scheduler : Scheduler = system.scheduler
+  "REST-API with a self-hosted HTTP server" - {
 
-  implicit val sttpBackend = HttpURLConnectionBackend()
-  val serverUrl : Uri = {
-    val f : Future[AkkaHttpServerInfo] = Retry.retry(delay = 1.second, retries = 3){
-      readFromJmx(mbeanSvr).get
-    }
-    val info = Await.result(f, timeout)
-    uri"http://localhost:${info.port.get}/mgmt"
-  }
-
-  val versionUrl = uri"${serverUrl}/version"
-
-  s"REST-API with a self-hosted HTTP server at ${serverUrl}" - {
-
-    s"GET ${versionUrl} should return the version" in {
+    "GET /version should return the version" in {
       withServer { sr =>
+        val versionUrl = uri"${plainServerUrl(registry)}/mgmt/version"
         val response = basicRequest.get(versionUrl).send()
         assert(response.body === Right("\"0.0.0\""))
       }
@@ -108,9 +93,8 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
     "OverlayConfig" - {
 
-      val url = uri"${serverUrl}/overlayConfig"
-
       "GET without credentials should fail with 401 - pending until feature is enabled" in logException {
+        val url = uri"${plainServerUrl(registry)}/mgmt/overlayConfig"
         // we currently do not require any permission for GET
         pending
         withServer { server =>
@@ -120,6 +104,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
       }
 
       "initial GET should return empty overlay list" in logException {
+        val url = uri"${plainServerUrl(registry)}/mgmt/overlayConfig"
         withServer { server =>
           val response = basicRequest.get(url)
             .auth.basic("tester", "mysecret")
@@ -136,6 +121,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
       }
 
       "POST allows upload of new OverlayConfig" in logException {
+        val url = uri"${plainServerUrl(registry)}/mgmt/overlayConfig"
         val o1 =
           """name = "jvm-medium"
             |version = "1"
@@ -171,13 +157,12 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
           assert(ocs.find(_.name == "jvm-medium").isDefined)
         }
       }
-
     }
 
     "ActivateProfile" - {
       val ci1 = "ci1_ActivateProfile"
       val ci2 = "ci2_ActivateProfile"
-      def url(containerId : String) = uri"${serverUrl}/container/${containerId}/update"
+      def url(containerId : String) = uri"${plainServerUrl(registry)}/mgmt/container/${containerId}/update"
 
       val ap = ActivateProfile(
         id = UUID.randomUUID().toString(),
@@ -216,11 +201,11 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
     "Upload deployment pack" - {
 
-      val uploadUrl = uri"${serverUrl}/profile/upload/deploymentpack/artifacts"
       val emptyPackFile = new File(BlendedTestSupport.projectTestOutput, "test.pack.empty-1.0.0.zip")
       val packFile = new File(BlendedTestSupport.projectTestOutput, "test.pack.minimal-1.0.0.zip")
 
       s"Uploading with missing credentials should fail with 401" in logException {
+        val uploadUrl = uri"${plainServerUrl(registry)}/mgmt/profile/upload/deploymentpack/artifacts"
         withServer { server =>
           assert(packFile.exists())
 
@@ -232,6 +217,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
       }
 
       s"Uploading with wrong credentials should fail with 401" in logException {
+        val uploadUrl = uri"${plainServerUrl(registry)}/mgmt/profile/upload/deploymentpack/artifacts"
         withServer { server =>
           assert(packFile.exists())
 
@@ -245,6 +231,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
       }
 
       s"Multipart POST with empty profile (no bundles) should fail with validation errors" in logException {
+        val uploadUrl = uri"${plainServerUrl(registry)}/mgmt/profile/upload/deploymentpack/artifacts"
         withServer { server =>
           assert(emptyPackFile.exists() === true)
 
@@ -267,6 +254,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
       }
 
       s"Multipart POST with minimal profile (one bundles) should succeed" in logException {
+        val uploadUrl = uri"${plainServerUrl(registry)}/mgmt/profile/upload/deploymentpack/artifacts"
         withServer { server =>
           assert(packFile.exists() === true)
 
