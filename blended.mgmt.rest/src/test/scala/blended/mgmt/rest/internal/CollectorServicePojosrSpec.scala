@@ -3,14 +3,18 @@ package blended.mgmt.rest.internal
 import java.io.File
 import java.util.UUID
 
+import akka.actor.{ActorSystem, Scheduler}
 import blended.akka.http.HttpContext
-import blended.akka.http.internal.BlendedAkkaHttpActivator
+import blended.akka.http.internal.{AkkaHttpServerInfo, AkkaHttpServerJmxSupport, BlendedAkkaHttpActivator}
 import blended.akka.internal.BlendedAkkaActivator
+import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName}
+import blended.jmx.internal.BlendedJmxActivator
 import blended.mgmt.repo.WritableArtifactRepo
 import blended.mgmt.repo.internal.ArtifactRepoActivator
 import blended.persistence.h2.internal.H2Activator
 import blended.security.internal.SecurityActivator
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.retry.Retry
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM, TestFile}
 import blended.updater.config.json.PrickleProtocol._
@@ -18,23 +22,30 @@ import blended.updater.config.{ActivateProfile, OverlayConfig, OverlayConfigComp
 import blended.updater.remote.internal.RemoteUpdaterActivator
 import blended.util.logging.Logger
 import sttp.client._
-import sttp.model.{HeaderNames, MediaType, StatusCode}
+import sttp.model.{HeaderNames, MediaType, StatusCode, Uri}
 import com.typesafe.config.ConfigFactory
 import domino.DominoActivator
 import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
 import prickle.{Pickle, Unpickle}
 
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
+
 @RequiresForkedJVM
 class CollectorServicePojosrSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
   with PojoSrTestHelper
-  with TestFile {
+  with TestFile
+  with AkkaHttpServerJmxSupport {
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
+  override def objName: JmxObjectName = JmxObjectName(properties = Map("type" -> "AkkaHttpServer"))
+
   override def bundles : Seq[(String, BundleActivator)] = Seq(
+    "blended.jmx" -> new BlendedJmxActivator(),
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.akka.http" -> new BlendedAkkaHttpActivator(),
     "blended.security" -> new SecurityActivator(),
@@ -69,8 +80,20 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
     }.start(registry.getBundleContext())
   }
 
+  private implicit val timeout : FiniteDuration = 3.seconds
+  private val mbeanSvr : BlendedMBeanServerFacade = mandatoryService[BlendedMBeanServerFacade](registry)(None)
+  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+  private implicit val eCtxt : ExecutionContext = system.dispatcher
+  private implicit val scheduler : Scheduler = system.scheduler
+
   implicit val sttpBackend = HttpURLConnectionBackend()
-  val serverUrl = uri"http://localhost:9995/mgmt"
+  val serverUrl : Uri = {
+    val f : Future[AkkaHttpServerInfo] = Retry.retry(delay = 1.second, retries = 3){
+      readFromJmx(mbeanSvr).get
+    }
+    val info = Await.result(f, timeout)
+    uri"http://localhost:${info.port.get}/mgmt"
+  }
 
   val versionUrl = uri"${serverUrl}/version"
 

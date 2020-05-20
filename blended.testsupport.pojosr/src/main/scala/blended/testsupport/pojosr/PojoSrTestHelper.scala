@@ -16,11 +16,18 @@ object PojoSrTestHelper {
   val OnlyOnePojoSrAtATime = new Object()
 }
 
-class MandatoryServiceUnavailable(clazz : Class[_], filter : Option[String]) extends Exception(s"Service of type [${clazz.getName()}] with filter [$filter] not available.")
+class MandatoryServiceUnavailable(clazz : Class[_], filter : Option[String])
+  extends Exception(s"Service of type [${clazz.getName()}] with filter [$filter] not available.")
 
 trait PojoSrTestHelper {
 
   private val log = Logger[PojoSrTestHelper]
+
+  /**
+   * Factory for bundles.
+   * A `Seq` of bundle name and activator class.
+   */
+  def bundles : Seq[(String, BundleActivator)] = Seq.empty
 
   import PojoSrTestHelper._
 
@@ -41,7 +48,9 @@ trait PojoSrTestHelper {
     }
   }
 
-  def contextActivator(
+  // An activator to instantiate a bundle with a special parametrized activator,
+  // so that the container context is initialized correctly
+  private def contextActivator(
     mandatoryProperties : Option[String] = None
   ) : BundleActivator = {
     new DominoActivator {
@@ -105,17 +114,6 @@ trait PojoSrTestHelper {
         case NonFatal(e) => log.error(e)(s"Could not properly stop bundle ID [${id}]")
       }
     }
-  }
-
-  def withSimpleBlendedContainer[T](
-    mandatoryProperties : List[String] = List.empty
-  )(f : BlendedPojoRegistry => T) : Try[T] = Try {
-
-    val registry = createRegistry().get
-    val result = f(registry)
-    stopRegistry(registry)
-
-    result
   }
 
   private[this] def deleteRecursive(files : File*) : Unit = files.map { file =>

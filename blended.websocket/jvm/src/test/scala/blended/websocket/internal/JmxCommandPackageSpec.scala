@@ -1,6 +1,8 @@
 package blended.websocket.internal
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.ws.TextMessage
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.util.logging.Logger
 import blended.websocket._
@@ -28,6 +30,8 @@ class JmxCommandPackageSpec extends AbstractWebSocketSpec {
     def withjmxSubscription(sub : BlendedJmxMessage)(f : TestProbe => Unit) : Unit = {
 
       withWebSocketServer {
+        implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+        implicit val materializer: Materializer = ActorMaterializer()
 
         val probe : TestProbe = TestProbe()
 

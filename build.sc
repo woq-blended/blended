@@ -1906,10 +1906,13 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.orgOsgi
       )
       override def moduleDeps = Seq(
+        blended.testsupport,
         blended.util.logging,
         blended.container.context.impl,
         blended.domino,
-        blended.jms.utils
+        blended.jms.utils,
+        blended.jmx,
+        blended.akka.http,
       )
       object test extends Tests
     }

@@ -7,11 +7,12 @@ abstract class SimplePojoContainerSpec
   extends TestSuite
   with BeforeAndAfterAll { this : PojoSrTestHelper =>
 
-  /**
-   * Factory for bundles.
-   * A `Seq` of bundle name and activator class.
-   */
-  def bundles : Seq[(String, BundleActivator)]
+  private var _registry : Option[BlendedPojoRegistry] = None
+
+  def registry : BlendedPojoRegistry = _registry match {
+    case Some(r) => r
+    case None => throw new Exception("Pojo Registry not yet defined")
+  }
 
   /**
    * Specify, which properties are mandatory for the simulated container.
@@ -23,30 +24,21 @@ abstract class SimplePojoContainerSpec
    */
   def systemProperties : Map[String, String] = Map.empty
 
-  def bundleByName(name : String) : Option[Bundle] = registry.getBundleContext().getBundles().find {
+  def bundleByName(r : BlendedPojoRegistry)(name : String) : Option[Bundle] = r.getBundleContext().getBundles().find {
     b => b.getSymbolicName() == name
   }
 
-  override protected def afterAll() : Unit = {
-    _registry.foreach { r =>
-      stopRegistry(r)
+  override protected def beforeAll(): Unit = {
+    super.beforeAll()
+    val reg = createSimpleBlendedContainer(mandatoryPropertyNames, systemProperties).get
+    bundles.foldLeft(reg) {
+      case (current, (name, activator)) => startBundle(current)(name, activator).get._2
     }
-    // drop registry after stop
-    _registry = None
-    super.afterAll()
+   _registry = Some(reg)
   }
 
-  private[this] var _registry : Option[BlendedPojoRegistry] = None
-
-  def registry : BlendedPojoRegistry = {
-    _registry.getOrElse {
-      _registry = Some(
-        bundles.foldLeft(createSimpleBlendedContainer(mandatoryPropertyNames, systemProperties).get) {
-          case (current, (name, activator)) =>
-            startBundle(current)(name, activator).get._2
-        }
-      )
-      _registry.get
-    }
+  override protected def afterAll() : Unit = {
+    _registry.foreach(stopRegistry)
+    super.afterAll()
   }
 }

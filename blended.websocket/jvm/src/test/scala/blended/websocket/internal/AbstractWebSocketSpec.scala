@@ -23,7 +23,7 @@ import blended.security.login.api.Token
 import blended.security.login.impl.LoginActivator
 import blended.security.login.rest.internal.RestLoginActivator
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{AkkaHttpServerTestHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.RichTry._
 import blended.util.logging.Logger
@@ -44,7 +44,8 @@ import scala.util.Try
 abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
-  with PojoSrTestHelper {
+  with PojoSrTestHelper
+  with AkkaHttpServerTestHelper {
 
   private val log : Logger = Logger(getClass().getName())
   protected implicit val timeout : FiniteDuration = 3.seconds
@@ -64,19 +65,16 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
 
   // A convenience method to initialize a web sockets client
   protected def wsFlow(token : String)(implicit system : ActorSystem) : Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
-   Http().webSocketClientFlow(WebSocketRequest(s"ws://localhost:9995/ws/?token=$token"))
+   Http().webSocketClientFlow(WebSocketRequest(s"ws://localhost:${akkaHttpInfo(registry).port.get}/ws/?token=$token"))
 
   // Just a source that stays open, so that actual traffic can happen
   protected val source : Source[TextMessage, ActorRef] = Source.actorRef[TextMessage](1, OverflowStrategy.fail)
   protected val incoming : ActorRef => Sink[Message, NotUsed] = a => Sink.actorRef(a, Done)
 
-  protected implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
-  protected implicit val materializer: Materializer = ActorMaterializer()
-
   protected def withWebSocketServer[T](
    f : => T
   )(implicit clazz : ClassTag[T]) : T = {
-   f
+    f
   }
 
   protected def withWebsocketConnection[T](
@@ -84,6 +82,9 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
     pwd: String,
     probe: ActorRef
   )(f : ActorRef => Token => T) : T = {
+
+    implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+    implicit val materializer: Materializer = ActorMaterializer()
 
     val (switch, actor, token) = wsConnect(user, pwd, probe)
     try {
@@ -97,7 +98,7 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
 
     implicit val backend = AkkaHttpBackend()
 
-    val request = basicRequest.get(uri"http://localhost:9995/login/key")
+    val request = basicRequest.get(uri"${plainServerUrl(registry)}/login/key")
     val response = request.send()
 
     val r = Await.result(response, 3.seconds)
@@ -124,7 +125,7 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
 
    val key : PublicKey = serverKey().unwrap
 
-   val request = basicRequest.post(uri"http://localhost:9995/login/").auth.basic(user, password)
+   val request = basicRequest.post(uri"${plainServerUrl(registry)}/login/").auth.basic(user, password)
    val response = request.send()
    val r = Await.result(response, 3.seconds)
 
@@ -155,6 +156,10 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
     probe : TestProbe,
     status : StatusCode = AkkaStatusCodes.OK
   )(f : T => Boolean)(implicit up : Unpickler[T]) : Any = {
+
+    implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+    implicit val materializer: Materializer = ActorMaterializer()
+
     val msg : TextMessage = probe.expectMsgType[TextMessage](t)
 
     val s : String = msg match {

@@ -10,10 +10,11 @@ import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
+import blended.jmx.internal.BlendedJmxActivator
 import blended.security.internal.SecurityActivator
 import blended.security.login.api.Token
 import blended.security.login.impl.LoginActivator
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{AkkaHttpServerTestHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import org.osgi.framework.BundleActivator
@@ -30,7 +31,8 @@ import scala.util.Try
 class LoginServiceSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
-  with PojoSrTestHelper {
+  with PojoSrTestHelper
+  with AkkaHttpServerTestHelper {
 
   private implicit val timeout : FiniteDuration = 3.seconds
 
@@ -38,6 +40,7 @@ class LoginServiceSpec extends SimplePojoContainerSpec
     new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
+    "blended.jmx" -> new BlendedJmxActivator(),
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.akka.http" -> new BlendedAkkaHttpActivator(),
     "blended.security" -> new SecurityActivator(),
@@ -62,7 +65,7 @@ class LoginServiceSpec extends SimplePojoContainerSpec
     implicit val materializer : Materializer = ActorMaterializer()
     implicit val backend = AkkaHttpBackend()
 
-    val request = basicRequest.get(uri"http://localhost:9995/login/key")
+    val request = basicRequest.get(uri"${plainServerUrl(registry)}/login/key")
     val response = request.send()
 
     val r = Await.result(response, 3.seconds)
@@ -82,14 +85,14 @@ class LoginServiceSpec extends SimplePojoContainerSpec
   "The login service should" - {
 
     "Respond with Unauthorized used without credentials" in {
-      withLoginService(basicRequest.post(uri"http://localhost:9995/login/")) { r =>
+      withLoginService(basicRequest.post(uri"${plainServerUrl(registry)}/login/")) { r =>
         r.code should be(StatusCode.Unauthorized)
       }
     }
 
     "Respond with Unauthorized used with wrong credentials" in {
       withLoginService(
-        basicRequest.post(uri"http://localhost:9995/login/").auth.basic("andreas", "foo")
+        basicRequest.post(uri"${plainServerUrl(registry)}/login/").auth.basic("andreas", "foo")
       ) { r =>
           r.code should be(StatusCode.Unauthorized)
         }
@@ -100,7 +103,7 @@ class LoginServiceSpec extends SimplePojoContainerSpec
       val key : PublicKey = serverKey().get
 
       withLoginService(
-        basicRequest.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
+        basicRequest.post(uri"${plainServerUrl(registry)}/login/").auth.basic("andreas", "mysecret")
       ) { r =>
           r.code should be(StatusCode.Ok)
 
@@ -115,7 +118,7 @@ class LoginServiceSpec extends SimplePojoContainerSpec
     "Allow a user to login twice" in {
 
       val key : PublicKey = serverKey().get
-      val request = basicRequest.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
+      val request = basicRequest.post(uri"${plainServerUrl(registry)}/login/").auth.basic("andreas", "mysecret")
 
       withLoginService(request) { r1 =>
         r1.code should be(StatusCode.Ok)

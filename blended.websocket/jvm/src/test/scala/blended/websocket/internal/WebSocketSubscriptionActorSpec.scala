@@ -2,7 +2,8 @@ package blended.websocket.internal
 
 import java.lang.management.ManagementFactory
 
-import akka.actor.PoisonPill
+import akka.actor.{ActorSystem, PoisonPill}
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.jmx.internal.BlendedMBeanServerFacadeImpl
 import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName}
@@ -27,6 +28,8 @@ class WebSocketSubscriptionActorSpec extends AbstractWebSocketSpec {
 
     def withJmxSubscription(sub : JmxSubscribe)(f : TestProbe => Unit) : Unit = {
       withWebSocketServer {
+        implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+        implicit val materializer: Materializer = ActorMaterializer()
 
         val wsProbe : TestProbe = TestProbe()
 

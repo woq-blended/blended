@@ -1,10 +1,13 @@
 package blended.websocket.internal
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{TextMessage, WebSocketRequest}
 import akka.http.scaladsl.model.{StatusCodes => AkkaStatusCodes}
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.Keep
 import akka.testkit.TestProbe
+import blended.testsupport.pojosr.BlendedPojoRegistry
 import blended.util.RichTry._
 import blended.websocket._
 import blended.websocket.json.PrickleProtocol._
@@ -16,9 +19,14 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
   "The Web socket server should" - {
 
+   val websocketUrl : BlendedPojoRegistry => String = r => s"ws://localhost:${akkaHttpInfo(r).port.get}/ws"
+
    "reject clients without token" in {
      withWebSocketServer {
-       val flow = Http().webSocketClientFlow(WebSocketRequest("ws://localhost:9995/ws/"))
+       implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+       implicit val materializer: Materializer = ActorMaterializer()
+
+       val flow = Http().webSocketClientFlow(WebSocketRequest(websocketUrl(registry)))
 
        val (resp, _) = source
          .viaMat(flow)(Keep.right)
@@ -33,7 +41,10 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
    "reject clients with a fantasy token" in {
      withWebSocketServer {
-       val flow = Http().webSocketClientFlow(WebSocketRequest("ws://localhost:9995/ws/?token=foo"))
+       implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+       implicit val materializer: Materializer = ActorMaterializer()
+
+       val flow = Http().webSocketClientFlow(WebSocketRequest(s"${websocketUrl(registry)}/?token=foo"))
 
        val (resp, _) = source
          .viaMat(flow)(Keep.right)
@@ -48,6 +59,9 @@ class WebSocketSpec extends AbstractWebSocketSpec {
    "accept clients with a real token" in {
 
      withWebSocketServer {
+       implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+       implicit val materializer: Materializer = ActorMaterializer()
+
        // login and retrieve the token
        val token = login("bg_test", "secret").unwrap
 
@@ -65,6 +79,8 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
    "respond to a malformed web socket request with BAD_REQUEST" in {
      withWebSocketServer {
+       implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+       implicit val materializer: Materializer = ActorMaterializer()
 
        val probe: TestProbe = TestProbe()
 
@@ -78,6 +94,8 @@ class WebSocketSpec extends AbstractWebSocketSpec {
    "respond to an unknown command with a NOT_FOUND" in {
 
      withWebSocketServer {
+       implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+       implicit val materializer: Materializer = ActorMaterializer()
 
        val probe: TestProbe = TestProbe()
        withWebsocketConnection("bg_test", "secret", probe.ref) { actor => _ =>
@@ -92,6 +110,8 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
     "respond to a valid Web Socket request" in {
       withWebSocketServer {
+        implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
+        implicit val materializer: Materializer = ActorMaterializer()
 
         val probe: TestProbe = TestProbe()
 
