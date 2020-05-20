@@ -1,33 +1,36 @@
-name: Scala 2.12
-
 on:
   push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
 jobs:
   build:
+    strategy:
+      matrix:
+        java-version: [1.8, 11]
+        scala-version: [2.12.11, 2.13.2]
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
       with:
-        java-version: 1.8
+        java-version: ${{ matrix.java-version }}
 
     - name: Run tests
-      run: ./millw -i -k blended[2.12.11].__.testCached
+      run: ./millw -i -k blended[${{ matrix.scala-version }}].__.testCached
 
     - name: Upload test logs
       uses: actions/upload-artifact@v2
       if: failure()
       with:
         name: test-logs
-        path: out/testlog-2.12/
+        path: out/testlog-*/
 
     - name: Generate coverage report
       run: ./millw -i scoverage.xmlReportAll
