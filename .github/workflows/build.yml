@@ -20,7 +20,7 @@ jobs:
     - name: Blended version
       run: ./millw -i show blendedVersion
 
-    - name: Set up JDK 1.8
+    - name: Set up JDK ${{ matrix.java-version }}
       uses: actions/setup-java@v1
       with:
         java-version: ${{ matrix.java-version }}
@@ -39,4 +39,4 @@ jobs:
       run: ./millw -i scoverage.xmlReportAll
 
     - name: Upload coverage
-      run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml
+      run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml -v
