@@ -126,6 +126,7 @@ case class FlowTransaction(
   id : String,
   created : Date,
   lastUpdate : Date,
+  first : Boolean = false,
   creationProps : Map[String, MsgProperty],
   worklist : Map[String, List[WorklistState]] = Map.empty,
   state : FlowTransactionState = FlowTransactionStateStarted
@@ -184,7 +185,7 @@ case class FlowTransaction(
 
   private val applyEvent : FlowTransactionEvent => FlowTransaction = { event =>
     if (event.transactionId == tid) {
-      if (state == FlowTransactionStateStarted || state == FlowTransactionStateUpdated) {
+      (if (state == FlowTransactionStateStarted || state == FlowTransactionStateUpdated) {
         log.trace(s"Updating transaction [$tid] with [$event]")
         event match {
           case started: FlowTransactionStarted => applyStarted(started)
@@ -195,7 +196,7 @@ case class FlowTransaction(
       } else {
         log.trace(s"Ignoring event for already terminated transaction [$tid]")
         this
-      }
+      })
     } else {
       this
     }

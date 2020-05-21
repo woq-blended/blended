@@ -109,6 +109,13 @@ class FlowTransactionStream(
 
       val f = b.add(Flow.fromFunction[Try[FlowTransaction], Try[FlowEnvelope]]{
         case Success(t) =>
+          // If this is the first transaction encountered for a given id, in any case log
+          // a FlowTransaction started
+          if (t.state != FlowTransactionStateStarted && t.first) {
+            val s : FlowTransaction = t.copy(worklist = Map.empty, state = FlowTransactionStateStarted)
+            streamLogger.underlying.infoMdc(mdc(s))(s.toString())
+          }
+
           t.state match {
             case FlowTransactionStateStarted | FlowTransactionStateCompleted =>
               streamLogger.underlying.infoMdc(mdc(t))(t.toString())

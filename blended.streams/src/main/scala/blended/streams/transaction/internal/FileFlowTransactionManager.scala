@@ -66,7 +66,8 @@ class FileFlowTransactionManager(
           id = e.transactionId,
           created = now,
           lastUpdate = now,
-          creationProps = e.properties
+          creationProps = e.properties,
+          first = true
         )
 
         if (e.state == FlowTransactionStateStarted) {
@@ -76,7 +77,7 @@ class FileFlowTransactionManager(
         }
       case Some(t) =>
         log.trace(s"Updating transaction [${e.transactionId}]")
-        (Some(t), t.updateTransaction(e))
+        (Some(t), t.updateTransaction(e).copy(first = false))
     }.map {
       case (old, updated) => store(old, updated)
     }

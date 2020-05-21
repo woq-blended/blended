@@ -66,7 +66,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
   "The activated dispatcher should" - {
 
-    "process inbound messages with a wrong ResourceType" in {
+    "process inbound messages with a wrong ResourceType" in logException {
 
       // make sure we can connect to all connection factories
       val amq = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
@@ -113,10 +113,11 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val cbes : List[FlowEnvelope] = results.last
 
       // TODO: Reconstruct FlowTransaction from String ??
+      dispCtxt.envLogger.underlying.info(s"Collected [${logEvents.size}] transaction log events")
       assert(logEvents.size >= 2)
       assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateStarted]")) == 1)
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateFailed]")) == 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateStarted]")) >= 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateFailed]")) >= 1)
 
       errors should have size 1
       cbes should have size 0
@@ -124,7 +125,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       switch.shutdown()
     }
 
-    "process inbound messages with a correct ResourceType" in {
+    "process inbound messages with a correct ResourceType" in logException {
 
       // make sure we can connect to all connection factories
       val amq = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
@@ -176,8 +177,8 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       dispCtxt.envLogger.underlying.info(s"Collected [${logEvents.size}] transaction log events")
       assert(logEvents.size >= 2)
       assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateStarted]")) == 1)
-      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateCompleted]")) == 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateStarted]")) >= 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateCompleted]")) >= 1)
 
       errors should have size 0
       cbes should have size 1
@@ -185,7 +186,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       switch.shutdown()
     }
 
-    "send configured startup messages" in {
+    "send configured startup messages" in logException {
 
       // make sure we can connect to all connection factories
       val amq = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap

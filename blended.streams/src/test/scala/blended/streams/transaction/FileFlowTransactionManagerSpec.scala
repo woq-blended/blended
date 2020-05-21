@@ -8,11 +8,13 @@ import akka.actor.{ActorSystem, Scheduler}
 import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.internal.FileFlowTransactionManager
+import blended.streams.worklist.WorklistStateStarted
 import blended.testsupport.retry.{ResultPoller, Retry}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import com.sun.management.UnixOperatingSystemMXBean
+import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
@@ -60,6 +62,38 @@ trait FlowTransactionManagerSpec
             case Some(v) => assert(t === v)
           }).isSuccess should be (true)
         }
+      }
+    }
+
+    // In rare occasion it is possible that an inbound component (i.e. an inbound JMS bridge) generates a transaction
+    // started event which is processed asynchronously by the transaction manager. If a subsequent component starts
+    // to further process and updates the transaction before (!!) the initial start event could be processed, the
+    // downstream never sees a FlowtransactionStarted event, but only events of the updated state (i.e Failed or
+    // completed.
+    // Therefore we will flag the first transaction we see for a given id, so that a downstream processor can
+    // take appropriate action.
+    "Mark the the first transaction event it sees for a given id regardless the transaction state" in logException {
+      val tMgr : FlowTransactionManager = createTransactionManager("first")
+
+      // Generate a bunch of transactions and change the state to any state but Started
+      val tGen = for {
+        t <- FlowTransactionGen.genTrans
+        s <- FlowTransactionGen.genState.suchThat(_ != FlowTransactionStateStarted)
+      } yield (t,s)
+
+      forAll (tGen) { case (t,s) =>
+        val event : FlowTransactionEvent = s match {
+          case FlowTransactionStateStarted => fail() // Should not happen with the given generator
+          case FlowTransactionStateFailed => FlowTransactionFailed(t.id, t.creationProps, Some("Generated"))
+          case FlowTransactionStateCompleted => FlowTransactionCompleted(t.id, t.creationProps)
+          case FlowTransactionStateUpdated => FlowTransactionUpdate(t.tid, t.creationProps, WorklistStateStarted, "default")
+        }
+        val updatedTrans : FlowTransaction = tMgr.updateTransaction(event).get
+        assert(updatedTrans.first)
+
+        // Make sure a subsequent update is not marked as first
+        val completed : FlowTransaction = tMgr.updateTransaction(FlowTransactionCompleted(t.tid, t.creationProps)).get
+        assert(!completed.first)
       }
     }
 

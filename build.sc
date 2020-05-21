@@ -154,7 +154,7 @@ trait BlendedBaseModule extends SbtModule with BlendedCoursierModule with Blende
         s"""<configuration>
            |
            |  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-           |    <file>${baseDir.toString()}/out/testlog-${scalaBinVersion()}/test-${moduleSpec}.log</file>
+           |    <file>${baseDir.toString()}/out/testlog-${System.getProperty("java.version")}-${scalaBinVersion()}/test-${moduleSpec}.log</file>
            |
            |    <encoder>
            |      <pattern>%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%t] %logger : %msg%n</pattern>

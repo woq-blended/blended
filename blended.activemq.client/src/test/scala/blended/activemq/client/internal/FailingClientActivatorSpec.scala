@@ -55,7 +55,7 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
 
   "The ActiveMQ Client Activator should" - {
 
-    "reject to create a Connection Factory if the connection verification failed" in {
+    "reject to create a Connection Factory if the connection verification failed" in logException {
       implicit val to : FiniteDuration = timeout
 
       intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry, Some("(&(vendor=activemq)(provider=conn1))")))

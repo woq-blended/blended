@@ -1,5 +1,6 @@
 package blended.streams.transaction
 
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.{Date, UUID}
 
 import blended.streams.message._
@@ -11,6 +12,7 @@ import scala.util.Random
 object FlowTransactionGen {
 
   private val maxKey : Int = 1000
+  private val id : AtomicInteger = new AtomicInteger(0)
 
   private val wlStateGen : Gen[WorklistState] = Gen.oneOf(Seq(
     WorklistStateCompleted,
@@ -67,11 +69,19 @@ object FlowTransactionGen {
     } yield (s"prop-$key", prop)
   )
 
+  def genState : Gen[FlowTransactionState] =
+    Gen.oneOf(
+      FlowTransactionStateStarted,
+      FlowTransactionStateUpdated,
+      FlowTransactionStateCompleted,
+      FlowTransactionStateFailed
+    )
+
   def genTrans : Gen[FlowTransaction] = for {
     wl <- wlGen
     cp <- creationProps
   } yield FlowTransaction(
-      id = UUID.randomUUID().toString(),
+      id = s"${id.incrementAndGet()}",
       created = new Date(),
       lastUpdate = new Date(),
       creationProps = cp,
