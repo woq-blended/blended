@@ -3,34 +3,34 @@ package blended.mgmt.rest.internal
 import java.io.File
 import java.util.UUID
 
-import akka.actor.{ActorSystem, Scheduler}
+import akka.actor.ActorSystem
 import blended.akka.http.HttpContext
-import blended.akka.http.internal.{AkkaHttpServerInfo, AkkaHttpServerJmxSupport, BlendedAkkaHttpActivator}
+import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName}
+import blended.jmx.JmxObjectName
 import blended.jmx.internal.BlendedJmxActivator
 import blended.mgmt.repo.WritableArtifactRepo
 import blended.mgmt.repo.internal.ArtifactRepoActivator
 import blended.persistence.h2.internal.H2Activator
 import blended.security.internal.SecurityActivator
 import blended.testsupport.pojosr.{AkkaHttpServerTestHelper, BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
-import blended.testsupport.retry.Retry
+import blended.testsupport.retry.{ResultPoller, Retry}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM, TestFile}
 import blended.updater.config.json.PrickleProtocol._
 import blended.updater.config.{ActivateProfile, OverlayConfig, OverlayConfigCompanion, UpdateAction}
 import blended.updater.remote.internal.RemoteUpdaterActivator
 import blended.util.logging.Logger
-import sttp.client._
-import sttp.model.{HeaderNames, MediaType, StatusCode, Uri}
 import com.typesafe.config.ConfigFactory
 import domino.DominoActivator
 import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
 import prickle.{Pickle, Unpickle}
+import sttp.client._
+import sttp.model.{HeaderNames, MediaType, StatusCode}
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @RequiresForkedJVM
 class CollectorServicePojosrSpec extends SimplePojoContainerSpec
@@ -60,7 +60,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
   case class Server(serviceRegistry : BlendedPojoRegistry, dir : File)
 
-  def withServer(f : Server => Unit) : Unit = {
+  def withServer(hint : String)(f : Server => Unit) : Unit = {
     log.info(s"Server path: ${baseDir}")
 
     // cleanup potential left over data from previous runs
@@ -71,10 +71,15 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
     // We consume services with a nice domino API
     new DominoActivator() {
       whenBundleActive {
-        whenServicePresent[WritableArtifactRepo] { repo =>
-          whenAdvancedServicePresent[HttpContext]("(prefix=mgmt)") { httpCtxt =>
-            log.info("Test-Server up and running. Starting test case...")
-            f(Server(serviceRegistry = registry, dir = new File(baseDir)))
+        whenServicePresent[ActorSystem] { system =>
+          whenServicePresent[WritableArtifactRepo] { _ =>
+            whenAdvancedServicePresent[HttpContext]("(prefix=mgmt)") { _ =>
+              implicit val eCtxt : ExecutionContext = system.dispatcher
+              log.info("Test-Server up and running. Starting test case...")
+              val success : Try[Unit] =
+                new ResultPoller[Unit](system, timeout, hint)(() => Future(f(Server(serviceRegistry = registry, dir = new File(baseDir))))).execute( _ => true )
+              assert(success.isSuccess)
+            }
           }
         }
       }
@@ -84,7 +89,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
   "REST-API with a self-hosted HTTP server" - {
 
     "GET /version should return the version" in {
-      withServer { sr =>
+      withServer("Get Version") { sr =>
         val versionUrl = uri"${plainServerUrl(registry)}/mgmt/version"
         val response = basicRequest.get(versionUrl).send()
         assert(response.body === Right("\"0.0.0\""))
@@ -97,15 +102,15 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
         val url = uri"${plainServerUrl(registry)}/mgmt/overlayConfig"
         // we currently do not require any permission for GET
         pending
-        withServer { server =>
-          val response = basicRequest.get(url).send()
-          assert(response.code === 401)
-        }
+//        withServer { _ =>
+//          val response = basicRequest.get(url).send()
+//          assert(response.code === 401)
+//        }
       }
 
       "initial GET should return empty overlay list" in logException {
         val url = uri"${plainServerUrl(registry)}/mgmt/overlayConfig"
-        withServer { server =>
+        withServer("Get empty overlays") { _ =>
           val response = basicRequest.get(url)
             .auth.basic("tester", "mysecret")
             .send()
@@ -134,7 +139,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
         val oc = OverlayConfigCompanion.read(ConfigFactory.parseString(o1)).get
 
-        withServer { server =>
+        withServer("Post overlays") { _ =>
           val responsePost = basicRequest
             .post(url)
             .body(Pickle.intoString(oc))
@@ -162,6 +167,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
     "ActivateProfile" - {
       val ci1 = "ci1_ActivateProfile"
       val ci2 = "ci2_ActivateProfile"
+
       def url(containerId : String) = uri"${plainServerUrl(registry)}/mgmt/container/${containerId}/update"
 
       val ap = ActivateProfile(
@@ -172,7 +178,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
       )
 
       "POST with missing credentials fails with 401 Unauthorized" in logException {
-        withServer { server =>
+        withServer("Activate Profile unauthorized") { _ =>
           val responsePost = basicRequest
             .post(url(ci1))
             .body(Pickle.intoString(ap))
@@ -185,7 +191,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
       "POST an valid ActivateProfile action succeeds" in logException {
 
-        withServer { server =>
+        withServer("Activate Profile") { _ =>
           val responsePost = basicRequest
             .post(url(ci1))
             .body(Pickle.intoString[UpdateAction](ap))
@@ -206,7 +212,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
       s"Uploading with missing credentials should fail with 401" in logException {
         val uploadUrl = uri"${plainServerUrl(registry)}/mgmt/profile/upload/deploymentpack/artifacts"
-        withServer { server =>
+        withServer("Upload deployment pack") { _ =>
           assert(packFile.exists())
 
           val response = basicRequest.multipartBody(multipartFile("file", emptyPackFile)).
@@ -218,7 +224,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
       s"Uploading with wrong credentials should fail with 401" in logException {
         val uploadUrl = uri"${plainServerUrl(registry)}/mgmt/profile/upload/deploymentpack/artifacts"
-        withServer { server =>
+        withServer("Upload unauthorized") { _ =>
           assert(packFile.exists())
 
           val response = basicRequest.
@@ -232,7 +238,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
       s"Multipart POST with empty profile (no bundles) should fail with validation errors" in logException {
         val uploadUrl = uri"${plainServerUrl(registry)}/mgmt/profile/upload/deploymentpack/artifacts"
-        withServer { server =>
+        withServer("Fail with empty profile") { _ =>
           assert(emptyPackFile.exists() === true)
 
           val response = basicRequest.multipartBody(multipartFile("file", emptyPackFile)).
@@ -255,7 +261,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
       s"Multipart POST with minimal profile (one bundles) should succeed" in logException {
         val uploadUrl = uri"${plainServerUrl(registry)}/mgmt/profile/upload/deploymentpack/artifacts"
-        withServer { server =>
+        withServer("Succeed with minimal profile") { server =>
           assert(packFile.exists() === true)
 
           val response = basicRequest.multipartBody(multipartFile("file", packFile)).

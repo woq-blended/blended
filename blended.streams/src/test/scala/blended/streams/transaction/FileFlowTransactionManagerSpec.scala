@@ -55,7 +55,7 @@ trait FlowTransactionManagerSpec
         val env : FlowEnvelope = FlowEnvelope(t.creationProps)
 
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))) { t =>
-          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout, s"${getClass().getSimpleName()} - createTransaction")(() => tMgr.findTransaction(t.tid)).execute {
             case None =>
             case Some(v) => assert(t === v)
           }).isSuccess should be (true)
@@ -78,7 +78,7 @@ trait FlowTransactionManagerSpec
 
       val tMgr2 : FlowTransactionManager = createTransactionManager("restart")
       assert(ids.distinct.toList.forall{ id =>
-        (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr2.findTransaction(id)).execute {
+        (new ResultPoller[Option[FlowTransaction]](actorSys, timeout, s"${getClass().getSimpleName()} - maintain state")(() => tMgr2.findTransaction(id)).execute {
           case Some(_) =>
           case _ => fail()
         }).isSuccess
@@ -95,7 +95,7 @@ trait FlowTransactionManagerSpec
 
           tMgr.removeTransaction(t.tid)
 
-          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout, s"${getClass().getSimpleName()} - removeTransaction")(() => tMgr.findTransaction(t.tid)).execute {
             case None =>
             case Some(_) => fail()
           }).isSuccess should be (true)
@@ -112,7 +112,7 @@ trait FlowTransactionManagerSpec
         val env : FlowEnvelope = FlowEnvelope(t.creationProps)
 
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))) { t =>
-          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout, s"${getClass().getSimpleName()} - retrieveAll")(() => tMgr.findTransaction(t.tid)).execute {
             case None => fail()
             case Some(trans) => transactions.append(trans.tid)
           }).isSuccess should be (true)
@@ -131,7 +131,7 @@ trait FlowTransactionManagerSpec
         val env : FlowEnvelope = FlowEnvelope(t.creationProps)
 
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))) { t =>
-          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout, s"${getClass().getSimpleName()} - retrieveCompleted")(() => tMgr.findTransaction(t.tid)).execute {
             case None => fail()
             case Some(trans) => transactions.append(trans)
           }).isSuccess should be (true)
@@ -156,7 +156,7 @@ trait FlowTransactionManagerSpec
         val env : FlowEnvelope = FlowEnvelope(t.creationProps)
 
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))) { t =>
-          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout, s"${getClass().getSimpleName()} - clearAll}")(() => tMgr.findTransaction(t.tid)).execute {
             case None => fail()
             case Some(trans) =>
           }).isSuccess should be (true)
@@ -184,7 +184,7 @@ trait FlowTransactionManagerSpec
         val env : FlowEnvelope = FlowEnvelope(t.creationProps)
 
         updateTest(tMgr, FlowTransaction.startEvent(Some(env))) { t =>
-          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout)(() => tMgr.findTransaction(t.tid)).execute {
+          (new ResultPoller[Option[FlowTransaction]](actorSys, timeout, s"${getClass().getSimpleName()} - cleanup}")(() => tMgr.findTransaction(t.tid)).execute {
             case None => fail()
             case Some(trans) => transactions.append(trans)
           }).isSuccess should be (true)

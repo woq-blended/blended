@@ -9,9 +9,11 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-class ResultPoller[T](system : ActorSystem, timeout : FiniteDuration)(op : () => Future[T]) {
-
-  private val log : Logger = Logger(getClass().getName())
+class ResultPoller[T](
+  system : ActorSystem,
+  timeout : FiniteDuration,
+  hint : String
+)(op : () => Future[T]) {
 
   private val pollInterval : FiniteDuration = 100.millis
   private val retries : Int = Math.max(timeout / pollInterval, 1).floor.toInt
@@ -30,7 +32,7 @@ class ResultPoller[T](system : ActorSystem, timeout : FiniteDuration)(op : () =>
           case Success(v) =>
             running.set(false)
             result = Some(v)
-          case Failure(t) =>
+          case Failure(_) =>
             running.set(false)
         }
       }
@@ -43,13 +45,17 @@ class ResultPoller[T](system : ActorSystem, timeout : FiniteDuration)(op : () =>
           case Some(v) =>
             Try { verify(v) } match {
               case Failure(e) => throw e
-              case s @ Success(_) => Success(v)
+              case Success(_) => Success(v)
             }
         }
       }
     }
 
-    Retry.retry(pollInterval, retries)(singlePoll)
+    Retry.retry(
+      delay = pollInterval,
+      retries = retries,
+      onRetry = (n, e) => Logger(classOf[ResultPoller[_]].getClass().getName()).info(s"ResultPoller [$hint] : ${e.getMessage()}, [$n] retries left")
+    )(singlePoll)
   }
 
   def execute(f : T => Unit) : Try[T] = { Await.result(run(f), timeout + 1.second) }

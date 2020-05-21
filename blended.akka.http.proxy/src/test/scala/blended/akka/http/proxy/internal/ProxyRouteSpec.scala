@@ -4,8 +4,7 @@ import java.io.IOException
 import java.net.{InetSocketAddress, Socket}
 
 import scala.concurrent.duration._
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials, Location}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -21,8 +20,6 @@ class ProxyRouteSpec extends AnyFreeSpec with ScalatestRouteTest {
 
   private[this] val log = Logger[ProxyRouteSpec]
 
-  val localPort = 9999
-
   implicit val routeTestTimeout : RouteTestTimeout = RouteTestTimeout(30.seconds)
 
   def authenticator(cred : Credentials) : Option[String] = {
@@ -32,7 +29,7 @@ class ProxyRouteSpec extends AnyFreeSpec with ScalatestRouteTest {
     }
   }
 
-  s"Test against embedded temporary localhost server on port $localPort" - {
+  s"Test against embedded temporary localhost server" - {
     val testRoute = get {
       path("secure") {
         authenticateBasic(realm = "blended", authenticator) { userName =>
@@ -66,7 +63,7 @@ class ProxyRouteSpec extends AnyFreeSpec with ScalatestRouteTest {
       }
 
     def localtest(redirectCount: Int = 0, user : Option[String] = None, pwd: Option[String] = None)(f: Route => Unit): Unit = {
-      TestServer.withServer(localPort, testRoute) {
+      TestServer.withServer(testRoute) { localPort =>
         val proxyRoute = new ProxyRoute {
           override val actorSystem = system
           override val proxyConfig = ProxyTarget(path = "path", uri = s"http://localhost:$localPort", timeout = 2, redirectCount = redirectCount, user = user, password = pwd)
@@ -131,7 +128,10 @@ class ProxyRouteSpec extends AnyFreeSpec with ScalatestRouteTest {
       localtest() { prefixRoute =>
         Get("/test/redirect_to_hello") ~> Route.seal(prefixRoute) ~> check {
           assert(status === StatusCodes.MovedPermanently)
-          assert(header[Location].get.uri.toString() === "http://localhost:" + localPort + "/hello")
+          val uri : Uri = header[Location].get.uri
+          assert(uri.scheme == "http")
+          assert(uri.path.toString() == "/hello")
+          assert(uri.authority.host.toString() == "localhost")
         }
       }
     }

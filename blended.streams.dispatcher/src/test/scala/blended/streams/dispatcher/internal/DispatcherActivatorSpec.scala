@@ -202,7 +202,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val out : List[FlowEnvelope] = results.last
 
       errors should be (empty)
-      out should have size(1)
+      out should not be (empty)
 
       out.head.header[String](dispCtxt.bs.headerConfig.headerResourceType) should be (Some("DispatcherStarted"))
       out.head.flowMessage.body() should be (s"$country;${location.substring(1)}")
