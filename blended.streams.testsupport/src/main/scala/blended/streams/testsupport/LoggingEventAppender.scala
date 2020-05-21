@@ -1,5 +1,7 @@
 package blended.streams.testsupport
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, KillSwitch, KillSwitches, Materializer, OverflowStrategy}
@@ -17,6 +19,8 @@ class LoggingEventAppender[T](system : ActorSystem)(loggerName : String) {
   private var appender : Option[Appender[ILoggingEvent]] = None
   private var killSwitch : Option[KillSwitch] = None
 
+  val started : AtomicBoolean = new AtomicBoolean(false)
+
   private class ActorLoggingAppender(actor : ActorRef) extends AppenderBase[ILoggingEvent] {
     override def append(eventObject : ILoggingEvent) : Unit = actor ! eventObject
   }
@@ -32,6 +36,7 @@ class LoggingEventAppender[T](system : ActorSystem)(loggerName : String) {
     appender.foreach { a =>
       a.start()
       root.addAppender(a)
+      started.set(true)
     }
 
     killSwitch = Some(ks)
