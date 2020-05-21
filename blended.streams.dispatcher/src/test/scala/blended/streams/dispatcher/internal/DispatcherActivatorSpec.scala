@@ -2,7 +2,7 @@ package blended.streams.dispatcher.internal
 
 import java.io.File
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Scheduler}
 import akka.stream.scaladsl.{Flow, Keep, Sink}
 import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
 import blended.activemq.brokerstarter.internal.BrokerActivator
@@ -25,6 +25,7 @@ import blended.util.RichTry._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import blended.streams.internal.BlendedStreamsActivator
+import blended.testsupport.retry.Retry
 
 @RequiresForkedJVM
 class DispatcherActivatorSpec extends DispatcherSpecSupport
@@ -72,6 +73,9 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val sonic = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sonic75", "central").unwrap
       val ccQueue = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
 
+      implicit val eCtxt : ExecutionContext = dispCtxt.system.dispatcher
+      implicit val sched : Scheduler = dispCtxt.system.scheduler
+
       val logSink = Flow[ILoggingEvent]
         .filter{ event =>
           event.getLevel() == Level.INFO || event.getLevel() == Level.WARN
@@ -101,12 +105,15 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
       appender.stop()
       val logEvents = Await.result(logEventsFut, timeout + 1.second).filter(_.getMessage.contains(env.id))
+      Retry.retry(100.millis, 10){
+        assert(appender.started.get)
+      }
 
       val errors : List[FlowEnvelope] = results.head
       val cbes : List[FlowEnvelope] = results.last
 
       // TODO: Reconstruct FlowTransaction from String ??
-      assert(logEvents.size == 2)
+      assert(logEvents.size >= 2)
       assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
       assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateStarted]")) == 1)
       assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateFailed]")) == 1)
@@ -124,6 +131,9 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val sonic = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sonic75", "central").unwrap
       val ccQueue = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
 
+      implicit val eCtxt : ExecutionContext = dispCtxt.system.dispatcher
+      implicit val sched : Scheduler = dispCtxt.system.scheduler
+
       val logSink = Flow[ILoggingEvent]
         .filter { event =>
           event.getLevel() == Level.INFO
@@ -134,6 +144,10 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
         new LoggingEventAppender[Future[Seq[ILoggingEvent]]](dispCtxt.system)("App.transactions")
 
       val logEventsFut = appender.attachAndStart(logSink)
+      // We need to wait until the appender has properly attached
+      Retry.retry(100.millis, 10){
+        assert(appender.started.get)
+      }
 
       val env : FlowEnvelope = FlowEnvelope().withHeader(dispCtxt.bs.headerResourceType, "NoCbe").unwrap
 
@@ -159,7 +173,8 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val cbes : List[FlowEnvelope] = results.last
 
       // TODO: Reconstruct FlowTransaction from String ??
-      assert(logEvents.size == 2)
+      dispCtxt.envLogger.underlying.info(s"Collected [${logEvents.size}] transaction log events")
+      assert(logEvents.size >= 2)
       assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
       assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateStarted]")) == 1)
       assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[$FlowTransactionStateCompleted]")) == 1)
