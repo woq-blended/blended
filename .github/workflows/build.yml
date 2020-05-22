@@ -3,11 +3,16 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  # This is the java version that will trigger an upload to the SNAPSHOT maven store
+  # Other Java versions within the matrix are just unit tested
+  MAIN_JAVA_VERSION: 1.8
+
 jobs:
   build:
     strategy:
       matrix:
-        java-version: [1.8, 11]
+        java-version: [${{ MAIN_JAVA_VERSION }}, 11]
         scala-version: [2.12.11, 2.13.2]
 
     runs-on: ubuntu-latest
@@ -17,26 +22,27 @@ jobs:
     - uses: actions/checkout@v2
     - run: git fetch --prune --unshallow
 
-    - name: Blended version
-      run: ./millw -i show blendedVersion
+    - run: ./millw -i show blendedVersion
 
     - name: Set up JDK ${{ matrix.java-version }}
       uses: actions/setup-java@v1
       with:
         java-version: ${{ matrix.java-version }}
 
-    - name: Run tests
-      run: ./millw -i -j 0 -k blended[${{ matrix.scala-version }}].__.testCached
+    - run: ./millw -i -j 0 -k blended[${{ matrix.scala-version }}].__.testCached
 
-    - name: Upload test logs
-      uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v2
       if: failure()
       with:
         name: test-logs
         path: out/testlog-*/
 
-    - name: Generate coverage report
-      run: ./millw -i scoverage.xmlReportAll
+    - run: ./millw -i scoverage.xmlReportAll
 
-    - name: Upload coverage
-      run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml -v
+    - run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml -v
+
+    - name: Upload to simple maven store
+      if: matrix.java-version == MAIN_JAVA_VERSION
+      env:
+        OAUTH_ACCESS_TOKEN: ${{ secrets.DROPBOX_UPLOAD }}
+      run: ./millw -i -j 0 __.publishM2Local out/maven ; ./scripts/dropbox_uploader.sh upload out/maven repo

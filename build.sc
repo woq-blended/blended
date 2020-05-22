@@ -58,6 +58,10 @@ trait BlendedCoursierModule extends CoursierModule {
 trait BlendedPublishModule extends PublishModule {
   def description: String = "Blended module ${blendedModule}"
   override def publishVersion = T { blendedVersion() }
+
+  override def sonatypeUri: String = "https://maven.pkg.github.com/woq-blended/blended"
+  override def sonatypeSnapshotUri: String = sonatypeUri
+
   override def pomSettings: T[PomSettings] = T {
     PomSettings(
       description = description,
