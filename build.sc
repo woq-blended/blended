@@ -31,15 +31,19 @@ import build_deps.Deps
 
 /** Project directory. */
 val baseDir: os.Path = build.millSourcePath
+val dropboxRepo = "https://www.dropbox.com/sh/s9bmcyz8ipndc2p/AAAAKrNxS-1t7L12roUFbUuYa"
 
 def blendedVersion = T.input {
-  T.env.get("CI") match {
+  val v = T.env.get("CI") match {
     case Some(ci @ ("1" | "true")) =>
       val version = GitSupport.publishVersion()._2
       T.log.info(s"Using git-based version: ${version} (CI=${ci})")
       version
     case _ => os.read(baseDir / "version.txt").trim()
   }
+  val path = T.dest / "version.txt"
+  os.write(path, v)
+  v
 }
 
 object GitSupport extends GitModule {
@@ -49,18 +53,19 @@ object GitSupport extends GitModule {
 /** Configure additional repositories. */
 trait BlendedCoursierModule extends CoursierModule {
   private def zincWorker: ZincWorkerModule = mill.scalalib.ZincWorkerModule
-  override def repositories: Seq[Repository] = zincWorker.repositories ++ Seq(
-    MavenRepository("https://repo.spring.io/libs-release")
-  )
+  override def repositories: Seq[Repository] = {
+    val blendedSnapshots : String = s"$dropboxRepo/3.2-SNAPSHOT"
+    zincWorker.repositories ++ Seq(
+      MavenRepository("https://repo.spring.io/libs-release"),
+      MavenRepository(blendedSnapshots)
+    )
+  }
 }
 
 /** Configure plublish settings. */
 trait BlendedPublishModule extends PublishModule {
   def description: String = "Blended module ${blendedModule}"
   override def publishVersion = T { blendedVersion() }
-
-  override def sonatypeUri: String = "https://maven.pkg.github.com/woq-blended/blended"
-  override def sonatypeSnapshotUri: String = sonatypeUri
 
   override def pomSettings: T[PomSettings] = T {
     PomSettings(
@@ -74,6 +79,28 @@ trait BlendedPublishModule extends PublishModule {
         Developer("lefou", "Tobias Roeser", "https://github.com/lefou")
       )
     )
+  }
+
+  def dropboxPublish() : define.Command[Path] = T.command {
+    val path = T.dest / blendedVersion()
+
+    new LocalM2Publisher(path)
+      .publish(
+        jar = jar().path,
+        sourcesJar = sourceJar().path,
+        docJar = docJar().path,
+        pom = pom().path,
+        artifact = artifactMetadata(),
+        extras = extraPublish()
+      )
+
+    val process = Jvm.spawnSubprocess(
+      commandArgs = Seq("./scripts/dropbox_uploader.sh", "upload", path.toIO.getAbsolutePath(), "repo"),
+      envArgs = Map.empty,
+      workingDir = baseDir
+    )
+    process.join()
+    path
   }
 }
 

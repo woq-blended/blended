@@ -54,45 +54,39 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
     "blended.akka.http.jmsqueue" -> new BlendedAkkaHttpJmsqueueActivator()
   )
 
-//  private[this] val amqCF : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(None)
-//  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-//  private implicit val eCtxt : ExecutionContext = system.dispatcher
-//  private implicit val materializer : Materializer = ActorMaterializer()
-//  mandatoryService[HttpContext](registry)(None)
-
   private def amqCf(r : BlendedPojoRegistry) : IdAwareConnectionFactory = jmsConnectionFactory(r, mustConnect = true, timeout).get
 
   "The Http Queue Service should (STTP client)" - {
 
-    "respond with a bad request if the url does not match [provider/queue]" in {
+    "respond with a bad request if the url does not match [provider/queue]" in logException {
       val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/foo")))
       val response = request.send()
 
       response.code should be(StatusCode.BadRequest)
     }
 
-    "respond with Unauthorised if the requested Queue is not configured" in {
+    "respond with Unauthorised if the requested Queue is not configured" in logException {
       val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/activemq/bar")))
       val response = request.send()
 
       response.code should be(StatusCode.Unauthorized)
     }
 
-    "respond with Unauthorised if the JMS provider is unknown or doesn't have any queues configured" in {
+    "respond with Unauthorised if the JMS provider is unknown or doesn't have any queues configured" in logException {
       val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/sonic/foo")))
       val response = request.send()
 
       response.code should be(StatusCode.Unauthorized)
     }
 
-    "respond with an empty response if no msg is available" in {
+    "respond with an empty response if no msg is available" in logException {
       val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/blended/Queue1")))
       val response = request.send()
 
       response.code should be(StatusCode.NoContent)
     }
 
-    "respond with a text response if the queue contains a text message" in {
+    "respond with a text response if the queue contains a text message" in logException {
 
       val msg : String = "Hello Blended"
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(msg)(FlowMessage.noProps))
@@ -115,7 +109,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       assert(response.contentType.forall(_.startsWith("text/plain")))
     }
 
-    "respond with a binary response if the queue contains a binary message" in {
+    "respond with a binary response if the queue contains a binary message" in logException {
 
       val msg : String = "Hello Blended"
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(ByteString(msg))(FlowMessage.noProps))
@@ -138,7 +132,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       assert(response.contentType.forall(_.startsWith("application/octet-stream")))
     }
 
-    "allow null values for JMS message properties" in {
+    "allow null values for JMS message properties" in logException {
       val msg : String = "Hello Blended"
       val env : FlowEnvelope = FlowEnvelope(
         FlowMessage(ByteString(msg))(FlowMessage.props("iamnull" -> null).get)
