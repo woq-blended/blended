@@ -19,7 +19,7 @@ jobs:
     continue-on-error: true
 
     steps:
-    - run: echo '${{ $MAIN_JAVA_VERSION }}'
+    - run: echo '${{ MAIN_JAVA_VERSION }}'
     - uses: actions/checkout@v2
     - run: git fetch --prune --unshallow
 
