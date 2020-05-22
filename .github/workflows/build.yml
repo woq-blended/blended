@@ -42,7 +42,7 @@ jobs:
     - run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml -v
 
     - name: Upload to simple maven store
-      if: matrix.java-version == $MAIN_JAVA_VERSION
+      if: matrix.java-version == '$MAIN_JAVA_VERSION'
       env:
         OAUTH_ACCESS_TOKEN: ${{ secrets.DROPBOX_UPLOAD }}
       run: ./millw -i -j 0 __.publishM2Local out/maven ; ./scripts/dropbox_uploader.sh upload out/maven repo
