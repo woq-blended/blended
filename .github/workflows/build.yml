@@ -19,16 +19,15 @@ jobs:
     continue-on-error: true
 
     steps:
-    - run: echo '$MAIN_JAVA_VERSION'
     - uses: actions/checkout@v2
     - run: git fetch --prune --unshallow
-
-    - run: ./millw -i show blendedVersion
 
     - name: Set up JDK ${{ matrix.java-version }}
       uses: actions/setup-java@v1
       with:
         java-version: ${{ matrix.java-version }}
+
+    - run: ./millw -i show blendedVersion
 
     - run: ./millw -i -j 0 -k blended[${{ matrix.scala-version }}].__.testCached
 
@@ -43,7 +42,7 @@ jobs:
     - run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml -v
 
     - name: Upload to simple maven store
-      if: matrix.java-version == '$MAIN_JAVA_VERSION'
+      if: ${{ matrix.java-version == env.MAIN_JAVA_VERSION }}
       env:
         OAUTH_ACCESS_TOKEN: ${{ secrets.DROPBOX_UPLOAD }}
       run: ./millw -i -j 0 __.publishM2Local out/maven ; ./scripts/dropbox_uploader.sh upload out/maven repo
