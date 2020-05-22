@@ -31,7 +31,8 @@ jobs:
 
     - run: ./millw -i -j 0 -k blended[${{ matrix.scala-version }}].__.testCached
 
-    - uses: actions/upload-artifact@v2
+    - name: Upload Testlogs
+      uses: actions/upload-artifact@v2
       if: failure()
       with:
         name: test-logs
@@ -45,4 +46,4 @@ jobs:
       if: ${{ matrix.java-version == env.MAIN_JAVA_VERSION }}
       env:
         OAUTH_ACCESS_TOKEN: ${{ secrets.DROPBOX_UPLOAD }}
-      run: ./millw -i -j 0 __.publishM2Local out/maven ; ./scripts/dropbox_uploader.sh upload out/maven repo
+      run: ./millw -i -j 0 blended[${{ matrix.scala-version}}].__.publishM2Local out/maven ; ./scripts/dropbox_uploader.sh upload out/maven repo
