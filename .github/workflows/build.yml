@@ -28,7 +28,7 @@ jobs:
       with:
         java-version: ${{ matrix.java-version }}
 
-    - run: ./millw -i show blendedVersion
+    - run: ./millw -i show blendedVersion ; echo "${{ github.ref }}"
 
     - run: ./millw -i -j 0 -k blended[${{ matrix.scala-version }}].__.testCached
 
@@ -44,7 +44,7 @@ jobs:
     - run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml -v
 
     - name: Upload to simple maven store
-      if: ${{ matrix.java-version == env.MAIN_JAVA_VERSION && github.token == env.PUBLISH_BRANCH }}
+      if: ${{ matrix.java-version == env.MAIN_JAVA_VERSION && github.ref == env.PUBLISH_BRANCH }}
       env:
         WOQ_SCP_USER: ${{ secrets.WOQ_SCP_USER }}
         WOQ_SCP_KEY: ${{ secrets.WOQ_SCP_KEY}}
