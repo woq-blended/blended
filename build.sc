@@ -132,7 +132,7 @@ trait BlendedPublishModule extends PublishModule {
       process.join()
       T.log.info(s"Uploaded ${path.toIO.getAbsolutePath()} to Blended Snapshot repo at ${scpHost}")
     } finally {
-      //os.remove(keyFile)
+      os.remove(keyFile)
     }
     path
   }

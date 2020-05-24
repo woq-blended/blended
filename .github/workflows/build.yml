@@ -7,10 +7,7 @@ env:
   # This is the java version that will trigger an upload to the SNAPSHOT maven store
   # Other Java versions within the matrix are just unit tested
   MAIN_JAVA_VERSION: 1.8
-  # The user to upload the SNAPSHOT builds to the SNAPSHOT maven repo. We use a simple
-  # WBEDAV server to maintain the SNAPSHOTS, which are not really for public consumption.
-  # Tagged versions will be published to Maven central
-  WOQ_SCP_USER: ${{ secrets.WOQ_SCP_USER }}
+  PUBLISH_BRANCH: master
 
 jobs:
   build:
@@ -47,8 +44,9 @@ jobs:
     - run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml -v
 
     - name: Upload to simple maven store
-      if: ${{ matrix.java-version == env.MAIN_JAVA_VERSION }}
+      if: ${{ matrix.java-version == env.MAIN_JAVA_VERSION && github.token == env.PUBLISH_BRANCH }}
       env:
-        OAUTH_ACCESS_TOKEN: ${{ secrets.DROPBOX_UPLOAD }}
-      run: ./millw -i -j 0 blended[${{ matrix.scala-version}}].__.dropboxPublish
+        WOQ_SCP_USER: ${{ secrets.WOQ_SCP_USER }}
+        WOQ_SCP_KEY: ${{ secrets.WOQ_SCP_KEY}}
+      run: ./millw -i -j 0 blended[${{ matrix.scala-version}}].__.scpPublish
 
