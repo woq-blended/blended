@@ -48,5 +48,5 @@ jobs:
       env:
         WOQ_SCP_USER: ${{ secrets.WOQ_SCP_USER }}
         WOQ_SCP_KEY: ${{ secrets.WOQ_SCP_KEY}}
-      run: ./millw -i -j 0 blended[${{ matrix.scala-version}}].__.scpPublish
+      run: ./millw -i -j 0 blended[${{ matrix.scala-version}}].__.publishScp
 
