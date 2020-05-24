@@ -7,6 +7,10 @@ env:
   # This is the java version that will trigger an upload to the SNAPSHOT maven store
   # Other Java versions within the matrix are just unit tested
   MAIN_JAVA_VERSION: 1.8
+  # The user to upload the SNAPSHOT builds to the SNAPSHOT maven repo. We use a simple
+  # WBEDAV server to maintain the SNAPSHOTS, which are not really for public consumption.
+  # Tagged versions will be published to Maven central
+  WOQ_SCP_USER: ${{ secrets.WOQ_SCP_USER }}
 
 jobs:
   build:

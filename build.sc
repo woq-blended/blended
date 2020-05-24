@@ -1,5 +1,4 @@
 import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
-
 import coursier.Repository
 import coursier.maven.MavenRepository
 import mill.api.{Ctx, Loose, Result}
@@ -10,7 +9,7 @@ import mill.scalajslib.api.ModuleKind
 import mill.scalalib._
 import mill.scalalib.api.CompilationResult
 import mill.scalalib.publish._
-import os.Path
+import os.{Path, PermSet}
 import sbt.testing.{Fingerprint, Framework}
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
 import mill.contrib.scoverage.api.ScoverageReportWorkerApi.ReportType
@@ -54,10 +53,8 @@ object GitSupport extends GitModule {
 trait BlendedCoursierModule extends CoursierModule {
   private def zincWorker: ZincWorkerModule = mill.scalalib.ZincWorkerModule
   override def repositories: Seq[Repository] = {
-    val blendedSnapshots : String = s"$dropboxRepo/3.2-SNAPSHOT"
     zincWorker.repositories ++ Seq(
-      MavenRepository("https://repo.spring.io/libs-release"),
-      MavenRepository(blendedSnapshots)
+      MavenRepository("https://repo.spring.io/libs-release")
     )
   }
 }
@@ -66,6 +63,27 @@ trait BlendedCoursierModule extends CoursierModule {
 trait BlendedPublishModule extends PublishModule {
   def description: String = "Blended module ${blendedModule}"
   override def publishVersion = T { blendedVersion() }
+
+  def scpUser = T.input {
+    T.env.get("WOQ_SCP_USER") match {
+      case Some(u) => u
+      case _ =>
+        T.log.error(s"The environment variable [WOQ_SCP_USER] must be set correctly to perform a scp upload.")
+        sys.exit(1)
+    }
+  }
+
+  def scpKey = T.input {
+    T.env.get("WOQ_SCP_KEY") match {
+      case Some(k) => k
+      case None =>
+        T.log.error(s"The environment variable [WOQ_SCP_KEY] must be set correctly to perform a scp upload.")
+        sys.exit(1)
+    }
+  }
+
+  def scpHost : String = "u233308.your-storagebox.de"
+  def scpTargetDir : String = "/"
 
   override def pomSettings: T[PomSettings] = T {
     PomSettings(
@@ -81,25 +99,41 @@ trait BlendedPublishModule extends PublishModule {
     )
   }
 
-  def dropboxPublish() : define.Command[Path] = T.command {
+  def publishScp() : define.Command[Path] = T.command {
+
     val path = T.dest / blendedVersion()
 
-    new LocalM2Publisher(path)
-      .publish(
-        jar = jar().path,
-        sourcesJar = sourceJar().path,
-        docJar = docJar().path,
-        pom = pom().path,
-        artifact = artifactMetadata(),
-        extras = extraPublish()
-      )
+    val keyFile = T.dest / "scpKey"
 
-    val process = Jvm.spawnSubprocess(
-      commandArgs = Seq("./scripts/dropbox_uploader.sh", "upload", path.toIO.getAbsolutePath(), "repo"),
-      envArgs = Map.empty,
-      workingDir = baseDir
-    )
-    process.join()
+    try {
+
+      val files : Seq[Path] = new LocalM2Publisher(path)
+        .publish(
+          jar = jar().path,
+          sourcesJar = sourceJar().path,
+          docJar = docJar().path,
+          pom = pom().path,
+          artifact = artifactMetadata(),
+          extras = extraPublish()
+        )
+
+      // Todo: Sign all files and digest
+
+      os.write(keyFile, scpKey().replaceAll("\\$", "\n"), perms = "rw-------")
+      val process = Jvm.spawnSubprocess(
+        commandArgs = Seq("scp",
+          "-i", keyFile.toIO.getAbsolutePath() ,
+          "-r", path.toIO.getAbsolutePath(),
+          s"${scpUser()}@${scpHost}:/${scpTargetDir}"
+        ),
+        envArgs = Map.empty,
+        workingDir = baseDir
+      )
+      process.join()
+      T.log.info(s"Uploaded ${path.toIO.getAbsolutePath()} to Blended Snapshot repo at ${scpHost}")
+    } finally {
+      //os.remove(keyFile)
+    }
     path
   }
 }
