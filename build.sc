@@ -82,6 +82,15 @@ trait BlendedPublishModule extends PublishModule {
     }
   }
 
+  def scpHostKey = T.input {
+    T.env.get("WOQ_HOST_KEY") match {
+      case Some(k) => k
+      case None =>
+        T.log.error(s"The environment variable [WOQ_HOST_KEY] must be set correctly to perform a scp upload.")
+        sys.exit(1)
+    }
+  }
+
   def scpHost : String = "u233308.your-storagebox.de"
   def scpTargetDir : String = "/"
 
@@ -104,6 +113,7 @@ trait BlendedPublishModule extends PublishModule {
     val path = T.dest / blendedVersion()
 
     val keyFile = T.dest / "scpKey"
+    val knownHosts = T.dest / "known_hosts"
 
     try {
 
@@ -120,19 +130,25 @@ trait BlendedPublishModule extends PublishModule {
       // Todo: Sign all files and digest
 
       os.write(keyFile, scpKey().replaceAll("\\$", "\n"), perms = "rw-------")
+      os.write(knownHosts, s"$scpHost ssh-rsa ${scpHostKey()}")
+
       val process = Jvm.spawnSubprocess(
         commandArgs = Seq("scp",
           "-i", keyFile.toIO.getAbsolutePath() ,
-          "-r", path.toIO.getAbsolutePath(),
-          s"${scpUser()}@${scpHost}:/${scpTargetDir}"
+          "-r",
+          "-o", "CheckHostIP=no",
+          "-o", s"UserKnownHostsFile=${knownHosts.toIO.getAbsoluteFile()}",
+          path.toIO.getAbsolutePath(),s"${scpUser()}@${scpHost}:/${scpTargetDir}"
         ),
         envArgs = Map.empty,
         workingDir = baseDir
       )
+
       process.join()
       T.log.info(s"Uploaded ${path.toIO.getAbsolutePath()} to Blended Snapshot repo at ${scpHost}")
     } finally {
-      os.remove(keyFile)
+      //os.remove(keyFile)
+      //os.remove(knownHosts)
     }
     path
   }

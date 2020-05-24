@@ -7,6 +7,8 @@ env:
   # This is the java version that will trigger an upload to the SNAPSHOT maven store
   # Other Java versions within the matrix are just unit tested
   MAIN_JAVA_VERSION: 1.8
+  # We will only publish the build artifacts to our pseudo snapshot repo for a push on
+  # this branch
   PUBLISH_BRANCH: refs/heads/master
 
 jobs:
