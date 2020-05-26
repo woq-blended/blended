@@ -1,30 +1,41 @@
-merge = require("webpack-merge");
-var config = require('./scalajs.webpack.config');
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
+// node_modules/webpack-cli/bin/cli.js --output-path /home/andreas/projects/blended/core/out/doc --config doc/docs.webpack.config.js
+
 var path = require("path");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 // out pwd is `target/scala_2.12/scalajs-bundler/node_modules`
 // rootDir should be the project base dir
-var rootDir = path.resolve(__dirname, "../../../../");
+var rootDir = path.resolve(__dirname, "/home/andreas/projects/blended/core/doc");
 
-module.exports = merge(config, {
+module.exports = {
   entry: {
     'blended-bootstrap' : [ path.resolve(rootDir, 'scss/bootstrap/blended.scss') ]
   },
-  plugins: [
-    // convert *.scss files to *.css
-    new ExtractTextPlugin("[name].css")
-  ],
   module: {
     rules: [{
       test: /\.scss$/,
-      use: ExtractTextPlugin.extract({
-        fallback: 'style-loader',
-        use: [
-          'raw-loader',
-          'sass-loader'
-        ]
-      })
+      use: [
+        {
+          loader: MiniCssExtractPlugin.loader
+        },
+        {
+          // Interprets CSS
+          loader: "css-loader",
+          options: {
+            importLoaders: 2
+          }
+        },
+        {
+          loader: 'sass-loader'
+        }
+      ]
     }]
-  }
-});
+  },
+  plugins: [
+    // Where the compiled SASS is saved to
+    new MiniCssExtractPlugin({
+      filename: 'blended-bootstrap.css',
+      allChunks: true,
+    })
+  ],
+};

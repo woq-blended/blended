@@ -1,10 +1,15 @@
 {
   "dependencies": {
-    "@babel/runtime": "^7.4.5",
-    "junit-viewer": "^4.11.1",
-    "mermaid": "^8.0.0-rc.8",
-    "mermaid.cli": "^0.5.1",
-    "popper.js": "^1.14.4",
-    "xunit-viewer": "^5.1.10"
+    "bootstrap": "4.5.0"
+  },
+  "devDependencies": {
+    "css-loader" : "1.0.1",
+    "style-loader" : "0.23.1",
+    "sass-loader" : "8.0.2",
+    "raw-loader" : "4.0.1",
+    "node-sass" : "4.14.1",
+    "mini-css-extract-plugin": "0.9.0",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   }
 }

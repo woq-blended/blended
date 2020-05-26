@@ -1,5 +1,4 @@
 _site
-jbake.properties
 .asciidoctor
 coverage
 scaladoc

@@ -9,14 +9,14 @@ import mill.scalajslib.api.ModuleKind
 import mill.scalalib._
 import mill.scalalib.api.CompilationResult
 import mill.scalalib.publish._
-import os.{Path, PermSet}
+import os.{Path, PermSet, RelPath}
 import sbt.testing.{Fingerprint, Framework}
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
 import mill.contrib.scoverage.api.ScoverageReportWorkerApi.ReportType
 import mill.contrib.scoverage.{ScoverageModule, ScoverageReportWorker}
 import mill.eval.Evaluator
 import mill.main.RunScript
-import mill.modules.Jvm
+import mill.modules.{Jvm, Util}
 
 // This import the mill-osgi plugin
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
@@ -30,7 +30,6 @@ import build_deps.Deps
 
 /** Project directory. */
 val baseDir: os.Path = build.millSourcePath
-val dropboxRepo = "https://www.dropbox.com/sh/s9bmcyz8ipndc2p/AAAAKrNxS-1t7L12roUFbUuYa"
 
 def blendedVersion = T.input {
   val v = T.env.get("CI") match {
@@ -47,6 +46,53 @@ def blendedVersion = T.input {
 
 object GitSupport extends GitModule {
   override def millSourcePath: Path = baseDir
+}
+
+trait WebUtils extends Module {
+  def npmModulesDir : Path = baseDir / "node_modules"
+
+  def yarnInstall : T[PathRef] = T {
+    val modules = npmModulesDir
+    val process = Jvm.spawnSubprocess(
+      commandArgs = Seq(
+        "yarn", "install"
+      ),
+      envArgs = Map.empty,
+      workingDir = baseDir
+    )
+    process.join()
+    T.log.info(new String(process.stdout.bytes))
+    PathRef(modules)
+  }
+
+  def webPackConfig : Path = millSourcePath / "docs.webpack.config.js"
+
+  def prepareWebPackConfig : T[PathRef] = T {
+
+    val destFile = T.dest / webPackConfig.last
+    os.copy(webPackConfig, destFile)
+    PathRef(destFile)
+  }
+
+  def webpack : T[PathRef] = T {
+
+    val out : Path = T.dest
+
+    yarnInstall()
+
+    val process = Jvm.spawnSubprocess(
+      commandArgs = Seq(
+        (npmModulesDir/ "webpack-cli" / "bin" / "cli.js").toIO.getAbsolutePath(),
+        "--output-path", out.toIO.getAbsolutePath(),
+        "--config", prepareWebPackConfig().path.toIO.getAbsolutePath()
+      ),
+      envArgs = Map.empty,
+      workingDir = millSourcePath
+    )
+    process.join()
+    T.log.info(new String(process.stdout.bytes()))
+    PathRef(out)
+  }
 }
 
 /** Configure additional repositories. */
@@ -147,8 +193,8 @@ trait BlendedPublishModule extends PublishModule {
       process.join()
       T.log.info(s"Uploaded ${path.toIO.getAbsolutePath()} to Blended Snapshot repo at ${scpHost}")
     } finally {
-      //os.remove(keyFile)
-      //os.remove(knownHosts)
+      os.remove(keyFile)
+      os.remove(knownHosts)
     }
     path
   }
@@ -484,6 +530,45 @@ trait DistModule extends CoursierModule {
   }
 }
 
+trait JBakeBuild extends Module with WebUtils {
+
+  def jbakeVersion : String = "2.6.5"
+  def jbakeDownloadUrl : String = s"https://dl.bintray.com/jbake/binary/jbake-${jbakeVersion}-bin.zip"
+
+  def prepareJBake : T[PathRef] = T {
+    Util.downloadUnpackZip(jbakeDownloadUrl, RelPath("."))
+
+    PathRef(T.dest)
+  }
+
+  def jbake : T[PathRef] = T {
+
+    val jbakeCp : Agg[Path] = os.list(prepareJBake().path / s"jbake-$jbakeVersion-bin" / "lib")
+
+    println(jbakeCp)
+
+    val process = Jvm.runSubprocess(
+      mainClass = "org.jbake.launcher.Main",
+      classPath = jbakeCp,
+      mainArgs = Seq(
+        millSourcePath.toIO.getAbsolutePath(),
+        T.dest.toIO.getAbsolutePath(),
+        "-b"
+      )
+    )
+
+    val webpackResult : Path = webpack().path
+
+    os.walk(webpackResult).foreach { p =>
+      val rel = p.relativeTo(webpackResult)
+      val dest = T.dest / "webpack" / rel
+      os.copy(p, dest, replaceExisting = true, createFolders = true)
+    }
+    PathRef(T.dest)
+  }
+
+}
+
 object blended extends Cross[BlendedCross](Deps.scalaVersions.keys.toSeq: _*)
 class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_12.scalaVersion
@@ -505,6 +590,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     trait ForkedTests extends super.ForkedTest {
       override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_12.scalaVersion
     }
+  }
+
+  object doc extends JBakeBuild with WebUtils {
+
+    override def millSourcePath = baseDir / "doc"
   }
 
   object activemq extends Module {

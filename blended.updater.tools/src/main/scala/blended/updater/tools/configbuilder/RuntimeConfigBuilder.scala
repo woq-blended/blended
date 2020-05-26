@@ -340,7 +340,5 @@ object RuntimeConfigBuilder {
         debug("Writing config file: " + f.getAbsolutePath())
         ConfigWriter.write(RuntimeConfigCompanion.toConfig(newRuntimeConfig), f, None)
     }
-
   }
-
 }
