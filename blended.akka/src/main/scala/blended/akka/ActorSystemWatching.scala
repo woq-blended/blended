@@ -37,9 +37,9 @@ trait ActorSystemWatching extends DominoImplicits {
     val actorRef = system.actorOf(props, actorName)
 
     capsuleContext.addCapsule(new Capsule {
-      override def start() {
+      override def start(): Unit = {
       }
-      override def stop() {
+      override def stop(): Unit = {
         log.debug(s"About to stop bundle actor for bundle: ${actorName}")
         system.stop(actorRef)
       }

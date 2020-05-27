@@ -62,7 +62,7 @@ class BlendedPojoBundle(
   }
 
   @throws[BundleException]
-  override def stop() {
+  override def stop(): Unit = {
 
     m_state match {
       case Bundle.ACTIVE =>

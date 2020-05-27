@@ -22,7 +22,7 @@ private[jvmrunner] class RunningProcess(
   private[this] val outThread = new Thread("StreamCopyThread") {
     setDaemon(true)
 
-    override def run() {
+    override def run(): Unit = {
       try {
         while (true) {
           if (in.available > 0) {
@@ -101,7 +101,7 @@ private[jvmrunner] class RunningProcess(
     new Thread("StreamCopyThread") {
       setDaemon(true)
 
-      override def run() {
+      override def run(): Unit = {
         try {
           copy(in, out, immediately)
         } catch {
