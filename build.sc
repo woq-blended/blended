@@ -227,7 +227,11 @@ trait BlendedBaseModule extends SbtModule with BlendedCoursierModule with Blende
   )}
   override def bundleSymbolicName = blendedModule
 
-  override def scalacOptions = Seq("-deprecation", "-target:jvm-1.8")
+  override def scalacOptions = Seq(
+    "-deprecation",
+    "-target:jvm-1.8",
+    "-Wunused"
+  )
 
   override def scoverageVersion = deps.scoverageVersion
 
