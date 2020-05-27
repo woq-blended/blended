@@ -28,6 +28,11 @@ import build_util.{FilterUtil, ScoverageReport, ZipUtil, GitModule}
 import $file.build_deps
 import build_deps.Deps
 
+import $ivy.`com.goyeau::mill-scalafix:0.1.1`
+import com.goyeau.mill.scalafix.ScalafixModule
+
+/////////////////////////////////////////////////////////////////////////////////////
+
 /** Project directory. */
 val baseDir: os.Path = build.millSourcePath
 
@@ -200,7 +205,13 @@ trait BlendedPublishModule extends PublishModule {
   }
 }
 
-trait BlendedBaseModule extends SbtModule with BlendedCoursierModule with BlendedPublishModule with OsgiBundleModule with ScoverageModule { blendedModuleBase =>
+trait BlendedBaseModule
+  extends SbtModule
+    with BlendedCoursierModule
+    with BlendedPublishModule
+    with OsgiBundleModule
+    with ScoverageModule
+    with ScalafixModule { blendedModuleBase =>
   def deps: Deps
   /** The blended module name. */
   def blendedModule: String = millModuleSegments.parts.mkString(".")
