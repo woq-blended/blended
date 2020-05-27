@@ -13,9 +13,9 @@ trait Deps { deps =>
   def jolokiaVersion = "1.6.2"
   def microJsonVersion = "1.6"
   def parboiledVersion = "1.1.6"
-  def prickleVersion = "1.1.14"
-  def scalaJsVersion = "0.6.32"
-  def scalaVersion = "2.12.11"
+  def prickleVersion = "1.1.16"
+  def scalaJsVersion = "1.0.1"
+  def scalaVersion = "2.13.2"
   def scalaBinVersion(scalaVersion: String) = scalaVersion.split("[.]").take(2).mkString(".")
   def scalatestVersion = "3.1.1"
   def scoverageVersion = "1.4.1"
@@ -168,12 +168,7 @@ trait Deps { deps =>
 }
 
 object Deps {
-  def scalaVersions: Map[String, Deps] = Seq(Deps_2_12, Deps_2_13).map(d => d.scalaVersion -> d).toMap
+  def scalaVersions: Map[String, Deps] = Seq(Deps_2_13).map(d => d.scalaVersion -> d).toMap
 
-  object Deps_2_12 extends Deps
-  object Deps_2_13 extends Deps {
-    override def scalaVersion = "2.13.2"
-    override def scalaJsVersion = "1.0.1"
-    override def prickleVersion = "1.1.16"
-  }
+  object Deps_2_13 extends Deps
 }

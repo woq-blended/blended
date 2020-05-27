@@ -545,8 +545,6 @@ trait JBakeBuild extends Module with WebUtils {
 
     val jbakeCp : Agg[Path] = os.list(prepareJBake().path / s"jbake-$jbakeVersion-bin" / "lib")
 
-    println(jbakeCp)
-
     val process = Jvm.runSubprocess(
       mainClass = "org.jbake.launcher.Main",
       classPath = jbakeCp,
@@ -571,7 +569,7 @@ trait JBakeBuild extends Module with WebUtils {
 
 object blended extends Cross[BlendedCross](Deps.scalaVersions.keys.toSeq: _*)
 class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
-  override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_12.scalaVersion
+  override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_13.scalaVersion
 
   // correct the unneeded cross sub-dir
   override def millSourcePath: Path = super.millSourcePath / os.up
@@ -583,12 +581,12 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def deps: Deps = blended.deps
     // remove the scala version
     override def blendedModule: String = millModuleSegments.parts.filterNot(crossScalaVersion == _).mkString(".")
-    override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_12.scalaVersion
+    override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_13.scalaVersion
     trait Tests extends super.Tests {
-      override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_12.scalaVersion
+      override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_13.scalaVersion
     }
     trait ForkedTests extends super.ForkedTest {
-      override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_12.scalaVersion
+      override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_13.scalaVersion
     }
   }
 
@@ -741,7 +739,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Import-Package` = Seq(
             """scala.compat.*;version="[0.8,1)"""",
-            """scala.*;version="[2.12,2.12.50]"""",
+            s"""scala.*;version="[${scalaBinVersion},${scalaBinVersion}.50]"""",
             "com.sun.*;resolution:=optional",
             "sun.*;resolution:=optional",
             "net.liftweb.*;resolution:=optional",
@@ -2375,6 +2373,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 }
 
 object scoverage extends ScoverageReport {
-  override def scalaVersion = Deps.Deps_2_12.scalaVersion
-  override def scoverageVersion = Deps.Deps_2_12.scoverageVersion
+  override def scalaVersion = Deps.Deps_2_13.scalaVersion
+  override def scoverageVersion = Deps.Deps_2_13.scoverageVersion
 }
