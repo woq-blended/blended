@@ -16,7 +16,7 @@ import org.osgi.framework.startlevel.{BundleStartLevel, FrameworkStartLevel}
 import org.osgi.framework.wiring.FrameworkWiring
 import org.osgi.framework.{Bundle, BundleContext, Constants, FrameworkEvent, FrameworkListener}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.immutable.Map
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}

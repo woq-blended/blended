@@ -2,7 +2,7 @@ package blended.util.config
 
 import com.typesafe.config.Config
 
-import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration._
 
 trait ConfigOptionGetter extends ConfigAccessor {

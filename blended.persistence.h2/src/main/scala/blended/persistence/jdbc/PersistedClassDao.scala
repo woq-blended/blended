@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.{MapSqlParameterSource, NamedParameterJdbcTemplate}
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.{immutable => sci}
 import scala.util.Try
 import scala.util.control.NonFatal

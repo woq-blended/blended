@@ -10,7 +10,7 @@ import org.scalacheck.Arbitrary
 import org.scalatest.DoNotDiscover
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.{ClassTag, classTag}
 import scala.util.Try
 

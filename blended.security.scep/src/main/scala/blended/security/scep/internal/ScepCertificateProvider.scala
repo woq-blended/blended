@@ -19,7 +19,7 @@ import org.jscep.client.verification.{CertificateVerifier, OptimisticCertificate
 import org.jscep.client.{Client, DefaultCallbackHandler}
 import org.jscep.transport.response.Capabilities
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 case class ScepConfig(

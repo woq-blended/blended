@@ -13,7 +13,7 @@ import org.h2.jdbcx.{JdbcConnectionPool, JdbcDataSource}
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.PlatformTransactionManager
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 

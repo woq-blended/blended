@@ -3,7 +3,7 @@ package blended.testsupport.security
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag
 import javax.security.auth.login.{AppConfigurationEntry, Configuration}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class DummyLoginConfiguration extends Configuration {
 

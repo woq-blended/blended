@@ -14,7 +14,7 @@ import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 import StandardCopyOption._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object FileDropCommand {
   val tsPattern : SimpleDateFormat = new SimpleDateFormat("yyyyMMdd.HHmmssSSS")

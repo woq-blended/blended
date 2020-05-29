@@ -6,7 +6,7 @@ import org.apache.felix.connect.felix.framework.ServiceRegistry
 import org.apache.felix.connect.felix.framework.util.EventDispatcher
 import org.osgi.framework._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class BlendedPojoBundle(
   activator : BundleActivator,

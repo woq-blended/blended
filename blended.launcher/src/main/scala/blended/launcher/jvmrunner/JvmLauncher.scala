@@ -8,7 +8,7 @@ import blended.updater.config.OverlayConfigCompanion
 import blended.util.logging.Logger
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration._
 import scala.util.Try
 import scala.util.control.NonFatal

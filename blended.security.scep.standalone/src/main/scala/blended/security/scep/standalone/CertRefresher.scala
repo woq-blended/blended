@@ -8,7 +8,7 @@ import blended.security.ssl.{CertificateManager, MemoryKeystore}
 import blended.util.logging.Logger
 import domino.DominoActivator
 import org.apache.felix.connect.launch.{ClasspathScanner, PojoServiceRegistryFactory}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}

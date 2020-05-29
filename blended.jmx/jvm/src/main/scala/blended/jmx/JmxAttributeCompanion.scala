@@ -4,7 +4,7 @@ import blended.util.RichTry._
 import javax.management.ObjectName
 import javax.management.openmbean.{CompositeData, TabularData}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 object JmxAttributeCompanion {

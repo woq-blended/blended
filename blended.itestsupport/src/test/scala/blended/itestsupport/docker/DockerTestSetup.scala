@@ -4,7 +4,7 @@ import java.util
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.command._

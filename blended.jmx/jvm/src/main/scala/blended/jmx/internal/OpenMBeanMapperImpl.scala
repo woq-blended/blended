@@ -7,7 +7,7 @@ import blended.jmx.OpenMBeanMapper
 import javax.management.openmbean._
 import javax.management.{DynamicMBean, MBeanNotificationInfo, ObjectName}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class OpenMBeanMapperImpl() extends OpenMBeanMapper {
   import OpenMBeanMapperImpl._

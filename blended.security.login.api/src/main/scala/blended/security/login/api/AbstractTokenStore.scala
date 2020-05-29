@@ -8,7 +8,7 @@ import blended.security.boot.UserPrincipal
 import javax.security.auth.Subject
 import javax.security.auth.login.LoginException
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Try}

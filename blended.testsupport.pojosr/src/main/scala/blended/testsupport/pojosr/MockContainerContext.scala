@@ -9,7 +9,7 @@ import com.typesafe.config.impl.Parseable
 import com.typesafe.config.{Config, ConfigFactory, ConfigObject, ConfigParseOptions}
 
 import scala.beans.BeanProperty
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class MockContainerContext(baseDir : String, ctid : String) extends AbstractContainerContextImpl {
 

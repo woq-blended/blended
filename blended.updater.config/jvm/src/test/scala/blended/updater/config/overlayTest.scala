@@ -8,7 +8,7 @@ import blended.updater.config.util.ConfigPropertyMapConverter
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{Args, Status}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Success
 
 import org.scalatest.freespec.AnyFreeSpec

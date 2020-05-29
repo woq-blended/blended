@@ -5,7 +5,7 @@ import java.nio.file.{DirectoryStream, Files, Path}
 
 import blended.util.logging.Logger
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
 class DirectorySource(pollCfg : FilePollConfig) {

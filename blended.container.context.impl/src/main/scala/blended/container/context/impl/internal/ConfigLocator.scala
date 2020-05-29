@@ -7,7 +7,7 @@ import blended.util.logging.Logger
 import com.typesafe.config._
 import blended.util.RichTry._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 

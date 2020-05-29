@@ -9,7 +9,7 @@ import java.util.Formatter
 import blended.updater.config.util.ConfigPropertyMapConverter
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigValue}
 
-import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
 

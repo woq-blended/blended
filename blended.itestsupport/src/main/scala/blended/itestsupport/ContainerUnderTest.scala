@@ -3,7 +3,7 @@ package blended.itestsupport
 import java.net.ServerSocket
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 
 import com.github.dockerjava.api.model.PortBinding

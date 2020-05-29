@@ -5,7 +5,7 @@ import blended.security.{BlendedPermission, BlendedPermissionManager, BlendedPer
 import com.typesafe.config.{Config, ConfigObject}
 import javax.security.auth.Subject
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.{immutable => sci}
 
 class ConfigPermissionManager(obj : ConfigObject) extends BlendedPermissionManager {

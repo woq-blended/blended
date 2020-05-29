@@ -1,6 +1,6 @@
 package blended.itestsupport.docker
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 import akka.actor.{Actor, ActorLogging}
 import akka.event.LoggingReceive

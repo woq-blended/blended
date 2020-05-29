@@ -2,7 +2,7 @@ package blended.updater.config
 
 import com.typesafe.config.{Config, ConfigFactory}
 
-import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 object FeatureConfigCompanion {

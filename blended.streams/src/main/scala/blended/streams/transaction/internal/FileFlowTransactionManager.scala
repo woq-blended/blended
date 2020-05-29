@@ -14,7 +14,7 @@ import blended.streams.transaction._
 import blended.util.logging.Logger
 import prickle._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.io.BufferedSource

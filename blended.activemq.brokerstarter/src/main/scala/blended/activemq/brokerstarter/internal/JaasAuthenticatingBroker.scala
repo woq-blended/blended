@@ -13,7 +13,7 @@ import org.apache.activemq.broker.{Broker, ConnectionContext}
 import org.apache.activemq.command.ConnectionInfo
 import org.apache.activemq.security.{AbstractAuthenticationBroker, SecurityContext}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 

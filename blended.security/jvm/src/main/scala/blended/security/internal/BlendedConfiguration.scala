@@ -7,7 +7,7 @@ import com.typesafe.config.Config
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag
 import javax.security.auth.login.{AppConfigurationEntry, Configuration}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object BlendedConfiguration {
   val configProp = "config"

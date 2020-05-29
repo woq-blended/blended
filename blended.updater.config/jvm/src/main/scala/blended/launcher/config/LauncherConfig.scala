@@ -5,7 +5,7 @@ import java.io.File
 import blended.updater.config.util.ConfigPropertyMapConverter
 import com.typesafe.config._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 case class LauncherConfig(
   frameworkJar : String,

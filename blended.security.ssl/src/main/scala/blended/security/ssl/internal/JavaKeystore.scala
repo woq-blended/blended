@@ -6,7 +6,7 @@ import java.security.{KeyStore, PrivateKey, PublicKey}
 
 import blended.security.ssl.{CertificateChange, CertificateHolder, InconsistentKeystoreException, MemoryKeystore}
 import blended.util.logging.Logger
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 class JavaKeystore(

@@ -9,7 +9,7 @@ import blended.mgmt.repo.{ArtifactRepo, WritableArtifactRepo}
 import blended.updater.config.util.StreamCopy
 import blended.util.logging.Logger
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
 

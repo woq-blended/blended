@@ -2,7 +2,7 @@ package blended.updater.config.util
 
 import com.typesafe.config.{Config, ConfigValue, ConfigValueFactory}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 // TODO: move to blended.util project
 object ConfigPropertyMapConverter {

@@ -3,7 +3,7 @@ package blended.persistence.jdbc
 import java.util.regex.Pattern
 import java.{lang => jl, util => ju}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
  * Represents one field in a persisted data set.

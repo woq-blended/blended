@@ -9,7 +9,7 @@ import blended.updater.config.RuntimeConfig
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.beans.BeanProperty
 import scala.util.{Failure, Success, Try}
 

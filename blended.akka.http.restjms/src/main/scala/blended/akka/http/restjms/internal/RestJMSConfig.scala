@@ -3,7 +3,7 @@ package blended.akka.http.restjms.internal
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object RestJMSConfig {
 

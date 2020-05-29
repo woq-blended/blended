@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Route
 import blended.util.logging.Logger
 import javax.jms._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}

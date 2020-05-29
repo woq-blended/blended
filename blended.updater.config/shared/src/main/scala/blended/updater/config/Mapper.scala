@@ -1,6 +1,6 @@
 package blended.updater.config
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 /**

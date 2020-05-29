@@ -11,7 +11,7 @@ import javax.naming.Context
 import javax.naming.directory.{DirContext, InitialDirContext, SearchControls}
 import javax.security.auth.login.LoginException
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 import scala.util.control.NonFatal
 

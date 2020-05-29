@@ -8,7 +8,7 @@ import blended.updater.config.util.Unzipper
 import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
 import de.tototec.cmdoption.{CmdOption, CmdlineParser}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.immutable._
 import scala.util.{Failure, Success, Try}
 

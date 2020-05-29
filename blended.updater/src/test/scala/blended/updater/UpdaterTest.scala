@@ -9,7 +9,7 @@ import blended.testsupport.TestFile.DeleteNever
 import blended.updater.config._
 import com.typesafe.config.ConfigFactory
 import org.scalatest.BeforeAndAfterAll
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 import org.scalatest.freespec.AnyFreeSpecLike
 

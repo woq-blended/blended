@@ -10,7 +10,7 @@ import org.apache.felix.connect.launch.BundleDescriptor
 import org.apache.felix.connect.{BlendedPojoBundle, PojoSR, Revision}
 import org.osgi.framework.{Bundle, BundleActivator, Version}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class BlendedPojoRegistry(config : Map[String, Any]) extends PojoSR(config.asJava) {
 

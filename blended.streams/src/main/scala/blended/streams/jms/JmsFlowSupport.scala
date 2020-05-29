@@ -7,7 +7,7 @@ import blended.streams.message._
 import blended.util.RichTry._
 import javax.jms._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration._
 import scala.util.Try
 

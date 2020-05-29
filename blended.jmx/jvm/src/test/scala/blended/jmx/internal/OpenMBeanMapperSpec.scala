@@ -12,7 +12,7 @@ import org.scalacheck.Arbitrary
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.{ClassTag, classTag}
 
 class OpenMBeanMapperSpec extends LoggingFreeSpec with ScalaCheckPropertyChecks with Matchers {

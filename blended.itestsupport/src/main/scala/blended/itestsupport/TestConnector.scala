@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 import blended.util.logging.Logger
 
 import scala.reflect.ClassTag
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 object TestConnector {

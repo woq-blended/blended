@@ -10,7 +10,7 @@ import org.scalatest.matchers.should.Matchers
 import org.springframework.transaction.PlatformTransactionManager
 import blended.testsupport.BlendedTestSupport._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class PersistenceServiceJdbcTest
   extends LoggingFreeSpec

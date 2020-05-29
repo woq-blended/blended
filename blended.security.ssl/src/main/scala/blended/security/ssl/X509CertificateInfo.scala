@@ -4,7 +4,7 @@ import java.security.cert.X509Certificate
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
  * Information about a X509 certificate.

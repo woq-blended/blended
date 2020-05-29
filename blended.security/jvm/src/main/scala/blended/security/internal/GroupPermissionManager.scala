@@ -4,7 +4,7 @@ import blended.security.boot.GroupPrincipal
 import blended.security.{BlendedPermission, BlendedPermissionManager, BlendedPermissions}
 import javax.security.auth.Subject
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class GroupPermissionManager extends BlendedPermissionManager {
 

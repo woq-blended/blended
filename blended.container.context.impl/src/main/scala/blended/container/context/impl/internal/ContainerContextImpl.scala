@@ -9,7 +9,7 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 import blended.util.RichTry._
 
 import scala.beans.BeanProperty
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{Success, Try}
 
 class ContainerContextImpl() extends AbstractContainerContextImpl {

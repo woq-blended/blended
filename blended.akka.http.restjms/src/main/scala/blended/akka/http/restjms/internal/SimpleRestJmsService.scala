@@ -15,7 +15,7 @@ import blended.streams.jms._
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowEnvelopeLogger, FlowMessage, TextFlowMessage}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 import scala.collection.mutable
 import scala.concurrent.duration._

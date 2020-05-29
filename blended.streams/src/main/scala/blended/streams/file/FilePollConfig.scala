@@ -6,7 +6,7 @@ import blended.streams.message.{FlowMessage, MsgProperty}
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration._
 
 object FilePollConfig {

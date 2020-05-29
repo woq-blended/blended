@@ -5,7 +5,7 @@ import blended.util.logging.Logger
 import de.tobiasroeser.lambdatest.proxy.TestProxy
 import javax.sql.DataSource
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class PersistedClassDaoTest extends LoggingFreeSpec {
 

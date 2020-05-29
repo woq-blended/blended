@@ -5,7 +5,7 @@ import blended.util.logging.Logger
 import javax.management.openmbean.{CompositeData, CompositeDataSupport}
 import javax.management.{Attribute, MBeanServer, ObjectInstance, ObjectName}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class ServiceJmxAnalyser(server : MBeanServer, config : ServiceJmxConfig) {
 

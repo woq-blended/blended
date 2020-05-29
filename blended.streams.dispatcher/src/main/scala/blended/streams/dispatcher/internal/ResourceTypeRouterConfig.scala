@@ -9,7 +9,7 @@ import blended.streams.worklist.WorklistItem
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration._
 import scala.util.Try
 

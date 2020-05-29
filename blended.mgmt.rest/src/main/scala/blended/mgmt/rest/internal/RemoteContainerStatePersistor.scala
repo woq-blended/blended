@@ -4,7 +4,7 @@ import blended.persistence.PersistenceService
 import blended.updater.config.{Mapper, RemoteContainerState}
 import blended.util.logging.Logger
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success}
 
 class RemoteContainerStatePersistor(persistenceService : PersistenceService) {

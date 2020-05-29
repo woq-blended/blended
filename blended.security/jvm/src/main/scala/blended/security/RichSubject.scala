@@ -3,7 +3,7 @@ package blended.security
 import blended.security.boot.{GroupPrincipal, UserPrincipal}
 import javax.security.auth.Subject
 
-import scala.collection.JavaConverters.asScalaSetConverter
+import scala.jdk.CollectionConverters._
 
 trait RichSubject {
 
