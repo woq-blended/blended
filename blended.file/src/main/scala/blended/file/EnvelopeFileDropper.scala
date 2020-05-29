@@ -56,7 +56,7 @@ class EnvelopeFileDropper(
       compressed = env.headerWithDefault[Boolean](cfg.compressHeader, false),
       append = env.headerWithDefault[Boolean](cfg.appendHeader, false),
       timestamp = env.headerWithDefault[Long](timestampHeader(headerConfig.prefix), System.currentTimeMillis()),
-      properties = Map("JMSCorrelationID" -> corrId(env)) ++ env.flowMessage.header.mapValues(_.value),
+      properties = Map("JMSCorrelationID" -> corrId(env)) ++ env.flowMessage.header.view.mapValues(_.value),
       log = log.underlying
     )
   }

@@ -4,9 +4,10 @@ import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.condition.ConditionActor.CheckCondition
 import blended.itestsupport.condition.ConditionActor.ConditionCheckResult
 import blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class ParallelCheckerSpec extends WordSpec
+class ParallelCheckerSpec extends AnyWordSpec
   with Matchers {
 
   "The Condition Checker" should {

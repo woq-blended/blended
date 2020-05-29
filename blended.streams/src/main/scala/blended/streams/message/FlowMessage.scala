@@ -172,11 +172,11 @@ sealed abstract class FlowMessage(msgHeader : FlowMessageProps) {
 
   def withHeader(key : String, value : Any, overwrite : Boolean = true) : Try[FlowMessage]
 
-  protected def doRemoveHeader(keys : String*) : FlowMessageProps = header.filterKeys(k => !keys.contains(k)).toMap
+  protected def doRemoveHeader(keys : String*) : FlowMessageProps = header.view.filterKeys(k => !keys.contains(k)).toMap
 
   protected def newHeader(key : String, value : Any, overwrite : Boolean) : Try[FlowMessageProps] = Try {
     if (overwrite) {
-      header.filterKeys(_ != key).toMap + (key -> MsgProperty(value).unwrap)
+      header.view.filterKeys(_ != key).toMap + (key -> MsgProperty(value).unwrap)
     } else {
       if (header.isDefinedAt(key)) {
         header

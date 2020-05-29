@@ -1,8 +1,10 @@
 package blended.updater.config
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class SystemPropertyResolverSpec extends WordSpec with Matchers {
+
+class SystemPropertyResolverSpec extends AnyWordSpec with Matchers {
 
   "The System Property Resolver" should {
 

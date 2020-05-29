@@ -76,8 +76,8 @@ object FlowProcessor {
       import GraphDSL.Implicits._
 
       val branches = b.add(Broadcast[Either[L, R]](2))
-      val isLeft = b.add(Flow[Either[L, R]].filter(_.isLeft).map(_.left.get))
-      val isRight = b.add(Flow[Either[L, R]].filter(_.isRight).map(_.right.get))
+      val isLeft = b.add(Flow[Either[L, R]].collect { case Left(l) => l })
+      val isRight = b.add(Flow[Either[L, R]].collect { case Right(r) => r })
 
       branches ~> isLeft
       branches ~> isRight

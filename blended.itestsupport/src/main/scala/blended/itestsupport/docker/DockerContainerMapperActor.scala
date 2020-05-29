@@ -22,8 +22,8 @@ class DockerContainerMapperActor extends Actor with ActorLogging {
         }
       }
 
-      val errors = mapped.values.filter(_.isLeft).map(_.left.get.getMessage)
-      val mappedCuts = mapped.values.filter(_.isRight).map(_.right.get)
+      val errors = mapped.values.collect { case Left(l) => l.getMessage() }
+      val mappedCuts = mapped.values.collect { case Right(r) => r }
 
       val result = errors match {
         case e if e.isEmpty => InternalDockerContainersMapped(requestor, Right(mappedCuts.map { c => (c.ctName, c) }.toMap ))

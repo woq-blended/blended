@@ -21,20 +21,20 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
 
   val nextInterval : FiniteDuration => BlendedStreamsConfig => FiniteDuration = { interval => streamCfg =>
 
-    val noise = {
+    val noise: Double = {
       val d = rnd.nextDouble().abs
       (d - d.floor) / (1 / (streamCfg.random * 2)) - streamCfg.random
     }
 
-    var newIntervalMillis : Double =
+    var newIntervalMillis: Double =
       if (streamCfg.exponential) {
-        interval.toMillis * 2
+        interval.toMillis.toDouble * 2
       } else {
-        interval.toMillis + streamCfg.minDelay.toMillis
+        (interval.toMillis + streamCfg.minDelay.toMillis).toDouble
       }
 
     newIntervalMillis = scala.math.min(
-      streamCfg.maxDelay.toMillis,
+      streamCfg.maxDelay.toMillis.toDouble,
       newIntervalMillis + newIntervalMillis * noise
     )
 

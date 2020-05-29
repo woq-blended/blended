@@ -139,7 +139,7 @@ trait TestFile {
     if (file.isDirectory()) {
       file.listFiles() match {
         case null  =>
-        case files => deleteRecursive(files : _*)
+        case files => deleteRecursive(files.toSeq : _*)
       }
     }
     file.delete()

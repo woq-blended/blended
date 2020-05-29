@@ -156,10 +156,10 @@ class Unzipper {
         } else {
           if (zipEntry.isDirectory) {
             log.debug(s"  Creating ${zipEntry.getName()}")
-            new File(targetDir + "/" + zipEntry.getName).mkdirs()
+            new File(targetDir.getPath() + "/" + zipEntry.getName).mkdirs()
             None
           } else {
-            Some(new File(targetDir + "/" + zipEntry.getName))
+            Some(new File(targetDir.getPath() + "/" + zipEntry.getName))
           }
         }
 

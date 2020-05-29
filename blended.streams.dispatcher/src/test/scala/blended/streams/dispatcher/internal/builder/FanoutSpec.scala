@@ -24,7 +24,7 @@ class FanoutSpec extends DispatcherSpecSupport
     resType : String,
     envelope : FlowEnvelope
   ) : Try[Seq[(OutboundRouteConfig, FlowEnvelope)]] = {
-    val resTypeCfg = ctxt.cfg.resourceTypeConfigs.get(resType).get
+    val resTypeCfg = ctxt.cfg.resourceTypeConfigs(resType)
     val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)
     fanout.funFanoutOutbound(envelope
       .withHeader(ctxt.bs.headerResourceType, resType).get

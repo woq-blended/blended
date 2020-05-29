@@ -3,11 +3,10 @@ package blended.itestsupport.docker
 import blended.itestsupport.ContainerUnderTest
 import blended.util.logging.Logger
 import org.mockito.Mockito._
-import org.scalatest.{ Matchers, WordSpec }
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 
-class DockerContainerSpec extends WordSpec
-  with Matchers
+class DockerContainerSpec extends AnyWordSpec
   with DockerTestSetup
   with MockitoSugar {
   

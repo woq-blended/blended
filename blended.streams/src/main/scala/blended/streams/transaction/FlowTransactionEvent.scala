@@ -23,7 +23,7 @@ object FlowTransactionEvent {
       case started : FlowTransactionStarted =>
         FlowEnvelope(FlowMessage(
           basicProps(started)
-        ), started.transactionId).withHeaders(started.properties.filterKeys(k => !k.startsWith("JMS")).toMap).get
+        ), started.transactionId).withHeaders(started.properties.view.filterKeys(k => !k.startsWith("JMS")).toMap).get
 
       case completed : FlowTransactionCompleted =>
         FlowEnvelope(FlowMessage(basicProps(completed)), completed.transactionId)

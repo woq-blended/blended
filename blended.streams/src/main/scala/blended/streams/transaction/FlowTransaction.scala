@@ -174,7 +174,7 @@ case class FlowTransaction(
 
     // We keep everything that is not in the update
     val newWorklist : Map[String, List[WorklistState]] =
-      worklist.filterKeys(id => !updatedItemIds.contains(id)).toMap ++ updatedItemIds
+      worklist.view.filterKeys(id => !updatedItemIds.contains(id)).toMap ++ updatedItemIds
 
     copy(
       worklist = newWorklist,

@@ -1,6 +1,6 @@
 package blended.launcher
 
-import java.io.{File, FileOutputStream, PrintWriter, StringWriter}
+import java.io.{ByteArrayOutputStream, File, FileOutputStream, PrintStream, PrintWriter, StringWriter}
 import java.net.URLClassLoader
 import java.nio.file.{Files, Paths}
 import java.util.{Hashtable, Properties, ServiceLoader, UUID}
@@ -15,7 +15,6 @@ import org.osgi.framework.launch.{Framework, FrameworkFactory}
 import org.osgi.framework.startlevel.{BundleStartLevel, FrameworkStartLevel}
 import org.osgi.framework.wiring.FrameworkWiring
 import org.osgi.framework.{Bundle, BundleContext, Constants, FrameworkEvent, FrameworkListener}
-
 import scala.jdk.CollectionConverters._
 import scala.collection.immutable.Map
 import scala.util.control.NonFatal
@@ -78,9 +77,10 @@ object Launcher {
     }
 
     if (cmdline.help) {
-      val sb = new java.lang.StringBuilder()
-      cp.usage(sb)
-      throw new LauncherException(sb.toString(), None, 0)
+      val bos = new ByteArrayOutputStream()
+      val os = new PrintStream(bos)
+      cp.usage(new PrintStream(os))
+      throw new LauncherException(bos.toString(), None, 0)
     }
 
     cmdline

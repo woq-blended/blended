@@ -22,7 +22,7 @@ case class BlendedPermission(
 
     def checkProperties : Boolean = {
 
-      val props : Seq[(String, Seq[String], Option[Seq[String]])] = properties.map(p => (p._1, p._2, other.properties.get(p._1))).toSeq
+      val props : Seq[(String, Seq[String], Option[Seq[String]])] = properties.toSeq.map(p => (p._1, p._2, other.properties.get(p._1)))
 
       props.forall { p =>
         p._3 match {

@@ -82,7 +82,7 @@ class JmsSessionManager(
         case Success(_) => afterSessionClose(sess)
         case Failure(t) => onError(t)
       }
-    }.getOrElse( Success() )
+    }.getOrElse( Success(()) )
   }
 
   def closeSessionAsync(id : String)(system : ActorSystem) : Future[Unit] =

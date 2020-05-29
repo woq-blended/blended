@@ -47,7 +47,7 @@ final class JmsProducerStage(
 
     private[this] def removeProducer(s : String) : Unit = {
       if (producer.contains(s)) {
-        producer = producer.filterKeys(_ != s).toMap
+        producer = producer.view.filterKeys(_ != s).toMap
         producerSettings.log.underlying.debug(s"Producer count of [$id] is [${producer.size}]")
       }
     }
@@ -119,7 +119,7 @@ final class JmsProducerStage(
           val logDest = s"${producerSettings.connectionFactory.vendor}:${producerSettings.connectionFactory.provider}:$dest"
           producerSettings.log.logEnv(env, producerSettings.logLevel(env),
             s"Successfully sent message [${env.id}] to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] " +
-              s"with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]", false
+              s"with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]", withStacktrace = false
           )
         }
 

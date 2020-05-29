@@ -66,7 +66,7 @@ class LoginServiceSpec extends SimplePojoContainerSpec
     val r = Await.result(response, 3.seconds)
     r.code should be(StatusCode.Ok)
 
-    val rawString = r.body.right.get
+    val rawString = r.body.getOrElse(throw new NoSuchElementException("right"))
       .replace("-----BEGIN PUBLIC KEY-----\n", "")
       .replace("-----END PUBLIC KEY-----", "")
       .replaceAll("\n", "")
@@ -102,7 +102,7 @@ class LoginServiceSpec extends SimplePojoContainerSpec
       ) { r =>
           r.code should be(StatusCode.Ok)
 
-          val token = Token(r.body.right.get, key).get
+          val token = Token(r.body.getOrElse(throw new NoSuchElementException("right")), key).get
 
           token.permissions.granted.size should be(2)
           token.permissions.granted.find(_.permissionClass.contains("admins")) should be(defined)
@@ -117,11 +117,11 @@ class LoginServiceSpec extends SimplePojoContainerSpec
 
       withLoginService(request) { r1 =>
         r1.code should be(StatusCode.Ok)
-        val t1 = Token(r1.body.right.get, key).get
+        val t1 = Token(r1.body.getOrElse(throw new NoSuchElementException("right")), key).get
 
         withLoginService(request) { r2 =>
           r2.code should be(StatusCode.Ok)
-          val t2 = Token(r2.body.right.get, key).get
+          val t2 = Token(r2.body.getOrElse(throw new NoSuchElementException("right")), key).get
           assert(t1.id != t2.id)
         }
       }

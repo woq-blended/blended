@@ -39,7 +39,7 @@ class DirectorySource(pollCfg : FilePollConfig) {
       val result : Option[File] = file() match {
         case None => None
         case Some(f) =>
-          pendingFiles = pendingFiles.filterKeys(_ != f).toMap + (f -> Some(System.currentTimeMillis()))
+          pendingFiles = pendingFiles.view.filterKeys(_ != f).toMap + (f -> Some(System.currentTimeMillis()))
           Some(f)
       }
 

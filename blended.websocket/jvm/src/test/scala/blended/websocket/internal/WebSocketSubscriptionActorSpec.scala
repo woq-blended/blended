@@ -68,7 +68,7 @@ class WebSocketSubscriptionActorSpec extends AbstractWebSocketSpec {
       withJmxSubscription(JmxSubscribe(Some(JmxObjectName("java.lang:type=Memory").unwrap), interval.toMillis)) { probe =>
 
         // scalastyle:off magic.number
-        1.to(10).foreach { i =>
+        1.to(10).foreach { _ =>
           fishForWsUpdate[BlendedJmxMessage](interval * 2)(probe){ upd =>
             upd.isInstanceOf[JmxUpdate] &&
             upd.asInstanceOf[JmxUpdate].beans.nonEmpty

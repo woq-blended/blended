@@ -218,7 +218,7 @@ class ContainerPropertyResolver(
       val e = extractVariableElement(line, resolveStartDelim, resolveEndDelim)
       e.modifier match {
         case "delayed" =>
-          resolve(e.prefix, additionalProps).unwrap + e.pattern + resolve(e.postfix, additionalProps).unwrap
+          resolve(e.prefix, additionalProps).unwrap.toString() + e.pattern + resolve(e.postfix, additionalProps).unwrap
 
         case "encrypted" =>
           val decrypted : String = cryptoSupport.decrypt(e.pattern).get

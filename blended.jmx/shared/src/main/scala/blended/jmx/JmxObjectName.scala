@@ -44,6 +44,7 @@ case class JmxObjectName (
 ) {
 
   val sortedProps : List[String] = properties
+    .view
     .mapValues(_.replaceAll(":", "/"))
     .toList
     .sorted

@@ -64,7 +64,7 @@ object BlendedJMSConnectionConfig {
 
     val properties : (String => Try[Any]) => Config => Try[Map[String, String]] = stringResolver => cfg => Try {
       ConfigPropertyMapConverter.getKeyAsPropertyMap(cfg, "properties", Option(() => defaultConfig.properties))
-        .mapValues { v =>
+        .view.mapValues { v =>
           stringResolver(v) match {
             case Failure(t) => throw t
             case Success(s) => s.toString()

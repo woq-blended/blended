@@ -62,8 +62,8 @@ final case class FlowEnvelope private[message] (
 
   def removeHeader(keys : String*) : FlowEnvelope = copy(flowMessage.removeHeader(keys : _*))
 
-  def removeFromContext(key : String) : FlowEnvelope = copy(flowContext = flowContext.filterKeys(_ != key).toMap)
-  def withContextObject(key : String, o : Any) : FlowEnvelope = copy(flowContext = flowContext.filterKeys(_ != key).toMap + (key -> o))
+  def removeFromContext(key : String) : FlowEnvelope = copy(flowContext = flowContext.view.filterKeys(_ != key).toMap)
+  def withContextObject(key : String, o : Any) : FlowEnvelope = copy(flowContext = flowContext.view.filterKeys(_ != key).toMap + (key -> o))
 
   def getFromContext[T](key : String) : Try[Option[T]] = Try { flowContext.get(key).map(_.asInstanceOf[T]) }
 

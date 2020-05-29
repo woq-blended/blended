@@ -5,11 +5,12 @@ import akka.testkit.TestProbe
 import blended.itestsupport.ContainerUnderTest
 import blended.testsupport.TestActorSys
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
-
 import scala.concurrent.duration._
 
-class DockerContainerMapperSpec extends WordSpec
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+
+class DockerContainerMapperSpec extends AnyWordSpec
   with Matchers
   with DockerTestSetup
   with MockitoSugar {

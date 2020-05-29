@@ -72,7 +72,7 @@ class Updater(
       ))
     } else if (state.artifactsToDownload.isEmpty && state.artifactsToUnpack.isEmpty) {
 
-      stagingInProgress = stagingInProgress.filterKeys(id != _).toMap
+      stagingInProgress = stagingInProgress.view.filterKeys(id != _).toMap
       val (profileState, msg) = state.issues match {
         case Seq()  => LocalProfile.Staged -> OperationSucceeded(id)
         case issues => LocalProfile.Invalid(issues) -> OperationFailed(id, issues.mkString("; "))
@@ -402,9 +402,9 @@ class Updater(
           }
       }
 
-    case StageNextRuntimeConfig(reqId) =>
+    case StageNextRuntimeConfig(reqId @ _) =>
       if (stagingInProgress.isEmpty) {
-        profiles.toIterator.collect {
+        profiles.iterator.collect {
           case (id @ ProfileId(name, version, overlays), LocalProfile(_, _, LocalProfile.Pending(_))) =>
             log.info(s"About to auto-stage profile ${id}")
             self ! StageProfile(nextId(), name, version, overlays = overlays)

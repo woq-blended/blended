@@ -123,7 +123,7 @@ class FileAckSource(
         if (f.exists()) {
           val uuid : String = UUID.randomUUID().toString() + "-" + f.getName()
 
-          val fileToProcess : File = new File(f + pollCfg.tmpExt)
+          val fileToProcess : File = new File(f.getPath() + pollCfg.tmpExt)
 
           // First we try to rename the file in order to check whether it can be accessed yet
           if (FileHelper.renameFile(f, fileToProcess, false)) {

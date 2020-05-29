@@ -158,7 +158,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
     removeInflight(ackCtxt.inflightId)
     // If the poll timer is active we actually have executed a poll recently with no result
     if (!isTimerActive(Poll)) {
-      pollImmediately.invoke()
+      pollImmediately.invoke(())
     }
   }
 
@@ -181,7 +181,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
     removeInflight(ackCtxt.inflightId)
     // If the poll timer is active we actually have executed a poll recently with no result
     if (!isTimerActive(Poll)) {
-      pollImmediately.invoke()
+      pollImmediately.invoke(())
     }
   }
 
@@ -235,6 +235,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
             case Some(d) => if (!isTimerActive(Poll)) {
               log.underlying.trace(s"Scheduling next poll for [$id] in [$d]")
               scheduleOnce(Poll, d)
+              ()
             }
           }
 
@@ -260,7 +261,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   }
 
   protected def pending() : Map[String, T] =
-    inflightMap.filter { case (_, (_, state)) => state == AckState.Pending }.toMap.mapValues(_._1).toMap
+    inflightMap.filter { case (_, (_, state)) => state == AckState.Pending }.toMap.view.mapValues(_._1).toMap
 
   override protected def onTimer(timerKey : Any) : Unit = {
     timerKey match {

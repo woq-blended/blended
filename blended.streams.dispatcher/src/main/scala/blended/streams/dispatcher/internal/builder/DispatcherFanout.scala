@@ -57,7 +57,7 @@ case class DispatcherFanout(
           // if the block does not have a condition, the header block will be used
           case None => true
           case Some(c) =>
-            val resolve = ctCtxt.resolveString(c, env.flowMessage.header.mapValues(_.value).toMap)
+            val resolve = ctCtxt.resolveString(c, env.flowMessage.header.view.mapValues(_.value).toMap)
             streamLogger.logEnv(env, LogLevel.Debug, s"Resolved condition to [$resolve][${resolve.map(_.getClass().getName())}]")
             val use = resolve.map(_.asInstanceOf[Boolean]).unwrap
 
@@ -90,7 +90,7 @@ case class DispatcherFanout(
             .withHeader(deliveryModeHeader(bs.headerConfig.prefix), oh.deliveryMode).unwrap
 
         oh.header.foreach { case (header, value) =>
-          val resolved = ctCtxt.resolveString(value, env.flowMessage.header.mapValues(_.value).toMap).get
+          val resolved = ctCtxt.resolveString(value, env.flowMessage.header.view.mapValues(_.value).toMap).get
           streamLogger.logEnv(env, LogLevel.Trace,s"[${newEnv.id}]:[${outCfg.id}] - resolved property [$header] to [$resolved]")
           newEnv = newEnv.withHeader(header, resolved).unwrap
         }
@@ -134,8 +134,8 @@ case class DispatcherFanout(
       val fanout = builder.add(fanoutOutbound)
 
       val errorFilter = builder.add(Broadcast[Either[FlowEnvelope, Seq[(OutboundRouteConfig, FlowEnvelope)]]](2))
-      val withError = builder.add(Flow[Either[FlowEnvelope, Seq[(OutboundRouteConfig, FlowEnvelope)]]].filter(_.isLeft).map(_.left.get))
-      val noError = builder.add(Flow[Either[FlowEnvelope, Seq[(OutboundRouteConfig, FlowEnvelope)]]].filter(_.isRight).map(_.right.get))
+      val withError = builder.add(Flow[Either[FlowEnvelope, Seq[(OutboundRouteConfig, FlowEnvelope)]]].collect{ case Left(l) => l })
+      val noError = builder.add(Flow[Either[FlowEnvelope, Seq[(OutboundRouteConfig, FlowEnvelope)]]].collect{ case Right(r) => r })
       val mapDestination = builder.add(decideRouting)
 
       val createWorklist = builder.add(Broadcast[Seq[(OutboundRouteConfig, FlowEnvelope)]](2))

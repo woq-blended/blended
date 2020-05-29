@@ -22,7 +22,7 @@ object JvmLauncher {
       val exitVal = launcher.run(args)
       sys.exit(exitVal)
     } catch {
-      case NonFatal(e) => sys.exit(1)
+      case NonFatal(_) => sys.exit(1)
     }
   }
 }
@@ -47,7 +47,7 @@ class JvmLauncher() {
   Runtime.getRuntime.addShutdownHook(shutdownHook)
 
   def run(args : Array[String]) : Int = {
-    val config = checkConfig(parse(args)).get
+    val config = checkConfig(parse(args.toIndexedSeq)).get
     log.debug("JvmLauncherConfig = " + config)
     config.action match {
 
@@ -72,7 +72,7 @@ class JvmLauncher() {
                     try {
                       Thread.sleep(delay * 1000)
                     } catch {
-                      case e : InterruptedException =>
+                      case _: InterruptedException =>
                         log.debug("Delay interrupted!")
                     }
                   case _ =>
@@ -256,7 +256,7 @@ class JvmLauncher() {
 
     val cpArgs = Option(classpath) match {
       case None | Some(Seq()) => Array[String]()
-      case Some(cp)           => Array("-cp", pathAsArg(classpath))
+      case Some(cp)           => Array("-cp", pathAsArg(cp))
     }
     log.debug("Using classpath args: " + cpArgs.mkString(" "))
 

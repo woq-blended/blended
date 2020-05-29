@@ -46,7 +46,7 @@ class Commands(updater : ActorRef, env : Option[UpdateEnv])(implicit val actorSy
       profiles.map {
         case p : LocalProfile =>
           val activePart = if (activeProfile.exists(_ == p.profileId)) " (active)" else ""
-          p.profileId + ": " + p.state + activePart
+          p.profileId.toString() + ": " + p.state + activePart
       }.mkString("\n")
     }"
   }

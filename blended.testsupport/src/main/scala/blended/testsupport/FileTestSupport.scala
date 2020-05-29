@@ -112,17 +112,16 @@ trait FileTestSupport extends Matchers {
       if (f.isFile()) {
         List(f.getAbsoluteFile())
       } else {
-        f.listFiles(filter).flatMap {
-          x =>
-            if (x.isFile) {
-              List(x.getAbsoluteFile())
+        f.listFiles(filter).flatMap { x =>
+          if (x.isFile()) {
+            List(x.getAbsoluteFile())
+          } else {
+            if (recursive) {
+              getFiles(x.getAbsolutePath(), filter, recursive)
             } else {
-              if (recursive) {
-                getFiles(x.getAbsolutePath, filter, recursive)
-              } else {
-                List.empty
-              }
+              List.empty
             }
+          }
         }.toList
       }
     } else {

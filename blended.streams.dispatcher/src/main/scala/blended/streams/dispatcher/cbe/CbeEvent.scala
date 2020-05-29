@@ -62,7 +62,7 @@ case class CbeTransactionEvent(
   }
 
   private val dataElements : String = ExtendedDataElements(
-    properties.filterKeys(!ignoreHeader.contains(_)).map { case (k, v) => (k, v.toString) }.toMap
+    properties.view.filterKeys(!ignoreHeader.contains(_)).map { case (k, v) => (k, v.toString()) }.toMap
   )
 
   private val application : String = ExtendedDataElements(Map(

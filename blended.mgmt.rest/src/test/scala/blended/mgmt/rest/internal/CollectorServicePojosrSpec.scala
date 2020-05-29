@@ -253,9 +253,10 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
           assert(response.code === StatusCode.UnprocessableEntity)
           assert(response.statusText === "Unprocessable Entity")
           assert(response.body.isLeft)
-          assert(response.body.left.get ===
+          assert(response.body === Left(
             "Could not process the uploaded deployment pack file. Reason: requirement failed: " +
             "A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): 0")
+          )
         }
       }
 
@@ -275,8 +276,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
           assert(response.code === StatusCode.Ok)
           assert(response.statusText === "OK")
-          assert(response.body.isRight)
-          assert(response.body.right.get === "\"Uploaded profile test.pack.minimal 1.0.0\"")
+          assert(response.body === Right("\"Uploaded profile test.pack.minimal 1.0.0\""))
 
           // We expect the bundle file in the local repo
           assert(new File(server.dir, "repositories/artifacts/org/example/fake/1.0.0/fake-1.0.0.jar").exists())

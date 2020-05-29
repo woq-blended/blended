@@ -129,7 +129,7 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
    val r = Await.result(response, 3.seconds)
 
    r.code should be(SC.Ok)
-   Token(r.body.right.get, key)
+   Token(r.body.getOrElse(throw new NoSuchElementException("right")), key)
   }
 
   def wsConnect(user : String, password : String, wsListener : ActorRef)(

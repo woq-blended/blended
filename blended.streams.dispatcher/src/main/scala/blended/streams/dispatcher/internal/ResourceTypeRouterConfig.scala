@@ -60,6 +60,7 @@ object ResourceTypeRouterConfig {
       cfg
         .getStringMapOption(startupPath)
         .getOrElse(Map.empty)
+        .view
         .mapValues(s => ctCtxt.resolveString(s).get.toString)
         .toMap
 

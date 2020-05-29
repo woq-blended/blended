@@ -64,7 +64,7 @@ case class LocalRuntimeConfig(
             }
           }
           issue
-      }.seq
+      }
     }
 
     val resourceIssues = if (explodedResourceArchives) {

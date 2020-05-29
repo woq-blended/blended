@@ -101,7 +101,7 @@ final class JmsConsumerStage(
       consumer.put(s, c)
       consumerSettings.log.underlying.debug(s"Jms Consumer count of [$name] is [${consumer.size}]")
       nextPollRelative = None
-      pollImmediately.invoke()
+      pollImmediately.invoke(())
     }
 
     private[this] def removeConsumer(s : String) : Unit = {

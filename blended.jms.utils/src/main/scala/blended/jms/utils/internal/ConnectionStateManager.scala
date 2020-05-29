@@ -251,10 +251,10 @@ class ConnectionStateManager(holder: ConnectionHolder)
 
   private[this] def initConnection(s : ConnectionState, now : Boolean) : Unit = {
 
-    val remaining : Double = s.lastDisconnect match {
+    val remaining : Double = (s.lastDisconnect match {
       case None    => 0
       case Some(l) => config.minReconnect.toMillis - (System.currentTimeMillis() - l.getTime())
-    }
+    }).toDouble
 
     // if we were ever disconnected from the JMS provider since the container start we will check
     // whether the reconnect interval has passed, otherwise we will connect immediately
@@ -297,7 +297,7 @@ class ConnectionStateManager(holder: ConnectionHolder)
 
     // push the events into the newState in reverse order and set
     // the new state name
-    publishEvents(newState, events.reverse.toArray : _*).copy(
+    publishEvents(newState, events.reverse: _*).copy(
       status = Connecting,
       lastConnectAttempt = Some(lastConnectAttempt)
     )

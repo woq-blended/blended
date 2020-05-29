@@ -1,16 +1,17 @@
 package blended.itestsupport.jms
 
 import javax.jms.ConnectionFactory
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.testkit.TestProbe
 import blended.itestsupport.jms.protocol._
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-abstract class AbstractJMSSpec extends WordSpec
+abstract class AbstractJMSSpec extends AnyWordSpec
   with Matchers
   with BeforeAndAfterAll {
 

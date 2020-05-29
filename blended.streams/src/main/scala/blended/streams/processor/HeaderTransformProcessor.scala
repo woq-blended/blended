@@ -51,7 +51,7 @@ case class HeaderTransformProcessor(
                 case None =>
                   v
                 case Some(s) =>
-                  val props : Map[String, Any] = c.header.mapValues(_.value).toMap
+                  val props : Map[String, Any] = c.header.view.mapValues(_.value).toMap
                   s.resolveString(
                     v.toString(),
                     props + ("envelope" -> env)

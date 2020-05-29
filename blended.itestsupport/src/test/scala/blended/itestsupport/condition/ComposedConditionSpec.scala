@@ -3,12 +3,12 @@ package blended.itestsupport.condition
 import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.condition.ConditionProvider._
 import blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpec}
-
 import blended.itestsupport.condition.ConditionActor.CheckCondition
 import blended.itestsupport.condition.ConditionActor.ConditionCheckResult
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class ComposedConditionSpec extends WordSpec
+class ComposedConditionSpec extends AnyWordSpec
   with Matchers {
 
   "A composed condition" should {

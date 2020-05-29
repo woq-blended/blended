@@ -5,11 +5,11 @@ import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.ContainerUnderTest
 import blended.itestsupport.docker.protocol._
 import blended.testsupport.TestActorSys
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
 
-class ContainerManagerSpec extends WordSpec
-  with Matchers
+class ContainerManagerSpec extends AnyWordSpec
   with DockerTestSetup
   with MockitoSugar {
   

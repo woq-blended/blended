@@ -26,7 +26,7 @@ class UpdaterTest
     def apply(name : String, version : String, overlays : Set[OverlayRef]) : Boolean = true
   }
 
-  override def afterAll {
+  override def afterAll(): Unit = {
     TestKit.shutdownActorSystem(system)
   }
 

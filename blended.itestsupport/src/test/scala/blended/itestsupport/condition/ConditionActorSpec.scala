@@ -5,9 +5,10 @@ import blended.itestsupport.condition.ConditionActor.CheckCondition
 import blended.itestsupport.condition.ConditionActor.ConditionCheckResult
 import blended.itestsupport.condition.ConditionProvider._
 import blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-class ConditionActorSpec extends WordSpec
+class ConditionActorSpec extends AnyWordSpec
   with Matchers {
 
   "The Condition Actor" should {

@@ -203,8 +203,8 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
       // map case classes
       case x: Product =>
         val fields: Map[String, Element] = productToMap(x)
-        val names = fields.map(_._1).toArray
-        val types = fields.map(_._2._2).toArray
+        val names = fields.toSeq.map(_._1).toArray
+        val types = fields.toSeq.map(_._2._2).toArray
 
         val openType = new CompositeType(
           name,
@@ -214,7 +214,7 @@ class OpenMBeanMapperImpl() extends OpenMBeanMapper {
           types
         )
 
-        val value = new CompositeDataSupport(openType, fields.mapValues(_._1).toMap.asJava)
+        val value = new CompositeDataSupport(openType, fields.view.mapValues(_._1).toMap.asJava)
 
         value -> openType
     }
