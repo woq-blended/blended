@@ -59,18 +59,18 @@ class BlendedLogger extends Actor with BlendedLogging with RequiresMessageQueue[
           AkkaLogger(logClass, logSource).errorMdc(cause)(mdcMap(logSource, event))(Option(message).map(_.toString).getOrElse(cause.getLocalizedMessage))
       }
 
-    case event @ Warning(logSource, logClass, message) ⇒
+    case event @ Warning(logSource, logClass, message) =>
       event match {
-        case e: LogEventWithCause ⇒
+        case e: LogEventWithCause =>
           AkkaLogger(logClass, logSource).warnMdc(e.cause)(mdcMap(logSource, event))(Option(message).map(_.toString).getOrElse(e.cause.getLocalizedMessage))
-        case _                    ⇒
+        case _                    =>
           AkkaLogger(logClass, logSource).warnMdc(mdcMap(logSource, event))(Option(message).map(_.toString).orNull)
       }
 
     case event @ Info(logSource, logClass, message) =>
       AkkaLogger(logClass, logSource).infoMdc(mdcMap(logSource, event))(message.toString)
 
-    case event @ Debug(logSource, logClass, message) ⇒
+    case event @ Debug(logSource, logClass, message) =>
       AkkaLogger(logClass, logSource).debugMdc(mdcMap(logSource, event))(message.toString)
 
     case InitializeLogger(_) =>
