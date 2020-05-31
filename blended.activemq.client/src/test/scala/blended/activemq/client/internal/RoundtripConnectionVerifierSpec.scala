@@ -5,6 +5,7 @@ import blended.activemq.client.{ConnectionVerifier, RoundtripConnectionVerifier}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue, SimpleIdAwareConnectionFactory}
 import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
@@ -14,6 +15,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 
+@RequiresForkedJVM
 class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
   with Matchers
   with BeforeAndAfterAll {
@@ -54,7 +56,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
 
       val verifier : ConnectionVerifier = new RoundtripConnectionVerifier(
         probeMsg = () => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps)),
-        verify = env => true,
+        verify = _ => true,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
         headerConfig = FlowHeaderConfig.create(prefix = "App")
@@ -77,7 +79,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
       assert(!Await.result(f, 5.seconds))
     }
 
-    "stay unresolve if the connection to the broker did not succeed" in {
+    "stay unresolved if the connection to the broker did not succeed" in {
 
       val ucf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
         vendor = "amq",

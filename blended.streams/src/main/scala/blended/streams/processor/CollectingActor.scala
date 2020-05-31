@@ -59,7 +59,7 @@ class CollectingActor[T](
       collected(msg)
       messages += msg.asInstanceOf[T]
 
-    case m => log.error(s"Received unhandled message [$m]")
+    case m => log.warn(s"Received unhandled message [$m]")
   }
 
 }

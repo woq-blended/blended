@@ -11,6 +11,7 @@ import blended.streams.processor.{CollectingActor, Collector}
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
+import scala.util.{Failure, Success}
 
 object StreamFactories {
 
@@ -33,7 +34,11 @@ object StreamFactories {
       .run()
 
     done.onComplete {
-      case _ => stopped.set(true)
+      case Success(c) =>
+        stopped.set(true)
+      case Failure(t) =>
+        collector.actor ! CollectingActor.Completed
+        stopped.set(true)
     }
 
     akka.pattern.after(timeout, system.scheduler){

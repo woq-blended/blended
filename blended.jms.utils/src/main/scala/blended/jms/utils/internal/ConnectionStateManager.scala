@@ -114,7 +114,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
       pinger = None
 
       checkReconnect(
-        publishEvents(state, s"Error sending connection ping for provider [$vendor:$provider] : [${t.getMessage()}].")
+        publishEvents(state, s"Error sending connection ping for provider [$vendor:$provider] : [${t.getMessage()}]. (failed pings = [${state.failedPings + 1} / ${config.pingTolerance}])")
           .copy(failedPings = state.failedPings + 1)
       )
 
@@ -218,6 +218,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
     currentReceive = rec
     currentState = nextState
     monitor ! ConnectionStateChanged(nextState)
+    context.system.eventStream.publish(ConnectionStateChanged(newState))
     context.become(
       rec(nextState)
         .orElse(jmxOperations(nextState))

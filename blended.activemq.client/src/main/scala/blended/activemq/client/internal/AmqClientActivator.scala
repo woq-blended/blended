@@ -74,7 +74,7 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching {
                   failedHandler.verificationFailed(cf)
                 }
               case Failure(t) =>
-                s"Unable to verify connection [${cf.vendor}:${cf.provider}]. This connection will not be active"
+                log.warn(s"Unable to verify connection [${cf.vendor}:${cf.provider}]. This connection will not be active : ${t.getMessage()}")
             }
           }
         }

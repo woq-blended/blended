@@ -6,16 +6,17 @@ import blended.activemq.client.{ConnectionVerifier, ConnectionVerifierFactory, V
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{MandatoryServiceUnavailable, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import domino.DominoActivator
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
+@RequiresForkedJVM
 class FailingClientActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper
@@ -54,11 +55,11 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
   )
 
   private implicit val timeout : FiniteDuration = 3.seconds
-  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
 
   "The ActiveMQ Client Activator should" - {
 
     "reject to create a Connection Factory if the connection verification failed" in {
+      mandatoryService[ContainerIdentifierService](registry)(None)
       intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn1))")))
       intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn2))")))
 

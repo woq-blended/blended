@@ -5,13 +5,14 @@ import java.io.File
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import org.osgi.framework.BundleActivator
 
 import scala.concurrent.duration._
 
+@RequiresForkedJVM
 class DefaultClientActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper {
@@ -24,13 +25,13 @@ class DefaultClientActivatorSpec extends SimplePojoContainerSpec
   )
 
   private implicit val timeout : FiniteDuration = 3.seconds
-  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
 
   "The ActiveMQ Client Activator should" - {
 
     "create a Connection Factory for each configured client connection" in {
-      val c1 = mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn1))"))
-      val c2 = mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn2))"))
+      mandatoryService[ContainerIdentifierService](registry)(None)
+      mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn1))"))
+      mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn2))"))
     }
   }
 }
