@@ -29,7 +29,7 @@ class DefaultClientActivatorSpec extends SimplePojoContainerSpec
   "The ActiveMQ Client Activator should" - {
 
     "create a Connection Factory for each configured client connection" in {
-      mandatoryService[ContainerIdentifierService](registry)(None)
+      mandatoryService[ContainerContext](registry)(None)
       mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn1))"))
       mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn2))"))
     }

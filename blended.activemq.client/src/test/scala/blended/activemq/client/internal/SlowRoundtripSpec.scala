@@ -8,8 +8,7 @@ import akka.stream.ActorMaterializer
 import akka.testkit.TestProbe
 import blended.activemq.client.{ConnectionVerifier, ConnectionVerifierFactory, RoundtripConnectionVerifier, VerificationFailedHandler}
 import blended.akka.internal.BlendedAkkaActivator
-import blended.jms.utils.internal.{ConnectionState, ConnectionStateChanged, PingFailed}
-import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue, SimpleIdAwareConnectionFactory}
+import blended.jms.utils._
 import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
@@ -87,8 +86,10 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
         log = envLogger,
         listener = 1,
         minMessageDelay = None,
-        selector = None
-      )(timeout = 3.seconds, system = system, materializer = materializer)
+        selector = None,
+        completeOn = Some(_.size > 0),
+        timeout = Some(3.seconds)
+      )
 
       val verifyMsg : FlowEnvelope = Await.result(verifyRec.result, 4.seconds).headOption.get
 
@@ -135,15 +136,18 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
               if (firstTry.get()) {
                 implicit val eCtxt : ExecutionContext = system.dispatcher
 
+                akka.pattern.after[Unit](500.millis, system.scheduler)( Future {
+                  system.eventStream.publish(MaxKeepAliveExceeded("activemq", "conn1"))
+                })
+
                 akka.pattern.after[Unit](1.second, system.scheduler)(Future {
-                  0.to(2).foreach { i =>
-                    cf.stateMgr.get ! PingFailed(new Exception(s"Ping fail simulation ($i)"))
-                  }
+                  responder.respond()
                 })
 
                 firstTry.set(false)
+              } else {
+                responder.respond()
               }
-              responder.respond()
               super.waitForResponse(cf, id)
             }
           }
@@ -179,17 +183,24 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
       system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
 
       // Ensure the underlying Jms connection is there
+      system.eventStream.publish(QueryConnectionState("activemq", "conn1"))
       probe.fishForMessage(3.seconds, "Waiting for connected event"){
-        case evt : ConnectionStateChanged => evt.state.status == ConnectionState.CONNECTED
+        case evt : ConnectionStateChanged =>
+          println(evt)
+          evt.state.status.toString == Connected.toString
       }
 
       // Make sure the underlying connection factory reconnects
       probe.fishForMessage(3.seconds, "Waiting for disconnected event"){
-        case evt : ConnectionStateChanged => evt.state.status == ConnectionState.DISCONNECTED
+        case evt : ConnectionStateChanged =>
+          println(evt)
+          evt.state.status == Disconnected
       }
 
-      probe.fishForMessage(5.seconds, "Waiting for connected event"){
-        case evt : ConnectionStateChanged => evt.state.status == ConnectionState.CONNECTED
+      probe.fishForMessage(5.seconds, "Waiting for second connected event"){
+        case evt : ConnectionStateChanged =>
+          println(evt)
+          evt.state.status == Connected
       }
 
       // The service will be available after the verifier has finally verified the connection

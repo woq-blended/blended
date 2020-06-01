@@ -7,10 +7,11 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
+import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerContext
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
+import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory, JmsDestination, JmsQueue, QueryConnectionState}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed}
@@ -61,8 +62,19 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
   val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(prefix = prefix)
   val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
-  val amqCf : IdAwareConnectionFactory =
-    mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=activemq))"))
+  val amqCf : IdAwareConnectionFactory = {
+    val result : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=activemq))"))
+
+    val probe : TestProbe = TestProbe()
+    system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+    system.eventStream.publish(QueryConnectionState("activemq", "activemq"))
+
+    probe.fishForMessage(3.seconds, "Waitiung to connect") {
+      case evt : ConnectionStateChanged => evt.state.status == Connected
+    }
+
+    result
+  }
 
   def producerSettings : String => JmsProducerSettings = destName => JmsProducerSettings(
     log = envLogger,

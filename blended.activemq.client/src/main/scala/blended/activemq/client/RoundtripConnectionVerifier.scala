@@ -46,7 +46,6 @@ class RoundtripConnectionVerifier(
 
     implicit val materializer : Materializer = ActorMaterializer()
     implicit val eCtxt : ExecutionContext = system.dispatcher
-    implicit val to : FiniteDuration = receiveTimeout
 
     val collector : Collector[FlowEnvelope] = receiveMessages(
       headerCfg = headerConfig,
@@ -54,7 +53,9 @@ class RoundtripConnectionVerifier(
       dest = responseDest,
       log = envLogger,
       listener = 1,
-      selector = Some(s"JMSCorrelationID='$id'")
+      selector = Some(s"JMSCorrelationID='$id'"),
+      completeOn = Some(_.size > 0),
+      timeout = Some(receiveTimeout)
     )
 
     collector.result.onComplete {

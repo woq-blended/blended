@@ -59,7 +59,7 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
   "The ActiveMQ Client Activator should" - {
 
     "reject to create a Connection Factory if the connection verification failed" in {
-      mandatoryService[ContainerIdentifierService](registry)(None)
+      mandatoryService[ContainerContext](registry)(None)
       intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn1))")))
       intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn2))")))
 

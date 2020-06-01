@@ -2,9 +2,8 @@ package blended.jms.utils
 
 import java.lang.management.ManagementFactory
 
-import akka.actor.ActorSystem
-import akka.util.Timeout
-import blended.jms.utils.internal.{CheckConnection, _}
+import akka.actor.{ActorRef, ActorSystem}
+import blended.jms.utils.internal._
 import blended.util.logging.Logger
 import javax.jms.{Connection, ConnectionFactory, JMSException}
 import javax.management.ObjectName
@@ -15,7 +14,6 @@ import scala.util.control.NonFatal
 
 trait IdAwareConnectionFactory extends ConnectionFactory with ProviderAware {
   val clientId : String
-  val stateMgr : Option[ActorRef]
   override def id : String = super.id + s"($clientId)"
 }
 
@@ -44,7 +42,7 @@ class BlendedSingleConnectionFactory(
 
   private[this] lazy val cfEnabled : Boolean = config.enabled && config.cfEnabled.forall(f => f(config))
 
-  val stateMgr : Option[ActorRef] =
+  private[this] val stateMgr : Option[ActorRef] =
     if (cfEnabled) {
 
       val mbean : Option[ConnectionMonitor] = if (config.jmxEnabled) {
