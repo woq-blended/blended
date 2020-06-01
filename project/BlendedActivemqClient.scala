@@ -2,6 +2,7 @@ import blended.sbt.Dependencies
 import blended.sbt.phoenix.osgi.OsgiBundle
 import phoenix.ProjectFactory
 import sbt._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 object BlendedActivemqClient extends ProjectFactory {
 
