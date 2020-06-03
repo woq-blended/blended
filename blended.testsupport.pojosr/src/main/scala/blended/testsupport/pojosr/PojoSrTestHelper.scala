@@ -7,7 +7,7 @@ import blended.util.logging.Logger
 import domino.DominoActivator
 import org.osgi.framework.{BundleActivator, ServiceReference}
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -148,7 +148,7 @@ trait PojoSrTestHelper {
       filter.getOrElse(s"(objectClass=${clazz.runtimeClass.getName()})")
     )).getOrElse(Array.empty).map(_.asInstanceOf[ServiceReference[T]])
 
-  def waitOnService[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout : FiniteDuration) : Option[T] = {
+  def waitOnService[T](sr : BlendedPojoRegistry, filter : Option[String] = None, timeout : FiniteDuration = 3.seconds)(implicit clazz : ClassTag[T]) : Option[T] = {
     var result : Option[T] = None
     val start = System.currentTimeMillis()
 
@@ -162,8 +162,8 @@ trait PojoSrTestHelper {
     result
   }
 
-  def mandatoryService[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout : FiniteDuration) : T = {
-    waitOnService[T](sr)(filter) match {
+  def mandatoryService[T](sr : BlendedPojoRegistry, filter : Option[String] = None, timeout : FiniteDuration = 3.seconds)(implicit clazz : ClassTag[T]) : T = {
+    waitOnService[T](sr, filter, timeout) match {
       case Some(s) => s
       case None    => throw new MandatoryServiceUnavailable(clazz.runtimeClass, filter)
     }

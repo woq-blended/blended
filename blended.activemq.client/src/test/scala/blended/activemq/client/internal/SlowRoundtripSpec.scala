@@ -8,10 +8,10 @@ import akka.stream.ActorMaterializer
 import akka.testkit.TestProbe
 import blended.activemq.client.{ConnectionVerifier, ConnectionVerifierFactory, RoundtripConnectionVerifier, VerificationFailedHandler}
 import blended.akka.internal.BlendedAkkaActivator
+import blended.container.context.api.ContainerContext
 import blended.jms.utils._
-import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.Collector
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -22,7 +22,8 @@ import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.osgi.framework.BundleActivator
-import org.scalatest.{BeforeAndAfterAll, Matchers}
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -35,12 +36,14 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
   with JmsStreamSupport
   with BeforeAndAfterAll {
 
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
   private val brokerName : String = "slow"
   private val log : Logger = Logger[SlowRoundtripSpec]
 
   private val verifyRequest : String = "verify"
   private val verifyRespond : String = "verified"
+
+  private val vendor : String = "activemq"
+  private val provider : String = "conn1"
 
   private val broker : BrokerService = {
     val b = new BrokerService()
@@ -55,14 +58,17 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
     b
   }
 
+
+  override protected def beforeAll(): Unit = {
+    super.beforeAll()
+  }
+
   override protected def afterAll(): Unit = {
     broker.stop()
     broker.waitUntilStopped()
   }
 
   class SimpleResponder(system : ActorSystem) {
-
-    val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
     implicit val actorSys : ActorSystem = system
     implicit val materializer = ActorMaterializer()
@@ -83,7 +89,7 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
         headerCfg = headerCfg,
         cf = simpleCf,
         dest = JmsQueue(verifyRequest),
-        log = envLogger,
+        log = envLogger(log),
         listener = 1,
         minMessageDelay = None,
         selector = None,
@@ -96,12 +102,12 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
       log.info("sending verification response")
       sendMessages(
         producerSettings = JmsProducerSettings(
-          log = envLogger,
+          log = envLogger(log),
           headerCfg = headerCfg,
           connectionFactory = simpleCf,
           jmsDestination = Some(JmsQueue("verified"))
         ),
-        log = envLogger,
+        log = envLogger(log),
         verifyMsg
       )
     }
@@ -116,7 +122,6 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
     private val firstTry : AtomicBoolean = new AtomicBoolean(true)
 
     whenBundleActive {
-
       whenServicePresent[ActorSystem] { system =>
         implicit val actorSys : ActorSystem = system
 
@@ -124,31 +129,35 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
         val slowFactory : ConnectionVerifierFactory = new ConnectionVerifierFactory {
 
           override def createConnectionVerifier(): ConnectionVerifier = new RoundtripConnectionVerifier(
-            probeMsg = () => FlowEnvelope(),
+            probeMsg = id => FlowEnvelope(FlowMessage(FlowMessage.noProps), id),
             verify = _ => true,
             requestDest = JmsQueue(verifyRequest),
             responseDest = JmsQueue(verifyRespond),
-            headerConfig = headerCfg,
             retryInterval = 5.seconds,
             receiveTimeout = 5.seconds
           ) {
-            override protected def waitForResponse(cf: IdAwareConnectionFactory, id: String): Unit = {
+
+            override protected def probe(ctCtxt : ContainerContext)(cf: IdAwareConnectionFactory): Unit = {
               if (firstTry.get()) {
-                implicit val eCtxt : ExecutionContext = system.dispatcher
 
-                akka.pattern.after[Unit](500.millis, system.scheduler)( Future {
-                  system.eventStream.publish(MaxKeepAliveExceeded("activemq", "conn1"))
-                })
+                val probe : TestProbe = TestProbe()
+                system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+                system.eventStream.publish(QueryConnectionState(vendor, provider))
 
-                akka.pattern.after[Unit](1.second, system.scheduler)(Future {
-                  responder.respond()
-                })
+                probe.fishForMessage(timeout, "Waiting for first connection"){
+                  case evt : ConnectionStateChanged => evt.state.status == Connected
+                }
+
+                system.stop(probe.ref)
+                super.probe(ctCtxt)(cf)
+                system.eventStream.publish(MaxKeepAliveExceeded(vendor, provider))
+                responder.respond()
 
                 firstTry.set(false)
               } else {
+                super.probe(ctCtxt)(cf)
                 responder.respond()
               }
-              super.waitForResponse(cf, id)
             }
           }
         }
@@ -166,46 +175,34 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
   }
 
   override def bundles: Seq[(String, BundleActivator)] = Seq(
-    "slow" -> new SlowRoundtripActivator,
     "blended.akka" -> new BlendedAkkaActivator(),
-    "blended.activemq.client" -> new AmqClientActivator()
+    "blended.activemq.client" -> new AmqClientActivator(),
+    "slow" -> new SlowRoundtripActivator
   )
 
   "The ActiveMQ Client Activator should" - {
 
     "register a connection factory after the underlying connection factory has been restarted due to failed pings" in {
 
-      implicit val to : FiniteDuration = 30.seconds
-
-      implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+      implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val probe : TestProbe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
 
-      // Ensure the underlying Jms connection is there
-      system.eventStream.publish(QueryConnectionState("activemq", "conn1"))
-      probe.fishForMessage(3.seconds, "Waiting for connected event"){
-        case evt : ConnectionStateChanged =>
-          println(evt)
-          evt.state.status.toString == Connected.toString
-      }
-
       // Make sure the underlying connection factory reconnects
       probe.fishForMessage(3.seconds, "Waiting for disconnected event"){
         case evt : ConnectionStateChanged =>
-          println(evt)
           evt.state.status == Disconnected
       }
 
       probe.fishForMessage(5.seconds, "Waiting for second connected event"){
         case evt : ConnectionStateChanged =>
-          println(evt)
           evt.state.status == Connected
       }
 
       // The service will be available after the verifier has finally verified the connection
       // It should still succeed after the connection restart
-      mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn1))"))
+      mandatoryService[IdAwareConnectionFactory](registry, filter = Some("(&(vendor=activemq)(provider=conn1))"), timeout = 30.seconds)
 
       failed should be (empty)
     }

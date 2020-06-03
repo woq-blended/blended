@@ -11,9 +11,8 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import domino.DominoActivator
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 @RequiresForkedJVM
@@ -31,7 +30,7 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
     private val failFactory : ConnectionVerifierFactory = new ConnectionVerifierFactory {
 
       override def createConnectionVerifier() : ConnectionVerifier = new ConnectionVerifier {
-        override def verifyConnection(cf : IdAwareConnectionFactory)(implicit eCtxt : ExecutionContext) : Future[Boolean] = Future { false }
+        override def verifyConnection(ctCtxt : ContainerContext)(cf : IdAwareConnectionFactory)(implicit eCtxt : ExecutionContext) : Future[Boolean] = Future { false }
       }
 
     }
@@ -54,14 +53,12 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
     "blended.activemq.client" -> new AmqClientActivator()
   )
 
-  private implicit val timeout : FiniteDuration = 3.seconds
-
   "The ActiveMQ Client Activator should" - {
 
     "reject to create a Connection Factory if the connection verification failed" in {
-      mandatoryService[ContainerContext](registry)(None)
-      intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn1))")))
-      intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn2))")))
+      mandatoryService[ContainerContext](registry)
+      intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry, filter = Some("(&(vendor=activemq)(provider=conn1))")))
+      intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry, filter = Some("(&(vendor=activemq)(provider=conn2))")))
 
       failed should have size (2)
     }

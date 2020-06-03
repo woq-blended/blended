@@ -59,7 +59,7 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching {
                 connectionCfg, Some(osgiCfg.bundleContext)
               )
 
-              val verified : Future[Boolean] = verifierFactory.createConnectionVerifier().verifyConnection(cf)
+              val verified : Future[Boolean] = verifierFactory.createConnectionVerifier().verifyConnection(osgiCfg.ctContext)(cf)
 
               verified.onComplete {
                 case Success(b) => if (b) {

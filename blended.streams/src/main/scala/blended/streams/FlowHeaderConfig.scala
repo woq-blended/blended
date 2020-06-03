@@ -2,7 +2,7 @@ package blended.streams
 
 import blended.container.context.api.ContainerContext
 import blended.util.config.Implicits._
-import com.typesafe.config.Config
+import com.typesafe.config.{Config, ConfigFactory}
 
 object FlowHeaderConfig {
 
@@ -51,9 +51,16 @@ object FlowHeaderConfig {
   val headerConfigPath : String = "blended.flow.header"
   val header : String => String => String = prefix => name => prefix + name
 
-  def create(ctCtxt : ContainerContext) : FlowHeaderConfig = create(
-    ctCtxt.containerConfig.getConfig(FlowHeaderConfig.headerConfigPath)
-  )
+  def create(ctCtxt : ContainerContext) : FlowHeaderConfig = {
+
+    val cfg : Config = if (ctCtxt.containerConfig.hasPath(FlowHeaderConfig.headerConfigPath)) {
+      ctCtxt.containerConfig.getConfig(FlowHeaderConfig.headerConfigPath)
+    } else {
+      ConfigFactory.empty()
+    }
+
+    create(cfg)
+  }
 
   def create(prefix : String) : FlowHeaderConfig = FlowHeaderConfig(
     prefix = prefix,

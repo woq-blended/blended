@@ -1,6 +1,7 @@
 package blended.activemq.client.internal
 
 import blended.activemq.client.{ConnectionVerifier, ConnectionVerifierFactory}
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.IdAwareConnectionFactory
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -10,5 +11,5 @@ class DefaultConnectionVerifierFactory extends ConnectionVerifierFactory {
 }
 
 class DefaultConnectionVerifier extends ConnectionVerifier {
-  override def verifyConnection(cf : IdAwareConnectionFactory)(implicit eCtxt : ExecutionContext) : Future[Boolean] = Future { true }
+  override def verifyConnection(ctCtxt : ContainerContext)(cf : IdAwareConnectionFactory)(implicit eCtxt : ExecutionContext) : Future[Boolean] = Future { true }
 }

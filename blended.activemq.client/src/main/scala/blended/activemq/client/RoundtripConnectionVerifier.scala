@@ -4,6 +4,8 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.pattern.after
+import akka.stream.{ActorMaterializer, Materializer}
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsEnvelopeHeader, JmsProducerSettings, JmsStreamSupport, MessageDestinationResolver}
@@ -20,7 +22,6 @@ class RoundtripConnectionVerifier(
   verify : FlowEnvelope => Boolean,
   requestDest : JmsDestination,
   responseDest : JmsDestination,
-  headerConfig : FlowHeaderConfig,
   retryInterval : FiniteDuration = 1.second,
   receiveTimeout : FiniteDuration = 250.millis
 )(implicit system : ActorSystem) extends ConnectionVerifier
@@ -28,29 +29,28 @@ class RoundtripConnectionVerifier(
   with JmsEnvelopeHeader {
 
   private val log : Logger = Logger[RoundtripConnectionVerifier]
-  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerConfig, log)
   private val verified : Promise[Boolean] = Promise[Boolean]()
 
-  override def verifyConnection(cf: IdAwareConnectionFactory)(implicit eCtxt: ExecutionContext): Future[Boolean] = {
-    after[Unit](10.millis, system.scheduler) {
-      Future {
-        probe(cf)
-      }
+  override def verifyConnection(ctCtxt : ContainerContext)(cf: IdAwareConnectionFactory)(implicit eCtxt: ExecutionContext): Future[Boolean] = {
+    Future {
+      probe(ctCtxt)(cf)
     }
 
     verified.future
   }
 
-  protected def waitForResponse(cf : IdAwareConnectionFactory, id : String) : Unit = {
+  protected def waitForResponse(ctCtxt : ContainerContext)(cf : IdAwareConnectionFactory, id : String) : Unit = {
 
     implicit val materializer : Materializer = ActorMaterializer()
     implicit val eCtxt : ExecutionContext = system.dispatcher
+
+    val headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
 
     val collector : Collector[FlowEnvelope] = receiveMessages(
       headerCfg = headerConfig,
       cf = cf,
       dest = responseDest,
-      log = envLogger,
+      log = FlowEnvelopeLogger.create(headerConfig, log),
       listener = 1,
       selector = Some(s"JMSCorrelationID='$id'"),
       completeOn = Some(_.size > 0),
@@ -61,7 +61,7 @@ class RoundtripConnectionVerifier(
       case Success(l) => l match {
         case Nil =>
           log.warn(s"No response received to verify connection [${cf.vendor}:${cf.provider}]")
-          scheduleRetry(cf)
+          scheduleRetry(ctCtxt)(cf)
         case h :: _ =>
           val result : Boolean = verify(h)
           log.info(s"Verification result for client connection [${cf.vendor}:${cf.provider}] is [$result]")
@@ -70,14 +70,16 @@ class RoundtripConnectionVerifier(
 
       case Failure(t) =>
         log.warn(s"Failed to receive verification response to verify connection [${cf.vendor}:${cf.provider}] : [${t.getMessage()}]")
-        scheduleRetry(cf)
+        scheduleRetry(ctCtxt)(cf)
     }
   }
 
-  private def probe(cf: IdAwareConnectionFactory) : Unit = {
+  protected def probe(ctCtxt : ContainerContext)(cf: IdAwareConnectionFactory) : Unit = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
+    val headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
+    val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerConfig, log)
     val id : String = UUID.randomUUID().toString()
 
     val probeEnv : FlowEnvelope = probeMsg(id)
@@ -101,21 +103,21 @@ class RoundtripConnectionVerifier(
         log.info(s"Request message sent successfully to [${requestDest.asString}]")
         s.shutdown()
 
-        waitForResponse(cf, id)
+        waitForResponse(ctCtxt)(cf, id)
 
       case Failure(t) =>
         log.debug(s"Failed to send verification request to verify connection [${cf.vendor}:${cf.provider}] : [${t.getMessage()}]")
-        scheduleRetry(cf)
+        scheduleRetry(ctCtxt)(cf)
     }
   }
 
-  private def scheduleRetry(cf : IdAwareConnectionFactory) : Unit = {
+  private def scheduleRetry(ctCtxt : ContainerContext)(cf : IdAwareConnectionFactory) : Unit = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
     after[Unit](retryInterval, system.scheduler){
       log.debug(s"Scheduling retry to verify connection in [$retryInterval]")
-      Future { probe(cf) }
+      Future { probe(ctCtxt)(cf) }
     }
   }
 }

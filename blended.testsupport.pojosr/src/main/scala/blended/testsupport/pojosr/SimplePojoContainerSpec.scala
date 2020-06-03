@@ -5,11 +5,10 @@ import blended.container.context.api.ContainerContext
 import blended.streams.FlowHeaderConfig
 import blended.streams.message.FlowEnvelopeLogger
 import blended.util.logging.Logger
-import org.osgi.framework.Bundle
+import org.osgi.framework.{Bundle, BundleActivator}
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
 
 import scala.concurrent.duration._
-import scala.reflect.ClassTag
 
 abstract class SimplePojoContainerSpec
   extends TestSuite
@@ -33,12 +32,14 @@ abstract class SimplePojoContainerSpec
   def headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
   def envLogger : Logger => FlowEnvelopeLogger = log => FlowEnvelopeLogger.create(headerCfg, log)
 
-  def actorSystem = mandatoryService[ActorSystem](registry)(ClassTag(classOf[ActorSystem]), timeout)
+  def actorSystem : ActorSystem = mandatoryService[ActorSystem](registry, timeout = timeout)
 
   /**
    * Specify, which properties are mandatory for the simulated container.
    */
   def mandatoryPropertyNames : List[String] = List.empty
+
+  def bundles : Seq[(String, BundleActivator)] = Seq.empty
 
   /**
    * If required, inject additional system properties when firing up the container.
