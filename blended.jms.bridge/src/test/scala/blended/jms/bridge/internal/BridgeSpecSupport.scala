@@ -34,8 +34,6 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   with ScalaCheckPropertyChecks
   with JmsConnectionHelper {
 
-  private implicit val to : FiniteDuration = timeout
-
   protected val log : Logger = Logger(getClass().getName())
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withRetries").getAbsolutePath()
