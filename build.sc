@@ -239,9 +239,30 @@ trait BlendedBaseModule
   override def bundleSymbolicName = blendedModule
 
   override def scalacOptions = Seq(
-    "-deprecation",
-    "-target:jvm-1.8",
-    "-Wunused"
+    "--deprecation",
+    "--target:8",
+//    "-Werror",
+    Seq(
+      "adapted-args",
+      "constant",
+      "deprecation",
+      "doc-detached",
+      "inaccessible",
+      "infer-any",
+      "missing-interpolator",
+      "nullary-override",
+      "nullary-unit",
+      "option-implicit",
+      "poly-implicit-overload",
+      "stars-align",
+      // Compiler doesn't know it but suggest it: "Recompile with -Xlint:unchecked for details."
+      // "unchecked",
+      "unused",
+    ).mkString("-Xlint:", ",", ""),
+//    "--unchecked"
+  )
+  override def javacOptions = Seq(
+    "-Xlint:unchecked"
   )
 
   override def scoverageVersion = deps.scoverageVersion
