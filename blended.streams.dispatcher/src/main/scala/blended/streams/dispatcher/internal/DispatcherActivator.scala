@@ -1,7 +1,6 @@
 package blended.streams.dispatcher.internal
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
@@ -36,7 +35,6 @@ class DispatcherActivator extends DominoActivator
                 }
 
                 implicit val system: ActorSystem = cfg.system
-                implicit val materializer: Materializer = ActorMaterializer()
 
                 val routerCfg = ResourceTypeRouterConfig.create(
                   ctCtxt = cfg.ctContext,

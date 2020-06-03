@@ -17,7 +17,6 @@ import blended.util.logging.{LogLevel, Logger}
 import blended.util.RichTry._
 
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -29,10 +28,9 @@ class RunnableDispatcher(
   tMgr : FlowTransactionManager,
   routerCfg : ResourceTypeRouterConfig,
   streamsCfg : BlendedStreamsConfig
-)(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
+)(implicit system: ActorSystem) extends JmsStreamSupport {
 
   private val startedDispatchers : mutable.Map[String, ActorRef] = mutable.Map.empty
-  private var transMgr : Option[ActorRef] = None
   private var transStream : Option[ActorRef] = None
 
   private val internal : BridgeProviderConfig = registry.internalProvider.get
@@ -83,7 +81,7 @@ class RunnableDispatcher(
   }
 
   // Simply stick the transaction event into the transaction destination
-  private[builder] def transactionSend(streamLogger : FlowEnvelopeLogger)(implicit system : ActorSystem, materializer: Materializer) :
+  private[builder] def transactionSend(streamLogger : FlowEnvelopeLogger)(implicit system : ActorSystem) :
     Graph[FlowShape[FlowTransactionEvent, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
@@ -191,8 +189,6 @@ class RunnableDispatcher(
     )
 
     try {
-      implicit val eCtxt : ExecutionContext = system.dispatcher
-
       if (routerCfg.startupMap.nonEmpty) {
 
         logger.underlying.debug(s"Waiting for JMS connection [${providerCfg.vendor},${providerCfg.provider}] to connect ...")
@@ -296,7 +292,6 @@ class RunnableDispatcher(
   }
 
   def stop() : Unit = {
-    transMgr.foreach(system.stop)
     transStream.foreach(_ ! StreamController.Stop)
     startedDispatchers.foreach { case (_, d) => d ! StreamController.Stop }
     startedDispatchers.clear()

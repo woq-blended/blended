@@ -5,8 +5,6 @@ import java.security.spec.X509EncodedKeySpec
 import java.security.{KeyFactory, PublicKey}
 import java.util.Base64
 
-import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator

@@ -3,7 +3,7 @@ package blended.streams.transaction
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Zip}
-import akka.stream.{FlowShape, Materializer}
+import akka.stream.FlowShape
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.FlowHeaderConfig
 import blended.streams.jms._
@@ -44,7 +44,7 @@ class TransactionWiretap(
   inbound : Boolean,
   trackSource : String,
   log : FlowEnvelopeLogger
-)(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
+)(implicit system: ActorSystem) extends JmsStreamSupport {
 
   private[transaction] val createTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 

@@ -6,12 +6,9 @@ import blended.security.internal.SecurityActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import blended.util.logging.Logger
 import javax.security.auth.login.LoginContext
 import org.osgi.framework.BundleActivator
 import org.scalatest.DoNotDiscover
-
-import scala.concurrent.duration._
 
 @DoNotDiscover
 abstract class LDAPLoginSpec extends SimplePojoContainerSpec
@@ -20,7 +17,6 @@ abstract class LDAPLoginSpec extends SimplePojoContainerSpec
 
   private[this] val user = "andreas"
   private[this] val pwd = "mysecret"
-  private[this] val log = Logger[LDAPLoginSpec]
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 

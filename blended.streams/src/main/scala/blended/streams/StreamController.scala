@@ -1,10 +1,7 @@
 package blended.streams
 
 import akka.actor.{Actor, Props}
-import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-
-import scala.concurrent.ExecutionContext
 
 object StreamController {
 
@@ -32,8 +29,6 @@ object StreamController {
 abstract class AbstractStreamController[T, Mat](streamCfg : BlendedStreamsConfig)
   extends Actor
   with StreamControllerSupport[T, Mat] {
-
-  private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
 
   override def preStart() : Unit = self ! StreamController.Start
 

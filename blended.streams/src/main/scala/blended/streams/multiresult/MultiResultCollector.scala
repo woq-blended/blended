@@ -9,7 +9,6 @@ import akka.{Done, NotUsed}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.Collector
 import blended.util.logging.LogLevel
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
@@ -116,8 +115,13 @@ class MultiResultCollector(
   }
 
   private def collecting(env : FlowEnvelope, timer : Option[Cancellable]) : Receive = {
-    case r : Try[List[FlowEnvelope]] => r match {
-      case Success(l) => l.map(_.exception).find(_.isDefined).flatten match {
+    case r: Try[_] => r match {
+      case Success(Nil) =>
+        log.logEnv(env, LogLevel.Info, s"Successfully executed sub flows for [${env.id}]")
+        respond(env, timer)
+        // We can't match the list element type because of erasure, so we try to match the first element or fail
+      case Success(l @ (_: FlowEnvelope) :: _ ) =>
+        l.asInstanceOf[List[FlowEnvelope]].map(_.exception).find(_.isDefined).flatten match {
         case None =>
           log.logEnv(env, LogLevel.Info, s"Successfully executed sub flows for [${env.id}]")
           respond(env, timer)
@@ -125,6 +129,10 @@ class MultiResultCollector(
           log.logEnv(env, LogLevel.Warn, s"Subflow for [${env.id}] threw exception [${t.getMessage()}]")
           respond(env.withException(t), timer)
       }
+      case Success(unexpected) =>
+        val ex = new RuntimeException(s"Unexpected result type ${unexpected.getClass()}, expected a List[FlowEnvelope]")
+        log.logEnv(env, LogLevel.Error, s"Failed to process subflows of [${env.id}] : ${ex.getMessage()}")
+        respond(env.withException(ex), timer)
       case Failure(t) =>
         log.logEnv(env, LogLevel.Warn, s"Failed to process subflows of [${env.id}] : ${t.getMessage()}")
         respond(env.withException(t), timer)

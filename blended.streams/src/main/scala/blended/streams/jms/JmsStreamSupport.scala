@@ -13,7 +13,7 @@ import blended.streams.processor.{AckProcessor, Collector}
 import blended.util.logging.LogLevel
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, Future}
 import scala.util.Try
 
 trait JmsStreamSupport {
@@ -32,7 +32,6 @@ trait JmsStreamSupport {
   )(implicit system : ActorSystem) : Try[KillSwitch] = Try {
 
     implicit val materializer : Materializer = ActorMaterializer()
-    implicit val eCtxt : ExecutionContext = system.dispatcher
 
     val hasException : AtomicBoolean = new AtomicBoolean(false)
     val sendCount : AtomicInteger = new AtomicInteger(0)
@@ -108,7 +107,6 @@ trait JmsStreamSupport {
     timeout : Option[FiniteDuration]
   )(implicit system : ActorSystem) : Collector[FlowEnvelope] = {
 
-    implicit val materializer : Materializer = ActorMaterializer()(system)
     val listenerCount : Int = if (dest.isInstanceOf[JmsQueue]) {
       listener
     } else {
@@ -145,8 +143,6 @@ trait JmsStreamSupport {
     settings : JmsProducerSettings,
     autoAck : Boolean
   )(implicit system : ActorSystem) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
-
-    implicit val materializer : Materializer = ActorMaterializer()
 
     val f = Flow.fromGraph(new JmsProducerStage(name, settings)).named(name)
 

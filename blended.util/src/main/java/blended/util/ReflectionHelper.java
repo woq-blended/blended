@@ -42,6 +42,7 @@ public final class ReflectionHelper {
     }
 
     try {
+      @SuppressWarnings("unchecked")
       T result = (T) current;
       return result;
     } catch (ClassCastException cce) {
@@ -54,7 +55,9 @@ public final class ReflectionHelper {
     if (propertyName == null) {
       return null;
     } else {
-      return (T) getProperty(object, propertyName.split("\\."));
+      @SuppressWarnings("unchecked")
+      T t = (T) getProperty(object, propertyName.split("\\."));
+      return t;
     }
   }
 

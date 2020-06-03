@@ -2,7 +2,6 @@ package blended.streams.jms.internal
 
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, ActorRef, Cancellable, OneForOneStrategy, Props, SupervisorStrategy}
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.container.context.api.ContainerContext
 import blended.jms.utils._
 import blended.streams.FlowHeaderConfig
@@ -73,7 +72,6 @@ class JmsKeepAliveActor(
 
   private val log : Logger = Logger[JmsKeepAliveActor]
   private implicit val eCtxt : ExecutionContext = context.system.dispatcher
-  private implicit val materializer : Materializer = ActorMaterializer()
   private val headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
 
   case object Tick

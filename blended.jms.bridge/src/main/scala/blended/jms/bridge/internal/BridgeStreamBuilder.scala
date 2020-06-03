@@ -3,7 +3,7 @@ package blended.jms.bridge.internal
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
-import akka.stream.{FanOutShape2, FlowShape, Graph, Materializer}
+import akka.stream.{FanOutShape2, FlowShape, Graph}
 import blended.container.context.api.ContainerContext
 import blended.jms.bridge.internal.TrackTransaction.TrackTransaction
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
@@ -67,7 +67,7 @@ case class BridgeStreamConfig(
 class BridgeStreamBuilder(
   bridgeCfg : BridgeStreamConfig,
   streamsConfig : BlendedStreamsConfig
-)(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
+)(implicit system: ActorSystem) extends JmsStreamSupport {
 
   // So that we find the stream in the logs
   protected val inId = s"${bridgeCfg.fromCf.vendor}:${bridgeCfg.fromCf.provider}:${bridgeCfg.fromDest.asString}"

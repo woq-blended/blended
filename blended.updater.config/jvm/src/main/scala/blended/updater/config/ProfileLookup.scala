@@ -74,7 +74,7 @@ object ProfileLookup {
    * Create a [[Config]] from a [[ProfileLookup]].
    */
   def toConfig(profileLookup : ProfileLookup) : Config = {
-    val config = Map(
+    val config = Map[String, Object](
       "profile.name" -> profileLookup.profileName,
       "profile.version" -> profileLookup.profileVersion,
       "profile.baseDir" -> profileLookup.profileBaseDir.getPath(),

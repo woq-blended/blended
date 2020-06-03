@@ -29,8 +29,6 @@ class ConnectionStateManager(holder: ConnectionHolder)
   implicit val eCtxt : ExecutionContext = context.system.dispatcher
   private val log : Logger = Logger(s"${getClass().getName()}.${config.vendor}.${config.provider}")
 
-  private var conn : Option[BlendedJMSConnection] = None
-
   private var currentReceive : StateReceive = disconnected()
   private[internal] var currentState : ConnectionState = ConnectionState(
     vendor = config.vendor,
@@ -116,8 +114,6 @@ class ConnectionStateManager(holder: ConnectionHolder)
     // We successfully connected, record the connection and timestamps
     case ConnectResult(t, Right(c)) =>
       if (t == state.lastConnectAttempt.getOrElse(0L)) {
-        conn = Some(new BlendedJMSConnection(config.vendor, config.provider, c))
-        // checkConnection(schedule)
         switchState(connected(), publishEvents(state, s"Successfully connected to JMS provider").copy(
           status = Connected,
           firstReconnectAttempt = None,
@@ -143,7 +139,6 @@ class ConnectionStateManager(holder: ConnectionHolder)
 
     // All good, happily disconnected
     case ConnectionClosed =>
-      conn = None
       checkConnection(config.minReconnect, true)
       state.controller.foreach(context.system.stop)
       switchState(

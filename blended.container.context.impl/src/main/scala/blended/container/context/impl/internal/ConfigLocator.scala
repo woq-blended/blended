@@ -1,6 +1,6 @@
 package blended.container.context.impl.internal
 
-import java.io.{File, FileReader, Reader}
+import java.io.File
 
 import blended.container.context.api.ContainerContext
 import blended.util.logging.Logger

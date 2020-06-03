@@ -12,14 +12,11 @@ import com.typesafe.config.ConfigFactory
 import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.duration._
-
 class InboundConfigSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
   with PojoSrTestHelper {
 
-  private[this] implicit val timeout : FiniteDuration = 3.seconds
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles: Seq[(String, BundleActivator)] = Seq.empty

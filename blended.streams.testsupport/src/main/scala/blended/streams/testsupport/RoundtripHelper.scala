@@ -1,7 +1,6 @@
 package blended.streams.testsupport
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
@@ -29,7 +28,6 @@ case class RoundtripHelper(
 
   val outcomeId : ExpectedOutcome => String = oc => oc.cf.id + "." + oc.dest.asString
 
-  private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
 
   def withTestMsgs(env : FlowEnvelope*) : RoundtripHelper = copy(testMsgs = testMsgs ++ env)

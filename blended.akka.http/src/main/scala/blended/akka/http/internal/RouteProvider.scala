@@ -47,7 +47,7 @@ class RouteProvider {
       updateRoutes()
     }
 
-    def modifyContext(httpContext : HttpContext) : Unit = addContext _
+    def modifyContext(httpContext : HttpContext) : Unit = addContext(httpContext)
 
     def removeContext(httpContext : HttpContext) : Unit = {
       // we currently allow only one route for each prefix

@@ -12,7 +12,6 @@ import akka.http.scaladsl.model.{StatusCode, StatusCodes => AkkaStatusCodes}
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.testkit.TestProbe
-import akka.util.ByteString
 import akka.{Done, NotUsed}
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
@@ -70,9 +69,7 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
   protected val source : Source[TextMessage, ActorRef] = Source.actorRef[TextMessage](1, OverflowStrategy.fail)
   protected val incoming : ActorRef => Sink[Message, NotUsed] = a => Sink.actorRef(a, Done)
 
-  protected def withWebSocketServer[T](
-   f : => T
-  )(implicit clazz : ClassTag[T]) : T = {
+  protected def withWebSocketServer[T: ClassTag](f: => T): T = {
     f
   }
 
@@ -93,7 +90,7 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
     }
   }
 
-  protected def serverKey()(implicit system : ActorSystem, materializer : Materializer) : Try[PublicKey] = Try {
+  protected def serverKey(): Try[PublicKey] = Try {
 
     implicit val backend = AkkaHttpBackend()
 
@@ -118,7 +115,7 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
     kf.generatePublic(x509)
   }
 
-  protected def login(user : String, password : String)(implicit system : ActorSystem, materializer : Materializer) : Try[Token] = {
+  protected def login(user : String, password : String): Try[Token] = {
 
    implicit val backend = AkkaHttpBackend()
 

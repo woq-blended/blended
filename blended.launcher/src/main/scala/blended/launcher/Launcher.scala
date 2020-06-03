@@ -512,7 +512,6 @@ class Launcher private (config : LauncherConfig) {
 
     val framework : Framework = startFramework().get
     val osgiBundles : Seq[InstalledBundle] = installBundles(framework.getBundleContext()).get
-    val frameworkStartLevel : FrameworkStartLevel = framework.adapt(classOf[FrameworkStartLevel])
 
     /* Make sure all bundles are resolved before attempting the start sequence */
     val unresolved :Seq[InstalledBundle] = resolveBundles(framework, osgiBundles).get

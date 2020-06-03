@@ -122,7 +122,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   }
 
   private def addInflight(inflightId : String, ackCtxt : T, state : AckState) : Unit = {
-    inflightMap += ( inflightId -> (ackCtxt, state))
+    inflightMap += inflightId -> (ackCtxt -> state)
     log.underlying.debug(s"Inflight message count for [$id] is [${inflightMap.size}]")
   }
 
@@ -231,7 +231,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
         case Success(None) =>
 
           nextPoll() match {
-            case None => pollImmediately.invoke()
+            case None => pollImmediately.invoke(())
             case Some(d) => if (!isTimerActive(Poll)) {
               log.underlying.trace(s"Scheduling next poll for [$id] in [$d]")
               scheduleOnce(Poll, d)

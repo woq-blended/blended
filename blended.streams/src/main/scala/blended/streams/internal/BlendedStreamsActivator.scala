@@ -3,7 +3,6 @@ package blended.streams.internal
 import java.io.File
 
 import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.utils._
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
@@ -29,8 +28,6 @@ class BlendedStreamsActivator extends DominoActivator
       log.debug(s"Starting bundle [${bundleContext.getBundle().getSymbolicName()}]")
 
       implicit val system : ActorSystem = osgiCfg.system
-      implicit val materializer : Materializer = ActorMaterializer()
-
 
       val baseDir : File = new File(osgiCfg.ctContext.containerDirectory)
 

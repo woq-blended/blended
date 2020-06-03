@@ -59,7 +59,8 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       val actorSys = system(registry)
       val (internal, external) = getConnectionFactories(registry)
 
-      val switch = sendOutbound(internal, msgCount, true)
+      //      val switch =
+      sendOutbound(internal, msgCount, true)
 
       val messages : List[FlowEnvelope] =
         consumeMessages(

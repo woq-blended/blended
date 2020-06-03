@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
-import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer}
+import akka.stream.{FlowShape, Graph}
 import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams._
@@ -68,7 +68,6 @@ class JmsRetryProcessor(
   implicit system : ActorSystem
 ) extends JmsStreamSupport {
 
-  private[this] implicit val materializer : Materializer = ActorMaterializer()
   private[this] val id : String = retryCfg.headerCfg.prefix + ".retry." + retryCfg.retryDestName
   private[this] val retryLog : FlowEnvelopeLogger = FlowEnvelopeLogger.create(retryCfg.headerCfg, Logger(id))
   private[this] val log : Logger = Logger[JmsRetryProcessor]

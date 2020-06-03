@@ -6,7 +6,6 @@ import blended.util.RichTry._
 import blended.util.logging.Logger
 import javax.management._
 
-import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 import scala.util.Try
 import scala.util.control.NonFatal

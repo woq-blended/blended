@@ -3,17 +3,16 @@ package blended.jms.bridge.internal
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
+import akka.stream.KillSwitch
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerContext
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.internal.BlendedStreamsActivator
 import blended.streams.jms.{JmsEnvelopeHeader, JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.FlowTransactionEvent
-import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
+import blended.streams.BlendedStreamsConfig
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{BlendedPojoRegistry, JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -23,7 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.Await
 import scala.util.Try
 
 abstract class BridgeSpecSupport extends SimplePojoContainerSpec

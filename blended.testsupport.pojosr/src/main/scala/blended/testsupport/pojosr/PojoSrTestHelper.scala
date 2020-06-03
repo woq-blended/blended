@@ -51,12 +51,13 @@ trait PojoSrTestHelper {
   // An activator to instantiate a bundle with a special parametrized activator,
   // so that the container context is initialized correctly
   private def contextActivator(
-    mandatoryProperties : Option[String] = None
+    mandatoryProperties : Option[String]
   ) : BundleActivator = {
     new DominoActivator {
 
       mandatoryProperties.foreach(s =>
-        System.setProperty("blended.updater.profile.properties.keys", s))
+        System.setProperty("blended.updater.profile.properties.keys", s)
+      )
 
       whenBundleActive {
         new MockContainerContext(baseDir, pojoUuid).providesService[ContainerContext]

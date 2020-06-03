@@ -3,7 +3,7 @@ package blended.streams.dispatcher.internal.builder
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
-import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer}
+import akka.stream.{FlowShape, Graph}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
@@ -24,7 +24,6 @@ class TransactionOutbound(
   log: FlowEnvelopeLogger
 )(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport {
 
-  private implicit val materializer : Materializer = ActorMaterializer()
   private val config = dispatcherCfg.providerRegistry.mandatoryProvider(internalCf.vendor, internalCf.provider)
 
   private[builder] val jmsSource : Try[Source[FlowEnvelope, NotUsed]] = Try {

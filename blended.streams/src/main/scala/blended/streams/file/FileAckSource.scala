@@ -5,7 +5,6 @@ import java.nio.charset.Charset
 import java.text.SimpleDateFormat
 import java.util.{Date, UUID}
 
-import akka.actor.ActorSystem
 import akka.stream.stage.{GraphStage, GraphStageLogic}
 import akka.stream.{Attributes, Outlet, SourceShape}
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
@@ -44,7 +43,7 @@ object FileAckSource {
 class FileAckSource(
   pollCfg : FilePollConfig,
   logger : FlowEnvelopeLogger
-)(implicit system : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
+) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val pollId : String =  s"${pollCfg.headerCfg.prefix}.FilePoller.${pollCfg.id}.source"
   private val out : Outlet[FlowEnvelope] = Outlet(name = pollId)
@@ -117,8 +116,6 @@ class FileAckSource(
     override protected def doPerformPoll(id : String, ackHandler : AcknowledgeHandler) : Try[Option[FileAckContext]] = {
 
       def createEnvelope(f : File) : Try[Option[FileAckContext]] = Try {
-
-        val sdf : SimpleDateFormat = new SimpleDateFormat("yyyyMMdd-HHmmssSSS")
 
         if (f.exists()) {
           val uuid : String = UUID.randomUUID().toString() + "-" + f.getName()

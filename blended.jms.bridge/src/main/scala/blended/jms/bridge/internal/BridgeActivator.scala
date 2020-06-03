@@ -40,7 +40,7 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
   // the factory with stream builders throwing particular exceptions
   protected def streamBuilderFactory(system : ActorSystem)(materializer: Materializer)(
     bridgeCfg : BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
-  ) : BridgeStreamBuilder = new BridgeStreamBuilder(bridgeCfg, streamsCfg)(system, materializer)
+  ) : BridgeStreamBuilder = new BridgeStreamBuilder(bridgeCfg, streamsCfg)(system)
 
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>

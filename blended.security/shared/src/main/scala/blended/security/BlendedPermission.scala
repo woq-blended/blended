@@ -60,6 +60,7 @@ case class BlendedPermission(
         // the result will also not restrict on that property.
 
         val props = properties
+          .view
           // we need the properties defined in both permissions
           .filterKeys(k => other.properties.get(k).isDefined)
           // then we combine the properties of both permissions

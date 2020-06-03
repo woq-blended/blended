@@ -1,7 +1,7 @@
 package blended.akka.http.internal
 
 import blended.jmx._
-import javax.management.{InstanceNotFoundException, MBeanInfo, ObjectName}
+import javax.management.{InstanceNotFoundException, ObjectName}
 
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}

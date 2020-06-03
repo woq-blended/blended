@@ -1,7 +1,6 @@
 package blended.testsupport.pojosr
 
 import java.io.File
-import java.nio.file.Files
 import java.util.Properties
 
 import blended.container.context.impl.internal.AbstractContainerContextImpl

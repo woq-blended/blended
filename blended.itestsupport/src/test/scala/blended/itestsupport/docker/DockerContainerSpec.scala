@@ -20,7 +20,7 @@ class DockerContainerSpec extends AnyWordSpec
     log.info(s"$cut")
 
     "be created from the image id and a name" in {
-      val container = new DockerContainer(cut)
+      new DockerContainer(cut)
     }
 
     "issue the stop command with the correct id" in {

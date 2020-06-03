@@ -35,7 +35,7 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
     override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
       cfg: BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
     ): BridgeStreamBuilder =
-      new BridgeStreamBuilder(cfg, streamsCfg)(system, materializer) {
+      new BridgeStreamBuilder(cfg, streamsCfg)(system) {
         override protected def jmsSend: Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
           env.withException(new Exception("Boom"))
         }

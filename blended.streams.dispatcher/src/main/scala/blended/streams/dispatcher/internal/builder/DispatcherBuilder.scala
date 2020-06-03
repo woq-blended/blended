@@ -43,7 +43,7 @@ case class DispatcherBuilder(
 
   private[this] val classLogger : Logger = Logger[DispatcherBuilder]
 
-  def core()(implicit system : ActorSystem) : Graph[FanOutShape3[FlowEnvelope, FlowEnvelope, WorklistEvent, FlowEnvelope], NotUsed] = {
+  def core(): Graph[FanOutShape3[FlowEnvelope, FlowEnvelope, WorklistEvent, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit builder =>
 

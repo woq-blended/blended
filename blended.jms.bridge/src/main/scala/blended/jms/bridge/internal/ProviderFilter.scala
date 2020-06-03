@@ -3,8 +3,6 @@ package blended.jms.bridge.internal
 import blended.jms.utils.ProviderAware
 import blended.util.logging.Logger
 
-import scala.reflect.ClassTag
-
 object ProviderFilter {
   def apply(vendor : String) : ProviderFilter = apply(vendor, None)
   def apply(vendor : String, provider : String) : ProviderFilter = apply(vendor, Some(provider))
@@ -36,10 +34,10 @@ class ProviderFilter(vendor : String, provider : Option[String]) {
     result
   }
 
-  def listProviderFilter[T <: ProviderAware](l : List[T], vendor : String, provider : Option[String])(implicit classTag : ClassTag[T]) : List[T] =
+  def listProviderFilter[T <: ProviderAware](l : List[T], vendor : String, provider : Option[String]): List[T] =
     l.filter(matches)
 
-  def singleProviderFilter[T <: ProviderAware](l : List[T], vendor : String, provider : String)(implicit evidence : ClassTag[T]) : Option[T] = {
+  def singleProviderFilter[T <: ProviderAware](l : List[T], vendor : String, provider : String): Option[T] = {
 
     l.filter(matches) match {
       case Nil =>

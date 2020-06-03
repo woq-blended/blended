@@ -6,7 +6,6 @@ import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 
 import scala.jdk.CollectionConverters._
-import scala.collection.immutable
 import scala.collection.immutable.Map
 import scala.util._
 
@@ -28,12 +27,12 @@ final case class LocalOverlays(overlays : Set[OverlayConfig], profileDir : File)
    * @return A collection of validation errors, if any.
    *         If this is empty, the validation was successful.
    */
-  def validate() : List[String] = {
-    val nameIssues = overlays.groupBy(_.name).collect {
+  def validate(): Seq[String] = {
+    val nameIssues: Seq[String] = overlays.groupBy(_.name).collect {
       case (name, configs) if configs.size > 1 => s"More than one overlay with name '$name' detected"
-    }.toList
+    }.toSeq
     var seenPropsAndConfigNames = Set[(String, String)]()
-    val propIssues = overlays.toSeq.flatMap { o =>
+    val propIssues: Seq[String] = overlays.toSeq.flatMap { o =>
       val occ = s"${o.name}-${o.version}"
       o.properties.keySet.toSeq.flatMap { p =>
         seenPropsAndConfigNames.find(_._1 == p) match {
@@ -60,7 +59,7 @@ final case class LocalOverlays(overlays : Set[OverlayConfig], profileDir : File)
    *
    * @return The `Success` with the materialized config files or `Failure` in case of any unrecoverable error.
    */
-  def materialize() : Try[immutable.Seq[File]] = Try {
+  def materialize(): Try[Seq[File]] = Try {
     val dir = materializedDir
     OverlayConfigCompanion.aggregateGeneratedConfigs2(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
@@ -79,7 +78,7 @@ final case class LocalOverlays(overlays : Set[OverlayConfig], profileDir : File)
   /**
    * The files that would be generated
    */
-  def materializedFiles() : Try[immutable.Seq[File]] = Try {
+  def materializedFiles() : Try[Seq[File]] = Try {
     val dir = materializedDir
     OverlayConfigCompanion.aggregateGeneratedConfigs2(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>

@@ -14,7 +14,7 @@ import blended.mgmt.repo.internal.ArtifactRepoActivator
 import blended.persistence.h2.internal.H2Activator
 import blended.security.internal.SecurityActivator
 import blended.testsupport.pojosr.{AkkaHttpServerTestHelper, BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
-import blended.testsupport.retry.{ResultPoller, Retry}
+import blended.testsupport.retry.ResultPoller
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM, TestFile}
 import blended.updater.config.json.PrickleProtocol._
@@ -76,8 +76,10 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
             whenAdvancedServicePresent[HttpContext]("(prefix=mgmt)") { _ =>
               implicit val eCtxt : ExecutionContext = system.dispatcher
               log.info("Test-Server up and running. Starting test case...")
-              val success : Try[Unit] =
-                new ResultPoller[Unit](system, timeout, hint)(() => Future(f(Server(serviceRegistry = registry, dir = new File(baseDir))))).execute( _ => true )
+              val success: Try[Unit] =
+                new ResultPoller[Unit](system, timeout, hint)(() => Future {
+                  f(Server(serviceRegistry = registry, dir = new File(baseDir)))
+                }).execute(_ => true)
               assert(success.isSuccess)
             }
           }
@@ -99,13 +101,9 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
     "OverlayConfig" - {
 
       "GET without credentials should fail with 401 - pending until feature is enabled" in logException {
-        val url = uri"${plainServerUrl(registry)}/mgmt/overlayConfig"
+        uri"${plainServerUrl(registry)}/mgmt/overlayConfig"
         // we currently do not require any permission for GET
         pending
-//        withServer { _ =>
-//          val response = basicRequest.get(url).send()
-//          assert(response.code === 401)
-//        }
       }
 
       "initial GET should return empty overlay list" in logException {
@@ -166,7 +164,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
 
     "ActivateProfile" - {
       val ci1 = "ci1_ActivateProfile"
-      val ci2 = "ci2_ActivateProfile"
+      // val ci2 = "ci2_ActivateProfile"
 
       def url(containerId : String) = uri"${plainServerUrl(registry)}/mgmt/container/${containerId}/update"
 

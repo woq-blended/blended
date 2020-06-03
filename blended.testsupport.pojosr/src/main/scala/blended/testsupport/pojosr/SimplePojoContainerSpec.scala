@@ -1,7 +1,5 @@
 package blended.testsupport.pojosr
 
-import java.net.ServerSocket
-
 import akka.actor.ActorSystem
 import blended.container.context.api.ContainerContext
 import blended.streams.FlowHeaderConfig

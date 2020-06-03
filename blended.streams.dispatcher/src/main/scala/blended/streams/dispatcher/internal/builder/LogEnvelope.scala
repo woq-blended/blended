@@ -32,7 +32,8 @@ object LogEnvelope {
           case Failure(_) => dispatcherCfg.applicationLogHeader
         }
 
-        val headerString : Map[String, String] = logHeader match {
+//        val headerString : Map[String, String] =
+        logHeader match {
           case Nil => env.flowMessage.header.view.mapValues(_.toString).toMap
           case l => l.map { h =>
             (h -> env.flowMessage.header.get(h).map(_.toString()).getOrElse("UNKNOWN"))

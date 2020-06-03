@@ -19,29 +19,7 @@ private[jvmrunner] class RunningProcess(
   private[this] val log : Logger = Logger[RunningProcess]
   private[this] val sleepInterval : FiniteDuration = 50.millis
 
-  private[this] val outThread = new Thread("StreamCopyThread") {
-    setDaemon(true)
-
-    override def run(): Unit = {
-      try {
-        while (true) {
-          if (in.available > 0) {
-            in.read match {
-              case -1 =>
-              case read =>
-                out.write(read)
-                out.flush()
-            }
-          } else {
-            Thread.sleep(sleepInterval.toMillis)
-          }
-        }
-      } catch {
-        case e : IOException          => // ignore
-        case e : InterruptedException => // this is ok
-      }
-    }
-  }
+  private[this] val outThread = asyncCopyThread(in, out, immediately = true, sleepInterval = sleepInterval)
 
   if (interactive) {
     log.info("Starting console read thread ...")
@@ -96,28 +74,25 @@ private[jvmrunner] class RunningProcess(
   /**
    * Starts a new thread which copies an InputStream into an Output stream. Does not close the streams.
    */
-
-  private def asyncCopy(in : InputStream, out : OutputStream, immediately : Boolean = false) : Thread =
+  private def asyncCopyThread(in: InputStream, out: OutputStream, immediately: Boolean, sleepInterval: FiniteDuration): Thread =
     new Thread("StreamCopyThread") {
       setDaemon(true)
 
       override def run(): Unit = {
         try {
-          copy(in, out, immediately)
+          copy(in, out, immediately, sleepInterval)
         } catch {
           case e : IOException          => // ignore
           case e : InterruptedException => // ok
         }
         out.flush()
       }
-
-      start()
     }
 
   /**
    * Copies an InputStream into an OutputStream. Does not close the streams.
    */
-  private def copy(in : InputStream, out : OutputStream, immediately : Boolean = false) : Unit = {
+  private def copy(in: InputStream, out: OutputStream, immediately: Boolean, sleepInterval: FiniteDuration) : Unit = {
     if (immediately) {
       while (true) {
         if (in.available > 0) {
@@ -128,7 +103,7 @@ private[jvmrunner] class RunningProcess(
               out.flush()
           }
         } else {
-          Thread.sleep(50)
+          Thread.sleep(sleepInterval.toMillis)
         }
       }
     } else {

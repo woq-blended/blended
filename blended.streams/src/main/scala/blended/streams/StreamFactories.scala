@@ -66,7 +66,7 @@ object StreamFactories {
     (mat, collector)
   }
 
-  def keepAliveSource[T](bufferSize : Int)(implicit system : ActorSystem) : Source[T, (ActorRef, KillSwitch)] = {
+  def keepAliveSource[T](bufferSize : Int): Source[T, (ActorRef, KillSwitch)] = {
     Source
       .actorRef[T](bufferSize, OverflowStrategy.fail)
       .viaMat(KillSwitches.single)(Keep.both)

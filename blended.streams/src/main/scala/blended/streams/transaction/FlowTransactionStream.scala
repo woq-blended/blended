@@ -45,8 +45,6 @@ class FlowTransactionStream(
   streamLogger: FlowEnvelopeLogger
 )(implicit system: ActorSystem) extends JmsStreamSupport {
 
-  private implicit val materializer : Materializer = ActorMaterializer()
-
   // recreate the FlowTransactionEvent from the inbound envelope
   private val updateEvent : FlowEnvelope => Try[FlowTransactionEvent] = { env =>
     Try {

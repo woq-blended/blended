@@ -2,8 +2,7 @@ package blended.jms.bridge.internal
 
 import akka.actor.ActorSystem
 import akka.stream.KillSwitch
-import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
-import blended.streams.jms.JmsProducerSettings
+import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionStarted}
 import blended.testsupport.RequiresForkedJVM

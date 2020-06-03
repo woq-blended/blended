@@ -80,7 +80,6 @@ class WebSocketSpec extends AbstractWebSocketSpec {
    "respond to a malformed web socket request with BAD_REQUEST" in {
      withWebSocketServer {
        implicit val system: ActorSystem = actorSystem
-       implicit val materializer: Materializer = ActorMaterializer()
 
        val probe: TestProbe = TestProbe()
 
@@ -95,7 +94,6 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
      withWebSocketServer {
        implicit val system: ActorSystem = actorSystem
-       implicit val materializer: Materializer = ActorMaterializer()
 
        val probe: TestProbe = TestProbe()
        withWebsocketConnection("bg_test", "secret", probe.ref) { actor => _ =>
@@ -111,7 +109,6 @@ class WebSocketSpec extends AbstractWebSocketSpec {
     "respond to a valid Web Socket request" in {
       withWebSocketServer {
         implicit val system: ActorSystem = actorSystem
-        implicit val materializer: Materializer = ActorMaterializer()
 
         val probe: TestProbe = TestProbe()
 

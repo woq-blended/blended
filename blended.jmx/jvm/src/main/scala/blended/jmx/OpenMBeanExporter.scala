@@ -2,7 +2,7 @@ package blended.jmx
 
 import blended.util.logging.Logger
 
-import javax.management.{InstanceAlreadyExistsException, ObjectName}
+import javax.management.ObjectName
 
 import scala.util.{Failure, Success, Try}
 
@@ -17,7 +17,7 @@ trait OpenMBeanExporter {
    * @param product The product
    * @param replaceExisting If `true`, an already registered MBean with the same ObjectName will removed before the registration.
    * @param namingStrategy Used to automatically decide which ObjectName should be used to register the product.
-   * @return In case of error, a [[Failure]] of [[InstanceAlreadyExistsException]]
+   * @return In case of error, a [[Failure]] of [[javax.management.InstanceAlreadyExistsException]]
    */
   def export(product: Product, replaceExisting: Boolean = false)(implicit namingStrategy: NamingStrategy): Try[Unit] = {
     export(product, namingStrategy(product), replaceExisting)

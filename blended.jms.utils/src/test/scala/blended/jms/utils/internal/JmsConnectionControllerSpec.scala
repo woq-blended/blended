@@ -46,7 +46,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
       assert(m.r.isRight)
 
       val t2 = new Date()
-      val c1 = m.r.right.get
+      val Right(c1) = m.r
 
       testActor ! Connect(t2, testId())
 

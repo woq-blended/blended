@@ -3,7 +3,6 @@ package blended.streams.dispatcher.internal.builder
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Flow
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.FlowHeaderConfig
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
@@ -20,7 +19,6 @@ class CbeSendFlow(
   streamLogger: FlowEnvelopeLogger
 )(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport with JmsEnvelopeHeader {
 
-  private implicit val materializer : Materializer = ActorMaterializer()
   private val config = dispatcherCfg.providerRegistry.mandatoryProvider(internalCf.vendor, internalCf.provider)
 
   private[builder] val cbeSink : Try[Flow[FlowEnvelope, FlowEnvelope, NotUsed]] = Try {

@@ -71,7 +71,7 @@ object FlowTransactionEvent {
           case FlowTransactionStateUpdated =>
 
             val branchIds : Seq[String] = envelope.header[String](cfg.headerBranch) match {
-              case Some(s) => if (s.isEmpty()) Seq() else s.split(",")
+              case Some(s) => if (s.isEmpty()) Seq() else s.split("[,]").toSeq
               case None    => Seq()
             }
 

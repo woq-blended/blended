@@ -4,7 +4,6 @@ import java.util.UUID
 
 import akka.actor.ActorSystem
 import akka.pattern.after
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsEnvelopeHeader, JmsProducerSettings, JmsStreamSupport, MessageDestinationResolver}
@@ -44,7 +43,6 @@ class RoundtripConnectionVerifier(
 
   private def probe(cf : IdAwareConnectionFactory) : Unit = {
 
-    implicit val materializer : Materializer = ActorMaterializer()
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
     val id : String = UUID.randomUUID().toString()

@@ -68,7 +68,7 @@ object FlowTransaction {
               b(0) -> b(1).split(stateSeparator).toList
             }.toMap
 
-        branches.mapValues(s => s.map(i => WorklistState.apply(i).get)).toMap
+        branches.view.mapValues(s => s.map(i => WorklistState.apply(i).get)).toMap
       }
     }.getOrElse(Map.empty[String, List[WorklistState]])
 

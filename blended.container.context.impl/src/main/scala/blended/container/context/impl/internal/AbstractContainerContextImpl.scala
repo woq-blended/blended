@@ -24,8 +24,6 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
   private[this] lazy val log : Logger = Logger(getClass().getName())
 
   def initialize() : Unit = {
-    // make sure we initialize the config
-    val cfg = containerConfig
     // then inject the context into the property resolver
     resolver.setCtCtxt(this)
   }

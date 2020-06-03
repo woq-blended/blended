@@ -1,9 +1,7 @@
 package blended.itestsupport.docker
 
-import akka.event.LoggingAdapter
 import blended.itestsupport.ContainerUnderTest
 import blended.testsupport.TestActorSys
-import com.typesafe.config.Config
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
@@ -19,14 +17,14 @@ class ContainerUnderTestSpec extends AnyWordSpec
     "be configurable from the configuration" in TestActorSys { testkit =>
       implicit val system = testkit.system
 
-      def docker = {
-        System.setProperty("docker.io.version", "1.17")
-        new Docker {
-          override implicit val logger: LoggingAdapter = system.log
-          override implicit val config: Config = system.settings.config
-          override implicit val client = mockClient
-        }
-      }
+//      def docker: Docker = {
+//        System.setProperty("docker.io.version", "1.17")
+//        new Docker {
+//          override implicit val logger: LoggingAdapter = system.log
+//          override implicit val config: Config = system.settings.config
+//          override implicit val client = mockClient
+//        }
+//      }
 
       val cuts = ContainerUnderTest.containerMap(config)
       

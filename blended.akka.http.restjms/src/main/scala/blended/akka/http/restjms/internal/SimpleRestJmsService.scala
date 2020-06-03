@@ -15,7 +15,6 @@ import blended.streams.jms._
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowEnvelopeLogger, FlowMessage, TextFlowMessage}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
-import scala.jdk.CollectionConverters._
 
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -223,7 +222,7 @@ class SimpleRestJmsService(
   private def addRequest(id : String, request : HttpRequest) : Future[HttpResponse] = synchronized {
     val p : Promise[HttpResponse] = Promise()
 
-    pendingRequests += (id -> (request, p))
+    pendingRequests += id -> (request -> p)
 
     p.future.onComplete{ _ =>
       log.debug(s"Cleaning up Http request [$id]")

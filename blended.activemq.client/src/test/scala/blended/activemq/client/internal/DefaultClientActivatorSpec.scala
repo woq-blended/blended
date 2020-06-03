@@ -3,7 +3,6 @@ package blended.activemq.client.internal
 import java.io.File
 
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerContext
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}

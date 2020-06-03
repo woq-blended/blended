@@ -2,9 +2,9 @@ package blended.streams.dispatcher.internal
 
 import java.io.File
 
-import akka.actor.{ActorSystem, Scheduler}
+import akka.actor.Scheduler
 import akka.stream.scaladsl.{Flow, Keep, Sink}
-import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
+import akka.stream.KillSwitch
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.bridge.internal.BridgeActivator
@@ -69,9 +69,9 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     "process inbound messages with a wrong ResourceType" in logException {
 
       // make sure we can connect to all connection factories
-      val amq = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
+      namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
       val sonic = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sonic75", "central").unwrap
-      val ccQueue = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
+      namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
 
       implicit val eCtxt : ExecutionContext = dispCtxt.system.dispatcher
       implicit val sched : Scheduler = dispCtxt.system.scheduler
@@ -128,9 +128,9 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     "process inbound messages with a correct ResourceType" in logException {
 
       // make sure we can connect to all connection factories
-      val amq = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
+      namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
       val sonic = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sonic75", "central").unwrap
-      val ccQueue = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
+      namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
 
       implicit val eCtxt : ExecutionContext = dispCtxt.system.dispatcher
       implicit val sched : Scheduler = dispCtxt.system.scheduler
@@ -189,9 +189,9 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     "send configured startup messages" in logException {
 
       // make sure we can connect to all connection factories
-      val amq = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
+      namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("activemq", "activemq").unwrap
       val sonic = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sonic75", "central").unwrap
-      val ccQueue = namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
+      namedJmsConnectionFactory(registry, mustConnect = true, timeout = timeout)("sagum", s"${country}_queue").unwrap
 
       val results = getResults(
         cf = sonic,

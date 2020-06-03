@@ -3,19 +3,15 @@ package blended.akka.http.jmsqueue.internal
 import java.io.File
 import java.net.URI
 
-import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
 import blended.activemq.brokerstarter.internal.BrokerActivator
-import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.http.jmsqueue.BlendedAkkaHttpJmsqueueActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
 import blended.jmx.internal.BlendedJmxActivator
-import blended.streams.FlowHeaderConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{AkkaHttpServerTestHelper, BlendedPojoRegistry, JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -25,8 +21,6 @@ import org.scalatest.matchers.should.Matchers
 import sttp.client._
 import sttp.model.{StatusCode, Uri}
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.Right
 
 // ToDo: Enhance with Property based test

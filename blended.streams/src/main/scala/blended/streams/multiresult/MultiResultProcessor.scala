@@ -6,7 +6,6 @@ import akka.pattern.ask
 import akka.stream.scaladsl.Flow
 import akka.util.Timeout
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
-import blended.util.logging.Logger
 
 import scala.concurrent.duration._
 

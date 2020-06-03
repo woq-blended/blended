@@ -1,7 +1,6 @@
 package blended.streams.transaction.internal
 
 import java.io._
-import java.nio.charset.Charset
 import java.nio.file.{DirectoryStream, Files, Path}
 import java.util.Date
 
@@ -32,7 +31,6 @@ class FileFlowTransactionManager(
 )(implicit system : ActorSystem) extends FlowTransactionManager {
 
   private val log : Logger = Logger[FileFlowTransactionManager]
-  private val charset : Charset = Charset.forName("UTF-8")
 
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private implicit val materializer : Materializer = ActorMaterializer()
