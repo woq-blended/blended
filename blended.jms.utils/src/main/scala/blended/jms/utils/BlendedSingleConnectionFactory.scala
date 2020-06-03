@@ -2,7 +2,7 @@ package blended.jms.utils
 
 import java.lang.management.ManagementFactory
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import blended.jms.utils.internal._
 import blended.util.logging.Logger
 import javax.jms.{Connection, ConnectionFactory, JMSException}
@@ -42,7 +42,7 @@ class BlendedSingleConnectionFactory(
 
   private[this] lazy val cfEnabled : Boolean = config.enabled && config.cfEnabled.forall(f => f(config))
 
-  private[this] val actor =
+  private[this] val stateMgr : Option[ActorRef] =
     if (cfEnabled) {
 
       val mbean : Option[ConnectionMonitor] = if (config.jmxEnabled) {
@@ -81,7 +81,7 @@ class BlendedSingleConnectionFactory(
       None
     }
 
-  actor.foreach { a => a ! CheckConnection(false) }
+  stateMgr.foreach { a => a ! CheckConnection(false) }
 
   @throws[JMSException]
   override def createConnection() : Connection = {

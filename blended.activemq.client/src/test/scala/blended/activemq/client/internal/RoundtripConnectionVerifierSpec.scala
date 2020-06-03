@@ -5,16 +5,17 @@ import blended.activemq.client.{ConnectionVerifier, RoundtripConnectionVerifier}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue, SimpleIdAwareConnectionFactory}
 import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.{BeforeAndAfterAll, Matchers}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 
+@RequiresForkedJVM
 class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
   with Matchers
   with BeforeAndAfterAll {
@@ -54,7 +55,7 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
     "succeed upon a successfull request / response cycle" in {
 
       val verifier : ConnectionVerifier = new RoundtripConnectionVerifier(
-        probeMsg = id => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps), id),
+        probeMsg = () => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps)),
         verify = _ => true,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
@@ -67,8 +68,8 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
 
     "fail if the response message could not be verified" in {
       val verifier : ConnectionVerifier = new RoundtripConnectionVerifier(
-        probeMsg = id => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps), id),
-        verify = _ => false,
+        probeMsg = () => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps)),
+        verify = env => false,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
         headerConfig = FlowHeaderConfig.create(prefix = "App")
@@ -88,8 +89,8 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
       )
 
       val verifier : ConnectionVerifier = new RoundtripConnectionVerifier(
-        probeMsg = id => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps), id),
-        verify = _ => false,
+        probeMsg = () => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps)),
+        verify = env => false,
         requestDest = JmsQueue("roundtrip"),
         responseDest = JmsQueue("roundtrip"),
         headerConfig = FlowHeaderConfig.create(prefix = "App")

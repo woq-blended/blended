@@ -4,17 +4,19 @@ import java.io.File
 
 import blended.activemq.client.{ConnectionVerifier, ConnectionVerifierFactory, VerificationFailedHandler}
 import blended.akka.internal.BlendedAkkaActivator
+import blended.container.context.api.ContainerContext
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{MandatoryServiceUnavailable, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import domino.DominoActivator
 import org.osgi.framework.BundleActivator
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
+@RequiresForkedJVM
 class FailingClientActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper
@@ -52,13 +54,14 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
     "blended.activemq.client" -> new AmqClientActivator()
   )
 
+  private implicit val timeout : FiniteDuration = 3.seconds
+
   "The ActiveMQ Client Activator should" - {
 
-    "reject to create a Connection Factory if the connection verification failed" in logException {
-      implicit val to : FiniteDuration = timeout
-
-      intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry, Some("(&(vendor=activemq)(provider=conn1))")))
-      intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry, Some("(&(vendor=activemq)(provider=conn2))")))
+    "reject to create a Connection Factory if the connection verification failed" in {
+      mandatoryService[ContainerContext](registry)(None)
+      intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn1))")))
+      intercept[MandatoryServiceUnavailable](mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=conn2))")))
 
       failed should have size (2)
     }

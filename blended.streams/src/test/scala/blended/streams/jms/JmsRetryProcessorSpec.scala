@@ -5,21 +5,24 @@ import java.util.UUID
 
 import akka.NotUsed
 import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
+import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.container.context.api.ContainerContext
+import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory, JmsDestination, JmsQueue, QueryConnectionState}
+import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed}
-import blended.streams.{BlendedStreamsConfig, FlowProcessor}
-import blended.testsupport.pojosr.{BlendedPojoRegistry, JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor}
+import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.RichTry._
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future, Promise}
@@ -29,9 +32,9 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
   with LoggingFreeSpecLike
   with PojoSrTestHelper
   with Matchers
-  with JmsStreamSupport
-  with JmsConnectionHelper {
+  with JmsStreamSupport {
 
+  protected implicit val timeout : FiniteDuration = 5.seconds
   protected val log : Logger = Logger(getClass().getName())
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
@@ -45,26 +48,44 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
-  protected def streamsConfig : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
+  protected implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+  protected implicit val materializer : ActorMaterializer = ActorMaterializer()
+  protected implicit val ectxt : ExecutionContext = system.dispatcher
+
+  protected val ctCtxt : ContainerContext = mandatoryService[ContainerContext](registry)(None)
+  protected val streamsConfig : BlendedStreamsConfig = BlendedStreamsConfig.create(ctCtxt)
 
   val prefix : String = "spec"
 
   val brokerName : String = "retry"
   val consumerCount : Int = 5
+  val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(prefix = prefix)
+  val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
-  val amqCf : BlendedPojoRegistry => IdAwareConnectionFactory = r =>
-    jmsConnectionFactory(r, mustConnect = true, timeout = timeout).get
+  val amqCf : IdAwareConnectionFactory = {
+    val result : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=activemq))"))
 
-  def producerSettings(cf : IdAwareConnectionFactory, destName : String) = JmsProducerSettings(
-    log = envLogger(log),
+    val probe : TestProbe = TestProbe()
+    system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+    system.eventStream.publish(QueryConnectionState("activemq", "activemq"))
+
+    probe.fishForMessage(3.seconds, "Waitiung to connect") {
+      case evt : ConnectionStateChanged => evt.state.status == Connected
+    }
+
+    result
+  }
+
+  def producerSettings : String => JmsProducerSettings = destName => JmsProducerSettings(
+    log = envLogger,
     headerCfg = headerCfg,
-    connectionFactory = cf,
+    connectionFactory = amqCf,
     jmsDestination = Some(JmsDestination.create(destName).unwrap)
   )
 
   // scalastyle:off magic.number
-  protected def retryCfg(cf : IdAwareConnectionFactory) : JmsRetryConfig = JmsRetryConfig(
-    cf = cf,
+  protected val retryCfg : JmsRetryConfig = JmsRetryConfig(
+    cf = amqCf,
     retryDestName = "retryQueue",
     failedDestName = "retryFailed",
     eventDestName = "internal.transactions",
@@ -74,27 +95,22 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
     headerCfg = headerCfg
   )
 
+  protected val consumeAfter : FiniteDuration = retryCfg.retryInterval * 5
   // scalastyle:on magic.number
 
   def withExpectedDestination(
-    cf : IdAwareConnectionFactory,
     destName : String,
     retryProcessor : JmsRetryProcessor,
     consumeAfter : FiniteDuration,
-    completeOn : Seq[FlowEnvelope] => Boolean,
-    system : ActorSystem
+    completeOn : Seq[FlowEnvelope] => Boolean
   )(env : FlowEnvelope)(assertions : List[FlowEnvelope] => Unit) : Unit = {
-
-    implicit val eCtxt : ExecutionContext = system.dispatcher
-
-    val retryCfg : JmsRetryConfig = retryProcessor.retryCfg
 
     val p : Promise[Unit] = Promise()
 
     log.info("Starting Retry Processor ...")
     retryProcessor.start()
 
-    sendMessages(producerSettings(cf, retryCfg.retryDestName), envLogger(log), Seq(env):_*)(system) match {
+    sendMessages(producerSettings(retryCfg.retryDestName), envLogger, Seq(env):_*) match {
       case Success(s) =>
         akka.pattern.after(consumeAfter, system.scheduler)(Future {
           // We stop the retry processor, so that it does not process any more messages
@@ -102,7 +118,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
           s.shutdown()
 
           log.info(s"Trying to consume messages from [$destName]")
-          p.complete(consumeMessages(cf, destName, system)(completeOn).map{ env =>
+          p.complete(consumeMessages(destName)(completeOn).map{ env =>
             log.info(s"Applying evaluation function to [${env.size}] envelopes")
             assertions(env)
           })
@@ -117,24 +133,24 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
     Await.result(p.future, 10.seconds)
   }
 
-  def consumeMessages(cf : IdAwareConnectionFactory, dest : String, system : ActorSystem)(f : Seq[FlowEnvelope] => Boolean) : Try[List[FlowEnvelope]] = Try {
+  def consumeMessages(dest : String)(f : Seq[FlowEnvelope] => Boolean) : Try[List[FlowEnvelope]] = Try {
 
     log.info(s"Consuming messages from [$dest]")
     val coll : Collector[FlowEnvelope] = receiveMessages(
       headerCfg = headerCfg,
-      cf = cf,
+      cf = amqCf,
       dest = JmsDestination.create(dest).get,
-      log = envLogger(log),
+      log = envLogger,
       listener = 1,
       completeOn = Some(f),
       timeout = Some(timeout)
-    )(system)
+    )
 
     Await.result(coll.result, timeout + 100.millis)
   }
 
-  def consumeTransactions(cf : IdAwareConnectionFactory, system: ActorSystem, f : Seq[FlowEnvelope] => Boolean) : Try[List[FlowEnvelope]] =
-    consumeMessages(cf, "internal.transactions", system)(f)
+  def consumeTransactions(f : Seq[FlowEnvelope] => Boolean) : Try[List[FlowEnvelope]] =
+    consumeMessages("internal.transactions")(f)
 
 }
 
@@ -143,25 +159,16 @@ class JmsRetryProcessorForwardSpec extends ProcessorSpecSupport("retryForward") 
 
   "Consume messages from the retry destination and reinsert them into the original destination" in {
 
-    implicit val to : FiniteDuration = timeout
-    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
-
-    val cf : IdAwareConnectionFactory = amqCf(registry)
-    val rCfg : JmsRetryConfig = retryCfg(cf)
-    val consumeAfter : FiniteDuration = rCfg.retryInterval * 5
-
     val srcQueue : String = "myQueue"
 
     val retryMsg : FlowEnvelope = FlowEnvelope()
       .withHeader(headerCfg.headerRetryDestination, srcQueue).unwrap
 
     withExpectedDestination(
-      cf = cf,
       destName = srcQueue,
-      retryProcessor = new JmsRetryProcessor(streamsConfig, rCfg),
+      retryProcessor = new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
-      completeOn = s => s.nonEmpty,
-      system = system
+      completeOn = s => s.nonEmpty
     )(retryMsg)(
       _ should not be empty
     )
@@ -172,33 +179,23 @@ class JmsRetryProcessorForwardSpec extends ProcessorSpecSupport("retryForward") 
 class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount") {
 
   "Consume messages from the retry destination and pass them to the retry failed destination if the retry cont exceeds" in {
-
-    implicit val to : FiniteDuration = timeout
-    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
-
-    val cf : IdAwareConnectionFactory = amqCf(registry)
-    val rCfg : JmsRetryConfig = retryCfg(cf)
-    val consumeAfter : FiniteDuration = rCfg.retryInterval * 5
-
     val srcQueue: String = "myQueue"
 
    val retryMsg: FlowEnvelope = FlowEnvelope()
      .withHeader(headerCfg.headerRetrying, "True").unwrap
      .withHeader(headerCfg.headerRetryDestination, srcQueue).unwrap
-     .withHeader(headerCfg.headerRetryCount, rCfg.maxRetries).unwrap
+     .withHeader(headerCfg.headerRetryCount, retryCfg.maxRetries).unwrap
 
     withExpectedDestination(
-      cf = cf,
-      rCfg.failedDestName,
-      new JmsRetryProcessor(streamsConfig, rCfg),
+      retryCfg.failedDestName,
+      new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
-      completeOn = _.nonEmpty,
-      system = system
+      completeOn = _.nonEmpty
     )(retryMsg) { l =>
       l should have size 1
 
       l.foreach { env =>
-        env.header[Long](headerCfg.headerRetryCount) should contain(rCfg.maxRetries + 1)
+        env.header[Long](headerCfg.headerRetryCount) should contain(retryCfg.maxRetries + 1)
       }
     }
   }
@@ -208,41 +205,32 @@ class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount")
 class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeout") {
 
   "Consume messages from the retry destination and pass them to the retry failed destination if the retry timeout exceeds" in {
-    implicit val to : FiniteDuration = timeout
-    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
-
-    val cf : IdAwareConnectionFactory = amqCf(registry)
-    val rCfg : JmsRetryConfig = retryCfg(cf)
-    val consumeAfter : FiniteDuration = rCfg.retryInterval * 5
-
     val srcQueue : String = "myQueue"
 
     val retryMsg : FlowEnvelope = FlowEnvelope()
       .withHeader(headerCfg.headerRetryDestination, srcQueue).unwrap
-      .withHeader(headerCfg.headerFirstRetry, System.currentTimeMillis() - 2 * rCfg.retryTimeout.toMillis).unwrap
+      .withHeader(headerCfg.headerFirstRetry, System.currentTimeMillis() - 2 * retryCfg.retryTimeout.toMillis).unwrap
 
     withExpectedDestination(
-      cf = cf,
-      rCfg.failedDestName,
-      new JmsRetryProcessor(streamsConfig, rCfg),
+      retryCfg.failedDestName,
+      new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
-      completeOn = _.nonEmpty,
-      system = system
+      completeOn = _.nonEmpty
     )(retryMsg) { l =>
       l should have size 1
       l.foreach { env =>
         val now : Long = System.currentTimeMillis()
         val first : Long = env.header[Long](headerCfg.headerFirstRetry).getOrElse(now)
 
-        assert(first + rCfg.retryTimeout.toMillis <= now)
+        assert(first + retryCfg.retryTimeout.toMillis <= now)
       }
     }
 
     val otherFailed : Collector[FlowEnvelope] = receiveMessages(
       headerCfg = headerCfg,
-      cf = cf,
-      dest = JmsQueue(rCfg.failedDestName),
-      log = envLogger(log),
+      cf = amqCf,
+      dest = JmsQueue(retryCfg.failedDestName),
+      log = envLogger,
       listener = 1,
       completeOn = None,
       timeout = Some(timeout)
@@ -252,26 +240,17 @@ class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeo
   }
 }
 
-@RequiresForkedJVM
+
 class JmsRetryProcessorMissingDestinationSpec extends ProcessorSpecSupport("missingDest") {
 
   "Consume messages from the retry destination and pass them to the retry failed destination if no original destination is known" in {
-    implicit val to : FiniteDuration = timeout
-    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
-
-    val cf : IdAwareConnectionFactory = amqCf(registry)
-    val rCfg : JmsRetryConfig = retryCfg(cf)
-    val consumeAfter : FiniteDuration = rCfg.retryInterval * 5
-
     val retryMsg : FlowEnvelope = FlowEnvelope()
 
     withExpectedDestination(
-      cf = cf,
-      rCfg.failedDestName,
-      new JmsRetryProcessor(streamsConfig, rCfg),
+      retryCfg.failedDestName,
+      new JmsRetryProcessor(streamsConfig, retryCfg),
       consumeAfter = consumeAfter,
-      completeOn = _.nonEmpty,
-      system = system
+      completeOn = _.nonEmpty
     )(retryMsg){ l =>
       l should have size 1
       l.foreach(_.header[Long](headerCfg.headerRetryCount) should contain (1) )
@@ -283,16 +262,9 @@ class JmsRetryProcessorMissingDestinationSpec extends ProcessorSpecSupport("miss
 class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry") {
 
   "Reinsert messages into the retry destination if the send to the original destination fails" in {
-    implicit val to : FiniteDuration = timeout
-    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
-
-    val cf : IdAwareConnectionFactory = amqCf(registry)
-    val rCfg : JmsRetryConfig = retryCfg(cf)
-    val consumeAfter : FiniteDuration = rCfg.retryInterval * 5
-
     val srcQueue : String = "myQueue"
 
-    val router = new JmsRetryProcessor(streamsConfig, rCfg.copy(maxRetries = 2, retryTimeout = 1.day)) {
+    val router = new JmsRetryProcessor(streamsConfig, retryCfg.copy(maxRetries = 2, retryTimeout = 1.day)) {
 
       // This causes the send to the original destination to fail within the flow, causing
       // the envelope to travel the error path.
@@ -309,22 +281,20 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
     )
 
     withExpectedDestination(
-      cf = cf,
       destName = srcQueue,
       retryProcessor = router,
       consumeAfter = consumeAfter,
-      completeOn = _=> false,
-      system = system
+      completeOn = _=> false
     )(retryMsg)(_ should be (empty))
 
-    consumeMessages(cf, rCfg.failedDestName, system)(_.nonEmpty) match {
+    consumeMessages(retryCfg.failedDestName)(_.nonEmpty) match {
       case Failure(t) => fail(t)
-      case Success(Nil) => fail(s"Expected message in [${rCfg.failedDestName}]")
+      case Success(Nil) => fail(s"Expected message in [${retryCfg.failedDestName}]")
       case Success(env :: _) =>
         env.header[String](headerCfg.headerTransId) should be(Some(id))
         env.header[Long](headerCfg.headerRetryCount) should be(Some(3))
 
-        consumeTransactions(cf, system, _.nonEmpty) match {
+        consumeTransactions(_.nonEmpty) match {
           case Failure(t) => fail(t)
           case Success(Nil) => fail("Expected transaction event")
           case Success(e :: _) =>
@@ -342,18 +312,11 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
   "The Jms Retry Processor should" - {
 
     "Deny messages that cannot be processed correctly by the retry router" in {
-      implicit val to : FiniteDuration = timeout
-      implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
-
-      val cf : IdAwareConnectionFactory = amqCf(registry)
-      val rCfg : JmsRetryConfig = retryCfg(cf)
-      val consumeAfter : FiniteDuration = rCfg.retryInterval * 5
-
-      val router = new JmsRetryProcessor(streamsConfig, rCfg) {
+      val router = new JmsRetryProcessor(streamsConfig, retryCfg) {
         // This causes the send to the original destination to fail within the flow, causing
         // the envelope to travel the error path.
         override protected def sendToOriginal : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(
-          FlowProcessor.fromFunction("failedSendOriginal", envLogger(log)) { _ =>
+          FlowProcessor.fromFunction("failedSendOriginal", envLogger) { env =>
             Try {
               throw new Exception("Boom")
             }
@@ -363,7 +326,7 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
         // This causes the resend to the retry queue to fail, causing the envelope to be denied and causing
         // a redelivery on the retry queue (in other words the envelope will stay at the head of the queue
         override protected def sendToRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(
-          FlowProcessor.fromFunction("failedSendRetry", envLogger(log)) { _ =>
+          FlowProcessor.fromFunction("failedSendRetry", envLogger) { env =>
             Try {
               throw new Exception("Boom")
             }
@@ -372,15 +335,13 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
       }
 
       withExpectedDestination(
-        cf = cf,
         destName = "myQueue",
         retryProcessor = router,
         consumeAfter = consumeAfter,
-        completeOn = _ => false,
-        system = system
+        completeOn = _ => false
       )(FlowEnvelope()){ _ should be (empty) }
 
-      consumeMessages(cf, rCfg.retryDestName, system){_.nonEmpty}.unwrap should not be (empty)
+      consumeMessages(retryCfg.retryDestName){_.nonEmpty}.unwrap should not be (empty)
     }
   }
 }

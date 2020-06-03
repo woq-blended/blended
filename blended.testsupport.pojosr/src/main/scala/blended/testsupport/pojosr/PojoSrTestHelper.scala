@@ -16,18 +16,11 @@ object PojoSrTestHelper {
   val OnlyOnePojoSrAtATime = new Object()
 }
 
-class MandatoryServiceUnavailable(clazz : Class[_], filter : Option[String])
-  extends Exception(s"Service of type [${clazz.getName()}] with filter [$filter] not available.")
+class MandatoryServiceUnavailable(clazz : Class[_], filter : Option[String]) extends Exception(s"Service of type [${clazz.getName()}] with filter [$filter] not available.")
 
 trait PojoSrTestHelper {
 
   private val log = Logger[PojoSrTestHelper]
-
-  /**
-   * Factory for bundles.
-   * A `Seq` of bundle name and activator class.
-   */
-  def bundles : Seq[(String, BundleActivator)] = Seq.empty
 
   import PojoSrTestHelper._
 
@@ -48,16 +41,13 @@ trait PojoSrTestHelper {
     }
   }
 
-  // An activator to instantiate a bundle with a special parametrized activator,
-  // so that the container context is initialized correctly
-  private def contextActivator(
-    mandatoryProperties : Option[String]
+  def contextActivator(
+    mandatoryProperties : Option[String] = None
   ) : BundleActivator = {
     new DominoActivator {
 
       mandatoryProperties.foreach(s =>
-        System.setProperty("blended.updater.profile.properties.keys", s)
-      )
+        System.setProperty("blended.updater.profile.properties.keys", s))
 
       whenBundleActive {
         new MockContainerContext(baseDir, pojoUuid).providesService[ContainerContext]
@@ -117,8 +107,19 @@ trait PojoSrTestHelper {
     }
   }
 
+  def withSimpleBlendedContainer[T](
+    mandatoryProperties : List[String] = List.empty
+  )(f : BlendedPojoRegistry => T) : Try[T] = Try {
+
+    val registry = createRegistry().get
+    val result = f(registry)
+    stopRegistry(registry)
+
+    result
+  }
+
   private[this] def deleteRecursive(files : File*) : Unit = files.map { file =>
-    if (file.isDirectory) deleteRecursive(file.listFiles.toSeq : _*)
+    if (file.isDirectory) deleteRecursive(file.listFiles : _*)
     file.delete match {
       case false if file.exists =>
         throw new RuntimeException(
@@ -154,14 +155,14 @@ trait PojoSrTestHelper {
     do {
       result = serviceReferences[T](sr)(filter).headOption.map(ref => sr.getService(ref))
       if (result.isEmpty) {
-        Thread.sleep((timeout / 10).toMillis)
+        Thread.sleep(10)
       }
     } while (System.currentTimeMillis() - start < timeout.toMillis && result.isEmpty)
 
     result
   }
 
-  def mandatoryService[T](sr : BlendedPojoRegistry, filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout : FiniteDuration) : T = {
+  def mandatoryService[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout : FiniteDuration) : T = {
     waitOnService[T](sr)(filter) match {
       case Some(s) => s
       case None    => throw new MandatoryServiceUnavailable(clazz.runtimeClass, filter)

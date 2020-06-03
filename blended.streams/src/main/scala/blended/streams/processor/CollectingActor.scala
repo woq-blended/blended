@@ -91,6 +91,6 @@ class CollectingActor[T](
         context.become(working(newSeq, isComplete))
       }
 
-    case m => log.error(s"Received unhandled message [$m]")
+    case m => log.warn(s"Received unhandled message [$m]")
   }
 }
