@@ -7,7 +7,7 @@ import org.slf4j
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
-trait Logger extends LoggerBase
+trait Logger extends LoggerBase with LoggerMdcBase
 
 /**
  * Factory apply-methods try to find a SLF4J-Logger on the classpath

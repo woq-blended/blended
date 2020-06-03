@@ -2,9 +2,9 @@ package blended.util.logging
 
 import java.io.{PrintWriter, StringWriter}
 
-trait LoggerBase extends Serializable {
+import blended.util.logging.LogLevel.LogLevel
 
-  import blended.util.logging.LogLevel.LogLevel
+trait LoggerBase extends Serializable {
 
   def name : String
 
@@ -13,18 +13,6 @@ trait LoggerBase extends Serializable {
   def isInfoEnabled : Boolean = false
   def isDebugEnabled : Boolean = false
   def isTraceEnabled : Boolean = false
-
-  def errorMdc(mdc : Map[String, String])(msg: => String) : Unit = error(msg)
-  def warnMdc(mdc : Map[String, String])(msg: => String) : Unit = warn(msg)
-  def infoMdc(mdc : Map[String, String])(msg: => String) : Unit = info(msg)
-  def debugMdc(mdc : Map[String, String])(msg: => String) : Unit = debug(msg)
-  def traceMdc(mdc : Map[String, String])(msg: => String) : Unit = trace(msg)
-
-  def errorMdc(e: Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit = error(e, stacktrace)(msg)
-  def warnMdc(e: Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit = warn(e, stacktrace)(msg)
-  def infoMdc(e: Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit = info(e, stacktrace)(msg)
-  def debugMdc(e: Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit = debug(e, stacktrace)(msg)
-  def traceMdc(e: Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit = trace(e, stacktrace)(msg)
 
   def error(msg: => String): Unit = {}
   def warn(msg: => String): Unit = {}
@@ -66,6 +54,22 @@ trait LoggerBase extends Serializable {
     case LogLevel.Debug => debug(t, stacktrace)(msg)
     case LogLevel.Trace => trace(t, stacktrace)(msg)
   }
+
+}
+
+trait LoggerMdcBase extends LoggerBase {
+
+  def errorMdc(mdc : Map[String, String])(msg: => String) : Unit = error(msg)
+  def warnMdc(mdc : Map[String, String])(msg: => String) : Unit = warn(msg)
+  def infoMdc(mdc : Map[String, String])(msg: => String) : Unit = info(msg)
+  def debugMdc(mdc : Map[String, String])(msg: => String) : Unit = debug(msg)
+  def traceMdc(mdc : Map[String, String])(msg: => String) : Unit = trace(msg)
+
+  def errorMdc(e: Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit = error(e, stacktrace)(msg)
+  def warnMdc(e: Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit = warn(e, stacktrace)(msg)
+  def infoMdc(e: Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit = info(e, stacktrace)(msg)
+  def debugMdc(e: Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit = debug(e, stacktrace)(msg)
+  def traceMdc(e: Throwable, stacktrace : Boolean = false)(mdc : Map[String, String])(msg: => String) : Unit = trace(e, stacktrace)(msg)
 
   def logMdc(mdc : Map[String, String])(level : LogLevel, msg: => String) : Unit = level match {
     case LogLevel.Error => errorMdc(mdc)(msg)
