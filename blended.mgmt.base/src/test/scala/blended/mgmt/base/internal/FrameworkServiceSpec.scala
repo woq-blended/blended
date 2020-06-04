@@ -9,7 +9,7 @@ import org.osgi.framework.{Bundle, BundleContext}
 class FrameworkServiceSpec extends LoggingFreeSpec {
 
   "The FrameworkService" - {
-    "restartContainer should stop bundle 0" in {
+    "restartContainer should update bundle 0" in {
       var bundleZeroUpdated = false
       class MockFrameworkBundle(val id: Long) {
         def update(): Unit = {

@@ -9,7 +9,6 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.management.MBeanServer
 import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
-
 import scala.concurrent.duration._
 
 class MgmtBaseActivatorSpec extends SimplePojoContainerSpec
@@ -32,7 +31,7 @@ class MgmtBaseActivatorSpec extends SimplePojoContainerSpec
     "should register a FrameworkService as MBean" in {
       mandatoryService[blended.mgmt.base.FrameworkService](registry, None)
       ensureServiceMissing[MBeanServer](registry)()(implicitly, 1.second)
-      val reg = registry.registerService(classOf[MBeanServer].getName(), ManagementFactory.getPlatformMBeanServer(), null)
+      val reg = registry.registerService(classOf[MBeanServer].getName(), ManagementFactory.getPlatformMBeanServer(), new java.util.Hashtable[String, Any]())
       try {
         mandatoryService[MBeanServer](registry, None)
       } finally {
