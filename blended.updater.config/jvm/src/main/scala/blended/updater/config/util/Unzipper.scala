@@ -108,9 +108,7 @@ class Unzipper {
       if (index < 0) name else name.substring(index)
     }
 
-    /**
-     * Test if a file is accepted and calculate the output file name
-     */
+    // Test if a file is accepted and calculate the output file name
     def acceptFile(file : String) : Option[File] = {
       if (!partial) {
         // unpack all

@@ -183,7 +183,7 @@ class ReflectionConfigHolder(
           config.jmsClassloader.foreach(Thread.currentThread().setContextClassLoader)
 
           log.info(s"Configuring connection factory of type [$c].")
-          Thread.currentThread().getContextClassLoader().loadClass(c).newInstance().asInstanceOf[ConnectionFactory]
+          Thread.currentThread().getContextClassLoader().loadClass(c).getDeclaredConstructor().newInstance().asInstanceOf[ConnectionFactory]
       }
 
       config.properties.foreach {

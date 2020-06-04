@@ -56,7 +56,7 @@ class BlendedLoginModule extends LoginModule {
           case None => throw new IllegalStateException(s"Bundle [$bundleName] not found.")
           case Some(bundle) =>
             try {
-              target = Option(bundle.loadClass(clazz).newInstance().asInstanceOf[LoginModule])
+              target = Option(bundle.loadClass(clazz).getDeclaredConstructor().newInstance().asInstanceOf[LoginModule])
               target.foreach(t => t.initialize(
                 subject,
                 callbackHandler,

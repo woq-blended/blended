@@ -209,7 +209,7 @@ class ContainerPropertyResolver(
   def resolve(line : String, additionalProps : Map[String, Any] = Map.empty) : Try[AnyRef] = Try {
     // First we check if we have replacements in "Blended Style"
 
-    /**
+    /*
      * TODO: Map the modifier to installable services
      * delayed : do not evaluate the inner expression any further
      * encrypted : resolve an encrypted value

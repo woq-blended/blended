@@ -256,15 +256,20 @@ trait BlendedBaseModule
       "option-implicit",
       "poly-implicit-overload",
       "stars-align",
-      // Compiler doesn't know it but suggest it: "Recompile with -Xlint:unchecked for details."
+      // Compiler doesn't know it but suggests it: "Recompile with -Xlint:unchecked for details."
       // "unchecked",
       "unused",
     ).mkString("-Xlint:", ",", ""),
 //    "--unchecked"
   )
+
   override def javacOptions = Seq(
     "-Xlint:unchecked"
   )
+
+  override def scalaDocOptions: Target[Seq[String]] = T {
+    scalacOptions().filter(_ != "-Werror")
+  }
 
   override def scoverageVersion = deps.scoverageVersion
 
