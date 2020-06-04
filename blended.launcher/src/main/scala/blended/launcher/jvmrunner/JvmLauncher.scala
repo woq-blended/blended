@@ -28,7 +28,7 @@ object JvmLauncher {
 }
 
 /**
- * A small Java wrapper responsiblefor controlling the actual Container JVM.
+ * A small Java wrapper responsible for controlling the actual Container JVM.
  */
 class JvmLauncher() {
 

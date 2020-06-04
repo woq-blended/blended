@@ -1,9 +1,10 @@
 import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
+
 import coursier.Repository
 import coursier.maven.MavenRepository
 import mill.api.{Ctx, Loose, Result}
 import mill.{PathRef, _}
-import mill.define.{Command, ExternalModule, Input, Sources, Target, Task, Worker}
+import mill.define.{Command, Input, Sources, Target, Task, Worker}
 import mill.scalajslib.ScalaJSModule
 import mill.scalajslib.api.ModuleKind
 import mill.scalalib._
@@ -1383,7 +1384,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           s"""
             |package blended.launcher
             |
-            |/** Generated with mill: The frameworks to use in the tests. */
+            |/** Generated with mill: The frameworks to use in the tests.
+            | *  See [[blended.launcher.OsgiFrameworksTest]].
+            | */
             |object TestOsgiFrameworks {
             |  val frameworks: Map[String, String] = ${
               resolvedOsgiFrameworks().map { case (name, file) => s""""${name}" -> "${file.path}"""" }
@@ -1525,6 +1528,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.testsupport,
           blended.testsupport.pojosr
         )
+
+        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          deps.lambdaTest
+        )}
       }
     }
     object service extends Module {

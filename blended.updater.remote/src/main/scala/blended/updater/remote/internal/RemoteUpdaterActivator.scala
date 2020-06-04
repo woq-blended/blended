@@ -36,11 +36,11 @@ class RemoteUpdaterActivator
           log.debug(s"PersistenceService available. About to instantiate RemoteUpdater: ${persistenceService}")
 
           onStop {
-            log.debug(s"PersistenceService no longer availabe: ${persistenceService}")
+            log.debug(s"PersistenceService no longer available: ${persistenceService}")
           }
 
           val containerStatePersistor = new PersistentContainerStatePersistor(persistenceService)
-          log.debug(s"Created persistent container state peristor: ${containerStatePersistor}")
+          log.debug(s"Created persistent container state persistor: ${containerStatePersistor}")
           if (log.isDebugEnabled) {
             log.debug(s"Already persisted ContainerStates: ${Try(containerStatePersistor.findAllContainerStates())}")
           }

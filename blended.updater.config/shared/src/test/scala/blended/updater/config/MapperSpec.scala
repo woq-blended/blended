@@ -13,7 +13,7 @@ class MapperSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
 
   "Mapper maps and unmaps to identity" - {
 
-    import Mapper._
+    import blended.updater.config.Mapper._
     import TestData._
 
     def testMapping[T : ClassTag](map : T => ju.Map[String, AnyRef], unmap : AnyRef => Try[T])(implicit arb : Arbitrary[T]) : Unit = {
