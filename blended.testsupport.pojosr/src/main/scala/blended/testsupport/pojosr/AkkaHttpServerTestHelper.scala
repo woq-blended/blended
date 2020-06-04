@@ -14,7 +14,6 @@ trait AkkaHttpServerTestHelper extends AkkaHttpServerJmxSupport { this : PojoSrT
 
   def akkaHttpInfo(registry : BlendedPojoRegistry) : AkkaHttpServerInfo = {
 
-    implicit val timeout : FiniteDuration = 3.seconds
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
     implicit val eCtxt : ExecutionContext = system.dispatcher
     implicit val scheduler : Scheduler = system.scheduler

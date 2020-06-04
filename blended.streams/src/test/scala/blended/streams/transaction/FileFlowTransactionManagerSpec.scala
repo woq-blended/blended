@@ -2,26 +2,25 @@ package blended.streams.transaction
 
 import java.io.File
 import java.lang.management.{ManagementFactory, OperatingSystemMXBean}
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
+import java.util.concurrent.atomic.AtomicInteger
 
-import akka.actor.{ActorSystem, Scheduler}
+import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.streams.worklist.WorklistStateStarted
-import blended.testsupport.retry.{ResultPoller, Retry}
+import blended.testsupport.retry.ResultPoller
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import com.sun.management.UnixOperatingSystemMXBean
-import org.scalacheck.Gen
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.mutable
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 trait FTMFactory {
   def createTransactionManager(dir : String) : FlowTransactionManager =

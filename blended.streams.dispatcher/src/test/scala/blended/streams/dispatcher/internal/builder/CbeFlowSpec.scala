@@ -2,7 +2,6 @@ package blended.streams.dispatcher.internal.builder
 
 import akka.stream._
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.FlowEnvelope
@@ -10,7 +9,6 @@ import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent}
 import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.pojosr.PojoSrTestHelper
-import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._

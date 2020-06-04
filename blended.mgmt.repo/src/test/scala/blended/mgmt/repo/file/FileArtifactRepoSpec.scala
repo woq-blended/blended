@@ -82,7 +82,7 @@ class FileArtifactRepoSpec extends AnyFreeSpec with TestFile with Matchers {
         // first upload
         val baip = new ByteArrayInputStream("test".getBytes())
         try {
-          repo.uploadFile(path, baip, None) should be(Success[Unit]())
+          repo.uploadFile(path, baip, None) should be(Success(()))
         } finally {
           baip.close()
         }
@@ -90,7 +90,7 @@ class FileArtifactRepoSpec extends AnyFreeSpec with TestFile with Matchers {
         // second upload
         val baip2 = new ByteArrayInputStream("test".getBytes())
         try {
-          val fail = repo.uploadFile(path, baip2, None) should be
+          repo.uploadFile(path, baip2, None) should be
         } finally {
           baip.close()
         }

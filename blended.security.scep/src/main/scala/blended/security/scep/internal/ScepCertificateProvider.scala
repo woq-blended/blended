@@ -11,16 +11,16 @@ import javax.security.auth.x500.X500Principal
 import org.bouncycastle.asn1.DERPrintableString
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers
 import org.bouncycastle.asn1.x509.{Extension, ExtensionsGenerator, GeneralName, GeneralNames}
-import org.bouncycastle.openssl.PEMWriter
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import org.bouncycastle.pkcs.PKCS10CertificationRequest
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder
 import org.jscep.client.verification.{CertificateVerifier, OptimisticCertificateVerifier}
 import org.jscep.client.{Client, DefaultCallbackHandler}
 import org.jscep.transport.response.Capabilities
-
 import scala.jdk.CollectionConverters._
 import scala.util.Try
+
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter
 
 case class ScepConfig(
   url : String,
@@ -84,7 +84,7 @@ class ScepCertificateProvider(cfg : ScepConfig)
   private def dumpCsr(csr : PKCS10CertificationRequest) : String = {
 
     val str = new StringWriter()
-    val pemWriter = new PEMWriter(str)
+    val pemWriter = new JcaPEMWriter(str)
     pemWriter.writeObject(csr)
     pemWriter.close()
     str.close()
@@ -119,7 +119,7 @@ class ScepCertificateProvider(cfg : ScepConfig)
 
       val names = new GeneralNames(altNames)
       val extGen = new ExtensionsGenerator()
-      val sanExt = extGen.addExtension(Extension.subjectAlternativeName, false, names)
+      extGen.addExtension(Extension.subjectAlternativeName, false, names)
 
       csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, extGen.generate())
     }

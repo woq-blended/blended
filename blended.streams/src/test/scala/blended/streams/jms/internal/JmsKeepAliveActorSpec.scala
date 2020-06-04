@@ -9,7 +9,7 @@ import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils._
 import blended.streams.message.FlowEnvelope
-import blended.testsupport.pojosr.{BlendedPojoRegistry, JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
@@ -17,7 +17,6 @@ import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
 
 import scala.collection.mutable
-import scala.concurrent.duration._
 
 @RequiresForkedJVM
 class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
@@ -60,7 +59,6 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
   "The JmsKeepAliveActor should" - {
 
     "publish a MaxKeepAliveExceeded when the maximum number of allowed keep alives has been missed" in {
-      implicit val to : FiniteDuration = timeout
       val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val cf : IdAwareConnectionFactory = jmsConnectionFactory(registry, mustConnect = true, timeout = timeout).get
@@ -105,7 +103,6 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
     }
 
     "Initiate a keep alive message / publish a KeepAliveMissed when the keep alive interval has been reached" in {
-      implicit val to : FiniteDuration = timeout
       val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val cf : IdAwareConnectionFactory = jmsConnectionFactory(registry, mustConnect = true, timeout = timeout).get
@@ -137,7 +134,6 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
     }
 
     "Reset the Keep Alive counter once a message has been received" in {
-      implicit val to : FiniteDuration = timeout
       val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val cf : IdAwareConnectionFactory = jmsConnectionFactory(registry, mustConnect = true, timeout = timeout).get

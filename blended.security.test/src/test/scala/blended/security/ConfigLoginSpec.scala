@@ -4,8 +4,6 @@ import java.io.File
 
 import blended.testsupport.BlendedTestSupport
 
-import scala.concurrent.duration._
-
 class ConfigLoginSpec extends AbstractLoginSpec {
 
   override val baseDir : String = new File(BlendedTestSupport.projectTestOutput, "simple").getAbsolutePath()
@@ -13,7 +11,6 @@ class ConfigLoginSpec extends AbstractLoginSpec {
   "The Simple Login Module should" - {
 
     "allow a user to login and determine the group memberships" in {
-      implicit val to : FiniteDuration = timeout
       val mgr = mandatoryService[BlendedPermissionManager](registry, None)
       val sub = login("andreas", "mysecret")
 

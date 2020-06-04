@@ -3,24 +3,19 @@ package blended.streams.multiresult
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Source}
-import akka.stream.{ActorMaterializer, OverflowStrategy}
+import akka.stream.OverflowStrategy
 import akka.testkit.TestKit
 import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import blended.util.logging.Logger
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.Await
 
 class MultiResultGraphStageSpec extends TestKit(ActorSystem("multiresult"))
   with LoggingFreeSpecLike
   with Matchers {
-
-  private val log : Logger = Logger[MultiResultGraphStageSpec]
-  private implicit val eCtxt : ExecutionContext = system.dispatcher
-  private implicit val materializer : ActorMaterializer = ActorMaterializer()
 
   "The multi result graph should" - {
 

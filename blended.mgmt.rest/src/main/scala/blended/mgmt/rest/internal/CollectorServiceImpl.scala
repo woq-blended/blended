@@ -53,7 +53,7 @@ class CollectorServiceImpl(
   }
 
   def removeArtifactRepo(repo : WritableArtifactRepo) : Unit = {
-    artifactRepos = artifactRepos.filterKeys(name => name != repo.repoId).toMap
+    artifactRepos = artifactRepos.view.filterKeys(name => name != repo.repoId).toMap
   }
 
   def setEventStream(eventStream : Option[EventStream]) : Unit = this.eventStream = eventStream

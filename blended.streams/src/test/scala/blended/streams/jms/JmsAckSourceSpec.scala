@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.NotUsed
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.scaladsl.Source
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestKit
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, MessageReceived, SimpleIdAwareConnectionFactory}
 import blended.streams.StreamFactories
@@ -21,7 +20,7 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.scalatest.BeforeAndAfterAll
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.Await
 import scala.util.{Failure, Success}
 import blended.util.RichTry._
 import org.scalatest.matchers.should.Matchers
@@ -61,8 +60,6 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
   }
 
   private implicit val actorSystem : ActorSystem = system
-  private implicit val materializer : Materializer = ActorMaterializer()
-  private implicit val eCtxt : ExecutionContext = system.dispatcher
 
   private val log : Logger = Logger[JmsAckSourceSpec]
   private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)

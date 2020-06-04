@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, Source}
-import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
+import akka.stream.OverflowStrategy
 import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.{FlowHeaderConfig, FlowProcessor, StreamFactories}
@@ -24,7 +24,6 @@ class MultiResultProcessorSpec extends TestKit(ActorSystem("mulitprocessor"))
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
   private val log : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, Logger[MultiResultProcessorSpec])
   private val to : FiniteDuration = 10.seconds
-  private implicit val materializer : Materializer = ActorMaterializer()
 
   private val createCopies : FlowEnvelope => List[FlowEnvelope] = { env =>
     // scalastyle:off magic.number

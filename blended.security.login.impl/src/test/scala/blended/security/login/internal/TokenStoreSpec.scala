@@ -16,7 +16,6 @@ import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
 import scala.util.Try
 
 class TokenStoreSpec extends SimplePojoContainerSpec
@@ -33,7 +32,6 @@ class TokenStoreSpec extends SimplePojoContainerSpec
   )
 
   private def withTokenStore[T](f : TokenStore => T) : T = {
-    implicit val to = 3.seconds
     val store = mandatoryService[TokenStore](registry, None)
     val result = f(store)
 

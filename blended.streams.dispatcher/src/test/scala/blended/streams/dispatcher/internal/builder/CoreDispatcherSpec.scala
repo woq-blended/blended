@@ -44,8 +44,6 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
     Collector[FlowEnvelope],
     RunnableGraph[(ActorRef, KillSwitch)]
   )= {
-    implicit val materializer : Materializer = ActorMaterializer()
-
     val ack : FlowEnvelope => Unit = _.acknowledge()
 
     val jmsCollector = Collector[FlowEnvelope]("jms", onCollected = Some(ack))
@@ -88,10 +86,9 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
       testMessages : FlowEnvelope*
     )(implicit system: ActorSystem) : Future[DispatcherResult] = {
 
-      implicit val eCtxt : ExecutionContext = system.dispatcher
       implicit val materializer : Materializer = ActorMaterializer()
 
-      val source = StreamFactories.keepAliveSource[FlowEnvelope](testMessages.size)
+      StreamFactories.keepAliveSource[FlowEnvelope](testMessages.size)
       val (jmsColl, wlColl, errorColl, g) = runnableDispatcher(ctxt, testMessages.size)
 
       try {

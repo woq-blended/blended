@@ -103,7 +103,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
         val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl, timeout = 10.seconds)
-        val done = WorklistStepCompleted(worklist = wl, state = WorklistStateCompleted)
+        WorklistStepCompleted(worklist = wl, state = WorklistStateCompleted)
 
         // Start a dummy worklist
         actor ! started
@@ -132,7 +132,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
         val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl, timeout = 10.seconds)
-        val done = WorklistStepCompleted(worklist = wl, state = WorklistStateCompleted)
+        WorklistStepCompleted(worklist = wl, state = WorklistStateCompleted)
 
         // Start a dummy worklist
         actor ! started

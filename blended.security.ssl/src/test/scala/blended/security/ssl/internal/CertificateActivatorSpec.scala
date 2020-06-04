@@ -10,8 +10,6 @@ import javax.net.ssl.SSLContext
 import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.duration._
-
 @RequiresForkedJVM
 class CertificateActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
@@ -29,8 +27,6 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
   "The Certificate Activator should" - {
 
     "start up and provide a server and a client SSL Context" in {
-      implicit  val to : FiniteDuration = timeout
-
       mandatoryService[SSLContext](registry, Some("(type=server)"))
       mandatoryService[SSLContext](registry, Some("(type=client)"))
 
@@ -45,8 +41,6 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
     }
 
     "Only support selected CypherSuites and protocols" in {
-      implicit  val to : FiniteDuration = timeout
-
       val sslInfo : blended.security.ssl.SslContextInfo = mandatoryService[blended.security.ssl.SslContextInfo](registry)
 
       val invalid = sslInfo.getInvalidCypherSuites()

@@ -25,8 +25,9 @@ class UnzipperTest extends AnyFreeSpec
   "With a usable test.zip file" - {
     "unpacking everything should work" in {
       withTestDir() { dir =>
-        val files = Unzipper.unzip(testZip, dir, Nil, None, None)
-        expectFiles(dir, true, "dir1", "dir1/dir1a", "dir1/file2a.txt", "dir2", "file1.txt")
+        Unzipper.unzip(testZip, dir, Nil, None, None)
+        val expectedFiles = Seq("dir1", "dir1/dir1a", "dir1/file2a.txt", "dir2", "file1.txt")
+        expectFiles(dir, true, expectedFiles: _*)
       }
     }
 
@@ -39,7 +40,7 @@ class UnzipperTest extends AnyFreeSpec
         assert(fileSelector("dir1") === false)
         assert(fileSelector("dir1/file1") === false)
 
-        val files = Unzipper.unzip(testZip, dir, Nil, Some(fileSelector), None)
+        Unzipper.unzip(testZip, dir, Nil, Some(fileSelector), None)
         expectFiles(dir, true, "dir2")
       }
     }
@@ -49,7 +50,7 @@ class UnzipperTest extends AnyFreeSpec
 
         val fileSelector = { fileName : String => !blacklist.exists(b => fileName == b || fileName.startsWith(b + "/")) }
 
-        val files = Unzipper.unzip(testZip, dir, Nil, Some(fileSelector), None)
+        Unzipper.unzip(testZip, dir, Nil, Some(fileSelector), None)
         expectFiles(dir, true, "dir1", "dir1/file2a.txt", "dir2", "file1.txt")
       }
     }
@@ -82,7 +83,7 @@ class UnzipperTest extends AnyFreeSpec
     }
     "unpacking everything and replacing a missing variable should work when failOnMissing is false" in {
       withTestDir() { dir =>
-        val files = Unzipper.unzip(test2Zip, dir, Nil, None, Some(Unzipper.PlaceholderConfig(
+        Unzipper.unzip(test2Zip, dir, Nil, None, Some(Unzipper.PlaceholderConfig(
           openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map(),
           failOnMissing = false
         )))

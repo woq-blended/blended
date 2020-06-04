@@ -5,18 +5,15 @@ import java.util.UUID
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
-import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerContext
-import blended.jms.utils.{Connected, ConnectionStateChanged, IdAwareConnectionFactory, JmsDestination, JmsQueue, QueryConnectionState}
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed}
 import blended.streams.{BlendedStreamsConfig, FlowProcessor}
-import blended.testsupport.pojosr.{BlendedPojoRegistry, JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.pojosr.{JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.RichTry._

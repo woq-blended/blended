@@ -3,13 +3,11 @@ package blended.streams.jms.internal
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerContext
-import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory, MessageReceived, ProducerMaterialized}
-import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
+import blended.jms.utils.{BlendedSingleConnectionFactory, MessageReceived, ProducerMaterialized}
+import blended.streams.BlendedStreamsConfig
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
@@ -17,10 +15,9 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
-import blended.util.RichTry._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Promise}
+import scala.concurrent.{Await, Promise}
 import scala.util.Success
 
 class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
@@ -41,7 +38,6 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
   "The stream based keep alive producer should" - {
 
     "create a stream to send keep alives for a given connection factory" in {
-      implicit val to : FiniteDuration = timeout
       implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val cf : BlendedSingleConnectionFactory = jmsConnectionFactory(registry, mustConnect = true).get.asInstanceOf[BlendedSingleConnectionFactory]

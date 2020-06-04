@@ -45,8 +45,6 @@ class LoginServiceSpec extends SimplePojoContainerSpec
   )
 
   private def withLoginService[T](request : Request[Either[String, String], Nothing])(f : Response[Either[String, String]] => T) : T = {
-    implicit val to : FiniteDuration = timeout
-
     implicit val backend = AkkaHttpBackend()
     mandatoryService[HttpContext](registry, None)
 

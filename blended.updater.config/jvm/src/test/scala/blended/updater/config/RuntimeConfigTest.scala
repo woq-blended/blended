@@ -26,7 +26,7 @@ class RuntimeConfigTest
       |""".stripMargin
 
     "read" in {
-      val config = RuntimeConfigCompanion.read(ConfigFactory.parseString(minimal)).get
+      RuntimeConfigCompanion.read(ConfigFactory.parseString(minimal)).get
     }
 
     val lines = minimal.trim().split("\n")

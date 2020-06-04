@@ -4,8 +4,6 @@ import java.io.File
 
 import blended.testsupport.BlendedTestSupport
 
-import scala.concurrent.duration._
-
 class ConfigPermissionManagerSpec extends AbstractLoginSpec {
 
   override val baseDir = new File(BlendedTestSupport.projectTestOutput, "permissions").getAbsolutePath()
@@ -32,7 +30,6 @@ class ConfigPermissionManagerSpec extends AbstractLoginSpec {
     }
 
     "should map the JAAS groups to permissions" in {
-      implicit val to : FiniteDuration = timeout
       val mgr = mandatoryService[BlendedPermissionManager](registry, None)
 
       assertPermissions(
@@ -49,7 +46,6 @@ class ConfigPermissionManagerSpec extends AbstractLoginSpec {
     }
 
     "should merge configured permissions correctly" in {
-      implicit val to : FiniteDuration = timeout
       val mgr = mandatoryService[BlendedPermissionManager](registry, None)
 
       assertPermissions(

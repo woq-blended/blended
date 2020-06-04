@@ -31,7 +31,6 @@ class JmsSessionManagerSpec extends SimplePojoContainerSpec
   )
 
   private def createSessionManger(name : String, maxSessions : Int)(sessionOpened : JmsSession => Try[Unit]) : JmsSessionManager = {
-    implicit val to : FiniteDuration = timeout
 
     val cf : IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)
     val con : Connection = ensureConnection(registry)(cf, 3.seconds).unwrap

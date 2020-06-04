@@ -8,9 +8,9 @@ import akka.stream.scaladsl.Source
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerContext
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{AckProcessor, Collector}
-import blended.streams.{FlowHeaderConfig, FlowProcessor, StreamFactories}
+import blended.streams.{FlowProcessor, StreamFactories}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, FileTestSupport}
@@ -41,8 +41,6 @@ abstract class AbstractFileSourceSpec extends SimplePojoContainerSpec
   protected val log : Logger = Logger[FileSourceSpec]
 
   protected def testWithLock(srcDir : File, lockFile : File, pollCfg : FilePollConfig): Unit = {
-
-    implicit val to : FiniteDuration = timeout
 
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
     implicit val eCtxt : ExecutionContext = system.dispatcher

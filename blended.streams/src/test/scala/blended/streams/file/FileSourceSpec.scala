@@ -21,7 +21,6 @@ class FileSourceSpec extends AbstractFileSourceSpec {
   "The FilePollSource should" - {
 
     "perform a regular file poll from a given directory" in {
-      implicit val to : FiniteDuration = timeout
       implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val rawCfg : Config = ctCtxt.containerConfig.getConfig("simplePoll")
@@ -50,7 +49,6 @@ class FileSourceSpec extends AbstractFileSourceSpec {
     }
 
     "restore the original file if the envelope was denied" in {
-      implicit val to : FiniteDuration = timeout
       implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg(ctCtxt), ctCtxt).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/restore")
@@ -71,7 +69,6 @@ class FileSourceSpec extends AbstractFileSourceSpec {
     }
 
     "create a backup file if the backup directory is configured" in {
-      implicit val to : FiniteDuration = timeout
       implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg(ctCtxt), ctCtxt).copy(
@@ -92,7 +89,6 @@ class FileSourceSpec extends AbstractFileSourceSpec {
     }
 
     "create a backup without timestamp suffix file if the backup directory is configured" in {
-      implicit val to : FiniteDuration = timeout
       implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val pollCfg: FilePollConfig = FilePollConfig(rawCfg(ctCtxt), ctCtxt).copy(

@@ -6,7 +6,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Source
 import akka.stream.stage.{GraphStage, GraphStageLogic}
-import akka.stream.{ActorMaterializer, Attributes, Graph, Materializer, Outlet, SourceShape}
+import akka.stream.{Attributes, Graph, Outlet, SourceShape}
 import akka.testkit.TestKit
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.streams.processor.{AckProcessor, Collector}
@@ -15,7 +15,7 @@ import blended.util.logging.Logger
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.Await
 import scala.util.Try
 
 class CountingAckContext(
@@ -36,7 +36,7 @@ class CountingAckSource(
   handleAck : AcknowledgeContext => Unit
 )(
   handleDeny : AcknowledgeContext => Unit
-)(implicit system : ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
+) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val out : Outlet[FlowEnvelope] = Outlet[FlowEnvelope](s"CountingAckSource($name.out)")
   override def shape : SourceShape[FlowEnvelope] = SourceShape(out)
@@ -90,13 +90,11 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
   private val expectedCnt : Long = numSlots * 2
   private val log : Logger = Logger[AckSourceLogicSpec]
   private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create("App"), log)
-  private implicit val eCtxt : ExecutionContext = system.dispatcher
 
   "The AckSourceLogic should" - {
 
     "Generate messages and process the acknowledgement correctly" in {
 
-      implicit val materializer : Materializer = ActorMaterializer()
       implicit val timeout : FiniteDuration = 1.seconds
 
       val ack : AtomicLong = new AtomicLong(0L)
@@ -120,7 +118,6 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
 
     "Generate messages and process the auto acknowledgement correctly" in {
 
-      implicit val materializer : Materializer = ActorMaterializer()
       implicit val timeout : FiniteDuration = 1.seconds
 
       val ack : AtomicLong = new AtomicLong(0L)
@@ -143,7 +140,6 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
 
     "Generate messages and process the denial correctly" in {
 
-      implicit val materializer : Materializer = ActorMaterializer()
       implicit val timeout : FiniteDuration = 1.seconds
 
       val ack : AtomicLong = new AtomicLong(0L)
@@ -168,7 +164,6 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
 
     "Monitor the acknowledgement for timeouts correctly" in {
 
-      implicit val materializer : Materializer = ActorMaterializer()
       val timeout : FiniteDuration = 3.seconds
 
       val ack : AtomicLong = new AtomicLong(0L)

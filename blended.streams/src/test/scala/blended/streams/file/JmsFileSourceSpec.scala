@@ -49,8 +49,6 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
   private val cfCnt : AtomicInteger = new AtomicInteger(0)
   private def amqCf(p : Int) : IdAwareConnectionFactory = {
-
-    implicit val to : FiniteDuration = timeout
     val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
     SimpleIdAwareConnectionFactory(
@@ -93,7 +91,6 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     cf : IdAwareConnectionFactory,
     destName : String
   ) : Source[FlowEnvelope, NotUsed] = {
-    implicit val to : FiniteDuration = timeout
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
     val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
@@ -121,8 +118,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     cf : IdAwareConnectionFactory,
     destName : String
   ) : JmsProducerSettings = {
-    implicit val to : FiniteDuration = timeout
-    val system : ActorSystem = mandatoryService[ActorSystem](registry)
+    mandatoryService[ActorSystem](registry)
 
     val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(ctCtxt)
     val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
@@ -145,7 +141,6 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       srcDir : String,
       ctxt : ContainerContext
     ) : Seq[ActorRef] = {
-      implicit val to : FiniteDuration = timeout
       implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val rawCfg : Config = ctxt.containerConfig.getConfig("simplePoll")
@@ -195,8 +190,6 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     }
 
     "pickup files and send them to JMS" in {
-
-      implicit val to : FiniteDuration = timeout
       val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val (b, p) = startBroker("normal")
@@ -215,8 +208,6 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
     }
 
     "recover to send JMS messages in case the JMS connection fails and comes back" in {
-
-      implicit val to : FiniteDuration = timeout
       val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
       val (b, p) = startBroker("failover1")

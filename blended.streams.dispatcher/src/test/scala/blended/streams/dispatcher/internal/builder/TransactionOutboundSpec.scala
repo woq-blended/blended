@@ -4,7 +4,6 @@ import java.io.File
 import java.util.UUID
 
 import akka.stream.KillSwitch
-import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.BlendedStreamsConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
@@ -16,7 +15,6 @@ import blended.streams.worklist._
 import blended.testsupport.pojosr.JmsConnectionHelper
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.RichTry._
-import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.Await
@@ -34,7 +32,6 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   override protected def beforeAll(): Unit = {
     super.beforeAll()
 
-    implicit val to : FiniteDuration = timeout
     val bs : DispatcherBuilderSupport = dispCtxt.bs
 
     val tMgr : FlowTransactionManager =

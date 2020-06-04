@@ -6,9 +6,7 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerContext
-import blended.streams.FlowHeaderConfig
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -26,8 +24,6 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
 
   System.setProperty("testName", "header")
   System.setProperty("Country", "cc")
-
-  private[this] implicit val to : FiniteDuration = 3.seconds
 
   private val log = Logger[HeaderProcessorSpec]
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
@@ -72,8 +68,8 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
 
       val r = result(List(
         HeaderProcessorConfig("foo", Some("""$[[Country]]"""), overwrite = true),
-        HeaderProcessorConfig("foo2", Some("""${{#foo}}"""), overwrite = true),
-        HeaderProcessorConfig("test", Some("${{42}}"), overwrite = true)
+        HeaderProcessorConfig("foo2", Some(s"""$${{#foo}}"""), overwrite = true),
+        HeaderProcessorConfig("test", Some(s"$${{42}}"), overwrite = true)
       ))
 
       // scalastyle:off magic.number

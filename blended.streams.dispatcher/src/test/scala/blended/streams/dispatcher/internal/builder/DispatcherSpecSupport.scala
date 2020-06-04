@@ -22,7 +22,6 @@ import org.osgi.framework.BundleActivator
 import org.scalatest.BeforeAndAfterAll
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 
 trait DispatcherSpecSupport extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
@@ -75,8 +74,6 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     classOf[BridgeProviderConfig].getSimpleName() + s"($vendor:$provider)"
 
   def createDispatcherExecContext(r : BlendedPojoRegistry) : DispatcherExecContext = {
-    implicit val to : FiniteDuration = timeout
-
     implicit val system : ActorSystem = mandatoryService[ActorSystem](r)
     val provider : BridgeProviderRegistry = mandatoryService[BridgeProviderRegistry](r)
 
@@ -104,11 +101,9 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
   override protected def beforeAll(): Unit = {
     super.beforeAll()
 
-    implicit val to : FiniteDuration = timeout
-    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
+    mandatoryService[ActorSystem](registry)
 
     val dispCtxt = createDispatcherExecContext(registry)
-    implicit val bs : DispatcherBuilderSupport = dispCtxt.bs
 
     val (internalVendor, internalProvider) = dispCtxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).get
 

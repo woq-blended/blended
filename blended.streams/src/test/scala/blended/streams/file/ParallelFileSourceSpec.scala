@@ -24,7 +24,6 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
       val numMsg : Int = 5000
       val t : FiniteDuration = 30.seconds
 
-      implicit val to : FiniteDuration = timeout
       implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
       implicit val eCtxt : ExecutionContext = system.dispatcher
 
@@ -38,7 +37,7 @@ class ParallelFileSourceSpec extends AbstractFileSourceSpec {
         }
       }
 
-      def createCollector(subId : Int, startDelay : Option[FiniteDuration] = None) : Collector[FlowEnvelope] = {
+      def createCollector(subId : Int, startDelay : Option[FiniteDuration]) : Collector[FlowEnvelope] = {
         val src : Source[FlowEnvelope, NotUsed] =
           Source.fromGraph(new FileAckSource(
             pollCfg.copy(id = s"poller$subId", interval = 100.millis), envLogger(log)

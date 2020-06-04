@@ -57,7 +57,7 @@ class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
         dataFromPosClient.inboundConfig should be(defined)
         dataFromPosClient.inboundConfig.foreach { in =>
           in.entry should be(JmsQueue("ClientFromQ"))
-          in.header should be(Map("ResourceType" -> "${{#MsgType}}"))
+          in.header should be(Map("ResourceType" -> s"$${{#MsgType}}"))
         }
 
         dataFromPosClient.outbound should have size 1

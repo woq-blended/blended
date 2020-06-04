@@ -11,7 +11,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerContext
 import blended.jms.utils._
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -26,7 +26,7 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 
 @RequiresForkedJVM
 class SlowRoundtripSpec extends SimplePojoContainerSpec

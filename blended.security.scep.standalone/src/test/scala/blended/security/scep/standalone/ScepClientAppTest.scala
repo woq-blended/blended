@@ -3,14 +3,10 @@ package blended.security.scep.standalone
 import java.io.File
 import java.net.{InetAddress, URL}
 import java.nio.file.{Files, StandardCopyOption}
-import java.util.concurrent.{TimeUnit, TimeoutException}
 
-import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
-import scala.util.control.NonFatal
 
 import blended.testsupport.TestFile
-import blended.testsupport.retry.Retry
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory

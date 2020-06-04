@@ -79,7 +79,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
               val success: Try[Unit] =
                 new ResultPoller[Unit](system, timeout, hint)(() => Future {
                   f(Server(serviceRegistry = registry, dir = new File(baseDir)))
-                }).execute(_ => true)
+                }).execute(_ => ())
               assert(success.isSuccess)
             }
           }

@@ -3,7 +3,6 @@ package blended.mgmt.agent.internal
 import akka.actor.Props
 import blended.akka.{OSGIActor, OSGIActorConfig}
 import blended.container.context.api.ContainerContext
-import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 import blended.util.logging.Logger
 
 import scala.util.{Failure, Try}

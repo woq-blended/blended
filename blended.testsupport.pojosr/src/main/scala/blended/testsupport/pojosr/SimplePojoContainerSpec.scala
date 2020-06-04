@@ -52,8 +52,6 @@ abstract class SimplePojoContainerSpec
 
   override protected def beforeAll(): Unit = {
 
-    implicit val to : FiniteDuration = timeout
-
     super.beforeAll()
     val reg = createSimpleBlendedContainer(mandatoryPropertyNames, systemProperties).get
     bundles.foldLeft(reg) {

@@ -9,8 +9,6 @@ import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import org.osgi.framework.BundleActivator
 
-import scala.concurrent.duration._
-
 class ProxyActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper {
@@ -25,7 +23,6 @@ class ProxyActivatorSpec extends SimplePojoContainerSpec
   "The HTTP proxy activator" - {
 
     "should register the proxy routes as Simple Http context services" in {
-      implicit val to : FiniteDuration = timeout
       mandatoryService[HttpContext](registry, None)
     }
   }

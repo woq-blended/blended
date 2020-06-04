@@ -119,7 +119,7 @@ trait PojoSrTestHelper {
   }
 
   private[this] def deleteRecursive(files : File*) : Unit = files.map { file =>
-    if (file.isDirectory) deleteRecursive(file.listFiles : _*)
+    if (file.isDirectory) deleteRecursive(file.listFiles.toSeq: _*)
     file.delete match {
       case false if file.exists =>
         throw new RuntimeException(

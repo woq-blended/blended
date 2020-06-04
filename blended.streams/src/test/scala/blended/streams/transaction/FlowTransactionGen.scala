@@ -1,7 +1,7 @@
 package blended.streams.transaction
 
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.{Date, UUID}
+import java.util.Date
 
 import blended.streams.message._
 import blended.streams.worklist._

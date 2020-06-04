@@ -16,7 +16,6 @@ trait JmsConnectionHelper { this : PojoSrTestHelper =>
   def namedJmsConnectionFactory(r : BlendedPojoRegistry, mustConnect : Boolean = false, timeout : FiniteDuration = 3.seconds, evalFilter : Boolean = true)(
     vendor : String, provider : String
   ) : Try[IdAwareConnectionFactory] = Try {
-    implicit val to : FiniteDuration = timeout
 
     val filter : Option[String] = if (evalFilter) {
       Some(s"(&(vendor=$vendor)(provider=$provider))")
@@ -34,7 +33,6 @@ trait JmsConnectionHelper { this : PojoSrTestHelper =>
   }
 
   def ensureConnection(r : BlendedPojoRegistry)(cf : IdAwareConnectionFactory, timeout: FiniteDuration = 3.seconds) : Try[Connection] = Try {
-    implicit val to : FiniteDuration = timeout
     implicit val system : ActorSystem = mandatoryService[ActorSystem](r)
 
     val probe : TestProbe = TestProbe()

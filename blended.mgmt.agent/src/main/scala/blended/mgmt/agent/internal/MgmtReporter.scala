@@ -144,7 +144,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
   }
 
   private def handleHttpRequests(state : MgmtReporterState) : Receive = {
-    case (response @ HttpResponse(status, _, entity, _), appliedIds : List[String]) =>
+    case (response @ HttpResponse(status, _, entity, _), appliedIds : List[_]) =>
       status match {
         case StatusCodes.OK =>
           // As the server accepted also the list of applied update action IDs

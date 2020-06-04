@@ -1362,8 +1362,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           s"""
             |package blended.launcher
             |
-            |import java.io.File
-            |
             |/** Generated with mill: The frameworks to use in the tests. */
             |object TestOsgiFrameworks {
             |  val frameworks: Map[String, String] = ${

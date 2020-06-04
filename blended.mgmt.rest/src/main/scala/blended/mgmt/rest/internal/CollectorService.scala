@@ -6,7 +6,6 @@ import java.util.UUID
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Route, ValidationRejection}
-import akka.util.Timeout
 import blended.prickle.akka.http.PrickleSupport
 import blended.security.akka.http.BlendedSecurityDirectives
 import blended.updater.config._
@@ -16,7 +15,6 @@ import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 
 import scala.collection.{immutable => sci}
-import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 trait CollectorService {
@@ -79,8 +77,6 @@ trait CollectorService {
   }
 
   def collectorRoute : Route = {
-
-    implicit val timeout : Timeout = Timeout(1.second)
 
     path("container") {
       post {
@@ -328,7 +324,7 @@ trait CollectorService {
     if (file.isDirectory()) {
       file.listFiles() match {
         case null  =>
-        case files => deleteRecursive(files : _*)
+        case files => deleteRecursive(files.toSeq : _*)
       }
     }
     file.delete()

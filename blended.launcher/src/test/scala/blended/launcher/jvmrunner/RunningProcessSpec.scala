@@ -7,7 +7,6 @@ class RunningProcessSpec extends LoggingFreeSpec
   with Matchers {
 
   "A RunningProcess should" - {
-
-    ""
+    pending
   }
 }

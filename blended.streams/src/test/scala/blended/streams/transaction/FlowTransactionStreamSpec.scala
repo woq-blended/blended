@@ -7,7 +7,6 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.internal.BlendedAkkaActivator
-import blended.container.context.api.ContainerContext
 import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.{CollectingActor, Collector}
@@ -42,7 +41,6 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
 
     "record an incoming FlowTransactionUpdate correctly" in {
 
-      implicit val to : FiniteDuration = timeout
       implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
       implicit val materializer : Materializer = ActorMaterializer()
       implicit val eCtxt : ExecutionContext = system.dispatcher

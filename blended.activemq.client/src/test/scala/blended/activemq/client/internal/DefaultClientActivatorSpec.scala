@@ -10,8 +10,6 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import org.osgi.framework.BundleActivator
 
-import scala.concurrent.duration._
-
 @RequiresForkedJVM
 class DefaultClientActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike

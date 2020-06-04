@@ -11,7 +11,6 @@ import javax.management.openmbean.{ArrayType, SimpleType, TabularData}
 import org.scalacheck.Arbitrary
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-
 import scala.jdk.CollectionConverters._
 import scala.reflect.{ClassTag, classTag}
 
@@ -102,7 +101,9 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with ScalaCheckPropertyChecks 
         s"of ${if (isPrim) "primitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
           //          val expectedType = new ArrayType( type0, isPrim)
           forAll { d: Seq[T] =>
-            val (value, mappedType) = mapper.fieldToElement("d", d)
+            val element = mapper.fieldToElement("d", d)
+            val value = element._1
+            val mappedType = element._2
             if (d.isEmpty) {
               assert(mappedType === SimpleType.VOID)
               assert(value === null)
@@ -135,7 +136,9 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with ScalaCheckPropertyChecks 
         s"of ${if (isPrim) "primitive " else ""}type ${type0} (classTag: ${rcClass.getName()})" in {
           //          val expectedType = new ArrayType( type0, isPrim)
           forAll { d: Map[T, T] =>
-            val (value, mappedType) = mapper.fieldToElement("d", d)
+            val element = mapper.fieldToElement("d", d)
+            val value = element._1
+            val mappedType = element._2
             if (d.isEmpty) {
               assert(mappedType === SimpleType.VOID)
               assert(value === null)
@@ -169,7 +172,9 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with ScalaCheckPropertyChecks 
           //          val expectedType = new ArrayType( type0, isPrim)
           forAll { d: List[T] =>
             val col = d.asJava
-            val (value, mappedType) = mapper.fieldToElement("d", col)
+            val element = mapper.fieldToElement("d", col)
+            val value = element._1
+            val mappedType = element._2
             if (col.isEmpty) {
               assert(mappedType === SimpleType.VOID)
               assert(value === null)
@@ -203,7 +208,9 @@ class OpenMBeanMapperSpec extends LoggingFreeSpec with ScalaCheckPropertyChecks 
           //          val expectedType = new ArrayType( type0, isPrim)
           forAll { d: Map[T, T] =>
             val col = d.asJava
-            val (value, mappedType) = mapper.fieldToElement("d", col)
+            val element = mapper.fieldToElement("d", col)
+            val value = element._1
+            val mappedType = element._2
             if (col.isEmpty) {
               assert(mappedType === SimpleType.VOID)
               assert(value === null)

@@ -26,7 +26,7 @@ object MockObjects {
     "sib.connectId" -> pickOne(connectIds)
   )
 
-  private[this] def sizedProperties(namePrefix : String = "prop", numProps : Int) =
+  private[this] def sizedProperties(namePrefix: String, numProps: Int): Map[String, String] =
     1.to(numProps).map(i => (s"$namePrefix-$i", s"value$i")).toMap
 
   // scalastyle:off magic.number

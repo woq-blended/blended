@@ -80,7 +80,7 @@ class PersistedFieldTest
       )
     ),
     ("List[Map]",
-      Map("key" -> List(Map("ik" -> "iv1", "ik2" -> 2).asJava, Map("second" -> "value").asJava).asJava).asJava,
+      Map("key" -> List(Map[String,Any]("ik" -> "iv1", "ik2" -> 2).asJava, Map("second" -> "value").asJava).asJava).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", typeName = TypeName.Array),
         PersistedField(fieldId = 2, baseFieldId = Some(1), name = "0", typeName = TypeName.Object),
@@ -97,7 +97,7 @@ class PersistedFieldTest
           "kv1",
           "kv2"
         ).asJava,
-        "key3" -> Map(
+        "key3" -> Map[String,Any](
           "k3a" -> "v3a",
           "k3b" -> List(
             "v3b1",

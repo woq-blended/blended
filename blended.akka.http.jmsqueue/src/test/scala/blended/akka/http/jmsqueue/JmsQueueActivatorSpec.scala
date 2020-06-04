@@ -11,8 +11,6 @@ import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import org.osgi.framework.BundleActivator
 
-import scala.concurrent.duration._
-
 class JmsQueueActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper {
@@ -29,8 +27,6 @@ class JmsQueueActivatorSpec extends SimplePojoContainerSpec
   "The JmsQueueActivator" - {
 
     "should register a webcontext for the configured destinations" in {
-
-      implicit val timeout : FiniteDuration = 3.seconds
       mandatoryService[HttpContext](registry)
     }
   }

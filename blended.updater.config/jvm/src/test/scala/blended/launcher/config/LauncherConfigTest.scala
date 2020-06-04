@@ -15,7 +15,7 @@ class LauncherConfigTest extends AnyFreeSpec {
 
   "Minimal config" - {
     "read() must succeed" in {
-      val config = LauncherConfig.read(ConfigFactory.parseString(minimalConfig))
+      LauncherConfig.read(ConfigFactory.parseString(minimalConfig))
     }
 
     val lines = minimalConfig.trim().split("\n")
@@ -105,7 +105,6 @@ class LauncherConfigTest extends AnyFreeSpec {
       val a = read(ConfigFactory.parseString(config))
       val b = read(toConfig(a))
 
-      val fwp = b.frameworkProperties
       assert(a === b)
     }
   }

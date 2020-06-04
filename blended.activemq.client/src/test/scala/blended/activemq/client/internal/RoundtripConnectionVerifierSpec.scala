@@ -6,11 +6,10 @@ import akka.actor.ActorSystem
 import blended.activemq.client.{ConnectionVerifier, RoundtripConnectionVerifier}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue, SimpleIdAwareConnectionFactory}
-import blended.streams.FlowHeaderConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
-import blended.testsupport.scalatest.{LoggingFreeSpec, LoggingFreeSpecLike}
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
