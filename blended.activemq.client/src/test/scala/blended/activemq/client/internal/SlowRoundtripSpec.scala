@@ -1,7 +1,7 @@
 package blended.activemq.client.internal
 
 import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -116,6 +116,7 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "slow").getAbsolutePath()
 
   private var failed : List[String] = List.empty
+  private val verifyCounter : AtomicInteger = new AtomicInteger(0)
 
   private class SlowRoundtripActivator extends DominoActivator {
 
@@ -138,6 +139,7 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
           ) {
 
             override protected def probe(ctCtxt : ContainerContext)(cf: IdAwareConnectionFactory): Unit = {
+              verifyCounter.incrementAndGet()
               if (firstTry.get()) {
 
                 val probe : TestProbe = TestProbe()
@@ -148,9 +150,14 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
                   case evt : ConnectionStateChanged => evt.state.status == Connected
                 }
 
-                system.stop(probe.ref)
                 super.probe(ctCtxt)(cf)
                 system.eventStream.publish(MaxKeepAliveExceeded(vendor, provider))
+
+                probe.fishForMessage(timeout, "Waiting for disconnect"){
+                  case evt : ConnectionStateChanged => evt.state.status == Disconnected
+                }
+
+                system.stop(probe.ref)
                 responder.respond()
 
                 firstTry.set(false)
@@ -189,12 +196,6 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
       val probe : TestProbe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
 
-      // Make sure the underlying connection factory reconnects
-      probe.fishForMessage(3.seconds, "Waiting for disconnected event"){
-        case evt : ConnectionStateChanged =>
-          evt.state.status == Disconnected
-      }
-
       probe.fishForMessage(5.seconds, "Waiting for second connected event"){
         case evt : ConnectionStateChanged =>
           evt.state.status == Connected
@@ -205,6 +206,7 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
       mandatoryService[IdAwareConnectionFactory](registry, filter = Some("(&(vendor=activemq)(provider=conn1))"), timeout = 30.seconds)
 
       failed should be (empty)
+      assert(verifyCounter.get() > 1)
     }
   }
 }

@@ -58,16 +58,16 @@ class RoundtripConnectionVerifier(
     collector.result.onComplete {
       case Success(l) => l match {
         case Nil =>
-          log.warn(s"No response received to verify connection [${cf.vendor}:${cf.provider}]")
+          log.warn(s"No response received to verify connection [${cf.vendor}:${cf.provider}] with id [$id]")
           scheduleRetry(ctCtxt)(cf)
         case h :: _ =>
           val result : Boolean = verify(h)
-          log.info(s"Verification result for client connection [${cf.vendor}:${cf.provider}] is [$result]")
+          log.info(s"Verification result [$id] for client connection [${cf.vendor}:${cf.provider}] is [$result]")
           verified.complete(Success(result))
       }
 
       case Failure(t) =>
-        log.warn(s"Failed to receive verification response to verify connection [${cf.vendor}:${cf.provider}] : [${t.getMessage()}]")
+        log.warn(s"Failed to receive verification response [$id] to verify connection [${cf.vendor}:${cf.provider}] : [${t.getMessage()}]")
         scheduleRetry(ctCtxt)(cf)
     }
   }
@@ -92,17 +92,17 @@ class RoundtripConnectionVerifier(
       logLevel = _ => LogLevel.Debug
     )
 
-    log.info(s"Running verification probe for connection [${cf.vendor}:${cf.provider}]")
+    log.info(s"Running verification probe for connection [${cf.vendor}:${cf.provider}] with id [$id]")
 
     sendMessages(pSettings, envLogger, probeEnv) match {
       case Success(s) =>
-        log.info(s"Request message sent successfully to [${requestDest.asString}]")
+        log.info(s"Request message [$id] sent successfully to [${requestDest.asString}]")
         s.shutdown()
 
         waitForResponse(ctCtxt)(cf, id)
 
       case Failure(t) =>
-        log.debug(s"Failed to send verification request to verify connection [${cf.vendor}:${cf.provider}] : [${t.getMessage()}]")
+        log.debug(s"Failed to send verification request [$id] to verify connection [${cf.vendor}:${cf.provider}] : [${t.getMessage()}]")
         scheduleRetry(ctCtxt)(cf)
     }
   }
@@ -112,7 +112,7 @@ class RoundtripConnectionVerifier(
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
     after[Unit](retryInterval, system.scheduler){
-      log.debug(s"Scheduling retry to verify connection in [$retryInterval]")
+      log.debug(s"Scheduling retry to verify connection [${cf.vendor}:${cf.provider}] in [$retryInterval]")
       Future { probe(ctCtxt)(cf) }
     }
   }

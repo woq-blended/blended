@@ -411,16 +411,29 @@ trait BlendedBaseModule
       if(testGroup == otherTestGroup) T{
         // only check in default cross instance "other"
 
-        val anyGroupsDetected = detectTestGroups().keySet != Set(otherTestGroup)
-        val anyGroupsDefined = testGroups.nonEmpty
-        val relevantGroups: PartialFunction[(String, Set[String]), Set[String]] = {
-          case (name, tests) if name != otherTestGroup => tests
-        }
-        val definedGroupedTests = testGroups.collect(relevantGroups).toSet
-        val detectedGroupedTests = detectTestGroups().collect(relevantGroups).toSet
+        // First we check if we have detected any other groups than the default group
+        val anyGroupsDetected : Boolean = detectTestGroups().keySet != Set(otherTestGroup)
 
-        if((anyGroupsDetected || anyGroupsDefined) && definedGroupedTests != detectedGroupedTests) {
-          T.log.error(s"Test groups invalid. Detected the following explicit groups: ${detectTestGroups() - otherTestGroup}.")
+        // Then we check if we have any groups defined in the build.sc
+        val anyGroupsDefined = testGroups.nonEmpty
+
+        if (anyGroupsDetected || anyGroupsDefined) {
+          val relevantGroups: PartialFunction[(String, Set[String]), Set[String]] = {
+            case (name, tests) if name != otherTestGroup => tests
+          }
+
+          val definedGroupedTests : Set[Set[String]] = testGroups.collect(relevantGroups).toSet
+          val detectedGroupedTests : Set[Set[String]] = detectTestGroups().collect(relevantGroups).toSet
+
+          val definedUndetected : Set[Set[String]] = definedGroupedTests.diff(detectedGroupedTests)
+          val detectedUndefined : Set[Set[String]] = detectedGroupedTests.diff(definedGroupedTests)
+
+          if (detectedUndefined.nonEmpty) {
+            T.log.error(s"The following test groups are detected, but do not occurr in the build file:\n${detectedUndefined.mkString("\n")}")
+          }
+          if (definedUndetected.nonEmpty) {
+            T.log.error(s"The following test groups are defined, but are missing the RequiredForkedJVM annotation:\n${definedUndetected.mkString("\n")}")
+          }
         }
       } else T{
         // depend on the other check
@@ -692,7 +705,15 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Some(s"${blendedModule}.internal.AmqClientActivator")
       )}
-      object test extends Tests {
+      override def testGroups: Map[String, Set[String]] = Map(
+        "DefaultClientActivatorSpec" -> Set("blended.activemq.client.internal.DefaultClientActivatorSpec"),
+        "SlowRoundtripSpec" -> Set("blended.activemq.client.internal.SlowRoundtripSpec"),
+        "FailingClientActivatorSpec" -> Set("blended.activemq.client.internal.FailingClientActivatorSpec"),
+        "RoundtripConnectionVerifierSpec" -> Set("blended.activemq.client.internal.RoundtripConnectionVerifierSpec")
+      )
+      object test extends Cross[Test](crossTestGroups: _*)
+      class Test(override val testGroup: String) extends ForkedTest {
+        override def otherModule: ForkedTest = client.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.activeMqBroker,
           deps.activeMqKahadbStore
@@ -796,12 +817,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             "akka.shapeless.*"
           )
         )}
-//        override def exportContents: T[Seq[String]] = T{ Seq(
-//          s"akka.http.*;version=${deps.akkaHttpVersion};-split-package:=merge-first"
-//        )}
-//        override def embeddedJars: T[Seq[PathRef]] = T{
-//          resolveDeps(T.task{ ivyDeps().map(_.exclude("*" -> "*")) })().toSeq
-//        }
       }
 
       object jmsqueue extends BlendedModule {
