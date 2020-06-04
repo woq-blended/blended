@@ -241,7 +241,8 @@ trait BlendedBaseModule
   override def scalacOptions = Seq(
     "--deprecation",
     "--target:8",
-//    "-Werror",
+    "-Werror",
+    "--feature",
     Seq(
       "adapted-args",
       "constant",
