@@ -990,7 +990,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.prickle.akka.http
       )
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-        `Bundle-Activator` = Some(s"${blendedModule}.internal.AgentActivator")
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.MgmtAgentActivator")
       )}
     }
     object mock extends CoreModule {
