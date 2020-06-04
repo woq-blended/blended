@@ -960,7 +960,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           s"""
             |package blended.launcher
             |
-            |/** Generated with mill: The frameworks to use in the tests. */
+            |/** Generated with mill: The frameworks to use in the tests.
+            | *  See [[blended.launcher.OsgiFrameworksTest]].
+            | */
             |object TestOsgiFrameworks {
             |  val frameworks: Map[String, String] = ${
               resolvedOsgiFrameworks().map { case (name, file) => s""""${name}" -> "${file.path}"""" }
@@ -1103,6 +1105,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.testsupport,
           blended.testsupport.pojosr
         )
+
+        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          deps.lambdaTest
+        )}
       }
     }
     object service extends Module {

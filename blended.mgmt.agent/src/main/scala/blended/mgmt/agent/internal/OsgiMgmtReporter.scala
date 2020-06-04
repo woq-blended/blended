@@ -46,6 +46,5 @@ class OsgiMgmtReporter(cfg : OSGIActorConfig) extends OSGIActor(cfg) with MgmtRe
 }
 
 object OsgiMgmtReporter {
-
   def props(cfg : OSGIActorConfig) : Props = Props(new OsgiMgmtReporter(cfg))
 }

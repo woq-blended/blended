@@ -12,3 +12,4 @@ class MgmtAgentActivator extends DominoActivator with ActorSystemWatching {
     }
   }
 }
+

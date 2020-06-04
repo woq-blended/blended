@@ -130,7 +130,7 @@ trait TestData {
     name <- arbitrary[String]
     serviceType <- arbitrary[String]
     timestampMsec <- Gen.choose(10000, Long.MaxValue)
-    lifetimeMsec <- Gen.choose(0, Long.MaxValue) // arbitrary[Long].filter(_ >= 0)
+    lifetimeMsec <- Gen.choose(0, Long.MaxValue)
     props <- arbitrary[Map[String, String]]
   } yield ServiceInfo(name, serviceType, timestampMsec, lifetimeMsec, props)
   implicit val arbServiceInfo : Arbitrary[ServiceInfo] = Arbitrary(serviceInfos)
@@ -154,7 +154,6 @@ trait TestData {
     properties <- arbitrary[Map[String, String]]
     serviceInfos <- arbitrary[List[ServiceInfo]]
     profiles <- arbitrary[List[Profile]]
-    //    timestamp <- arbitrary[ju.Date]
     timestampMsec <- Gen.choose(10000, Long.MaxValue)
     appliedUpdateActionIds <- arbitrary[List[String]]
   } yield ContainerInfo(containerId, properties, serviceInfos, profiles, timestampMsec, appliedUpdateActionIds)
