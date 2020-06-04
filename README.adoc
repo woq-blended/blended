@@ -67,6 +67,9 @@ We currently target Java 8 and Java 11 and cross build to _Scala 2.12 with Scala
 
 | `mill -j 0 -k __.testCached`
 | Run all unit test in parallel and keep mill going even a test failure occured
+
+| `mill scoverage.htmlReportAll`
+| Generate a HTML Coverage report based on previously ran tests
 |===
 
 === IDE support
