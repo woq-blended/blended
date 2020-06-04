@@ -4,7 +4,7 @@ import blended.akka.ActorSystemWatching
 import domino.DominoActivator
 
 // The Activator that is called from the OSGi framework whenever the bundle is started or stopped.
-class AgentActivator extends DominoActivator with ActorSystemWatching {
+class MgmtAgentActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
