@@ -2,6 +2,7 @@ package blended.launcher
 
 import java.io.File
 
+import blended.launcher.test_generated.TestOsgiFrameworks
 import blended.testsupport.TestFile
 import blended.testsupport.scalatest.LoggingFreeSpec
 
@@ -17,11 +18,11 @@ class OsgiFrameworksTest extends LoggingFreeSpec
    */
   "Minimal launcher with just the framework JAR" - {
 
-    TestOsgiFrameworks.frameworks.foreach { case (name, file) =>
-      name in {
-        assert(new File(file).exists() == true, s"JAR file does not exists: ${file}")
+    TestOsgiFrameworks.frameworks.foreach { case (frameworkName, frameworkJar) =>
+      frameworkName in {
+        assert(new File(frameworkJar).exists() == true, s"Framework JAR file does not exists: ${frameworkJar}")
         val launcherConfig =
-          s"""frameworkBundle = "${file}"
+          s"""frameworkBundle = "${frameworkJar}"
              |startLevel = 10
              |defaultStartLevel = 4
              |frameworkProperties = {
