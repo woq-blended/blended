@@ -958,7 +958,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         val file = T.dest / "blended" / "launcher" / "TestOsgiFrameworks.scala"
         val body =
           s"""
-            |package blended.launcher
+            |package blended.launcher.test_generated
             |
             |/** Generated with mill: The frameworks to use in the tests.
             | *  See [[blended.launcher.OsgiFrameworksTest]].
