@@ -168,19 +168,19 @@ trait ScoverageReport extends Module { outer =>
     override def scoverageVersion = outer.scoverageVersion
   }
 
-  def htmlReportAll(evaluator: Evaluator, sources: String = "__.allSources", dataTargets: String = "__.scoverage.data"): Command[PathRef] = T.command {
-    reportTask(evaluator, ReportType.Html, sources, dataTargets)()
+  def htmlReportAll(evaluator: Evaluator, sources: String = "__.allSources", dataTargets: String = "__.scoverage.data", triggerTests: String = ""): Command[PathRef] = T.command {
+    reportTask(evaluator, ReportType.Html, sources, dataTargets, triggerTests)()
   }
 
-  def xmlReportAll(evaluator: Evaluator, sources: String = "__.allSources", dataTargets: String = "__.scoverage.data"): Command[PathRef] = T.command {
-    reportTask(evaluator, ReportType.Xml, sources, dataTargets)()
+  def xmlReportAll(evaluator: Evaluator, sources: String = "__.allSources", dataTargets: String = "__.scoverage.data", triggerTests: String = ""): Command[PathRef] = T.command {
+    reportTask(evaluator, ReportType.Xml, sources, dataTargets, triggerTests)()
   }
 
-  def consoleReportAll(evaluator: Evaluator, sources: String = "__.allSources", dataTargets: String = "__.scoverage.data"): Command[PathRef] = T.command {
-    reportTask(evaluator,ReportType.Console, sources, dataTargets)()
+  def consoleReportAll(evaluator: Evaluator, sources: String = "__.allSources", dataTargets: String = "__.scoverage.data", triggerTests: String = ""): Command[PathRef] = T.command {
+    reportTask(evaluator,ReportType.Console, sources, dataTargets, triggerTests)()
   }
 
-  def reportTask(evaluator: Evaluator, reportType: ReportType, sources: String, dataTargets: String): Task[PathRef] = {
+  def reportTask(evaluator: Evaluator, reportType: ReportType, sources: String, dataTargets: String, triggerTests: String): Task[PathRef] = {
     val sourcesTasks: Seq[Task[Seq[PathRef]]] = RunScript.resolveTasks(
       mill.main.ResolveTasks,
       evaluator,
@@ -199,8 +199,23 @@ trait ScoverageReport extends Module { outer =>
       case Left(err) => throw new Exception(err)
       case Right(tasks) => tasks.asInstanceOf[Seq[Task[PathRef]]]
     }
+    val testTasks: Seq[Task[_]] = if(triggerTests.nonEmpty) {
+      RunScript.resolveTasks(
+        mill.main.ResolveTasks,
+        evaluator,
+        Seq(triggerTests),
+        multiSelect = false
+      ) match{
+        case Left(err) => throw new Exception(err)
+        case Right(tasks) => tasks.asInstanceOf[Seq[Task[_]]]
+      }
+    } else Seq()
 
     T.task {
+      T.log.info("Running triggered tests...")
+      T.sequence(testTasks)()
+      T.log.info("Generating rport")
+
       val sourcePaths: Seq[Path] = T.sequence(sourcesTasks)().flatten.map(_.path)
       val dataPaths: Seq[Path] = T.sequence(dataTasks)().map(_.path)
       scoverageReportWorkerModule.scoverageReportWorker()

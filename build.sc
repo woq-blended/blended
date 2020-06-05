@@ -292,6 +292,25 @@ trait BlendedBaseModule
     override def explodedJars: T[Seq[PathRef]] = T{ blendedModuleBase.explodedJars() }
     override def moduleDeps: Seq[JavaModule] = blendedModuleBase.moduleDeps.map(mapToScoverageModule)
     override def recursiveModuleDeps: Seq[JavaModule] = blendedModuleBase.recursiveModuleDeps.map(mapToScoverageModule)
+    /** In continuous tests we want to freely edit code without making it always clean */
+    override def scalacOptions: Target[Seq[String]] = super.scalacOptions().filterNot(_ == "-Werror")
+    /** Non-persistent version of compile, to avoid operating on stale scoverage instrumentation data. */
+    override def compile: T[CompilationResult] = T{
+      // remove stale coverage data
+      if(os.exists(data().path)) os.list.stream(data().path).map(os.remove.all(_))
+      zincWorker.worker().compileMixed(
+        upstreamCompileOutput(),
+        allSourceFiles().map(_.path),
+        compileClasspath().map(_.path),
+        javacOptions(),
+        scalaVersion(),
+        scalaOrganization(),
+        scalacOptions(),
+        scalaCompilerClasspath().map(_.path),
+        scalacPluginClasspath().map(_.path),
+        T.reporter.apply(hashCode)
+      )
+    }
   }
 
   trait Tests extends super.Tests with super.ScoverageTests {
