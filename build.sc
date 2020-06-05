@@ -1,6 +1,6 @@
 import coursierapi.{Credentials, MavenRepository}
 
-val blendedMillVersion : String = "v0.1-5-7e0b46"
+val blendedMillVersion : String = "0.1-SNAPSHOT"
 
 interp.repositories() ++= Seq(
   MavenRepository.of(s"https://u233308-sub2.your-storagebox.de/blended-mill/$blendedMillVersion")
@@ -38,6 +38,7 @@ import $file.build_util
 import build_util.{FilterUtil, ScoverageReport, ZipUtil}
 
 import de.wayofquality.blended.mill.versioning.GitModule
+import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
 
 import $file.build_deps
@@ -51,22 +52,11 @@ import com.goyeau.mill.scalafix.ScalafixModule
 /** Project directory. */
 val baseDir: os.Path = build.millSourcePath
 
-def blendedVersion = T.input {
-  val v = T.env.get("CI") match {
-    case Some(ci @ ("1" | "true")) =>
-      val version = GitSupport.publishVersion()
-      T.log.info(s"Using git-based version: ${version} (CI=${ci})")
-      version
-    case _ => os.read(baseDir / "version.txt").trim()
-  }
-  val path = T.dest / "version.txt"
-  os.write(path, v)
-  v
-}
-
 object GitSupport extends GitModule {
   override def millSourcePath: Path = baseDir
 }
+
+def blendedVersion = T { GitSupport.publishVersion() }
 
 /** Configure additional repositories. */
 trait BlendedCoursierModule extends CoursierModule {
@@ -79,104 +69,19 @@ trait BlendedCoursierModule extends CoursierModule {
 }
 
 /** Configure plublish settings. */
-trait BlendedPublishModule extends PublishModule {
+trait CorePublishModule extends BlendedPublishModule {
   def description: String = "Blended module ${blendedModule}"
+
+  def githubRepo : String = "blended"
+  def scpTargetDir : String = "blended"
+
   override def publishVersion = T { blendedVersion() }
-
-  def scpUser = T.input {
-    T.env.get("WOQ_SCP_USER") match {
-      case Some(u) => u
-      case _ =>
-        T.log.error(s"The environment variable [WOQ_SCP_USER] must be set correctly to perform a scp upload.")
-        sys.exit(1)
-    }
-  }
-
-  def scpKey = T.input {
-    T.env.get("WOQ_SCP_KEY") match {
-      case Some(k) => k
-      case None =>
-        T.log.error(s"The environment variable [WOQ_SCP_KEY] must be set correctly to perform a scp upload.")
-        sys.exit(1)
-    }
-  }
-
-  def scpHostKey = T.input {
-    T.env.get("WOQ_HOST_KEY") match {
-      case Some(k) => k
-      case None =>
-        T.log.error(s"The environment variable [WOQ_HOST_KEY] must be set correctly to perform a scp upload.")
-        sys.exit(1)
-    }
-  }
-
-  def scpHost : String = "u233308.your-storagebox.de"
-  def scpTargetDir : String = "/"
-
-  override def pomSettings: T[PomSettings] = T {
-    PomSettings(
-      description = description,
-      organization = "de.wayofquality.blended",
-      url = "https://github.com/woq-blended",
-      licenses = Seq(License.`Apache-2.0`),
-      versionControl = VersionControl.github("woq-blended", "blended"),
-      developers = Seq(
-        Developer("atooni", "Andreas Gies", "https://github.com/atooni"),
-        Developer("lefou", "Tobias Roeser", "https://github.com/lefou")
-      )
-    )
-  }
-
-  def publishScp() : define.Command[Path] = T.command {
-
-    val path = T.dest / blendedVersion()
-
-    val keyFile = T.dest / "scpKey"
-    val knownHosts = T.dest / "known_hosts"
-
-    try {
-
-      val files : Seq[Path] = new LocalM2Publisher(path)
-        .publish(
-          jar = jar().path,
-          sourcesJar = sourceJar().path,
-          docJar = docJar().path,
-          pom = pom().path,
-          artifact = artifactMetadata(),
-          extras = extraPublish()
-        )
-
-      // Todo: Sign all files and digest
-
-      os.write(keyFile, scpKey().replaceAll("\\$", "\n"), perms = "rw-------")
-      os.write(knownHosts, s"$scpHost ssh-rsa ${scpHostKey()}")
-
-      val process = Jvm.spawnSubprocess(
-        commandArgs = Seq("scp",
-          "-i", keyFile.toIO.getAbsolutePath() ,
-          "-r",
-          "-o", "CheckHostIP=no",
-          "-o", s"UserKnownHostsFile=${knownHosts.toIO.getAbsoluteFile()}",
-          path.toIO.getAbsolutePath(),s"${scpUser()}@${scpHost}:/${scpTargetDir}"
-        ),
-        envArgs = Map.empty,
-        workingDir = baseDir
-      )
-
-      process.join()
-      T.log.info(s"Uploaded ${path.toIO.getAbsolutePath()} to Blended Snapshot repo at ${scpHost}")
-    } finally {
-      os.remove(keyFile)
-      os.remove(knownHosts)
-    }
-    path
-  }
 }
 
 trait BlendedBaseModule
   extends SbtModule
     with BlendedCoursierModule
-    with BlendedPublishModule
+    with CorePublishModule
     with OsgiBundleModule
     with ScoverageModule
     with ScalafixModule { blendedModuleBase =>
@@ -454,7 +359,7 @@ trait BlendedJvmModule extends BlendedBaseModule { jvmBase =>
     )}
   }
 
-  trait Js extends ScalaJSModule with BlendedPublishModule { jsBase =>
+  trait Js extends ScalaJSModule with CorePublishModule { jsBase =>
     override def millSourcePath = jvmBase.millSourcePath / os.up / "js"
     override def scalaJSVersion = deps.scalaJsVersion
     override def scalaVersion = jvmBase.scalaVersion
