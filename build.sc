@@ -50,6 +50,8 @@ def blendedVersion = T.input {
   v
 }
 
+def testlog = T.persistent { PathRef(T.dest) }
+
 object GitSupport extends GitModule {
   override def millSourcePath: Path = baseDir
 }
@@ -343,7 +345,7 @@ trait BlendedBaseModule
         s"""<configuration>
            |
            |  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-           |    <file>${baseDir.toString()}/out/testlog-${System.getProperty("java.version")}-${scalaBinVersion()}/test-${moduleSpec}.log</file>
+           |    <file>${testlog().path}/testlog-${System.getProperty("java.version")}-${scalaBinVersion()}/test-${moduleSpec}.log</file>
            |
            |    <encoder>
            |      <pattern>%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%t] %logger : %msg%n</pattern>

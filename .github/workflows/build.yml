@@ -39,7 +39,7 @@ jobs:
       if: failure()
       with:
         name: test-logs
-        path: out/testlog-*/
+        path: out/testlog/
 
     - run: ./millw -i scoverage.xmlReportAll
 
