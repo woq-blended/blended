@@ -955,7 +955,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         }().toMap
       }
       override def generatedSources: Target[Seq[PathRef]] = T{ super.generatedSources() ++ {
-        val file = T.dest / "blended" / "launcher" / "TestOsgiFrameworks.scala"
+        val file = T.dest / "blended" / "launcher" / "test_generated" / "generated.scala"
         val body =
           s"""
             |package blended.launcher.test_generated
@@ -966,7 +966,14 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             |object TestOsgiFrameworks {
             |  val frameworks: Map[String, String] = ${
               resolvedOsgiFrameworks().map { case (name, file) => s""""${name}" -> "${file.path}"""" }
-                .mkString("Map(\n    ", ",\n    ", "  )")
+                .mkString("Map(\n    ", ",\n    ", "\n  )")
+              }
+            |}
+            |
+            |object JvmLauncherTest {
+            |  val classpath: Seq[String] = ${
+              blended.launcher.scoverage.runClasspath().map(ref => s""""${ref.path}"""")
+                .mkString("Seq(\n    ", ",\n    ", "\n  )")
               }
             |}
             |""".stripMargin
