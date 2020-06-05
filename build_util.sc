@@ -136,35 +136,18 @@ trait FilterUtil {
 }
 object FilterUtil extends FilterUtil
 
-//
-//object Scoverage extends ExternalModule {
-//  def worker: Worker[ScoverageReportWorker] = T.worker { ScoverageReportWorker.scoverageReportWorker() }
-//  object workerModule extends ScoverageModule {
-//    override def scalaVersion = Deps.scalaVersion
-//    override def scoverageVersion = Deps.scoverageVersion
-//  }
-//  def htmlReportAll(sources: mill.main.Tasks[Seq[PathRef]], dataTargets: mill.main.Tasks[PathRef]): Command[Unit] = T.command {
-//    val sourcePaths: Seq[Path] = T.sequence(sources.value)().flatten.map(_.path)
-//    val dataPaths: Seq[Path] = T.sequence(dataTargets.value)().map(_.path)
-//    worker()
-//      .bridge(workerModule.toolsClasspath().map(_.path))
-//      .report(ReportType.Html, sourcePaths, dataPaths)
-//  }
-//
-//  // parse tasks
-//  implicit def millScoptTargetReads[T]: scopt.Read[Tasks[T]] = new mill.main.Tasks.Scopt[T]()
-////   find modules
-//  lazy val millDiscover: mill.define.Discover[this.type] = mill.define.Discover[this.type]
-//}
-
-trait ScoverageReport extends Module { outer =>
+trait ScoverageReport extends Module {
+  outer =>
   def scalaVersion: T[String]
+
   def scoverageVersion: T[String]
 
   def scoverageReportWorkerModule: ScoverageReportWorker.type = ScoverageReportWorker
+
   /** We use this only to get access to the right classpaths */
   object workerModule extends ScoverageModule {
     override def scalaVersion = outer.scalaVersion
+
     override def scoverageVersion = outer.scoverageVersion
   }
 
@@ -177,7 +160,7 @@ trait ScoverageReport extends Module { outer =>
   }
 
   def consoleReportAll(evaluator: Evaluator, sources: String = "__.allSources", dataTargets: String = "__.scoverage.data"): Command[PathRef] = T.command {
-    reportTask(evaluator,ReportType.Console, sources, dataTargets)()
+    reportTask(evaluator, ReportType.Console, sources, dataTargets)()
   }
 
   def reportTask(evaluator: Evaluator, reportType: ReportType, sources: String, dataTargets: String): Task[PathRef] = {
@@ -186,7 +169,7 @@ trait ScoverageReport extends Module { outer =>
       evaluator,
       Seq(sources),
       multiSelect = false
-    ) match{
+    ) match {
       case Left(err) => throw new Exception(err)
       case Right(tasks) => tasks.asInstanceOf[Seq[Task[Seq[PathRef]]]]
     }
@@ -195,7 +178,7 @@ trait ScoverageReport extends Module { outer =>
       evaluator,
       Seq(dataTargets),
       multiSelect = false
-    ) match{
+    ) match {
       case Left(err) => throw new Exception(err)
       case Right(tasks) => tasks.asInstanceOf[Seq[Task[PathRef]]]
     }
@@ -209,54 +192,4 @@ trait ScoverageReport extends Module { outer =>
       PathRef(T.dest)
     }
   }
-
-  // parse tasks
-  //  implicit def millScoptTargetReads[T]: scopt.Read[Tasks[T]] = new mill.main.Tasks.Scopt[T]()
-  //   find modules
-  //  lazy val millDiscover: mill.define.Discover[this.type] = mill.define.Discover[this.type]
 }
-
-trait GitModule extends Module {
-
-  /**
-   * The current git revision.
-   */
-  def gitHead: T[String] = T.input {
-    sys.env.get("TRAVIS_COMMIT").getOrElse(
-      os.proc('git, "rev-parse", "HEAD").call(cwd = millSourcePath).out.trim
-    ).toString()
-  }
-
-  /**
-   * Calc a publishable version based on git tags and dirty state.
-   *
-   * @return A tuple of (the latest tag, the calculated version string)
-   */
-  def publishVersion: T[(String, String)] = T.input {
-    val tag =
-      try Option(
-        os.proc('git, 'describe, "--exact-match", "--tags", "--always", gitHead()).call(cwd = millSourcePath).out.trim
-      )
-      catch {
-        case e => None
-      }
-
-    val dirtySuffix = os.proc('git, 'diff).call().out.string.trim() match {
-      case "" => ""
-      case s => "-DIRTY" + Integer.toHexString(s.hashCode)
-    }
-
-    tag match {
-      case Some(t) => (t, t)
-      case None =>
-        val latestTaggedVersion = os.proc('git, 'describe, "--abbrev=0", "--always", "--tags").call().out.trim
-
-        val commitsSinceLastTag =
-          os.proc('git, "rev-list", gitHead(), "--not", latestTaggedVersion, "--count").call().out.trim.toInt
-
-        (latestTaggedVersion, s"$latestTaggedVersion-$commitsSinceLastTag-${gitHead().take(6)}$dirtySuffix")
-    }
-  }
-
-}
-

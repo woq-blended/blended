@@ -1,6 +1,18 @@
+import coursierapi.{Credentials, MavenRepository}
+
+val blendedMillVersion : String = "v0.1-5-7e0b46"
+
+interp.repositories() ++= Seq(
+  MavenRepository.of(s"https://u233308-sub2.your-storagebox.de/blended-mill/$blendedMillVersion")
+    .withCredentials(Credentials.of("u233308-sub2", "px8Kumv98zIzSF7k"))
+)
+
+interp.load.ivy("de.wayofquality.blended" %% "blended-mill" % blendedMillVersion)
+
+@
+
 import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
 import coursier.Repository
-import coursier.maven.MavenRepository
 import mill.api.{Ctx, Loose, Result}
 import mill.{PathRef, _}
 import mill.define.{Command, ExternalModule, Input, Sources, Target, Task, Worker}
@@ -23,7 +35,10 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 import $file.build_util
-import build_util.{FilterUtil, ScoverageReport, ZipUtil, GitModule}
+import build_util.{FilterUtil, ScoverageReport, ZipUtil}
+
+import de.wayofquality.blended.mill.versioning.GitModule
+import de.wayofquality.blended.mill.webtools.WebTools
 
 import $file.build_deps
 import build_deps.Deps
@@ -39,7 +54,7 @@ val baseDir: os.Path = build.millSourcePath
 def blendedVersion = T.input {
   val v = T.env.get("CI") match {
     case Some(ci @ ("1" | "true")) =>
-      val version = GitSupport.publishVersion()._2
+      val version = GitSupport.publishVersion()
       T.log.info(s"Using git-based version: ${version} (CI=${ci})")
       version
     case _ => os.read(baseDir / "version.txt").trim()
@@ -53,59 +68,12 @@ object GitSupport extends GitModule {
   override def millSourcePath: Path = baseDir
 }
 
-trait WebUtils extends Module {
-  def npmModulesDir : Path = baseDir / "node_modules"
-
-  def yarnInstall : T[PathRef] = T {
-    val modules = npmModulesDir
-    val process = Jvm.spawnSubprocess(
-      commandArgs = Seq(
-        "yarn", "install"
-      ),
-      envArgs = Map.empty,
-      workingDir = baseDir
-    )
-    process.join()
-    T.log.info(new String(process.stdout.bytes))
-    PathRef(modules)
-  }
-
-  def webPackConfig : Path = millSourcePath / "docs.webpack.config.js"
-
-  def prepareWebPackConfig : T[PathRef] = T {
-
-    val destFile = T.dest / webPackConfig.last
-    os.copy(webPackConfig, destFile)
-    PathRef(destFile)
-  }
-
-  def webpack : T[PathRef] = T {
-
-    val out : Path = T.dest
-
-    yarnInstall()
-
-    val process = Jvm.spawnSubprocess(
-      commandArgs = Seq(
-        (npmModulesDir/ "webpack-cli" / "bin" / "cli.js").toIO.getAbsolutePath(),
-        "--output-path", out.toIO.getAbsolutePath(),
-        "--config", prepareWebPackConfig().path.toIO.getAbsolutePath()
-      ),
-      envArgs = Map.empty,
-      workingDir = millSourcePath
-    )
-    process.join()
-    T.log.info(new String(process.stdout.bytes()))
-    PathRef(out)
-  }
-}
-
 /** Configure additional repositories. */
 trait BlendedCoursierModule extends CoursierModule {
   private def zincWorker: ZincWorkerModule = mill.scalalib.ZincWorkerModule
   override def repositories: Seq[Repository] = {
     zincWorker.repositories ++ Seq(
-      MavenRepository("https://repo.spring.io/libs-release")
+      coursier.maven.MavenRepository("https://repo.spring.io/libs-release")
     )
   }
 }
@@ -585,7 +553,9 @@ trait DistModule extends CoursierModule {
   }
 }
 
-trait JBakeBuild extends Module with WebUtils {
+trait JBakeBuild extends Module with WebTools {
+
+  override def npmModulesDir : Path = baseDir / "node_modules"
 
   def jbakeVersion : String = "2.6.5"
   def jbakeDownloadUrl : String = s"https://dl.bintray.com/jbake/binary/jbake-${jbakeVersion}-bin.zip"
@@ -645,7 +615,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object doc extends JBakeBuild with WebUtils {
+  object doc extends JBakeBuild with WebTools {
 
     override def millSourcePath = baseDir / "doc"
   }
