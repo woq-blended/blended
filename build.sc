@@ -1,6 +1,6 @@
 import coursierapi.{Credentials, MavenRepository}
 
-val blendedMillVersion : String = "0.1-SNAPSHOT"
+val blendedMillVersion : String = "v0.1-6-8e2afb"
 
 interp.repositories() ++= Seq(
   MavenRepository.of(s"https://u233308-sub2.your-storagebox.de/blended-mill/$blendedMillVersion")
@@ -11,49 +11,39 @@ interp.load.ivy("de.wayofquality.blended" %% "blended-mill" % blendedMillVersion
 
 @
 
-import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
+import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
 import coursier.Repository
-import mill.api.{Ctx, Loose, Result}
-import mill.{PathRef, _}
-import mill.define.{Command, ExternalModule, Input, Sources, Target, Task, Worker}
+import mill.api.Loose
+import mill.define.{Sources, Target, Task}
+import mill.modules.{Jvm, Util}
 import mill.scalajslib.ScalaJSModule
 import mill.scalajslib.api.ModuleKind
 import mill.scalalib._
-import mill.scalalib.api.CompilationResult
 import mill.scalalib.publish._
-import os.{Path, PermSet, RelPath}
-import sbt.testing.{Fingerprint, Framework}
-import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
-import mill.contrib.scoverage.api.ScoverageReportWorkerApi.ReportType
-import mill.contrib.scoverage.{ScoverageModule, ScoverageReportWorker}
-import mill.eval.Evaluator
-import mill.main.RunScript
-import mill.modules.{Jvm, Util}
+import mill.{PathRef, _}
+import os.{Path, RelPath}
 
 // This import the mill-osgi plugin
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
-import $file.build_util
-import build_util.{FilterUtil, ScoverageReport, ZipUtil}
-
+// imports from the blended-mill plugin
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
+import de.wayofquality.blended.mill.modules._
+import de.wayofquality.blended.mill.utils._
 
-import $file.build_deps
-import build_deps.Deps
-
-import $ivy.`com.goyeau::mill-scalafix:0.1.1`
-import com.goyeau.mill.scalafix.ScalafixModule
+import $file.build_util
+import build_util.ScoverageReport
 
 /////////////////////////////////////////////////////////////////////////////////////
 
 /** Project directory. */
-val baseDir: os.Path = build.millSourcePath
+val projectDir: os.Path = build.millSourcePath
 
 object GitSupport extends GitModule {
-  override def millSourcePath: Path = baseDir
+  override def millSourcePath: Path = projectDir
 }
 
 def blendedVersion = T { GitSupport.publishVersion() }
@@ -78,268 +68,11 @@ trait CorePublishModule extends BlendedPublishModule {
   override def publishVersion = T { blendedVersion() }
 }
 
-trait BlendedBaseModule
-  extends SbtModule
-    with BlendedCoursierModule
-    with CorePublishModule
-    with OsgiBundleModule
-    with ScoverageModule
-    with ScalafixModule { blendedModuleBase =>
-  def deps: Deps
-  /** The blended module name. */
-  def blendedModule: String = millModuleSegments.parts.mkString(".")
-  override def artifactName: T[String] = blendedModule
-  def scalaVersion = T{ deps.scalaVersion }
-  def scalaBinVersion = T { scalaVersion().split("[.]").take(2).mkString(".") }
+trait CoreBaseModule extends BlendedBaseModule
+  with BlendedCoursierModule
+  with CorePublishModule
 
-  def exportPackages: Seq[String] = Seq(blendedModule)
-  def essentialImportPackage: Seq[String] = Seq()
-  override def osgiHeaders: T[OsgiHeaders] = T{
-    super.osgiHeaders().copy(
-      `Export-Package` = exportPackages,
-      `Import-Package` =
-        // scala compatible binary version control
-        Seq(s"""scala.*;version="[${scalaBinVersion()}.0,${scalaBinVersion()}.50]"""") ++
-          essentialImportPackage ++
-          Seq("*")
-    )
-  }
-
-  override def millSourcePath: os.Path = baseDir / blendedModule
-  override def resources = T.sources { super.resources() ++ Seq(
-    PathRef(millSourcePath / 'src / 'main / 'binaryResources)
-  )}
-  override def bundleSymbolicName = blendedModule
-
-  override def scalacOptions = Seq(
-    "--deprecation",
-    "--target:8",
-    "-Werror",
-    "--feature",
-    Seq(
-      "adapted-args",
-      "constant",
-      "deprecation",
-      "doc-detached",
-      "inaccessible",
-      "infer-any",
-      "missing-interpolator",
-      "nullary-override",
-      "nullary-unit",
-      "option-implicit",
-      "poly-implicit-overload",
-      "stars-align",
-      // Compiler doesn't know it but suggests it: "Recompile with -Xlint:unchecked for details."
-      // "unchecked",
-      "unused",
-    ).mkString("-Xlint:", ",", ""),
-//    "--unchecked"
-  )
-
-  override def javacOptions = Seq(
-    "-Xlint:unchecked"
-  )
-
-  override def scalaDocOptions: Target[Seq[String]] = T {
-    scalacOptions().filter(_ != "-Werror")
-  }
-
-  override def scoverageVersion = deps.scoverageVersion
-
-  def mapToScoverageModule(m: JavaModule) = m match {
-    case module: ScoverageModule =>
-      // instead of depending on the base module, we depend on it's inner scoverage module
-      module.scoverage
-    case module => module
-  }
-
-  override val scoverage: ScoverageData = new ScoverageData(implicitly)
-  class ScoverageData(ctx0: mill.define.Ctx) extends super.ScoverageData(ctx0) with OsgiBundleModule {
-    // we ensure, out scoverage enhancer is also a valid OSGi module to drop-in replace it in all tests
-    override def bundleSymbolicName: T[String] = T{ blendedModuleBase.bundleSymbolicName() }
-    override def bundleVersion: T[String] = T{ blendedModuleBase.bundleVersion() }
-    override def osgiHeaders: T[OsgiHeaders] = T{ blendedModuleBase.osgiHeaders() }
-    override def reproducibleBundle: T[Boolean] = T{ blendedModuleBase.reproducibleBundle() }
-    override def embeddedJars: T[Seq[PathRef]] = T{ blendedModuleBase.embeddedJars() }
-    override def explodedJars: T[Seq[PathRef]] = T{ blendedModuleBase.explodedJars() }
-    override def moduleDeps: Seq[JavaModule] = blendedModuleBase.moduleDeps.map(mapToScoverageModule)
-    override def recursiveModuleDeps: Seq[JavaModule] = blendedModuleBase.recursiveModuleDeps.map(mapToScoverageModule)
-  }
-
-  trait Tests extends super.Tests with super.ScoverageTests {
-    /** Ensure we don't include the non-scoverage-enhanced classes. */
-//    override def moduleDeps: Seq[JavaModule] = super.moduleDeps.filterNot(_ == blendedModuleBase)
-    override def moduleDeps: Seq[JavaModule] = super.moduleDeps.map(mapToScoverageModule)
-    override def recursiveModuleDeps: Seq[JavaModule] = super.recursiveModuleDeps.map(mapToScoverageModule)
-    override def transitiveLocalClasspath: T[Loose.Agg[PathRef]] = T { T.traverse(recursiveModuleDeps)(m => m.jar)() }
-    override def ivyDeps = T{ super.ivyDeps() ++ Agg(
-      deps.scalatest
-    )}
-    override def testFrameworks = Seq("org.scalatest.tools.Framework")
-    /** Empty, we use [[testResources]] instead to model sbt behavior. */
-    override def runIvyDeps: Target[Loose.Agg[Dep]] = T{ super.runIvyDeps() ++ Agg(
-      deps.logbackClassic,
-      deps.jclOverSlf4j
-    )}
-    override def resources = T.sources { Seq.empty[PathRef] }
-
-    def testResources: Sources = T.sources(
-      millSourcePath / "src" / "test" / "resources",
-      millSourcePath / "src" / "test" / "binaryResources"
-    )
-    // TODO: set projectTestOutput property to resources directory
-    /** Used by all tests, e.g. for logback config. */
-    def logResources = T {
-      val moduleSpec = toString()
-      val dest = T.ctx().dest
-      val logConfig =
-        s"""<configuration>
-           |
-           |  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-           |    <file>${baseDir.toString()}/out/testlog-${System.getProperty("java.version")}-${scalaBinVersion()}/test-${moduleSpec}.log</file>
-           |
-           |    <encoder>
-           |      <pattern>%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%t] %logger : %msg%n</pattern>
-           |    </encoder>
-           |  </appender>
-           |
-           |  <logger name="blended" level="debug" />
-           |  <logger name="domino" level="debug" />
-           |  <logger name="App" level="debug" />
-           |
-           |  <root level="INFO">
-           |    <appender-ref ref="FILE" />
-           |  </root>
-           |
-           |</configuration>
-           |""".stripMargin
-      os.write(dest / "logback-test.xml", logConfig)
-      PathRef(dest)
-    }
-    /** A T.input, because this needs to run always to be always fresh, as we intend to write into that dir when executing tests.
-     * This is in migration from sbt-like setup.
-     */
-    def copiedResources: T[PathRef] = T.input {
-      val dest = T.dest
-      testResources().foreach { p =>
-        if(os.exists(p.path)) {
-          if(os.isDir(p.path)) {
-            os.list(p.path).foreach { p1 =>
-              os.copy.into(p1, dest)
-            }
-          }
-          else {
-            os.copy.over(p.path, dest)
-          }
-        }
-      }
-      PathRef(dest)
-    }
-    override def runClasspath: Target[Seq[PathRef]] = T{ super.runClasspath() ++ Seq(logResources(), copiedResources()) }
-    override def forkArgs: Target[Seq[String]] = T{ super.forkArgs() ++ Seq(
-      s"-DprojectTestOutput=${copiedResources().path.toString()}"
-    )}
-  }
-
-  val otherTestGroup = "other"
-  /** A Map of groups with their belonging test suites.
-   * The groups name  [[otherTestGroup]] is reserved for all tests that don't need to run in an extra JVM. */
-  def testGroups: Map[String, Set[String]] = Map()
-  /** Test group names, derived from [[testGroups]]. */
-  def crossTestGroups: Seq[String] = (Set(otherTestGroup) ++ testGroups.keySet).toSeq
-
-  /** A test module that only executed the tests from the configured [[ForkedTest#testGroup]]. */
-  trait ForkedTest extends Tests {
-
-    def testGroup: String = otherTestGroup
-
-    def detectTestGroups: T[Map[String, Set[String]]] = T {
-      if(testFrameworks() != Seq("org.scalatest.tools.Framework")) {
-        Result.Failure("Unsupported test framework set")
-      } else {
-        val testClasspath = runClasspath().map(_.path)
-        val cl = new URLClassLoader(testClasspath.map(_.toNIO.toUri().toURL()), getClass().getClassLoader())
-        val framework: Framework = TestRunner.frameworks(testFrameworks())(cl).head
-        val testClasses: Loose.Agg[(Class[_], Fingerprint)] = Lib.discoverTests(cl, framework, Agg(compile().classes.path))
-        val groups: Map[String, List[(Class[_], Fingerprint)]] = testClasses.toList.groupBy { case (cl, fp) =>
-          cl.getAnnotations().map{ anno =>
-//            println(s"anno: ${anno}, name: ${anno.getClass().getName()}")
-          }
-          val isFork = cl.getAnnotations().exists(a => a.toString().contains("blended.testsupport.RequiresForkedJVM") || a.getClass().getName().contains("blended.testsupport.RequiresForkedJVM"))
-          if(isFork) cl.getName()
-          else otherTestGroup
-        }
-        val groupNames: Map[String, Set[String]] = groups.mapValues(_.map(_._1.getName()).toSet).toMap
-        cl.close()
-        Result.Success(groupNames)
-      }
-    }
-
-    /** redirect to "other"-compile */
-    override def compile: T[CompilationResult] = if(testGroup == otherTestGroup) super.compile else otherModule.compile
-    /** Override this to define the target which compiles the test sources */
-    def otherModule: ForkedTest
-
-    def checkTestGroups(): Command[Unit] = T.command {
-      if(testGroup == otherTestGroup) T{
-        // only check in default cross instance "other"
-
-        // First we check if we have detected any other groups than the default group
-        val anyGroupsDetected : Boolean = detectTestGroups().keySet != Set(otherTestGroup)
-
-        // Then we check if we have any groups defined in the build.sc
-        val anyGroupsDefined = testGroups.nonEmpty
-
-        if (anyGroupsDetected || anyGroupsDefined) {
-          val relevantGroups: PartialFunction[(String, Set[String]), Set[String]] = {
-            case (name, tests) if name != otherTestGroup => tests
-          }
-
-          val definedGroupedTests : Set[Set[String]] = testGroups.collect(relevantGroups).toSet
-          val detectedGroupedTests : Set[Set[String]] = detectTestGroups().collect(relevantGroups).toSet
-
-          val definedUndetected : Set[Set[String]] = definedGroupedTests.diff(detectedGroupedTests)
-          val detectedUndefined : Set[Set[String]] = detectedGroupedTests.diff(definedGroupedTests)
-
-          if (detectedUndefined.nonEmpty) {
-            T.log.error(s"The following test groups are detected, but do not occurr in the build file:\n${detectedUndefined.mkString("\n")}")
-          }
-          if (definedUndetected.nonEmpty) {
-            T.log.error(s"The following test groups are defined, but are missing the RequiredForkedJVM annotation:\n${definedUndetected.mkString("\n")}")
-          }
-        }
-      } else T{
-        // depend on the other check
-        otherModule.checkTestGroups()()
-      }
-    }
-
-    override def test(args: String*): Command[(String, Seq[TestRunner.Result])] =
-      if(args.isEmpty) T.command{
-        super.testTask(testCachedArgs)()
-      }
-      else super.test(args: _*)
-
-    override def testCachedArgs: T[Seq[String]] = T{
-      checkTestGroups()()
-      val tests = if(testGroup == otherTestGroup && testGroups.get(otherTestGroup).isEmpty) {
-        val allTests = detectTestGroups().values.toSet.flatten
-        val groupTests = testGroups.values.toSet.flatten
-        allTests -- groupTests
-      } else {
-        testGroups(testGroup)
-      }
-      T.log.debug(s"tests: ${tests}")
-      if(tests.isEmpty) {
-        Seq("-w", "NON_TESTS")
-      } else {
-        tests.toSeq.flatMap(tc => Seq("-w", tc))
-      }
-    }
-  }
-}
-
-trait BlendedJvmModule extends BlendedBaseModule { jvmBase =>
+trait BlendedJvmModule extends CoreBaseModule { jvmBase =>
   override def millSourcePath = super.millSourcePath / "jvm"
   override def sources = T.sources {
     super.sources() ++ Seq(PathRef(millSourcePath / os.up / 'shared / 'src / 'main / 'scala))
@@ -349,7 +82,7 @@ trait BlendedJvmModule extends BlendedBaseModule { jvmBase =>
       PathRef(millSourcePath / os.up / 'shared / 'src / 'main / 'binaryResources)
   )}
 
-  trait Tests extends super.Tests {
+  trait CoreJvmTests extends super.BlendedTests {
     override def sources = T.sources {
       super.sources() ++ Seq(PathRef(jvmBase.millSourcePath / os.up / 'shared / 'src / 'test / 'scala))
     }
@@ -370,7 +103,7 @@ trait BlendedJvmModule extends BlendedBaseModule { jvmBase =>
     override def moduleKind: T[ModuleKind] = T{ ModuleKind.CommonJSModule }
     def blendedModule = jvmBase.blendedModule
     override def artifactName: T[String] = jvmBase.artifactName
-    trait Tests extends super.Tests {
+    trait CoreJsTests extends super.Tests {
       override def sources: Sources = T.sources(
         jsBase.millSourcePath / "src" / "test" / "scala"
       )
@@ -383,8 +116,8 @@ trait BlendedJvmModule extends BlendedBaseModule { jvmBase =>
   }
 }
 
-trait DistModule extends CoursierModule {
-  def deps: Deps
+trait DistModule extends BlendedCoursierModule {
+  def deps: BlendedDependencies
   override def millSourcePath: Path = super.millSourcePath / os.up
 
   /** Sources to put into the dist file. */
@@ -460,7 +193,7 @@ trait DistModule extends CoursierModule {
 
 trait JBakeBuild extends Module with WebTools {
 
-  override def npmModulesDir : Path = baseDir / "node_modules"
+  override def npmModulesDir : Path = projectDir / "node_modules"
 
   def jbakeVersion : String = "2.6.5"
   def jbakeDownloadUrl : String = s"https://dl.bintray.com/jbake/binary/jbake-${jbakeVersion}-bin.zip"
@@ -497,32 +230,35 @@ trait JBakeBuild extends Module with WebTools {
 
 }
 
-object blended extends Cross[BlendedCross](Deps.scalaVersions.keys.toSeq: _*)
+object blended extends Cross[BlendedCross](BlendedDependencies.scalaVersions.keys.toSeq: _*)
 class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
-  override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_13.scalaVersion
+  override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
 
   // correct the unneeded cross sub-dir
   override def millSourcePath: Path = super.millSourcePath / os.up
 
-  val deps: Deps = build_deps.Deps.scalaVersions(crossScalaVersion)
-//  val Deps = deps
+  val deps: BlendedDependencies = BlendedDependencies.scalaVersions(crossScalaVersion)
 
-  trait BlendedModule extends BlendedBaseModule {
-    override def deps: Deps = blended.deps
+  trait BlendedModule extends CoreBaseModule {
+
+    override def scalaVersion : T[String] = deps.scalaVersion
+    override def baseDir : os.Path = projectDir
+
+    override def deps: BlendedDependencies = blended.deps
     // remove the scala version
     override def blendedModule: String = millModuleSegments.parts.filterNot(crossScalaVersion == _).mkString(".")
-    override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_13.scalaVersion
-    trait Tests extends super.Tests {
-      override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_13.scalaVersion
+    override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
+    trait CoreTests extends super.BlendedTests {
+      override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
     }
-    trait ForkedTests extends super.ForkedTest {
-      override def skipIdea: Boolean = crossScalaVersion != Deps.Deps_2_13.scalaVersion
+    trait CoreForkedTests extends super.BlendedForkedTests {
+      override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
     }
   }
 
   object doc extends JBakeBuild with WebTools {
 
-    override def millSourcePath = baseDir / "doc"
+    override def millSourcePath = projectDir / "doc"
   }
 
   object activemq extends Module {
@@ -550,8 +286,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         "BrokerActivatorSpec" -> Set("blended.activemq.brokerstarter.internal.BrokerActivatorSpec")
       )
       object test extends Cross[Test](crossTestGroups: _*)
-      class Test(override val testGroup: String) extends ForkedTest {
-        override def otherModule: ForkedTest =  brokerstarter.test(otherTestGroup)
+      class Test(override val testGroup: String) extends CoreForkedTests {
+        override def otherModule: CoreForkedTests =  brokerstarter.test(otherTestGroup)
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           deps.activeMqKahadbStore,
           deps.springCore,
@@ -587,8 +323,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         "RoundtripConnectionVerifierSpec" -> Set("blended.activemq.client.internal.RoundtripConnectionVerifierSpec")
       )
       object test extends Cross[Test](crossTestGroups: _*)
-      class Test(override val testGroup: String) extends ForkedTest {
-        override def otherModule: ForkedTest = client.test(otherTestGroup)
+      class Test(override val testGroup: String) extends CoreForkedTests {
+        override def otherModule: CoreForkedTests = client.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.activeMqBroker,
           deps.activeMqKahadbStore
@@ -619,7 +355,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
       `Bundle-Activator` = Some(s"${blendedModule}.internal.BlendedAkkaActivator")
     )}
-    object test extends Tests {
+    object test extends CoreTests {
       override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
         blended.testsupport,
         blended.testsupport.pojosr
@@ -645,7 +381,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Some(s"${blendedModule}.internal.BlendedAkkaHttpActivator")
       )}
-      object test extends Tests {
+      object test extends CoreTests {
 
         override def forkArgs = T{ super.forkArgs() ++ Seq("-Dsun.net.client.defaultReadTimeout=3000")}
 
@@ -707,7 +443,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.akka.http,
           blended.util
         )
-        object test extends Tests {
+        object test extends CoreTests {
           override def ivyDeps = T{ super.ivyDeps() ++ Agg(
             deps.sttp,
             deps.sttpAkka,
@@ -743,7 +479,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.util,
           blended.util.logging
         )
-        object test extends Tests {
+        object test extends CoreTests {
           override def ivyDeps = T{ super.ivyDeps() ++ Agg(
             deps.akkaSlf4j,
             deps.akkaTestkit,
@@ -781,8 +517,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
 
         object test extends Cross[Test](crossTestGroups: _*)
-        class Test(override val testGroup: String) extends ForkedTest {
-          override def otherModule: ForkedTest = restjms.test(otherTestGroup)
+        class Test(override val testGroup: String) extends CoreForkedTests {
+          override def otherModule: CoreForkedTests = restjms.test(otherTestGroup)
           override def ivyDeps = T{ super.ivyDeps() ++ Agg(
             deps.sttp,
             deps.sttpAkka,
@@ -819,7 +555,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           override def osgiHeaders = T { super.osgiHeaders().copy(
             `Bundle-Activator` = Option(s"$blendedModule.internal.HelloworldActivator")
           )}
-          object test extends Tests {
+          object test extends CoreTests {
             override def ivyDeps = T{ super.ivyDeps() ++ Agg(
               deps.slf4jLog4j12,
               deps.akkaStreamTestkit,
@@ -861,7 +597,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.util.logging,
           blended.security.crypto
         )
-        object test extends Tests {
+        object test extends CoreTests {
           override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
             blended.testsupport
           )
@@ -891,7 +627,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Bundle-Activator` = Some(s"${blendedModule}.internal.ContainerContextActivator")
         )}
-        object test extends Tests {
+        object test extends CoreTests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             deps.scalacheck
           )}
@@ -913,7 +649,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       blended.util.logging,
       blended.container.context.api
     )
-    object test extends Tests
+    object test extends CoreTests
   }
 
   object file extends BlendedModule {
@@ -923,7 +659,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       blended.jms.utils,
       blended.streams
     )
-    object test extends Tests {
+    object test extends CoreTests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.commonsIo,
         deps.activeMqBroker,
@@ -1040,8 +776,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         "SendFailedRejectBridgeSpec" -> Set("blended.jms.bridge.internal.SendFailedRejectBridgeSpec")
       )
       object test extends Cross[Test](crossTestGroups: _*)
-      class Test(override val testGroup: String) extends ForkedTest {
-        override def otherModule: ForkedTest =  bridge.test(otherTestGroup)
+      class Test(override val testGroup: String) extends CoreForkedTests {
+        override def otherModule: CoreForkedTests =  bridge.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.activeMqBroker,
           deps.scalacheck,
@@ -1074,7 +810,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.util.logging,
         blended.akka
       )
-      object test extends Tests {
+      object test extends CoreTests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.akkaSlf4j,
           deps.akkaStream,
@@ -1110,7 +846,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
       `Bundle-Activator` = Option(s"${blendedModule}.internal.BlendedJmxActivator")
     )}
-    object test extends Tests {
+    object test extends CoreJvmTests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.scalacheck,
         deps.scalatestplusScalacheck
@@ -1139,7 +875,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
       blended.akka
     )
-    object test extends Tests {
+    object test extends CoreTests {
       override def runIvyDeps: Target[Loose.Agg[Dep]] = T{ super.runIvyDeps() ++ Agg(
         deps.jolokiaJvmAgent
       )}
@@ -1234,7 +970,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    object test extends Tests {
+    object test extends CoreTests {
       override def moduleDeps = super.moduleDeps ++ Seq(
         blended.testsupport
       )
@@ -1304,7 +1040,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.container.context.impl,
         blended.util.logging
       )
-      object test extends Tests
+      object test extends CoreTests
     }
     object repo extends BlendedModule {
       override val description : String = "File Artifact Repository"
@@ -1317,7 +1053,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Some(s"${blendedModule}.internal.ArtifactRepoActivator")
       )}
-      object test extends Tests {
+      object test extends CoreTests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.lambdaTest,
           deps.akkaTestkit,
@@ -1347,8 +1083,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           `Bundle-Activator` = Some(s"${blendedModule}.internal.ArtifactRepoRestActivator")
         )}
         object test extends Cross[Test](crossTestGroups: _*)
-        class Test(override val testGroup: String) extends ForkedTest {
-          override def otherModule: ForkedTest =  rest.test(otherTestGroup)
+        class Test(override val testGroup: String) extends CoreForkedTests {
+          override def otherModule: CoreForkedTests =  rest.test(otherTestGroup)
         }
       }
     }
@@ -1373,7 +1109,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Some(s"${blendedModule}.internal.MgmtRestActivator")
       )}
-      object test extends Tests {
+      object test extends CoreTests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.akkaStreamTestkit,
           deps.akkaHttpTestkit,
@@ -1395,7 +1131,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.util,
         blended.util.logging
       )
-      object test extends Tests {
+      object test extends CoreTests {
         override def moduleDeps = super.moduleDeps ++ Seq(
           blended.testsupport,
           blended.testsupport.pojosr
@@ -1414,7 +1150,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Bundle-Activator` = Some(s"${blendedModule}.internal.ServiceJmxActivator")
         )}
-        object test extends Tests {
+        object test extends CoreTests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             deps.akkaTestkit
           )}
@@ -1431,7 +1167,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def moduleDeps = super.moduleDeps ++ Seq(
       blended.akka
     )
-    object test extends Tests {
+    object test extends CoreTests {
       override def ivyDeps = super.ivyDeps() ++ Agg(
         deps.mockitoAll,
         deps.slf4jLog4j12
@@ -1469,7 +1205,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           "blended.persistence.jdbc"
         )
       )}
-      object test extends Tests {
+      object test extends CoreTests {
         override def ivyDeps = super.ivyDeps() ++ Agg(
           deps.lambdaTest,
           deps.scalacheck
@@ -1518,7 +1254,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
           blended.util.logging
         )
-        object test extends Tests {
+        object test extends CoreTests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             deps.akkaStreamTestkit,
             deps.akkaHttpTestkit
@@ -1545,7 +1281,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def osgiHeaders = T{ super.osgiHeaders().copy(
       `Bundle-Activator` = Some(s"${blendedModule}.internal.SecurityActivator")
     )}
-    object test extends Tests {
+    object test extends CoreJvmTests {
       override def sources: Sources = T.sources { super.sources() ++ Seq(
         PathRef(baseDir / "blended.security.test" / "src" / "test" / "scala")
       )}
@@ -1563,7 +1299,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def ivyDeps = Agg(
         deps.js.prickle
       )
-      object test extends Tests
+      object test extends CoreJsTests
     }
 
     object akka extends Module {
@@ -1581,7 +1317,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.security,
           blended.util.logging
         )
-        object test extends Tests {
+        object test extends CoreTests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             deps.commonsBeanUtils,
             deps.akkaStreamTestkit,
@@ -1607,7 +1343,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.security
         )
         override def essentialImportPackage: Seq[String] = Seq("android.*;resolution:=optional")
-        object test extends Tests {
+        object test extends CoreTests {
           override def moduleDeps = super.moduleDeps ++ Seq(
             blended.testsupport,
             blended.testsupport.pojosr
@@ -1632,7 +1368,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           super.embeddedJars() ++
           compileClasspath().toSeq.filter(f => f.path.last.startsWith("bcprov") || f.path.last.startsWith("jjwt"))
         }
-        object test extends Tests {
+        object test extends CoreTests {
           override def moduleDeps = super.moduleDeps ++ Seq(
             blended.testsupport,
             blended.testsupport.pojosr
@@ -1658,8 +1394,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           "LoginServiceSpec" -> Set("blended.security.login.rest.internal.LoginServiceSpec")
         )
         object test extends Cross[Test](crossTestGroups: _*)
-        class Test(override val testGroup: String) extends ForkedTest {
-          override def otherModule: ForkedTest =  rest.test(otherTestGroup)
+        class Test(override val testGroup: String) extends CoreForkedTests {
+          override def otherModule: CoreForkedTests =  rest.test(otherTestGroup)
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             deps.akkaTestkit,
             deps.akkaStreamTestkit,
@@ -1693,7 +1429,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.cmdOption
       )
       override def essentialImportPackage: Seq[String] = Seq("de.tototec.cmdoption;resolution:=optional")
-      object test extends Tests {
+      object test extends CoreTests {
         override def ivyDeps = super.ivyDeps() ++ Agg(
           deps.scalacheck,
           deps.scalatestplusScalacheck,
@@ -1737,11 +1473,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )}
 
       object test extends Cross[Test](crossTestGroups: _*)
-      class Test(override val testGroup: String) extends ForkedTest {
+      class Test(override val testGroup: String) extends CoreForkedTests {
         override def forkArgs: Target[Seq[String]] = T{ super.forkArgs() ++ Seq(
           s"-Djava.security.properties=${copiedResources().path.toIO.getPath()}/container/security.properties"
         )}
-        override def otherModule: ForkedTest =  ssl.test(otherTestGroup)
+        override def otherModule: CoreForkedTests =  ssl.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T { super.ivyDeps() ++ Agg(
           deps.scalacheck,
           deps.scalatestplusScalacheck
@@ -1788,7 +1524,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           s"$blendedModule.internal"
         )
       )}
-      object test extends Tests {
+      object test extends CoreTests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.logbackClassic
         )}
@@ -1827,7 +1563,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           domino,
           updater.config
         )
-        object test extends Tests {
+        object test extends CoreTests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             deps.osLib
           )}
@@ -1886,8 +1622,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       "FileFlowTransactionManagerSpec" -> Set("blended.streams.transaction.FileFlowTransactionManagerSpec")
     )
     object test extends Cross[Test](crossTestGroups: _*)
-    class Test(override val testGroup: String) extends ForkedTest {
-      override def otherModule: ForkedTest = streams.test(otherTestGroup)
+    class Test(override val testGroup: String) extends CoreForkedTests {
+      override def otherModule: CoreForkedTests = streams.test(otherTestGroup)
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.commonsIo,
         deps.scalacheck,
@@ -1933,8 +1669,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         "DispatcherActivatorSpec" -> Set("blended.streams.dispatcher.internal.DispatcherActivatorSpec")
       )
       object test extends Cross[Test](crossTestGroups: _*)
-      class Test(override val testGroup: String) extends ForkedTest {
-        override def otherModule: ForkedTest = dispatcher.test(otherTestGroup)
+      class Test(override val testGroup: String) extends CoreForkedTests {
+        override def otherModule: CoreForkedTests = dispatcher.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.akkaTestkit,
           deps.akkaSlf4j,
@@ -1973,7 +1709,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.testsupport
       )
 
-      object test extends Tests
+      object test extends CoreTests
 
     }
   }
@@ -1994,7 +1730,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       blended.util.logging,
       blended.security.boot
     )
-    object test extends Tests
+    object test extends CoreTests
 
     object pojosr extends BlendedModule {
       override def description = "A simple pojo based test container that can be used in unit testing"
@@ -2015,7 +1751,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.streams,
         blended.streams.dispatcher
       )
-      object test extends Tests
+      object test extends CoreTests
     }
 
   }
@@ -2040,7 +1776,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
       `Bundle-Activator` = Option(s"${blendedModule}.internal.BlendedUpdaterActivator")
     )}
-    object test extends Tests {
+    object test extends CoreTests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.akkaTestkit,
         deps.felixFramework,
@@ -2073,7 +1809,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.util.logging,
         blended.security
       )
-      object test extends Tests {
+      object test extends CoreJvmTests {
         override def ivyDeps = super.ivyDeps() ++ Agg(
           deps.scalatest,
           deps.scalatestplusScalacheck,
@@ -2091,7 +1827,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def moduleDeps: Seq[PublishModule] = Seq(
           blended.security.js
         )
-        object test extends Tests {
+        object test extends CoreJsTests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             deps.js.prickle,
             deps.js.scalacheck
@@ -2121,7 +1857,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Option(s"${blendedModule}.internal.RemoteUpdaterActivator")
       )}
-      object test extends Tests {
+      object test extends CoreTests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.akkaTestkit,
           deps.felixFramework,
@@ -2153,7 +1889,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.updater.config
       )
-      object test extends Tests
+      object test extends CoreTests
     }
 
   }
@@ -2170,7 +1906,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       s"${blendedModule}.config",
       s"${blendedModule}.arm"
     )
-    object test extends Tests {
+    object test extends CoreTests {
       override def ivyDeps = T{ super.ivyDeps() ++ Agg(
         deps.akkaTestkit,
         deps.junit,
@@ -2183,7 +1919,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def compileIvyDeps: Target[Agg[Dep]] = Agg(
         deps.slf4j
       )
-      object test extends Tests
+      object test extends CoreJvmTests
     }
   }
 
@@ -2218,7 +1954,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
       super.resources() ++ Seq(versionResource)
     }
-    object test extends Tests {
+    object test extends CoreJvmTests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.akkaTestkit,
         deps.sttp,
@@ -2247,7 +1983,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.jmx.js
       )
-      object test extends Tests {
+      object test extends CoreJsTests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.js.scalacheck
         )}
@@ -2278,7 +2014,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       blended.jolokia,
       blended.security.ssl
     )
-    object test extends Tests {
+    object test extends CoreTests {
       override def ivyDeps = T { super.ivyDeps() ++ Agg(
         deps.jolokiaJvmAgent,
         deps.scalatestplusMockito,
@@ -2303,6 +2039,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 }
 
 object scoverage extends ScoverageReport {
-  override def scalaVersion = Deps.Deps_2_13.scalaVersion
-  override def scoverageVersion = Deps.Deps_2_13.scoverageVersion
+  override def scalaVersion = BlendedDependencies.Deps_2_13.scalaVersion
+  override def scoverageVersion = BlendedDependencies.Deps_2_13.scoverageVersion
 }
