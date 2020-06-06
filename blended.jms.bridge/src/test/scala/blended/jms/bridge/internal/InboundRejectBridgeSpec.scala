@@ -37,7 +37,7 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
 
   "The inbound bridge should" - {
 
-    "reject messages in case the send forward fails" in {
+    "reject messages in case the send forward fails" in logException {
       val timeout : FiniteDuration = 1.second
       val msgCount = 2
 

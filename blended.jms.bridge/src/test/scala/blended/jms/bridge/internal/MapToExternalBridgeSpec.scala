@@ -13,7 +13,7 @@ class MapToExternalBridgeSpec extends BridgeSpecSupport {
 
   "The outbound bridge should" - {
 
-    "Forward messages that are meant to an external provider even if send via the internal provider" in {
+    "Forward messages that are meant to an external provider even if send via the internal provider" in logException {
       val msgCount : Int = 1
 
       val (internal, external) = getConnectionFactories(registry)

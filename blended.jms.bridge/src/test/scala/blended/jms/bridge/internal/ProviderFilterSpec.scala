@@ -12,7 +12,7 @@ class ProviderFilterSpec extends LoggingFreeSpec {
 
   "The Providerfilter should" - {
 
-    "match if filter conditions are correct" in {
+    "match if filter conditions are correct" in logException {
 
       val p1 = Dummy("TestVendor", "TestProvider")
 
@@ -22,7 +22,7 @@ class ProviderFilterSpec extends LoggingFreeSpec {
       assert(ProviderFilter("TestVendor", ".*Provider").matches(p1))
     }
 
-    "not match if filter conditions are not correct" in {
+    "not match if filter conditions are not correct" in logException {
 
       val p1 = Dummy("TestVendor", "TestProvider")
 

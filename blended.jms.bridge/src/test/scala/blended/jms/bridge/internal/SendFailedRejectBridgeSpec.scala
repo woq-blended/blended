@@ -44,7 +44,7 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
 
   "The outbound bridge should " - {
 
-    "reject the messages in a forward fails and no retry destination is defined" in {
+    "reject the messages in a forward fails and no retry destination is defined" in logException {
       val timeout : FiniteDuration = 1.second
       val msgCount = 2
 

@@ -25,7 +25,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
   "The Inbound Bridge should" - {
 
     // We only test for tracked transactions as all bridge inbound streams generate transaction started events by design
-    "process normal inbound messages with tracked transactions" in {
+    "process normal inbound messages with tracked transactions" in logException {
       val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
@@ -56,7 +56,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
       switch.shutdown()
     }
 
-    "process messages with optional header configs" in {
+    "process messages with optional header configs" in logException {
 
       val (internal, external) = getConnectionFactories(registry)
       val actorSys : ActorSystem = system(registry)

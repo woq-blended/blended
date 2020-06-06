@@ -26,7 +26,7 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
 
   "The inbound bridge should" - {
 
-    "process normal inbound messages without tracking" in {
+    "process normal inbound messages without tracking" in logException {
       val timeout : FiniteDuration = 10.seconds
       val msgCount = 2
       val actorSys = system(registry)
@@ -53,7 +53,7 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       switch.shutdown()
     }
 
-    "process text messages with a null body" in {
+    "process text messages with a null body" in logException {
       val timeout : FiniteDuration = 1.second
 
       val actorSys = system(registry)
@@ -79,7 +79,7 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       switch.shutdown()
     }
 
-    "process messages with an empty binary body" in {
+    "process messages with an empty binary body" in logException {
       val timeout : FiniteDuration = 1.second
 
       val actorSys = system(registry)

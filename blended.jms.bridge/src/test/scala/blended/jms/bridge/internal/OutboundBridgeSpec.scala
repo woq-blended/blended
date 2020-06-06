@@ -24,7 +24,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
 
   "The outbound bridge should " - {
 
-    "process normal inbound messages with untracked transactions" in {
+    "process normal inbound messages with untracked transactions" in logException {
       val timeout : FiniteDuration = 1.second
       val msgCount = 2
 

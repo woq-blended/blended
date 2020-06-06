@@ -43,7 +43,7 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
 
   "The outbound bridge should " - {
 
-    "reject envelopes if the send of the transaction event fails and retry is disabled" in {
+    "reject envelopes if the send of the transaction event fails and retry is disabled" in logException {
       val timeout : FiniteDuration = 1.second
       val msgCount = 2
 

@@ -185,8 +185,10 @@ class ConnectionStateManager(holder: ConnectionHolder)
   }
 
   def handleQueryState(state : ConnectionState) : Receive = {
-    case s : QueryConnectionState if s.vendor == state.vendor && s.provider == state.provider =>
-      context.system.eventStream.publish(ConnectionStateChanged(state))
+    case s : QueryConnectionState =>
+      if (s.vendor == state.vendor && s.provider == state.provider) {
+        context.system.eventStream.publish(ConnectionStateChanged(state))
+      }
   }
 
   // helper methods

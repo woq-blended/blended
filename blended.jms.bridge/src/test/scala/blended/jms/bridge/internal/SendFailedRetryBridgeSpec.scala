@@ -39,7 +39,7 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
 
   "The outbound bridge should " - {
 
-    "pass the message to the retry destination and not generate a transaction event if the forwarding of the message fails" in {
+    "pass the message to the retry destination and not generate a transaction event if the forwarding of the message fails" in logException {
       val msgCount = 2
 
       val actorSys = system(registry)

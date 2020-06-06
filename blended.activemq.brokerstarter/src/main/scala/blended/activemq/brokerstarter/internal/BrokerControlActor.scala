@@ -216,41 +216,12 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
       log.trace(s"Received StartBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
       if (broker.isEmpty) { startBroker() }
     case started : BrokerControlActor.BrokerStarted =>
-      log.trace(s"Received BrokerStarted Event for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
       if (started.uuid == uuid) {
+        log.debug(s"Received BrokerStarted Event for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
         broker.foreach { _ => registerService(brokerCfg) }
       }
     case BrokerControlActor.StopBroker =>
       log.trace(s"Received StopBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
       stopBroker()
   }
-
-//  private class BlendedBrokerFactory(location : String) extends XBeanBrokerFactory {
-//
-//    def createApplicationContext(): ApplicationContext = new FileSystemXmlApplicationContext(location)
-//
-//    def createBroker() : Try[BrokerService] = Try {
-//
-//      val context: ApplicationContext = createApplicationContext()
-//
-//      val broker: Option[BrokerService] = Try {
-//        context.getBean("broker").asInstanceOf[BrokerService]
-//      } match {
-//        case Success(b) =>
-//          Some(b)
-//        case Failure(_) =>
-//          context.getBeanNamesForType(classOf[BrokerService]).headOption.map { n => context.getBean(n).asInstanceOf[BrokerService] }
-//      }
-//
-//      broker match {
-//        case Some(b) =>
-//          val springBrokerContext: SpringBrokerContext = new SpringBrokerContext()
-//          springBrokerContext.setApplicationContext(context)
-//          springBrokerContext.setConfigurationUrl(location)
-//          b.setBrokerContext(springBrokerContext)
-//          b
-//        case None => throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + location)
-//      }
-//    }
-//  }
 }

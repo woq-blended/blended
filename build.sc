@@ -1,6 +1,6 @@
 import coursierapi.{Credentials, MavenRepository}
 
-val blendedMillVersion : String = "v0.1-9-36478e"
+val blendedMillVersion : String = "v0.1-10-9ee8a6"
 
 interp.repositories() ++= Seq(
   MavenRepository.of(s"https://u233308-sub2.your-storagebox.de/blended-mill/$blendedMillVersion")
@@ -824,6 +824,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.js.prickle,
         deps.js.scalacheck
       )}
+
+      object test extends super.BlendedJsTests
     }
   }
 
@@ -1178,7 +1180,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object prickle extends CoreModule with CoreJvmModule {
+  object prickle extends CoreJvmModule {
     override val description : String = "OSGi package for Prickle and mircojson"
     override def ivyDeps = super.ivyDeps() ++ Agg(
       deps.prickle.exclude("*" -> "*"),
@@ -1257,10 +1259,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
     object js extends CoreJs {
-      override def ivyDeps = Agg(
+      override def ivyDeps = T { super.ivyDeps() ++ Agg(
         deps.js.prickle
-      )
-      object test extends BlendedJsTests
+      )}
+      object test extends super.BlendedJsTests
     }
 
     object akka extends Module {
@@ -1790,9 +1792,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
         object test extends BlendedJsTests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-            deps.js.prickle,
-            deps.js.scalacheck
+            deps.js.prickle
           )}
+          override def moduleDeps = super.moduleDeps ++ Seq(
+            blended.util.logging.js
+          )
         }
       }
     }
@@ -1881,6 +1885,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.slf4j
       )
       object test extends CoreTests
+
+      object js extends CoreJs
     }
   }
 

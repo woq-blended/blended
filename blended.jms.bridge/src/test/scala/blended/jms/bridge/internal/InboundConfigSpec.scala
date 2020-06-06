@@ -26,7 +26,7 @@ class InboundConfigSpec extends SimplePojoContainerSpec
     System.setProperty("BlendedCountry", "de")
     System.setProperty("BlendedLocation", "09999")
 
-    "initialize from a plain config correctly" in {
+    "initialize from a plain config correctly" in logException {
 
       val cfgString =
         """
@@ -50,7 +50,7 @@ class InboundConfigSpec extends SimplePojoContainerSpec
       // scalastyle:on magic.number
     }
 
-    "initialize from a config with placeholders correctly" in {
+    "initialize from a config with placeholders correctly" in logException {
 
       val cfgString =
         """
@@ -76,7 +76,7 @@ class InboundConfigSpec extends SimplePojoContainerSpec
       // scalastyle:on magic.number
     }
 
-    "initialize with optional headers correctly" in {
+    "initialize with optional headers correctly" in logException {
       val cfgString =
         """
           |{

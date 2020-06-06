@@ -1,6 +1,7 @@
 package blended.testsupport.pojosr
 
 import java.io.File
+import java.util.UUID
 
 import blended.container.context.api.ContainerContext
 import blended.util.logging.Logger
@@ -163,9 +164,16 @@ trait PojoSrTestHelper {
   }
 
   def mandatoryService[T](sr : BlendedPojoRegistry, filter : Option[String] = None, timeout : FiniteDuration = 3.seconds)(implicit clazz : ClassTag[T]) : T = {
+    val id : String = UUID.randomUUID().toString()
+    val start = System.currentTimeMillis()
+    log.debug(s"Starting to wait for service of type [${clazz.runtimeClass.getName()}] with filter [$filter] : [$id]")
     waitOnService[T](sr, filter, timeout) match {
-      case Some(s) => s
-      case None    => throw new MandatoryServiceUnavailable(clazz.runtimeClass, filter)
+      case Some(s) =>
+        log.debug(s"Service of type [${clazz.runtimeClass.getName()}] : [$id] is available after [${System.currentTimeMillis() - start} ms]")
+        s
+      case None    =>
+        log.debug(s"Service of type [${clazz.runtimeClass.getName()}] with filter [$filter] : [$id] is unavailable after [$timeout]")
+        throw new MandatoryServiceUnavailable(clazz.runtimeClass, filter)
     }
   }
 

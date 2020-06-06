@@ -138,7 +138,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
 @RequiresForkedJVM
 class JmsRetryProcessorForwardSpec extends ProcessorSpecSupport("retryForward") {
 
-  "Consume messages from the retry destination and reinsert them into the original destination" in {
+  "Consume messages from the retry destination and reinsert them into the original destination" in logException {
 
     implicit val system : ActorSystem = actorSystem
     val srcQueue : String = "myQueue"
@@ -160,7 +160,7 @@ class JmsRetryProcessorForwardSpec extends ProcessorSpecSupport("retryForward") 
 @RequiresForkedJVM
 class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount") {
 
-  "Consume messages from the retry destination and pass them to the retry failed destination if the retry cont exceeds" in {
+  "Consume messages from the retry destination and pass them to the retry failed destination if the retry cont exceeds" in logException {
 
     implicit val system : ActorSystem = actorSystem
     val srcQueue: String = "myQueue"
@@ -188,7 +188,7 @@ class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount")
 @RequiresForkedJVM
 class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeout") {
 
-  "Consume messages from the retry destination and pass them to the retry failed destination if the retry timeout exceeds" in {
+  "Consume messages from the retry destination and pass them to the retry failed destination if the retry timeout exceeds" in logException {
 
     implicit val system : ActorSystem = actorSystem
     val srcQueue : String = "myQueue"
@@ -229,7 +229,7 @@ class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeo
 @RequiresForkedJVM
 class JmsRetryProcessorMissingDestinationSpec extends ProcessorSpecSupport("missingDest") {
 
-  "Consume messages from the retry destination and pass them to the retry failed destination if no original destination is known" in {
+  "Consume messages from the retry destination and pass them to the retry failed destination if no original destination is known" in logException {
 
     implicit val system : ActorSystem = actorSystem
     val retryMsg : FlowEnvelope = FlowEnvelope()
@@ -249,7 +249,7 @@ class JmsRetryProcessorMissingDestinationSpec extends ProcessorSpecSupport("miss
 @RequiresForkedJVM
 class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry") {
 
-  "Reinsert messages into the retry destination if the send to the original destination fails" in {
+  "Reinsert messages into the retry destination if the send to the original destination fails" in logException {
 
     implicit val system : ActorSystem = actorSystem
     val srcQueue : String = "myQueue"
@@ -301,7 +301,7 @@ class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
 
   "The Jms Retry Processor should" - {
 
-    "Deny messages that cannot be processed correctly by the retry router" in {
+    "Deny messages that cannot be processed correctly by the retry router" in logException {
 
       implicit val system : ActorSystem = actorSystem
       val router = new JmsRetryProcessor(streamsConfig, retryCfg) {

@@ -74,7 +74,7 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
 
   "The outbound bridge should " - {
 
-    "correctly route outbound messages after one or more retries" in {
+    "correctly route outbound messages after one or more retries" in logException {
       val timeout : FiniteDuration = 1.second
       val msgCount = 1
 

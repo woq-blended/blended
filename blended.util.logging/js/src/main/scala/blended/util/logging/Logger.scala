@@ -2,8 +2,6 @@ package blended.util.logging
 
 import java.util.{logging => jul}
 
-import org.slf4j
-
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
