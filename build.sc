@@ -1,6 +1,6 @@
 import coursierapi.{Credentials, MavenRepository}
 
-val blendedMillVersion : String = "0.1-SNAPSHOT"
+val blendedMillVersion : String = "v0.1-9-36478e"
 
 interp.repositories() ++= Seq(
   MavenRepository.of(s"https://u233308-sub2.your-storagebox.de/blended-mill/$blendedMillVersion")
@@ -64,17 +64,6 @@ trait CorePublishModule extends BlendedPublishModule {
   def scpTargetDir : String = "blended"
 
   override def publishVersion = T { blendedVersion() }
-}
-
-trait CoreBaseModule extends BlendedBaseModule
-  with CoreCoursierModule
-  with CorePublishModule
-
-trait CoreJvmModule extends BlendedJvmModule
-  with CorePublishModule {
-
-  trait CoreJs extends super.BlendedJs
-    with CorePublishModule
 }
 
 trait DistModule extends CoreCoursierModule {
@@ -197,15 +186,19 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
   // correct the unneeded cross sub-dir
   override def millSourcePath: Path = super.millSourcePath / os.up
+  val deps = BlendedDependencies.scalaVersions(crossScalaVersion)
 
-  val deps: BlendedDependencies = BlendedDependencies.scalaVersions(crossScalaVersion)
-
-  trait BlendedModule extends CoreBaseModule {
+  trait CoreModule extends BlendedBaseModule
+    with BlendedOsgiModule
+    with CoreCoursierModule
+    with CorePublishModule {
 
     override def scalaVersion : T[String] = deps.scalaVersion
     override def baseDir : os.Path = projectDir
 
-    override def deps: BlendedDependencies = blended.deps
+    override type ProjectDeps = BlendedDependencies
+    override def deps = blended.deps
+
     // remove the scala version
     override def blendedModule: String = millModuleSegments.parts.filterNot(crossScalaVersion == _).mkString(".")
     override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
@@ -217,13 +210,22 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
+  trait CoreJvmModule extends CoreModule
+    with BlendedJvmModule
+    with BlendedOsgiModule
+    with CorePublishModule {
+
+    trait CoreJs extends super.BlendedJs
+      with CorePublishModule
+  }
+
   object doc extends JBakeBuild with WebTools {
 
     override def millSourcePath = projectDir / "doc"
   }
 
   object activemq extends Module {
-    object brokerstarter extends BlendedModule {
+    object brokerstarter extends CoreModule {
       override val description : String =
         """A simple wrapper around an Active MQ broker that makes sure that the broker is completely
           |started before exposing a connection factory OSGi service""".stripMargin
@@ -262,7 +264,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
     }
-    object client extends BlendedModule {
+    object client extends CoreModule {
       override val description : String = "An Active MQ Connection factory as a service"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.activeMqClient
@@ -298,7 +300,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object akka extends BlendedModule {
+  object akka extends CoreModule {
     override val description = "Provide OSGi services and API to use Actors in OSGi bundles with a shared ActorSystem."
     override def ivyDeps = T{ super.ivyDeps() ++ Agg(
       deps.orgOsgi,
@@ -323,7 +325,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    object http extends BlendedModule {
+    object http extends CoreModule {
       override val description : String = "Provide Akka HTTP support"
       override def ivyDeps = T{ super.ivyDeps() ++ Agg(
         deps.domino,
@@ -361,7 +363,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
 
-      object api extends BlendedModule {
+      object api extends CoreModule {
         override val description : String = "Package the Akka Http API into a bundle."
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           deps.akkaHttp,
@@ -391,7 +393,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )}
       }
 
-      object jmsqueue extends BlendedModule {
+      object jmsqueue extends CoreModule {
         override val description : String = "Provide a simple REST interface to consume messages from JMS Queues"
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           deps.domino,
@@ -424,7 +426,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         }
       }
 
-      object proxy extends BlendedModule {
+      object proxy extends CoreModule {
         override val description : String = "Provide Akka HTTP Proxy support"
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           deps.domino,
@@ -454,7 +456,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         }
       }
 
-      object restjms extends BlendedModule {
+      object restjms extends CoreModule {
         override val description : String = "Provide a simple REST interface to perform JMS request / reply operations"
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           deps.domino,
@@ -499,7 +501,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
 
       object sample extends Module {
-        object helloworld extends BlendedModule {
+        object helloworld extends CoreModule {
           override val description = "A sample Akka HTTP bases HTTP endpoint for the blended container"
           override def millSourcePath: Path = baseDir / "blended.samples" / blendedModule
           override def ivyDeps = T{ super.ivyDeps() ++ Agg(
@@ -527,7 +529,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
 
-    object logging extends BlendedModule {
+    object logging extends CoreModule {
       override val description = "Redirect Akka Logging to the Blended logging framework"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.akkaActor
@@ -547,7 +549,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
     object context extends Module {
 
-      object api extends BlendedModule {
+      object api extends CoreModule {
         override def description = "The API for the Container Context and Identifier Service"
         override def ivyDeps = Agg(
           deps.typesafeConfig
@@ -565,7 +567,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         }
       }
 
-      object impl extends BlendedModule {
+      object impl extends CoreModule {
         override def description = "A simple OSGi service to provide access to the container's config directory"
         override def ivyDeps = Agg(
           deps.orgOsgiCompendium,
@@ -600,7 +602,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object domino extends BlendedModule {
+  object domino extends CoreModule {
     override def description = "Blended Domino extension for new Capsule scopes"
     override def ivyDeps = Agg(
       deps.typesafeConfig,
@@ -613,7 +615,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     object test extends CoreTests
   }
 
-  object file extends BlendedModule {
+  object file extends CoreModule {
     override val description : String = "Bundle to define a customizable Filedrop / Filepoll API"
     override def moduleDeps = super.moduleDeps ++ Seq(
       blended.akka,
@@ -638,7 +640,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   }
 
   object hawtio extends Module {
-    object login extends BlendedModule {
+    object login extends CoreModule {
       override val description : String = "Adding required imports to the hawtio war bundle"
       override def essentialImportPackage: Seq[String] = Seq(
         "blended.security.boot",
@@ -654,7 +656,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   }
 
   object jetty extends Module {
-    object boot extends BlendedModule {
+    object boot extends CoreModule {
       override val description : String = "Bundle wrapping the original jetty boot bundle to dynamically provide SSL Context via OSGI services"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
        deps.domino,
@@ -706,7 +708,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   }
 
   object jms extends Module {
-    object bridge extends BlendedModule {
+    object bridge extends CoreModule {
       override val description : String = "A generic JMS bridge to connect the local JMS broker to en external JMS"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.akkaActor,
@@ -757,7 +759,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
     }
-    object utils extends BlendedModule {
+    object utils extends CoreModule {
       override val description = "A bundle to provide a ConnectionFactory wrapper that monitors a single connection and is able to monitor the connection via an active ping."
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.jms11Spec
@@ -786,7 +788,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object jmx extends BlendedModule with CoreJvmModule {
+  object jmx extends CoreJvmModule {
     override val description = "Helper bundle to expose the platform's MBeanServer as OSGI Service."
     override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
       deps.domino,
@@ -807,7 +809,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
       `Bundle-Activator` = Option(s"${blendedModule}.internal.BlendedJmxActivator")
     )}
-    object test extends CoreJvmTests {
+    object test extends CoreTests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.scalacheck,
         deps.scalatestplusScalacheck
@@ -825,7 +827,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object jolokia extends BlendedModule {
+  object jolokia extends CoreModule {
     override val description : String = "Provide an Actor based Jolokia Client to access JMX resources of a container via REST"
     override def ivyDeps = super.ivyDeps() ++ Agg(
       deps.sprayJson,
@@ -853,7 +855,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object launcher extends BlendedModule {
+  object launcher extends CoreModule {
     override def description = "Provide an OSGi Launcher"
     override def ivyDeps = Agg(
       deps.cmdOption,
@@ -968,7 +970,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   }
 
   object mgmt extends Module {
-    object agent extends BlendedModule {
+    object agent extends CoreModule {
       override val description : String = "Bundle to regularly report monitoring information to a central container hosting the container registry"
       override def ivyDeps = super.ivyDeps() ++ Agg(
         deps.orgOsgi,
@@ -986,7 +988,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         `Bundle-Activator` = Some(s"${blendedModule}.internal.AgentActivator")
       )}
     }
-    object mock extends BlendedModule {
+    object mock extends CoreModule {
       override val description : String = "Mock server to simulate a larger network of blended containers for UI testing"
       override def ivyDeps = super.ivyDeps() ++ Agg(
         deps.cmdOption,
@@ -1001,7 +1003,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
       object test extends CoreTests
     }
-    object repo extends BlendedModule {
+    object repo extends CoreModule {
       override val description : String = "File Artifact Repository"
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.domino,
@@ -1023,7 +1025,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
 
-      object rest extends BlendedModule {
+      object rest extends CoreModule {
         override val description : String = "File Artifact Repository REST Service"
         override def ivyDeps = super.ivyDeps() ++ Agg(
           deps.akkaHttp
@@ -1047,7 +1049,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         }
       }
     }
-    object rest extends BlendedModule {
+    object rest extends CoreModule {
       override val description = "REST interface to accept POST's from distributed containers. These will be delegated to the container registry"
       override def ivyDeps = super.ivyDeps() ++ Agg(
         deps.akkaActor,
@@ -1082,7 +1084,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
     }
-    object base extends BlendedModule {
+    object base extends CoreModule {
       override val description = "Shared classes for management and reporting facility"
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.domino,
@@ -1098,7 +1100,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
     object service extends Module {
-      object jmx extends BlendedModule {
+      object jmx extends CoreModule {
         override val description : String = "A JMX based Service Info Collector"
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
           blended.domino,
@@ -1117,7 +1119,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
   }
-  object persistence extends BlendedModule {
+  object persistence extends CoreModule {
     override val description : String = "Provide a technology agnostic persistence API with pluggable Data Objects defined in other bundles"
     override def ivyDeps = super.ivyDeps() ++ Agg(
       deps.slf4j,
@@ -1136,7 +1138,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    object h2 extends BlendedModule {
+    object h2 extends CoreModule {
       override val description : String = "Implement a persistence backend with H2 JDBC database"
       override def ivyDeps = super.ivyDeps() ++ Agg(
         deps.slf4j,
@@ -1176,7 +1178,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object prickle extends BlendedModule {
+  object prickle extends CoreModule with CoreJvmModule {
     override val description : String = "OSGi package for Prickle and mircojson"
     override def ivyDeps = super.ivyDeps() ++ Agg(
       deps.prickle.exclude("*" -> "*"),
@@ -1202,7 +1204,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
 
     object akka extends Module {
-      object http extends BlendedModule {
+      object http extends CoreModule {
         override val description : String = "Define some convenience to use Prickle with Akka HTTP"
         override def ivyDeps = super.ivyDeps() ++ Agg(
           deps.akkaHttpCore,
@@ -1223,7 +1225,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object security extends BlendedModule with CoreJvmModule {
+  object security extends CoreJvmModule {
     override def description = "Configuration bundle for the security framework"
     override def ivyDeps = Agg(
       deps.prickle
@@ -1240,7 +1242,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def osgiHeaders = T{ super.osgiHeaders().copy(
       `Bundle-Activator` = Some(s"${blendedModule}.internal.SecurityActivator")
     )}
-    object test extends CoreJvmTests {
+    object test extends BlendedJvmTests {
       override def sources: Sources = T.sources { super.sources() ++ Seq(
         PathRef(baseDir / "blended.security.test" / "src" / "test" / "scala")
       )}
@@ -1258,11 +1260,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def ivyDeps = Agg(
         deps.js.prickle
       )
-      object test extends CoreJsTests
+      object test extends BlendedJsTests
     }
 
     object akka extends Module {
-      object http extends BlendedModule {
+      object http extends CoreModule {
         override val description : String = "Some security aware Akka HTTP routes for the blended container"
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           deps.akkaHttp,
@@ -1290,7 +1292,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
 
     object login extends Module {
-      object api extends BlendedModule {
+      object api extends CoreModule {
         override val description : String = "API to provide the backend for a Login Service"
         override def ivyDeps = super.ivyDeps() ++ Agg(
           deps.prickle,
@@ -1309,7 +1311,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           )
         }
       }
-      object impl extends BlendedModule {
+      object impl extends CoreModule {
         override val description : String = "Implementation of the Login backend"
         override def ivyDeps = super.ivyDeps() ++ Agg(
           deps.jjwt,
@@ -1334,7 +1336,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           )
         }
       }
-      object rest extends BlendedModule {
+      object rest extends CoreModule {
         override val description : String = "A REST service providing login services and web token management"
         override def ivyDeps = super.ivyDeps() ++ Agg(
           deps.akkaHttp,
@@ -1371,7 +1373,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
 
-    object boot extends BlendedModule {
+    object boot extends CoreModule {
       override def description: String = "A delegating login module for the blended container"
       override def compileIvyDeps: Target[Agg[Dep]] = Agg(
         deps.orgOsgi
@@ -1382,7 +1384,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )}
     }
 
-    object crypto extends BlendedModule {
+    object crypto extends CoreModule {
       override def description = "Provides classes and mainline for encrypting / decrypting arbitrary Strings"
       override def ivyDeps = Agg(
         deps.cmdOption
@@ -1402,7 +1404,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
 
-    object ssl extends BlendedModule {
+    object ssl extends CoreModule {
       override val description = "Bundle to provide simple Server Certificate Management"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.domino,
@@ -1453,7 +1455,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
 
-    object scep extends BlendedModule {
+    object scep extends CoreModule {
       override val description : String = "Bundle to manage the container certificate via SCEP."
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.bouncyCastlePkix,
@@ -1493,7 +1495,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
 
-      object standalone extends BlendedModule {
+      object standalone extends CoreModule {
         override def description: String = "Standalone client to manage certificates via SCEP"
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.felixConnect,
@@ -1534,7 +1536,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object streams extends BlendedModule {
+  object streams extends CoreModule {
     override val description : String = "Helper objects to work with Streams in blended integration flows."
     override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
       deps.akkaActor,
@@ -1600,7 +1602,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.testsupport
       )
     }
-    object dispatcher extends BlendedModule {
+    object dispatcher extends CoreModule {
       override val description : String = "A generic Dispatcher to support common integration routing."
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{super.ivyDeps() ++ Agg(
         deps.akkaActor,
@@ -1651,7 +1653,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
     }
-    object testsupport extends BlendedModule {
+    object testsupport extends CoreModule {
       override val description : String = "Some classes to make testing for streams a bit easier"
       override def ivyDeps = Agg(
         deps.scalacheck,
@@ -1673,7 +1675,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object testsupport extends BlendedModule {
+  object testsupport extends CoreModule {
     override def description = "Some test helper classes"
     override def ivyDeps = Agg(
       deps.akkaActor,
@@ -1691,7 +1693,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     )
     object test extends CoreTests
 
-    object pojosr extends BlendedModule {
+    object pojosr extends CoreModule {
       override def description = "A simple pojo based test container that can be used in unit testing"
       override def ivyDeps = Agg(
         deps.akkaTestkit,
@@ -1715,7 +1717,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
   }
 
-  object updater extends BlendedModule {
+  object updater extends CoreModule {
     override val description = "OSGi Updater"
     override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
       deps.orgOsgi,
@@ -1752,7 +1754,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    object config extends BlendedModule with CoreJvmModule {
+    object config extends CoreJvmModule {
       override def description = "Configurations for Updater and Launcher"
       override def ivyDeps = Agg(
         deps.prickle,
@@ -1768,7 +1770,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.util.logging,
         blended.security
       )
-      object test extends CoreJvmTests {
+      object test extends BlendedJvmTests {
         override def ivyDeps = super.ivyDeps() ++ Agg(
           deps.scalatest,
           deps.scalatestplusScalacheck,
@@ -1786,7 +1788,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def moduleDeps: Seq[PublishModule] = Seq(
           blended.security.js
         )
-        object test extends CoreJsTests {
+        object test extends BlendedJsTests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             deps.js.prickle,
             deps.js.scalacheck
@@ -1795,7 +1797,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
 
-    object remote extends BlendedModule {
+    object remote extends CoreModule {
       override val description = "OSGi Updater remote handle support"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.orgOsgi,
@@ -1839,7 +1841,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
     }
-    object tools extends BlendedModule {
+    object tools extends CoreModule {
       override val description = "Configurations for Updater and Launcher"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.typesafeConfig,
@@ -1853,7 +1855,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
   }
 
-  object util extends BlendedModule {
+  object util extends CoreModule {
     override def description: String = "Utility classes to use in other bundles"
     override def compileIvyDeps: Target[Agg[Dep]] = Agg(
       deps.akkaActor,
@@ -1873,16 +1875,16 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.logbackCore
       )}
     }
-    object logging extends BlendedModule with CoreJvmModule {
+    object logging extends CoreJvmModule {
       override def description: String = "Logging utility classes to use in other bundles"
       override def compileIvyDeps: Target[Agg[Dep]] = Agg(
         deps.slf4j
       )
-      object test extends CoreJvmTests
+      object test extends CoreTests
     }
   }
 
-  object websocket extends BlendedModule with CoreJvmModule {
+  object websocket extends CoreJvmModule {
     override val description = "The web socket server module"
     override def ivyDeps = super.ivyDeps() ++ Agg(
       deps.akkaHttp,
@@ -1913,7 +1915,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
       super.resources() ++ Seq(versionResource)
     }
-    object test extends CoreJvmTests {
+    object test extends BlendedJvmTests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.akkaTestkit,
         deps.sttp,
@@ -1942,7 +1944,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.jmx.js
       )
-      object test extends CoreJsTests {
+      object test extends BlendedJsTests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.js.scalacheck
         )}
@@ -1950,7 +1952,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object itestsupport extends BlendedModule {
+  object itestsupport extends CoreModule {
     override def description = "Integration test helper classes"
     override def ivyDeps = T { super.ivyDeps() ++  Agg(
         deps.activeMqBroker,
