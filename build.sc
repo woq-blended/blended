@@ -1,6 +1,6 @@
 import coursierapi.{Credentials, MavenRepository}
 
-val blendedMillVersion : String = "v0.1-10-9ee8a6"
+val blendedMillVersion : String = "v0.1-11-6268dc"
 
 interp.repositories() ++= Seq(
   MavenRepository.of(s"https://u233308-sub2.your-storagebox.de/blended-mill/$blendedMillVersion")
