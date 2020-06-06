@@ -1,6 +1,6 @@
 import coursierapi.{Credentials, MavenRepository}
 
-val blendedMillVersion : String = "v0.1-6-8e2afb"
+val blendedMillVersion : String = "0.1-SNAPSHOT"
 
 interp.repositories() ++= Seq(
   MavenRepository.of(s"https://u233308-sub2.your-storagebox.de/blended-mill/$blendedMillVersion")
@@ -16,8 +16,6 @@ import coursier.Repository
 import mill.api.Loose
 import mill.define.{Sources, Target, Task}
 import mill.modules.{Jvm, Util}
-import mill.scalajslib.ScalaJSModule
-import mill.scalajslib.api.ModuleKind
 import mill.scalalib._
 import mill.scalalib.publish._
 import mill.{PathRef, _}
@@ -49,7 +47,7 @@ object GitSupport extends GitModule {
 def blendedVersion = T { GitSupport.publishVersion() }
 
 /** Configure additional repositories. */
-trait BlendedCoursierModule extends CoursierModule {
+trait CoreCoursierModule extends CoursierModule {
   private def zincWorker: ZincWorkerModule = mill.scalalib.ZincWorkerModule
   override def repositories: Seq[Repository] = {
     zincWorker.repositories ++ Seq(
@@ -69,54 +67,17 @@ trait CorePublishModule extends BlendedPublishModule {
 }
 
 trait CoreBaseModule extends BlendedBaseModule
-  with BlendedCoursierModule
+  with CoreCoursierModule
   with CorePublishModule
 
-trait BlendedJvmModule extends CoreBaseModule { jvmBase =>
-  override def millSourcePath = super.millSourcePath / "jvm"
-  override def sources = T.sources {
-    super.sources() ++ Seq(PathRef(millSourcePath / os.up / 'shared / 'src / 'main / 'scala))
-  }
-  override def resources = T.sources { super.resources() ++ Seq(
-      PathRef(millSourcePath / os.up / 'shared / 'src / 'main / 'resources),
-      PathRef(millSourcePath / os.up / 'shared / 'src / 'main / 'binaryResources)
-  )}
+trait CoreJvmModule extends BlendedJvmModule
+  with CorePublishModule {
 
-  trait CoreJvmTests extends super.BlendedTests {
-    override def sources = T.sources {
-      super.sources() ++ Seq(PathRef(jvmBase.millSourcePath / os.up / 'shared / 'src / 'test / 'scala))
-    }
-    override def testResources = T.sources { super.testResources() ++ Seq(
-      PathRef(jvmBase.millSourcePath / os.up / 'shared / 'src / 'test / 'resources),
-      PathRef(jvmBase.millSourcePath / os.up / 'shared / 'src / 'test / 'binaryResources)
-    )}
-  }
-
-  trait Js extends ScalaJSModule with CorePublishModule { jsBase =>
-    override def millSourcePath = jvmBase.millSourcePath / os.up / "js"
-    override def scalaJSVersion = deps.scalaJsVersion
-    override def scalaVersion = jvmBase.scalaVersion
-    override def sources: Sources = T.sources(
-      millSourcePath / "src" / "main" / "scala",
-      millSourcePath / os.up / "shared" / "src" / "main" / "scala"
-    )
-    override def moduleKind: T[ModuleKind] = T{ ModuleKind.CommonJSModule }
-    def blendedModule = jvmBase.blendedModule
-    override def artifactName: T[String] = jvmBase.artifactName
-    trait CoreJsTests extends super.Tests {
-      override def sources: Sources = T.sources(
-        jsBase.millSourcePath / "src" / "test" / "scala"
-      )
-      override def ivyDeps = T{ super.ivyDeps() ++ Agg(
-        deps.js.scalatest
-      )}
-      override def testFrameworks = Seq("org.scalatest.tools.Framework")
-      override def moduleKind: T[ModuleKind] = T{ ModuleKind.CommonJSModule }
-    }
-  }
+  trait CoreJs extends super.BlendedJs
+    with CorePublishModule
 }
 
-trait DistModule extends BlendedCoursierModule {
+trait DistModule extends CoreCoursierModule {
   def deps: BlendedDependencies
   override def millSourcePath: Path = super.millSourcePath / os.up
 
@@ -173,7 +134,7 @@ trait DistModule extends BlendedCoursierModule {
 
     val jars = resolveDeps(transitiveLibIvyDeps)().map(_.path)
 
-    jars.foreach { jar =>
+    jars.iterator.foreach { jar =>
       os.copy(jar, dest / "lib" / jar.last, createFolders = true)
     }
     PathRef(dest)
@@ -825,7 +786,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object jmx extends BlendedModule with BlendedJvmModule {
+  object jmx extends BlendedModule with CoreJvmModule {
     override val description = "Helper bundle to expose the platform's MBeanServer as OSGI Service."
     override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
       deps.domino,
@@ -856,7 +817,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.testsupport.pojosr
       )
     }
-    object js extends Js {
+    object js extends CoreJs {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.js.prickle,
         deps.js.scalacheck
@@ -920,7 +881,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       PublishInfo(file = dist.zip(), classifier = Some("dist"), ivyConfig = "compile")
     )}
 
-    object dist extends DistModule with BlendedCoursierModule {
+    object dist extends DistModule with CoreCoursierModule {
       override def deps = blended.launcher.deps
       override def distName: T[String] = T{ s"${blended.launcher.artifactId()}-${blended.launcher.publishVersion()}" }
       override def sources: Sources = T.sources(millSourcePath / "src" / "runner" / "binaryResources")
@@ -977,10 +938,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       def osgiFrameworkIvyDeps: Map[String, Dep] = Map(
         "Felix 5.0.0" -> ivy"org.apache.felix:org.apache.felix.framework:5.0.0",
         "Felix 5.6.10" -> ivy"org.apache.felix:org.apache.felix.framework:5.6.10",
-//        "Eclipse OSGi 3.8.0" -> ivy"org.eclipse:org.eclipse.osgi:3.8.0.v20120529-1548",
         "Eclipse OSGi 3.10.100.v20150529-1857" -> ivy"org.osgi:org.eclipse.osgi:3.10.100.v20150529-1857",
         "Eclipse OSGi 3.12.50" -> ivy"org.eclipse.platform:org.eclipse.osgi:3.12.50",
-//        "Eclipse OSGi 3.9.1.v20130814-1242" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.9.1.v20130814-1242",
         "Eclipse OSGi 3.10.0.v20140606-1445" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.10.0.v20140606-1445"
       )
       def resolvedOsgiFrameworks = T{
@@ -1264,7 +1223,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object security extends BlendedModule with BlendedJvmModule {
+  object security extends BlendedModule with CoreJvmModule {
     override def description = "Configuration bundle for the security framework"
     override def ivyDeps = Agg(
       deps.prickle
@@ -1295,7 +1254,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.security.login.impl
       )
     }
-    object js extends Js {
+    object js extends CoreJs {
       override def ivyDeps = Agg(
         deps.js.prickle
       )
@@ -1793,7 +1752,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    object config extends BlendedModule with BlendedJvmModule {
+    object config extends BlendedModule with CoreJvmModule {
       override def description = "Configurations for Updater and Launcher"
       override def ivyDeps = Agg(
         deps.prickle,
@@ -1823,7 +1782,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
 
-      object js extends Js {
+      object js extends CoreJs {
         override def moduleDeps: Seq[PublishModule] = Seq(
           blended.security.js
         )
@@ -1914,7 +1873,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.logbackCore
       )}
     }
-    object logging extends BlendedModule with BlendedJvmModule {
+    object logging extends BlendedModule with CoreJvmModule {
       override def description: String = "Logging utility classes to use in other bundles"
       override def compileIvyDeps: Target[Agg[Dep]] = Agg(
         deps.slf4j
@@ -1923,7 +1882,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object websocket extends BlendedModule with BlendedJvmModule {
+  object websocket extends BlendedModule with CoreJvmModule {
     override val description = "The web socket server module"
     override def ivyDeps = super.ivyDeps() ++ Agg(
       deps.akkaHttp,
@@ -1976,7 +1935,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    object js extends Js {
+    object js extends CoreJs {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.js.prickle
       )}
