@@ -2,7 +2,6 @@ package blended.jms.bridge.internal
 
 import akka.NotUsed
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import akka.stream.Materializer
 import blended.container.context.api.ContainerContext
 import blended.jms.bridge._
 import blended.jms.bridge.internal.BridgeController.{AddConnectionFactory, RemoveConnectionFactory}
@@ -25,7 +24,7 @@ private[bridge] object BridgeControllerConfig {
     internalCf : IdAwareConnectionFactory,
     ctCtxt: ContainerContext,
     streamsCfg : BlendedStreamsConfig,
-    streamBuilderFactory : ActorSystem => Materializer => (BridgeStreamConfig, BlendedStreamsConfig) => BridgeStreamBuilder
+    streamBuilderFactory : ActorSystem => (BridgeStreamConfig, BlendedStreamsConfig) => BridgeStreamBuilder
   ) : BridgeControllerConfig = {
 
     val headerCfg = FlowHeaderConfig.create(ctCtxt)
@@ -76,7 +75,7 @@ private[bridge] case class BridgeControllerConfig(
   trackInbound : Boolean,
   streamsCfg : BlendedStreamsConfig,
   rawConfig : Config,
-  streamBuilderFactory : ActorSystem => Materializer => (BridgeStreamConfig, BlendedStreamsConfig) => BridgeStreamBuilder
+  streamBuilderFactory : ActorSystem => (BridgeStreamConfig, BlendedStreamsConfig) => BridgeStreamBuilder
 )
 
 object BridgeController {
@@ -84,12 +83,12 @@ object BridgeController {
   case class AddConnectionFactory(cf : IdAwareConnectionFactory)
   case class RemoveConnectionFactory(cf : IdAwareConnectionFactory)
 
-  def props(ctrlCfg : BridgeControllerConfig)(implicit system : ActorSystem, materializer : Materializer) : Props =
+  def props(ctrlCfg : BridgeControllerConfig)(implicit system : ActorSystem) : Props =
     Props(new BridgeController(ctrlCfg))
 
 }
 
-class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : ActorSystem, materializer : Materializer) extends Actor {
+class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : ActorSystem) extends Actor {
 
   private[this] val log = Logger[BridgeController]
 
@@ -128,7 +127,7 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
       sessionRecreateTimeout = in.sessionRecreateTimeout
     )
 
-    val builder = ctrlCfg.streamBuilderFactory(system)(materializer)(inCfg, ctrlCfg.streamsCfg)
+    val builder = ctrlCfg.streamBuilderFactory(system)(inCfg, ctrlCfg.streamsCfg)
     val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](
       streamName = builder.streamId,
       src = builder.stream,
@@ -166,7 +165,7 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
       sessionRecreateTimeout = 1.second
     )
 
-    val builder = ctrlCfg.streamBuilderFactory(system)(materializer)(outCfg, ctrlCfg.streamsCfg)
+    val builder = ctrlCfg.streamBuilderFactory(system)(outCfg, ctrlCfg.streamsCfg)
     val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](
       streamName = builder.streamId,
       src = builder.stream,

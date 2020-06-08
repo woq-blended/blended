@@ -92,7 +92,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
 
   override def preStart() : Unit = {
     super.preStart()
-    schedulePeriodically(CheckAck, 100.millis)
+    scheduleAtFixedRate(CheckAck, 100.millis, 100.millis)
   }
 
   /** The id to identify the instance in the log files */

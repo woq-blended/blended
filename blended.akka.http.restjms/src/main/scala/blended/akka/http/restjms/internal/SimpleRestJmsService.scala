@@ -7,13 +7,13 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
+import akka.stream.OverflowStrategy
 import akka.util.ByteString
 import blended.akka.OSGIActorConfig
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.jms._
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowEnvelopeLogger, FlowMessage, TextFlowMessage}
-import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController, StreamFactories}
 import blended.util.logging.{LogLevel, Logger}
 
 import scala.collection.mutable
@@ -29,7 +29,6 @@ class SimpleRestJmsService(
 ) extends JmsEnvelopeHeader {
 
   private implicit val system : ActorSystem = osgiCfg.system
-  private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private val log : Logger = Logger(s"${getClass().getName()}.$name")
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(osgiCfg.ctContext)
@@ -81,8 +80,8 @@ class SimpleRestJmsService(
     }})
 
   private val requestSrc : Source[FlowEnvelope, ActorRef] =
-    Source.actorRef[FlowEnvelope](100, OverflowStrategy.dropNew)
-    .via(sendToJms)
+    StreamFactories.actorSource[FlowEnvelope](100, OverflowStrategy.dropNew)
+      .via(sendToJms)
 
   private var requestActor : Option[ActorRef] = None
 
@@ -174,7 +173,7 @@ class SimpleRestJmsService(
 
   private def requestReply(operation : String, opCfg : JmsOperationConfig, cType : ContentType, request : HttpRequest, actor : ActorRef) : Future[HttpResponse] = {
 
-    val data : Future[Seq[ByteString]] = request.entity.getDataBytes().runWith(Sink.seq[ByteString], materializer)
+    val data : Future[Seq[ByteString]] = request.entity.getDataBytes().asScala.runWith(Sink.seq[ByteString])
 
     data.map { result =>
       val content: Array[Byte] = result.flatten.toArray

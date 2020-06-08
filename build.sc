@@ -1,6 +1,6 @@
 import coursierapi.{Credentials, MavenRepository}
 
-val blendedMillVersion : String = "v0.1-11-6268dc"
+val blendedMillVersion : String = "0.1-SNAPSHOT"
 
 interp.repositories() ++= Seq(
   MavenRepository.of(s"https://u233308-sub2.your-storagebox.de/blended-mill/$blendedMillVersion")
@@ -20,6 +20,7 @@ import mill.scalalib._
 import mill.scalalib.publish._
 import mill.{PathRef, _}
 import os.{Path, RelPath}
+
 
 // This import the mill-osgi plugin
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
@@ -200,7 +201,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def deps = blended.deps
 
     // remove the scala version
-    override def blendedModule: String = millModuleSegments.parts.filterNot(crossScalaVersion == _).mkString(".")
     override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
     trait CoreTests extends super.BlendedTests {
       override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
@@ -376,7 +376,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Import-Package` = Seq(
             """scala.compat.*;version="[0.8,1)"""",
-            s"""scala.*;version="[${scalaBinVersion},${scalaBinVersion}.50]"""",
+            s"""scala.*;version="[${scalaBinVersion()},${scalaBinVersion()}.50]"""",
             "com.sun.*;resolution:=optional",
             "sun.*;resolution:=optional",
             "net.liftweb.*;resolution:=optional",
@@ -1682,7 +1682,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def ivyDeps = Agg(
       deps.akkaActor,
       deps.akkaTestkit,
-      deps.akkaCamel,
       deps.jaxb,
       deps.scalatest,
       deps.junit,
@@ -1898,6 +1897,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     )
     override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
       blended.akka,
+      blended.streams,
       blended.akka.http,
       blended.security.login.api,
       blended.jmx

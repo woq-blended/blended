@@ -103,7 +103,7 @@ object WorklistManager {
       private val outEvents : mutable.Queue[WorklistEvent] = mutable.Queue.empty
 
       override def preStart() : Unit = {
-        schedulePeriodically(Tick, 100.millis)
+        scheduleAtFixedRate(Tick, 100.millis, 100.millis)
         pull(in)
       }
 

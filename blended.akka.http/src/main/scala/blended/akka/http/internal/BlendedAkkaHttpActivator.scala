@@ -2,7 +2,6 @@ package blended.akka.http.internal
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.{ConnectionContext, Http}
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.akka.http.SimpleHttpContext
 import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName, OpenMBeanExporter}
@@ -40,7 +39,6 @@ class BlendedAkkaHttpActivator extends DominoActivator
           val httpsPort = config.getInt("ssl.port", defaultHttpsPort)
 
           implicit val actorSystem : ActorSystem = cfg.system
-          implicit val actorMaterializer : Materializer = ActorMaterializer()
           // needed for the future flatMap/onComplete in the end
           implicit val executionContext : ExecutionContext = actorSystem.dispatcher
 

@@ -141,12 +141,10 @@ class Updater(
     if (config.autoStagingIntervalMSec > 0) {
       log.info(s"Enabling auto-staging with interval [${config.autoStagingIntervalMSec}] and initial delay [${config.autoStagingDelayMSec}]")
       implicit val eCtx = context.system.dispatcher
-      tickers +:= context.system.scheduler.schedule(
+      tickers +:= context.system.scheduler.scheduleAtFixedRate(
         Duration(config.autoStagingDelayMSec, TimeUnit.MILLISECONDS),
         Duration(config.autoStagingIntervalMSec, TimeUnit.MILLISECONDS)
-      ) {
-          self ! StageNextRuntimeConfig(nextId())
-        }
+      )(() => self ! StageNextRuntimeConfig(nextId()))
     } else {
       log.info(s"Auto-staging is disabled")
     }
@@ -154,13 +152,13 @@ class Updater(
     if (config.serviceInfoIntervalMSec > 0) {
       log.info(s"Enabling service info publishing [${config.serviceInfoIntervalMSec}] and lifetime [${config.serviceInfoLifetimeMSec}]")
       implicit val eCtx = context.system.dispatcher
-      tickers +:= context.system.scheduler.schedule(
+      tickers +:= context.system.scheduler.scheduleAtFixedRate(
         Duration(100, TimeUnit.MILLISECONDS),
         Duration(config.serviceInfoIntervalMSec, TimeUnit.MILLISECONDS)
-      ) {
-          self ! PublishServiceInfo
-          self ! PublishProfileInfo
-        }
+      ) { () =>
+        self ! PublishServiceInfo
+        self ! PublishProfileInfo
+      }
     } else {
       log.info("Publishing of service infos and profile infos is disabled")
     }

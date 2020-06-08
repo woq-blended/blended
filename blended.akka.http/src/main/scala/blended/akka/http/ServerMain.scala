@@ -4,14 +4,12 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
 import scala.concurrent.duration._
 
 import scala.concurrent.{Await, ExecutionContext}
 
 trait SimpleWebServer {
   implicit val actorSystem : ActorSystem = ActorSystem("AkkaServer")
-  implicit val materializer : ActorMaterializer = ActorMaterializer()
   implicit val executionContext : ExecutionContext = actorSystem.dispatcher
 
   val contentDir : String

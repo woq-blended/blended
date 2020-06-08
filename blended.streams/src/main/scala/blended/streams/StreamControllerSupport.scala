@@ -1,9 +1,9 @@
 package blended.streams
 
 import akka.Done
-import akka.actor.{Actor, Cancellable}
+import akka.actor.{Actor, ActorSystem, Cancellable}
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, KillSwitch, KillSwitches, Materializer}
+import akka.stream.{KillSwitch, KillSwitches}
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._
@@ -16,7 +16,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
 
   private[this] val log : Logger = Logger(getClass().getName())
   private[this] val rnd = new Random()
-  private[this] implicit val materializer : Materializer = ActorMaterializer()
+  private[this] implicit val actorSystem : ActorSystem = context.system
   private[this] implicit val eCtxt : ExecutionContext = context.dispatcher
 
   val nextInterval : FiniteDuration => BlendedStreamsConfig => FiniteDuration = { interval => streamCfg =>

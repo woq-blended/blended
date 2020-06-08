@@ -7,7 +7,6 @@ import java.util.Date
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.streams.json.PrickleProtocol._
 import blended.streams.transaction._
 import blended.util.logging.Logger
@@ -33,7 +32,6 @@ class FileFlowTransactionManager(
   private val log : Logger = Logger[FileFlowTransactionManager]
 
   private implicit val eCtxt : ExecutionContext = system.dispatcher
-  private implicit val materializer : Materializer = ActorMaterializer()
 
   private val dir : File = config.dir
 

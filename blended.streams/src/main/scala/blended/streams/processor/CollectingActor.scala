@@ -27,7 +27,8 @@ object Collector {
       completeOn = completeOn.getOrElse(_ => false)
     ))
 
-    Collector(name = name, result = result.future, sink = Sink.actorRef[T](actor, CollectingActor.Completed), actor = actor)
+    Collector(name = name, result = result.future, sink =
+      Sink.actorRef[T](actor, CollectingActor.Success, t => CollectingActor.Failed(t)), actor = actor)
   }
 }
 
@@ -39,7 +40,8 @@ case class Collector[T](
 )
 
 object CollectingActor {
-  object Completed
+  object Success
+  case class Failed(t : Throwable)
   object GetMessages
 
   def props[T](
@@ -75,8 +77,13 @@ class CollectingActor[T](
     case CollectingActor.GetMessages =>
       sender() ! msgs.toList
 
-    case CollectingActor.Completed =>
+    case CollectingActor.Success =>
       complete(msgs)
+
+    case CollectingActor.Failed(t) =>
+      log.debug(s"Collecting actor ended with exception [${t.getMessage()}]")
+      promise.failure(t)
+      context.stop(self)
 
     case msg : T =>
       log.trace(s"Collector [$name] received [$msg]")

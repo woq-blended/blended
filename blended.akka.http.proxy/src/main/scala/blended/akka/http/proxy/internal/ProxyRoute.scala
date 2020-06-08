@@ -6,7 +6,6 @@ import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials, Ho
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{RequestContext, Route}
 import akka.http.scaladsl.{ConnectionContext, Http}
-import akka.stream.ActorMaterializer
 import blended.util.logging.Logger
 import javax.net.ssl.SSLContext
 
@@ -36,7 +35,6 @@ trait ProxyRoute {
   def handle(requestPath : String) : Route = {
 
     implicit val _actorSystem = actorSystem
-    implicit val materializer = ActorMaterializer()
     import scala.concurrent.ExecutionContext.Implicits.global
 
     val timeoutResponse = HttpResponse(

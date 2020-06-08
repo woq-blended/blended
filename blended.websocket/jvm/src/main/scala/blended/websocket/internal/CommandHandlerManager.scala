@@ -2,10 +2,10 @@ package blended.websocket.internal
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.http.scaladsl.model.StatusCodes
-import akka.stream.OverflowStrategy
-import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.scaladsl.{Flow, Sink}
 import akka.{NotUsed, actor}
 import blended.security.login.api.Token
+import blended.streams.StreamFactories
 import blended.util.logging.Logger
 import blended.websocket._
 import prickle.Unpickle
@@ -34,6 +34,7 @@ object CommandHandlerManager {
   case class RemoveCommandPackage(handler: WebSocketCommandPackage)
   case class NewClient(t : Token, clientActor : ActorRef)
   case class ClientClosed(t : Token)
+  case class ClientFailed(token : Token, t : Throwable)
   case class ReceivedMessage(t: Token, s : String)
   case class WsClientUpdate(
     msg : WsMessageEncoded,
@@ -53,13 +54,13 @@ object CommandHandlerManager {
     override def newClient(token : Token) : Flow[String, WsMessageEncoded, NotUsed] = {
       val in = Flow[String]
         .map(s => ReceivedMessage(token, s))
-        .to(Sink.actorRef[ReceivedMessage](cmdHandler, ClientClosed(token)))
+        .to(Sink.actorRef[ReceivedMessage](cmdHandler, ClientClosed(token), t => ClientFailed(token, t)))
 
       // This materializes a new actor for the given client. All messages sent to this actor
       // will be sent to the client via Web Sockets
       // The new client will be registered with the DispatcherActor, which will then watch this
       // actor and dispatch events to the client as long as it is active.
-      val out = Source.actorRef[WsMessageEncoded](1, OverflowStrategy.fail)
+      val out = StreamFactories.actorSource[WsMessageEncoded](1)
         .mapMaterializedValue { c => cmdHandler ! NewClient(token, c) }
 
       Flow.fromSinkAndSourceCoupled(in, out)
@@ -117,6 +118,11 @@ object CommandHandlerManager {
           ci.clientActor ! actor.Status.Success(())
         }
         context.become(handling(state.removeClient(t)))
+      case ClientFailed(token, t) =>
+        state.clients.get(token.id).foreach { ci =>
+          ci.clientActor ! actor.Status.Failure(t)
+        }
+        context.become(handling(state.removeClient(token)))
       case Terminated(ca) =>
         state.clients.values.find(_.clientActor == ca).foreach { ci =>
           context.become(handling(state.removeClient(ci.t)))

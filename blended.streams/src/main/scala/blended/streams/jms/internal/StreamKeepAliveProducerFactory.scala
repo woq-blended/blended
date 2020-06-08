@@ -8,7 +8,7 @@ import blended.container.context.api.ContainerContext
 import blended.jms.utils.{BlendedSingleConnectionFactory, JmsDestination, ProducerMaterialized}
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
-import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController}
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController, StreamFactories}
 import blended.util.logging.LogLevel
 
 class StreamKeepAliveProducerFactory(
@@ -62,9 +62,9 @@ class StreamKeepAliveProducerFactory(
   )
 
   // scalastyle:off magic.number
-  val keepAliveSource: BlendedSingleConnectionFactory => Source[FlowEnvelope, ActorRef] = bcf => Source.actorRef(
-    10, OverflowStrategy.dropBuffer
-  ).viaMat(Flow.fromSinkAndSourceCoupled(producer(bcf), consumer(bcf)))(Keep.left)
+  val keepAliveSource: BlendedSingleConnectionFactory => Source[FlowEnvelope, ActorRef] = bcf =>
+    StreamFactories.actorSource[FlowEnvelope](10, OverflowStrategy.dropBuffer)
+      .viaMat(Flow.fromSinkAndSourceCoupled(producer(bcf), consumer(bcf)))(Keep.left)
   // scalastyle:on magic.number
 
   override def start(bcf : BlendedSingleConnectionFactory): Unit = {

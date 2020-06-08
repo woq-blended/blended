@@ -3,12 +3,13 @@ package blended.streams.multiresult
 import java.util.UUID
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable, Props}
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
-import akka.{Done, NotUsed}
+import akka.stream.scaladsl.{Flow, Keep, Sink}
+import akka.NotUsed
+import blended.streams.StreamFactories
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
-import blended.streams.processor.Collector
+import blended.streams.processor.{CollectingActor, Collector}
 import blended.util.logging.LogLevel
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
@@ -67,8 +68,6 @@ class MultiResultCollector(
 
   private implicit val system : ActorSystem = context.system
   private implicit val eCtxt : ExecutionContext = context.dispatcher
-  private implicit val materializer : Materializer = ActorMaterializer()
-
 
   override def receive : Receive = {
     case env : FlowEnvelope =>
@@ -103,9 +102,9 @@ class MultiResultCollector(
           // We need to set up the sub flow that accepts messages from an actor and passes
           // each message through the given sub flow while the final result is collected
           // by the collector
-          val collActor : ActorRef = Source.actorRef[FlowEnvelope](bufferSize, OverflowStrategy.fail)
+          val collActor : ActorRef = StreamFactories.actorSource[FlowEnvelope](bufferSize)
             .viaMat(processSingle)(Keep.left)
-            .toMat(Sink.actorRef[FlowEnvelope](collector.actor, Done))(Keep.left)
+            .toMat(Sink.actorRef[FlowEnvelope](collector.actor, CollectingActor.Success, t => CollectingActor.Failed(t)))(Keep.left)
             .run()
 
           context.become(collecting(env, timer))

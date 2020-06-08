@@ -31,13 +31,11 @@ trait JmsStreamSupport {
     msgs : FlowEnvelope*
   )(implicit system : ActorSystem) : Try[KillSwitch] = Try {
 
-    implicit val materializer : Materializer = ActorMaterializer()
-
     val hasException : AtomicBoolean = new AtomicBoolean(false)
     val sendCount : AtomicInteger = new AtomicInteger(0)
 
     val (((actor : ActorRef, killswitch : KillSwitch), done : Future[Done]), errEnv : Future[Option[FlowEnvelope]]) =
-      Source.actorRef[FlowEnvelope](msgs.size, OverflowStrategy.fail)
+      StreamFactories.actorSource[FlowEnvelope](msgs.size)
         .viaMat(processFlow)(Keep.left)
         .viaMat(KillSwitches.single)(Keep.both)
         .watchTermination()(Keep.both)

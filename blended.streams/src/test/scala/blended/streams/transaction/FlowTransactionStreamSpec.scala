@@ -70,7 +70,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
           source
             .watchTermination()(Keep.right)
             .viaMat(stream)(Keep.left)
-            .toMat(Sink.actorRef[FlowEnvelope](transColl.actor, CollectingActor.Completed))(Keep.left)
+            .toMat(Sink.actorRef[FlowEnvelope](transColl.actor, CollectingActor.Success))(Keep.left)
             .run()
 
           Await.result(transColl.result.map(t => f(t)), 3.seconds)

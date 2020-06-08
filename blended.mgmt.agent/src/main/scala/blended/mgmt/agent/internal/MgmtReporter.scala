@@ -6,7 +6,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
+import akka.stream.Materializer
 import blended.container.context.api.ContainerContext
 import blended.prickle.akka.http.PrickleSupport
 import blended.updater.config._
@@ -57,7 +57,6 @@ trait MgmtReporter extends Actor with PrickleSupport {
   private[this] lazy val log = Logger[MgmtReporter]
 
   implicit private lazy val eCtxt : ExecutionContext = context.system.dispatcher
-  implicit private lazy val materializer : ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 
   override def preStart() : Unit = {
     super.preStart()
@@ -145,6 +144,9 @@ trait MgmtReporter extends Actor with PrickleSupport {
 
   private def handleHttpRequests(state : MgmtReporterState) : Receive = {
     case (response @ HttpResponse(status, _, entity, _), appliedIds : List[_]) =>
+
+      implicit val materializer : Materializer = akka.stream.SystemMaterializer.get(context.system).materializer
+
       status match {
         case StatusCodes.OK =>
           // As the server accepted also the list of applied update action IDs

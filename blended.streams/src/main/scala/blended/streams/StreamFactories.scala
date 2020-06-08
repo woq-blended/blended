@@ -35,14 +35,13 @@ object StreamFactories {
     completeOn : Option[Seq[T] => Boolean] = None
   )(implicit system : ActorSystem, clazz : ClassTag[T]) : (Mat, Collector[T]) = {
 
-    implicit val materializer : Materializer = ActorMaterializer()(system)
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
     val stopped = new AtomicBoolean(false)
 
     val collector = Collector[T](name = name, onCollected = onCollected, completeOn = completeOn)
 
-    val sink = Sink.actorRef(collector.actor, CollectingActor.Completed)
+    val sink = Sink.actorRef(collector.actor, CollectingActor.Success, t => CollectingActor.Failed(t))
 
     val ((mat, killswitch), done) = source
       .viaMat(KillSwitches.single)(Keep.both)
@@ -54,7 +53,7 @@ object StreamFactories {
       case Success(c) =>
         stopped.set(true)
       case Failure(t) =>
-        collector.actor ! CollectingActor.Completed
+        collector.actor ! CollectingActor.Success
         stopped.set(true)
     }
 
@@ -71,9 +70,21 @@ object StreamFactories {
     (mat, collector)
   }
 
-  def keepAliveSource[T](bufferSize : Int): Source[T, (ActorRef, KillSwitch)] = {
-    Source
-      .actorRef[T](bufferSize, OverflowStrategy.fail)
-      .viaMat(KillSwitches.single)(Keep.both)
+  def actorSource[T](bufferSize : Int, overflowStrategy : OverflowStrategy = OverflowStrategy.fail) : Source[T, ActorRef] = {
+
+    val complete : PartialFunction[Any, CompletionStrategy] = {
+      case akka.actor.Status.Success(s: CompletionStrategy) => s
+      case akka.actor.Status.Success(_) => CompletionStrategy.draining
+      case akka.actor.Status.Success => CompletionStrategy.draining
+    }
+
+    val fail : PartialFunction[Any, Throwable] = {
+      case akka.actor.Status.Failure(t) => t
+    }
+
+    Source.actorRef[T](complete, fail, bufferSize, overflowStrategy)
   }
+
+  def keepAliveSource[T](bufferSize : Int): Source[T, (ActorRef, KillSwitch)] =
+    actorSource[T](bufferSize).viaMat(KillSwitches.single)(Keep.both)
 }

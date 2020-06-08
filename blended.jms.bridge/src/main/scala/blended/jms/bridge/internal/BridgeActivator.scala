@@ -1,7 +1,6 @@
 package blended.jms.bridge.internal
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
@@ -38,7 +37,7 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
   // We maintain the streamBuilder factory as a function here, so that unit tests can override
   // the factory with stream builders throwing particular exceptions
-  protected def streamBuilderFactory(system : ActorSystem)(materializer: Materializer)(
+  protected def streamBuilderFactory(system : ActorSystem)(
     bridgeCfg : BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
   ) : BridgeStreamBuilder = new BridgeStreamBuilder(bridgeCfg, streamsCfg)(system)
 
@@ -76,7 +75,6 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
           ctrlConfig.registry.providesService[BridgeProviderRegistry]
 
           implicit val system: ActorSystem = osgiCfg.system
-          implicit val materialzer: ActorMaterializer = ActorMaterializer()
 
           if (osgiCfg.config.hasPath("retry")) {
 
