@@ -16,9 +16,10 @@ class MapperSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
     import blended.updater.config.Mapper._
     import TestData._
 
-    def testMapping[T : ClassTag](map : T => ju.Map[String, AnyRef], unmap : AnyRef => Try[T])(implicit arb : Arbitrary[T]) : Unit = {
+    def testMapping[T: ClassTag](map: T => ju.Map[String, AnyRef],
+                                 unmap: AnyRef => Try[T])(implicit arb: Arbitrary[T]): Unit = {
       classTag[T].runtimeClass.getSimpleName in {
-        forAll { d : T =>
+        forAll { d: T =>
           assert(unmap(map(d)) === Success(d))
         }
       }
@@ -28,15 +29,11 @@ class MapperSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
     testMapping(mapBundleConfig, unmapBundleConfig)
     testMapping(mapFeatureRef, unmapFeatureRef)
     testMapping(mapFeatureConfig, unmapFeatureConfig)
-    testMapping(mapOverlayConfig, unmapOverlayConfig)
     testMapping(mapRuntimeConfig, unmapRuntimeConfig)
     testMapping(mapServiceInfo, unmapServiceInfo)
     testMapping(mapUpdateAction, unmapUpdateAction)
     testMapping(mapGeneratedConfig, unmapGeneratedConfig)
-    testMapping(mapProfileGroup, unmapProfileGroup)
     testMapping(mapProfile, unmapProfile)
-    testMapping(mapOverlayRef, unmapOverlayRef)
-    testMapping(mapOverlaySet, unmapOverlaySet)
 
     // FIXME: those 2 tests never return
     // testMapping(mapContainerInfo, unmapContainerInfo)

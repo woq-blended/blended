@@ -15,7 +15,6 @@ import scala.util.Try
  * @param profileVersion The version of the profile.
  * @param profileBaseDir The directory, where the files of the profile will be looked up.
  *   The determine the concrete profile directory, use [[ProfileLookup#materializedDir]]
- * @param overlays The active applied overlays for this profile.
  *
  * @see [[blended.launcher.Launcher]]
  * @see [[blended.updater.Updater]]
@@ -23,11 +22,10 @@ import scala.util.Try
 case class ProfileLookup(
   profileName : String,
   profileVersion : String,
-  profileBaseDir : File,
-  overlays : Set[OverlayRef]
+  profileBaseDir : File
 ) {
 
-  override def toString() : String = s"${getClass.getSimpleName}(profileName=${profileName}, profileVersion=${profileVersion},profileBaseDir=${profileBaseDir},overlays=${overlays.mkString("[", ",", "]")})"
+  override def toString() : String = s"${getClass.getSimpleName}(profileName=${profileName}, profileVersion=${profileVersion},profileBaseDir=${profileBaseDir})"
 
   /**
    * The directory where the profile including it's overlays is installed.
@@ -52,21 +50,11 @@ object ProfileLookup {
     val profileName = config.getString("profile.name")
     val profileVersion = config.getString("profile.version")
     val profileBaseDir = new File(config.getString("profile.baseDir"))
-    val overlays =
-      if (config.hasPath("profile.overlays"))
-        config.getStringList("profile.overlays").asScala.map { o =>
-          o.split("[:]", 2) match {
-            case Array(n, v) => OverlayRef(n, v)
-            case invalid     => sys.error("Invalid overlay id: " + invalid)
-          }
-        }
-      else Nil
 
     ProfileLookup(
       profileName = profileName,
       profileVersion = profileVersion,
-      profileBaseDir = profileBaseDir,
-      overlays = overlays.toSet
+      profileBaseDir = profileBaseDir
     )
   }
 
@@ -77,8 +65,7 @@ object ProfileLookup {
     val config = Map[String, Object](
       "profile.name" -> profileLookup.profileName,
       "profile.version" -> profileLookup.profileVersion,
-      "profile.baseDir" -> profileLookup.profileBaseDir.getPath(),
-      "profile.overlays" -> profileLookup.overlays.map(o => s"${o.name}:${o.version}").asJava
+      "profile.baseDir" -> profileLookup.profileBaseDir.getPath()
     ).asJava
 
     ConfigFactory.parseMap(config)

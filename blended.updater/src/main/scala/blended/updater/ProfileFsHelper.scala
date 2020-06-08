@@ -2,51 +2,26 @@ package blended.updater
 
 import java.io.File
 
+import scala.util.Try
+
 import blended.updater.config._
 import blended.util.logging.Logger
 import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
-
-import scala.util.{Failure, Success, Try}
 
 class ProfileFsHelper {
 
   private[this] val log = Logger[ProfileFsHelper]
 
-  def scanForOverlayConfigs(overlayBaseDir : File) : List[OverlayConfig] = {
-    log.debug(s"Scanning for overlays configs in: ${overlayBaseDir}")
-
-    val confFiles = Option(overlayBaseDir.listFiles).getOrElse(Array()).
-      filter(f => f.isFile() && f.getName().endsWith(".conf"))
-
-    val configs = confFiles.toList.flatMap { file =>
-      Try {
-        ConfigFactory.parseFile(file).resolve()
-      }.
-        flatMap(OverlayConfigCompanion.read) match {
-          case Success(overlayConfig) =>
-            List(overlayConfig)
-          case Failure(e) =>
-            log.error(e)(s"Could not parse overlay config file: ${file}")
-            List()
-        }
-    }
-
-    log.debug(s"Found overlay configs: ${configs}")
-    configs
-  }
-
-  def scanForRuntimeConfigs(installBaseDir : File) : List[LocalRuntimeConfig] = {
+  def scanForRuntimeConfigs(installBaseDir: File): List[LocalRuntimeConfig] = {
     log.debug(s"Scanning for runtime configs in ${installBaseDir}")
 
-    val configFiles = Option(installBaseDir.listFiles).getOrElse(Array()).toList.
-      flatMap { nameDir =>
-        Option(nameDir.listFiles).getOrElse(Array()).toList.
-          flatMap { versionDir =>
-            val profileFile = new File(versionDir, "profile.conf")
-            if (profileFile.exists()) Some(profileFile)
-            else None
-          }
+    val configFiles = Option(installBaseDir.listFiles).getOrElse(Array()).toList.flatMap { nameDir =>
+      Option(nameDir.listFiles).getOrElse(Array()).toList.flatMap { versionDir =>
+        val profileFile = new File(versionDir, "profile.conf")
+        if (profileFile.exists()) Some(profileFile)
+        else None
       }
+    }
 
     log.debug(s"Found potential runtime config files: ${configFiles}")
 
@@ -57,7 +32,8 @@ class ProfileFsHelper {
         val version = versionDir.getName()
         val name = versionDir.getParentFile.getName()
 
-        val config = ConfigFactory.parseFile(runtimeConfigFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+        val config =
+          ConfigFactory.parseFile(runtimeConfigFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
         val resolved = ResolvedRuntimeConfig(RuntimeConfigCompanion.read(config).get)
         val local = LocalRuntimeConfig(baseDir = versionDir, resolvedRuntimeConfig = resolved)
 
@@ -78,77 +54,34 @@ class ProfileFsHelper {
     runtimeConfigs
   }
 
-  def scanForProfiles(installBaseDir : File, runtimeConfigs : Option[List[LocalRuntimeConfig]] = None) : List[LocalProfile] = {
+  def scanForProfiles(installBaseDir: File,
+                      runtimeConfigs: Option[List[LocalRuntimeConfig]] = None): List[LocalProfile] = {
     log.debug(s"Scanning for profiles in: ${installBaseDir}")
 
     val rcs = runtimeConfigs.getOrElse(scanForRuntimeConfigs(installBaseDir)).toList
 
     val runtimeConfigsWithIssues = rcs.flatMap { localConfig =>
-      val issues = localConfig.validate(
-        includeResourceArchives = false,
-        explodedResourceArchives = true
-      ).toList
-      log.debug(s"Runtime config ${localConfig.runtimeConfig.name}-${localConfig.runtimeConfig.version} issues: ${issues}")
+      val issues = localConfig
+        .validate(
+          includeResourceArchives = false,
+          explodedResourceArchives = true
+        )
+        .toList
+      log.debug(
+        s"Runtime config ${localConfig.runtimeConfig.name}-${localConfig.runtimeConfig.version} issues: ${issues}")
       List(localConfig -> issues)
 
     }
 
     log.debug(s"Runtime configs (with issues): ${runtimeConfigsWithIssues}")
 
-    def profileState(issues : List[String]) : LocalProfile.ProfileState = issues match {
+    def profileState(issues: List[String]): LocalProfile.ProfileState = issues match {
       case Seq()  => LocalProfile.Staged
       case issues => LocalProfile.Pending(issues)
     }
 
     val fullProfiles = runtimeConfigsWithIssues.flatMap {
-      case (localRuntimeConfig, issues) =>
-        val profileDir = localRuntimeConfig.baseDir
-
-        // scan for overlays
-        val overlayDir = new File(profileDir, "overlays")
-        val overlayFiles = Option(overlayDir.listFiles()).getOrElse(Array()).filter(f => f.getName().endsWith(".conf")).toList
-        if (overlayFiles.isEmpty) {
-          log.warn(s"Could not found any overlay configs for profile: ${localRuntimeConfig.profileFileLocation}")
-          //          log.info("Migrating legacy profile. Generating base overlay config")
-          //          // We create a transient base overlay
-          // TODO: Remove timely
-          //          List(Profile(localRuntimeConfig, LocalOverlays(Set(), profileDir), profileState(issues)))
-          List()
-        } else overlayFiles.flatMap { file =>
-          Try {
-            ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-          }.flatMap { c =>
-            LocalOverlays.read(c, profileDir)
-          } match {
-            case Failure(e) =>
-              log.error(e)(s"Could not load overlay config file: ${file}")
-              None
-            case Success(localOverlays) =>
-              val canonicalFile = LocalOverlays.preferredConfigFile(localOverlays.overlays.map(_.overlayRef), profileDir)
-              if (canonicalFile != file) {
-                log.error(s"Skipping found overlays file because filename does not match the expected file name: ${file}")
-                List()
-              } else {
-                val overlayIssues = localOverlays.validate() match {
-                  case Seq() =>
-                    // no conflicts, now check if already materialized
-                    if (localOverlays.isMaterialized()) {
-                      List()
-                    } else {
-                      List("Overlays not materialized")
-                    }
-                  case issues =>
-                    log.error(
-                      s"Skipping found overlays file because it is not valid: ${file}. Issue: ${issues.mkString(" / ")}"
-                    )
-                    issues.toList
-                }
-                log.debug(s"Found overlay: ${localOverlays}")
-                log.debug(s"Found overlay issues: ${issues}")
-                List(LocalProfile(localRuntimeConfig, localOverlays, profileState(issues ::: overlayIssues)))
-              }
-          }
-        }
+      case (localRuntimeConfig, issues) => List(LocalProfile(localRuntimeConfig, profileState(issues)))
     }
 
     fullProfiles

@@ -4,9 +4,8 @@ import blended.updater.config._
 import blended.util.logging.Logger
 
 class RemoteUpdater(
-  runtimeConfigPersistor : RuntimeConfigPersistor,
-  containerStatePersistor : ContainerStatePersistor,
-  overlayConfigPersistor : OverlayConfigPersistor
+    runtimeConfigPersistor: RuntimeConfigPersistor,
+    containerStatePersistor: ContainerStatePersistor
 ) {
 
   private[this] val log = Logger[RemoteUpdater]
@@ -14,7 +13,7 @@ class RemoteUpdater(
   type ContainerId = String
 
   // TODO: review: isn't this redundant with updateContainerState method?
-  def addAction(containerId : ContainerId, action : UpdateAction) : Unit = {
+  def addAction(containerId: ContainerId, action: UpdateAction): Unit = {
     // Logic:
     // - find previous state
     // - add new actions
@@ -22,7 +21,8 @@ class RemoteUpdater(
     // - persist new state
 
     log.debug(s"About to add action [${action}] for container [${containerId}]")
-    val state = containerStatePersistor.findContainerState(containerId).getOrElse(ContainerState(containerId = containerId))
+    val state =
+      containerStatePersistor.findContainerState(containerId).getOrElse(ContainerState(containerId = containerId))
     val actions = state.outstandingActions
     log.debug(s"Found [${actions.size}] old outstanding actions for container [${containerId}]")
     val newActions =
@@ -38,7 +38,7 @@ class RemoteUpdater(
     containerStatePersistor.updateContainerState(newState)
   }
 
-  def updateContainerState(containerInfo : ContainerInfo) : ContainerState = {
+  def updateContainerState(containerInfo: ContainerInfo): ContainerState = {
     // Logic:
     // - find previous state and extract it's profiles
     // - analyze outstanding actions (filter those with missing dependencies or those known as applied)
@@ -48,40 +48,42 @@ class RemoteUpdater(
     log.trace(s"ContainerInfo: [${containerInfo}]")
 
     val timeStamp = System.currentTimeMillis()
-    val persistedState = containerStatePersistor.findContainerState(containerInfo.containerId).getOrElse(ContainerState(containerId = containerInfo.containerId))
+    val persistedState = containerStatePersistor
+      .findContainerState(containerInfo.containerId)
+      .getOrElse(ContainerState(containerId = containerInfo.containerId))
 
     val containerProfiles = containerInfo.profiles
 
     val newUpdateActions = persistedState.outstandingActions
-      // remove those marked as applied
+    // remove those marked as applied
       .filterNot(a => containerInfo.appliedUpdateActionIds.contains(a.id))
       // filter some inconsistent actions
       .filter {
         // TODO: why do we filter here? Performance?
         // TODO: support for overlays
-        case ActivateProfile(id, n, v, o) =>
+        case ActivateProfile(id, n, v) =>
           // exclude already active activate request
           // FIXME: is this correct, e.g. if a previous action activates another profile?
-          !containerProfiles.exists(p =>
-            p.name == n &&
-              p.version == v &&
-              p.overlaySet.overlays == o &&
-              p.state == OverlayState.Active)
-        case StageProfile(id, n, v, oc) =>
+          !containerProfiles.exists(
+            p =>
+              p.name == n &&
+                p.version == v)
+        case StageProfile(id, n, v) =>
           // exclude already staged stage request
-          !containerProfiles.exists(p =>
-            p.name == n &&
-              p.version == v &&
-              p.overlaySet.overlays == oc &&
-              Set(OverlayState.Valid, OverlayState.Invalid, OverlayState.Active).exists(_ == p.overlaySet.state))
+          !containerProfiles.exists(
+            p =>
+              p.name == n &&
+                p.version == v)
         case _ => true
       }
     val diff = newUpdateActions.size - persistedState.outstandingActions.size
     if (diff < 0) {
-      log.debug(s"Removed ${-diff} actions: ${persistedState.outstandingActions.filterNot(a => newUpdateActions.contains(a))}")
+      log.debug(
+        s"Removed ${-diff} actions: ${persistedState.outstandingActions.filterNot(a => newUpdateActions.contains(a))}")
     }
     if (diff > 0) {
-      log.debug(s"Added ${diff} actions: ${newUpdateActions.filterNot(a => persistedState.outstandingActions.contains(a))}")
+      log.debug(
+        s"Added ${diff} actions: ${newUpdateActions.filterNot(a => persistedState.outstandingActions.contains(a))}")
     }
 
     val newState = persistedState.copy(
@@ -93,21 +95,17 @@ class RemoteUpdater(
     newState
   }
 
-  def getContainerState(containerId : ContainerId) : Option[ContainerState] =
+  def getContainerState(containerId: ContainerId): Option[ContainerState] =
     containerStatePersistor.findContainerState(containerId)
 
-  def getContainerActions(containerId : ContainerId) : List[UpdateAction] =
+  def getContainerActions(containerId: ContainerId): List[UpdateAction] =
     getContainerState(containerId).map(_.outstandingActions).getOrElse(List.empty)
 
-  def getContainerIds() : List[ContainerId] = containerStatePersistor.findAllContainerStates().map(_.containerId)
+  def getContainerIds(): List[ContainerId] = containerStatePersistor.findAllContainerStates().map(_.containerId)
 
-  def registerRuntimeConfig(runtimeConfig : RuntimeConfig) : Unit = runtimeConfigPersistor.persistRuntimeConfig(runtimeConfig)
+  def registerRuntimeConfig(runtimeConfig: RuntimeConfig): Unit =
+    runtimeConfigPersistor.persistRuntimeConfig(runtimeConfig)
 
-  def getRuntimeConfigs() : List[RuntimeConfig] = runtimeConfigPersistor.findRuntimeConfigs()
-
-  def getOverlayConfigs() : List[OverlayConfig] = overlayConfigPersistor.findOverlayConfigs()
-
-  def registerOverlayConfig(overlayConfig : OverlayConfig) : Unit = overlayConfigPersistor.persistOverlayConfig(overlayConfig)
+  def getRuntimeConfigs(): List[RuntimeConfig] = runtimeConfigPersistor.findRuntimeConfigs()
 
 }
-

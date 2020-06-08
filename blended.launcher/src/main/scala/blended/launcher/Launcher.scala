@@ -256,35 +256,18 @@ object Launcher {
         var brandingProps = Map(
           RuntimeConfig.Properties.PROFILE_DIR -> profileDir
         )
-        var overlayProps = Map[String, String]()
-
         profileLookup.foreach { pl =>
           brandingProps ++= Map(
             RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(cmdline.profileLookup.get).getAbsolutePath(),
-            RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath(),
-            RuntimeConfig.Properties.OVERLAYS -> pl.overlays.map(or => s"${or.name}:${or.version}").mkString(",")
+            RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath()
           )
-
-          val knownOverlays = LocalOverlays.findLocalOverlays(new File(profileDir).getAbsoluteFile())
-          knownOverlays.find(ko => ko.overlayRefs.toSet == pl.overlays.toSet) match {
-            case None =>
-              if (pl.overlays.nonEmpty) {
-                sys.error("Cannot find specified overlay set: " + pl.overlays.toSeq.sorted.mkString(", "))
-              } else {
-                log.error("Cannot find the empty overlay set (aka 'base.conf'). To be compatible with older version, we continue here as no real information is missing")
-              }
-            case Some(localOverlays) =>
-              val newOverlayProps = localOverlays.properties
-              log.debug("Found overlay provided properties: " + newOverlayProps)
-              overlayProps ++= newOverlayProps
-          }
         }
 
         Configs(
           launcherConfig = launchConfig.copy(
             branding = launchConfig.branding ++ brandingProps,
             systemProperties =
-              SystemPropertyResolver.resolve((launchConfig.systemProperties ++ overlayProps) + ("blended.container.home" -> profileDir))
+              SystemPropertyResolver.resolve((launchConfig.systemProperties) + ("blended.container.home" -> profileDir))
           ),
           profileConfig = Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir)))
         )

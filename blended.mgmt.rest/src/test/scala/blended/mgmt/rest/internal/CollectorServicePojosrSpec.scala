@@ -18,14 +18,13 @@ import blended.testsupport.retry.ResultPoller
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM, TestFile}
 import blended.updater.config.json.PrickleProtocol._
-import blended.updater.config.{ActivateProfile, OverlayConfig, OverlayConfigCompanion, UpdateAction}
+import blended.updater.config.{ActivateProfile, UpdateAction}
 import blended.updater.remote.internal.RemoteUpdaterActivator
 import blended.util.logging.Logger
-import com.typesafe.config.ConfigFactory
 import domino.DominoActivator
 import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
-import prickle.{Pickle, Unpickle}
+import prickle.Pickle
 import sttp.client._
 import sttp.model.{HeaderNames, MediaType, StatusCode}
 
@@ -98,70 +97,6 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
       }
     }
 
-    "OverlayConfig" - {
-
-      "GET without credentials should fail with 401 - pending until feature is enabled" in logException {
-        uri"${plainServerUrl(registry)}/mgmt/overlayConfig"
-        // we currently do not require any permission for GET
-        pending
-      }
-
-      "initial GET should return empty overlay list" in logException {
-        val url = uri"${plainServerUrl(registry)}/mgmt/overlayConfig"
-        withServer("Get empty overlays") { _ =>
-          val response = basicRequest.get(url)
-            .auth.basic("tester", "mysecret")
-            .send()
-          assert(response.code === StatusCode.Ok)
-
-          val rBody : String = response.body match {
-            case Right(s) => s
-            case Left(_) => fail("failed to retrieve response")
-          }
-          val ocs = Unpickle[Seq[OverlayConfig]].fromString(rBody).get
-          assert(ocs.size === 0)
-        }
-      }
-
-      "POST allows upload of new OverlayConfig" in logException {
-        val url = uri"${plainServerUrl(registry)}/mgmt/overlayConfig"
-        val o1 =
-          """name = "jvm-medium"
-            |version = "1"
-            |properties = {
-            |  "blended.launcher.jvm.xms" = "768M"
-            |  "blended.launcher.jvm.xmx" = "768M"
-            |  "amq.systemMemoryLimit" = "500m"
-            |}
-            |""".stripMargin
-
-        val oc = OverlayConfigCompanion.read(ConfigFactory.parseString(o1)).get
-
-        withServer("Post overlays") { _ =>
-          val responsePost = basicRequest
-            .post(url)
-            .body(Pickle.intoString(oc))
-            .header(HeaderNames.ContentType, MediaType.ApplicationJson.toString())
-            .auth.basic("tester", "mysecret")
-            .send()
-          assert(responsePost.code === StatusCode.Ok)
-          assert(responsePost.body === Right("\"Registered jvm-medium-1\""))
-
-          val responseGet = basicRequest.get(url)
-            .auth.basic("tester", "mysecret")
-            .send()
-          assert(responseGet.code === StatusCode.Ok)
-          val rBody : String = responseGet.body match {
-            case Right(s) => s
-            case Left(_) => fail("failed to retrieve response")
-          }
-          val ocs = Unpickle[Seq[OverlayConfig]].fromString(rBody).get
-          assert(ocs.size === 1)
-          assert(ocs.find(_.name == "jvm-medium").isDefined)
-        }
-      }
-    }
-
     "ActivateProfile" - {
       val ci1 = "ci1_ActivateProfile"
       // val ci2 = "ci2_ActivateProfile"
@@ -171,8 +106,7 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
       val ap = ActivateProfile(
         id = UUID.randomUUID().toString(),
         profileName = "p",
-        profileVersion = "1",
-        overlays = Set.empty
+        profileVersion = "1"
       )
 
       "POST with missing credentials fails with 401 Unauthorized" in logException {

@@ -4,28 +4,33 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+import scala.collection.immutable._
+import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success, Try}
+
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.{EventStream, LoggingReceive}
 import akka.pattern.ask
 import akka.routing.BalancingPool
 import akka.util.Timeout
-import blended.updater.config.{UpdateAction, ActivateProfile => UAActivateProfile, AddOverlayConfig => UAAddOverlayConfig, AddRuntimeConfig => UAAddRuntimeConfig, StageProfile => UAStageProfile, _}
+import blended.updater.config.{
+  UpdateAction,
+  ActivateProfile => UAActivateProfile,
+  AddRuntimeConfig => UAAddRuntimeConfig,
+  StageProfile => UAStageProfile,
+  _
+}
 import blended.util.logging.Logger
 
-import scala.collection.immutable._
-import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success, Try}
-
 class Updater(
-  installBaseDir : File,
-  profileActivator : ProfileActivator,
-  restartFramework : () => Unit,
-  config : UpdaterConfig,
-  launchedProfileDir : Option[File],
-  launchedProfileId : Option[ProfileId]
-)
-  extends Actor
-  with ActorLogging {
+    installBaseDir: File,
+    profileActivator: ProfileActivator,
+    restartFramework: () => Unit,
+    config: UpdaterConfig,
+    launchedProfileDir: Option[File],
+    launchedProfileId: Option[ProfileId]
+) extends Actor
+    with ActorLogging {
 
   import Updater._
 
@@ -43,17 +48,16 @@ class Updater(
   /////////////////////
   // MUTABLE
   // requestId -> State
-  private[this] var stagingInProgress : Map[String, State] = Map()
+  private[this] var stagingInProgress: Map[String, State] = Map()
 
-  private[this] var profiles : Map[ProfileId, LocalProfile] = Map()
+  private[this] var profiles: Map[ProfileId, LocalProfile] = Map()
 
-  private[this] var overlayConfigs : Set[OverlayConfig] = Set()
-  private[this] var runtimeConfigs : Set[LocalRuntimeConfig] = Set()
+  private[this] var runtimeConfigs: Set[LocalRuntimeConfig] = Set()
 
-  private[this] var tickers : Seq[Cancellable] = Nil
+  private[this] var tickers: Seq[Cancellable] = Nil
   ////////////////////
 
-  private[this] def stageInProgress(state : State) : Unit = {
+  private[this] def stageInProgress(state: State): Unit = {
     val id = state.requestId
     val config = state.config
     val progress = state.progress()
@@ -66,10 +70,11 @@ class Updater(
       state.pendingArtifactsToUnpack.foreach { a =>
         unpacker ! Unpacker.Unpack(a.reqId, self, a.file, config.baseDir)
       }
-      stageInProgress(state.copy(
-        artifactsToUnpack = state.pendingArtifactsToUnpack,
-        pendingArtifactsToUnpack = Nil
-      ))
+      stageInProgress(
+        state.copy(
+          artifactsToUnpack = state.pendingArtifactsToUnpack,
+          pendingArtifactsToUnpack = Nil
+        ))
     } else if (state.artifactsToDownload.isEmpty && state.artifactsToUnpack.isEmpty) {
 
       stagingInProgress = stagingInProgress.view.filterKeys(id != _).toMap
@@ -78,7 +83,7 @@ class Updater(
         case issues => LocalProfile.Invalid(issues) -> OperationFailed(id, issues.mkString("; "))
       }
 
-      profiles += state.profileId -> LocalProfile(state.config, state.overlays, profileState)
+      profiles += state.profileId -> LocalProfile(state.config, profileState)
       state.requestActor ! msg
 
     } else {
@@ -86,36 +91,40 @@ class Updater(
     }
   }
 
-  def findConfig(id : ProfileId) : Option[LocalRuntimeConfig] = profiles.get(id).map(_.config)
+  def findConfig(id: ProfileId): Option[LocalRuntimeConfig] = profiles.get(id).map(_.config)
 
-  def findActiveConfig() : Option[LocalRuntimeConfig] = findActiveProfile().map(_.config)
+  def findActiveConfig(): Option[LocalRuntimeConfig] = findActiveProfile().map(_.config)
 
-  def findActiveProfile() : Option[LocalProfile] = {
+  def findActiveProfile(): Option[LocalProfile] = {
     launchedProfileId.flatMap(profileId => profiles.get(profileId))
   }
 
-  def findLocalResource(name : String, sha1Sum : String) : Option[File] =
-    profiles.values.filter { profile =>
-      // only valid profiles
-      profile.state == LocalProfile.Staged
-    }.
-      flatMap { profile =>
-        profile.bundles.filter { b =>
-          // same sha1sum
-          b.sha1Sum == Some(sha1Sum)
-        }.
-          filter { b =>
+  def findLocalResource(name: String, sha1Sum: String): Option[File] =
+    profiles.values
+      .filter { profile =>
+        // only valid profiles
+        profile.state == LocalProfile.Staged
+      }
+      .flatMap { profile =>
+        profile.bundles
+          .filter { b =>
+            // same sha1sum
+            b.sha1Sum == Some(sha1Sum)
+          }
+          .filter { b =>
             val location = profile.config.bundleLocation(b.artifact)
             // same file name and file exists
             location.getName() == name && location.exists()
-          }.
-          map { b =>
+          }
+          .map { b =>
             // extract location
             profile.config.bundleLocation(b.artifact)
-          }.headOption
-      }.headOption
+          }
+          .headOption
+      }
+      .headOption
 
-  private[this] def nextId() : String = UUID.randomUUID().toString()
+  private[this] def nextId(): String = UUID.randomUUID().toString()
 
   /**
    * Signals to publish current service information into the Akka event stream.
@@ -132,14 +141,15 @@ class Updater(
    * Convenience accessor to event stream, also to better see where the event stream is used.
    * @return
    */
-  private[this] def eventStream : EventStream = context.system.eventStream
+  private[this] def eventStream: EventStream = context.system.eventStream
 
-  override def preStart() : Unit = {
+  override def preStart(): Unit = {
     log.info("Initiating initial scanning for profiles")
     self ! Scan
 
     if (config.autoStagingIntervalMSec > 0) {
-      log.info(s"Enabling auto-staging with interval [${config.autoStagingIntervalMSec}] and initial delay [${config.autoStagingDelayMSec}]")
+      log.info(
+        s"Enabling auto-staging with interval [${config.autoStagingIntervalMSec}] and initial delay [${config.autoStagingDelayMSec}]")
       implicit val eCtx = context.system.dispatcher
       tickers +:= context.system.scheduler.scheduleAtFixedRate(
         Duration(config.autoStagingDelayMSec, TimeUnit.MILLISECONDS),
@@ -150,7 +160,8 @@ class Updater(
     }
 
     if (config.serviceInfoIntervalMSec > 0) {
-      log.info(s"Enabling service info publishing [${config.serviceInfoIntervalMSec}] and lifetime [${config.serviceInfoLifetimeMSec}]")
+      log.info(
+        s"Enabling service info publishing [${config.serviceInfoIntervalMSec}] and lifetime [${config.serviceInfoLifetimeMSec}]")
       implicit val eCtx = context.system.dispatcher
       tickers +:= context.system.scheduler.scheduleAtFixedRate(
         Duration(100, TimeUnit.MILLISECONDS),
@@ -168,7 +179,7 @@ class Updater(
     super.preStart()
   }
 
-  override def postStop() : Unit = {
+  override def postStop(): Unit = {
 
     eventStream.unsubscribe(context.self)
 
@@ -180,7 +191,7 @@ class Updater(
     super.postStop()
   }
 
-  private def publishResultEvent[T](id : String, reply : Try[Any]) = {
+  private def publishResultEvent[T](id: String, reply: Try[Any]) = {
     reply match {
       case Success(OperationSucceeded(_))      => eventStream.publish(UpdateActionApplied(id))
       case Success(OperationFailed(_, reason)) => eventStream.publish(UpdateActionApplied(id, Option(reason)))
@@ -189,36 +200,27 @@ class Updater(
     }
   }
 
-  def handleUpdateAction(event : UpdateAction) : Unit = event match {
+  def handleUpdateAction(event: UpdateAction): Unit = event match {
     case UAAddRuntimeConfig(id, runtimeConfig) =>
-      log.debug(s"Received add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version} with ID [${id}]")
+      log.debug(
+        s"Received add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version} with ID [${id}]")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
       self.ask(AddRuntimeConfig(nextId(), runtimeConfig))(timeout).onComplete { x =>
-        log.debug(s"Finished add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version} with ID [${id}] with result: ${x}")
+        log.debug(
+          s"Finished add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version} with ID [${id}] with result: ${x}")
         publishResultEvent(id, x)
       }
 
-    case UAAddOverlayConfig(id, overlayConfig) =>
-      log.debug(s"Received add overlay config request (via event stream) for ${overlayConfig.name}-${overlayConfig.version} with ID [${id}]")
+    case UAStageProfile(id, name, version) =>
+      log.debug(s"Received stage profile request (via event stream) for ${name}-${version} with ID [${id}]")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
-      self.ask(AddOverlayConfig(nextId(), overlayConfig))(timeout).onComplete { x =>
-        log.debug(s"Finished add overlay config request (via event stream) for ${overlayConfig.name}-${overlayConfig.version} with ID [${id}] with result: ${x}")
-        publishResultEvent(id, x)
-      }
-
-    case UAStageProfile(id, name, version, overlayRefs) =>
-      log.debug(s"Received stage profile request (via event stream) for ${name}-${version} and overlays: ${overlayRefs} with ID [${id}]")
-
-      implicit val ec = context.system.dispatcher
-      val timeout = new Timeout(10, TimeUnit.MINUTES)
-
-      val request = StageProfile(nextId(), name, version, overlayRefs)
+      val request = StageProfile(nextId(), name, version)
       self.ask(request)(timeout).onComplete {
         case x @ Success(OperationFailed(_, reason)) =>
           log.error(s"Could not stage profile: ${reason}")
@@ -227,32 +229,34 @@ class Updater(
           log.error(e)(s"Could not complete stage profile [${request}]")
           publishResultEvent(id, x)
         case x =>
-          log.debug(s"Finished stage profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs}  with ID [${id}] with result: ${x}")
+          log.debug(
+            s"Finished stage profile request (via event stream) for ${name}-${version} with ID [${id}] with result: ${x}")
           publishResultEvent(id, x)
       }
 
-    case UAActivateProfile(id, name, version, overlayRefs) =>
-      log.debug(s"Received activate profile request (via event stream) for ${name}-${version} and overlays: ${overlayRefs} with ID [${id}]")
+    case UAActivateProfile(id, name, version) =>
+      log.debug(s"Received activate profile request (via event stream) for ${name}-${version} with ID [${id}]")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
-      self.ask(ActivateProfile(nextId(), name, version, overlayRefs))(timeout).onComplete { x =>
-        log.debug(s"Finished activation profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs} with ID [${id}] with result: ${x}")
+      self.ask(ActivateProfile(nextId(), name, version))(timeout).onComplete { x =>
+        log.debug(
+          s"Finished activation profile request (via event stream) for ${name}-${version} with ID [${id}] with result: ${x}")
         publishResultEvent(id, x)
       }
   }
 
-  protected def activateProfile(reqActor : ActorRef, msg : ActivateProfile) : Unit = {
-    val ActivateProfile(reqId, name, version, overlays) = msg
-    val profileId = ProfileId(name, version, overlays)
+  protected def activateProfile(reqActor: ActorRef, msg: ActivateProfile): Unit = {
+    val ActivateProfile(reqId, name, version) = msg
+    val profileId = ProfileId(name, version)
     log.debug(s"Requested activate profile with id: ${profileId}")
 
     profiles.get(profileId) match {
-      case Some(LocalProfile(_, _, LocalProfile.Staged)) =>
+      case Some(LocalProfile(_, LocalProfile.Staged)) =>
         // write config
         log.debug(s"About to activate new profile for next startup: ${profileId}")
-        val success = profileActivator(name, version, profileId.overlays)
+        val success = profileActivator(name, version)
         if (success) {
           reqActor ! OperationSucceeded(reqId)
           restartFramework()
@@ -267,27 +271,21 @@ class Updater(
 
   }
 
-  protected def stageProfile(reqActor : ActorRef, msg : StageProfile) : Unit = {
-    val StageProfile(reqId, name, version, overlayRefs) = msg
+  protected def stageProfile(reqActor: ActorRef, msg: StageProfile): Unit = {
+    val StageProfile(reqId, name, version) = msg
 
-    val profileId = ProfileId(name, version, overlayRefs)
+    val profileId = ProfileId(name, version)
 
     // try to find the profile, if not found, we report a failure to the reqActor
-    val foundProfile : Option[LocalProfile] = profiles.get(profileId).orElse {
+    val foundProfile: Option[LocalProfile] = profiles.get(profileId).orElse {
       Try {
-        val localRuntimeConfig = runtimeConfigs.find(r => r.runtimeConfig.name == name && r.runtimeConfig.version == version) match {
-          case None     => sys.error(s"No such runtime config found: ${name}-${version}")
-          case Some(rc) => rc
-        }
+        val localRuntimeConfig =
+          runtimeConfigs.find(r => r.runtimeConfig.name == name && r.runtimeConfig.version == version) match {
+            case None     => sys.error(s"No such runtime config found: ${name}-${version}")
+            case Some(rc) => rc
+          }
 
-        val overlays = overlayRefs.toList.map(ref => ref -> overlayConfigs.find(o => o.overlayRef == ref))
-        overlays.find(v => v._2 == None).map { v =>
-          sys.error(s"No such overlay config found: ${v._1.name}-${v._1.version}")
-        }
-
-        val localOverlays = LocalOverlays(overlays.map(_._2.get).toSet, localRuntimeConfig.baseDir)
-
-        LocalProfile(localRuntimeConfig, localOverlays, LocalProfile.Pending(List("Newly staged")))
+        LocalProfile(localRuntimeConfig, LocalProfile.Pending(List("Newly staged")))
 
       } match {
         case Failure(e) =>
@@ -299,68 +297,49 @@ class Updater(
 
     // we found a profile and inspect it
     foundProfile.foreach {
-      case profile @ LocalProfile(_, _, LocalProfile.Staged) =>
+      case profile @ LocalProfile(_, LocalProfile.Staged) =>
         // already staged
         log.debug(s"Profile [${profile.profileId}] already staged")
         reqActor ! OperationSucceeded(reqId)
 
-      case profile @ LocalProfile(config, localOverlays, state) =>
+      case profile @ LocalProfile(config, state) =>
         log.debug(s"About to stage profile [${profile.profileId}] with current state [$state]")
 
-        val validErrors = localOverlays.validate()
-        if (!validErrors.isEmpty) {
-          reqActor ! OperationFailed(reqId, s"Overlay configuration contains ${validErrors.size} errors: ${validErrors.mkString("; ")}")
+        if (stagingInProgress.contains(reqId)) {
+          log.error(s"Duplicate id detected. Dropping request [${msg}]")
         } else {
-          val overlayFiles = localOverlays.materialize()
-          val overlayFile = LocalOverlays.preferredConfigFile(localOverlays.overlayRefs, localOverlays.profileDir)
-          log.debug(s"About to save applied overlays config to [${overlayFile}]")
-          ConfigWriter.write(LocalOverlays.toConfig(localOverlays), overlayFile, None)
-
-          if (stagingInProgress.contains(reqId)) {
-            log.error(s"Duplicate id detected. Dropping request [${msg}]")
-          } else {
-            // analyze config
-            overlayFiles match {
-              case Failure(e) =>
-                reqActor ! OperationFailed(reqId, "Overlay configuration contains errors: " + e.getMessage())
-              case Success(generateFiles) =>
-                val artifacts = config.resolvedRuntimeConfig.allBundles.map { b =>
-                  ArtifactInProgress(nextId(), b.artifact, config.bundleLocation(b))
-                } ++
-                  config.runtimeConfig.resources.map { r =>
-                    ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r))
-                  }
-
-                val pendingUnpacks = config.runtimeConfig.resources.map { r =>
-                  ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r))
-                }
-
-                artifacts.foreach { a =>
-                  artifactDownloader ! ArtifactDownloader.Download(a.reqId, a.artifact, a.file)
-                }
-
-                stageInProgress(State(
-                  requestId = reqId,
-                  requestActor = reqActor,
-                  config = config,
-                  artifactsToDownload = artifacts,
-                  pendingArtifactsToUnpack = pendingUnpacks,
-                  artifactsToUnpack = List.empty,
-                  overlays = localOverlays,
-                  issues = List.empty
-                ))
-
+          val artifacts = config.resolvedRuntimeConfig.allBundles.map { b =>
+            ArtifactInProgress(nextId(), b.artifact, config.bundleLocation(b))
+          } ++
+            config.runtimeConfig.resources.map { r =>
+              ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r))
             }
+
+          val pendingUnpacks = config.runtimeConfig.resources.map { r =>
+            ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r))
           }
+
+          artifacts.foreach { a =>
+            artifactDownloader ! ArtifactDownloader.Download(a.reqId, a.artifact, a.file)
+          }
+
+          stageInProgress(
+            State(
+              requestId = reqId,
+              requestActor = reqActor,
+              config = config,
+              artifactsToDownload = artifacts,
+              pendingArtifactsToUnpack = pendingUnpacks,
+              artifactsToUnpack = List.empty,
+              issues = List.empty
+            ))
+
         }
     }
 
   }
 
-  def handleProtocol(msg : Protocol) : Unit = msg match {
-
-    case GetOverlays(reqId) =>
-      sender() ! Result(reqId, overlayConfigs)
+  def handleProtocol(msg: Protocol): Unit = msg match {
 
     case GetRuntimeConfigs(reqId) =>
       sender() ! Result(reqId, runtimeConfigs)
@@ -371,22 +350,12 @@ class Updater(
     case GetProfileIds(reqId) =>
       sender() ! Result(reqId, profiles.keySet)
 
-    case AddOverlayConfig(reqId, config) =>
-      overlayConfigs.find(o => o.name == config.name && o.version == config.version) match {
-        case Some(existing) if existing != config =>
-          sender() ! OperationFailed(reqId, s"A different overlay with same name and version (${config.name}-${config.version}) is already registered")
-        case _ =>
-          val confFile = new File(installBaseDir.getParentFile(), s"overlays/${config.name}-${config.version}.conf")
-          confFile.getParentFile().mkdirs()
-          ConfigWriter.write(OverlayConfigCompanion.toConfig(config), confFile, None)
-          overlayConfigs += config
-          sender ! OperationSucceeded(reqId)
-      }
-
     case AddRuntimeConfig(reqId, config) =>
       runtimeConfigs.find(r => r.runtimeConfig.name == config.name && r.runtimeConfig.version == config.version) match {
         case Some(existing) if existing.runtimeConfig != config =>
-          sender() ! OperationFailed(reqId, s"A different overlay with same name and version (${config.name}-${config.version}) is already registered")
+          sender() ! OperationFailed(
+            reqId,
+            s"A different overlay with same name and version (${config.name}-${config.version}) is already registered")
         case _ =>
           val confFile = new File(installBaseDir, s"${config.name}/${config.version}/profile.conf")
           config.resolve() match {
@@ -402,16 +371,18 @@ class Updater(
 
     case StageNextRuntimeConfig(reqId @ _) =>
       if (stagingInProgress.isEmpty) {
-        profiles.iterator.collect {
-          case (id @ ProfileId(name, version, overlays), LocalProfile(_, _, LocalProfile.Pending(_))) =>
-            log.info(s"About to auto-stage profile ${id}")
-            self ! StageProfile(nextId(), name, version, overlays = overlays)
-        }.take(1)
+        profiles.iterator
+          .collect {
+            case (id @ ProfileId(name, version), LocalProfile(_, LocalProfile.Pending(_))) =>
+              log.info(s"About to auto-stage profile ${id}")
+              self ! StageProfile(nextId(), name, version)
+          }
+          .take(1)
       }
 
-    case msg : StageProfile    => stageProfile(sender(), msg)
+    case msg: StageProfile => stageProfile(sender(), msg)
 
-    case msg : ActivateProfile => activateProfile(sender(), msg)
+    case msg: ActivateProfile => activateProfile(sender(), msg)
 
     case GetProgress(reqId) =>
       val reqActor = sender()
@@ -422,40 +393,36 @@ class Updater(
 
   }
 
-  def scanForOverlayConfigs() : List[OverlayConfig] = {
-    val overlayBaseDir = new File(installBaseDir.getParentFile(), "overlays")
-    ProfileFsHelper.scanForOverlayConfigs(overlayBaseDir)
-  }
-
-  def scanForRuntimeConfigs() : List[LocalRuntimeConfig] = {
+  def scanForRuntimeConfigs(): List[LocalRuntimeConfig] = {
     ProfileFsHelper.scanForRuntimeConfigs(installBaseDir)
   }
 
-  def scanForProfiles(runtimeConfigs : Option[List[LocalRuntimeConfig]] = None) : List[LocalProfile] = {
+  def scanForProfiles(runtimeConfigs: Option[List[LocalRuntimeConfig]] = None): List[LocalProfile] = {
     ProfileFsHelper.scanForProfiles(installBaseDir, runtimeConfigs)
   }
 
-  override def receive : Actor.Receive = LoggingReceive {
+  override def receive: Actor.Receive = LoggingReceive {
 
     // from event stream
-    case e : UpdateAction =>
+    case e: UpdateAction =>
       log.debug(s"Current profiles [${profiles}]")
       log.debug(s"Handling UpdateAction message: ${e}")
       handleUpdateAction(e)
 
     // direct protocol
-    case p : Protocol =>
+    case p: Protocol =>
       log.debug(s"Handling Protocol message: ${p}")
       handleProtocol(p)
 
     case Scan =>
       log.debug("Handling Scan mesage")
-      overlayConfigs = scanForOverlayConfigs().toSet
       val rcs = scanForRuntimeConfigs()
       runtimeConfigs = rcs.toSet
 
       val fullProfiles = scanForProfiles(Option(rcs))
-      profiles = fullProfiles.map { profile => profile.profileId -> profile }.toMap
+      profiles = fullProfiles.map { profile =>
+        profile.profileId -> profile
+      }.toMap
       log.debug(s"Profiles (after scan): ${profiles}")
 
     case PublishProfileInfo =>
@@ -463,9 +430,8 @@ class Updater(
       val activeProfile = findActiveProfile().map(_.toSingleProfile)
       val singleProfiles = profiles.values.toList.map(_.toSingleProfile).map { p =>
         activeProfile match {
-          case Some(a) if p.name == a.name && p.version == a.version && p.overlays.toSet == a.overlays.toSet =>
-            p.copy(overlaySet = p.overlaySet.copy(state = OverlayState.Active))
-          case _ => p
+          case Some(a) if p.name == a.name && p.version == a.version => p
+          case _                                                     => p
         }
 
       }
@@ -490,14 +456,19 @@ class Updater(
       log.debug(s"About to publish service info: ${serviceInfo}")
       eventStream.publish(serviceInfo)
 
-    case msg : ArtifactDownloader.Reply => handleArtifactDownloaderReply(msg)
+    case msg: ArtifactDownloader.Reply => handleArtifactDownloaderReply(msg)
 
-    case msg : Unpacker.UnpackReply     => handleUnpackerUnpackReply(msg)
+    case msg: Unpacker.UnpackReply => handleUnpackerUnpackReply(msg)
   }
 
-  protected def handleArtifactDownloaderReply(msg : ArtifactDownloader.Reply) : Unit = {
+  protected def handleArtifactDownloaderReply(msg: ArtifactDownloader.Reply): Unit = {
     val foundProgress = stagingInProgress.values.flatMap { state =>
-      state.artifactsToDownload.find { bip => bip.reqId == msg.requestId }.map(state -> _).toList
+      state.artifactsToDownload
+        .find { bip =>
+          bip.reqId == msg.requestId
+        }
+        .map(state -> _)
+        .toList
     }.toList
     foundProgress match {
       case Nil =>
@@ -506,21 +477,28 @@ class Updater(
         val newArtifactsToDownload = state.artifactsToDownload.filter(bundleInProgress != _)
         msg match {
           case ArtifactDownloader.DownloadFinished(_) =>
-            stageInProgress(state.copy(
-              artifactsToDownload = newArtifactsToDownload
-            ))
+            stageInProgress(
+              state.copy(
+                artifactsToDownload = newArtifactsToDownload
+              ))
           case ArtifactDownloader.DownloadFailed(_, error) =>
-            stageInProgress(state.copy(
-              artifactsToDownload = newArtifactsToDownload,
-              issues = s"Download failed for ${bundleInProgress.file} (${error.getClass().getSimpleName()}: ${error})" +: state.issues
-            ))
+            stageInProgress(
+              state.copy(
+                artifactsToDownload = newArtifactsToDownload,
+                issues = s"Download failed for ${bundleInProgress.file} (${error.getClass().getSimpleName()}: ${error})" +: state.issues
+              ))
         }
     }
   }
 
-  protected def handleUnpackerUnpackReply(msg : Unpacker.UnpackReply) : Unit = {
+  protected def handleUnpackerUnpackReply(msg: Unpacker.UnpackReply): Unit = {
     val foundProgress = stagingInProgress.values.flatMap { state =>
-      state.artifactsToUnpack.find { a => a.reqId == msg.reqId }.map(state -> _).toList
+      state.artifactsToUnpack
+        .find { a =>
+          a.reqId == msg.reqId
+        }
+        .map(state -> _)
+        .toList
     }.toList
     foundProgress match {
       case Nil =>
@@ -531,20 +509,25 @@ class Updater(
           case Unpacker.UnpackingFinished(_) =>
             state.config.createResourceArchiveTouchFile(artifact.artifact, artifact.artifact.sha1Sum) match {
               case Success(file) =>
-                stageInProgress(state.copy(
-                  artifactsToUnpack = artifactsToUnpack
-                ))
+                stageInProgress(
+                  state.copy(
+                    artifactsToUnpack = artifactsToUnpack
+                  ))
               case Failure(e) =>
-                stageInProgress(state.copy(
-                  artifactsToUnpack = artifactsToUnpack,
-                  issues = s"Could not create unpacked-marker file for resource file ${artifact.file} (${e.getClass().getSimpleName()}: ${e.getMessage()})" +: state.issues
-                ))
+                stageInProgress(
+                  state.copy(
+                    artifactsToUnpack = artifactsToUnpack,
+                    issues = s"Could not create unpacked-marker file for resource file ${artifact.file} (${e
+                      .getClass()
+                      .getSimpleName()}: ${e.getMessage()})" +: state.issues
+                  ))
             }
           case Unpacker.UnpackingFailed(_, e) =>
-            stageInProgress(state.copy(
-              artifactsToUnpack = artifactsToUnpack,
-              issues = s"Could not unpack file ${artifact.file} (${e.getClass().getSimpleName()}: ${e.getMessage()})" +: state.issues
-            ))
+            stageInProgress(
+              state.copy(
+                artifactsToUnpack = artifactsToUnpack,
+                issues = s"Could not unpack file ${artifact.file} (${e.getClass().getSimpleName()}: ${e.getMessage()})" +: state.issues
+              ))
         }
     }
   }
@@ -557,7 +540,7 @@ object Updater {
    * Supported Messages by the [[Updater]] actor.
    */
   sealed trait Protocol {
-    def requestId : String
+    def requestId: String
   }
 
   //  /**
@@ -566,48 +549,40 @@ object Updater {
   //   */
   //  final case class GetRuntimeConfigs(override val requestId: String) extends Protocol
 
-  final case class GetRuntimeConfigs(override val requestId : String) extends Protocol
-
-  final case class GetOverlays(override val requestId : String) extends Protocol
+  final case class GetRuntimeConfigs(override val requestId: String) extends Protocol
 
   /**
    * Get all known profiles.
    * Reply: [[Result[Set[LocalProfile]]]]
    */
-  final case class GetProfiles(override val requestId : String) extends Protocol
+  final case class GetProfiles(override val requestId: String) extends Protocol
 
   /**
    * Get all known profile ids.
    * Reply: Result[Set[ProfileId]]
    */
-  final case class GetProfileIds(override val requestId : String) extends Protocol
+  final case class GetProfileIds(override val requestId: String) extends Protocol
 
   /**
    * Get a progress for the given `requestId`.
    * Reply: `Result[Progress]`
    */
-  final case class GetProgress(override val requestId : String) extends Protocol
+  final case class GetProgress(override val requestId: String) extends Protocol
 
   /**
    * Register a (new) runtime config.
    * Reply: [[OperationSucceeded]], [[OperationFailed]]
    */
-  final case class AddRuntimeConfig(override val requestId : String, runtimeConfig : RuntimeConfig) extends Protocol
-
-  /**
-   * Register a (new) overlay config.
-   * Reply: [[OperationSucceeded]], [[OperationFailed]]
-   */
-  final case class AddOverlayConfig(override val requestId : String, overlayConfig : OverlayConfig) extends Protocol
+  final case class AddRuntimeConfig(override val requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
 
   /**
    * Stage a profile, which is a runtime config with an overlay set.
    * Reply: [[OperationSucceeded]], [[OperationSucceeded]]
    */
   // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
-  final case class StageProfile(override val requestId : String, name : String, version : String, overlays : Set[OverlayRef]) extends Protocol
+  final case class StageProfile(override val requestId: String, name: String, version: String) extends Protocol
 
-  final case class ActivateProfile(override val requestId : String, name : String, version : String, overlays : Set[OverlayRef]) extends Protocol
+  final case class ActivateProfile(override val requestId: String, name: String, version: String) extends Protocol
 
   /**
    * Internal message: Scans the profile directory for existing runtime configurations
@@ -619,68 +594,68 @@ object Updater {
   /**
    * Stage the next runtime config, or do nothing if there is no next runtime config.
    */
-  final case class StageNextRuntimeConfig(override val requestId : String) extends Protocol
+  final case class StageNextRuntimeConfig(override val requestId: String) extends Protocol
 
   /**
    * Supported Replies by the [[Updater]] actor.
    */
   sealed trait Reply
 
-  final case class Progress(requestId : String, progress : Int) extends Reply
+  final case class Progress(requestId: String, progress: Int) extends Reply
 
-  final case class Result[T](requestId : String, result : T) extends Reply
+  final case class Result[T](requestId: String, result: T) extends Reply
 
-  final case class OperationSucceeded(requestId : String) extends Reply
+  final case class OperationSucceeded(requestId: String) extends Reply
 
-  final case class OperationFailed(requestId : String, reason : String) extends Reply
+  final case class OperationFailed(requestId: String, reason: String) extends Reply
 
   /**
    * Create the actor properties.
    */
   def props(
-    baseDir : File,
-    profileActivator : ProfileActivator,
-    restartFramework : () => Unit,
-    config : UpdaterConfig,
-    launchedProfileDir : File = null,
-    launchedProfileId : ProfileId = null
-  ) : Props = {
+      baseDir: File,
+      profileActivator: ProfileActivator,
+      restartFramework: () => Unit,
+      config: UpdaterConfig,
+      launchedProfileDir: File = null,
+      launchedProfileId: ProfileId = null
+  ): Props = {
 
-    Props(new Updater(
-      installBaseDir = baseDir,
-      profileActivator = profileActivator,
-      restartFramework = restartFramework,
-      config,
-      Option(launchedProfileDir),
-      Option(launchedProfileId)
-    ))
+    Props(
+      new Updater(
+        installBaseDir = baseDir,
+        profileActivator = profileActivator,
+        restartFramework = restartFramework,
+        config,
+        Option(launchedProfileDir),
+        Option(launchedProfileId)
+      ))
   }
 
   /**
    * A bundle in progress, e.g. downloading or verifying.
    */
-  private case class ArtifactInProgress(reqId : String, artifact : Artifact, file : File)
+  private case class ArtifactInProgress(reqId: String, artifact: Artifact, file: File)
 
   /**
    * Internal working state of in-progress stagings.
    */
   private case class State(
-    requestId : String,
-    requestActor : ActorRef,
-    config : LocalRuntimeConfig,
-    artifactsToDownload : List[ArtifactInProgress],
-    pendingArtifactsToUnpack : List[ArtifactInProgress],
-    artifactsToUnpack : List[ArtifactInProgress],
-    overlays : LocalOverlays,
-    issues : List[String]
+      requestId: String,
+      requestActor: ActorRef,
+      config: LocalRuntimeConfig,
+      artifactsToDownload: List[ArtifactInProgress],
+      pendingArtifactsToUnpack: List[ArtifactInProgress],
+      artifactsToUnpack: List[ArtifactInProgress],
+      issues: List[String]
   ) {
 
-    val profileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)
+    val profileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version)
 
     /**
      * The download/unpack progress in percent.
      */
-    def progress() : Int = {
+    def progress(): Int = {
       val all = config.runtimeConfig.bundles.size
       val todos = artifactsToDownload.size
       if (all > 0)

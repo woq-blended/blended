@@ -1,15 +1,11 @@
 package blended.updater.config
 
-import blended.updater.config.util.ConfigPropertyMapConverter
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 
 import scala.jdk.CollectionConverters._
 import scala.collection.immutable.Map
-import scala.util.{Left, Right, Try}
+import scala.util.{Left, Right}
 
-/**
- * Helper for [[OverlayConfig]] containing common useful operations.
- */
 final object OverlayConfigCompanion {
 
   object Properties {
@@ -65,38 +61,6 @@ final object OverlayConfigCompanion {
           }
         )
     }
-  }
-
-  def read(config : Config) : Try[OverlayConfig] = Try {
-
-    OverlayConfig(
-      name = config.getString("name"),
-      version = config.getString("version"),
-      generatedConfigs = if (config.hasPath("configGenerator")) {
-        config.getObjectList("configGenerator").asScala.map { gen =>
-          val genConf = gen.toConfig()
-          val fileName = genConf.getString("file")
-          val genConfig = genConf.getObject("config").toConfig()
-          GeneratedConfigCompanion.create(fileName, genConfig)
-        }.toList
-      } else Nil,
-      properties = ConfigPropertyMapConverter.getKeyAsPropertyMap(config, "properties", Some(() => Map()))
-    )
-  }
-
-  def toConfig(overlayConfig : OverlayConfig) : Config = {
-    val config = Map(
-      "name" -> overlayConfig.name,
-      "version" -> overlayConfig.version,
-      "configGenerator" -> overlayConfig.generatedConfigs.map { genConfig =>
-        Map(
-          "file" -> genConfig.configFile,
-          "config" -> GeneratedConfigCompanion.config(genConfig).root().unwrapped()
-        ).asJava
-      }.asJava,
-      "properties" -> ConfigPropertyMapConverter.propertyMapToConfigValue(overlayConfig.properties)
-    ).asJava
-    ConfigFactory.parseMap(config)
   }
 
 }

@@ -17,12 +17,12 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
 class CollectorServiceSpec
-  extends AnyFreeSpec
-  with Matchers
-  with ScalatestRouteTest
-  with CollectorService
-  with DummyBlendedSecurityDirectives
-  with PrickleSupport {
+    extends AnyFreeSpec
+    with Matchers
+    with ScalatestRouteTest
+    with CollectorService
+    with DummyBlendedSecurityDirectives
+    with PrickleSupport {
 
   val processContainerInfoLatch = TestLatch(1)
   val getCurrentStateLatch = TestLatch(1)
@@ -38,9 +38,10 @@ class CollectorServiceSpec
 
     "should GET /container return container infos" in {
       Get("/container") ~> infoRoute ~> check {
-        responseAs[Seq[RemoteContainerState]] should be(Seq(
-          RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List()), List())
-        ))
+        responseAs[Seq[RemoteContainerState]] should be(
+          Seq(
+            RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List()), List())
+          ))
       }
       getCurrentStateLatch.isOpen should be(true)
     }
@@ -53,62 +54,28 @@ class CollectorServiceSpec
 
   }
 
-  override def cleanUp() : Unit = {
+  override def cleanUp(): Unit = {
     Await.result(system.terminate(), 10.seconds)
   }
 
-  override def processContainerInfo(info : ContainerInfo) : ContainerRegistryResponseOK = {
+  override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
     processContainerInfoLatch.countDown()
     ContainerRegistryResponseOK(info.containerId)
   }
 
-  override def getCurrentState() : sci.Seq[RemoteContainerState] = {
+  override def getCurrentState(): sci.Seq[RemoteContainerState] = {
     getCurrentStateLatch.countDown()
     List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List()), List()))
   }
 
-  override def version : String = "TEST"
+  override def version: String = "TEST"
 
-  override def registerRuntimeConfig(rc : RuntimeConfig) : Unit = ???
+  override def registerRuntimeConfig(rc: RuntimeConfig): Unit = ???
 
-  override def getOverlayConfigs() : sci.Seq[OverlayConfig] = ???
+  override def getRuntimeConfigs(): sci.Seq[RuntimeConfig] = ???
 
-  override def getRuntimeConfigs() : sci.Seq[RuntimeConfig] = ???
+  override def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit = ???
 
-  override def registerOverlayConfig(oc : OverlayConfig) : Unit = ???
+  override def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit] = ???
 
-  override def addUpdateAction(containerId : String, updateAction : UpdateAction) : Unit = ???
-
-  override def installBundle(repoId : String, path : String, file : File, sha1Sum : Option[String]) : Try[Unit] = ???
-
-  "findMissingOverlayConfigs" in {
-
-    // that we want to use
-    val service = new CollectorService with DummyBlendedSecurityDirectives with PrickleSupport {
-      override def getOverlayConfigs() : sci.Seq[OverlayConfig] = List(OverlayConfig("o1", "1", List(), Map()))
-
-      // unused
-      override def processContainerInfo(info : ContainerInfo) : ContainerRegistryResponseOK = ???
-
-      override def getCurrentState() : sci.Seq[RemoteContainerState] = ???
-
-      override def registerRuntimeConfig(rc : RuntimeConfig) : Unit = ???
-
-      override def registerOverlayConfig(oc : OverlayConfig) : Unit = ???
-
-      override def getRuntimeConfigs() : sci.Seq[RuntimeConfig] = ???
-
-      override def addUpdateAction(containerId : String, updateAction : UpdateAction) : Unit = ???
-
-      override def version : String = ???
-
-      override def installBundle(repoId : String, path : String, file : File, sha1Sum : Option[String]) : Try[Unit] = ???
-    }
-
-    assert(service.findMissingOverlayRef(List()) === None)
-    assert(service.findMissingOverlayRef(List(OverlayRef("o1", "1"))) === None)
-    assert(service.findMissingOverlayRef(List(OverlayRef("o1", "2"))) === Some(OverlayRef("o1", "2")))
-    assert(service.findMissingOverlayRef(List(OverlayRef("o2", "1"))) === Some(OverlayRef("o2", "1")))
-
-  }
 }

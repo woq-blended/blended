@@ -65,16 +65,8 @@ object RuntimeConfigBuilder {
     @CmdOption(names = Array("--explode-resources"), description = "Explode resources (unpack and update touch-files)")
     var explodeResources : Boolean = false
 
-    @CmdOption(names = Array("--add-overlay-file"), args = Array("file"), maxCount = -1,
-      description = "Add the given overlay config file to the final profile")
-    def addOverlayFile(file : String): Unit = this.overlayFiles :+= file
-    var overlayFiles : Seq[String] = Seq()
-
-    @CmdOption(names = Array("--write-overlays-config"), description = "Write a specific overlays config (or base if no overlays were given)")
-    var writeOverlaysConfig : Boolean = false
-
     @CmdOption(names = Array("--create-launch-config"), args = Array("file"),
-      description = "Creates the given launcher config file, honoring the given overlays")
+      description = "Creates the given launcher config file")
     var createLaunchConfigFile : String = _
 
     @CmdOption(names = Array("--profile-base-dir"), args = Array("dir"),
@@ -270,7 +262,7 @@ object RuntimeConfigBuilder {
       newRuntimeConfig.resources.map { r =>
         val resourceFile = localRuntimeConfig.resourceArchiveLocation(r)
         if (!resourceFile.exists()) sys.error("Could not unpack missing resource file: " + resourceFile)
-        val blacklist = List("profile.conf", "bundles", "resources", "overlays")
+        val blacklist = List("profile.conf", "bundles", "resources")
         Unzipper.unzip(resourceFile, localRuntimeConfig.baseDir, Nil,
           fileSelector = Some { fileName : String => !blacklist.contains(fileName) },
           placeholderReplacer = None) match {
@@ -285,40 +277,12 @@ object RuntimeConfigBuilder {
       }
     }
 
-    // read given overlays configs, e.g. A-1 and B-2
-    val overlayConfigs = options.overlayFiles.map { f =>
-      val config = ConfigFactory.parseFile(new File(f))
-      OverlayConfigCompanion.read(config).get
-    }.toSet
-
-    if (options.writeOverlaysConfig) {
-
-      // validate configs, e.g. no conflicts
-      val localOverlays = LocalOverlays(overlayConfigs, localRuntimeConfig.baseDir)
-      debug("About to validate overlays: " + localOverlays)
-      val validationResult = localOverlays.validate()
-      debug("overlay validation result: " + validationResult)
-      validationResult match {
-        case Nil => // ok
-        case errors =>
-          sys.error("Inconsistent overlays given:\n- " + errors.mkString("\n- "))
-      }
-
-      // materialize config generators of overlay configs, e.g. <profileDir>/A-1/B-2/container/application_overlay.conf
-      localOverlays.materialize().get
-
-      // write resulting overlay config, e.g. <profileDir>/overlays/A-1-B-2.conf (or base.conf)
-      val overlayFile = LocalOverlays.preferredConfigFile(localOverlays.overlayRefs, localOverlays.profileDir)
-      ConfigWriter.write(LocalOverlays.toConfig(localOverlays), overlayFile, None)
-    }
-
     if (Option(options.createLaunchConfigFile).isDefined) {
       val profileBaseDir = options.profileBaseDir
       val profileLookup = ProfileLookup(
         profileName = localRuntimeConfig.runtimeConfig.name,
         profileVersion = localRuntimeConfig.runtimeConfig.version,
-        profileBaseDir = new File("REPLACE_BASE_DIR"),
-        overlays = overlayConfigs.map(_.overlayRef)
+        profileBaseDir = new File("REPLACE_BASE_DIR")
       )
       val file = new File(options.createLaunchConfigFile)
       debug("Writing launch config file: " + file)

@@ -81,7 +81,8 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
         )
       )
 
-      val info = Pickle.intoString(List(ContainerInfo("c840c57d-a357-4b85-937a-2bb6440417d2", Map(), svcInfos, List(), 1L, Nil)))
+      val info =
+        Pickle.intoString(List(ContainerInfo("c840c57d-a357-4b85-937a-2bb6440417d2", Map(), svcInfos, List(), 1L, Nil)))
       log.info("serialized: " + info)
 
       val containerInfos = Unpickle[List[ContainerInfo]].fromString(info).get
@@ -93,40 +94,37 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
   "Prickle should (de)serialize" - {
     "an ActivateProfile" in logException {
 
-      val overlay = OverlayRef("myOverlay", "1.0")
-      val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
+      val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0")
 
       val json = Pickle.intoString(action)
 
-      val action2 : ActivateProfile = Unpickle[ActivateProfile].fromString(json).get
+      val action2: ActivateProfile = Unpickle[ActivateProfile].fromString(json).get
       action2.isInstanceOf[ActivateProfile] should be(true)
       action2.isInstanceOf[UpdateAction] should be(true)
 
       val activate = action2.asInstanceOf[ActivateProfile]
       activate.profileName should be(action.profileName)
       activate.profileVersion should be(action.profileVersion)
-
-      activate.overlays should be(Set(overlay))
-
     }
 
     "an ActivateProfile as UpdateAction" in logException {
 
-      val overlay = OverlayRef("myOverlay", "1.0")
-      val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
+      val action = ActivateProfile(
+        UUID.randomUUID().toString(),
+        profileName = "test",
+        profileVersion = "1.0"
+      )
 
-      val json = Pickle.intoString(action : UpdateAction)
+      val json = Pickle.intoString(action: UpdateAction)
       log.info("json: " + json)
 
-      val action2 : UpdateAction = Unpickle[UpdateAction].fromString(json).get
+      val action2: UpdateAction = Unpickle[UpdateAction].fromString(json).get
       action2.isInstanceOf[ActivateProfile] should be(true)
       action2.isInstanceOf[UpdateAction] should be(true)
 
       val activate = action2.asInstanceOf[ActivateProfile]
       activate.profileName should be(action.profileName)
       activate.profileVersion should be(action.profileVersion)
-
-      activate.overlays should be(Set(overlay))
     }
 
     "a GeneratedConfig" in logException {
@@ -165,7 +163,7 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     "a ContainerInfo" in logException {
 
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000L, Map("svc" -> "test"))
-      val profile = Profile("myProfile", "1.0", OverlaySet(Set(), OverlayState.Valid, None))
+      val profile = Profile("myProfile", "1.0")
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L, Nil)
 
@@ -194,12 +192,15 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
     "a RemoteContainerState" in logException {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000L, Map("svc" -> "test"))
-      val profile = Profile("myProfile", "1.0", OverlaySet(Set(), OverlayState.Valid, None))
+      val profile = Profile("myProfile", "1.0")
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L, Nil)
 
-      val overlay = OverlayRef("myOverlay", "1.0")
-      val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
+      val action = ActivateProfile(
+        UUID.randomUUID().toString(),
+        profileName = "test",
+        profileVersion = "1.0"
+      )
 
       val state = RemoteContainerState(info, List(action))
 
@@ -217,13 +218,12 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
     import TestData._
 
-    def testMapping[T : ClassTag](implicit
-      arb : Arbitrary[T],
-      u : Unpickler[T],
-      p : Pickler[T]
-    ) : Unit = {
+    def testMapping[T: ClassTag](implicit
+                                 arb: Arbitrary[T],
+                                 u: Unpickler[T],
+                                 p: Pickler[T]): Unit = {
       classTag[T].runtimeClass.getSimpleName in logException {
-        forAll { d : T =>
+        forAll { d: T =>
           val backAndForth = Unpickle[T].fromString(Pickle.intoString(d))
           // log.info(s"data: [${backAndForth}]")
           assert(backAndForth === Success(d))
@@ -235,26 +235,23 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     testMapping[BundleConfig]
     testMapping[FeatureRef]
     testMapping[FeatureConfig]
-    testMapping[OverlayConfig]
     testMapping[RuntimeConfig]
     testMapping[ServiceInfo]
     testMapping[UpdateAction]
     testMapping[GeneratedConfig]
-    testMapping[ProfileGroup]
     testMapping[Profile]
-    testMapping[OverlayRef]
-    testMapping[OverlaySet]
     testMapping[RolloutProfile]
     testMapping[ContainerInfo]
     testMapping[RemoteContainerState]
   }
 
-  def logException[T](f : => T) : T = try {
-    f
-  } catch {
-    case NonFatal(e) =>
-      log.error(e)("Exception caught")
-      throw e
-  }
+  def logException[T](f: => T): T =
+    try {
+      f
+    } catch {
+      case NonFatal(e) =>
+        log.error(e)("Exception caught")
+        throw e
+    }
 
 }
