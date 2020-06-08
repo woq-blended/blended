@@ -3,7 +3,7 @@ package blended.streams.dispatcher.internal.builder
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Source}
-import akka.stream.{ActorMaterializer, Graph, Materializer, SinkShape}
+import akka.stream.{Graph, SinkShape}
 import blended.jms.bridge.BridgeProviderConfig
 import blended.jms.utils.JmsDestination
 import blended.streams.dispatcher.internal.builder.DispatcherOutbound.DispatcherTarget
@@ -56,7 +56,6 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
       implicit val system : ActorSystem = ctxt.system
       implicit val eCtxt : ExecutionContext = system.dispatcher
-      implicit val materializer : Materializer = ActorMaterializer()
 
       val envelope = FlowEnvelope().withHeader(ctxt.bs.headerConfig.headerBranch, "outbound").get
 

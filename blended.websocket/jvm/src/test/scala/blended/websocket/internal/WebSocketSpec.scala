@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{TextMessage, WebSocketRequest}
 import akka.http.scaladsl.model.{StatusCodes => AkkaStatusCodes}
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.Keep
 import akka.testkit.TestProbe
 import blended.testsupport.pojosr.BlendedPojoRegistry
@@ -24,7 +23,6 @@ class WebSocketSpec extends AbstractWebSocketSpec {
    "reject clients without token" in {
      withWebSocketServer {
        implicit val system: ActorSystem = actorSystem
-       implicit val materializer: Materializer = ActorMaterializer()
 
        val flow = Http().webSocketClientFlow(WebSocketRequest(websocketUrl(registry)))
 
@@ -42,7 +40,6 @@ class WebSocketSpec extends AbstractWebSocketSpec {
    "reject clients with a fantasy token" in {
      withWebSocketServer {
        implicit val system: ActorSystem = actorSystem
-       implicit val materializer: Materializer = ActorMaterializer()
 
        val flow = Http().webSocketClientFlow(WebSocketRequest(s"${websocketUrl(registry)}/?token=foo"))
 
@@ -60,7 +57,6 @@ class WebSocketSpec extends AbstractWebSocketSpec {
 
      withWebSocketServer {
        implicit val system: ActorSystem = actorSystem
-       implicit val materializer: Materializer = ActorMaterializer()
 
        // login and retrieve the token
        val token = login("bg_test", "secret").unwrap

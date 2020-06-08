@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, Source}
-import akka.stream.OverflowStrategy
 import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.{FlowHeaderConfig, FlowProcessor, StreamFactories}
@@ -52,8 +51,7 @@ class MultiResultProcessorSpec extends TestKit(ActorSystem("mulitprocessor"))
 
       // scalastyle:off magic.number
       val src : Source[FlowEnvelope, ActorRef] =
-        Source.actorRef[FlowEnvelope](10, OverflowStrategy.fail)
-        .viaMat(processor.build())(Keep.left)
+        StreamFactories.actorSource[FlowEnvelope](10).viaMat(processor.build())(Keep.left)
       // scalastyle:on magic.number
 
       val (actor, coll) = StreamFactories.runMatSourceWithTimeLimit[FlowEnvelope, ActorRef](
@@ -92,7 +90,7 @@ class MultiResultProcessorSpec extends TestKit(ActorSystem("mulitprocessor"))
 
       // scalastyle:off magic.number
       val src : Source[FlowEnvelope, ActorRef] =
-        Source.actorRef[FlowEnvelope](10, OverflowStrategy.fail)
+        StreamFactories.actorSource[FlowEnvelope](10)
           .viaMat(processor.build())(Keep.left)
       // scalastyle:on magic.number
 
@@ -128,7 +126,7 @@ class MultiResultProcessorSpec extends TestKit(ActorSystem("mulitprocessor"))
 
       // scalastyle:off magic.number
       val src : Source[FlowEnvelope, ActorRef] =
-        Source.actorRef[FlowEnvelope](10, OverflowStrategy.fail)
+        StreamFactories.actorSource[FlowEnvelope](10)
           .viaMat(processor.build())(Keep.left)
       // scalastyle:on magic.number
 

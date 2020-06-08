@@ -5,7 +5,7 @@ import java.io.File
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Flow
-import akka.stream.{KillSwitch, Materializer}
+import akka.stream.KillSwitch
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.BlendedStreamsConfig
 import blended.streams.message.FlowEnvelope
@@ -30,7 +30,7 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
   }
 
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
-    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
+    override protected def streamBuilderFactory(system: ActorSystem)(
       cfg: BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
     ): BridgeStreamBuilder =
       new BridgeStreamBuilder(cfg, streamsCfg)(system) {
@@ -50,7 +50,7 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
       val actorSys = system(registry)
       val (internal, _) = getConnectionFactories(registry)
 
-      val switch = sendOutbound(internal, msgCount, true)
+      val switch = sendOutbound(internal, msgCount, track = true)
 
       val retried : List[FlowEnvelope] = consumeMessages(cf = internal, destName = "retries", timeout = timeout)(actorSys).get
       retried should be (empty)
@@ -62,7 +62,7 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
         destName = "bridge.data.out.activemq.external",
         expected = msgCount,
         timeout = timeout
-      )(actorSys).get should have size(msgCount)
+      )(actorSys).get should have size msgCount
 
       switch.shutdown()
     }

@@ -4,9 +4,8 @@ import java.io.File
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.testkit.TestProbe
-import blended.activemq.client.{ConnectionVerifier, ConnectionVerifierFactory, RoundtripConnectionVerifier, VerificationFailedHandler}
+import blended.activemq.client.{ConnectionVerifierFactory, RoundtripConnectionVerifier, VerificationFailedHandler}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerContext
 import blended.jms.utils._
@@ -71,7 +70,6 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
   class SimpleResponder(system : ActorSystem) {
 
     implicit val actorSys : ActorSystem = system
-    implicit val materializer = ActorMaterializer()
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
     val simpleCf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
@@ -93,7 +91,7 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
         listener = 1,
         minMessageDelay = None,
         selector = None,
-        completeOn = Some(_.size > 0),
+        completeOn = Some(_.nonEmpty),
         timeout = Some(3.seconds)
       )
 
@@ -127,52 +125,47 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
         implicit val actorSys : ActorSystem = system
 
         val responder : SimpleResponder = new SimpleResponder(system)
-        val slowFactory : ConnectionVerifierFactory = new ConnectionVerifierFactory {
+        val slowFactory : ConnectionVerifierFactory = () => new RoundtripConnectionVerifier(
+          probeMsg = id => FlowEnvelope(FlowMessage(FlowMessage.noProps), id),
+          verify = _ => true,
+          requestDest = JmsQueue(verifyRequest),
+          responseDest = JmsQueue(verifyRespond),
+          retryInterval = 5.seconds,
+          receiveTimeout = 5.seconds
+        ) {
 
-          override def createConnectionVerifier(): ConnectionVerifier = new RoundtripConnectionVerifier(
-            probeMsg = id => FlowEnvelope(FlowMessage(FlowMessage.noProps), id),
-            verify = _ => true,
-            requestDest = JmsQueue(verifyRequest),
-            responseDest = JmsQueue(verifyRespond),
-            retryInterval = 5.seconds,
-            receiveTimeout = 5.seconds
-          ) {
+          override protected def probe(ctCtxt: ContainerContext)(cf: IdAwareConnectionFactory): Unit = {
+            verifyCounter.incrementAndGet()
+            if (firstTry.get()) {
 
-            override protected def probe(ctCtxt : ContainerContext)(cf: IdAwareConnectionFactory): Unit = {
-              verifyCounter.incrementAndGet()
-              if (firstTry.get()) {
+              val probe: TestProbe = TestProbe()
+              system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
+              system.eventStream.publish(QueryConnectionState(vendor, provider))
 
-                val probe : TestProbe = TestProbe()
-                system.eventStream.subscribe(probe.ref, classOf[ConnectionStateChanged])
-                system.eventStream.publish(QueryConnectionState(vendor, provider))
-
-                probe.fishForMessage(timeout, "Waiting for first connection"){
-                  case evt : ConnectionStateChanged => evt.state.status == Connected
-                }
-
-                super.probe(ctCtxt)(cf)
-                system.eventStream.publish(MaxKeepAliveExceeded(vendor, provider))
-
-                probe.fishForMessage(timeout, "Waiting for disconnect"){
-                  case evt : ConnectionStateChanged => evt.state.status == Disconnected
-                }
-
-                system.stop(probe.ref)
-                responder.respond()
-
-                firstTry.set(false)
-              } else {
-                super.probe(ctCtxt)(cf)
-                responder.respond()
+              probe.fishForMessage(timeout, "Waiting for first connection") {
+                case evt: ConnectionStateChanged => evt.state.status == Connected
               }
+
+              super.probe(ctCtxt)(cf)
+              system.eventStream.publish(MaxKeepAliveExceeded(vendor, provider))
+
+              probe.fishForMessage(timeout, "Waiting for disconnect") {
+                case evt: ConnectionStateChanged => evt.state.status == Disconnected
+              }
+
+              system.stop(probe.ref)
+              responder.respond()
+
+              firstTry.set(false)
+            } else {
+              super.probe(ctCtxt)(cf)
+              responder.respond()
             }
           }
         }
 
-        val slowHandler : VerificationFailedHandler = new VerificationFailedHandler {
-          override def verificationFailed(cf: IdAwareConnectionFactory): Unit = {
-            failed = (s"${cf.vendor}:${cf.provider}") :: failed
-          }
+        val slowHandler : VerificationFailedHandler = (cf: IdAwareConnectionFactory) => {
+          failed = s"${cf.vendor}:${cf.provider}" :: failed
         }
 
         slowFactory.providesService[ConnectionVerifierFactory]("name" -> "slow")

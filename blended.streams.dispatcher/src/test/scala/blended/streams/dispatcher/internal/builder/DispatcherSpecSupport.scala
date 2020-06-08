@@ -3,7 +3,7 @@ package blended.streams.dispatcher.internal.builder
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.Materializer
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerContext
@@ -36,7 +36,7 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     bs : DispatcherBuilderSupport,
     envLogger : FlowEnvelopeLogger
   ) {
-    val materializer : Materializer = ActorMaterializer()(system)
+    val materializer : Materializer = akka.stream.SystemMaterializer.get(system).materializer
     val execCtxt : ExecutionContext = system.dispatcher
   }
 

@@ -3,7 +3,7 @@ package blended.jms.bridge.internal
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Flow
-import akka.stream.{KillSwitch, Materializer}
+import akka.stream.KillSwitch
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.BlendedStreamsConfig
 import blended.streams.message.FlowEnvelope
@@ -27,7 +27,7 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
   // exceptional path will be triggered
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
 
-    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
+    override protected def streamBuilderFactory(system: ActorSystem)(
       cfg: BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
     ): BridgeStreamBuilder =
       new BridgeStreamBuilder(cfg, streamsCfg)(system) {
@@ -45,7 +45,7 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
       val actorSys = system(registry)
       val (internal, external) = getConnectionFactories(registry)
 
-      val switch = sendOutbound(internal, msgCount, true)
+      val switch = sendOutbound(internal, msgCount, track = true)
 
       val retried : List[FlowEnvelope] = consumeMessages(
         cf = internal,
@@ -54,7 +54,7 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
         timeout = timeout
       )(actorSys).get
 
-      retried should have size(msgCount)
+      retried should have size msgCount
 
       retried.foreach{ env =>
         env.header[Unit]("UnitProperty") should be (Some(()))

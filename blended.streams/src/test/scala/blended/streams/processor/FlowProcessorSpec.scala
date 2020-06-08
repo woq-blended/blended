@@ -1,7 +1,6 @@
 package blended.streams.processor
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestKit
 import blended.streams.FlowProcessor.IntegrationStep
@@ -23,8 +22,6 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
   private val log = Logger[FlowProcessorSpec]
   private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(FlowHeaderConfig.create("App"), log)
 
-  private implicit val materializer = ActorMaterializer()
-
   private val msg : FlowEnvelope = {
     val header : FlowMessageProps = FlowMessage.props("foo" -> "bar").get
     FlowEnvelope(FlowMessage("Testmessage")(header)).withRequiresAcknowledge(true)
@@ -37,7 +34,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
 
   private val faulty = new FlowProcessor {
     override val name: String = "faulty"
-    override val f: IntegrationStep = env => Failure(new Exception("Boom"))
+    override val f: IntegrationStep = _ => Failure(new Exception("Boom"))
   }
 
   "The FlowProcessor should" - {

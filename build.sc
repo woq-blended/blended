@@ -252,6 +252,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       class Test(override val testGroup: String) extends CoreForkedTests {
         override def otherModule: CoreForkedTests =  brokerstarter.test(otherTestGroup)
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
+          deps.akkaSlf4j,
           deps.activeMqKahadbStore,
           deps.springCore,
           deps.springBeans,
@@ -289,6 +290,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       class Test(override val testGroup: String) extends CoreForkedTests {
         override def otherModule: CoreForkedTests = client.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          deps.akkaSlf4j,
           deps.activeMqBroker,
           deps.activeMqKahadbStore
         )}
@@ -742,6 +744,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       class Test(override val testGroup: String) extends CoreForkedTests {
         override def otherModule: CoreForkedTests =  bridge.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          deps.akkaSlf4j,
           deps.activeMqBroker,
           deps.scalacheck,
           deps.scalatestplusScalacheck,
@@ -1074,6 +1077,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )}
       object test extends CoreTests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          deps.akkaSlf4j,
           deps.akkaStreamTestkit,
           deps.akkaHttpTestkit,
           deps.sttp,
@@ -1588,6 +1592,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     class Test(override val testGroup: String) extends CoreForkedTests {
       override def otherModule: CoreForkedTests = streams.test(otherTestGroup)
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+        deps.akkaSlf4j,
         deps.commonsIo,
         deps.scalacheck,
         deps.scalatestplusScalacheck,
@@ -1923,6 +1928,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
     object test extends BlendedJvmTests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+        deps.akkaSlf4j,
         deps.akkaTestkit,
         deps.sttp,
         deps.sttpAkka,
@@ -1961,6 +1967,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   object itestsupport extends CoreModule {
     override def description = "Integration test helper classes"
     override def ivyDeps = T { super.ivyDeps() ++  Agg(
+        deps.akkaSlf4j,
         deps.activeMqBroker,
         deps.akkaActor,
         deps.akkaStream,

@@ -2,10 +2,10 @@ package blended.streams.worklist
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, KillSwitches, Materializer, OverflowStrategy}
+import akka.stream.scaladsl.{Flow, Keep, Sink}
+import akka.stream.KillSwitches
 import akka.testkit.TestKit
-import blended.streams.FlowHeaderConfig
+import blended.streams.{FlowHeaderConfig, StreamFactories}
 import blended.streams.message.FlowEnvelopeLogger
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
@@ -25,7 +25,6 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
   private val log = Logger[WorklistSpec]
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
   private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
-  private implicit val materialzer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private val defaultCooldown = 500.millis
 
@@ -36,8 +35,7 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
 
   private def withWorklistManager(cooldown: FiniteDuration, events : WorklistEvent*)(f : Seq[WorklistEvent] => Unit) : Unit = {
 
-    val source = Source.actorRef(100, OverflowStrategy.dropBuffer)
-
+    val source = StreamFactories.actorSource(100)
     val sink = Sink.seq[WorklistEvent]
 
     val mgr : Flow[WorklistEvent, WorklistEvent, NotUsed] = WorklistManager.flow("worklist", envLogger)

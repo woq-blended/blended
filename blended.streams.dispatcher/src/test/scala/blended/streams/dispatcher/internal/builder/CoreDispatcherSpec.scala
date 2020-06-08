@@ -20,7 +20,8 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
   with Matchers {
 
   override def loggerName: String = classOf[CoreDispatcherSpec].getName()
-  val goodFlow = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{env => env}
+  val goodFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
+    Flow.fromFunction[FlowEnvelope, FlowEnvelope]{env => env}
 
   val defaultTimeout : FiniteDuration = 1.second
 
@@ -85,8 +86,6 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
       timeout : FiniteDuration,
       testMessages : FlowEnvelope*
     )(implicit system: ActorSystem) : Future[DispatcherResult] = {
-
-      implicit val materializer : Materializer = ActorMaterializer()
 
       StreamFactories.keepAliveSource[FlowEnvelope](testMessages.size)
       val (jmsColl, wlColl, errorColl, g) = runnableDispatcher(ctxt, testMessages.size)

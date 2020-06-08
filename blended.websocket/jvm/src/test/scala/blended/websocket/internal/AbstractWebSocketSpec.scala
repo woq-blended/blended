@@ -21,6 +21,7 @@ import blended.security.internal.SecurityActivator
 import blended.security.login.api.Token
 import blended.security.login.impl.LoginActivator
 import blended.security.login.rest.internal.RestLoginActivator
+import blended.streams.StreamFactories
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{AkkaHttpServerTestHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -66,8 +67,8 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
    Http().webSocketClientFlow(WebSocketRequest(s"ws://localhost:${akkaHttpInfo(registry).port.get}/ws/?token=$token"))
 
   // Just a source that stays open, so that actual traffic can happen
-  protected val source : Source[TextMessage, ActorRef] = Source.actorRef[TextMessage](1, OverflowStrategy.fail)
-  protected val incoming : ActorRef => Sink[Message, NotUsed] = a => Sink.actorRef(a, Done)
+  protected val source : Source[TextMessage, ActorRef] = StreamFactories.actorSource[TextMessage](1)
+  protected val incoming : ActorRef => Sink[Message, NotUsed] = a => Sink.actorRef(a, Done, _ => Done)
 
   protected def withWebSocketServer[T: ClassTag](f: => T): T = {
     f
@@ -80,7 +81,6 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
   )(f : ActorRef => Token => T) : T = {
 
     implicit val system: ActorSystem = actorSystem
-    implicit val materializer: Materializer = ActorMaterializer()
 
     val (switch, actor, token) = wsConnect(user, pwd, probe)
     try {
@@ -154,7 +154,6 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
   )(f : T => Boolean)(implicit up : Unpickler[T]) : Any = {
 
     implicit val system: ActorSystem = actorSystem
-    implicit val materializer: Materializer = ActorMaterializer()
 
     val msg : TextMessage = probe.expectMsgType[TextMessage](t)
 
@@ -164,7 +163,7 @@ abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
         Await.result(streamed.textStream.runWith(Sink.seq[String]), 3.seconds).head
     }
 
-    log.debug(s"Received WebSocket message : [${s}]")
+    log.debug(s"Received WebSocket message : [$s]")
     val enc: WsMessageEncoded = Unpickle[WsMessageEncoded].fromString(s).unwrap
     assert(enc.context.status == status.intValue())
     val obj : T = enc.decode[T].unwrap

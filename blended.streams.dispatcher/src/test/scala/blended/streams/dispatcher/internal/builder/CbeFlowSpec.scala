@@ -1,8 +1,9 @@
 package blended.streams.dispatcher.internal.builder
 
 import akka.stream._
-import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.scaladsl.{Keep, Sink}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
+import blended.streams.StreamFactories
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
@@ -44,7 +45,7 @@ class CbeFlowSpec extends DispatcherSpecSupport
     cf : IdAwareConnectionFactory
   )(envelopes : FlowEnvelope*) : KillSwitch = {
 
-    val (actor, switch) = Source.actorRef(envelopes.size, OverflowStrategy.fail)
+    val (actor, switch) = StreamFactories.actorSource(envelopes.size)
       .viaMat(KillSwitches.single)(Keep.both)
       .viaMat(cbeSendFlow)(Keep.left)
       .toMat(Sink.ignore)(Keep.left)

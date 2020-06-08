@@ -2,10 +2,11 @@ package blended.streams.dispatcher.internal.builder
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
-import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Source}
+import akka.stream.scaladsl.{Flow, GraphDSL, Keep}
 import blended.jms.utils.JmsDestination
+import blended.streams.StreamFactories
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
@@ -24,10 +25,9 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
 
   private def runEventHandler(
     ctxt : DispatcherExecContext
-  ) = {
+  ) : (ActorRef, KillSwitch, Collector[FlowTransactionEvent], Collector[FlowEnvelope]) = {
 
     implicit val system : ActorSystem = ctxt.system
-    implicit val materializer : Materializer = ActorMaterializer()
 
     val errColl : Collector[FlowEnvelope] =
       Collector[FlowEnvelope](name = "error", onCollected = Some( { e : FlowEnvelope => e.acknowledge() }))
@@ -36,7 +36,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
       Collector[FlowTransactionEvent](name = "transaction")
 
     // scalastyle:off magic.number
-    val source = Source.actorRef[WorklistEvent](10, OverflowStrategy.fail)
+    val source = StreamFactories.actorSource[WorklistEvent](10)
     // scalastyle:on magic.number
 
     val sinkGraph = GraphDSL.create() { implicit b =>
@@ -63,7 +63,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
     withDispatcherConfig(registry) { ctxt =>
       implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
-      val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
+      val (actor, killSwitch, transColl, _) = runEventHandler(ctxt)
 
       val master = FlowEnvelope()
 
@@ -97,7 +97,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
       withDispatcherConfig(registry) { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
-        val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
+        val (actor, killSwitch, transColl, _) = runEventHandler(ctxt)
 
         val envelope = FlowEnvelope().withHeader(ctxt.bs.headerConfig.headerBranch, "test").get
         val wl = ctxt.bs.worklist(envelope).get
@@ -126,7 +126,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
       withDispatcherConfig(registry) { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
-        val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
+        val (actor, killSwitch, transColl, _) = runEventHandler(ctxt)
 
         val envelope = FlowEnvelope().withHeader(ctxt.bs.headerConfig.headerBranch, "test").get
         val wl = ctxt.bs.worklist(envelope).get
@@ -153,7 +153,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
       withDispatcherConfig(registry) { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
-        val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
+        val (actor, killSwitch, transColl, _) = runEventHandler(ctxt)
 
         val envelope = FlowEnvelope().withHeader(ctxt.bs.headerConfig.headerBranch, "test").get
         val wl = ctxt.bs.worklist(envelope).get
@@ -181,7 +181,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
       withDispatcherConfig(registry) { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
-        val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
+        val (actor, killSwitch, transColl, _) = runEventHandler(ctxt)
 
         val envelope = FlowEnvelope()
           .withHeader(ctxt.bs.headerConfig.headerBranch, "test").get
@@ -214,7 +214,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
 
     "Generate a transaction updated after the worklist has completed for all outbounds which are routed internally and should autocomplete"  in {
 
-      run("activemq", "activemq", true){ (envelope, events) =>
+      run("activemq", "activemq", true){ (_, events) =>
         events.size should be (2)
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
@@ -222,7 +222,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
         event.updatedState should be (WorklistStateCompleted)
       }
 
-      run("activemq", "activemq", true, true, true){ (envelope, events) =>
+      run("activemq", "activemq", true, true, true){ (_, events) =>
         events.size should be (2)
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]

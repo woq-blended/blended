@@ -3,7 +3,6 @@ package blended.streams.multiresult
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Source}
-import akka.stream.OverflowStrategy
 import akka.testkit.TestKit
 import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
@@ -33,7 +32,7 @@ class MultiResultGraphStageSpec extends TestKit(ActorSystem("multiresult"))
       )
 
       val source : Source[FlowEnvelope, ActorRef] =
-        Source.actorRef[FlowEnvelope](bufferSize = numMsg * numCopies, overflowStrategy = OverflowStrategy.fail).via(copy)
+        StreamFactories.actorSource[FlowEnvelope](numMsg * numCopies).via(copy)
 
       val (actor, collector) = StreamFactories.runMatSourceWithTimeLimit[FlowEnvelope, ActorRef](
         name = "multiResult",

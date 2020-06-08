@@ -3,7 +3,7 @@ package blended.jms.bridge.internal
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Flow
-import akka.stream.{KillSwitch, Materializer}
+import akka.stream.KillSwitch
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.BlendedStreamsConfig
 import blended.streams.message.FlowEnvelope
@@ -24,7 +24,7 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
   }
 
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
-    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
+    override protected def streamBuilderFactory(system: ActorSystem)(
       cfg: BridgeStreamConfig, streamsCfg: BlendedStreamsConfig
     ): BridgeStreamBuilder =
       new BridgeStreamBuilder(cfg, streamsCfg)(system) {
@@ -44,7 +44,7 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
       val actorSys = system(registry)
       val (internal, _) = getConnectionFactories(registry)
 
-      val switch = sendOutbound(internal, msgCount, true)
+      val switch = sendOutbound(internal, msgCount, track = true)
 
       val retried : List[FlowEnvelope] = consumeMessages(
         cf = internal,
@@ -52,7 +52,7 @@ class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
         expected = 2,
         timeout = timeout
       )(actorSys).get
-      retried should have size (msgCount)
+      retried should have size msgCount
 
       consumeEvents(internal, timeout)(actorSys).get should be (empty)
 

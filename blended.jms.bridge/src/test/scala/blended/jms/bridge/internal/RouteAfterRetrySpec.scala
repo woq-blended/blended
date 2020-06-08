@@ -5,7 +5,7 @@ import java.io.File
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge}
-import akka.stream.{FlowShape, Graph, KillSwitch, Materializer}
+import akka.stream.{FlowShape, Graph, KillSwitch}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.message.FlowEnvelope
 import blended.streams.{BlendedStreamsConfig, FlowProcessor}
@@ -39,7 +39,7 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
   // We override the send flow with a flow simply triggering an exception, so that the
   // exceptional path will be triggered
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
-    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
+    override protected def streamBuilderFactory(system: ActorSystem)(
       cfg: BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
     ): BridgeStreamBuilder =
       new BridgeStreamBuilder(cfg, streamsCfg)(system) {
@@ -81,8 +81,9 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
       val actorSys = system(registry)
       val (internal, external) = getConnectionFactories(registry)
 
-      val switch = sendOutbound(internal, msgCount, true)
+      val switch = sendOutbound(internal, msgCount, track = true)
 
+      //
       println("Waiting for the retry loop to complete ...")
       0.to(15).foreach{ i =>
         Thread.sleep(1000)

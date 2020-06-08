@@ -111,7 +111,6 @@ class FanoutSpec extends DispatcherSpecSupport
 
       withDispatcherConfig(registry) { ctxt =>
         implicit val system : ActorSystem = ctxt.system
-        implicit val materializer : Materializer = ActorMaterializer()
         implicit val eCtxt : ExecutionContext = system.dispatcher
 
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)

@@ -4,7 +4,6 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source}
-import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.BlendedTestSupport
@@ -37,7 +36,7 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
   private val src = Source.single(FlowEnvelope(msg))
   private val sink = Sink.seq[FlowEnvelope]
 
-  private val flow : (List[HeaderProcessorConfig]) => RunnableGraph[Future[Seq[FlowEnvelope]]] = rules => {
+  private val flow : List[HeaderProcessorConfig] => RunnableGraph[Future[Seq[FlowEnvelope]]] = rules => {
     src.via(
       HeaderTransformProcessor(name = "t", log = envLogger(log), rules = rules, ctCtxt = Some(ctCtxt)).flow(envLogger(log))
     )
@@ -47,8 +46,6 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
   private val result : List[HeaderProcessorConfig] => Seq[FlowEnvelope] = { rules =>
 
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
-    implicit val materializer : Materializer = ActorMaterializer()
-
     Await.result(flow(rules).run(), 3.seconds)
   }
 

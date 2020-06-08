@@ -4,9 +4,9 @@ import java.io.File
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream._
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.stream.scaladsl.{Flow, Keep, Sink}
 import akka.util.ByteString
-import blended.streams.FlowHeaderConfig
+import blended.streams.{FlowHeaderConfig, StreamFactories}
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger, FlowMessage}
 import blended.testsupport.FileTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -22,7 +22,6 @@ class FileDropStageSpec extends LoggingFreeSpec
   with FileTestSupport {
 
   private implicit val system : ActorSystem = ActorSystem(getClass().getSimpleName())
-  private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private val log : Logger = Logger[FileDropStageSpec]
   private val to : FiniteDuration = 1.second
@@ -58,7 +57,7 @@ class FileDropStageSpec extends LoggingFreeSpec
         log = envLogger
       ))
 
-    Source.actorRef[FlowEnvelope](bufferSize, OverflowStrategy.fail)
+    StreamFactories.actorSource[FlowEnvelope](bufferSize)
       .viaMat(dropper)(Keep.left)
       .viaMat(KillSwitches.single)(Keep.both)
       .toMat(Sink.seq[FileDropResult])(Keep.both)

@@ -25,7 +25,7 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
   }
 
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
-    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(
+    override protected def streamBuilderFactory(system: ActorSystem)(
       cfg: BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
     ): BridgeStreamBuilder =
       new BridgeStreamBuilder(cfg, streamsCfg)(system) {
@@ -54,7 +54,7 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
         destName = "sampleIn",
         expected = msgCount,
         timeout = timeout
-      )(actorSys).get should have size(msgCount)
+      )(actorSys).get should have size msgCount
 
       switch.shutdown()
     }

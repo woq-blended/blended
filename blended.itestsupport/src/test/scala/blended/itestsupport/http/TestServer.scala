@@ -6,7 +6,6 @@ import scala.concurrent.duration._
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
 import blended.util.logging.Logger
 
 object TestServer {
@@ -16,9 +15,7 @@ object TestServer {
   def withServer(route: Route)(
     f : Int => Unit
   )(
-    implicit
-    actorSystem: ActorSystem,
-    actorMaterializer: ActorMaterializer
+    implicit actorSystem: ActorSystem,
   ): Unit = {
 
     val serverFut = Http().bindAndHandle(route, "localhost", 0)

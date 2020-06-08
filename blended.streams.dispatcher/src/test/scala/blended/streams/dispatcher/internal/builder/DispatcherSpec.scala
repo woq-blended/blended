@@ -3,7 +3,8 @@ package blended.streams.dispatcher.internal.builder
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
-import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Source}
+import akka.stream.scaladsl.{Flow, GraphDSL, Keep}
+import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
 import blended.streams.transaction._
@@ -26,11 +27,10 @@ class DispatcherSpec extends DispatcherSpecSupport
   ) : (ActorRef, KillSwitch, Collector[FlowTransactionEvent]) = {
 
     implicit val system : ActorSystem = ctxt.system
-    implicit val materializer : Materializer = ActorMaterializer()
 
     val transColl = Collector[FlowTransactionEvent]("trans")
 
-    val source = Source.actorRef[FlowEnvelope](defaultBufferSize, OverflowStrategy.fail)
+    val source = StreamFactories.actorSource[FlowEnvelope](defaultBufferSize)
 
     val sinkGraph = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
