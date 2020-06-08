@@ -4,21 +4,18 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import java.{util => ju}
 
+import scala.jdk.CollectionConverters._
+import scala.reflect.{ClassTag, classTag}
+import scala.util.Try
+
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalacheck.Arbitrary
 import org.scalatest.DoNotDiscover
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
-import scala.jdk.CollectionConverters._
-import scala.reflect.{ClassTag, classTag}
-import scala.util.Try
-
 @DoNotDiscover
-class LoadTest
-  extends LoggingFreeSpec
-  with ScalaCheckPropertyChecks
-  with DbFactory {
+class LoadTest extends LoggingFreeSpec with ScalaCheckPropertyChecks with DbFactory {
 
   private[this] val log = Logger[this.type]
 
@@ -26,17 +23,17 @@ class LoadTest
 
     import blended.updater.config.TestData._
 
-    def testMapping[T : ClassTag](
-      map : T => ju.Map[String, AnyRef],
-      unmap : AnyRef => Try[T]
-    )(implicit arb : Arbitrary[T]) : Unit = {
+    def testMapping[T: ClassTag](
+        map: T => ju.Map[String, AnyRef],
+        unmap: AnyRef => Try[T]
+    )(implicit arb: Arbitrary[T]): Unit = {
       val className = classTag[T].runtimeClass.getSimpleName
       className in logException {
         withTestPersistenceService() { ctx =>
           val startTime = System.currentTimeMillis()
           val count = new AtomicInteger()
           try {
-            forAll { d : T =>
+            forAll { d: T =>
               count.incrementAndGet()
               val uuid = UUID.randomUUID().toString()
               val idCol = "TEST@ID@"
@@ -54,7 +51,8 @@ class LoadTest
           } finally {
 
             val endTime = System.currentTimeMillis()
-            log.info(s"Persisting [${count.get()}] [${className}] entries took [${endTime - startTime}] ms (including time for generating and mapping data)")
+            log.info(
+              s"Persisting [${count.get()}] [${className}] entries took [${endTime - startTime}] ms (including time for generating and mapping data)")
           }
         }
       }
@@ -66,15 +64,11 @@ class LoadTest
     testMapping(mapBundleConfig, unmapBundleConfig)
     testMapping(mapFeatureRef, unmapFeatureRef)
     testMapping(mapFeatureConfig, unmapFeatureConfig)
-    testMapping(mapOverlayConfig, unmapOverlayConfig)
     testMapping(mapRuntimeConfig, unmapRuntimeConfig)
     testMapping(mapServiceInfo, unmapServiceInfo)
     testMapping(mapUpdateAction, unmapUpdateAction)
     testMapping(mapGeneratedConfig, unmapGeneratedConfig)
-    testMapping(mapProfileGroup, unmapProfileGroup)
     testMapping(mapProfile, unmapProfile)
-    testMapping(mapOverlayRef, unmapOverlayRef)
-    testMapping(mapOverlaySet, unmapOverlaySet)
 
   }
 

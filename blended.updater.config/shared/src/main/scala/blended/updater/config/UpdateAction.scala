@@ -1,7 +1,6 @@
 package blended.updater.config
 
 object UpdateAction {
-  val KindAddOverlayConfig : String = classOf[AddOverlayConfig].getSimpleName()
   val KindAddRuntimeConfig : String = classOf[AddRuntimeConfig].getSimpleName()
   val KindStageProfile : String = classOf[StageProfile].getSimpleName()
   val KindActivateProfile : String = classOf[ActivateProfile].getSimpleName()
@@ -16,8 +15,6 @@ sealed trait UpdateAction {
   def withId(id : String) : UpdateAction = this match {
     case a : AddRuntimeConfig =>
       a.copy(id = id)
-    case a : AddOverlayConfig =>
-      a.copy(id = id)
     case a : StageProfile =>
       a.copy(id = id)
     case a : ActivateProfile =>
@@ -30,23 +27,16 @@ final case class AddRuntimeConfig(
   runtimeConfig : RuntimeConfig
 ) extends UpdateAction
 
-final case class AddOverlayConfig(
-  id : String,
-  overlay : OverlayConfig
-) extends UpdateAction
-
 final case class StageProfile(
   id : String,
   profileName : String,
-  profileVersion : String,
-  overlays : Set[OverlayRef]
+  profileVersion : String
 ) extends UpdateAction
 
 final case class ActivateProfile(
   id : String,
   profileName : String,
-  profileVersion : String,
-  overlays : Set[OverlayRef]
+  profileVersion : String
 ) extends UpdateAction
 
 /**

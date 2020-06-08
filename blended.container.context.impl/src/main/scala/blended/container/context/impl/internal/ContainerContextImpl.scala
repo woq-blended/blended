@@ -3,7 +3,7 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
-import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
+import blended.updater.config.RuntimeConfig
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 import blended.util.RichTry._
@@ -16,44 +16,44 @@ class ContainerContextImpl() extends AbstractContainerContextImpl {
 
   import AbstractContainerContextImpl._
 
-  private[this] lazy val log : Logger = Logger[ContainerContextImpl]
+  private[this] lazy val log: Logger = Logger[ContainerContextImpl]
   initialize()
 
-  private def normalizePath(f : File) : String = f.getAbsolutePath().replaceAll("\\\\", "/")
+  private def normalizePath(f: File): String = f.getAbsolutePath().replaceAll("\\\\", "/")
   @BeanProperty
-  override lazy val containerDirectory : String = normalizePath(new File(System.getProperty("blended.home")))
+  override lazy val containerDirectory: String = normalizePath(new File(System.getProperty("blended.home")))
 
   @BeanProperty
-  override lazy val containerHostname : String = {
+  override lazy val containerHostname: String = {
     try {
       val localMachine = java.net.InetAddress.getLocalHost()
       localMachine.getCanonicalHostName()
     } catch {
-      case _ : java.net.UnknownHostException => "UNKNOWN"
+      case _: java.net.UnknownHostException => "UNKNOWN"
     }
   }
 
   @BeanProperty
-  override lazy val containerLogDirectory : String = containerLogDir
+  override lazy val containerLogDirectory: String = containerLogDir
 
   @BeanProperty
-  override lazy val profileDirectory : String = profileDir
+  override lazy val profileDirectory: String = profileDir
 
-  lazy val brandingProperties : Map[String, String] = {
-    val props : Properties = (try {
+  lazy val brandingProperties: Map[String, String] = {
+    val props: Properties = (try {
       import blended.launcher.runtime.Branding
       // it is possible, that this optional class is not available at runtime,
       // e.g. when started with another launcher
       log.debug("About to read launcher branding properties")
       Option(Branding.getProperties())
     } catch {
-      case e : NoClassDefFoundError => None
+      case e: NoClassDefFoundError => None
     }) getOrElse {
       log.warn("Could not read launcher branding properies")
       new Properties()
     }
 
-    val result : Map[String, String] =
+    val result: Map[String, String] =
       props.entrySet().asScala.map(e => e.getKey().toString() -> e.getValue().toString()).toMap
 
     log.debug(s"Resolved branding properties : [${result.mkString(",")}]")
@@ -61,7 +61,7 @@ class ContainerContextImpl() extends AbstractContainerContextImpl {
     result
   }
 
-  private[this] lazy val profileDir : String = {
+  private[this] lazy val profileDir: String = {
 
     val profileHome =
       brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) orElse {
@@ -89,85 +89,58 @@ class ContainerContextImpl() extends AbstractContainerContextImpl {
     absDir
   }
 
-  private[this] lazy val containerLogDir : String = {
+  private[this] lazy val containerLogDir: String = {
     val f = new File(containerDirectory + "/log")
     normalizePath(f)
   }
 
   @BeanProperty
-  override lazy val containerConfigDirectory : String =
+  override lazy val containerConfigDirectory: String =
     normalizePath(new File(containerDirectory, CONFIG_DIR))
 
   @BeanProperty
-  override lazy val profileConfigDirectory : String = normalizePath(new File(profileDirectory, CONFIG_DIR))
+  override lazy val profileConfigDirectory: String = normalizePath(new File(profileDirectory, CONFIG_DIR))
 
-  private lazy val overlayConfig : Config = {
-    val cfg : Option[File] = brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) match {
-      case Some(profileDir) =>
-        brandingProperties.get(RuntimeConfig.Properties.OVERLAYS) match {
-          case Some(overlays) =>
-            val overlayRefs = overlays.split("[,]").toList.map(_.split("[:]", 2)).flatMap {
-              case Array(n, v) => Some(OverlayRef(n, v))
-              case x =>
-                log.debug("Unsupported overlay: " + x.mkString(":"))
-                None
-            }.toSet
-            if (overlayRefs.isEmpty) {
-              None
-            } else {
-              val dir = LocalOverlays.materializedDir(overlayRefs, new File(profileDir))
-              val confFile = new File(dir, s"$CONFIG_DIR/application_overlay.conf")
-              if (confFile.exists()) {
-                log.debug(s"About to read extra application overlay override file: ${confFile}")
-                Some(confFile)
-              } else {
-                None
-              }
-            }
-          case _ => None
-        }
-      case _ => None
-    }
-
-    val result : Config = cfg match {
-      case Some(oc) => ConfigFactory.parseFile(oc, ConfigParseOptions.defaults().setAllowMissing(false))
-      case _        => ConfigFactory.empty()
-    }
-
-    log.trace(s"After reading overlay config : $result")
-
-    result
-  }
-
-  override lazy val containerConfig : Config = {
+  override lazy val containerConfig: Config = {
     val sysProps = ConfigFactory.systemProperties()
     val envProps = ConfigFactory.systemEnvironment()
 
-    val cfgFile : File = new File(profileConfigDirectory, "application.conf")
+    val cfgFile: File = new File(profileConfigDirectory, "application.conf")
     log.debug(s"Trying to resolve config from [${cfgFile.getAbsolutePath()}]")
 
-    val appCfg : Config =
-      ConfigFactory.parseFile(cfgFile, ConfigParseOptions.defaults().setAllowMissing(false))
-        .withFallback(sysProps).withFallback(envProps).resolve()
+    val appCfg: Config =
+      ConfigFactory
+        .parseFile(cfgFile, ConfigParseOptions.defaults().setAllowMissing(false))
+        .withFallback(sysProps)
+        .withFallback(envProps)
+        .resolve()
 
     // we need to make sure that all keys are available in the resulting config,
     // even if they point to null values or empty configs
-    val allKeys : List[String] = ConfigLocator.fullKeyset("", appCfg)
+    val allKeys: List[String] = ConfigLocator.fullKeyset("", appCfg)
 
-    val nullKeys = allKeys.filter(s => appCfg.getIsNull(s)).map(s => (s -> null)).toMap.asJava
+    val nullKeys = allKeys
+      .filter(s => appCfg.getIsNull(s))
+      .map(s => (s -> null))
+      .toMap
+      .asJava
 
-    val emptyKeys = allKeys.filter { s =>
-      Try { appCfg.getConfig(s) } match {
-        case Success(c) => c.isEmpty()
-        case _ => false
+    val emptyKeys = allKeys
+      .filter { s =>
+        Try { appCfg.getConfig(s) } match {
+          case Success(c) => c.isEmpty()
+          case _          => false
+        }
       }
-    }.map(s => s -> ConfigFactory.empty().root()).toMap.asJava
+      .map(s => s -> ConfigFactory.empty().root())
+      .toMap
+      .asJava
 
     val evaluated = ConfigLocator.evaluatedConfig(appCfg, this).unwrap
 
     log.trace(s"After reading application.conf : $evaluated")
 
-    val resolvedCfg : Config = overlayConfig.withFallback(evaluated)
+    val resolvedCfg: Config = evaluated
       .withFallback(sysProps)
       .withFallback(envProps)
       .withFallback(ConfigFactory.parseMap(nullKeys))

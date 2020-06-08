@@ -2,102 +2,128 @@ package blended.persistence.jdbc
 
 import java.{util => ju}
 
-import blended.testsupport.scalatest.LoggingFreeSpec
-import org.scalacheck.Arbitrary
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-
 import scala.jdk.CollectionConverters._
 import scala.reflect.{ClassTag, classTag}
 import scala.util.{Success, Try}
 
-class PersistedFieldTest
-  extends LoggingFreeSpec
-  with ScalaCheckPropertyChecks {
+import blended.testsupport.scalatest.LoggingFreeSpec
+import org.scalacheck.Arbitrary
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+
+class PersistedFieldTest extends LoggingFreeSpec with ScalaCheckPropertyChecks {
 
   val testData = Seq(
-    ("Null",
+    (
+      "Null",
       Map("key" -> null).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", typeName = TypeName.Null)
-      )
-    ),
-    ("String",
+      )),
+    (
+      "String",
       Map("key" -> "value").asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", valueString = Some("value"), typeName = TypeName.String)
-      )
-    ),
-    ("Boolean",
+      )),
+    (
+      "Boolean",
       Map("key" -> true).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", valueLong = Some(1), typeName = TypeName.Boolean)
-      )
-    ),
-    ("Long",
+      )),
+    (
+      "Long",
       Map("key" -> Long.MaxValue).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", valueLong = Some(Long.MaxValue), typeName = TypeName.Long)
-      )
-    ),
+      )),
     (
       "Byte",
       Map("key" -> Byte.MaxValue).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", valueLong = Some(Byte.MaxValue), typeName = TypeName.Byte)
       )
-    ), (
+    ),
+    (
       "Int",
       Map("key" -> Int.MaxValue).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", valueLong = Some(Int.MaxValue), typeName = TypeName.Int)
       )
-    ), (
+    ),
+    (
       "Short",
       Map("key" -> Short.MaxValue).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", valueLong = Some(Short.MaxValue), typeName = TypeName.Short)
       )
     ),
-    ("Double",
+    (
+      "Double",
       Map("key" -> Double.MaxValue).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", valueDouble = Some(Double.MaxValue), typeName = TypeName.Double)
-      )
-    ),
-    ("Float",
+      )),
+    (
+      "Float",
       Map("key" -> Float.MaxValue).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", valueDouble = Some(Float.MaxValue), typeName = TypeName.Float)
-      )
-    ),
-    ("List[String]",
+      )),
+    (
+      "List[String]",
       Map("key" -> List("v1", "v2", "v3").asJava).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", typeName = TypeName.Array),
-        PersistedField(fieldId = 2, baseFieldId = Some(1), name = "0", valueString = Some("v1"), typeName = TypeName.String),
-        PersistedField(fieldId = 3, baseFieldId = Some(1), name = "1", valueString = Some("v2"), typeName = TypeName.String),
-        PersistedField(fieldId = 4, baseFieldId = Some(1), name = "2", valueString = Some("v3"), typeName = TypeName.String)
-      )
-    ),
-    ("List[Map]",
-      Map("key" -> List(Map[String,Any]("ik" -> "iv1", "ik2" -> 2).asJava, Map("second" -> "value").asJava).asJava).asJava,
+        PersistedField(
+          fieldId = 2,
+          baseFieldId = Some(1),
+          name = "0",
+          valueString = Some("v1"),
+          typeName = TypeName.String),
+        PersistedField(
+          fieldId = 3,
+          baseFieldId = Some(1),
+          name = "1",
+          valueString = Some("v2"),
+          typeName = TypeName.String),
+        PersistedField(
+          fieldId = 4,
+          baseFieldId = Some(1),
+          name = "2",
+          valueString = Some("v3"),
+          typeName = TypeName.String)
+      )),
+    (
+      "List[Map]",
+      Map("key" -> List(Map[String, Any]("ik" -> "iv1", "ik2" -> 2).asJava, Map("second" -> "value").asJava).asJava).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", typeName = TypeName.Array),
         PersistedField(fieldId = 2, baseFieldId = Some(1), name = "0", typeName = TypeName.Object),
-        PersistedField(fieldId = 3, baseFieldId = Some(2), name = "ik", valueString = Some("iv1"), typeName = TypeName.String),
+        PersistedField(
+          fieldId = 3,
+          baseFieldId = Some(2),
+          name = "ik",
+          valueString = Some("iv1"),
+          typeName = TypeName.String),
         PersistedField(fieldId = 4, baseFieldId = Some(2), name = "ik2", valueLong = Some(2L), typeName = TypeName.Int),
         PersistedField(fieldId = 5, baseFieldId = Some(1), name = "1", typeName = TypeName.Object),
-        PersistedField(fieldId = 6, baseFieldId = Some(5), name = "second", valueString = Some("value"), typeName = TypeName.String)
-      )
-    ),
-    ("Config object",
+        PersistedField(
+          fieldId = 6,
+          baseFieldId = Some(5),
+          name = "second",
+          valueString = Some("value"),
+          typeName = TypeName.String)
+      )),
+    (
+      "Config object",
       Map(
         "key1" -> "value1",
         "key2" -> List(
           "kv1",
           "kv2"
         ).asJava,
-        "key3" -> Map[String,Any](
+        "key3" -> Map[String, Any](
           "k3a" -> "v3a",
           "k3b" -> List(
             "v3b1",
@@ -105,26 +131,65 @@ class PersistedFieldTest
           ).asJava
         ).asJava
       ).asJava,
-        Seq(
-          PersistedField(fieldId = 1, name = "key1", valueString = Some("value1"), typeName = TypeName.String),
-          PersistedField(fieldId = 2, name = "key2", typeName = TypeName.Array),
-          PersistedField(fieldId = 3, name = "0", baseFieldId = Some(2), typeName = TypeName.String, valueString = Some("kv1")),
-          PersistedField(fieldId = 4, name = "1", baseFieldId = Some(2), typeName = TypeName.String, valueString = Some("kv2")),
-          PersistedField(fieldId = 5, name = "key3", typeName = TypeName.Object),
-          PersistedField(fieldId = 6, name = "k3a", baseFieldId = Some(5), typeName = TypeName.String, valueString = Some("v3a")),
-          PersistedField(fieldId = 7, name = "k3b", baseFieldId = Some(5), typeName = TypeName.Array),
-          PersistedField(fieldId = 8, name = "0", baseFieldId = Some(7), typeName = TypeName.String, valueString = Some("v3b1")),
-          PersistedField(fieldId = 9, name = "1", baseFieldId = Some(7), typeName = TypeName.String, valueString = Some("v3b2"))
-        )
-    ),
+      Seq(
+        PersistedField(fieldId = 1, name = "key1", valueString = Some("value1"), typeName = TypeName.String),
+        PersistedField(fieldId = 2, name = "key2", typeName = TypeName.Array),
+        PersistedField(
+          fieldId = 3,
+          name = "0",
+          baseFieldId = Some(2),
+          typeName = TypeName.String,
+          valueString = Some("kv1")),
+        PersistedField(
+          fieldId = 4,
+          name = "1",
+          baseFieldId = Some(2),
+          typeName = TypeName.String,
+          valueString = Some("kv2")),
+        PersistedField(fieldId = 5, name = "key3", typeName = TypeName.Object),
+        PersistedField(
+          fieldId = 6,
+          name = "k3a",
+          baseFieldId = Some(5),
+          typeName = TypeName.String,
+          valueString = Some("v3a")),
+        PersistedField(fieldId = 7, name = "k3b", baseFieldId = Some(5), typeName = TypeName.Array),
+        PersistedField(
+          fieldId = 8,
+          name = "0",
+          baseFieldId = Some(7),
+          typeName = TypeName.String,
+          valueString = Some("v3b1")),
+        PersistedField(
+          fieldId = 9,
+          name = "1",
+          baseFieldId = Some(7),
+          typeName = TypeName.String,
+          valueString = Some("v3b2"))
+      )),
     (
       "LongString",
       Map("key" -> List.fill(500)("x").mkString).asJava,
       Seq(
         PersistedField(fieldId = 1, name = "key", typeName = TypeName.LongString),
-        PersistedField(fieldId = 2, name = "0", baseFieldId = Some(1), typeName = TypeName.String, valueString = Some(List.fill(200)("x").mkString)),
-        PersistedField(fieldId = 3, name = "1", baseFieldId = Some(1), typeName = TypeName.String, valueString = Some(List.fill(200)("x").mkString)),
-        PersistedField(fieldId = 4, name = "2", baseFieldId = Some(1), typeName = TypeName.String, valueString = Some(List.fill(100)("x").mkString))
+        PersistedField(
+          fieldId = 2,
+          name = "0",
+          baseFieldId = Some(1),
+          typeName = TypeName.String,
+          valueString = Some(List.fill(200)("x").mkString)),
+        PersistedField(
+          fieldId = 3,
+          name = "1",
+          baseFieldId = Some(1),
+          typeName = TypeName.String,
+          valueString = Some(List.fill(200)("x").mkString)),
+        PersistedField(
+          fieldId = 4,
+          name = "2",
+          baseFieldId = Some(1),
+          typeName = TypeName.String,
+          valueString = Some(List.fill(100)("x").mkString))
       )
     )
   )
@@ -182,12 +247,12 @@ class PersistedFieldTest
   "Mapping of 'blended.updater.config' classes" - {
     import blended.updater.config.TestData._
 
-    def testMapping[T : ClassTag](
-      map : T => ju.Map[String, AnyRef],
-      unmap : AnyRef => Try[T]
-    )(implicit arb : Arbitrary[T]) : Unit = {
+    def testMapping[T: ClassTag](
+        map: T => ju.Map[String, AnyRef],
+        unmap: AnyRef => Try[T]
+    )(implicit arb: Arbitrary[T]): Unit = {
       classTag[T].runtimeClass.getSimpleName in {
-        forAll { d : T =>
+        forAll { d: T =>
           //          val data = map(d)
           assert(unmap(PersistedField.toJuMap(PersistedField.extractFieldsWithoutDataId(map(d)))) === Success(d))
         }
@@ -200,15 +265,11 @@ class PersistedFieldTest
     testMapping(mapBundleConfig, unmapBundleConfig)
     testMapping(mapFeatureRef, unmapFeatureRef)
     testMapping(mapFeatureConfig, unmapFeatureConfig)
-    testMapping(mapOverlayConfig, unmapOverlayConfig)
     testMapping(mapRuntimeConfig, unmapRuntimeConfig)
     testMapping(mapServiceInfo, unmapServiceInfo)
     testMapping(mapUpdateAction, unmapUpdateAction)
     testMapping(mapGeneratedConfig, unmapGeneratedConfig)
-    testMapping(mapProfileGroup, unmapProfileGroup)
     testMapping(mapProfile, unmapProfile)
-    testMapping(mapOverlayRef, unmapOverlayRef)
-    testMapping(mapOverlaySet, unmapOverlaySet)
 
   }
 

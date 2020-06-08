@@ -19,15 +19,14 @@ import scala.util.{Failure, Success, Try}
 
 trait CollectorService {
   // dependencies
-  deps : BlendedSecurityDirectives with PrickleSupport =>
+  deps: BlendedSecurityDirectives with PrickleSupport =>
 
-  val httpRoute : Route =
+  val httpRoute: Route =
     respondWithDefaultHeader(headers.`Access-Control-Allow-Origin`(headers.HttpOriginRange.*)) {
       collectorRoute ~
         infoRoute ~
         versionRoute ~
         runtimeConfigRoute ~
-        overlayConfigRoute ~
         updateActionRoute ~
         rolloutProfileRoute ~
         uploadDeploymentPackRoute
@@ -35,38 +34,22 @@ trait CollectorService {
 
   private[this] lazy val log = Logger[CollectorService]
 
-  def processContainerInfo(info : ContainerInfo) : ContainerRegistryResponseOK
+  def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
 
-  def getCurrentState() : sci.Seq[RemoteContainerState]
+  def getCurrentState(): sci.Seq[RemoteContainerState]
 
   /** Register a runtime config into the management container. */
-  def registerRuntimeConfig(rc : RuntimeConfig) : Unit
-
-  /** Register a overlay config into the management container. */
-  def registerOverlayConfig(oc : OverlayConfig) : Unit
+  def registerRuntimeConfig(rc: RuntimeConfig): Unit
 
   /** Get all registered runtime configs of the management container. */
-  def getRuntimeConfigs() : sci.Seq[RuntimeConfig]
-
-  /** Get all registered overlay configs of the managament container. */
-  def getOverlayConfigs() : sci.Seq[OverlayConfig]
+  def getRuntimeConfigs(): sci.Seq[RuntimeConfig]
 
   /** Promote (stage) an update action to a container. */
-  def addUpdateAction(containerId : String, updateAction : UpdateAction) : Unit
+  def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit
 
-  def version : String
+  def version: String
 
-  /**
-   * Find [[OverlayRef]]s, that are not already known by the overlay registry.
-   */
-  def findMissingOverlayRef(configs : Iterable[OverlayRef]) : Option[OverlayRef] =
-    if (configs.isEmpty) None
-    else {
-      val ocs = getOverlayConfigs()
-      configs.find(c => !ocs.exists(oc => oc.overlayRef == c))
-    }
-
-  def versionRoute : Route = {
+  def versionRoute: Route = {
     path("version") {
       get {
         complete {
@@ -76,7 +59,7 @@ trait CollectorService {
     }
   }
 
-  def collectorRoute : Route = {
+  def collectorRoute: Route = {
 
     path("container") {
       post {
@@ -90,7 +73,7 @@ trait CollectorService {
     }
   }
 
-  def infoRoute : Route = {
+  def infoRoute: Route = {
     path("container") {
       get {
         complete {
@@ -103,7 +86,7 @@ trait CollectorService {
     }
   }
 
-  def runtimeConfigRoute : Route = {
+  def runtimeConfigRoute: Route = {
     path("runtimeConfig") {
       get {
         complete {
@@ -121,25 +104,7 @@ trait CollectorService {
     }
   }
 
-  def overlayConfigRoute : Route = {
-    path("overlayConfig") {
-      get {
-        complete {
-          getOverlayConfigs()
-        }
-      } ~
-        post {
-          requirePermission("profile:update") {
-            entity(as[OverlayConfig]) { oc =>
-              registerOverlayConfig(oc)
-              complete(s"Registered ${oc.name}-${oc.version}")
-            }
-          }
-        }
-    }
-  }
-
-  def updateActionRoute : Route = {
+  def updateActionRoute: Route = {
     path("container" / Segment / "update") { containerId =>
       post {
         requirePermission("profile:update") {
@@ -152,67 +117,47 @@ trait CollectorService {
     }
   }
 
-  def rolloutProfileRoute : Route = {
+  def rolloutProfileRoute: Route = {
     path("rollout" / "profile") {
       post {
         requirePermission("rollout") {
           entity(as[RolloutProfile]) { rolloutProfile =>
             // check existence of profile
-            getRuntimeConfigs().find(rc => rc.name == rolloutProfile.profileName && rc.version == rolloutProfile.profileVersion) match {
+            getRuntimeConfigs().find(rc =>
+              rc.name == rolloutProfile.profileName && rc.version == rolloutProfile.profileVersion) match {
               case None =>
-                reject(ValidationRejection(s"Unknown profile ${rolloutProfile.profileName} ${rolloutProfile.profileVersion}"))
+                reject(
+                  ValidationRejection(
+                    s"Unknown profile ${rolloutProfile.profileName} ${rolloutProfile.profileVersion}"))
               case Some(rc) =>
-                // check existence of overlays
-                findMissingOverlayRef(rolloutProfile.overlays) match {
-                  case Some(r) =>
-                    log.error(s"The rollout request contains an overlay reference [${r}] which is not known. " +
-                      s"You have to register an overlay before using it in a rollout. " +
-                      s"Known overlay configs are: [${getOverlayConfigs().map(c => c.overlayRef)}]")
-                    reject(ValidationRejection(s"Unknown overlay ${r.name} ${r.version}"))
-                  case None =>
-                    // all ok, complete
-                    complete {
-                      log.debug("looks good, rollout can continue")
-                      rolloutProfile.containerIds.foreach { containerId =>
+                // all ok, complete
+                complete {
+                  log.debug("looks good, rollout can continue")
+                  rolloutProfile.containerIds.foreach { containerId =>
+                    // Make sure, we have the required runtime config
+                    addUpdateAction(
+                      containerId = containerId,
+                      updateAction = AddRuntimeConfig(
+                        UUID.randomUUID().toString(),
+                        runtimeConfig = rc
+                      )
+                    )
 
-                        // Make sure, we have the required runtime config
-                        addUpdateAction(
-                          containerId = containerId,
-                          updateAction = AddRuntimeConfig(
-                            UUID.randomUUID().toString(),
-                            runtimeConfig = rc
-                          )
-                        )
+                    // finally stage the new runtime config
+                    addUpdateAction(
+                      containerId = containerId,
+                      updateAction = StageProfile(
+                        UUID.randomUUID().toString(),
+                        profileName = rolloutProfile.profileName,
+                        profileVersion = rolloutProfile.profileVersion
+                      )
+                    )
 
-                        // Also register all required overlay configs
-                        val ocs = getOverlayConfigs()
-                        rolloutProfile.overlays.map { o =>
-                          val oc = ocs.find(oc => oc.overlayRef == o).get
-                          addUpdateAction(
-                            containerId = containerId,
-                            updateAction = AddOverlayConfig(
-                              UUID.randomUUID().toString(),
-                              overlay = oc
-                            )
-                          )
-                        }
+                  }
 
-                        // finally stage the new runtime config
-                        addUpdateAction(
-                          containerId = containerId,
-                          updateAction = StageProfile(
-                            UUID.randomUUID().toString(),
-                            profileName = rolloutProfile.profileName,
-                            profileVersion = rolloutProfile.profileVersion,
-                            overlays = rolloutProfile.overlays
-                          )
-                        )
-
-                      }
-
-                      s"Recorded ${rolloutProfile.containerIds.size} rollout actions"
-                    }
+                  s"Recorded ${rolloutProfile.containerIds.size} rollout actions"
                 }
+
             }
           }
         }
@@ -221,7 +166,7 @@ trait CollectorService {
 
   }
 
-  def uploadDeploymentPackRoute : Route = {
+  def uploadDeploymentPackRoute: Route = {
     path("profile" / "upload" / "deploymentpack" / Segment) { repoId =>
       withSizeLimit(1024 * 1024 * 100) {
         post {
@@ -262,7 +207,7 @@ trait CollectorService {
    *
    * @return Tuple of profile name and version.
    */
-  def processDeploymentPack(repoId : String, zipFile : File) : Try[(String, String)] = {
+  def processDeploymentPack(repoId: String, zipFile: File): Try[(String, String)] = {
     log.debug(s"About to process deploymentpack as inputstream for repoId: ${repoId}")
 
     // create temp file to find a free name, than delete and create dir with that name
@@ -283,16 +228,20 @@ trait CollectorService {
         log.debug(s"Extraced files: ${files}")
         val profileConfFile = files.find(f => f.getName() == "profile.conf").get
         val config = ConfigFactory.parseFile(profileConfFile)
-        val local = RuntimeConfigCompanion.
-          read(config).
-          flatMap(_.resolve()).
-          flatMap(c => Try { LocalRuntimeConfig(c, tempDir) }).
-          get
+        val local = RuntimeConfigCompanion
+          .read(config)
+          .flatMap(_.resolve())
+          .flatMap(c => Try { LocalRuntimeConfig(c, tempDir) })
+          .get
 
         val issues =
           local.validate(includeResourceArchives = true, explodedResourceArchives = false) ++
-            local.resolvedRuntimeConfig.allBundles.filter(b => !b.url.startsWith("mvn:")).map(u => s"Unsupported bundle URL: ${u}") ++
-            local.runtimeConfig.resources.filter(b => !b.url.startsWith("mvn:")).map(u => s"Unsupported resource URL: ${u}")
+            local.resolvedRuntimeConfig.allBundles
+              .filter(b => !b.url.startsWith("mvn:"))
+              .map(u => s"Unsupported bundle URL: ${u}") ++
+            local.runtimeConfig.resources
+              .filter(b => !b.url.startsWith("mvn:"))
+              .map(u => s"Unsupported resource URL: ${u}")
 
         if (!issues.isEmpty) sys.error(issues.mkString("; "))
 
@@ -320,11 +269,11 @@ trait CollectorService {
     result
   }
 
-  def deleteRecursive(files : File*) : Unit = files.foreach { file =>
+  def deleteRecursive(files: File*): Unit = files.foreach { file =>
     if (file.isDirectory()) {
       file.listFiles() match {
         case null  =>
-        case files => deleteRecursive(files.toSeq : _*)
+        case files => deleteRecursive(files.toSeq: _*)
       }
     }
     file.delete()
@@ -333,6 +282,6 @@ trait CollectorService {
   /**
    * Install the file under path. If there is an collision, only reject the file if the sha1Sum does not compare equal.
    */
-  def installBundle(repoId : String, path : String, file : File, sha1Sum : Option[String]) : Try[Unit]
+  def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit]
 
 }

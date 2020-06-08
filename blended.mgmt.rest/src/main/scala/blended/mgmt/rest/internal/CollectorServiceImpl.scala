@@ -85,11 +85,7 @@ class CollectorServiceImpl(
 
   override def registerRuntimeConfig(rc : RuntimeConfig) : Unit = updater.registerRuntimeConfig(rc)
 
-  override def registerOverlayConfig(oc : OverlayConfig) : Unit = updater.registerOverlayConfig(oc)
-
   override def getRuntimeConfigs() : immutable.Seq[RuntimeConfig] = updater.getRuntimeConfigs()
-
-  override def getOverlayConfigs() : immutable.Seq[OverlayConfig] = updater.getOverlayConfigs()
 
   override def addUpdateAction(containerId : String, updateAction : UpdateAction) : Unit = updater.addAction(containerId, updateAction)
 
