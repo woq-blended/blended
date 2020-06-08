@@ -6,9 +6,9 @@ import prickle.{Pickle, Unpickle}
 
 class PrickleSpec extends AnyFreeSpec {
 
-  "The Pickler for security objects should" - {
+  "The Pickler for security objects" - {
 
-    "(un)pickle BlendedPermission correctly" in {
+    "should (un)pickle BlendedPermission correctly" in {
 
       val permission = BlendedPermission(
         permissionClass = Some("container"),
@@ -23,7 +23,7 @@ class PrickleSpec extends AnyFreeSpec {
       assert(permission === p2)
     }
 
-    "(un)pickle BlendedPermissions correctly" in {
+    "should (un)pickle BlendedPermissions correctly" in {
 
       val permission = BlendedPermission(
         permissionClass = Some("container"),

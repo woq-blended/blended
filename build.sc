@@ -1507,9 +1507,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Bundle-Activator` = Some(s"${blendedModule}.internal.ArtifactRepoRestActivator")
         )}
-        object test extends Cross[Test](crossTestGroups: _*)
-        class Test(override val testGroup: String) extends ForkedTest {
-          override def otherModule: ForkedTest =  rest.test(otherTestGroup)
+        object test extends Tests {
+          override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
+            blended.testsupport.pojosr
+          )
         }
       }
     }
