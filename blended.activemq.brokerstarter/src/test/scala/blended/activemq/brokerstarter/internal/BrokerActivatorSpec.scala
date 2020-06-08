@@ -2,6 +2,7 @@ package blended.activemq.brokerstarter.internal
 
 import java.io.File
 
+import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{Connected, ConnectionStateChanged}
@@ -34,7 +35,7 @@ class BrokerActivatorSpec extends SimplePojoContainerSpec
 
     "start the configured brokers correctly" in {
 
-      implicit val actorSys = actorSystem
+      implicit val actorSys : ActorSystem = actorSystem
       var connected : List[String] = List.empty
 
       val probe : TestProbe = TestProbe()

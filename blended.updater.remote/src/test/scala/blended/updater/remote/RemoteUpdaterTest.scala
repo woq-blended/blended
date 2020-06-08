@@ -22,43 +22,41 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
   val todoOverlays = List.empty[OverlayConfig]
   val todoOverlayRefs = Set.empty[OverlayRef]
 
-  case class TestContext(remoteUpdater : RemoteUpdater, persitenceService : Option[PersistenceService] = None)
+  case class TestContext(remoteUpdater : RemoteUpdater, persistenceService : Option[PersistenceService] = None)
 
   def withEmptyRemoteUpdate(transient : Boolean)(f : TestContext => Unit) : Unit = {
-    transient match {
-      case true =>
-        val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-        f(TestContext(ru))
-      case false =>
-        withTestDir() { dir =>
+    if (transient) {
+      val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
+      f(TestContext(ru))
+    } else {
+      withTestDir() { dir =>
 
-          val ds0 = new JdbcDataSource();
-          ds0.setURL(s"jdbc:h2:mem:${getClass().getSimpleName()}");
-          ds0.setUser("admin");
-          ds0.setPassword("admin");
+        val ds0 = new JdbcDataSource()
+        ds0.setURL(s"jdbc:h2:mem:${getClass().getSimpleName()}")
+        ds0.setUser("admin")
+        ds0.setPassword("admin")
 
-          val ds = JdbcConnectionPool.create(ds0)
+        val ds = JdbcConnectionPool.create(ds0)
 
-          val txMgr : PlatformTransactionManager = new DataSourceTransactionManager(ds)
+        val txMgr: PlatformTransactionManager = new DataSourceTransactionManager(ds)
 
-          val dao : PersistedClassDao = new PersistedClassDao(ds)
-          dao.init()
+        val dao: PersistedClassDao = new PersistedClassDao(ds)
+        dao.init()
 
-          val persistenceService = new PersistenceServiceJdbc(txMgr, dao)
+        val persistenceService = new PersistenceServiceJdbc(txMgr, dao)
 
-          val csp = new PersistentContainerStatePersistor(persistenceService)
+        val csp = new PersistentContainerStatePersistor(persistenceService)
 
-          val ru = new RemoteUpdater(
-            new FileSystemRuntimeConfigPersistor(dir),
-            csp,
-            new FileSystemOverlayConfigPersistor(dir)
-          )
-          f(TestContext(ru, Some(persistenceService)))
+        val ru = new RemoteUpdater(
+          new FileSystemRuntimeConfigPersistor(dir),
+          csp,
+          new FileSystemOverlayConfigPersistor(dir)
+        )
+        f(TestContext(ru, Some(persistenceService)))
 
-          ds.dispose()
+        ds.dispose()
 
-        }(DeleteWhenNoFailure)
-
+      }(DeleteWhenNoFailure)
     }
   }
 
@@ -79,6 +77,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
             withEmptyRemoteUpdate(transient) { ctx =>
               val action1 = AddRuntimeConfig(
                 UUID.randomUUID().toString(),
+                // scalastyle:off magic.number
                 RuntimeConfig(
                   name = "test",
                   version = "1",
@@ -88,6 +87,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
                     BundleConfig(url = "mvn:test:test:1", startLevel = 0)
                   )
                 )
+                // scalastyle:on magic.number
               )
               ctx.remoteUpdater.addAction("1", action1)
               assert(ctx.remoteUpdater.getContainerActions("1") === Seq(action1))
@@ -106,11 +106,14 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
           }
 
           "adding a second add runtime config action" in {
-            withEmptyRemoteUpdate(transient) { ctx =>
+            withEmptyRemoteUpdate(transient) { _ =>
               val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
               val action1 = AddRuntimeConfig(
                 UUID.randomUUID().toString(),
-                RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0)))
+                RuntimeConfig(
+                  name = "test", version = "1", startLevel = 10, defaultStartLevel = 10,
+                  bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))
+                )
               )
               ru.addAction("1", action1)
               assert(ru.getContainerActions("1") === Seq(action1))
@@ -234,6 +237,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
               val conId = "1"
 
+              // scalastyle:off magic_number
               val action1 = AddRuntimeConfig(
                 UUID.randomUUID().toString(),
                 RuntimeConfig(
@@ -243,9 +247,10 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
                   defaultStartLevel = 10
                 )
               )
+              // scalastyle:on magic_number
               log.info(s"Add 1. action: ${action1}")
               ctx.remoteUpdater.addAction(conId, action1)
-              ctx.persitenceService.map(p => assert(p.findAll(PersistentContainerStatePersistor.pClassName).size === 1))
+              ctx.persistenceService.map(p => assert(p.findAll(PersistentContainerStatePersistor.pClassName).size === 1))
               assert(ctx.remoteUpdater.getContainerActions(conId).size === 1)
 
               val action2 = AddOverlayConfig(
@@ -257,7 +262,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
               )
               log.info(s"Add 2. action: ${action2}")
               ctx.remoteUpdater.addAction(conId, action2)
-              ctx.persitenceService.map { p =>
+              ctx.persistenceService.map { p =>
                 assert(p.findAll(PersistentContainerStatePersistor.pClassName).size === 1)
                 val state = p.findByExample(PersistentContainerStatePersistor.pClassName, Map("containerId" -> conId).asJava)
                 assert(state.size === 1)
@@ -273,7 +278,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
                 overlays = Set(OverlayRef("oc", "1"))
               )
               log.info(s"Add 3. action: ${action3}")
-              ctx.persitenceService.map { p =>
+              ctx.persistenceService.map { p =>
                 assert(p.findAll(PersistentContainerStatePersistor.pClassName).size === 1)
                 assert(p.findByExample(PersistentContainerStatePersistor.pClassName, Map("containerId" -> conId).asJava).size === 1)
               }

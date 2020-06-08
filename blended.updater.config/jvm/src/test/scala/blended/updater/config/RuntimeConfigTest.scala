@@ -1,15 +1,15 @@
 package blended.updater.config
 
 import blended.testsupport.TestFile
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import com.typesafe.config.{ConfigException, ConfigFactory}
+
 import scala.io.Source
 import scala.util.Success
-
-import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
 
 class RuntimeConfigTest
-  extends AnyFreeSpecLike
+  extends LoggingFreeSpecLike
   with Matchers
   with TestFile {
 
@@ -49,17 +49,17 @@ class RuntimeConfigTest
 
   "resolveFileName" - {
     "should infer the correct filename from a file URL" in {
-      val bundle = BundleConfig(url = "file:///tmp/file1.jar", start = false, startLevel = 0)
+      val bundle = BundleConfig(url = "file:///tmp/file1.jar", startLevel = 0)
       val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file1.jar"))
     }
     "should infer the correct filename from a http URL" in {
-      val bundle = BundleConfig(url = "http:///tmp/file1.jar", start = false, startLevel = 0)
+      val bundle = BundleConfig(url = "http:///tmp/file1.jar", startLevel = 0)
       val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file1.jar"))
     }
     "should infer the correct filename from a mvn URL without a repo setting" in {
-      val bundle = BundleConfig(url = "mvn:group:file:1", start = false, startLevel = 0)
+      val bundle = BundleConfig(url = "mvn:group:file:1", startLevel = 0)
       val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file-1.jar"))
     }
@@ -98,30 +98,15 @@ class RuntimeConfigTest
       |bundles = [{url = "mvn:feature3:bundle1:1", startLevel = 0}]
       |""".stripMargin
 
-    def features = List(feature1, feature2, feature3).map(f => {
+    def features : List[FeatureConfig] = List(feature1, feature2, feature3).map(f => {
       val fc = FeatureConfigCompanion.read(ConfigFactory.parseString(f))
       fc shouldBe a[Success[_]]
       fc.get
     })
 
-    //    "should read but not validate" in {
-    //      val rcTry = RuntimeConfig.read(ConfigFactory.parseString(config))
-    //      rcTry shouldBe a[Success[_]]
-    //
-    //      val rc = rcTry.get
-    //      val rrc = ResolvedRuntimeConfig(rc, features.take(1))
-    //      rc.bundles should have size (1)
-    //      rc.features should have size (2)
-    //      rrc.allBundles should have size (1)
-    //
-    //      val validate = rrc.validate()
-    //      validate should have length (1)
-    //      validate.head should include("one bundle with startLevel '0'")
-    //    }
-
     val resolver = FeatureResolver
 
-    "should resolve to a valid config" in {
+    "should resolve to a valid config" in logException {
       val rcTry = RuntimeConfigCompanion.read(ConfigFactory.parseString(config))
       rcTry shouldBe a[Success[_]]
 

@@ -25,7 +25,7 @@ object SelfSignedTest {
   def main(args : Array[String]) : Unit = {
 
     val keystore = new JavaKeystore(new File("/tmp/keystore"), "test".toCharArray, Some("test".toCharArray))
-    val memStore = new MemoryKeystore(Map.empty)
+    val memStore = MemoryKeystore(Map.empty)
 
     val cert : CertificateHolder = provider.refreshCertificate(None, selfSignedCfg.commonNameProvider).get
     println(cert.dump)

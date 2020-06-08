@@ -41,6 +41,7 @@ import scala.concurrent.{Await, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 
+//noinspection TypeAnnotation,TypeAnnotation
 abstract class AbstractWebSocketSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers

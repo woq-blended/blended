@@ -70,7 +70,7 @@ class JmxCommandPackage(
     override val name: String = "subscribe"
     override val description : String = "Subscribe to Jmx updates"
 
-    override def doHandleCommand: PartialFunction[BlendedJmxMessage, Token => WsContext] = {
+    override def executeCommand: PartialFunction[BlendedJmxMessage, Token => WsContext] = {
       case s : JmxSubscribe => t =>
         val subscription : WebSocketSubscription = createSubscription(t)(s)
         system.eventStream.publish(NewSubscription(subscription))
@@ -86,7 +86,7 @@ class JmxCommandPackage(
     override val name: String = "unsubscribe"
     override val description : String = "Unsubscribe from Jmx updates"
 
-    override def doHandleCommand: PartialFunction[BlendedJmxMessage, Token => WsContext] = {
+    override def executeCommand: PartialFunction[BlendedJmxMessage, Token => WsContext] = {
       case JmxUnsubscribe(u) => t =>
         val subscription : WebSocketSubscription = createSubscription(t)(u)
         system.eventStream.publish(RemoveSubscription(subscription))

@@ -32,7 +32,7 @@ object ScepTestClient {
       }
     }
 
-    val scepConfig = new ScepConfig(
+    val scepConfig = ScepConfig(
       url = "http://scep-t.pki.schwarz:8080/pgwy/scep/sib",
       profile = None,
       keyLength = 2048,
@@ -59,7 +59,7 @@ object ScepTestClient {
     assert(cert1.keypairValid.contains(true))
     assert(cert1.keypairValid.contains(true))
 
-    val memStore : MemoryKeystore = new MemoryKeystore(Map.empty)
+    val memStore : MemoryKeystore = MemoryKeystore(Map.empty)
       .update("initial", cert1).get
       .update("refreshed", cert2).get
 

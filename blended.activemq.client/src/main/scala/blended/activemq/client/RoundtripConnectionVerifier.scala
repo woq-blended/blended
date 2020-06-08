@@ -51,7 +51,7 @@ class RoundtripConnectionVerifier(
       log = FlowEnvelopeLogger.create(headerConfig, log),
       listener = 1,
       selector = Some(s"JMSCorrelationID='$id'"),
-      completeOn = Some(_.size > 0),
+      completeOn = Some(_.nonEmpty),
       timeout = Some(receiveTimeout)
     )
 
@@ -79,7 +79,7 @@ class RoundtripConnectionVerifier(
     val id : String = UUID.randomUUID().toString()
 
     val probeEnv : FlowEnvelope = probeMsg(id)
-      .withHeader(corrIdHeader(headerConfig.prefix), id, true).get
+      .withHeader(corrIdHeader(headerConfig.prefix), id).get
       .withHeader(replyToHeader(headerConfig.prefix), responseDest.asString).get
 
     val pSettings : JmsProducerSettings = JmsProducerSettings(

@@ -66,8 +66,8 @@ trait WebSocketCommandHandler[T] {
 
       case Success(content) =>
         log.debug(s"Command content is [$content]")
-        if (doHandleCommand.isDefinedAt(content)) {
-          doHandleCommand(content)(t)
+        if (executeCommand.isDefinedAt(content)) {
+          executeCommand(content)(t)
         } else {
           WsContext(cmdPackage.namespace, name, StatusCodes.NotImplemented.intValue, None)
         }
@@ -80,7 +80,7 @@ trait WebSocketCommandHandler[T] {
     }
   }
 
-  def doHandleCommand : PartialFunction[T,  Token => WsContext]
+  def executeCommand : PartialFunction[T,  Token => WsContext]
 }
 
 object WsUpdateEmitter {

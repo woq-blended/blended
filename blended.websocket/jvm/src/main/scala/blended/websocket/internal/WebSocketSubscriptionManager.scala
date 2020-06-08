@@ -70,7 +70,7 @@ class WebSocketSubscriptionManager extends Actor {
       context.become(handling(subscriptions.view.filterKeys(_ != key).toMap))
 
     case Terminated(a) =>
-      subscriptions.find { case (_,sa) => a == sa }.foreach { case (sk, sa) =>
+      subscriptions.find { case (_,sa) => a == sa }.foreach { case (sk, _) =>
         log.warn(s"subscription actor for [$sk] terminated, removing subscription.")
         context.become(handling(subscriptions.view.filterKeys(_ != sk).toMap))
       }

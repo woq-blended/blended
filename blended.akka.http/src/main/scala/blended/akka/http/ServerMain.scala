@@ -25,7 +25,7 @@ trait SimpleWebServer {
   lazy val port : Int = svrBinding.localAddress.getPort
 
   def run() : Unit = {
-    println(s"Started simple akka http server wit port [$port()]")
+    actorSystem.log.info(s"Started simple akka http server wit port [$port()]")
     Thread.sleep(runFor.toMillis)
   }
 }

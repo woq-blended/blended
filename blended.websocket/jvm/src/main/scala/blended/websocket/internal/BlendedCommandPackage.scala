@@ -33,7 +33,7 @@ class BlendedCommandPackage(
     override val name : String = "version"
     override val description: String = "Return the blended version"
 
-    override def doHandleCommand: PartialFunction[BlendedWsMessage, Token => WsContext] = {
+    override def executeCommand: PartialFunction[BlendedWsMessage, Token => WsContext] = {
       case _ : Version => t =>
         val ctxt : WsContext = WsContext(namespace = namespace, name = name)
         // This is a side effect, which will push the version info to the client

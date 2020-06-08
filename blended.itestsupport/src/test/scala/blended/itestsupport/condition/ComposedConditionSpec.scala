@@ -1,5 +1,6 @@
 package blended.itestsupport.condition
 
+import akka.actor.ActorSystem
 import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.condition.ConditionProvider._
 import blended.testsupport.TestActorSys
@@ -14,10 +15,10 @@ class ComposedConditionSpec extends AnyWordSpec
   "A composed condition" should {
 
     "be satisfied with an empty condition list" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+      implicit val system : ActorSystem = testkit.system
       val probe = TestProbe()
 
-      val condition = new ParallelComposedCondition()
+      val condition = ParallelComposedCondition()
 
       val checker = TestActorRef(ConditionActor.props(cond = condition))
       checker.tell(CheckCondition, probe.ref)
@@ -25,11 +26,11 @@ class ComposedConditionSpec extends AnyWordSpec
     }
 
     "be satisfied with a list of conditions that eventually satisfy" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+      implicit val system : ActorSystem = testkit.system
       val probe = TestProbe()
 
       val conditions = List(alwaysTrue(), alwaysTrue(), alwaysTrue(), alwaysTrue())
-      val condition = new ParallelComposedCondition(conditions.toSeq:_*)
+      val condition = ParallelComposedCondition(conditions:_*)
 
       val checker = TestActorRef(ConditionActor.props(cond = condition))
       checker.tell(CheckCondition, probe.ref)
@@ -37,11 +38,11 @@ class ComposedConditionSpec extends AnyWordSpec
     }
 
     "timeout with at least failing condition" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+      implicit val system : ActorSystem = testkit.system
       val probe = TestProbe()
 
       val conditions = List(alwaysTrue(), alwaysTrue(), neverTrue(), alwaysTrue())
-      val condition = new ParallelComposedCondition(conditions.toSeq:_*)
+      val condition = ParallelComposedCondition(conditions:_*)
 
       val checker = TestActorRef(ConditionActor.props(cond = condition))
       checker.tell(CheckCondition, probe.ref)
