@@ -189,10 +189,11 @@ object MgmtReporter {
 
   object MgmtReporterConfig {
     def fromConfig(config : Config) : Try[MgmtReporterConfig] = Try {
+      import blended.util.config.Implicits._
       MgmtReporterConfig(
         registryUrl = config.getString("registryUrl"),
-        updateIntervalMsec = if (config.hasPath("updateIntervalMsec")) config.getLong("updateIntervalMsec") else 0,
-        initialUpdateDelayMsec = if (config.hasPath("initialUpdateDelayMsec")) config.getLong("initialUpdateDelayMsec") else 0
+        updateIntervalMsec = config.getLong("updateIntervalMsec", 0),
+        initialUpdateDelayMsec = config.getLong("initialUpdateDelayMsec", 0)
       )
     }
   }
