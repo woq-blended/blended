@@ -24,8 +24,8 @@ case class JvmLauncherConfig(
       ",jvmOption=" + jvmOpts +
       ",interactive=" + interactive +
       ",shutdownTimeout=" + shutdownTimeout +
-      ",restartDelaySec=" + restartDelaySec
-  ")"
+      ",restartDelaySec=" + restartDelaySec +
+      ")"
 
   override def toString(): String = prettyPrint
 }
