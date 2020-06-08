@@ -30,8 +30,6 @@ class MgmtAgentActivatorSpec extends SimplePojoContainerSpec
   s"The ${bundleName}" - {
 
     "should register a MgmtReporter actor into the Akka system" in {
-      val activator = new MgmtAgentActivator()
-      activator.start(registry.getBundleContext())
       val actorSystem = mandatoryService[ActorSystem](registry, None)
       val sel: ActorSelection = actorSystem.actorSelection(s"/user/${bundleName}")
       Await.result(sel.resolveOne(1.second), 2.seconds)
