@@ -1446,6 +1446,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Bundle-Activator` = Some(s"${blendedModule}.internal.MgmtAgentActivator")
       )}
+      object test extends Tests {
+        override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
+          blended.testsupport.pojosr
+        )
+      }
     }
     object mock extends BlendedModule {
       override val description : String = "Mock server to simulate a larger network of blended containers for UI testing"
