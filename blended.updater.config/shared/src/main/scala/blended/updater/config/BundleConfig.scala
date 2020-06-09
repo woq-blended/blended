@@ -2,12 +2,12 @@ package blended.updater.config
 
 /**
  * A bundle with a start configuration.
- * Used as part of [[RuntimeConfig]] oder [[FeatureConfig]].
+ * Used as part of [[Profile]] oder [[FeatureConfig]].
  *
  * @param artifact The artifact (file).
  * @param start `true` if the bundle should be auto-started on container start.
  * @param startLevel The start level of this bundle.
- * @see [[RuntimeConfig]]
+ * @see [[Profile]]
  * @see [[FeatureConfig]]
  */
 case class BundleConfig(

@@ -41,8 +41,8 @@ class UpdaterTest
 
           assert(!installBaseDir.exists())
 
-          val config = ResolvedRuntimeConfig(
-            RuntimeConfig(
+          val config = ResolvedProfile(
+            Profile(
               name = "test-with-1-framework-bundle",
               version = "1.0.0",
               bundles = List(
@@ -58,7 +58,7 @@ class UpdaterTest
 
           {
             val addId = nextId()
-            updater ! Updater.AddRuntimeConfig(addId, config.runtimeConfig)
+            updater ! Updater.AddRuntimeConfig(addId, config.profile)
             expectMsgPF() {
               case Updater.OperationSucceeded(`addId`) => true
             }
@@ -100,8 +100,8 @@ class UpdaterTest
             }
           }
 
-          val config = ResolvedRuntimeConfig(
-            RuntimeConfig(
+          val config = ResolvedProfile(
+            Profile(
               name = "test-with-1-framework-bundle",
               version = "1.0.0",
               bundles = List(
@@ -117,7 +117,7 @@ class UpdaterTest
 
           {
             val addId = nextId()
-            updater ! Updater.AddRuntimeConfig(addId, config.runtimeConfig)
+            updater ! Updater.AddRuntimeConfig(addId, config.profile)
             expectMsgPF() {
               case Updater.OperationSucceeded(`addId`) => true
             }
@@ -137,7 +137,7 @@ class UpdaterTest
           //          }
 
           {
-            val config2 = config.runtimeConfig.copy(startLevel = 20)
+            val config2 = config.profile.copy(startLevel = 20)
             val addId = nextId()
             updater ! Updater.AddRuntimeConfig(addId, config2)
             expectMsgPF() {
@@ -164,7 +164,7 @@ class UpdaterTest
 
           assert(!installBaseDir.exists())
 
-          val config = RuntimeConfig(
+          val config = Profile(
             name = "test-with-1-framework-bundle",
             version = "1.0.0",
             bundles = List(
@@ -243,8 +243,8 @@ class UpdaterTest
             )
 
             {
-              val config = ResolvedRuntimeConfig(
-                RuntimeConfig(
+              val config = ResolvedProfile(
+                Profile(
                   name = "test-with-3-bundles",
                   version = "1.0.0",
                   bundles = List(
@@ -276,7 +276,7 @@ class UpdaterTest
 
               {
                 val addId = nextId()
-                updater ! Updater.AddRuntimeConfig(addId, config.runtimeConfig)
+                updater ! Updater.AddRuntimeConfig(addId, config.profile)
 
                 expectMsgPF() {
                   case Updater.OperationSucceeded(`addId`) => true
@@ -285,7 +285,7 @@ class UpdaterTest
 
               {
                 val stageId = nextId()
-                updater ! Updater.StageProfile(stageId, config.runtimeConfig.name, config.runtimeConfig.version)
+                updater ! Updater.StageProfile(stageId, config.profile.name, config.profile.version)
                 expectMsgPF(hint = s"waiting for: ${Updater.OperationSucceeded(stageId)}") {
                   case Updater.OperationSucceeded(`stageId`) => true
                 }

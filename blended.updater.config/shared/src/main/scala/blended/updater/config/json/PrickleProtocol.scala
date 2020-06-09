@@ -31,7 +31,7 @@ object PrickleProtocol {
     .concreteType[OverlayState.Invalid.type]
     .concreteType[OverlayState.Pending.type]
 
-  implicit val runtimeConfigPickler: Pickler[RuntimeConfig] = Pickler.materializePickler[RuntimeConfig]
-  implicit val runtimeConfigUnpickler: Unpickler[RuntimeConfig] = Unpickler.materializeUnpickler[RuntimeConfig]
+  implicit val runtimeConfigPickler: Pickler[Profile] = Pickler.materializePickler[Profile]
+  implicit val runtimeConfigUnpickler: Unpickler[Profile] = Unpickler.materializeUnpickler[Profile]
 
 }

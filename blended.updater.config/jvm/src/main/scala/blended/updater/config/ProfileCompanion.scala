@@ -6,30 +6,40 @@ import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.security.{DigestInputStream, MessageDigest}
 import java.util.Formatter
 
-import blended.updater.config.util.ConfigPropertyMapConverter
-import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigValue}
-
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-object RuntimeConfigCompanion {
+import blended.updater.config.util.ConfigPropertyMapConverter
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigValue}
 
-  def read(config : Config) : Try[RuntimeConfig] = Try {
+object ProfileCompanion {
 
-    val getProperties : String => Map[String, String] =
+  def read(config: Config): Try[Profile] = Try {
+
+    val getProperties: String => Map[String, String] =
       key => ConfigPropertyMapConverter.getKeyAsPropertyMap(config, key, Some(() => Map.empty))
 
-    val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-    val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+    val optionals = ConfigFactory
+      .parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
+      .resolve()
+    val reference = ConfigFactory
+      .parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
+      .resolve()
     config.withFallback(optionals).checkValid(reference)
 
-    RuntimeConfig(
+    Profile(
       name = config.getString("name"),
       version = config.getString("version"),
       bundles =
         if (config.hasPath("bundles"))
-          config.getObjectList("bundles").asScala.map { bc => BundleConfigCompanion.read(bc.toConfig()).get }.toList
+          config
+            .getObjectList("bundles")
+            .asScala
+            .map { bc =>
+              BundleConfigCompanion.read(bc.toConfig()).get
+            }
+            .toList
         else List.empty,
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
@@ -38,9 +48,13 @@ object RuntimeConfigCompanion {
       systemProperties = getProperties("systemProperties"),
       features =
         if (config.hasPath("features"))
-          config.getObjectList("features").asScala.map { f =>
-          FeatureRefCompanion.fromConfig(f.toConfig()).get
-        }.toList
+          config
+            .getObjectList("features")
+            .asScala
+            .map { f =>
+              FeatureRefCompanion.fromConfig(f.toConfig()).get
+            }
+            .toList
         else List.empty,
       resources =
         if (config.hasPath("resources"))
@@ -48,14 +62,18 @@ object RuntimeConfigCompanion {
         else List.empty,
       resolvedFeatures =
         if (config.hasPath("resolvedFeatures"))
-          config.getObjectList("resolvedFeatures").asScala.map(r => FeatureConfigCompanion.read(r.toConfig()).get).toList
+          config
+            .getObjectList("resolvedFeatures")
+            .asScala
+            .map(r => FeatureConfigCompanion.read(r.toConfig()).get)
+            .toList
         else List.empty
     )
   }
 
-  def toConfig(runtimeConfig : RuntimeConfig) : Config = {
+  def toConfig(runtimeConfig: Profile): Config = {
 
-    val propCfg : Map[String, String] => ConfigValue = m => ConfigPropertyMapConverter.propertyMapToConfigValue(m)
+    val propCfg: Map[String, String] => ConfigValue = m => ConfigPropertyMapConverter.propertyMapToConfigValue(m)
 
     val config = Map[String, Any](
       "name" -> runtimeConfig.name,
@@ -68,23 +86,27 @@ object RuntimeConfigCompanion {
       "systemProperties" -> propCfg(runtimeConfig.systemProperties),
       "features" -> runtimeConfig.features.map(FeatureRefCompanion.toConfig).map(_.root().unwrapped()).asJava,
       "resources" -> runtimeConfig.resources.map(ArtifactCompanion.toConfig).map(_.root().unwrapped()).asJava,
-      "resolvedFeatures" -> runtimeConfig.resolvedFeatures.map(FeatureConfigCompanion.toConfig).map(_.root().unwrapped()).asJava
+      "resolvedFeatures" -> runtimeConfig.resolvedFeatures
+        .map(FeatureConfigCompanion.toConfig)
+        .map(_.root().unwrapped())
+        .asJava
     ).asJava
 
     ConfigFactory.parseMap(config).resolve()
   }
 
-  def bytesToString(digest : Array[Byte]) : String = {
-    import java.lang.StringBuilder
-    val result = new StringBuilder(32);
+  def bytesToString(digest: Array[Byte]): String = {
+    val result = new java.lang.StringBuilder(32);
     val f = new Formatter(result)
     digest.foreach(b => f.format("%02x", b.asInstanceOf[Object]))
-    result.toString
+    result.toString()
   }
 
-  def digestFile(file : File) : Option[String] = {
-    if (!file.exists()) None else {
-      val sha1Stream = new DigestInputStream(new BufferedInputStream(new FileInputStream(file)), MessageDigest.getInstance("SHA"))
+  def digestFile(file: File): Option[String] = {
+    if (!file.exists()) None
+    else {
+      val sha1Stream =
+        new DigestInputStream(new BufferedInputStream(new FileInputStream(file)), MessageDigest.getInstance("SHA"))
       try {
         while (sha1Stream.read != -1) {}
         Option(bytesToString(sha1Stream.getMessageDigest.digest))
@@ -96,7 +118,7 @@ object RuntimeConfigCompanion {
     }
   }
 
-  def download(url : String, file : File) : Try[File] =
+  def download(url: String, file: File): Try[File] =
     Try {
       val parentDir = file.getAbsoluteFile().getParentFile() match {
         case null =>
@@ -122,12 +144,12 @@ object RuntimeConfigCompanion {
             val buffer = new Array[Byte](bufferSize)
 
             while (inStream.read(buffer, 0, bufferSize) match {
-              case count if count < 0 => false
-              case count => {
-                outStream.write(buffer, 0, count)
-                true
-              }
-            }) {}
+                     case count if count < 0 => false
+                     case count => {
+                       outStream.write(buffer, 0, count)
+                       true
+                     }
+                   }) {}
           } finally {
             inStream.close()
           }
@@ -138,8 +160,7 @@ object RuntimeConfigCompanion {
           fileStream.close()
         }
 
-        Files.move(Paths.get(tmpFile.toURI()), Paths.get(file.toURI()),
-          StandardCopyOption.ATOMIC_MOVE);
+        Files.move(Paths.get(tmpFile.toURI()), Paths.get(file.toURI()), StandardCopyOption.ATOMIC_MOVE);
 
         file
       } catch {
@@ -152,18 +173,24 @@ object RuntimeConfigCompanion {
 
     }
 
-  def bundlesBaseDir(baseDir : File) : File = new File(baseDir, "bundles")
+  def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
 
-  def bundleLocation(bundle : BundleConfig, baseDir : File) : File =
-    new File(RuntimeConfigCompanion.bundlesBaseDir(baseDir), bundle.jarName.getOrElse(RuntimeConfig.resolveFileName(bundle.url).get))
+  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
+    new File(
+      ProfileCompanion.bundlesBaseDir(baseDir),
+      bundle.jarName.getOrElse(Profile.resolveFileName(bundle.url).get))
 
-  def bundleLocation(artifact : Artifact, baseDir : File) : File =
-    new File(RuntimeConfigCompanion.bundlesBaseDir(baseDir), artifact.fileName.getOrElse(RuntimeConfig.resolveFileName(artifact.url).get))
+  def bundleLocation(artifact: Artifact, baseDir: File): File =
+    new File(
+      ProfileCompanion.bundlesBaseDir(baseDir),
+      artifact.fileName.getOrElse(Profile.resolveFileName(artifact.url).get))
 
-  def resourceArchiveLocation(resourceArchive : Artifact, baseDir : File) : File =
-    new File(baseDir, s"resources/${resourceArchive.fileName.getOrElse(RuntimeConfig.resolveFileName(resourceArchive.url).get)}")
+  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
+    new File(
+      baseDir,
+      s"resources/${resourceArchive.fileName.getOrElse(Profile.resolveFileName(resourceArchive.url).get)}")
 
-  def resourceArchiveTouchFileLocation(resourceArchive : Artifact, baseDir : File, mvnBaseUrl : Option[String]) : File = {
+  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File, mvnBaseUrl: Option[String]): File = {
     val resFile = resourceArchiveLocation(resourceArchive, baseDir)
     new File(resFile.getParentFile(), s".${resFile.getName()}")
   }

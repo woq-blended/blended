@@ -1,14 +1,14 @@
 package blended.updater.remote
 
-import blended.updater.config.RuntimeConfig
-
 import scala.collection.immutable
+
+import blended.updater.config.Profile
 
 class TransientRuntimeConfigPersistor extends RuntimeConfigPersistor {
 
-  private[this] var state : immutable.Set[RuntimeConfig] = Set.empty
+  private[this] var state: immutable.Set[Profile] = Set.empty
 
-  override def persistRuntimeConfig(rCfg : RuntimeConfig) : Unit = state += rCfg
+  override def persistRuntimeConfig(rCfg: Profile): Unit = state += rCfg
 
-  override def findRuntimeConfigs() : List[RuntimeConfig] = state.toList
+  override def findRuntimeConfigs(): List[Profile] = state.toList
 }

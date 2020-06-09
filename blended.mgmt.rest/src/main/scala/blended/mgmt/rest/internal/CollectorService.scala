@@ -39,10 +39,10 @@ trait CollectorService {
   def getCurrentState(): sci.Seq[RemoteContainerState]
 
   /** Register a runtime config into the management container. */
-  def registerRuntimeConfig(rc: RuntimeConfig): Unit
+  def registerRuntimeConfig(rc: Profile): Unit
 
   /** Get all registered runtime configs of the management container. */
-  def getRuntimeConfigs(): sci.Seq[RuntimeConfig]
+  def getRuntimeConfigs(): sci.Seq[Profile]
 
   /** Promote (stage) an update action to a container. */
   def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit
@@ -95,7 +95,7 @@ trait CollectorService {
       } ~
         post {
           requirePermission("profile:update") {
-            entity(as[RuntimeConfig]) { rc =>
+            entity(as[Profile]) { rc =>
               registerRuntimeConfig(rc)
               complete(s"Registered ${rc.name}-${rc.version}")
             }
@@ -228,7 +228,7 @@ trait CollectorService {
         log.debug(s"Extraced files: ${files}")
         val profileConfFile = files.find(f => f.getName() == "profile.conf").get
         val config = ConfigFactory.parseFile(profileConfFile)
-        val local = RuntimeConfigCompanion
+        val local = ProfileCompanion
           .read(config)
           .flatMap(_.resolve())
           .flatMap(c => Try { LocalRuntimeConfig(c, tempDir) })
@@ -236,7 +236,7 @@ trait CollectorService {
 
         val issues =
           local.validate(includeResourceArchives = true, explodedResourceArchives = false) ++
-            local.resolvedRuntimeConfig.allBundles
+            local.resolvedProfile.allBundles
               .filter(b => !b.url.startsWith("mvn:"))
               .map(u => s"Unsupported bundle URL: ${u}") ++
             local.runtimeConfig.resources
@@ -251,7 +251,7 @@ trait CollectorService {
 
         // we know the urls all start with "mvn:"
         // now install bundles
-        local.resolvedRuntimeConfig.allBundles.map { b =>
+        local.resolvedProfile.allBundles.map { b =>
           val file = local.bundleLocation(b)
           val path = MvnGav.parse(b.url.substring("mvn:".size)).get.toUrl("")
           installBundle(repoId, path, file, b.artifact.sha1Sum)

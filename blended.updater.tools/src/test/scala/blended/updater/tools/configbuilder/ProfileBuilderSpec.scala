@@ -3,15 +3,15 @@ package blended.updater.tools.configbuilder
 import de.tototec.cmdoption.CmdlineParser
 import org.scalatest.freespec.AnyFreeSpec
 
-class RuntimConfigBuilderSpec extends AnyFreeSpec {
+class ProfileBuilderSpec extends AnyFreeSpec {
 
   "CmdOption validate" in {
-    val cp = new CmdlineParser(new RuntimeConfigBuilder.CmdOptions())
+    val cp = new CmdlineParser(new ProfileBuilder.CmdOptions())
     cp.validate()
   }
 
   "--help should succeed" in {
-    RuntimeConfigBuilder.run(Array("--help"))
+    ProfileBuilder.run(Array("--help"))
   }
 
 }

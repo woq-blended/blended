@@ -27,32 +27,33 @@ object Launcher {
   private lazy val blendedHomeDir = Option(System.getProperty("blended.home")).getOrElse(".")
   private lazy val containerConfigDirectory = blendedHomeDir + "/etc"
 
-  private val containerIdFile : String = "blended.container.context.id"
-  private val extraStartBundle : String = "blended.laucher.startbundles"
+  private val containerIdFile: String = "blended.container.context.id"
+  private val extraStartBundle: String = "blended.laucher.startbundles"
 
-  val extraStartBundles : List[String] = Option(System.getProperty(Launcher.extraStartBundle)) match {
+  val extraStartBundles: List[String] = Option(System.getProperty(Launcher.extraStartBundle)) match {
     case None    => List.empty
     case Some(s) => s.split(",").toList
   }
 
-  case class InstalledBundle(jarBundle : LauncherConfig.BundleConfig, bundle : Bundle)
+  case class InstalledBundle(jarBundle: LauncherConfig.BundleConfig, bundle: Bundle)
 
   /**
    * Entry point of the launcher application.
    *
    * This methods will explicitly exit the VM!
    */
-  def main(args : Array[String]) : Unit = {
+  def main(args: Array[String]): Unit = {
     try {
       run(args)
     } catch {
-      case t : LauncherException =>
-        log.debug(t)(s"Caught a LauncherException. Exiting with error code: ${t.errorCode} and message: ${t.getMessage()}")
+      case t: LauncherException =>
+        log.debug(t)(
+          s"Caught a LauncherException. Exiting with error code: ${t.errorCode} and message: ${t.getMessage()}")
         if (!t.getMessage().isEmpty()) {
           Console.err.println(s"${t.getMessage()}")
         }
         sys.exit(t.errorCode)
-      case t : Throwable =>
+      case t: Throwable =>
         log.error(t)("Caught an exception. Exiting with error code: 1")
         Console.err.println(s"Error: ${t.getMessage()}")
         sys.exit(1)
@@ -60,19 +61,19 @@ object Launcher {
     sys.exit(0)
   }
 
-  private[this] def reportError(msg : String) : Unit = {
+  private[this] def reportError(msg: String): Unit = {
     log.error(msg)
     Console.err.println(msg)
     sys.error(msg)
   }
 
-  private[this] def parseArgs(args : Array[String]) : Try[Cmdline] = Try {
+  private[this] def parseArgs(args: Array[String]): Try[Cmdline] = Try {
     val cmdline = new Cmdline()
     val cp = new CmdlineParser(cmdline)
     try {
-      cp.parse(args : _*)
+      cp.parse(args: _*)
     } catch {
-      case e : CmdlineParserException =>
+      case e: CmdlineParserException =>
         reportError(s"${e.getMessage()}\nRun launcher --help for help.")
     }
 
@@ -86,7 +87,7 @@ object Launcher {
     cmdline
   }
 
-  private[this] def containerId(f : File, createContainerID : Boolean, onlyIfMissing : Boolean) : Try[String] = {
+  private[this] def containerId(f: File, createContainerID: Boolean, onlyIfMissing: Boolean): Try[String] = {
 
     val idFile = new File(containerConfigDirectory, containerIdFile)
 
@@ -107,7 +108,7 @@ object Launcher {
 
     if (generateId) {
       log.info("Creating new container id")
-      val uuid : CharSequence = UUID.randomUUID().toString.toCharArray
+      val uuid: CharSequence = UUID.randomUUID().toString.toCharArray
       Files.write(idFile.toPath, Seq(uuid).asJava)
     }
 
@@ -117,7 +118,9 @@ object Launcher {
     }
   }
 
-  private[this] def createAndPrepareLaunch(configs : Configs, createContainerId : Boolean, onlyIfMissing : Boolean) : Launcher = {
+  private[this] def createAndPrepareLaunch(configs: Configs,
+                                           createContainerId: Boolean,
+                                           onlyIfMissing: Boolean): Launcher = {
 
     val launcher = new Launcher(configs.launcherConfig)
 
@@ -125,8 +128,9 @@ object Launcher {
       case Some(localConfig) =>
         // Expose the List of mandatory container properties as a System Property
         // This will be evaluated by the Container Identifier Service
-        val propNames = localConfig.resolvedRuntimeConfig.runtimeConfig.properties.getOrElse(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "")
-        System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, propNames)
+        val propNames = localConfig.resolvedProfile.profile.properties
+          .getOrElse(Profile.Properties.PROFILE_PROPERTY_KEYS, "")
+        System.setProperty(Profile.Properties.PROFILE_PROPERTY_KEYS, propNames)
 
         localConfig.validate(
           includeResourceArchives = false,
@@ -165,17 +169,17 @@ object Launcher {
    *
    * @throws LauncherException
    */
-  def run(args : Array[String]) : Unit = {
+  def run(args: Array[String]): Unit = {
     val cmdline = parseArgs(args).get
     val handleFrameworkRestart = cmdline.handleFrameworkRestart
     var firstStart = true
-    var retVal : Int = 0
+    var retVal: Int = 0
 
     do {
       val configs = try {
         readConfigs(cmdline)
       } catch {
-        case e : Throwable =>
+        case e: Throwable =>
           log.error(e)("Could not read configs")
           throw e
       }
@@ -193,7 +197,7 @@ object Launcher {
             }
             retVal = 0
           } catch {
-            case e : Throwable =>
+            case e: Throwable =>
               log.error(e)(s"Could not write system properties file: $propFile")
               retVal = 1
           }
@@ -208,27 +212,40 @@ object Launcher {
     if (retVal != 0) throw new LauncherException("", errorCode = retVal)
   }
 
-  case class Configs(launcherConfig : LauncherConfig, profileConfig : Option[LocalRuntimeConfig] = None)
+  case class Configs(launcherConfig: LauncherConfig, profileConfig: Option[LocalRuntimeConfig] = None)
 
   /**
    * Parse the command line and wrap the result into a [[Configs]] object.
+   *
+   * We support three types of config files:
+   * - [[blended.launcher.config.LauncherConfig]] - A direct config denoting all properties and bundles
+   * - [[blended.updater.config.ProfileRef]] - given as explicit file or directory where a `profile.conf` is located
+   * - [[blended.updater.config.ProfileLookup]] - a config files with holds some information about JVM system properties
+   *   and a reference to the [[blended.updater.config.ProfileRef]] location
+   *
+   * All resources referenced by the config files (bundles, resouces) must be already locally available.
+   * Downloading and extracting them on demand is not supported.
    */
-  def readConfigs(cmdline : Cmdline) : Configs = {
+  def readConfigs(cmdline: Cmdline): Configs = {
     cmdline.configFile match {
       case Some(configFile) =>
         log.info(s"About to read configFile: [$configFile]")
-        val config = ConfigFactory.parseFile(new File(configFile), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+        val config =
+          ConfigFactory.parseFile(new File(configFile), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
         Configs(LauncherConfig.read(config))
       case None =>
-        val profileLookup : Option[ProfileLookup] = cmdline.profileLookup.map { pl =>
+        val profileLookup: Option[ProfileLookup] = cmdline.profileLookup.map { pl =>
           log.info(s"About to read profile lookup file: [$pl]")
           val c = ConfigFactory.parseFile(new File(pl), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-          ProfileLookup.read(c).map { pl =>
-            pl.copy(profileBaseDir = pl.profileBaseDir.getAbsoluteFile())
-          }.get
+          ProfileLookup
+            .read(c)
+            .map { pl =>
+              pl.copy(profileBaseDir = pl.profileBaseDir.getAbsoluteFile())
+            }
+            .get
         }
 
-        val profile : String = profileLookup match {
+        val profile: String = profileLookup match {
           case Some(pl) =>
             pl.materializedDir.getPath()
           case None =>
@@ -248,18 +265,19 @@ object Launcher {
         log.info(s"Using profile directory : [$profileDir]")
         log.info(s"Using profile file      : [${profileFile.getAbsolutePath}]")
 
-        val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+        val config =
+          ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
 
-        val runtimeConfig = ResolvedRuntimeConfig(RuntimeConfigCompanion.read(config).get)
+        val runtimeConfig = ResolvedProfile(ProfileCompanion.read(config).get)
         val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
 
         var brandingProps = Map(
-          RuntimeConfig.Properties.PROFILE_DIR -> profileDir
+          Profile.Properties.PROFILE_DIR -> profileDir
         )
         profileLookup.foreach { pl =>
           brandingProps ++= Map(
-            RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(cmdline.profileLookup.get).getAbsolutePath(),
-            RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath()
+            Profile.Properties.PROFILE_LOOKUP_FILE -> new File(cmdline.profileLookup.get).getAbsolutePath(),
+            Profile.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath()
           )
         }
 
@@ -274,11 +292,11 @@ object Launcher {
     }
   }
 
-  def apply(configFile : File) : Launcher = new Launcher(LauncherConfig.read(configFile))
+  def apply(configFile: File): Launcher = new Launcher(LauncherConfig.read(configFile))
 
-  class RunningFramework(val framework : Framework) {
+  class RunningFramework(val framework: Framework) {
 
-    def awaitFrameworkStop(framwork : Framework) : Int = {
+    def awaitFrameworkStop(framwork: Framework): Int = {
       val event = framework.waitForStop(0)
       event.getType match {
         case FrameworkEvent.ERROR =>
@@ -296,8 +314,8 @@ object Launcher {
       }
     }
 
-    val shutdownHook : Thread = new Thread("framework-shutdown-hook") {
-      override def run() : Unit = {
+    val shutdownHook: Thread = new Thread("framework-shutdown-hook") {
+      override def run(): Unit = {
         log.info("Caught kill signal: stopping framework")
         framework.stop()
         awaitFrameworkStop(framework)
@@ -307,7 +325,7 @@ object Launcher {
 
     Runtime.getRuntime.addShutdownHook(shutdownHook)
 
-    def waitForStop() : Int = {
+    def waitForStop(): Int = {
       try {
         awaitFrameworkStop(framework)
       } catch {
@@ -325,7 +343,7 @@ object Launcher {
 
 }
 
-class Launcher private (config : LauncherConfig) {
+class Launcher private (config: LauncherConfig) {
 
   import Launcher._
 
@@ -334,7 +352,7 @@ class Launcher private (config : LauncherConfig) {
   /**
    * Validate this Launcher's configuration and return the issues if any found.
    */
-  def validate() : Seq[String] = {
+  def validate(): Seq[String] = {
     val files = ("Framework JAR", config.frameworkJar) ::
       config.bundles.toList.map(b => "Bundle JAR" -> b.location)
 
@@ -353,7 +371,7 @@ class Launcher private (config : LauncherConfig) {
     }
   }
 
-  private def startFramework() : Try[Framework] = Try {
+  private def startFramework(): Try[Framework] = Try {
     log.info(s"Starting OSGi framework based on config: ${config}")
 
     // Try to locate and load the OSGi framework factory
@@ -401,7 +419,7 @@ class Launcher private (config : LauncherConfig) {
     framework
   }
 
-  private def installBundles(context : BundleContext) : Try[Seq[Launcher.InstalledBundle]] = Try {
+  private def installBundles(context: BundleContext): Try[Seq[Launcher.InstalledBundle]] = Try {
     log.info(s"Installing [${config.bundles.size}] bundles")
     config.bundles.map { b =>
       log.info(s"Installing Bundle: ${b}")
@@ -415,26 +433,24 @@ class Launcher private (config : LauncherConfig) {
     }
   }
 
-  private val isFragment : InstalledBundle => Boolean = b =>
+  private val isFragment: InstalledBundle => Boolean = b =>
     Option(b.bundle.getHeaders.get(Constants.FRAGMENT_HOST)).isDefined
 
-  private def resolveBundles(framework : Framework, bundles : Seq[InstalledBundle]) : Try[Seq[InstalledBundle]] = Try {
+  private def resolveBundles(framework: Framework, bundles: Seq[InstalledBundle]): Try[Seq[InstalledBundle]] = Try {
 
-    val frameworkWiring : FrameworkWiring = framework.adapt(classOf[FrameworkWiring])
-    frameworkWiring.resolveBundles(null /* all bundles */) match {
+    val frameworkWiring: FrameworkWiring = framework.adapt(classOf[FrameworkWiring])
+    frameworkWiring.resolveBundles(null /* all bundles */ ) match {
       case true =>
         log.info("All bundles resolved successfully")
         Seq.empty
       case false =>
-        val unresolved : Seq[InstalledBundle] = bundles.filter{ b =>
+        val unresolved: Seq[InstalledBundle] = bundles.filter { b =>
           b.bundle.getState() == Bundle.INSTALLED && !isFragment(b)
         }
 
-        val msg : String = s"The following bundles could not be resolved : ${
-          unresolved.map(
-            b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}"
-          ).mkString("\n", "\n", "")
-        }"
+        val msg: String = s"The following bundles could not be resolved : ${unresolved
+          .map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")
+          .mkString("\n", "\n", "")}"
 
         System.err.println(msg)
         log.warn(msg)
@@ -443,25 +459,27 @@ class Launcher private (config : LauncherConfig) {
     }
   }
 
-  def moveToStartlevel(framework: Framework, startLevel : Int, bundles : Seq[InstalledBundle]) : Try[Seq[(InstalledBundle, Option[Throwable])]] = Try {
-    val frameworkStartLevel : FrameworkStartLevel = framework.adapt(classOf[FrameworkStartLevel])
+  def activateStartLevel(framework: Framework,
+                         startLevel: Int,
+                         bundles: Seq[InstalledBundle]): Try[Seq[(InstalledBundle, Option[Throwable])]] = Try {
+    val frameworkStartLevel: FrameworkStartLevel = framework.adapt(classOf[FrameworkStartLevel])
     log.info(s"------ Entering start level [$startLevel] ------")
     frameworkStartLevel.setStartLevel(startLevel, new FrameworkListener() {
-      override def frameworkEvent(event : FrameworkEvent) : Unit = {
+      override def frameworkEvent(event: FrameworkEvent): Unit = {
         log.debug(s"Active start level [${startLevel}] reached")
       }
     })
 
-    val bundlesToStart : Seq[InstalledBundle] = bundles.filter { b =>
+    val bundlesToStart: Seq[InstalledBundle] = bundles.filter { b =>
       !isFragment(b) &&
-        b.jarBundle.startLevel == startLevel &&
-        (b.jarBundle.start || extraStartBundles.contains(b.bundle.getSymbolicName()))
+      b.jarBundle.startLevel == startLevel &&
+      (b.jarBundle.start || extraStartBundles.contains(b.bundle.getSymbolicName()))
     }
 
-    log.info(s"Starting [${bundlesToStart.size}] bundles : [${bundlesToStart.map(_.bundle.getSymbolicName()).mkString(",")}]")
+    log.info(
+      s"Starting [${bundlesToStart.size}] bundles : [${bundlesToStart.map(_.bundle.getSymbolicName()).mkString(",")}]")
 
-    val attemptedBundles : Seq[(InstalledBundle, Option[Throwable])] = bundlesToStart.map { bundle =>
-
+    val attemptedBundles: Seq[(InstalledBundle, Option[Throwable])] = bundlesToStart.map { bundle =>
       log.debug(s"Trying to start bundle : [${bundle.bundle.getSymbolicName()}-${bundle.bundle.getVersion()}]")
       Try {
         bundle.bundle.start()
@@ -478,11 +496,10 @@ class Launcher private (config : LauncherConfig) {
 
     log.info(s"Started [${attemptedBundles.count(_._2.isEmpty)}] bundles for start level [$startLevel]")
 
-    val failedBundles : Seq[(InstalledBundle, Option[Throwable])] = attemptedBundles.filter(_._2.isDefined)
+    val failedBundles: Seq[(InstalledBundle, Option[Throwable])] = attemptedBundles.filter(_._2.isDefined)
     if (failedBundles.nonEmpty) {
-      log.warn(s"Could not start some bundles:\n${
-        failedBundles.map(failed => s"\n - ${failed._1}\n ---> ${failed._2}")
-      }")
+      log.warn(
+        s"Could not start some bundles:\n${failedBundles.map(failed => s"\n - ${failed._1}\n ---> ${failed._2}")}")
     }
 
     failedBundles
@@ -491,13 +508,13 @@ class Launcher private (config : LauncherConfig) {
   /**
    * Run an (embedded) OSGiFramework based of this Launcher's configuration.
    */
-  def start(cmdLine : Cmdline) : Try[Framework] = Try {
+  def start(cmdLine: Cmdline): Try[Framework] = Try {
 
-    val framework : Framework = startFramework().get
-    val osgiBundles : Seq[InstalledBundle] = installBundles(framework.getBundleContext()).get
+    val framework: Framework = startFramework().get
+    val osgiBundles: Seq[InstalledBundle] = installBundles(framework.getBundleContext()).get
 
     /* Make sure all bundles are resolved before attempting the start sequence */
-    val unresolved :Seq[InstalledBundle] = resolveBundles(framework, osgiBundles).get
+    val unresolved: Seq[InstalledBundle] = resolveBundles(framework, osgiBundles).get
     if (unresolved.nonEmpty && cmdLine.strict) {
       // in strict mode, nor resolved bundles fail the whole container
       log.error("Shutting down container due to unresolved bundles.")
@@ -506,11 +523,12 @@ class Launcher private (config : LauncherConfig) {
 
     // Iterate over start levels and activate bundles in the correct order
     1.to(config.startLevel).foreach { startLevel =>
-      val failedBundles : Seq[(InstalledBundle, Option[Throwable])] = moveToStartlevel(framework, startLevel, osgiBundles).get
+      val failedBundles: Seq[(InstalledBundle, Option[Throwable])] =
+        activateStartLevel(framework, startLevel, osgiBundles).get
 
       if (failedBundles.nonEmpty && cmdLine.strict) {
         // in strict mode, bundles that failed to start fail the whole container
-        log.warn("Shutting down container due to bundle start failures.")
+        log.error("Shutting down container due to bundle start failures.")
         framework.stop()
       }
     }
@@ -524,7 +542,7 @@ class Launcher private (config : LauncherConfig) {
   /**
    * Run an (embedded) OSGiFramework based of this Launcher's configuration.
    */
-  def run(cmdLine : Cmdline) : Int = {
+  def run(cmdLine: Cmdline): Int = {
     start(cmdLine) match {
       case Success(framework) =>
         val handle = new RunningFramework(framework)

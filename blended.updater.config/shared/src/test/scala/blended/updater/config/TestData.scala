@@ -44,7 +44,7 @@ trait TestData {
   } yield GeneratedConfig(configFile, config)
   implicit val arbGeneratedConfig: Arbitrary[GeneratedConfig] = Arbitrary(generatedConfigs)
 
-  val runtimeConfigs = for {
+  val profiles = for {
     name <- arbitrary[String]
     version <- arbitrary[String]
     bundles <- arbitrary[List[BundleConfig]]
@@ -57,7 +57,7 @@ trait TestData {
     resources <- arbitrary[List[Artifact]]
     resolvedFeatures <- arbitrary[List[FeatureConfig]]
   } yield
-    RuntimeConfig(
+    Profile(
       name,
       version,
       bundles,
@@ -70,11 +70,11 @@ trait TestData {
       resources,
       resolvedFeatures
     )
-  implicit val arbRuntimeConfigs: Arbitrary[RuntimeConfig] = Arbitrary(runtimeConfigs)
+  implicit val arbProfile: Arbitrary[Profile] = Arbitrary(profiles)
 
   val addRuntimeConfigs = for {
     id <- arbitrary[String]
-    runtimeConfig <- arbitrary[RuntimeConfig]
+    runtimeConfig <- arbitrary[Profile]
   } yield AddRuntimeConfig(id, runtimeConfig)
 
   val stageProfiles = for {
@@ -109,17 +109,17 @@ trait TestData {
   } yield ServiceInfo(name, serviceType, timestampMsec, lifetimeMsec, props)
   implicit val arbServiceInfo: Arbitrary[ServiceInfo] = Arbitrary(serviceInfos)
 
-  val profiles = for {
+  val profileRefs = for {
     name <- arbitrary[String]
     version <- arbitrary[String]
-  } yield Profile(name, version)
-  implicit val arbProfile: Arbitrary[Profile] = Arbitrary(profiles)
+  } yield ProfileRef(name, version)
+  implicit val arbProfileRef: Arbitrary[ProfileRef] = Arbitrary(profileRefs)
 
   val containerInfos = for {
     containerId <- arbitrary[String]
     properties <- arbitrary[Map[String, String]]
     serviceInfos <- arbitrary[List[ServiceInfo]]
-    profiles <- arbitrary[List[Profile]]
+    profiles <- arbitrary[List[ProfileRef]]
     timestampMsec <- Gen.choose(10000, Long.MaxValue)
     appliedUpdateActionIds <- arbitrary[List[String]]
   } yield ContainerInfo(containerId, properties, serviceInfos, profiles, timestampMsec, appliedUpdateActionIds)

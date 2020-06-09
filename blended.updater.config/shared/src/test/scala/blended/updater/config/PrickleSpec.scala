@@ -163,7 +163,7 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     "a ContainerInfo" in logException {
 
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000L, Map("svc" -> "test"))
-      val profile = Profile("myProfile", "1.0")
+      val profile = ProfileRef("myProfile", "1.0")
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L, Nil)
 
@@ -192,7 +192,7 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
     "a RemoteContainerState" in logException {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000L, Map("svc" -> "test"))
-      val profile = Profile("myProfile", "1.0")
+      val profile = ProfileRef("myProfile", "1.0")
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L, Nil)
 
@@ -235,11 +235,11 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     testMapping[BundleConfig]
     testMapping[FeatureRef]
     testMapping[FeatureConfig]
-    testMapping[RuntimeConfig]
+    testMapping[Profile]
     testMapping[ServiceInfo]
     testMapping[UpdateAction]
     testMapping[GeneratedConfig]
-    testMapping[Profile]
+    testMapping[ProfileRef]
     testMapping[RolloutProfile]
     testMapping[ContainerInfo]
     testMapping[RemoteContainerState]

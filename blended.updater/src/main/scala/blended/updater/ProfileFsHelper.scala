@@ -34,8 +34,8 @@ class ProfileFsHelper {
 
         val config =
           ConfigFactory.parseFile(runtimeConfigFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-        val resolved = ResolvedRuntimeConfig(RuntimeConfigCompanion.read(config).get)
-        val local = LocalRuntimeConfig(baseDir = versionDir, resolvedRuntimeConfig = resolved)
+        val resolved = ResolvedProfile(ProfileCompanion.read(config).get)
+        val local = LocalRuntimeConfig(baseDir = versionDir, resolvedProfile = resolved)
 
         // consistency checks
         if (local.runtimeConfig.name == name && local.runtimeConfig.version == version) {

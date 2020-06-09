@@ -1,14 +1,14 @@
 package blended.updater.remote
 
-import blended.updater.config.RuntimeConfig
+import blended.updater.config.Profile
 
 /**
  * Persistence handling for [RuntimeConfig]s.
  */
 trait RuntimeConfigPersistor {
 
-  def persistRuntimeConfig(runtimeConfig : RuntimeConfig) : Unit
+  def persistRuntimeConfig(runtimeConfig : Profile) : Unit
 
-  def findRuntimeConfigs() : List[RuntimeConfig]
+  def findRuntimeConfigs() : List[Profile]
 
 }

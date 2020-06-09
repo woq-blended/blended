@@ -42,21 +42,21 @@ trait Mapper {
       }.asJava
     ).asJava
 
-  def mapRuntimeConfig(runtimeConfig: RuntimeConfig): java.util.Map[String, AnyRef] =
+  def mapProfile(profile: Profile): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
-      "name" -> runtimeConfig.name,
-      "version" -> runtimeConfig.version,
-      "bundles" -> runtimeConfig.bundles.map { b =>
+      "name" -> profile.name,
+      "version" -> profile.version,
+      "bundles" -> profile.bundles.map { b =>
         mapBundleConfig(b)
       }.asJava,
-      "startLevel" -> java.lang.Integer.valueOf(runtimeConfig.startLevel),
-      "defaultStartLevel" -> java.lang.Integer.valueOf(runtimeConfig.defaultStartLevel),
-      "properties" -> runtimeConfig.properties.asJava,
-      "frameworkProperties" -> runtimeConfig.frameworkProperties.asJava,
-      "systemProperties" -> runtimeConfig.systemProperties.asJava,
-      "features" -> runtimeConfig.features.map(f => mapFeatureRef(f)).asJava,
-      "resources" -> runtimeConfig.resources.map(a => mapArtifact(a)).asJava,
-      "resolvedFeatures" -> runtimeConfig.resolvedFeatures.map(f => mapFeatureConfig(f)).asJava
+      "startLevel" -> java.lang.Integer.valueOf(profile.startLevel),
+      "defaultStartLevel" -> java.lang.Integer.valueOf(profile.defaultStartLevel),
+      "properties" -> profile.properties.asJava,
+      "frameworkProperties" -> profile.frameworkProperties.asJava,
+      "systemProperties" -> profile.systemProperties.asJava,
+      "features" -> profile.features.map(f => mapFeatureRef(f)).asJava,
+      "resources" -> profile.resources.map(a => mapArtifact(a)).asJava,
+      "resolvedFeatures" -> profile.resolvedFeatures.map(f => mapFeatureConfig(f)).asJava
     ).asJava
 
   def mapRemoteContainerState(s: RemoteContainerState): java.util.Map[String, AnyRef] =
@@ -79,7 +79,7 @@ trait Mapper {
       "containerId" -> ci.containerId,
       "properties" -> ci.properties.asJava,
       "serviceInfos" -> ci.serviceInfos.map(si => mapServiceInfo(si)).asJava,
-      "profiles" -> ci.profiles.map(p => mapProfile(p)).asJava,
+      "profiles" -> ci.profiles.map(p => mapProfileRef(p)).asJava,
       "timestampMsec" -> java.lang.Long.valueOf(ci.timestampMsec)
     ).asJava
 
@@ -88,7 +88,7 @@ trait Mapper {
       Map(
         "kind" -> UpdateAction.KindAddRuntimeConfig,
         "id" -> id,
-        "runtimeConfig" -> mapRuntimeConfig(rc)
+        "runtimeConfig" -> mapProfile(rc)
       ).asJava
     case ActivateProfile(id, profileName, profileVersion) =>
       Map[String, AnyRef](
@@ -112,7 +112,7 @@ trait Mapper {
       "config" -> c.config
     ).asJava
 
-  def mapProfile(p: Profile): java.util.Map[String, AnyRef] =
+  def mapProfileRef(p: ProfileRef): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> p.name,
       "version" -> p.version
@@ -145,7 +145,7 @@ trait Mapper {
       case UpdateAction.KindAddRuntimeConfig =>
         AddRuntimeConfig(
           id = a("id").asInstanceOf[String],
-          runtimeConfig = unmapRuntimeConfig(a("runtimeConfig")).get
+          runtimeConfig = unmapProfile(a("runtimeConfig")).get
         )
       case UpdateAction.KindActivateProfile =>
         ActivateProfile(
@@ -173,7 +173,8 @@ trait Mapper {
         .asScala
         .toList
         .map(si => unmapServiceInfo(si).get),
-      profiles = ci("profiles").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(p => unmapProfile(p).get),
+      profiles =
+        ci("profiles").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(p => unmapProfileRef(p).get),
       timestampMsec = ci("timestampMsec").asInstanceOf[java.lang.Long].longValue(),
       appliedUpdateActionIds = Nil
     )
@@ -190,17 +191,17 @@ trait Mapper {
     )
   }
 
-  def unmapProfile(map: AnyRef): Try[Profile] = Try {
+  def unmapProfileRef(map: AnyRef): Try[ProfileRef] = Try {
     val p = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
-    Profile(
+    ProfileRef(
       name = p("name").asInstanceOf[String],
       version = p("version").asInstanceOf[String]
     )
   }
 
-  def unmapRuntimeConfig(map: AnyRef): Try[RuntimeConfig] = Try {
+  def unmapProfile(map: AnyRef): Try[Profile] = Try {
     val rc = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
-    RuntimeConfig(
+    Profile(
       name = rc("name").asInstanceOf[String],
       version = rc("version").asInstanceOf[String],
       bundles =

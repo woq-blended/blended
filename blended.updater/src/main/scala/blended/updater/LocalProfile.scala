@@ -32,11 +32,11 @@ object LocalProfile {
 case class LocalProfile(config: LocalRuntimeConfig, state: LocalProfile.ProfileState) {
   def profileId: ProfileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version)
 
-  def runtimeConfig: RuntimeConfig = config.resolvedRuntimeConfig.runtimeConfig
+  def runtimeConfig: Profile = config.resolvedProfile.profile
 
-  def bundles: List[BundleConfig] = config.resolvedRuntimeConfig.allBundles
+  def bundles: List[BundleConfig] = config.resolvedProfile.allBundles
 
-  def toSingleProfile: Profile = {
+  def toSingleProfile: ProfileRef = {
     val (oState, reason) = state match {
       case LocalProfile.Pending(issues) => (OverlayState.Pending, Some(issues.mkString("; ")))
       case LocalProfile.Invalid(issues) => (OverlayState.Invalid, Some(issues.mkString("; ")))
@@ -44,7 +44,7 @@ case class LocalProfile(config: LocalRuntimeConfig, state: LocalProfile.ProfileS
       case LocalProfile.Staged => (OverlayState.Valid, None)
     }
 
-    Profile(
+    ProfileRef(
       config.runtimeConfig.name,
       config.runtimeConfig.version
     )

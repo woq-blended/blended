@@ -42,10 +42,10 @@ object MockObjects {
   private[this] def serviceSeq(numServices: Int): List[ServiceInfo] =
     1.to(numServices).map(_ => serviceInfo()).toList
 
-  lazy val validProfiles: List[Profile] = List(
-    Profile(name = "blended-demo", "1.0"),
-    Profile(name = "blended-simple", "1.0"),
-    Profile(name = "blended-simple", "1.1")
+  lazy val validProfiles: List[ProfileRef] = List(
+    ProfileRef(name = "blended-demo", "1.0"),
+    ProfileRef(name = "blended-simple", "1.0"),
+    ProfileRef(name = "blended-simple", "1.1")
   )
 
   def createContainer(numContainers: Integer): List[ContainerInfo] =
