@@ -1388,11 +1388,13 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       def osgiFrameworkIvyDeps: Map[String, Dep] = Map(
         "Felix 5.0.0" -> ivy"org.apache.felix:org.apache.felix.framework:5.0.0",
         "Felix 5.6.10" -> ivy"org.apache.felix:org.apache.felix.framework:5.6.10",
+        "Felix 6.0.3" -> ivy"org.apache.felix:org.apache.felix.framework:6.0.3",
 //        "Eclipse OSGi 3.8.0" -> ivy"org.eclipse:org.eclipse.osgi:3.8.0.v20120529-1548",
+//        "Eclipse OSGi 3.9.1.v20130814-1242" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.9.1.v20130814-1242",
+        "Eclipse OSGi 3.10.0.v20140606-1445" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.10.0.v20140606-1445",
         "Eclipse OSGi 3.10.100.v20150529-1857" -> ivy"org.osgi:org.eclipse.osgi:3.10.100.v20150529-1857",
         "Eclipse OSGi 3.12.50" -> ivy"org.eclipse.platform:org.eclipse.osgi:3.12.50",
-//        "Eclipse OSGi 3.9.1.v20130814-1242" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.9.1.v20130814-1242",
-        "Eclipse OSGi 3.10.0.v20140606-1445" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.10.0.v20140606-1445"
+        "Eclipse OSGi 3.15.200" -> ivy"org.eclipse.platform:org.eclipse.osgi:3.15.200"
       )
       def resolvedOsgiFrameworks = T{
         Target.traverse(osgiFrameworkIvyDeps.toSeq){ case (name, dep) =>
