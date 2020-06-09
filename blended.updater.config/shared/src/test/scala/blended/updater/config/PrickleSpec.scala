@@ -245,10 +245,8 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     testMapping[OverlayRef]
     testMapping[OverlaySet]
     testMapping[RolloutProfile]
-
-    // FIXME: those 2 tests never return
-    // testMapping(mapContainerInfo, unmapContainerInfo)
-    // testMapping(mapRemoteContainerState, unmapRemoteContainerState)
+    testMapping[ContainerInfo]
+    testMapping[RemoteContainerState]
   }
 
   def logException[T](f : => T) : T = try {
