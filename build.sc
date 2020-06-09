@@ -2333,8 +2333,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       deps.typesafeConfig
     )
     override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
+      s"${blendedModule}.arm",
       s"${blendedModule}.config",
-      s"${blendedModule}.arm"
+      s"${blendedModule}.io"
     )
     object test extends Tests {
       override def ivyDeps = T{ super.ivyDeps() ++ Agg(

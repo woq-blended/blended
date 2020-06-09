@@ -1,4 +1,4 @@
-package blended.updater.config.util
+package blended.util.io
 
 import java.io.{InputStream, OutputStream}
 
@@ -13,7 +13,7 @@ object StreamCopy {
    * This methods blocks as long as the input stream is open.
    * It's the callers responsibility to properly create and close the output stream.
    */
-  def copy(in : InputStream, out : OutputStream) : Unit = {
+  def copy(in: InputStream, out: OutputStream): Unit = {
     val buf = new Array[Byte](1024)
     var len = 0
     while ({
@@ -22,5 +22,10 @@ object StreamCopy {
     }) {
       out.write(buf, 0, len)
     }
+    out.flush()
+  }
+
+  def copyInteractive(in: InputStream, out: OutputStream): Unit = {
+
   }
 }

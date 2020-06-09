@@ -3,8 +3,9 @@ package blended.launcher.jvmrunner
 import java.io.{IOException, InputStream, OutputStream}
 
 import blended.util.logging.Logger
-
 import scala.concurrent.duration._
+
+import blended.util.io.StreamCopy
 
 private[jvmrunner] class RunningProcess(
   process : Process,
@@ -107,14 +108,7 @@ private[jvmrunner] class RunningProcess(
         }
       }
     } else {
-      val buf = new Array[Byte](1024)
-      var len = 0
-      while ({
-        len = in.read(buf)
-        len > 0
-      }) {
-        out.write(buf, 0, len)
-      }
+      StreamCopy.copy(in, out)
     }
   }
 }
