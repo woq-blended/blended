@@ -3,14 +3,14 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
-import blended.updater.config.RuntimeConfig
-import blended.util.logging.Logger
-import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
-import blended.util.RichTry._
-
 import scala.beans.BeanProperty
 import scala.jdk.CollectionConverters._
 import scala.util.{Success, Try}
+
+import blended.updater.config.Profile
+import blended.util.RichTry._
+import blended.util.logging.Logger
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
 class ContainerContextImpl() extends AbstractContainerContextImpl {
 
@@ -64,7 +64,7 @@ class ContainerContextImpl() extends AbstractContainerContextImpl {
   private[this] lazy val profileDir: String = {
 
     val profileHome =
-      brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) orElse {
+      brandingProperties.get(Profile.Properties.PROFILE_DIR) orElse {
         log.warn("Could not read the profile directory from read launcher branding properties")
         None
       }

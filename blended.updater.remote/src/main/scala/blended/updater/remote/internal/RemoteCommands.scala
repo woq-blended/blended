@@ -58,7 +58,7 @@ class RemoteCommands(remoteUpdater: RemoteUpdater) {
     } else {
       println(s"Reading profile from file: ${file.toURI()}")
       val config = ConfigFactory.parseFile(file).resolve()
-      val runtimeConfig = RuntimeConfigCompanion.read(config)
+      val runtimeConfig = ProfileCompanion.read(config)
       println(s"Profile: ${runtimeConfig}")
       remoteUpdater.registerRuntimeConfig(runtimeConfig.get)
     }

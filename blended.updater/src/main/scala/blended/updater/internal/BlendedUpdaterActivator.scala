@@ -3,7 +3,7 @@ package blended.updater.internal
 import java.io.File
 
 import blended.akka.ActorSystemWatching
-import blended.updater.config.{ConfigWriter, ProfileLookup, RuntimeConfig}
+import blended.updater.config.{ConfigWriter, ProfileLookup, Profile}
 import blended.updater.{ProfileActivator, ProfileId, Updater, UpdaterConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
@@ -74,11 +74,11 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
     try {
       val props = blended.launcher.runtime.Branding.getProperties()
       log.info("Blended Launcher detected: " + props)
-      val pName = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_NAME))
-      val pVersion = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_VERSION))
-      val pProfileLookupFile = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE))
-      val pProfilesBaseDir = Option(props.getProperty(RuntimeConfig.Properties.PROFILES_BASE_DIR))
-      val pProfileDir = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_DIR))
+      val pName = Option(props.getProperty(Profile.Properties.PROFILE_NAME))
+      val pVersion = Option(props.getProperty(Profile.Properties.PROFILE_VERSION))
+      val pProfileLookupFile = Option(props.getProperty(Profile.Properties.PROFILE_LOOKUP_FILE))
+      val pProfilesBaseDir = Option(props.getProperty(Profile.Properties.PROFILES_BASE_DIR))
+      val pProfileDir = Option(props.getProperty(Profile.Properties.PROFILE_DIR))
       Some(
         UpdateEnv(
           launchedProfileName = pName.get,

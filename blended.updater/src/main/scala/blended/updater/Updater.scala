@@ -310,7 +310,7 @@ class Updater(
         if (stagingInProgress.contains(reqId)) {
           log.error(s"Duplicate id detected. Dropping request [${msg}]")
         } else {
-          val artifacts = config.resolvedRuntimeConfig.allBundles.map { b =>
+          val artifacts = config.resolvedProfile.allBundles.map { b =>
             ArtifactInProgress(nextId(), b.artifact, config.bundleLocation(b))
           } ++
             config.runtimeConfig.resources.map { r =>
@@ -363,8 +363,8 @@ class Updater(
           config.resolve() match {
             case Success(resolved) =>
               confFile.getParentFile().mkdirs()
-              ConfigWriter.write(RuntimeConfigCompanion.toConfig(config), confFile, None)
-              runtimeConfigs += LocalRuntimeConfig(baseDir = confFile.getParentFile(), resolvedRuntimeConfig = resolved)
+              ConfigWriter.write(ProfileCompanion.toConfig(config), confFile, None)
+              runtimeConfigs += LocalRuntimeConfig(baseDir = confFile.getParentFile(), resolvedProfile = resolved)
               sender() ! OperationSucceeded(reqId)
             case Failure(e) =>
               sender() ! OperationFailed(reqId, s"Given runtime config can't be resolved: ${e.getMessage}")
@@ -575,7 +575,7 @@ object Updater {
    * Register a (new) runtime config.
    * Reply: [[OperationSucceeded]], [[OperationFailed]]
    */
-  final case class AddRuntimeConfig(override val requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
+  final case class AddRuntimeConfig(override val requestId: String, runtimeConfig: Profile) extends Protocol
 
   /**
    * Stage a profile, which is a runtime config with an overlay set.

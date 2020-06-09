@@ -1,14 +1,14 @@
 package blended.updater.config
 
-import blended.testsupport.TestFile
-import com.typesafe.config.{ConfigException, ConfigFactory}
 import scala.io.Source
 import scala.util.Success
 
+import blended.testsupport.TestFile
+import com.typesafe.config.{ConfigException, ConfigFactory}
 import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
 
-class RuntimeConfigTest
+class ProfileSpec
   extends AnyFreeSpecLike
   with Matchers
   with TestFile {
@@ -26,7 +26,7 @@ class RuntimeConfigTest
       |""".stripMargin
 
     "read" in {
-      RuntimeConfigCompanion.read(ConfigFactory.parseString(minimal)).get
+      ProfileCompanion.read(ConfigFactory.parseString(minimal)).get
     }
 
     val lines = minimal.trim().split("\n")
@@ -34,14 +34,14 @@ class RuntimeConfigTest
       "without line " + n + " must fail" in {
         val config = lines.take(n) ++ lines.drop(n + 1)
         val ex = intercept[RuntimeException] {
-          ResolvedRuntimeConfig(RuntimeConfigCompanion.read(ConfigFactory.parseString(config.mkString("\n"))).get, List())
+          ResolvedProfile(ProfileCompanion.read(ConfigFactory.parseString(config.mkString("\n"))).get, List())
         }
         assert(ex.isInstanceOf[ConfigException] || ex.isInstanceOf[IllegalArgumentException])
       }
     }
 
     "read -> toConfig -> read must result in same config" in {
-      import RuntimeConfigCompanion._
+      import ProfileCompanion._
       val config = read(ConfigFactory.parseString(minimal))
       assert(config === read(toConfig(config.get)))
     }
@@ -50,17 +50,17 @@ class RuntimeConfigTest
   "resolveFileName" - {
     "should infer the correct filename from a file URL" in {
       val bundle = BundleConfig(url = "file:///tmp/file1.jar", start = false, startLevel = 0)
-      val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
+      val rc = Profile(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file1.jar"))
     }
     "should infer the correct filename from a http URL" in {
       val bundle = BundleConfig(url = "http:///tmp/file1.jar", start = false, startLevel = 0)
-      val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
+      val rc = Profile(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file1.jar"))
     }
     "should infer the correct filename from a mvn URL without a repo setting" in {
       val bundle = BundleConfig(url = "mvn:group:file:1", start = false, startLevel = 0)
-      val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
+      val rc = Profile(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file-1.jar"))
     }
 
@@ -122,15 +122,15 @@ class RuntimeConfigTest
     val resolver = FeatureResolver
 
     "should resolve to a valid config" in {
-      val rcTry = RuntimeConfigCompanion.read(ConfigFactory.parseString(config))
+      val rcTry = ProfileCompanion.read(ConfigFactory.parseString(config))
       rcTry shouldBe a[Success[_]]
 
       val resolvedTry = resolver.resolve(rcTry.get, features)
       resolvedTry shouldBe a[Success[_]]
       val resolved = resolvedTry.get
-      resolved.runtimeConfig.bundles should have size (1)
+      resolved.profile.bundles should have size (1)
       resolved.allBundles should have size (4)
-      resolved.runtimeConfig.features should have size (2)
+      resolved.profile.features should have size (2)
     }
 
   }
@@ -140,7 +140,7 @@ class RuntimeConfigTest
       s"should download a local file (try ${i})" in {
         withTestFiles("content", "") { (file, target) =>
           assert(Source.fromFile(file).getLines().toList === List("content"), "Precondition failed")
-          val result = RuntimeConfigCompanion.download(file.toURI().toString(), target)
+          val result = ProfileCompanion.download(file.toURI().toString(), target)
           assert(result === Success(target))
           assert(Source.fromFile(target).getLines().toList === List("content"))
         }

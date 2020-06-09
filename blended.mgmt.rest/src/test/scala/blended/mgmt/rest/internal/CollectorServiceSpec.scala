@@ -70,9 +70,9 @@ class CollectorServiceSpec
 
   override def version: String = "TEST"
 
-  override def registerRuntimeConfig(rc: RuntimeConfig): Unit = ???
+  override def registerRuntimeConfig(rc: Profile): Unit = ???
 
-  override def getRuntimeConfigs(): sci.Seq[RuntimeConfig] = ???
+  override def getRuntimeConfigs(): sci.Seq[Profile] = ???
 
   override def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit = ???
 

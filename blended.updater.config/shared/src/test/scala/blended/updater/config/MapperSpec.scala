@@ -29,11 +29,11 @@ class MapperSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
     testMapping(mapBundleConfig, unmapBundleConfig)
     testMapping(mapFeatureRef, unmapFeatureRef)
     testMapping(mapFeatureConfig, unmapFeatureConfig)
-    testMapping(mapRuntimeConfig, unmapRuntimeConfig)
+    testMapping(mapProfile, unmapProfile)
     testMapping(mapServiceInfo, unmapServiceInfo)
     testMapping(mapUpdateAction, unmapUpdateAction)
     testMapping(mapGeneratedConfig, unmapGeneratedConfig)
-    testMapping(mapProfile, unmapProfile)
+    testMapping(mapProfileRef, unmapProfileRef)
 
     // FIXME: those 2 tests never return
     // testMapping(mapContainerInfo, unmapContainerInfo)

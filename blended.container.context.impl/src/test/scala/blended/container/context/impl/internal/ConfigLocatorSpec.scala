@@ -3,7 +3,7 @@ package blended.container.context.impl.internal
 import blended.container.context.api.ContainerContext
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.updater.config.RuntimeConfig
+import blended.updater.config.Profile
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.matchers.should.Matchers
 
@@ -11,7 +11,7 @@ class ConfigLocatorSpec extends LoggingFreeSpec
   with Matchers {
 
   private val cfgDir : String = BlendedTestSupport.projectTestOutput
-  System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
+  System.setProperty(Profile.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
   System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
   System.setProperty("blended.container.home", BlendedTestSupport.projectTestOutput)
   System.setProperty("COUNTRY", "cc")

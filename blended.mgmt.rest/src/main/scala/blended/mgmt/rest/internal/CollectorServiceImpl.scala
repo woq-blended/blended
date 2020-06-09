@@ -83,9 +83,9 @@ class CollectorServiceImpl(
     states
   }
 
-  override def registerRuntimeConfig(rc : RuntimeConfig) : Unit = updater.registerRuntimeConfig(rc)
+  override def registerRuntimeConfig(rc : Profile) : Unit = updater.registerRuntimeConfig(rc)
 
-  override def getRuntimeConfigs() : immutable.Seq[RuntimeConfig] = updater.getRuntimeConfigs()
+  override def getRuntimeConfigs() : immutable.Seq[Profile] = updater.getRuntimeConfigs()
 
   override def addUpdateAction(containerId : String, updateAction : UpdateAction) : Unit = updater.addAction(containerId, updateAction)
 

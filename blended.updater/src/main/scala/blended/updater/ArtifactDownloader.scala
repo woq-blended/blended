@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.actor.{Actor, ActorLogging, Props, actorRef2Scala}
 import akka.event.LoggingReceive
-import blended.updater.config.{Artifact, MvnGav, RuntimeConfig, RuntimeConfigCompanion}
+import blended.updater.config.{Artifact, MvnGav, Profile, ProfileCompanion}
 import blended.util.logging.Logger
 
 import scala.util.{Failure, Success, Try}
@@ -22,7 +22,7 @@ class ArtifactDownloader(mvnRepositories : List[String])
     } else {
       artifact.sha1Sum match {
         case None => None
-        case Some(sha1) => RuntimeConfigCompanion.digestFile(file) match {
+        case Some(sha1) => ProfileCompanion.digestFile(file) match {
           case Some(`sha1`)   => None
           case Some(fileSha1) => Some(s"File checksum $fileSha1 does not match $sha1")
           case None           => Some(s"Could not verify checksum of file $file")
@@ -34,9 +34,9 @@ class ArtifactDownloader(mvnRepositories : List[String])
   private def artifactUrls(artifact : Artifact) : Try[List[String]] = {
     val url = artifact.url
 
-    if (url.startsWith(RuntimeConfig.MvnPrefix)) {
+    if (url.startsWith(Profile.MvnPrefix)) {
       log.debug(s"detected Maven url: [$url]")
-      val gav = MvnGav.parse(artifact.url.substring(RuntimeConfig.MvnPrefix.length()))
+      val gav = MvnGav.parse(artifact.url.substring(Profile.MvnPrefix.length()))
       gav.map(gav => mvnRepositories.map(repo => gav.toUrl(repo)))
     } else {
       Success(List(url))
@@ -50,7 +50,7 @@ class ArtifactDownloader(mvnRepositories : List[String])
         DownloadFailed(d.requestId, s"Could not download file [${d.file}]. Error: No Maven repositories defined.")
 
       case Success(url :: _) =>
-        RuntimeConfigCompanion.download(url, d.file) match {
+        ProfileCompanion.download(url, d.file) match {
           case Success(f) =>
             fileIssue(f, d.artifact) match {
               case None        => DownloadFinished(d.requestId)

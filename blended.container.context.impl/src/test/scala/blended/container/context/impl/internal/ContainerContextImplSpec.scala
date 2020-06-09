@@ -1,15 +1,15 @@
 package blended.container.context.impl.internal
 
+import scala.util.Try
+
 import blended.container.context.api.ContainerContext
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.updater.config.RuntimeConfig
-import blended.util.logging.Logger
-import org.scalatest.matchers.should.Matchers
+import blended.updater.config.Profile
 import blended.util.RichTry._
+import blended.util.logging.Logger
 import com.typesafe.config.Config
-
-import scala.util.Try
+import org.scalatest.matchers.should.Matchers
 
 class ContainerContextImplSpec extends LoggingFreeSpec
   with Matchers {
@@ -21,7 +21,7 @@ class ContainerContextImplSpec extends LoggingFreeSpec
     "initialize correctly" in {
 
       System.setProperty("COUNTRY", "cc")
-      System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
+      System.setProperty(Profile.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
       System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
       System.setProperty("blended.container.home", BlendedTestSupport.projectTestOutput)
 

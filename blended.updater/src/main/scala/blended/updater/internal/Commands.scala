@@ -61,7 +61,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
     s"${configs.size} runtime configs:\n${configs.toList
       .map {
-        case LocalRuntimeConfig(c, _) => s"${c.runtimeConfig.name}-${c.runtimeConfig.version}"
+        case LocalRuntimeConfig(c, _) => s"${c.profile.name}-${c.profile.version}"
       }
       .sorted
       .mkString("\n")}"
@@ -71,7 +71,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
   def registerRuntimeConfig(file: File): AnyRef = {
     val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-    val runtimeConfig = RuntimeConfigCompanion.read(config).get
+    val runtimeConfig = ProfileCompanion.read(config).get
     println("About to add: " + runtimeConfig)
 
     implicit val timeout = Timeout(5, SECONDS)

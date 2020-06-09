@@ -12,27 +12,30 @@ import scala.jdk.CollectionConverters._
 import scala.collection.immutable._
 import scala.util.{Failure, Success, Try}
 
-object RuntimeConfigBuilder {
+object ProfileBuilder {
 
   class CmdOptions {
     @CmdOption(names = Array("-h", "--help"), isHelp = true)
-    var help : Boolean = false
+    var help: Boolean = false
 
     @CmdOption(names = Array("-d", "--download-missing"))
-    var downloadMissing : Boolean = false
+    var downloadMissing: Boolean = false
 
     @CmdOption(names = Array("-u", "--update-checksums"))
-    var updateChecksums : Boolean = false
+    var updateChecksums: Boolean = false
 
     @CmdOption(names = Array("-c", "--check"))
-    var check : Boolean = false
+    var check: Boolean = false
 
     @CmdOption(names = Array("-f"), args = Array("configfile"), description = "Read the configuration from file {0}")
-    var configFile : String = ""
+    var configFile: String = ""
 
-    @CmdOption(names = Array("-o"), args = Array("outfile"), description = "Write the updated config file to {0}",
+    @CmdOption(
+      names = Array("-o"),
+      args = Array("outfile"),
+      description = "Write the updated config file to {0}",
       conflictsWith = Array("-i"))
-    var outFile : String = ""
+    var outFile: String = ""
 
     @CmdOption(
       names = Array("-i", "--in-place"),
@@ -40,51 +43,64 @@ object RuntimeConfigBuilder {
       requires = Array("-f"),
       conflictsWith = Array("-o")
     )
-    var inPlace : Boolean = false
+    var inPlace: Boolean = false
 
-    @CmdOption(names = Array("-r", "--feature-repo"), args = Array("featurefile"),
+    @CmdOption(
+      names = Array("-r", "--feature-repo"),
+      args = Array("featurefile"),
       description = "Lookup additional feature configuration(s) from file {0}",
       maxCount = -1)
-    def addFeatureRepo(repo : String) : Unit = featureRepos ++= Seq(repo)
+    def addFeatureRepo(repo: String): Unit = featureRepos ++= Seq(repo)
 
-    var featureRepos : Seq[String] = Seq()
+    var featureRepos: Seq[String] = Seq()
 
     @CmdOption(names = Array("-m", "--maven-url"), args = Array("url"), maxCount = -1)
-    def addMavenUrl(mavenUrl : String) : Unit = this.mavenUrls ++= Seq(mavenUrl)
+    def addMavenUrl(mavenUrl: String): Unit = this.mavenUrls ++= Seq(mavenUrl)
 
-    var mavenUrls : Seq[String] = Seq()
+    var mavenUrls: Seq[String] = Seq()
 
     @CmdOption(names = Array("--debug"))
-    var debug : Boolean = false
+    var debug: Boolean = false
 
-    @CmdOption(names = Array("--maven-artifact"), args = Array("GAV", "file"), maxCount = -1,
+    @CmdOption(
+      names = Array("--maven-artifact"),
+      args = Array("GAV", "file"),
+      maxCount = -1,
       description = "Gives explicit (already downloaded) file locations for Maven GAVs")
-    def addMavenDir(gav : String, file : String) : Unit = this.mavenArtifacts ++= Seq(gav -> file)
-    var mavenArtifacts : Seq[(String, String)] = Seq()
+    def addMavenDir(gav: String, file: String): Unit = this.mavenArtifacts ++= Seq(gav -> file)
+    var mavenArtifacts: Seq[(String, String)] = Seq()
 
     @CmdOption(names = Array("--explode-resources"), description = "Explode resources (unpack and update touch-files)")
-    var explodeResources : Boolean = false
+    var explodeResources: Boolean = false
 
-    @CmdOption(names = Array("--create-launch-config"), args = Array("file"),
+    @CmdOption(
+      names = Array("--create-launch-config"),
+      args = Array("file"),
       description = "Creates the given launcher config file")
-    var createLaunchConfigFile : String = _
+    var createLaunchConfigFile: String = _
 
-    @CmdOption(names = Array("--profile-base-dir"), args = Array("dir"),
+    @CmdOption(
+      names = Array("--profile-base-dir"),
+      args = Array("dir"),
       description = "Set the profile base directory to be written via --update-launcher-conf")
-    var profileBaseDir : String = "${BLENDED_HOME}/profiles"
+    var profileBaseDir: String = "${BLENDED_HOME}/profiles"
 
-    @CmdOption(names = Array("--env-var"), args = Array("key", "value"), maxCount = -1,
-      description = "Add an additional environment variable as a fallback for resolving the config.")
-    def addEnvVar(key : String, value : String) : Unit = this.envVars ++= Seq(key -> value)
-    var envVars : Seq[(String, String)] = Seq()
+    @CmdOption(
+      names = Array("--env-var"),
+      args = Array("key", "value"),
+      maxCount = -1,
+      description = "Add an additional environment variable as a fallback for resolving the config."
+    )
+    def addEnvVar(key: String, value: String): Unit = this.envVars ++= Seq(key -> value)
+    var envVars: Seq[(String, String)] = Seq()
   }
 
-  def main(args : Array[String]) : Unit = {
+  def main(args: Array[String]): Unit = {
     try {
       run(args)
       sys.exit(0)
     } catch {
-      case e : Throwable =>
+      case e: Throwable =>
         // scalastyle:off regex
         Console.err.println(s"An error occurred: ${e.getMessage()}")
         // scalastyle:on regex
@@ -93,63 +109,67 @@ object RuntimeConfigBuilder {
   }
 
   /**
-   * Same as [[RuntimeConfigBuilder#main]], but does not call `sys.exit` but throws an exception in case of non-success.
+   * Same as [[ProfileBuilder#main]], but does not call `sys.exit` but throws an exception in case of non-success.
    */
-  def run(args : Array[String]) : Unit = {
+  def run(args: Array[String]): Unit = {
     run(args = args, debugLog = None)
   }
 
   //    val debug = options.debug
-  val debug : CmdOptions => Option[String => Unit] => String => Unit = options => {
+  val debug: CmdOptions => Option[String => Unit] => String => Unit = options => {
     case Some(dl) => dl
     case None =>
       if (options.debug) {
         // scalastyle:off regex
-        msg => Console.err.println(msg)
+        msg =>
+          Console.err.println(msg)
         // scalastyle:on regex
-      } else {
-        _ => {}
+      } else { _ =>
+        {}
       }
   }
 
   def run(
-    args : Array[String],
-    debugLog : Option[String => Unit] = None,
-    infoLog : String => Unit = Console.out.println,
-    errorLog : String => Unit = Console.err.println
-  ) : Unit = {
+      args: Array[String],
+      debugLog: Option[String => Unit] = None,
+      infoLog: String => Unit = Console.out.println,
+      errorLog: String => Unit = Console.err.println
+  ): Unit = {
 
-    val options : CmdOptions = new CmdOptions()
+    val options: CmdOptions = new CmdOptions()
 
     val cp = new CmdlineParser(options)
-    cp.parse(args : _*)
+    cp.parse(args: _*)
     if (options.help) {
       cp.usage()
       return
     }
 
-    val debug : String => Unit = debugLog match {
+    val debug: String => Unit = debugLog match {
       case Some(dl) => dl
       case None =>
         if (options.debug) msg => Console.err.println(msg)
         else msg => {}
     }
 
-    debug(s"RuntimeConfigBuilder: ${args.mkString(" ")}")
+    debug(s"ProfileBuilder: ${args.mkString(" ")}")
 
     if (options.configFile.isEmpty()) {
       sys.error("No config file given")
     }
 
-    val mvnGavs : Seq[(MvnGav, String)] = options.mavenArtifacts.map {
-      case (gav, file) => MvnGav.parse(gav) -> file
-    }.collect {
-      case (Success(gav), file) => gav -> file
-    }
+    val mvnGavs: Seq[(MvnGav, String)] = options.mavenArtifacts
+      .map {
+        case (gav, file) => MvnGav.parse(gav) -> file
+      }
+      .collect {
+        case (Success(gav), file) => gav -> file
+      }
 
     // read feature repo files
     val features = options.featureRepos.map { fileName =>
-      val featureConfig = ConfigFactory.parseFile(new File(fileName), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+      val featureConfig =
+        ConfigFactory.parseFile(new File(fileName), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
       FeatureConfigCompanion.read(featureConfig).get
     }
     debug("features: " + features)
@@ -166,12 +186,12 @@ object RuntimeConfigBuilder {
       .withFallback(ConfigFactory.parseMap(options.envVars.toMap.asJava))
       .resolve()
 
-    val unresolvedRuntimeConfig = RuntimeConfigCompanion.read(config).get
+    val unresolvedRuntimeConfig = ProfileCompanion.read(config).get
     //    val unresolvedLocalRuntimeConfig = LocalRuntimeConfig(unresolvedRuntimeConfig, dir)
 
-    debug("unresolved runtime config: " + unresolvedRuntimeConfig)
+    debug("unresolved profile: " + unresolvedRuntimeConfig)
     val resolved = FeatureResolver.resolve(unresolvedRuntimeConfig, features).get
-    debug("runtime config with resolved features: " + resolved)
+    debug("profile with resolved features: " + resolved)
 
     val localRuntimeConfig = LocalRuntimeConfig(resolved, dir)
 
@@ -185,33 +205,38 @@ object RuntimeConfigBuilder {
       }
     }
 
-    lazy val mvnUrls = resolved.runtimeConfig.properties.get(RuntimeConfig.Properties.MVN_REPO).toSeq ++ options.mavenUrls
+    lazy val mvnUrls = resolved.profile.properties.get(Profile.Properties.MVN_REPO).toSeq ++ options.mavenUrls
     debug(s"Maven URLs: $mvnUrls")
 
-    def downloadUrls(b : Artifact) : Seq[String] = {
+    def downloadUrls(b: Artifact): Seq[String] = {
       val directUrl = MvnGavSupport.downloadUrls(mvnGavs, b, options.debug)
-      directUrl.map(Seq(_)).getOrElse(mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(b.url, Option(baseUrl)).toOption).toList)
+      directUrl
+        .map(Seq(_))
+        .getOrElse(mvnUrls.flatMap(baseUrl => Profile.resolveBundleUrl(b.url, Option(baseUrl)).toOption).toList)
     }
 
     if (options.downloadMissing) {
 
       val files = resolved.allBundles.distinct.map { b =>
-        RuntimeConfigCompanion.bundleLocation(b, dir) -> downloadUrls(b.artifact)
-      } ++ resolved.runtimeConfig.resources.map(r =>
-        RuntimeConfigCompanion.resourceArchiveLocation(r, dir) -> downloadUrls(r))
+        ProfileCompanion.bundleLocation(b, dir) -> downloadUrls(b.artifact)
+      } ++ resolved.profile.resources.map(r => ProfileCompanion.resourceArchiveLocation(r, dir) -> downloadUrls(r))
 
       val states = files.map {
         case (file, urls) =>
           if (!file.exists()) {
-            urls.find { url =>
-              debug(s"Downloading [${file.getName()}] from [$url]")
-              RuntimeConfigCompanion.download(url, file).isSuccess
-            }.map { url => file -> Try(file)
-            }.getOrElse {
-              val msg = s"Could not download [${file.getName()}] from: $urls"
-              errorLog(msg)
-              sys.error(msg)
-            }
+            urls
+              .find { url =>
+                debug(s"Downloading [${file.getName()}] from [$url]")
+                ProfileCompanion.download(url, file).isSuccess
+              }
+              .map { url =>
+                file -> Try(file)
+              }
+              .getOrElse {
+                val msg = s"Could not download [${file.getName()}] from: $urls"
+                errorLog(msg)
+                sys.error(msg)
+              }
           } else file -> Try(file)
       }
 
@@ -226,36 +251,41 @@ object RuntimeConfigBuilder {
     }
 
     val newRuntimeConfig = if (options.updateChecksums) {
-      var checkedFiles : Map[File, String] = Map()
+      var checkedFiles: Map[File, String] = Map()
 
-      def checkAndUpdate(file : File, r : Artifact) : Artifact = {
-        checkedFiles.get(file).orElse(RuntimeConfigCompanion.digestFile(file)).map { checksum =>
-          checkedFiles += file -> checksum
-          if (r.sha1Sum != Option(checksum)) {
-            debug(s"${if (r.sha1Sum.isDefined) "Updating" else "Creating"} checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
-            r.copy(sha1Sum = Option(checksum))
-          } else r
-        }.getOrElse(r)
+      def checkAndUpdate(file: File, r: Artifact): Artifact = {
+        checkedFiles
+          .get(file)
+          .orElse(ProfileCompanion.digestFile(file))
+          .map { checksum =>
+            checkedFiles += file -> checksum
+            if (r.sha1Sum != Option(checksum)) {
+              debug(s"${if (r.sha1Sum.isDefined) "Updating" else "Creating"} checksum for: ${r.fileName.getOrElse(
+                Profile.resolveFileName(r.url).get)}")
+              r.copy(sha1Sum = Option(checksum))
+            } else r
+          }
+          .getOrElse(r)
       }
 
-      def checkAndUpdateResource(a : Artifact) : Artifact =
+      def checkAndUpdateResource(a: Artifact): Artifact =
         checkAndUpdate(localRuntimeConfig.resourceArchiveLocation(a), a)
 
-      def checkAndUpdateBundle(b : BundleConfig) : BundleConfig =
+      def checkAndUpdateBundle(b: BundleConfig): BundleConfig =
         b.copy(artifact = checkAndUpdate(localRuntimeConfig.bundleLocation(b), b.artifact))
 
-      def checkAndUpdateFeatures(f : FeatureConfig) : FeatureConfig =
+      def checkAndUpdateFeatures(f: FeatureConfig): FeatureConfig =
         f.copy(bundles = f.bundles.map(checkAndUpdateBundle))
 
-      ResolvedRuntimeConfig(
-        resolved.runtimeConfig.copy(
-          bundles = resolved.runtimeConfig.bundles.map(checkAndUpdateBundle),
+      ResolvedProfile(
+        resolved.profile.copy(
+          bundles = resolved.profile.bundles.map(checkAndUpdateBundle),
           resolvedFeatures = resolved.allReferencedFeatures.map(checkAndUpdateFeatures),
-          resources = resolved.runtimeConfig.resources.map(checkAndUpdateResource)
+          resources = resolved.profile.resources.map(checkAndUpdateResource)
         )
-      ).runtimeConfig
+      ).profile
     } else {
-      resolved.runtimeConfig
+      resolved.profile
     }
 
     if (options.explodeResources) {
@@ -263,15 +293,17 @@ object RuntimeConfigBuilder {
         val resourceFile = localRuntimeConfig.resourceArchiveLocation(r)
         if (!resourceFile.exists()) sys.error("Could not unpack missing resource file: " + resourceFile)
         val blacklist = List("profile.conf", "bundles", "resources")
-        Unzipper.unzip(resourceFile, localRuntimeConfig.baseDir, Nil,
-          fileSelector = Some { fileName : String => !blacklist.contains(fileName) },
-          placeholderReplacer = None) match {
-            case Failure(e) => throw new RuntimeException("Could not update resource file: " + resourceFile, e)
-            case _          =>
-          }
+        Unzipper.unzip(resourceFile, localRuntimeConfig.baseDir, Nil, fileSelector = Some { fileName: String =>
+          !blacklist.contains(fileName)
+        }, placeholderReplacer = None) match {
+          case Failure(e) => throw new RuntimeException("Could not update resource file: " + resourceFile, e)
+          case _          =>
+        }
         localRuntimeConfig.createResourceArchiveTouchFile(r, r.sha1Sum) match {
           case Failure(e) =>
-            throw new RuntimeException("Could not create resource archive touch file for resource file: " + resourceFile, e)
+            throw new RuntimeException(
+              "Could not create resource archive touch file for resource file: " + resourceFile,
+              e)
           case _ =>
         }
       }
@@ -289,20 +321,21 @@ object RuntimeConfigBuilder {
       val os = new ByteArrayOutputStream()
       ConfigWriter.write(ProfileLookup.toConfig(profileLookup), os, None)
       // FIXME: the following is magic to support env variable in output, but it will work only if th file string has no spaces in it
-      val confOutput = Pattern.
-        compile("[\"]REPLACE_BASE_DIR[\"]").
-        matcher(os.toString()).
-        replaceAll(Matcher.quoteReplacement(profileBaseDir))
+      val confOutput = Pattern
+        .compile("[\"]REPLACE_BASE_DIR[\"]")
+        .matcher(os.toString())
+        .replaceAll(Matcher.quoteReplacement(profileBaseDir))
       val ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
-      try ps.println(confOutput) finally ps.close()
+      try ps.println(confOutput)
+      finally ps.close()
     }
 
     outFile match {
       case None =>
-        ConfigWriter.write(RuntimeConfigCompanion.toConfig(newRuntimeConfig), Console.out, None)
+        ConfigWriter.write(ProfileCompanion.toConfig(newRuntimeConfig), Console.out, None)
       case Some(f) =>
         debug("Writing config file: " + f.getAbsolutePath())
-        ConfigWriter.write(RuntimeConfigCompanion.toConfig(newRuntimeConfig), f, None)
+        ConfigWriter.write(ProfileCompanion.toConfig(newRuntimeConfig), f, None)
     }
   }
 }

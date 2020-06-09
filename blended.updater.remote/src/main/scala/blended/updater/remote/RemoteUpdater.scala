@@ -48,7 +48,7 @@ class RemoteUpdater(
     log.trace(s"ContainerInfo: [${containerInfo}]")
 
     val timeStamp = System.currentTimeMillis()
-    val persistedState = containerStatePersistor
+    val persistedState: ContainerState = containerStatePersistor
       .findContainerState(containerInfo.containerId)
       .getOrElse(ContainerState(containerId = containerInfo.containerId))
 
@@ -103,9 +103,9 @@ class RemoteUpdater(
 
   def getContainerIds(): List[ContainerId] = containerStatePersistor.findAllContainerStates().map(_.containerId)
 
-  def registerRuntimeConfig(runtimeConfig: RuntimeConfig): Unit =
+  def registerRuntimeConfig(runtimeConfig: Profile): Unit =
     runtimeConfigPersistor.persistRuntimeConfig(runtimeConfig)
 
-  def getRuntimeConfigs(): List[RuntimeConfig] = runtimeConfigPersistor.findRuntimeConfigs()
+  def getRuntimeConfigs(): List[Profile] = runtimeConfigPersistor.findRuntimeConfigs()
 
 }

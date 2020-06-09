@@ -74,7 +74,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
           withEmptyRemoteUpdate(transient) { ctx =>
             val action1 = AddRuntimeConfig(
               UUID.randomUUID().toString(),
-              RuntimeConfig(
+              Profile(
                 name = "test",
                 version = "1",
                 startLevel = 10,
@@ -105,7 +105,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
             )
             val action1 = AddRuntimeConfig(
               UUID.randomUUID().toString(),
-              RuntimeConfig(
+              Profile(
                 name = "test",
                 version = "1",
                 startLevel = 10,
@@ -116,7 +116,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
             assert(ru.getContainerActions("1") === Seq(action1))
             val action2 = AddRuntimeConfig(
               UUID.randomUUID().toString(),
-              RuntimeConfig(
+              Profile(
                 name = "test",
                 version = "2",
                 startLevel = 10,
@@ -159,7 +159,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
             assert(ctx.remoteUpdater.getContainerActions("1") === Seq(action1))
 
             val profiles = List(
-              Profile(name = "test", version = "1")
+              ProfileRef(name = "test", version = "1")
             )
             ctx.remoteUpdater.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L, Nil))
             assert(ctx.remoteUpdater.getContainerActions("1") === Seq())
@@ -200,7 +200,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
             ctx.remoteUpdater.addAction("1", action1)
             assert(ctx.remoteUpdater.getContainerActions("1") === Seq(action1))
             val profiles = List(
-              Profile(name = "test", version = "1")
+              ProfileRef(name = "test", version = "1")
             )
             ctx.remoteUpdater.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L, Nil))
             assert(ctx.remoteUpdater.getContainerActions("1") === Seq())
@@ -213,7 +213,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
             val action1 = AddRuntimeConfig(
               UUID.randomUUID().toString(),
-              RuntimeConfig(
+              Profile(
                 name = "rc",
                 version = "1",
                 startLevel = 10,

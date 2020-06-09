@@ -34,6 +34,7 @@ class OsgiFrameworksTest extends LoggingFreeSpec
         withTestFile(launcherConfig) { configFile =>
           Launcher.run(Array(
             "--config", configFile.getAbsolutePath(),
+            "--strict",
             "--test"
           ))
         }
