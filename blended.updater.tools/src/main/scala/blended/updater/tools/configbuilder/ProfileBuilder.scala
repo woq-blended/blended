@@ -186,11 +186,11 @@ object ProfileBuilder {
       .withFallback(ConfigFactory.parseMap(options.envVars.toMap.asJava))
       .resolve()
 
-    val unresolvedRuntimeConfig = ProfileCompanion.read(config).get
+    val unresolvedProfile = ProfileCompanion.read(config).get
     //    val unresolvedLocalRuntimeConfig = LocalRuntimeConfig(unresolvedRuntimeConfig, dir)
 
-    debug("unresolved profile: " + unresolvedRuntimeConfig)
-    val resolved = FeatureResolver.resolve(unresolvedRuntimeConfig, features).get
+    debug("unresolved profile: " + unresolvedProfile)
+    val resolved = FeatureResolver.resolve(unresolvedProfile, features).get
     debug("profile with resolved features: " + resolved)
 
     val localRuntimeConfig = LocalRuntimeConfig(resolved, dir)
@@ -250,7 +250,7 @@ object ProfileBuilder {
       }
     }
 
-    val newRuntimeConfig = if (options.updateChecksums) {
+    val newProfile = if (options.updateChecksums) {
       var checkedFiles: Map[File, String] = Map()
 
       def checkAndUpdate(file: File, r: Artifact): Artifact = {
@@ -289,7 +289,7 @@ object ProfileBuilder {
     }
 
     if (options.explodeResources) {
-      newRuntimeConfig.resources.map { r =>
+      newProfile.resources.map { r =>
         val resourceFile = localRuntimeConfig.resourceArchiveLocation(r)
         if (!resourceFile.exists()) sys.error("Could not unpack missing resource file: " + resourceFile)
         val blacklist = List("profile.conf", "bundles", "resources")
@@ -332,10 +332,10 @@ object ProfileBuilder {
 
     outFile match {
       case None =>
-        ConfigWriter.write(ProfileCompanion.toConfig(newRuntimeConfig), Console.out, None)
+        ConfigWriter.write(ProfileCompanion.toConfig(newProfile), Console.out, None)
       case Some(f) =>
         debug("Writing config file: " + f.getAbsolutePath())
-        ConfigWriter.write(ProfileCompanion.toConfig(newRuntimeConfig), f, None)
+        ConfigWriter.write(ProfileCompanion.toConfig(newProfile), f, None)
     }
   }
 }

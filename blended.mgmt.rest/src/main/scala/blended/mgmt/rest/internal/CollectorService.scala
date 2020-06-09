@@ -26,7 +26,7 @@ trait CollectorService {
       collectorRoute ~
         infoRoute ~
         versionRoute ~
-        runtimeConfigRoute ~
+        profileRoute ~
         updateActionRoute ~
         rolloutProfileRoute ~
         uploadDeploymentPackRoute
@@ -39,10 +39,10 @@ trait CollectorService {
   def getCurrentState(): sci.Seq[RemoteContainerState]
 
   /** Register a runtime config into the management container. */
-  def registerRuntimeConfig(rc: Profile): Unit
+  def registerProfile(rc: Profile): Unit
 
   /** Get all registered runtime configs of the management container. */
-  def getRuntimeConfigs(): sci.Seq[Profile]
+  def getProfiles(): sci.Seq[Profile]
 
   /** Promote (stage) an update action to a container. */
   def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit
@@ -86,17 +86,17 @@ trait CollectorService {
     }
   }
 
-  def runtimeConfigRoute: Route = {
-    path("runtimeConfig") {
+  def profileRoute: Route = {
+    path("profile") {
       get {
         complete {
-          getRuntimeConfigs()
+          getProfiles()
         }
       } ~
         post {
           requirePermission("profile:update") {
             entity(as[Profile]) { rc =>
-              registerRuntimeConfig(rc)
+              registerProfile(rc)
               complete(s"Registered ${rc.name}-${rc.version}")
             }
           }
@@ -123,7 +123,7 @@ trait CollectorService {
         requirePermission("rollout") {
           entity(as[RolloutProfile]) { rolloutProfile =>
             // check existence of profile
-            getRuntimeConfigs().find(rc =>
+            getProfiles().find(rc =>
               rc.name == rolloutProfile.profileName && rc.version == rolloutProfile.profileVersion) match {
               case None =>
                 reject(
@@ -247,7 +247,7 @@ trait CollectorService {
 
         // everything is ok
         log.debug(s"Uploaded profile.conf: ${local}")
-        registerRuntimeConfig(local.runtimeConfig)
+        registerProfile(local.runtimeConfig)
 
         // we know the urls all start with "mvn:"
         // now install bundles
