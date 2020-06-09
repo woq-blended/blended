@@ -2,6 +2,8 @@ package blended.util;
 
 import java.io.*;
 
+import blended.util.io.StreamCopy;
+
 public class FileHelper {
 
   public static void writeFile(final File f, byte[] content) throws Exception {
@@ -9,7 +11,7 @@ public class FileHelper {
     final InputStream is = new ByteArrayInputStream(content);
     final OutputStream os = new FileOutputStream(f);
 
-    StreamCopySupport.copyStream(is, os);
+    StreamCopy.copy(is, os);
 
     safeClose(is);
     safeClose(os);
@@ -19,7 +21,7 @@ public class FileHelper {
 
     final ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
-    StreamCopySupport.copyStream(is, bos);
+    StreamCopy.copy(is, bos);
 
     safeClose(is);
     safeClose(bos);

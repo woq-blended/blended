@@ -7,11 +7,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import blended.container.context.api.ContainerContext
-import blended.util.StreamCopySupport
 import blended.util.logging.Logger
 import org.osgi.framework.BundleContext
-
 import scala.util.control.NonFatal
+
+import blended.util.io.StreamCopy
 
 /**
  * Note: The fact that this class has the same name as it's trait is required by the MBean spec.
@@ -77,7 +77,7 @@ class FrameworkService(bundleContext : BundleContext, ctContext : ContainerConte
       logFiles.foreach { logFile =>
         out.putNextEntry(new ZipEntry(logFile))
         val in = new FileInputStream(new File(logDir, logFile))
-        StreamCopySupport.copyStream(in, out)
+        StreamCopy.copy(in, out)
         in.close()
         out.closeEntry()
       }
