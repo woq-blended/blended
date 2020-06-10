@@ -212,7 +212,7 @@ object Launcher {
     if (retVal != 0) throw new LauncherException("", errorCode = retVal)
   }
 
-  case class Configs(launcherConfig: LauncherConfig, profileConfig: Option[LocalRuntimeConfig] = None)
+  case class Configs(launcherConfig: LauncherConfig, profileConfig: Option[LocalProfile] = None)
 
   /**
    * Parse the command line and wrap the result into a [[Configs]] object.
@@ -287,7 +287,7 @@ object Launcher {
             systemProperties =
               SystemPropertyResolver.resolve((launchConfig.systemProperties) + ("blended.container.home" -> profileDir))
           ),
-          profileConfig = Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir)))
+          profileConfig = Some(LocalProfile(runtimeConfig, new File(profileDir)))
         )
     }
   }

@@ -1,7 +1,5 @@
 package blended.mgmt.rest.internal
 
-import java.io.File
-
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestLatch
 import blended.prickle.akka.http.PrickleSupport
@@ -11,7 +9,6 @@ import blended.updater.config.json.PrickleProtocol._
 import scala.collection.{immutable => sci}
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Try
 
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
@@ -30,7 +27,7 @@ class CollectorServiceSpec
   "The Management collector routes" - {
 
     "should POST /container returns a registry response" in {
-      Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List())) ~> collectorRoute ~> check {
+      Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L)) ~> collectorRoute ~> check {
         responseAs[ContainerRegistryResponseOK].id should be("uuid")
       }
       processContainerInfoLatch.isOpen should be(true)
@@ -40,7 +37,7 @@ class CollectorServiceSpec
       Get("/container") ~> infoRoute ~> check {
         responseAs[Seq[RemoteContainerState]] should be(
           Seq(
-            RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List()), List())
+            RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L))
           ))
       }
       getCurrentStateLatch.isOpen should be(true)
@@ -65,17 +62,9 @@ class CollectorServiceSpec
 
   override def getCurrentState(): sci.Seq[RemoteContainerState] = {
     getCurrentStateLatch.countDown()
-    List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List()), List()))
+    List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L)))
   }
 
   override def version: String = "TEST"
-
-  override def registerProfile(rc: Profile): Unit = ???
-
-  override def getProfiles(): sci.Seq[Profile] = ???
-
-  override def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit = ???
-
-  override def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit] = ???
 
 }

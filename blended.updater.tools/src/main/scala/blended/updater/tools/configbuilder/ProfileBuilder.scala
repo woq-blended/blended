@@ -193,7 +193,7 @@ object ProfileBuilder {
     val resolved = FeatureResolver.resolve(unresolvedProfile, features).get
     debug("profile with resolved features: " + resolved)
 
-    val localRuntimeConfig = LocalRuntimeConfig(resolved, dir)
+    val localRuntimeConfig = LocalProfile(resolved, dir)
 
     if (options.check) {
       val issues = localRuntimeConfig.validate(

@@ -44,22 +44,22 @@ trait MgmtReporter extends Actor with PrickleSupport {
 
   ////////////////////
   // ABSTRACT
-  protected val config : Try[MgmtReporterConfig]
-  protected val ctContext : ContainerContext
+  protected val config: Try[MgmtReporterConfig]
+  protected val ctContext: ContainerContext
   ////////////////////
 
   private case class MgmtReporterState(
-    serviceInfos : Map[String, ServiceInfo],
-    lastProfileInfo : ProfileInfo,
-    appliedUpdateActionIds : List[String]
+      serviceInfos: Map[String, ServiceInfo],
+      lastProfileInfo: ProfileInfo
   )
 
   private[this] lazy val log = Logger[MgmtReporter]
 
-  implicit private lazy val eCtxt : ExecutionContext = context.system.dispatcher
-  implicit private lazy val materializer : ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
+  implicit private lazy val eCtxt: ExecutionContext = context.system.dispatcher
+  implicit private lazy val materializer: ActorMaterializer = ActorMaterializer(
+    ActorMaterializerSettings(context.system))
 
-  override def preStart() : Unit = {
+  override def preStart(): Unit = {
     super.preStart()
 
     config foreach { config =>
@@ -73,31 +73,29 @@ trait MgmtReporter extends Actor with PrickleSupport {
 
     context.system.eventStream.subscribe(context.self, classOf[ServiceInfo])
     context.system.eventStream.subscribe(context.self, classOf[ProfileInfo])
-    context.system.eventStream.subscribe(context.self, classOf[UpdateActionApplied])
 
-    context.become(reporting(MgmtReporterState(
-      serviceInfos = Map.empty,
-      lastProfileInfo = ProfileInfo(0L, Nil),
-      appliedUpdateActionIds = List.empty
-    )))
+    context.become(
+      reporting(
+        MgmtReporterState(
+          serviceInfos = Map.empty,
+          lastProfileInfo = ProfileInfo(0L, Nil)
+        )))
   }
 
-  override def postStop() : Unit = {
+  override def postStop(): Unit = {
     context.system.eventStream.unsubscribe(context.self)
     super.postStop()
   }
 
-  private def handleTick(state : MgmtReporterState) : Receive = {
+  private def handleTick(state: MgmtReporterState): Receive = {
     case Tick =>
       config.foreach { cfg =>
-
         val info = ContainerInfo(
           containerId = ctContext.uuid,
           properties = ctContext.properties,
           serviceInfos = state.serviceInfos.values.toList,
           profiles = state.lastProfileInfo.profiles,
-          timestampMsec = System.currentTimeMillis(),
-          appliedUpdateActionIds = state.appliedUpdateActionIds
+          timestampMsec = System.currentTimeMillis()
         )
         log.debug(s"Performing report [$info].")
 
@@ -112,18 +110,15 @@ trait MgmtReporter extends Actor with PrickleSupport {
         }
 
         // TODO think about ssl
-        val responseFuture = request.flatMap { request =>
+        request.flatMap { request =>
           Http(context.system).singleRequest(request)
-        }.map(r => r -> state.appliedUpdateActionIds)
-
-        import akka.pattern.pipe
-        responseFuture.pipeTo(self)
+        }
 
         context.system.scheduler.scheduleOnce(cfg.updateIntervalMsec.millis, self, Tick)
       }
   }
 
-  private def handleEvents(state : MgmtReporterState) : Receive = {
+  private def handleEvents(state: MgmtReporterState): Receive = {
     // from event stream
     case serviceInfo @ ServiceInfo(name, _, _, _, _) =>
       log.debug(s"Update service info for: $name")
@@ -135,23 +130,19 @@ trait MgmtReporter extends Actor with PrickleSupport {
         log.debug("Update profile info to: " + pi)
         context.become(reporting(state.copy(lastProfileInfo = pi)))
       } else {
-        log.debug(s"Ignoring profile info with timestamp [${timestamp}] which is older than "
-          + s"[${state.lastProfileInfo.timeStamp}]: $pi")
+        log.debug(
+          s"Ignoring profile info with timestamp [${timestamp}] which is older than "
+            + s"[${state.lastProfileInfo.timeStamp}]: $pi")
       }
-
-    case UpdateActionApplied(id, _) =>
-      context.become(reporting(state.copy(appliedUpdateActionIds = id :: state.appliedUpdateActionIds)))
   }
 
-  private def handleHttpRequests(state : MgmtReporterState) : Receive = {
-    case (response @ HttpResponse(status, _, entity, _), appliedIds : List[_]) =>
+  private def handleHttpRequests(state: MgmtReporterState): Receive = {
+    case (response @ HttpResponse(status, _, entity, _), appliedIds: List[_]) =>
       status match {
         case StatusCodes.OK =>
           // As the server accepted also the list of applied update action IDs
           // we remove those from the list
-          context.become(reporting(state.copy(
-            appliedUpdateActionIds = state.appliedUpdateActionIds.filterNot(appliedIds.contains)
-          )))
+          context.become(reporting(state))
 
           import akka.pattern.pipe
 
@@ -163,20 +154,13 @@ trait MgmtReporter extends Actor with PrickleSupport {
           response.discardEntityBytes()
       }
 
-    case ContainerRegistryResponseOK(id, actions) =>
+    case ContainerRegistryResponseOK(id) =>
       log.debug(s"Reported [$id] to management node")
-      if (actions.nonEmpty) {
-        log.info(s"Received ${actions.size} update actions from management node: $actions")
-        actions.foreach { action : UpdateAction =>
-          log.debug(s"Publishing event to event stream: $action")
-          context.system.eventStream.publish(action)
-        }
-      }
   }
 
-  def receive : Receive = Actor.emptyBehavior
+  def receive: Receive = Actor.emptyBehavior
 
-  private def reporting(state : MgmtReporterState) : Receive = LoggingReceive {
+  private def reporting(state: MgmtReporterState): Receive = LoggingReceive {
     handleTick(state)
       .orElse(handleHttpRequests(state))
       .orElse(handleEvents(state))
@@ -186,7 +170,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
 object MgmtReporter {
 
   object MgmtReporterConfig {
-    def fromConfig(config : Config) : Try[MgmtReporterConfig] = Try {
+    def fromConfig(config: Config): Try[MgmtReporterConfig] = Try {
       import blended.util.config.Implicits._
       MgmtReporterConfig(
         registryUrl = config.getString("registryUrl"),
@@ -197,13 +181,17 @@ object MgmtReporter {
   }
 
   case class MgmtReporterConfig(
-    registryUrl : String,
-    updateIntervalMsec : Long,
-    initialUpdateDelayMsec : Long
+      registryUrl: String,
+      updateIntervalMsec: Long,
+      initialUpdateDelayMsec: Long
   ) {
 
-    override def toString() : String = s"${getClass().getSimpleName()}(registryUrl=$registryUrl,updateInetervalMsec=" +
-      s"$updateIntervalMsec,initialUpdateDelayMsec=$initialUpdateDelayMsec)"
+    override def toString(): String =
+      getClass().getSimpleName() +
+        "(registryUrl=" + registryUrl +
+        ",updateInetervalMsec=" + updateIntervalMsec +
+        ",initialUpdateDelayMsec=" + initialUpdateDelayMsec +
+        ")"
   }
 
   case object Tick
