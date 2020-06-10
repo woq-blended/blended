@@ -2,7 +2,7 @@ package blended.updater
 
 import blended.updater.config._
 
-object LocalProfile {
+object StatefulLocalProfile {
 
   sealed trait ProfileState
 
@@ -29,8 +29,11 @@ object LocalProfile {
 
 }
 
-case class LocalProfile(config: LocalRuntimeConfig, state: LocalProfile.ProfileState) {
-  def profileId: ProfileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version)
+case class StatefulLocalProfile(
+    config: LocalProfile,
+    state: StatefulLocalProfile.ProfileState
+) {
+  def profileId: ProfileRef = ProfileRef(config.runtimeConfig.name, config.runtimeConfig.version)
 
   def runtimeConfig: Profile = config.resolvedProfile.profile
 
@@ -38,10 +41,10 @@ case class LocalProfile(config: LocalRuntimeConfig, state: LocalProfile.ProfileS
 
   def toSingleProfile: ProfileRef = {
     val (oState, reason) = state match {
-      case LocalProfile.Pending(issues) => (OverlayState.Pending, Some(issues.mkString("; ")))
-      case LocalProfile.Invalid(issues) => (OverlayState.Invalid, Some(issues.mkString("; ")))
+      case StatefulLocalProfile.Pending(issues) => (OverlayState.Pending, Some(issues.mkString("; ")))
+      case StatefulLocalProfile.Invalid(issues) => (OverlayState.Invalid, Some(issues.mkString("; ")))
       //      case LocalProfile.Resolved => (OverlayState.Valid, None)
-      case LocalProfile.Staged => (OverlayState.Valid, None)
+      case StatefulLocalProfile.Staged => (OverlayState.Valid, None)
     }
 
     ProfileRef(

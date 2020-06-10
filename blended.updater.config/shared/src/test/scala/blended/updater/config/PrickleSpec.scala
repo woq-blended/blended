@@ -1,18 +1,16 @@
 package blended.updater.config
 
-import java.util.UUID
-
-import blended.util.logging.Logger
-import blended.updater.config.json.PrickleProtocol._
-import org.scalacheck.Arbitrary
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import prickle._
 import scala.reflect.{ClassTag, classTag}
 import scala.util.Success
 import scala.util.control.NonFatal
 
+import blended.updater.config.json.PrickleProtocol._
+import blended.util.logging.Logger
+import org.scalacheck.Arbitrary
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import prickle._
 
 class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
 
@@ -82,7 +80,7 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       )
 
       val info =
-        Pickle.intoString(List(ContainerInfo("c840c57d-a357-4b85-937a-2bb6440417d2", Map(), svcInfos, List(), 1L, Nil)))
+        Pickle.intoString(List(ContainerInfo("c840c57d-a357-4b85-937a-2bb6440417d2", Map(), svcInfos, List(), 1L)))
       log.info("serialized: " + info)
 
       val containerInfos = Unpickle[List[ContainerInfo]].fromString(info).get
@@ -92,40 +90,6 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
   }
 
   "Prickle should (de)serialize" - {
-    "an ActivateProfile" in logException {
-
-      val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0")
-
-      val json = Pickle.intoString(action)
-
-      val action2: ActivateProfile = Unpickle[ActivateProfile].fromString(json).get
-      action2.isInstanceOf[ActivateProfile] should be(true)
-      action2.isInstanceOf[UpdateAction] should be(true)
-
-      val activate = action2.asInstanceOf[ActivateProfile]
-      activate.profileName should be(action.profileName)
-      activate.profileVersion should be(action.profileVersion)
-    }
-
-    "an ActivateProfile as UpdateAction" in logException {
-
-      val action = ActivateProfile(
-        UUID.randomUUID().toString(),
-        profileName = "test",
-        profileVersion = "1.0"
-      )
-
-      val json = Pickle.intoString(action: UpdateAction)
-      log.info("json: " + json)
-
-      val action2: UpdateAction = Unpickle[UpdateAction].fromString(json).get
-      action2.isInstanceOf[ActivateProfile] should be(true)
-      action2.isInstanceOf[UpdateAction] should be(true)
-
-      val activate = action2.asInstanceOf[ActivateProfile]
-      activate.profileName should be(action.profileName)
-      activate.profileVersion should be(action.profileVersion)
-    }
 
     "a GeneratedConfig" in logException {
 
@@ -165,7 +129,7 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000L, Map("svc" -> "test"))
       val profile = ProfileRef("myProfile", "1.0")
 
-      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L, Nil)
+      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
 
       val json = Pickle.intoString(info)
       log.info("json: " + json)
@@ -180,7 +144,7 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     }
 
     "a ContainerRegistryResponseOK" in logException {
-      val resp = ContainerRegistryResponseOK("response", List.empty)
+      val resp = ContainerRegistryResponseOK("response")
 
       val json = Pickle.intoString(resp)
       log.info("json: " + json)
@@ -194,15 +158,9 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000L, Map("svc" -> "test"))
       val profile = ProfileRef("myProfile", "1.0")
 
-      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L, Nil)
+      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
 
-      val action = ActivateProfile(
-        UUID.randomUUID().toString(),
-        profileName = "test",
-        profileVersion = "1.0"
-      )
-
-      val state = RemoteContainerState(info, List(action))
+      val state = RemoteContainerState(info)
 
       val json = Pickle.intoString(state)
       log.info("json: " + json)
@@ -237,7 +195,6 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     testMapping[FeatureConfig]
     testMapping[Profile]
     testMapping[ServiceInfo]
-    testMapping[UpdateAction]
     testMapping[GeneratedConfig]
     testMapping[ProfileRef]
     testMapping[RolloutProfile]

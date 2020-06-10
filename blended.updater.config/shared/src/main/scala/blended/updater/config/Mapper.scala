@@ -61,8 +61,7 @@ trait Mapper {
 
   def mapRemoteContainerState(s: RemoteContainerState): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
-      "containerInfo" -> mapContainerInfo(s.containerInfo),
-      "outstandingUpdateActions" -> s.outstandingUpdateActions.map(a => mapUpdateAction(a)).asJava
+      "containerInfo" -> mapContainerInfo(s.containerInfo)
     ).asJava
 
   def mapServiceInfo(si: ServiceInfo): java.util.Map[String, AnyRef] =
@@ -83,28 +82,6 @@ trait Mapper {
       "timestampMsec" -> java.lang.Long.valueOf(ci.timestampMsec)
     ).asJava
 
-  def mapUpdateAction(a: UpdateAction): java.util.Map[String, AnyRef] = a match {
-    case AddRuntimeConfig(id, rc) =>
-      Map(
-        "kind" -> UpdateAction.KindAddRuntimeConfig,
-        "id" -> id,
-        "runtimeConfig" -> mapProfile(rc)
-      ).asJava
-    case ActivateProfile(id, profileName, profileVersion) =>
-      Map[String, AnyRef](
-        "kind" -> UpdateAction.KindActivateProfile,
-        "id" -> id,
-        "profileName" -> profileName,
-        "profileVersion" -> profileVersion
-      ).asJava
-    case StageProfile(id, profileName, profileVersion) =>
-      Map[String, AnyRef](
-        "kind" -> UpdateAction.KindStageProfile,
-        "id" -> id,
-        "profileName" -> profileName,
-        "profileVersion" -> profileVersion
-      ).asJava
-  }
 
   def mapGeneratedConfig(c: GeneratedConfig): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
@@ -121,12 +98,7 @@ trait Mapper {
   def unmapRemoteContainerState(map: AnyRef): Try[RemoteContainerState] = Try {
     val m = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     RemoteContainerState(
-      containerInfo = unmapContainerInfo(m("containerInfo")).get,
-      outstandingUpdateActions = m("outstandingUpdateActions")
-        .asInstanceOf[java.util.Collection[AnyRef]]
-        .asScala
-        .toList
-        .map(a => unmapUpdateAction(a).get)
+      containerInfo = unmapContainerInfo(m("containerInfo")).get
     )
   }
 
@@ -137,30 +109,6 @@ trait Mapper {
       fileName = m.get("fileName").flatMap(f => Option(f.asInstanceOf[String])),
       sha1Sum = m.get("sha1Sum").flatMap(s => Option(s.asInstanceOf[String]))
     )
-  }
-
-  def unmapUpdateAction(map: AnyRef): Try[UpdateAction] = Try {
-    val a = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
-    a("kind") match {
-      case UpdateAction.KindAddRuntimeConfig =>
-        AddRuntimeConfig(
-          id = a("id").asInstanceOf[String],
-          runtimeConfig = unmapProfile(a("runtimeConfig")).get
-        )
-      case UpdateAction.KindActivateProfile =>
-        ActivateProfile(
-          id = a("id").asInstanceOf[String],
-          profileName = a("profileName").asInstanceOf[String],
-          profileVersion = a("profileVersion").asInstanceOf[String]
-        )
-      case UpdateAction.KindStageProfile =>
-        StageProfile(
-          id = a("id").asInstanceOf[String],
-          profileName = a("profileName").asInstanceOf[String],
-          profileVersion = a("profileVersion").asInstanceOf[String]
-        )
-      case kind => sys.error(s"Unsupported update action kind: ${kind}")
-    }
   }
 
   def unmapContainerInfo(map: AnyRef): Try[ContainerInfo] = Try {
@@ -175,8 +123,7 @@ trait Mapper {
         .map(si => unmapServiceInfo(si).get),
       profiles =
         ci("profiles").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(p => unmapProfileRef(p).get),
-      timestampMsec = ci("timestampMsec").asInstanceOf[java.lang.Long].longValue(),
-      appliedUpdateActionIds = Nil
+      timestampMsec = ci("timestampMsec").asInstanceOf[java.lang.Long].longValue()
     )
   }
 

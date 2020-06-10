@@ -9,8 +9,7 @@ case class ContainerInfo(
     properties: Map[String, String],
     serviceInfos: List[ServiceInfo],
     profiles: List[ProfileRef],
-    timestampMsec: Long,
-    appliedUpdateActionIds: List[String]
+    timestampMsec: Long
 ) extends GrantableObject {
 
   override def permission: BlendedPermission = BlendedPermission(
@@ -25,7 +24,6 @@ case class ContainerInfo(
       ",serviceInfos=" + serviceInfos +
       ",profiles=" + profiles +
       ",timestampMsec=" + timestampMsec +
-      ",appliedUpdateActionIds=" + appliedUpdateActionIds +
       ")"
 
 }

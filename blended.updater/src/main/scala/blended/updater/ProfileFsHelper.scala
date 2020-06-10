@@ -12,7 +12,7 @@ class ProfileFsHelper {
 
   private[this] val log = Logger[ProfileFsHelper]
 
-  def scanForRuntimeConfigs(installBaseDir: File): List[LocalRuntimeConfig] = {
+  def scanForRuntimeConfigs(installBaseDir: File): List[LocalProfile] = {
     log.debug(s"Scanning for runtime configs in ${installBaseDir}")
 
     val configFiles = Option(installBaseDir.listFiles).getOrElse(Array()).toList.flatMap { nameDir =>
@@ -35,7 +35,7 @@ class ProfileFsHelper {
         val config =
           ConfigFactory.parseFile(runtimeConfigFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
         val resolved = ResolvedProfile(ProfileCompanion.read(config).get)
-        val local = LocalRuntimeConfig(baseDir = versionDir, resolvedProfile = resolved)
+        val local = LocalProfile(baseDir = versionDir, resolvedProfile = resolved)
 
         // consistency checks
         if (local.runtimeConfig.name == name && local.runtimeConfig.version == version) {
@@ -55,10 +55,10 @@ class ProfileFsHelper {
   }
 
   def scanForProfiles(installBaseDir: File,
-                      runtimeConfigs: Option[List[LocalRuntimeConfig]] = None): List[LocalProfile] = {
+                      runtimeConfigs: Option[List[LocalProfile]] = None): List[StatefulLocalProfile] = {
     log.debug(s"Scanning for profiles in: ${installBaseDir}")
 
-    val rcs = runtimeConfigs.getOrElse(scanForRuntimeConfigs(installBaseDir)).toList
+    val rcs = runtimeConfigs.getOrElse(scanForRuntimeConfigs(installBaseDir))
 
     val runtimeConfigsWithIssues = rcs.flatMap { localConfig =>
       val issues = localConfig
@@ -75,13 +75,13 @@ class ProfileFsHelper {
 
     log.debug(s"Runtime configs (with issues): ${runtimeConfigsWithIssues}")
 
-    def profileState(issues: List[String]): LocalProfile.ProfileState = issues match {
-      case Seq()  => LocalProfile.Staged
-      case issues => LocalProfile.Pending(issues)
+    def profileState(issues: List[String]): StatefulLocalProfile.ProfileState = issues match {
+      case Seq()  => StatefulLocalProfile.Staged
+      case issues => StatefulLocalProfile.Pending(issues)
     }
 
     val fullProfiles = runtimeConfigsWithIssues.flatMap {
-      case (localRuntimeConfig, issues) => List(LocalProfile(localRuntimeConfig, profileState(issues)))
+      case (localRuntimeConfig, issues) => List(StatefulLocalProfile(localRuntimeConfig, profileState(issues)))
     }
 
     fullProfiles

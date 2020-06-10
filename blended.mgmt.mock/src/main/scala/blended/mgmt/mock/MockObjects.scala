@@ -65,8 +65,7 @@ object MockObjects {
           properties = containerProps(containerCount.incrementAndGet()),
           serviceInfos = pickOne(serviceSeqs),
           profiles = validProfiles,
-          timestampMsec = System.currentTimeMillis(),
-          appliedUpdateActionIds = Nil
+          timestampMsec = System.currentTimeMillis()
         )
       }
       .toList

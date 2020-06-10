@@ -2,15 +2,11 @@ package blended.updater.internal
 
 import java.io.File
 
-import blended.akka.ActorSystemWatching
-import blended.updater.config.{ConfigWriter, ProfileLookup, Profile}
-import blended.updater.{ProfileActivator, ProfileId, Updater, UpdaterConfig}
+import blended.akka.{ActorSystemWatching, OSGIActorConfig}
+import blended.updater.config.{Profile, ProfileRef}
+import blended.updater.{Updater, UpdaterConfig}
 import blended.util.logging.Logger
-import com.typesafe.config.ConfigFactory
 import domino.DominoActivator
-import org.osgi.framework.ServiceRegistration
-
-import scala.util.{Failure, Success}
 
 case class UpdateEnv(
     launchedProfileName: String,
@@ -25,13 +21,8 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
   private[this] val log = Logger[BlendedUpdaterActivator]
 
   whenBundleActive {
-    whenActorSystemAvailable { cfg =>
+    whenActorSystemAvailable { cfg: OSGIActorConfig =>
       log.info(s"About to setup ${getClass()}")
-
-      val restartFrameworkAction = { () =>
-        val frameworkBundle = bundleContext.getBundle(0)
-        frameworkBundle.update()
-      }
 
       readUpdateEnv() match {
         case None =>
@@ -41,30 +32,15 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
         case Some(updateEnv) =>
           log.info("Blended Updated env: " + updateEnv)
 
-          val actor = setupBundleActor(
+          setupBundleActor(
             cfg,
             Updater.props(
               baseDir = updateEnv.profilesBaseDir,
-              profileActivator = profileActivator(updateEnv),
-              restartFramework = restartFrameworkAction,
               config = UpdaterConfig.fromConfig(cfg.config),
               launchedProfileDir = updateEnv.launchedProfileDir.orNull,
-              launchedProfileId = ProfileId(updateEnv.launchedProfileName, updateEnv.launchedProfileVersion)
+              launchedProfileRef = ProfileRef(updateEnv.launchedProfileName, updateEnv.launchedProfileVersion)
             )
           )
-
-          def registerCommands(srv: AnyRef, cmds: Seq[(String, String)]): ServiceRegistration[Object] = {
-            val (commands, descriptions) = cmds.unzip
-            srv.providesService[Object](
-              "osgi.command.scope" -> "blended.updater",
-              "osgi.command.function" -> commands.toArray,
-              "blended.osgi.command.description" -> descriptions.toArray
-            )
-
-          }
-
-          val commands = new Commands(actor, Some(updateEnv))(cfg.system)
-          registerCommands(commands, commands.commandsWithDescription)
 
       }
     }
@@ -96,34 +72,5 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
         // could not found some required properties
         None
     }
-
-  private def profileActivator(updateEnv: UpdateEnv) = new ProfileActivator {
-    override def apply(
-        newName: String,
-        newVersion: String
-    ): Boolean = {
-      // TODO: Error reporting
-      updateEnv match {
-        case UpdateEnv(_, _, Some(lookupFile), _, _) =>
-          val config = ConfigFactory.parseFile(lookupFile).resolve()
-          ProfileLookup.read(config) match {
-            case Success(profileLookup) =>
-              val newConfig = profileLookup.copy(
-                profileName = newName,
-                profileVersion = newVersion
-              )
-              log.debug(s"About to update profile lookup file: [$lookupFile] with config: [$newConfig]")
-              ConfigWriter.write(ProfileLookup.toConfig(newConfig), lookupFile, None)
-              true
-            case Failure(_) =>
-              false
-          }
-
-        case _ =>
-          // no lookup file
-          false
-      }
-    }
-  }
 
 }

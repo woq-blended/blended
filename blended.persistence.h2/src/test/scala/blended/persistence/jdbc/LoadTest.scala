@@ -66,7 +66,6 @@ class LoadTest extends LoggingFreeSpec with ScalaCheckPropertyChecks with DbFact
     testMapping(mapFeatureConfig, unmapFeatureConfig)
     testMapping(mapProfile, unmapProfile)
     testMapping(mapServiceInfo, unmapServiceInfo)
-    testMapping(mapUpdateAction, unmapUpdateAction)
     testMapping(mapGeneratedConfig, unmapGeneratedConfig)
     testMapping(mapProfileRef, unmapProfileRef)
 

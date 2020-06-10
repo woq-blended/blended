@@ -1083,7 +1083,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.util.logging,
         blended.akka.http,
-        blended.updater.remote,
+        blended.persistence,
         blended.security.akka.http,
         blended.akka,
         blended.prickle.akka.http,
@@ -1826,50 +1826,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
 
-    object remote extends CoreModule {
-      override val description = "OSGi Updater remote handle support"
-      override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-        deps.orgOsgi,
-        deps.domino,
-        deps.akkaOsgi,
-        deps.slf4j,
-        deps.typesafeConfig
-      )}
-      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
-        blended.util.logging,
-        blended.persistence,
-        blended.updater.config,
-        blended.mgmt.base,
-        blended.launcher,
-        blended.container.context.api,
-        blended.akka
-      )
-      override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-        `Bundle-Activator` = Option(s"${blendedModule}.internal.RemoteUpdaterActivator")
-      )}
-      object test extends CoreTests {
-        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-          deps.akkaTestkit,
-          deps.felixFramework,
-          deps.logbackClassic,
-          deps.akkaSlf4j,
-          deps.felixGogoRuntime,
-          deps.felixGogoShell,
-          deps.felixGogoCommand,
-          deps.felixFileinstall,
-          deps.mockitoAll,
-          deps.springCore,
-          deps.springBeans,
-          deps.springContext,
-          deps.springExpression,
-          deps.jclOverSlf4j
-        )}
-        override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
-          blended.testsupport,
-          blended.persistence.h2
-        )
-      }
-    }
     object tools extends CoreModule {
       override val description = "Configurations for Updater and Launcher"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
@@ -2023,7 +1979,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def forkArgs = T {
         val jolokiaAgent : PathRef = compileClasspath().filter{ r =>
           r.path.last.startsWith("jolokia")
-        }.toSeq.head
+        }.iterator.next()
 
         super.forkArgs() ++ Seq(
           s"-javaagent:${jolokiaAgent.path.toIO.getAbsolutePath()}=port=0,host=localhost"

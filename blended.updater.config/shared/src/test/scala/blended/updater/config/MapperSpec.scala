@@ -2,19 +2,19 @@ package blended.updater.config
 
 import java.{util => ju}
 
+import scala.reflect.{ClassTag, classTag}
+import scala.util.{Success, Try}
+
 import org.scalacheck.Arbitrary
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-
-import scala.reflect.{ClassTag, classTag}
-import scala.util.{Success, Try}
 
 class MapperSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
 
   "Mapper maps and unmaps to identity" - {
 
-    import blended.updater.config.Mapper._
     import TestData._
+    import blended.updater.config.Mapper._
 
     def testMapping[T: ClassTag](map: T => ju.Map[String, AnyRef],
                                  unmap: AnyRef => Try[T])(implicit arb: Arbitrary[T]): Unit = {
@@ -31,7 +31,6 @@ class MapperSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
     testMapping(mapFeatureConfig, unmapFeatureConfig)
     testMapping(mapProfile, unmapProfile)
     testMapping(mapServiceInfo, unmapServiceInfo)
-    testMapping(mapUpdateAction, unmapUpdateAction)
     testMapping(mapGeneratedConfig, unmapGeneratedConfig)
     testMapping(mapProfileRef, unmapProfileRef)
 

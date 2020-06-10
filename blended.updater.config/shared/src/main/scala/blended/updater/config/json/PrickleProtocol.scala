@@ -11,12 +11,6 @@ object PrickleProtocol {
 
   implicit val prickleConfig: PConfig[JsValue] = JsConfig(areSharedObjectsSupported = false)
 
-  // sealed trait needs special handling
-  implicit val updateActionPickler: PicklerPair[UpdateAction] = CompositePickler[UpdateAction]
-    .concreteType[ActivateProfile]
-    .concreteType[StageProfile]
-    .concreteType[AddRuntimeConfig]
-
   // Workaround for scala compiler error "diverging implicit expansion"
   // see https://github.com/benhutchison/prickle/issues/27
   implicit val serviceInfoPickler: Pickler[ServiceInfo] = Pickler.materializePickler[ServiceInfo]

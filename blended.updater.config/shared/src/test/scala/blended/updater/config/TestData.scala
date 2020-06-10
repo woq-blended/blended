@@ -72,30 +72,6 @@ trait TestData {
     )
   implicit val arbProfile: Arbitrary[Profile] = Arbitrary(profiles)
 
-  val addRuntimeConfigs = for {
-    id <- arbitrary[String]
-    runtimeConfig <- arbitrary[Profile]
-  } yield AddRuntimeConfig(id, runtimeConfig)
-
-  val stageProfiles = for {
-    id <- arbitrary[String]
-    profileName <- arbitrary[String]
-    profileVersion <- arbitrary[String]
-  } yield StageProfile(id, profileName, profileVersion)
-
-  val activateProfiles = for {
-    id <- arbitrary[String]
-    profileName <- arbitrary[String]
-    profileVersion <- arbitrary[String]
-  } yield ActivateProfile(id, profileName, profileVersion)
-
-  val updateActions: Gen[UpdateAction] = Gen.oneOf(
-    addRuntimeConfigs,
-    stageProfiles,
-    activateProfiles
-  )
-  implicit val arbUpdateAction: Arbitrary[UpdateAction] = Arbitrary(updateActions)
-
   val overlayStates =
     Gen.oneOf[OverlayState](OverlayState.Active, OverlayState.Valid, OverlayState.Invalid, OverlayState.Pending)
   implicit val arbOverlayState: Arbitrary[OverlayState] = Arbitrary(overlayStates)
@@ -121,14 +97,12 @@ trait TestData {
     serviceInfos <- arbitrary[List[ServiceInfo]]
     profiles <- arbitrary[List[ProfileRef]]
     timestampMsec <- Gen.choose(10000, Long.MaxValue)
-    appliedUpdateActionIds <- arbitrary[List[String]]
-  } yield ContainerInfo(containerId, properties, serviceInfos, profiles, timestampMsec, appliedUpdateActionIds)
+  } yield ContainerInfo(containerId, properties, serviceInfos, profiles, timestampMsec)
   implicit val arbContainerInfo: Arbitrary[ContainerInfo] = Arbitrary(containerInfos)
 
   val remoteContainerStates = for {
     containerInfo <- arbitrary[ContainerInfo]
-    outstandingUpdateActions <- arbitrary[List[UpdateAction]]
-  } yield RemoteContainerState(containerInfo, outstandingUpdateActions)
+  } yield RemoteContainerState(containerInfo)
   implicit val arbRemoteContainerState: Arbitrary[RemoteContainerState] = Arbitrary(remoteContainerStates)
 
   val rolloutProfiles = for {
