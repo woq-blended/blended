@@ -18,16 +18,17 @@ class MgmtAgentActivatorSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper
   with Matchers {
 
+  val akkaBundleName = classOf[BlendedAkkaActivator].getPackage().getName().replaceAll("[.]internal", "")
+  val bundleName = classOf[MgmtAgentActivator].getPackage().getName().replaceAll("[.]internal", "")
+
   override def bundles : Seq[(String, BundleActivator)] = Seq(
-    "blended.akka" -> new BlendedAkkaActivator(),
-    "blended.mgmt.agent" -> new MgmtAgentActivator()
+    akkaBundleName -> new BlendedAkkaActivator(),
+    bundleName -> new MgmtAgentActivator()
   )
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  val bundleName = classOf[MgmtAgentActivator].getPackage().getName().replaceAll("[.]internal", "")
-
-  s"The ${bundleName}" - {
+  s"The bundle ${bundleName}" - {
 
     "should register a MgmtReporter actor into the Akka system" in {
       val actorSystem = mandatoryService[ActorSystem](registry, None)
