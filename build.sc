@@ -2221,7 +2221,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.mockitoAll
       )}
       override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
-        blended.testsupport
+        blended.testsupport,
+        blended.testsupport.pojosr,
+        blended.akka
       )
     }
 
