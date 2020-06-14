@@ -1,4 +1,5 @@
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
+import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
 import coursier.Repository
 import mill.api.Loose
 import mill.define.{Sources, Target, Task}
@@ -7,13 +8,15 @@ import mill.scalalib._
 import mill.scalalib.publish._
 import mill.{PathRef, _}
 import os.{Path, RelPath}
+import coursier.maven.MavenRepository
+import coursier.core.Authentication
 
 // This import the mill-osgi plugin
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.3-SNAPSHOT`
+import $ivy.`de.wayofquality.blended::blended-mill:0.3`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -29,7 +32,7 @@ import build_util.ScoverageReport
 val projectDir: os.Path = build.millSourcePath
 
 /** The revision of bundles provided via akka-osgi */
-val akkaBundleRevision : String = "0.1-SNAPSHOT"
+val akkaBundleRevision : String = "f37f38e"
 
 object GitSupport extends GitModule {
   override def millSourcePath: Path = projectDir
@@ -42,7 +45,11 @@ trait CoreCoursierModule extends CoursierModule {
   private def zincWorker: ZincWorkerModule = mill.scalalib.ZincWorkerModule
   override def repositories: Seq[Repository] = {
     zincWorker.repositories ++ Seq(
-      coursier.maven.MavenRepository("https://repo.spring.io/libs-release")
+      MavenRepository("https://repo.spring.io/libs-release"),
+      MavenRepository(
+        s"https://u233308-sub2.your-storagebox.de/akka-osgi/${akkaBundleRevision}",
+        Some(Authentication("u233308-sub2", "px8Kumv98zIzSF7k"))
+      )
     )
   }
 }
@@ -88,7 +95,7 @@ trait DistModule extends CoreCoursierModule {
   }
 
   def transitiveLibModules: Seq[PublishModule] = libModules.flatMap(_.transitiveModuleDeps).collect{ case m: PublishModule => m }.distinct
-  /** 
+  /**
    * The transitive ivy dependencies of this module and all it's upstream modules
    */
   def transitiveLibIvyDeps: T[Agg[Dep]] = T{
@@ -242,7 +249,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       class Test(override val testGroup: String) extends CoreForkedTests {
         override def otherModule: CoreForkedTests =  brokerstarter.test(otherTestGroup)
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
-          deps.akkaSlf4j,
+          deps.akkaSlf4j(akkaBundleRevision),
           deps.activeMqKahadbStore,
           deps.springCore,
           deps.springBeans,
@@ -280,7 +287,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       class Test(override val testGroup: String) extends CoreForkedTests {
         override def otherModule: CoreForkedTests = client.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-          deps.akkaSlf4j,
+          deps.akkaSlf4j(akkaBundleRevision),
           deps.activeMqBroker,
           deps.activeMqKahadbStore
         )}
@@ -321,8 +328,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override val description : String = "Provide Akka HTTP support"
       override def ivyDeps = T{ super.ivyDeps() ++ Agg(
         deps.domino,
-        deps.akkaStream,
-        deps.akkaHttp
+        deps.akkaStream(akkaBundleRevision),
+        deps.akkaHttp(akkaBundleRevision),
+        deps.akkaHttpCore(akkaBundleRevision)
       )}
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.container.context.api,
@@ -341,7 +349,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           deps.akkaTestkit,
-          deps.akkaSlf4j,
+          deps.akkaSlf4j(akkaBundleRevision),
           deps.mockitoAll,
           deps.akkaHttpTestkit,
           deps.akkaStreamTestkit,
@@ -357,9 +365,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       object api extends CoreModule {
         override val description : String = "Package the Akka Http API into a bundle."
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
-          deps.akkaHttp,
-          deps.akkaHttpCore,
-          deps.akkaParsing
+          deps.akkaHttp(akkaBundleRevision),
+          deps.akkaHttpCore(akkaBundleRevision),
+          deps.akkaParsing(akkaBundleRevision)
         )}
         override def exportPackages : Seq[String] = Seq(
           s"akka.http.*;version=${deps.akkaHttpVersion};-split-package:=merge-first"
@@ -401,7 +409,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           override def ivyDeps = T{ super.ivyDeps() ++ Agg(
             deps.sttp,
             deps.sttpAkka,
-            deps.akkaSlf4j,
+            deps.akkaSlf4j(akkaBundleRevision),
             deps.akkaTestkit,
             deps.akkaStreamTestkit,
             deps.akkaHttpTestkit,
@@ -421,8 +429,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override val description : String = "Provide Akka HTTP Proxy support"
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           deps.domino,
-          deps.akkaStream,
-          deps.akkaHttp,
+          deps.akkaStream(akkaBundleRevision),
+          deps.akkaHttp(akkaBundleRevision),
           deps.akkaActor(akkaBundleRevision)
         )}
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
@@ -435,7 +443,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
         object test extends CoreTests {
           override def ivyDeps = T{ super.ivyDeps() ++ Agg(
-            deps.akkaSlf4j,
+            deps.akkaSlf4j(akkaBundleRevision),
             deps.akkaTestkit,
             deps.akkaStreamTestkit,
             deps.akkaHttpTestkit
@@ -451,8 +459,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override val description : String = "Provide a simple REST interface to perform JMS request / reply operations"
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
           deps.domino,
-          deps.akkaStream,
-          deps.akkaHttp,
+          deps.akkaStream(akkaBundleRevision),
+          deps.akkaHttp(akkaBundleRevision),
           deps.akkaActor(akkaBundleRevision),
           deps.jms11Spec
         )}
@@ -480,7 +488,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             deps.activeMqClient,
             deps.springBeans,
             deps.springContext,
-            deps.akkaSlf4j,
+            deps.akkaSlf4j(akkaBundleRevision),
             deps.akkaTestkit
           )}
           override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
@@ -503,8 +511,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           )}
           override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
             blended.akka,
-            blended.akka.http,
-            blended.akka.http.api
+            blended.akka.http
           )
           override def osgiHeaders = T { super.osgiHeaders().copy(
             `Bundle-Activator` = Option(s"$blendedModule.internal.HelloworldActivator")
@@ -619,7 +626,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.activeMqBroker,
         deps.activeMqKahadbStore,
         deps.akkaTestkit,
-        deps.akkaSlf4j
+        deps.akkaSlf4j(akkaBundleRevision)
       )}
       override def moduleDeps = super.moduleDeps ++ Seq(
         blended.testsupport
@@ -703,7 +710,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override val description : String = "A generic JMS bridge to connect the local JMS broker to en external JMS"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.akkaActor(akkaBundleRevision),
-        deps.akkaStream,
+        deps.akkaStream(akkaBundleRevision),
         deps.typesafeConfig
       )}
       override def moduleDeps = super.moduleDeps ++ Seq(
@@ -733,15 +740,14 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       class Test(override val testGroup: String) extends CoreForkedTests {
         override def otherModule: CoreForkedTests =  bridge.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-          deps.akkaSlf4j,
+          deps.akkaSlf4j(akkaBundleRevision),
           deps.activeMqBroker,
           deps.scalacheck,
           deps.scalatestplusScalacheck,
           deps.springCore,
           deps.springBeans,
           deps.springContext,
-          deps.springExpression,
-          deps.akkaSlf4j
+          deps.springExpression
         )}
         override def moduleDeps = super.moduleDeps ++ Seq(
           blended.activemq.brokerstarter,
@@ -767,8 +773,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
       object test extends CoreTests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-          deps.akkaSlf4j,
-          deps.akkaStream,
+          deps.akkaSlf4j(akkaBundleRevision),
+          deps.akkaStream(akkaBundleRevision),
           deps.activeMqBroker,
           deps.activeMqKahadbStore,
           deps.akkaTestkit
@@ -968,8 +974,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override val description : String = "Bundle to regularly report monitoring information to a central container hosting the container registry"
       override def ivyDeps = super.ivyDeps() ++ Agg(
         deps.orgOsgi,
-        deps.akkaHttp,
-        deps.akkaStream
+        deps.akkaHttp(akkaBundleRevision),
+        deps.akkaStream(akkaBundleRevision)
       )
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.akka,
@@ -1011,7 +1017,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.lambdaTest,
           deps.akkaTestkit,
-          deps.akkaSlf4j
+          deps.akkaSlf4j(akkaBundleRevision)
         )}
         override def moduleDeps = super.moduleDeps ++ Seq(
           blended.testsupport
@@ -1021,7 +1027,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       object rest extends CoreModule {
         override val description : String = "File Artifact Repository REST Service"
         override def ivyDeps = super.ivyDeps() ++ Agg(
-          deps.akkaHttp
+          deps.akkaHttp(akkaBundleRevision)
         )
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
           blended.domino,
@@ -1047,9 +1053,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def ivyDeps = super.ivyDeps() ++ Agg(
         deps.akkaActor(akkaBundleRevision),
         deps.domino,
-        deps.akkaHttp,
-        deps.akkaHttpCore,
-        deps.akkaStream
+        deps.akkaHttp(akkaBundleRevision),
+        deps.akkaHttpCore(akkaBundleRevision),
+        deps.akkaStream(akkaBundleRevision)
       )
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.util.logging,
@@ -1065,7 +1071,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )}
       object test extends CoreTests {
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-          deps.akkaSlf4j,
+          deps.akkaSlf4j(akkaBundleRevision),
           deps.akkaStreamTestkit,
           deps.akkaHttpTestkit,
           deps.sttp,
@@ -1201,9 +1207,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       object http extends CoreModule {
         override val description : String = "Define some convenience to use Prickle with Akka HTTP"
         override def ivyDeps = super.ivyDeps() ++ Agg(
-          deps.akkaHttpCore,
-          deps.akkaHttp,
-          deps.akkaStream,
+          deps.akkaHttpCore(akkaBundleRevision),
+          deps.akkaHttp(akkaBundleRevision),
+          deps.akkaStream(akkaBundleRevision),
           deps.prickle
         )
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
@@ -1261,8 +1267,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       object http extends CoreModule {
         override val description : String = "Some security aware Akka HTTP routes for the blended container"
         override def ivyDeps = T{ super.ivyDeps() ++ Agg(
-          deps.akkaHttp,
-          deps.akkaStream,
+          deps.akkaHttp(akkaBundleRevision),
+          deps.akkaHttpCore(akkaBundleRevision),
+          deps.akkaStream(akkaBundleRevision),
           deps.orgOsgi,
           deps.orgOsgiCompendium,
           deps.slf4j
@@ -1333,8 +1340,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       object rest extends CoreModule {
         override val description : String = "A REST service providing login services and web token management"
         override def ivyDeps = super.ivyDeps() ++ Agg(
-          deps.akkaHttp,
-          deps.akkaHttpCore
+          deps.akkaHttp(akkaBundleRevision),
+          deps.akkaHttpCore(akkaBundleRevision)
         )
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
           blended.akka.http,
@@ -1534,7 +1541,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override val description : String = "Helper objects to work with Streams in blended integration flows."
     override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
       deps.akkaActor(akkaBundleRevision),
-      deps.akkaStream,
+      deps.akkaStream(akkaBundleRevision),
       deps.geronimoJms11Spec,
       deps.levelDbJava
     )}
@@ -1579,12 +1586,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     class Test(override val testGroup: String) extends CoreForkedTests {
       override def otherModule: CoreForkedTests = streams.test(otherTestGroup)
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-        deps.akkaSlf4j,
+        deps.akkaSlf4j(akkaBundleRevision),
         deps.commonsIo,
         deps.scalacheck,
         deps.scalatestplusScalacheck,
         deps.akkaTestkit,
-        deps.akkaSlf4j,
         deps.activeMqBroker,
         deps.activeMqKahadbStore,
         deps.logbackClassic
@@ -1600,7 +1606,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override val description : String = "A generic Dispatcher to support common integration routing."
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{super.ivyDeps() ++ Agg(
         deps.akkaActor(akkaBundleRevision),
-        deps.akkaStream,
+        deps.akkaStream(akkaBundleRevision),
         deps.geronimoJms11Spec,
         deps.levelDbJava
       )}
@@ -1627,7 +1633,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def otherModule: CoreForkedTests = dispatcher.test(otherTestGroup)
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.akkaTestkit,
-          deps.akkaSlf4j,
+          deps.akkaSlf4j(akkaBundleRevision),
           deps.activeMqBroker,
           deps.activeMqKahadbStore,
           deps.logbackClassic,
@@ -1653,7 +1659,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.scalatest,
         deps.akkaTestkit,
         deps.akkaActor(akkaBundleRevision),
-        deps.akkaStream,
+        deps.akkaStream(akkaBundleRevision),
         deps.logbackClassic
       )
       override def moduleDeps = Seq(
@@ -1732,7 +1738,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.akkaTestkit,
         deps.felixFramework,
         deps.logbackClassic,
-        deps.akkaSlf4j,
+        deps.akkaSlf4j(akkaBundleRevision),
         deps.felixGogoRuntime,
         deps.felixGogoShell,
         deps.felixGogoCommand,
@@ -1814,7 +1820,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           deps.akkaTestkit,
           deps.felixFramework,
           deps.logbackClassic,
-          deps.akkaSlf4j,
+          deps.akkaSlf4j(akkaBundleRevision),
           deps.felixGogoRuntime,
           deps.felixGogoShell,
           deps.felixGogoCommand,
@@ -1850,7 +1856,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def description: String = "Utility classes to use in other bundles"
     override def compileIvyDeps: Target[Agg[Dep]] = Agg(
       deps.akkaActor(akkaBundleRevision),
-      deps.akkaSlf4j,
+      deps.akkaSlf4j(akkaBundleRevision),
       deps.slf4j,
       deps.typesafeConfig
     )
@@ -1880,8 +1886,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   object websocket extends CoreJvmModule {
     override val description = "The web socket server module"
     override def ivyDeps = super.ivyDeps() ++ Agg(
-      deps.akkaHttp,
-      deps.akkaHttpCore
+      deps.akkaHttp(akkaBundleRevision),
+      deps.akkaHttpCore(akkaBundleRevision)
     )
     override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
       blended.akka,
@@ -1911,7 +1917,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
     object test extends BlendedJvmTests {
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-        deps.akkaSlf4j,
+        deps.akkaSlf4j(akkaBundleRevision),
         deps.akkaTestkit,
         deps.sttp,
         deps.sttpAkka,
@@ -1950,10 +1956,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   object itestsupport extends CoreModule {
     override def description = "Integration test helper classes"
     override def ivyDeps = T { super.ivyDeps() ++  Agg(
-        deps.akkaSlf4j,
+        deps.akkaSlf4j(akkaBundleRevision),
         deps.activeMqBroker,
         deps.akkaActor(akkaBundleRevision),
-        deps.akkaStream,
+        deps.akkaStream(akkaBundleRevision),
         deps.akkaStreamTestkit,
         deps.akkaTestkit,
         deps.akkaHttpTestkit,

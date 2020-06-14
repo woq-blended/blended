@@ -163,7 +163,7 @@ trait PojoSrTestHelper {
     result
   }
 
-  def mandatoryService[T](sr : BlendedPojoRegistry, filter : Option[String] = None, timeout : FiniteDuration = 3.seconds)(implicit clazz : ClassTag[T]) : T = {
+  def mandatoryService[T](sr : BlendedPojoRegistry, filter : Option[String] = None, timeout : FiniteDuration = 10.seconds)(implicit clazz : ClassTag[T]) : T = {
     val id : String = UUID.randomUUID().toString()
     val start = System.currentTimeMillis()
     log.debug(s"Starting to wait for service of type [${clazz.runtimeClass.getName()}] with filter [$filter] : [$id]")
