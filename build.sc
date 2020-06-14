@@ -1,16 +1,3 @@
-import coursierapi.{Credentials, MavenRepository}
-
-val blendedMillVersion : String = "v0.2"
-
-interp.repositories() ++= Seq(
-  MavenRepository.of(s"https://u233308-sub2.your-storagebox.de/blended-mill/$blendedMillVersion")
-    .withCredentials(Credentials.of("u233308-sub2", "px8Kumv98zIzSF7k"))
-)
-
-interp.load.ivy("de.wayofquality.blended" %% "blended-mill" % blendedMillVersion)
-
-@
-
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
 import coursier.Repository
 import mill.api.Loose
@@ -21,12 +8,12 @@ import mill.scalalib.publish._
 import mill.{PathRef, _}
 import os.{Path, RelPath}
 
-
 // This import the mill-osgi plugin
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
+import $ivy.`de.wayofquality.blended::blended-mill:0.3-SNAPSHOT`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -40,6 +27,9 @@ import build_util.ScoverageReport
 
 /** Project directory. */
 val projectDir: os.Path = build.millSourcePath
+
+/** The revision of bundles provided via akka-osgi */
+val akkaBundleRevision : String = "0.1-SNAPSHOT"
 
 object GitSupport extends GitModule {
   override def millSourcePath: Path = projectDir
@@ -98,7 +88,7 @@ trait DistModule extends CoreCoursierModule {
   }
 
   def transitiveLibModules: Seq[PublishModule] = libModules.flatMap(_.transitiveModuleDeps).collect{ case m: PublishModule => m }.distinct
-  /**
+  /** 
    * The transitive ivy dependencies of this module and all it's upstream modules
    */
   def transitiveLibIvyDeps: T[Agg[Dep]] = T{
@@ -306,7 +296,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override val description = "Provide OSGi services and API to use Actors in OSGi bundles with a shared ActorSystem."
     override def ivyDeps = T{ super.ivyDeps() ++ Agg(
       deps.orgOsgi,
-      deps.akkaActor,
+      deps.akkaActor(akkaBundleRevision),
       deps.domino
     )}
 
@@ -332,7 +322,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def ivyDeps = T{ super.ivyDeps() ++ Agg(
         deps.domino,
         deps.akkaStream,
-        deps.akkaOsgi,
         deps.akkaHttp
       )}
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
@@ -434,7 +423,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           deps.domino,
           deps.akkaStream,
           deps.akkaHttp,
-          deps.akkaActor
+          deps.akkaActor(akkaBundleRevision)
         )}
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
           blended.domino,
@@ -464,7 +453,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           deps.domino,
           deps.akkaStream,
           deps.akkaHttp,
-          deps.akkaActor,
+          deps.akkaActor(akkaBundleRevision),
           deps.jms11Spec
         )}
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
@@ -534,7 +523,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     object logging extends CoreModule {
       override val description = "Redirect Akka Logging to the Blended logging framework"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-        deps.akkaActor
+        deps.akkaActor(akkaBundleRevision)
       )}
 
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
@@ -713,7 +702,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     object bridge extends CoreModule {
       override val description : String = "A generic JMS bridge to connect the local JMS broker to en external JMS"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-        deps.akkaActor,
+        deps.akkaActor(akkaBundleRevision),
         deps.akkaStream,
         deps.typesafeConfig
       )}
@@ -979,7 +968,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override val description : String = "Bundle to regularly report monitoring information to a central container hosting the container registry"
       override def ivyDeps = super.ivyDeps() ++ Agg(
         deps.orgOsgi,
-        deps.akkaOsgi,
         deps.akkaHttp,
         deps.akkaStream
       )
@@ -997,7 +985,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override val description : String = "Mock server to simulate a larger network of blended containers for UI testing"
       override def ivyDeps = super.ivyDeps() ++ Agg(
         deps.cmdOption,
-        deps.akkaActor,
+        deps.akkaActor(akkaBundleRevision),
         deps.logbackClassic
       )
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
@@ -1057,7 +1045,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     object rest extends CoreModule {
       override val description = "REST interface to accept POST's from distributed containers. These will be delegated to the container registry"
       override def ivyDeps = super.ivyDeps() ++ Agg(
-        deps.akkaActor,
+        deps.akkaActor(akkaBundleRevision),
         deps.domino,
         deps.akkaHttp,
         deps.akkaHttpCore,
@@ -1545,9 +1533,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   object streams extends CoreModule {
     override val description : String = "Helper objects to work with Streams in blended integration flows."
     override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-      deps.akkaActor,
+      deps.akkaActor(akkaBundleRevision),
       deps.akkaStream,
-      deps.akkaPersistence,
       deps.geronimoJms11Spec,
       deps.levelDbJava
     )}
@@ -1612,10 +1599,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     object dispatcher extends CoreModule {
       override val description : String = "A generic Dispatcher to support common integration routing."
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{super.ivyDeps() ++ Agg(
-        deps.akkaActor,
+        deps.akkaActor(akkaBundleRevision),
         deps.akkaStream,
         deps.geronimoJms11Spec,
-        deps.akkaPersistence,
         deps.levelDbJava
       )}
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
@@ -1666,9 +1652,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.scalacheck,
         deps.scalatest,
         deps.akkaTestkit,
-        deps.akkaActor,
+        deps.akkaActor(akkaBundleRevision),
         deps.akkaStream,
-        deps.akkaPersistence,
         deps.logbackClassic
       )
       override def moduleDeps = Seq(
@@ -1685,7 +1670,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   object testsupport extends CoreModule {
     override def description = "Some test helper classes"
     override def ivyDeps = Agg(
-      deps.akkaActor,
+      deps.akkaActor(akkaBundleRevision),
       deps.akkaTestkit,
       deps.jaxb,
       deps.scalatest,
@@ -1728,7 +1713,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
       deps.orgOsgi,
       deps.domino,
-      deps.akkaOsgi,
       deps.slf4j,
       deps.typesafeConfig
     )}
@@ -1810,7 +1794,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
         deps.orgOsgi,
         deps.domino,
-        deps.akkaOsgi,
         deps.slf4j,
         deps.typesafeConfig
       )}
@@ -1866,7 +1849,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   object util extends CoreModule {
     override def description: String = "Utility classes to use in other bundles"
     override def compileIvyDeps: Target[Agg[Dep]] = Agg(
-      deps.akkaActor,
+      deps.akkaActor(akkaBundleRevision),
       deps.akkaSlf4j,
       deps.slf4j,
       deps.typesafeConfig
@@ -1969,7 +1952,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def ivyDeps = T { super.ivyDeps() ++  Agg(
         deps.akkaSlf4j,
         deps.activeMqBroker,
-        deps.akkaActor,
+        deps.akkaActor(akkaBundleRevision),
         deps.akkaStream,
         deps.akkaStreamTestkit,
         deps.akkaTestkit,

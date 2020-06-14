@@ -1,7 +1,6 @@
 = Blended - a Scala based Integration framework
 :toc:
 :toc-placement: preamble
-:scala2_12: 2.12.11
 :scala2_13: 2.13.2
 
 ifdef::env-github[]
@@ -46,7 +45,7 @@ As we have some shared modules between Scala and Scala.Js, `node` and `yarn` is 
 
 After cloning the repository, simply navigate to the checkout directory and use the bundled mill script `./mill`, which is a copy of https://github.com/lefou/millw[lefou/millw].
 
-We currently target Java 8 and Java 11 and cross build to _Scala 2.12 with Scala.js 0.6_ and _Scala 2.13 with Scala.js 1_.
+We currently target Java 8 and Java 11 with _Scala 2.13 and Scala.js 1_.
 
 === Selected build targets / commands
 
@@ -59,8 +58,8 @@ We currently target Java 8 and Java 11 and cross build to _Scala 2.12 with Scala
 | `mill __.publishM2Local`
 | Build and publish all publishable artifacts into a local Maven2 repository.
 
-| `mill blended[{scala2_12}].__.osgiBundle`
-| Build all OSGi bundles for Scala {scala2_12}
+| `mill blended[{scala2_13}].__.osgiBundle`
+| Build all OSGi bundles for Scala {scala2_13}
 
 | `mill blended[{scala2_13}].__.testCached`
 | Run all tests for Scala {scala2_13}
