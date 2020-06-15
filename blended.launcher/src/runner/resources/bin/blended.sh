@@ -98,6 +98,7 @@ ${BLENDED_HOME}/lib/blended.launcher_@scala.binary.version@-@blended.launcher.ve
 ${BLENDED_HOME}/lib/config-@typesafe.config.version@.jar;\
 ${BLENDED_HOME}/lib/org.osgi.core-@org.osgi.core.version@.jar;\
 ${BLENDED_HOME}/lib/blended.updater.config_@scala.binary.version@-@blended.updater.config.version@.jar;\
+${BLENDED_HOME}/lib/blended.util_@scala.binary.version@-@blended.util.version@.jar;\
 ${BLENDED_HOME}/lib/blended.util.logging_@scala.binary.version@-@blended.util.logging.version@.jar;\
 ${BLENDED_HOME}/lib/de.tototec.cmdoption-@cmdoption.version@.jar;\
 ${BLENDED_HOME}/lib/scala-library-@scala.library.version@.jar;\
