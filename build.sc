@@ -16,7 +16,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.3`
+import $ivy.`de.wayofquality.blended::blended-mill:0.4-SNAPSHOT`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -538,7 +538,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
         `Private-Package` = Seq(blendedModule),
-        `Fragment-Host` = Some("com.typesafe.akka.actor")
+        `Fragment-Host` = Some(s"${deps.blendedOrg}.akka.actor_${scalaBinVersion()}")
       )}
     }
   }
