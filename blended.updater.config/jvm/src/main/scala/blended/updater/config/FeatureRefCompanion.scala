@@ -20,7 +20,7 @@ object FeatureRefCompanion {
     FeatureRef(
       name = config.getString("name"),
       version = config.getString("version"),
-      url = if (config.hasPath("url")) Option(config.getString("path")) else None
+      url = if (config.hasPath("url")) Option(config.getString("url")) else None
     )
   }
 }

@@ -15,11 +15,11 @@ object ArtifactCompanion {
     )
   }
 
-  def toConfig(resourceArchive : Artifact) : Config = {
+  def toConfig(artifact : Artifact) : Config = {
     val config = (
-      Map("url" -> resourceArchive.url) ++
-      resourceArchive.fileName.map(n => Map("fileName" -> n)).getOrElse(Map()) ++
-      resourceArchive.sha1Sum.map(s => Map("sha1Sum" -> s)).getOrElse(Map())
+      Map("url" -> artifact.url) ++
+      artifact.fileName.map(n => Map("fileName" -> n)).getOrElse(Map()) ++
+      artifact.sha1Sum.map(s => Map("sha1Sum" -> s)).getOrElse(Map())
     ).asJava
 
     ConfigFactory.parseMap(config)
