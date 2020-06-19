@@ -106,7 +106,7 @@ class ScepClientAppTest extends LoggingFreeSpec with TestFile with Matchers {
           env = Map("LC_ALL" -> "c"),
           stdin = os.ProcessInput.SourceInput("e2e63a747c4c633e11d5f41f0297c020")
         )
-        val out = proc.out.string
+        val out = proc.out.text
         out should include("Keystore type: PKCS12")
         out should include("Keystore provider: SUN")
         out should include("Your keystore contains 1 entry")

@@ -47,10 +47,10 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
       val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
-      val actorSys = system(registry)
+      val actorSys : ActorSystem = system(registry)
       val (internal, _) = getConnectionFactories(registry)
 
-      val switch = sendOutbound(internal, msgCount, track = true)
+      val switch : KillSwitch = sendOutbound(internal, msgCount, track = true)
 
       val retried : List[FlowEnvelope] = consumeMessages(cf = internal, destName = "retries", timeout = timeout)(actorSys).get
       retried should be (empty)
