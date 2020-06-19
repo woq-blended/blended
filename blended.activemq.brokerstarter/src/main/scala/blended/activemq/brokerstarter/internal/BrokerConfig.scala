@@ -25,20 +25,19 @@ case class BrokerConfig(
   override val properties : Map[String, String],
   override val defaultUser : Option[String],
   override val defaultPassword : Option[String],
+  override val enabled : Boolean = true,
+  override val useJndi : Boolean = false,
+  override val cfEnabled : Option[ConnectionConfig => Boolean] = None,
+  override val cfClassName : Option[String] = Some(classOf[ActiveMQConnectionFactory].getName()),
+  override val ctxtClassName : Option[String] = None,
+  override val jmsClassloader : Option[ClassLoader] = None,
   brokerName : String,
   file : String,
   withSsl : Boolean,
   withAuthentication : Boolean,
   anonymousUser : Option[String],
   anonymousGroups : List[String]
-) extends ConnectionConfig {
-  override val enabled : Boolean = true
-  override val useJndi : Boolean = false
-  override val cfEnabled : Option[ConnectionConfig => Boolean] = None
-  override val cfClassName : Option[String] = Some(classOf[ActiveMQConnectionFactory].getName())
-  override val ctxtClassName : Option[String] = None
-  override val jmsClassloader : Option[ClassLoader] = None
-}
+) extends ConnectionConfig 
 
 object BrokerConfig {
 

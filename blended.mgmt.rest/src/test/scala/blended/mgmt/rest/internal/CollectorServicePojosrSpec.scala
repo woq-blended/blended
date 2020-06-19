@@ -7,7 +7,6 @@ import akka.actor.ActorSystem
 import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.jmx.JmxObjectName
 import blended.jmx.internal.BlendedJmxActivator
 import blended.mgmt.repo.WritableArtifactRepo
 import blended.mgmt.repo.internal.ArtifactRepoActivator
@@ -41,8 +40,6 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
   with AkkaHttpServerTestHelper {
 
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
-
-  override def objName: JmxObjectName = JmxObjectName(properties = Map("type" -> "AkkaHttpServer"))
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.jmx" -> new BlendedJmxActivator(),

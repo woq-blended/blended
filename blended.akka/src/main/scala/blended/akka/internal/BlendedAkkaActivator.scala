@@ -30,7 +30,7 @@ class BlendedAkkaActivator extends DominoActivator {
         }
       } catch {
         case NonFatal(e) =>
-          log.error(s"Error starting actor system [$e]")
+          log.error(e)(s"Error starting actor system [$e]")
           throw e
       }
     }

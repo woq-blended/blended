@@ -1,5 +1,5 @@
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
-import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
+//import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
 import coursier.Repository
 import mill.api.Loose
 import mill.define.{Sources, Target, Task}
@@ -301,9 +301,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
   object akka extends CoreModule {
     override val description = "Provide OSGi services and API to use Actors in OSGi bundles with a shared ActorSystem."
+
     override def ivyDeps = T{ super.ivyDeps() ++ Agg(
       deps.orgOsgi,
       deps.akkaActor(akkaBundleRevision),
+      deps.akkaStream(akkaBundleRevision),
       deps.domino
     )}
 
@@ -313,10 +315,15 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       blended.domino
     )
 
-    override def exportPackages : Seq[String] = super.exportPackages ++ Seq(s"$blendedModule.protocol")
+    override def essentialImportPackage : Seq[String] = super.essentialImportPackage ++ Seq(
+      """akka.stream;version="[2.6,3)"""",
+      """akka.stream.serialization;version="[2.6,3)"""",
+    )
+
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
       `Bundle-Activator` = Some(s"${blendedModule}.internal.BlendedAkkaActivator")
     )}
+  
     object test extends CoreTests {
       override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
         blended.testsupport,

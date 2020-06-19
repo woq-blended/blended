@@ -9,7 +9,7 @@ import domino.service_consuming.ServiceConsuming
 import domino.service_watching.{ServiceWatcherEvent, ServiceWatching}
 import org.osgi.framework.{BundleContext, ServiceReference}
 
-class RouteProvider {
+class RouteProvider(jmxSupport : Option[AkkaHttpServerJmxSupport]) {
 
   private[this] val log = Logger[RouteProvider]
 
@@ -34,6 +34,10 @@ class RouteProvider {
       route ~ pathPrefix(PathMatchers.separateOnSlashes(context.prefix)) {
         context.route
       }
+    }
+
+    jmxSupport.foreach{ s => 
+      s.updateInJmx{ info => info.copy(routes = contexts.map(_.prefix).toArray) }
     }
   }
 

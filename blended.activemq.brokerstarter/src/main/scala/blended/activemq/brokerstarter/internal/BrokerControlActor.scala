@@ -159,7 +159,10 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
 
         val url = s"vm://${brokerCfg.brokerName}?create=false"
 
-        val jmsCfg : ConnectionConfig = brokerCfg.copy(properties = brokerCfg.properties + ("brokerURL" -> url))
+        val jmsCfg : ConnectionConfig = brokerCfg.copy(
+          properties = brokerCfg.properties + ("brokerURL" -> url),
+          jmsClassloader = Some(getClass().getClassLoader())
+        )
 
         val cf = new BlendedSingleConnectionFactory(
           config = jmsCfg,
