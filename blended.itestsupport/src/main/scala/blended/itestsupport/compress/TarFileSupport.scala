@@ -4,24 +4,24 @@ import java.io._
 
 import scala.collection.mutable
 
-import blended.util.StreamCopySupport
+import blended.util.io.StreamCopy
 import blended.util.logging.Logger
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
-import org.apache.commons.compress.archivers.tar.{ TarArchiveEntry, TarArchiveOutputStream }
+import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveOutputStream}
 
 object TarFileSupport {
 
   private[this] val log = Logger[TarFileSupport]
 
-  def untar(is : InputStream) : Map[String, Array[Byte]] = {
+  def untar(is: InputStream): Map[String, Array[Byte]] = {
     val tar = new ArchiveStreamFactory().createArchiveInputStream(new BufferedInputStream(is))
 
-    val content : mutable.Map[String, Array[Byte]] = mutable.Map.empty
+    val content: mutable.Map[String, Array[Byte]] = mutable.Map.empty
     var entry = Option(tar.getNextEntry())
 
-    while(entry.isDefined) {
+    while (entry.isDefined) {
       val bos = new ByteArrayOutputStream()
-      StreamCopySupport.copyStream(tar, bos)
+      StreamCopy.copy(tar, bos)
 
       bos.close()
 
@@ -37,9 +37,9 @@ object TarFileSupport {
     content.toMap
   }
 
-  def tar(file : File, os: OutputStream, user: Int = 0, group : Int = 0) : Unit = {
+  def tar(file: File, os: OutputStream, user: Int = 0, group: Int = 0): Unit = {
 
-    def addFileToTar(tarOs: TarArchiveOutputStream, file: File, base : String) : Unit = {
+    def addFileToTar(tarOs: TarArchiveOutputStream, file: File, base: String): Unit = {
       val entryName = base + file.getName()
       val entry = new TarArchiveEntry(file, entryName)
 
@@ -51,14 +51,16 @@ object TarFileSupport {
       tarOs.putArchiveEntry(entry)
 
       if (file.isFile()) {
-        StreamCopySupport.copyStream(new FileInputStream(file), tarOs)
+        StreamCopy.copy(new FileInputStream(file), tarOs)
         tarOs.closeArchiveEntry()
       } else {
         tarOs.closeArchiveEntry()
 
         val files = Option(file.listFiles())
         files.map { ff =>
-          ff.foreach{ f => addFileToTar(tarOs, f, entryName + "/") }
+          ff.foreach { f =>
+            addFileToTar(tarOs, f, entryName + "/")
+          }
         }
       }
     }

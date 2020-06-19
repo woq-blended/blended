@@ -29,8 +29,16 @@ trait ActorSystemWatching extends DominoImplicits {
     capsuleContext.addCapsule(m)
   }
 
+  /**
+   * Automatically create the actor and register it into the actor system.
+   * It will also stop the actor when the bundle gets stopped.
+   */
   def setupBundleActor(cfg : OSGIActorConfig, props : Props) : ActorRef = setupBundleActor(cfg.system, props)
 
+  /**
+   * Automatically create the actor and register it into the actor system.
+   * It will also stop the actor when the bundle gets stopped.
+   */
   def setupBundleActor(system : ActorSystem, props : Props) : ActorRef = {
     val actorName = bundleContext.getBundle().getSymbolicName()
     log.debug(s"About to create bundle actor for bundle: ${actorName}")

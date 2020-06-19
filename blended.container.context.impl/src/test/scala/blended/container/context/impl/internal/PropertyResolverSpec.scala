@@ -1,11 +1,11 @@
 package blended.container.context.impl.internal
 
-import blended.container.context.api.{ContainerContext, PropertyResolverException}
-import blended.testsupport.BlendedTestSupport
-import blended.updater.config.RuntimeConfig
-import blended.util.RichTry._
 import scala.util.control.NonFatal
 
+import blended.container.context.api.{ContainerContext, PropertyResolverException}
+import blended.testsupport.BlendedTestSupport
+import blended.updater.config.Profile
+import blended.util.RichTry._
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -13,7 +13,7 @@ class PropertyResolverSpec extends AnyFreeSpec
   with Matchers {
 
   System.setProperty("COUNTRY", "cc")
-  System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
+  System.setProperty(Profile.Properties.PROFILE_PROPERTY_KEYS, "foo,bar,FOO,num,version,typeA,typeB,blended.country,blended.demoProp")
   System.setProperty("blended.home", BlendedTestSupport.projectTestOutput)
   System.setProperty("blended.container.home", BlendedTestSupport.projectTestOutput)
   val ctCtxt : ContainerContext = new ContainerContextImpl()

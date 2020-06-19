@@ -940,9 +940,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       def osgiFrameworkIvyDeps: Map[String, Dep] = Map(
         "Felix 5.0.0" -> ivy"org.apache.felix:org.apache.felix.framework:5.0.0",
         "Felix 5.6.10" -> ivy"org.apache.felix:org.apache.felix.framework:5.6.10",
+        "Felix 6.0.3" -> ivy"org.apache.felix:org.apache.felix.framework:6.0.3",
+        "Eclipse OSGi 3.10.0.v20140606-1445" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.10.0.v20140606-1445",
         "Eclipse OSGi 3.10.100.v20150529-1857" -> ivy"org.osgi:org.eclipse.osgi:3.10.100.v20150529-1857",
         "Eclipse OSGi 3.12.50" -> ivy"org.eclipse.platform:org.eclipse.osgi:3.12.50",
-        "Eclipse OSGi 3.10.0.v20140606-1445" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.10.0.v20140606-1445"
+        "Eclipse OSGi 3.15.200" -> ivy"org.eclipse.platform:org.eclipse.osgi:3.15.200"
       )
       def resolvedOsgiFrameworks = T{
         Target.traverse(osgiFrameworkIvyDeps.toSeq){ case (name, dep) =>
@@ -950,16 +952,25 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         }().toMap
       }
       override def generatedSources: Target[Seq[PathRef]] = T{ super.generatedSources() ++ {
-        val file = T.dest / "blended" / "launcher" / "TestOsgiFrameworks.scala"
+        val file = T.dest / "blended" / "launcher" / "test_generated" / "generated.scala"
         val body =
           s"""
-            |package blended.launcher
+            |package blended.launcher.test_generated
             |
-            |/** Generated with mill: The frameworks to use in the tests. */
+            |/** Generated with mill: The frameworks to use in the tests.
+            | *  See [[blended.launcher.OsgiFrameworksTest]].
+            | */
             |object TestOsgiFrameworks {
             |  val frameworks: Map[String, String] = ${
               resolvedOsgiFrameworks().map { case (name, file) => s""""${name}" -> "${file.path}"""" }
-                .mkString("Map(\n    ", ",\n    ", "  )")
+                .mkString("Map(\n    ", ",\n    ", "\n  )")
+              }
+            |}
+            |
+            |object JvmLauncherTest {
+            |  val classpath: Seq[String] = ${
+              blended.launcher.scoverage.runClasspath().map(ref => s""""${ref.path}"""")
+                .mkString("Seq(\n    ", ",\n    ", "\n  )")
               }
             |}
             |""".stripMargin
@@ -984,8 +995,13 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.prickle.akka.http
       )
       override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-        `Bundle-Activator` = Some(s"${blendedModule}.internal.AgentActivator")
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.MgmtAgentActivator")
       )}
+      object test extends CoreTests {
+        override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
+          blended.testsupport.pojosr
+        )
+      }
     }
     object mock extends CoreModule {
       override val description : String = "Mock server to simulate a larger network of blended containers for UI testing"
@@ -1042,9 +1058,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
           `Bundle-Activator` = Some(s"${blendedModule}.internal.ArtifactRepoRestActivator")
         )}
-        object test extends Cross[Test](crossTestGroups: _*)
-        class Test(override val testGroup: String) extends CoreForkedTests {
-          override def otherModule: CoreForkedTests =  rest.test(otherTestGroup)
+        object test extends CoreTests {
+          override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
+            blended.testsupport.pojosr
+          )
         }
       }
     }
@@ -1060,7 +1077,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.util.logging,
         blended.akka.http,
-        blended.updater.remote,
+        blended.persistence,
         blended.security.akka.http,
         blended.akka,
         blended.prickle.akka.http,
@@ -1097,6 +1114,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.testsupport,
           blended.testsupport.pojosr
         )
+
+        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          deps.lambdaTest
+        )}
       }
     }
     object service extends Module {
@@ -1746,7 +1767,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.mockitoAll
       )}
       override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
-        blended.testsupport
+        blended.testsupport,
+        blended.testsupport.pojosr,
+        blended.akka
       )
     }
 
@@ -1795,49 +1818,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     }
 
-    object remote extends CoreModule {
-      override val description = "OSGi Updater remote handle support"
-      override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-        deps.orgOsgi,
-        deps.domino,
-        deps.slf4j,
-        deps.typesafeConfig
-      )}
-      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
-        blended.util.logging,
-        blended.persistence,
-        blended.updater.config,
-        blended.mgmt.base,
-        blended.launcher,
-        blended.container.context.api,
-        blended.akka
-      )
-      override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-        `Bundle-Activator` = Option(s"${blendedModule}.internal.RemoteUpdaterActivator")
-      )}
-      object test extends CoreTests {
-        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
-          deps.akkaTestkit,
-          deps.felixFramework,
-          deps.logbackClassic,
-          deps.akkaSlf4j(akkaBundleRevision),
-          deps.felixGogoRuntime,
-          deps.felixGogoShell,
-          deps.felixGogoCommand,
-          deps.felixFileinstall,
-          deps.mockitoAll,
-          deps.springCore,
-          deps.springBeans,
-          deps.springContext,
-          deps.springExpression,
-          deps.jclOverSlf4j
-        )}
-        override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
-          blended.testsupport,
-          blended.persistence.h2
-        )
-      }
-    }
     object tools extends CoreModule {
       override val description = "Configurations for Updater and Launcher"
       override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
@@ -1861,8 +1841,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       deps.typesafeConfig
     )
     override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
+      s"${blendedModule}.arm",
       s"${blendedModule}.config",
-      s"${blendedModule}.arm"
+      s"${blendedModule}.io"
     )
     object test extends CoreTests {
       override def ivyDeps = T{ super.ivyDeps() ++ Agg(
@@ -1990,7 +1971,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def forkArgs = T {
         val jolokiaAgent : PathRef = compileClasspath().filter{ r =>
           r.path.last.startsWith("jolokia")
-        }.toSeq.head
+        }.iterator.next()
 
         super.forkArgs() ++ Seq(
           s"-javaagent:${jolokiaAgent.path.toIO.getAbsolutePath()}=port=0,host=localhost"

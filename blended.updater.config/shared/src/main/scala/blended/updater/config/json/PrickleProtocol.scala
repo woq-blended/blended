@@ -9,33 +9,23 @@ import prickle._
  */
 object PrickleProtocol {
 
-  implicit val prickleConfig : PConfig[JsValue] = JsConfig(areSharedObjectsSupported = false)
-
-  // sealed trait needs special handling
-  implicit val updateActionPickler : PicklerPair[UpdateAction] = CompositePickler[UpdateAction].
-    concreteType[ActivateProfile].
-    concreteType[StageProfile].
-    concreteType[AddRuntimeConfig].
-    concreteType[AddOverlayConfig]
+  implicit val prickleConfig: PConfig[JsValue] = JsConfig(areSharedObjectsSupported = false)
 
   // Workaround for scala compiler error "diverging implicit expansion"
   // see https://github.com/benhutchison/prickle/issues/27
-  implicit val serviceInfoPickler : Pickler[ServiceInfo] = Pickler.materializePickler[ServiceInfo]
-  implicit val serviceInfoUnpickler : Unpickler[ServiceInfo] = Unpickler.materializeUnpickler[ServiceInfo]
+  implicit val serviceInfoPickler: Pickler[ServiceInfo] = Pickler.materializePickler[ServiceInfo]
+  implicit val serviceInfoUnpickler: Unpickler[ServiceInfo] = Unpickler.materializeUnpickler[ServiceInfo]
 
-  implicit val containerInfoPickler : Pickler[ContainerInfo] = Pickler.materializePickler[ContainerInfo]
-  implicit val containerInfoUnpickler : Unpickler[ContainerInfo] = Unpickler.materializeUnpickler[ContainerInfo]
+  implicit val containerInfoPickler: Pickler[ContainerInfo] = Pickler.materializePickler[ContainerInfo]
+  implicit val containerInfoUnpickler: Unpickler[ContainerInfo] = Unpickler.materializeUnpickler[ContainerInfo]
 
-  implicit val overlayStatePickler : PicklerPair[OverlayState] = CompositePickler[OverlayState].
-    concreteType[OverlayState.Active.type].
-    concreteType[OverlayState.Valid.type].
-    concreteType[OverlayState.Invalid.type].
-    concreteType[OverlayState.Pending.type]
+  implicit val overlayStatePickler: PicklerPair[OverlayState] = CompositePickler[OverlayState]
+    .concreteType[OverlayState.Active.type]
+    .concreteType[OverlayState.Valid.type]
+    .concreteType[OverlayState.Invalid.type]
+    .concreteType[OverlayState.Pending.type]
 
-  implicit val runtimeConfigPickler : Pickler[RuntimeConfig] = Pickler.materializePickler[RuntimeConfig]
-  implicit val runtimeConfigUnpickler : Unpickler[RuntimeConfig] = Unpickler.materializeUnpickler[RuntimeConfig]
-
-  implicit val overlayConfigPickler : Pickler[OverlayConfig] = Pickler.materializePickler[OverlayConfig]
-  implicit val overlayConfigUnpickler : Unpickler[OverlayConfig] = Unpickler.materializeUnpickler[OverlayConfig]
+  implicit val runtimeConfigPickler: Pickler[Profile] = Pickler.materializePickler[Profile]
+  implicit val runtimeConfigUnpickler: Unpickler[Profile] = Unpickler.materializeUnpickler[Profile]
 
 }

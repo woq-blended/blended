@@ -1,6 +1,6 @@
 package blended.updater.config
 
 case class ProfileInfo(
-  timeStamp : Long,
-  profiles : List[Profile]
+    timeStamp: Long,
+    profiles: List[ProfileRef]
 )

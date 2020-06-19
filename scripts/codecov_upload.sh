@@ -6,7 +6,7 @@
 
 set -e +o pipefail
 
-VERSION="tbd"
+VERSION="20200602-f809a24"
 
 url="https://codecov.io"
 env="$CODECOV_ENV"
@@ -39,10 +39,10 @@ ft_network="1"
 ft_xcodellvm="1"
 ft_xcodeplist="0"
 ft_gcovout="1"
+ft_html="0"
 
 _git_root=$(git rev-parse --show-toplevel 2>/dev/null || hg root 2>/dev/null || echo $PWD)
 git_root="$_git_root"
-codecov_yml=""
 remote_addr=""
 if [ "$git_root" = "$PWD" ];
 then
@@ -125,6 +125,7 @@ cat << EOF
                  -X xcode         Disable xcode processing
                  -X network       Disable uploading the file network
                  -X gcovout       Disable gcov output
+                 -X html          Enable coverage for HTML files
 
     -N           The commit SHA of the parent for which you are uploading coverage. If not present,
                  the parent will be determined using the API of your repository provider.
@@ -132,7 +133,6 @@ cat << EOF
                  the closest ancestor to the commit.
 
     -R root dir  Used when not in git/hg project to identify project root directory
-    -y conf file Used to specify the location of the .codecov.yml config file
     -F flag      Flag the upload to group coverage metrics
 
                  -F unittests        This upload is only unittests
@@ -145,7 +145,7 @@ cat << EOF
     -- xcode --
     -D           Custom Derived Data Path for Coverage.profdata and gcov processing
                  Default '~/Library/Developer/Xcode/DerivedData'
-    -J           Specify packages to build coverage.
+    -J           Specify packages to build coverage. Uploader will only build these packages.
                  This can significantly reduces time to build coverage reports.
 
                  -J 'MyAppName'      Will match "MyAppName" and "MyAppNameTests"
@@ -415,10 +415,14 @@ $OPTARG"
         elif [ "$OPTARG" = "s3" ];
         then
           ft_s3="0"
+        elif [ "$OPTARG" = "html" ];
+        then
+          ft_html="1"
         fi
         ;;
       "y")
-        codecov_yml="$OPTARG"
+        echo -e "${r}DeprecationWarning${x}: The -y flag is no longer supported by Codecov."`
+               `"\n  codecov.yml must be located underneath the root, dev/, or .github/ directories"
         ;;
       "Z")
         exit_with=1
@@ -514,7 +518,7 @@ then
     pr="$(echo $CODEBUILD_SOURCE_VERSION | sed 's/^pr\///')"
   fi
   job="$CODEBUILD_BUILD_ID"
-  slug="$(echo $CODEBUILD_SOURCE_REPO_URL | sed 's/^.*github.com\///' | sed 's/^.*bitbucket.org\///' | sed 's/\.git$//')"
+  slug="$(echo $CODEBUILD_SOURCE_REPO_URL | sed 's/^.*:\/\/[^\/]*\///' | sed 's/\.git$//')"
 
 elif [ "$DOCKER_REPO" != "" ];
 then
@@ -926,11 +930,10 @@ then
   fi
 fi
 
-yaml=$(test -n "$codecov_yml" && echo "$codecov_yml" \
-       || cd "$git_root" && \
+yaml=$(cd "$git_root" && \
           git ls-files "*codecov.yml" "*codecov.yaml" 2>/dev/null \
        || hg locate "*codecov.yml" "*codecov.yaml" 2>/dev/null \
-       || cd $proj_root && find . -type f -name '*codecov.y*ml' -depth 1 2>/dev/null \
+       || cd $proj_root && find . -maxdepth 1 -type f -name '*codecov.y*ml' 2>/dev/null \
        || echo '')
 yaml=$(echo "$yaml" | head -1)
 
@@ -1071,13 +1074,13 @@ then
   # Gcov Coverage
   if [ "$ft_gcov" = "1" ];
   then
-    say "${e}==>${x} Running gcov in $proj_root ${e}(disable via -X gcov)${x}"
+    say "${e}==>${x} Running $gcov_exe in $proj_root ${e}(disable via -X gcov)${x}"
     if [ "$ft_gcovout" = "0" ];
     then
       # suppress gcov output
-      bash -c "find $proj_root -type f -name '*.gcno' $gcov_include $gcov_ignore -execdir $gcov_exe -pb $gcov_arg {} \;" >/dev/null 2>&1 || true
+      bash -c "find $proj_root -type f -name '*.gcno' $gcov_include $gcov_ignore -exec $gcov_exe -pb $gcov_arg {} +" >/dev/null 2>&1 || true
     else
-      bash -c "find $proj_root -type f -name '*.gcno' $gcov_include $gcov_ignore -execdir $gcov_exe -pb $gcov_arg {} \;" || true
+      bash -c "find $proj_root -type f -name '*.gcno' $gcov_include $gcov_ignore -exec $gcov_exe -pb $gcov_arg {} +" || true
     fi
   else
     say "${e}==>${x} gcov disabled"
@@ -1367,8 +1370,14 @@ if [ "$ft_network" == "1" ];
 then
   i="woff|eot|otf"  # fonts
   i="$i|gif|png|jpg|jpeg|psd"  # images
-  i="$i|ptt|pptx|numbers|pages|md|txt|xlsx|docx|doc|pdf|html|csv"  # docs
+  i="$i|ptt|pptx|numbers|pages|md|txt|xlsx|docx|doc|pdf|csv"  # docs
   i="$i|yml|yaml|.gitignore"  # supporting docs
+
+  if [ "$ft_html" != "1" ];
+  then
+    i="$i|html"
+  fi
+
   echo "$network" | grep -vwE "($i)$" >> $upload_file
 fi
 echo "<<<<<< network" >> $upload_file
@@ -1392,13 +1401,13 @@ do
         then
           echo "# path=$(echo "$file.reduced" | sed "s|^$git_root/||")" >> $upload_file
           # get file name
-          head -1 $file >> $upload_file
+          head -1 "$file" >> $upload_file
           # 1. remove source code
           # 2. remove ending bracket lines
           # 3. remove whitespace
           # 4. remove contextual lines
           # 5. remove function names
-          awk -F': *' '{print $1":"$2":"}' $file \
+          awk -F': *' '{print $1":"$2":"}' "$file" \
             | sed '\/: *} *$/d' \
             | sed 's/^ *//' \
             | sed '/^-/d' \
@@ -1433,7 +1442,7 @@ fi
 if [ "$ft_fix" = "1" ];
 then
   say "${e}==>${x} Appending adjustments"
-  say "    ${b}http://docs.codecov.io/docs/fixing-reports${x}"
+  say "    ${b}https://docs.codecov.io/docs/fixing-reports${x}"
 
   empty_line='^[[:space:]]*$'
   # //
@@ -1634,7 +1643,6 @@ else
             --data-binary @$upload_file.gz \
             -H 'Content-Type: application/x-gzip' \
             -H 'Content-Encoding: gzip' \
-             -H 'x-amz-acl: public-read' \
             "$s3target" || true)
 
 
@@ -1694,4 +1702,3 @@ else
 fi
 
 exit ${exit_with}
-

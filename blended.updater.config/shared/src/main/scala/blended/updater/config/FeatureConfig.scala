@@ -1,7 +1,7 @@
 package blended.updater.config
 
 /**
- * A Feature configuration, holds a collection of [[BundleConfig]]s to build up a [[RuntimeConfig]].
+ * A Feature configuration, holds a collection of [[BundleConfig]]s to build up a [[Profile]].
  */
 case class FeatureConfig(
   name : String,
