@@ -6,9 +6,9 @@ import javax.management.{InstanceNotFoundException, ObjectName}
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
-trait AkkaHttpServerJmxSupport {
+class AkkaHttpServerJmxSupport(facade : BlendedMBeanServerFacade, exporter : OpenMBeanExporter) {
 
-  def objName : JmxObjectName
+  def objName: JmxObjectName = JmxObjectName(properties = Map("type" -> "AkkaHttpServer"))
 
   def readFromJmx(svr : BlendedMBeanServerFacade) : Try[AkkaHttpServerInfo] = {
 
@@ -33,7 +33,7 @@ trait AkkaHttpServerJmxSupport {
     }
   }
 
-  def updateInJmx(exporter : OpenMBeanExporter, facade : BlendedMBeanServerFacade)(update : AkkaHttpServerInfo => AkkaHttpServerInfo) : Unit = Try {
+  def updateInJmx(update : AkkaHttpServerInfo => AkkaHttpServerInfo) : Unit = Try {
     readFromJmx(facade) match {
       case Success(info) =>
         exporter.`export`(update(info), new ObjectName(objName.objectName), replaceExisting = true)

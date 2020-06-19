@@ -1,5 +1,5 @@
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
-import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
+//import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
 import coursier.Repository
 import mill.api.Loose
 import mill.define.{Sources, Target, Task}
@@ -16,7 +16,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.4-SNAPSHOT`
+import $ivy.`de.wayofquality.blended::blended-mill:0.3-3-g0d11a66`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -32,7 +32,7 @@ import build_util.ScoverageReport
 val projectDir: os.Path = build.millSourcePath
 
 /** The revision of bundles provided via akka-osgi */
-val akkaBundleRevision : String = "f37f38e"
+val akkaBundleRevision : String = "844b627"
 
 object GitSupport extends GitModule {
   override def millSourcePath: Path = projectDir
@@ -301,9 +301,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
   object akka extends CoreModule {
     override val description = "Provide OSGi services and API to use Actors in OSGi bundles with a shared ActorSystem."
+
     override def ivyDeps = T{ super.ivyDeps() ++ Agg(
       deps.orgOsgi,
       deps.akkaActor(akkaBundleRevision),
+      deps.akkaStream(akkaBundleRevision),
       deps.domino
     )}
 
@@ -313,10 +315,15 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       blended.domino
     )
 
-    override def exportPackages : Seq[String] = super.exportPackages ++ Seq(s"$blendedModule.protocol")
+    override def essentialImportPackage : Seq[String] = super.essentialImportPackage ++ Seq(
+      """akka.stream;version="[2.6,3)"""",
+      """akka.stream.serialization;version="[2.6,3)"""",
+    )
+
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
       `Bundle-Activator` = Some(s"${blendedModule}.internal.BlendedAkkaActivator")
     )}
+  
     object test extends CoreTests {
       override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
         blended.testsupport,

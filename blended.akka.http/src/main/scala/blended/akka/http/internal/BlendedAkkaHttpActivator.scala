@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.{ConnectionContext, Http}
 import blended.akka.ActorSystemWatching
 import blended.akka.http.SimpleHttpContext
-import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName, OpenMBeanExporter}
+import blended.jmx.{BlendedMBeanServerFacade, OpenMBeanExporter}
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import domino.DominoActivator
@@ -14,19 +14,19 @@ import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 class BlendedAkkaHttpActivator extends DominoActivator
-  with ActorSystemWatching
-  with AkkaHttpServerJmxSupport {
+  with ActorSystemWatching {
 
   private[this] val log : Logger = Logger[BlendedAkkaHttpActivator]
   private[this] val defaultHttpPort : Int = 8080
   private[this] val defaultHttpsPort : Int = 8443
 
-  override def objName: JmxObjectName = JmxObjectName(properties = Map("type" -> "AkkaHttpServer"))
-
   whenBundleActive {
 
     whenServicePresent[BlendedMBeanServerFacade] { facacade =>
       whenServicePresent[OpenMBeanExporter] { exporter =>
+
+        val jmxSupport : AkkaHttpServerJmxSupport = new AkkaHttpServerJmxSupport(facacade, exporter)
+
         // reuse the blended akka system
         whenActorSystemAvailable { cfg =>
 
@@ -42,14 +42,14 @@ class BlendedAkkaHttpActivator extends DominoActivator
           // needed for the future flatMap/onComplete in the end
           implicit val executionContext : ExecutionContext = actorSystem.dispatcher
 
-          val dynamicRoutes = new RouteProvider()
+          val dynamicRoutes = new RouteProvider(Some(jmxSupport))
 
           log.info(s"Starting HTTP server at [$httpHost:$httpPort]")
           val bindingFuture = Http().bindAndHandle(dynamicRoutes.dynamicRoute, httpHost, httpPort)
 
           bindingFuture.onComplete {
             case Success(b) =>
-              updateInJmx(exporter, facacade)(info => info.withHost(b.localAddress.getHostString()).withPort(b.localAddress.getPort()))
+              jmxSupport.updateInJmx(info => info.withHost(b.localAddress.getHostString()).withPort(b.localAddress.getPort()))
               log.info(s"Started HTTP server at ${b.localAddress}")
             case Failure(t) =>
               log.error(t)(s"Failed to start HTTP Server : [${t.getMessage()}]")
@@ -77,7 +77,7 @@ class BlendedAkkaHttpActivator extends DominoActivator
             httpsBindingFuture.onComplete {
               case Success(b) =>
                 log.info(s"Started HTTPS server at ${b.localAddress}")
-                updateInJmx(exporter, facacade)(info => info.withSslHost(b.localAddress.getHostString()).withPort(b.localAddress.getPort()))
+                jmxSupport.updateInJmx(info => info.withSslHost(b.localAddress.getHostString()).withPort(b.localAddress.getPort()))
               case Failure(t) =>
                 log.error(t)(t.getMessage())
                 throw t
@@ -86,7 +86,7 @@ class BlendedAkkaHttpActivator extends DominoActivator
             onStop {
               log.info(s"Stopping HTTPS server at [$httpsHost:$httpsPort]")
               httpsBindingFuture.map(serverBinding => serverBinding.unbind())
-              updateInJmx(exporter, facacade)(_.clearSslAddress())
+              jmxSupport.updateInJmx(_.clearSslAddress())
             }
           }
 

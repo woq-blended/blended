@@ -18,7 +18,7 @@ class RouteProviderSpec
 
   override def baseDir : String = new File(System.getProperty(BlendedTestSupport.projectTestOutput)).getAbsolutePath()
 
-  val routeProvider = new RouteProvider()
+  val routeProvider = new RouteProvider(None)
   val route = routeProvider.dynamicRoute
 
   "The RouteProvider should" - {

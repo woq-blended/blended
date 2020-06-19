@@ -2,25 +2,28 @@ package blended.testsupport.pojosr
 
 import akka.actor.{ActorSystem, Scheduler}
 import blended.akka.http.internal.{AkkaHttpServerInfo, AkkaHttpServerJmxSupport}
-import blended.jmx.{BlendedMBeanServerFacade, JmxObjectName}
+import blended.jmx.BlendedMBeanServerFacade
 import blended.testsupport.retry.Retry
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
+import blended.jmx.OpenMBeanExporter
 
-trait AkkaHttpServerTestHelper extends AkkaHttpServerJmxSupport { this : PojoSrTestHelper =>
-
-  override def objName: JmxObjectName = JmxObjectName(properties = Map("type" -> "AkkaHttpServer"))
+trait AkkaHttpServerTestHelper { this : PojoSrTestHelper =>
 
   def akkaHttpInfo(registry : BlendedPojoRegistry) : AkkaHttpServerInfo = {
 
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)
     implicit val eCtxt : ExecutionContext = system.dispatcher
     implicit val scheduler : Scheduler = system.scheduler
+
     val mbeanSvr : BlendedMBeanServerFacade = mandatoryService[BlendedMBeanServerFacade](registry)
+    val exporter : OpenMBeanExporter = mandatoryService[OpenMBeanExporter](registry)
+
+    val jmxSupport : AkkaHttpServerJmxSupport = new AkkaHttpServerJmxSupport(mbeanSvr, exporter)
 
     val f : Future[AkkaHttpServerInfo] = Retry.retry(delay = 1.second, retries = 3){
-      readFromJmx(mbeanSvr).get
+      jmxSupport.readFromJmx(mbeanSvr).get
     }
 
     val info : AkkaHttpServerInfo = Await.result(f, 4.seconds)
