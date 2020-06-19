@@ -16,7 +16,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.4-SNAPSHOT`
+import $ivy.`de.wayofquality.blended::blended-mill:0.3-3-g0d11a66`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -32,7 +32,7 @@ import build_util.ScoverageReport
 val projectDir: os.Path = build.millSourcePath
 
 /** The revision of bundles provided via akka-osgi */
-val akkaBundleRevision : String = "f37f38e"
+val akkaBundleRevision : String = "844b627"
 
 object GitSupport extends GitModule {
   override def millSourcePath: Path = projectDir
