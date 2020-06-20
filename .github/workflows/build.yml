@@ -30,7 +30,17 @@ jobs:
       with:
         java-version: ${{ matrix.java-version }}
 
-    - run: ./millw -i show blendedVersion ; echo "${{ github.ref }}"
+    - name: Setup GPG secrets
+      run: |
+        gpg --version
+        cat <(echo "${{ secrets.OSSRH_GPG_SECRET_KEY }}") | base64 -d | gpg --batch --import
+        gpg --list-secret-keys --keyid-format LONG
+
+    - run: echo ::set-env name=GIT_TAG::$(git describe --tags --exact-match 2>/dev/null)    
+
+    - run: |
+        ./millw -i show blendedVersion ; echo "${{ github.ref }}"
+        echo "GIT_TAG = [${{ env.GIT_TAG }}]"
 
     - run: ./millw -i -j 0 -k blended[${{ matrix.scala-version }}].__.testCached
 
@@ -46,7 +56,7 @@ jobs:
     - run: bash scripts/codecov_upload.sh -f out/scoverage/xmlReportAll/dest/scoverage.xml -v
 
     - name: Upload to simple maven store
-      if: ${{ matrix.java-version == env.MAIN_JAVA_VERSION && github.ref == env.PUBLISH_BRANCH && github.event_name == 'push' }}
+      if: ${{ matrix.java-version == env.MAIN_JAVA_VERSION && github.ref == env.PUBLISH_BRANCH && github.event_name == 'push' && env.GIT_TAG == ''}}
       env:
         WOQ_SCP_USER: ${{ secrets.WOQ_SCP_USER }}
         WOQ_SCP_KEY: ${{ secrets.WOQ_SCP_KEY}}
@@ -54,3 +64,6 @@ jobs:
 
       run: ./millw -i -j 0 blended[${{ matrix.scala-version}}].__.publishScp
 
+    - name: Release to Maven central
+      if: ${{ matrix.java-version == env.MAIN_JAVA_VERSION && github.event_name == 'push' && env.GIT_TAG != ''}}
+      run: ./millw mill.scalalib.PublishModule/publishAll --sonatypeCreds "${{ secrets.OSSRH_USER}}:${{ secrets.OSSRH_PASSWORD }}" --gpgArgs "--passphrase=${{ secrets.OSSRH_GPG_SECRET_KEY_PASSWORD}},--batch,--yes,-a,-b,--pinentry-mode,loopback" --publishArtifacts blended[${{ matrix.scala-version }}].__.publishArtifacts --readTimeout 600000 --release true --signed true
