@@ -97,4 +97,4 @@ Re-enter new password:
 
 On the server side, use the "jwtkey" certificate to create a signed JWT.
 
-See https://github.com/woq-blended/blended/blob/master/blended.security/src/test/scala/blended/security/JJwtSpec.scala[JJwtSpec.scala]
+See https://github.com/woq-blended/blended/blob/main/blended.security/src/test/scala/blended/security/JJwtSpec.scala[JJwtSpec.scala]

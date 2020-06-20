@@ -7,7 +7,7 @@ ifdef::env-github[]
 image:https://github.com/woq-blended/blended/workflows/.github/workflows/build.yml/badge.svg[Scala, link="https://github.com/woq-blended/blended/actions?query=workflow%3A.github%2Fworkflows%2Fbuild.yml"]
 image:https://badges.gitter.im/Join%20Chat.svg[Join the chat at, link="https://gitter.im/woq-blended/blended?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 image:https://api.codacy.com/project/badge/Grade/1c5e4c400adc4548b821583207b97694["Code quality report on Codacy.com", link="https://www.codacy.com/app/blended/blended?utm_source=github.com&utm_medium=referral&utm_content=woq-blended/blended&utm_campaign=Badge_Grade"]
-image:https://codecov.io/gh/woq-blended/blended/branch/master/graph/badge.svg["Test coverage report on Codecov.io", link="https://codecov.io/gh/woq-blended/blended"]
+image:https://codecov.io/gh/woq-blended/blended/branch/main/graph/badge.svg["Test coverage report on Codecov.io", link="https://codecov.io/gh/woq-blended/blended"]
 endif::[]
 
 == Project Mission

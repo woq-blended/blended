@@ -1,7 +1,7 @@
 on:
   push:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 env:
   # This is the java version that will trigger an upload to the SNAPSHOT maven store
@@ -9,7 +9,7 @@ env:
   MAIN_JAVA_VERSION: 1.8
   # We will only publish the build artifacts to our pseudo snapshot repo for a push on
   # this branch
-  PUBLISH_BRANCH: refs/heads/master
+  PUBLISH_BRANCH: refs/heads/main
 
 jobs:
   build:
