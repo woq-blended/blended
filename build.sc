@@ -32,7 +32,7 @@ import build_util.ScoverageReport
 val projectDir: os.Path = build.millSourcePath
 
 /** The revision of bundles provided via akka-osgi */
-val akkaBundleRevision : String = "844b627"
+val akkaBundleRevision : String = "1"
 
 object GitSupport extends GitModule {
   override def millSourcePath: Path = projectDir
