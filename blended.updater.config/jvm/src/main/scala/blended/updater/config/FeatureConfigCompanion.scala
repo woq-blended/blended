@@ -27,7 +27,7 @@ object FeatureConfigCompanion {
       name = config.getString("name"),
       version = config.getString("version"),
       url =
-        if (config.hasPath("url")) Option(config.getString("path")) else None,
+        if (config.hasPath("url")) Option(config.getString("url")) else None,
       bundles =
         if (config.hasPath("bundles")) {
           config.getObjectList("bundles").asScala.map { bc => BundleConfigCompanion.read(bc.toConfig()).get }.toList

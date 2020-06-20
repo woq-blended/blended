@@ -71,22 +71,22 @@ object ProfileCompanion {
     )
   }
 
-  def toConfig(runtimeConfig: Profile): Config = {
+  def toConfig(profile: Profile): Config = {
 
     val propCfg: Map[String, String] => ConfigValue = m => ConfigPropertyMapConverter.propertyMapToConfigValue(m)
 
     val config = Map[String, Any](
-      "name" -> runtimeConfig.name,
-      "version" -> runtimeConfig.version,
-      "bundles" -> runtimeConfig.bundles.map(BundleConfigCompanion.toConfig).map(_.root().unwrapped()).asJava,
-      "startLevel" -> runtimeConfig.startLevel,
-      "defaultStartLevel" -> runtimeConfig.defaultStartLevel,
-      "properties" -> propCfg(runtimeConfig.properties),
-      "frameworkProperties" -> propCfg(runtimeConfig.frameworkProperties),
-      "systemProperties" -> propCfg(runtimeConfig.systemProperties),
-      "features" -> runtimeConfig.features.map(FeatureRefCompanion.toConfig).map(_.root().unwrapped()).asJava,
-      "resources" -> runtimeConfig.resources.map(ArtifactCompanion.toConfig).map(_.root().unwrapped()).asJava,
-      "resolvedFeatures" -> runtimeConfig.resolvedFeatures
+      "name" -> profile.name,
+      "version" -> profile.version,
+      "bundles" -> profile.bundles.map(BundleConfigCompanion.toConfig).map(_.root().unwrapped()).asJava,
+      "startLevel" -> profile.startLevel,
+      "defaultStartLevel" -> profile.defaultStartLevel,
+      "properties" -> propCfg(profile.properties),
+      "frameworkProperties" -> propCfg(profile.frameworkProperties),
+      "systemProperties" -> propCfg(profile.systemProperties),
+      "features" -> profile.features.map(FeatureRefCompanion.toConfig).map(_.root().unwrapped()).asJava,
+      "resources" -> profile.resources.map(ArtifactCompanion.toConfig).map(_.root().unwrapped()).asJava,
+      "resolvedFeatures" -> profile.resolvedFeatures
         .map(FeatureConfigCompanion.toConfig)
         .map(_.root().unwrapped())
         .asJava
