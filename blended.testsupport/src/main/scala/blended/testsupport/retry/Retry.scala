@@ -23,7 +23,7 @@ object Retry {
   def retry[T](
     delay : FiniteDuration,
     retries : Int,
-    onRetry : (Int, Throwable) => Unit = (n, e) => Logger[Retry.type].debug(e)(s"Retrying after failed execution (${n} retries left)")
+    onRetry : (Int, Throwable) => Unit = (n, e) => Logger[Retry.type].debug(s"Retrying after failed execution (${n} retries left) : ${e.getMessage()}")
   )(
     op : => T
   )(implicit ec : ExecutionContext, s : Scheduler) : Future[T] =
@@ -50,7 +50,7 @@ object Retry {
   def unsafeRetry[T](
     delay : FiniteDuration,
     retries : Int,
-    onRetry : (Int, Throwable) => Unit = (n, e) => Logger[Retry.type].debug(e)(s"Retrying after failed execution (${n} retries left)"),
+    onRetry : (Int, Throwable) => Unit = (n, e) => Logger[Retry.type].debug(s"Retrying after failed execution (${n} retries left) : ${e.getMessage()}"),
     finalDelay : Option[FiniteDuration] = None
   )(
     op : => T
