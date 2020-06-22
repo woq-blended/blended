@@ -16,12 +16,13 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.3-6-ge074ebc`
+import $ivy.`de.wayofquality.blended::blended-mill:0.4-SNAPSHOT`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
 import de.wayofquality.blended.mill.modules._
 import de.wayofquality.blended.mill.utils._
+import de.wayofquality.blended.mill.feature._
 
 import $file.build_util
 import build_util.ScoverageReport
@@ -137,6 +138,17 @@ trait DistModule extends CoreCoursierModule {
 
     Jvm.createJar(dirs)
   }
+}
+
+trait CoreFeatureModule extends BlendedFeatureModule with CoreCoursierModule {
+
+  override def version : T[String] = T { blendedVersion() }
+  override def scalaVersion = deps.scalaVersion
+
+  override type ProjectDeps = BlendedDependencies 
+  override def deps : ProjectDeps = BlendedDependencies.Deps_2_13
+
+  override def baseDir = projectDir
 }
 
 trait JBakeBuild extends Module with WebTools {
@@ -367,36 +379,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.testsupport,
           blended.testsupport.pojosr
         )
-      }
-
-      object api extends CoreModule {
-        override val description : String = "Package the Akka Http API into a bundle."
-        override def ivyDeps = T{ super.ivyDeps() ++ Agg(
-          deps.akkaHttp(akkaBundleRevision),
-          deps.akkaHttpCore(akkaBundleRevision),
-          deps.akkaParsing(akkaBundleRevision)
-        )}
-        override def exportPackages : Seq[String] = Seq(
-          s"akka.http.*;version=${deps.akkaHttpVersion};-split-package:=merge-first"
-        )
-        override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
-          `Import-Package` = Seq(
-            """scala.compat.*;version="[0.8,1)"""",
-            s"""scala.*;version="[${scalaBinVersion()},${scalaBinVersion()}.50]"""",
-            "com.sun.*;resolution:=optional",
-            "sun.*;resolution:=optional",
-            "net.liftweb.*;resolution:=optional",
-            "play.*;resolution:=optional",
-            "twirl.*;resolution:=optional",
-            "org.json4s.*;resolution:=optional",
-            "*"
-          ),
-          `Private-Package` = Seq(
-            "akka.macros.*",
-            "akka.parboiled2.*",
-            "akka.shapeless.*"
-          )
-        )}
       }
 
       object jmsqueue extends CoreModule {
@@ -1739,7 +1721,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
       object test extends CoreTests
     }
-
   }
 
   object updater extends CoreModule {
@@ -1987,6 +1968,118 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
+  object features extends BlendedFeatureJar with CorePublishModule {
+
+    override def baseDir : os.Path = projectDir
+    override type ProjectDeps = BlendedDependencies
+    override def deps : ProjectDeps = BlendedDependencies.Deps_2_13
+    override def scalaVersion = crossScalaVersion
+
+    def baseName : String = "blended.features"
+
+    val coreDep : String => String => Dep = version => name => 
+      Dep(
+        org = deps.blendedOrg,
+        name = name,
+        version = version,
+        cross = CrossVersion.Binary(false)
+      )
+
+    def coreDep(m : CoreModule) = T.task{
+
+      m.publishLocal()
+
+      Dep(
+        org = m.artifactMetadata().group,
+        name = m.artifactName(),
+        version = m.publishVersion(),
+        cross = CrossVersion.Binary(false)
+      )
+    }      
+
+    def baseFelix : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".base.felix",
+        features = Seq.empty,
+        bundles = Seq(
+          FeatureBundle(deps.felixFramework, 0, true),
+          FeatureBundle(deps.orgOsgiCompendium, 1, true),
+          FeatureBundle(deps.jline, 1, false),
+          FeatureBundle(deps.jlineBuiltins, 1, false),
+          FeatureBundle(deps.felixGogoJline, 1, true),
+          FeatureBundle(deps.felixGogoRuntime, 1, true),
+          FeatureBundle(deps.felixGogoShell, 1, true),
+          FeatureBundle(deps.felixGogoCommand, 1, true),
+          FeatureBundle(deps.felixShellRemote, 1, true)
+        )
+      )
+    }
+
+    def baseEquinox : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + "base.equinox",
+        features = Seq.empty,
+        bundles = Seq(
+          FeatureBundle(deps.eclipseOsgi, 0, true),
+          FeatureBundle(deps.eclipseEquinoxConsole, 1, true),
+          FeatureBundle(deps.jline, 1, false),
+          FeatureBundle(deps.jlineBuiltins, 1, false),
+          FeatureBundle(deps.felixGogoJline, 1, true),
+          FeatureBundle(deps.felixGogoRuntime, 1, true),
+          FeatureBundle(deps.felixGogoShell, 1, true),
+          FeatureBundle(deps.felixGogoCommand, 1, true),
+          FeatureBundle(deps.felixShellRemote, 1, true)
+        )
+      )
+    }
+
+    def baseCommon : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".base.common",
+        features = Seq.empty,
+        bundles = Seq(
+          FeatureBundle(coreDep(blended.security.boot)()),
+          FeatureBundle(deps.asmAll, 4, true),
+          FeatureBundle(coreDep(blended.updater)(), 4, true),
+          FeatureBundle(coreDep(blended.updater.config)(), 4, true),
+          FeatureBundle(deps.scalaReflect(scalaVersion())),
+          FeatureBundle(deps.scalaLibrary(scalaVersion())),
+          FeatureBundle(deps.scalaXml),
+          FeatureBundle(deps.scalaCompatJava8),
+          FeatureBundle(deps.scalaParser),
+          FeatureBundle(coreDep(blended.akka)(), 4, true),
+          FeatureBundle(coreDep(blended.util.logging)(), 4, true),
+          FeatureBundle(coreDep(blended.util)(), 4, true),
+          FeatureBundle(deps.springCore),
+          FeatureBundle(deps.springExpression),
+          FeatureBundle(coreDep(blended.container.context.api)()),
+          FeatureBundle(coreDep(blended.container.context.impl)(), 4, true),
+          FeatureBundle(coreDep(blended.security.crypto)()),
+          FeatureBundle(deps.felixConfigAdmin, 4, true),
+          FeatureBundle(deps.felixEventAdmin, 4, true),
+          FeatureBundle(deps.felixFileinstall, 4, true),
+          FeatureBundle(deps.felixMetatype, 4, true),
+          FeatureBundle(deps.typesafeConfig),
+          FeatureBundle(deps.typesafeSslConfigCore),
+          FeatureBundle(deps.reactiveStreams),
+          FeatureBundle(deps.akkaActor(akkaBundleRevision)),
+          FeatureBundle(coreDep(blended.akka.logging)()),
+          FeatureBundle(deps.akkaProtobuf(akkaBundleRevision)),
+          FeatureBundle(deps.akkaProtobufV3(akkaBundleRevision)),
+          FeatureBundle(deps.akkaStream(akkaBundleRevision)),
+          FeatureBundle(deps.domino),
+          FeatureBundle(coreDep(blended.domino)()),
+          FeatureBundle(coreDep(blended.mgmt.base)(), 4, true),
+          FeatureBundle(coreDep(blended.prickle)()),
+          FeatureBundle(coreDep(blended.mgmt.service.jmx)())
+        )
+      )
+    }
+
+    override def features : T[Seq[FeatureModule]] = T {
+      Seq(baseFelix(), baseEquinox(), baseCommon())
+    }
+  }
 }
 
 object scoverage extends ScoverageReport {
