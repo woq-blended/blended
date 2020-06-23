@@ -47,6 +47,8 @@ trait CoreCoursierModule extends CoursierModule {
   override def repositories: Seq[Repository] = {
     zincWorker.repositories ++ Seq(
       MavenRepository("https://repo.spring.io/libs-release"),
+      MavenRepository("http://repository.springsource.com/maven/bundles/release"),
+      MavenRepository("http://repository.springsource.com/maven/bundles/external"),
       MavenRepository(
         s"https://u233308-sub2.your-storagebox.de/akka-osgi/${akkaBundleRevision}",
         Some(Authentication("u233308-sub2", "px8Kumv98zIzSF7k"))
@@ -1968,7 +1970,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object features extends BlendedFeatureJar with CorePublishModule {
+  object features extends BlendedFeatureJar with CorePublishModule with CoreCoursierModule {
 
     override def baseDir : os.Path = projectDir
     override type ProjectDeps = BlendedDependencies
@@ -1985,9 +1987,18 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         cross = CrossVersion.Binary(false)
       )
 
+    def selfDep : T[Dep] = T {
+      Dep(
+        org = deps.blendedOrg,
+        name = artifactName(),
+        version = publishVersion(),
+        cross = CrossVersion.Binary(false)
+      )
+    }      
+
     def coreDep(m : CoreModule) = T.task{
 
-      m.publishLocal()
+      //m.publishLocal()()
 
       Dep(
         org = m.artifactMetadata().group,
@@ -1997,38 +2008,53 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }      
 
-    def baseFelix : T[FeatureModule] = T {
+    def activemq : T[FeatureModule] = T {
       FeatureModule(
-        name = baseName + ".base.felix",
+        name = baseName + ".activemq",
         features = Seq.empty,
         bundles = Seq(
-          FeatureBundle(deps.felixFramework, 0, true),
-          FeatureBundle(deps.orgOsgiCompendium, 1, true),
-          FeatureBundle(deps.jline, 1, false),
-          FeatureBundle(deps.jlineBuiltins, 1, false),
-          FeatureBundle(deps.felixGogoJline, 1, true),
-          FeatureBundle(deps.felixGogoRuntime, 1, true),
-          FeatureBundle(deps.felixGogoShell, 1, true),
-          FeatureBundle(deps.felixGogoCommand, 1, true),
-          FeatureBundle(deps.felixShellRemote, 1, true)
+          FeatureBundle(deps.ariesProxyApi),
+          FeatureBundle(deps.ariesBlueprintApi),
+          FeatureBundle(deps.ariesBlueprintCore),
+          FeatureBundle(deps.geronimoAnnotation),
+          FeatureBundle(deps.geronimoJms11Spec),
+          FeatureBundle(deps.geronimoJ2eeMgmtSpec),
+          FeatureBundle(deps.servicemixStaxApi),
+          FeatureBundle(deps.activeMqOsgi),
+          FeatureBundle(coreDep(blended.activemq.brokerstarter)(), 4, true),
+          FeatureBundle(coreDep(blended.jms.utils)()),
+          FeatureBundle(deps.springJms)
         )
       )
     }
 
-    def baseEquinox : T[FeatureModule] = T {
+    def akkaHttpBase : T[FeatureModule] = T {
       FeatureModule(
-        name = baseName + "base.equinox",
-        features = Seq.empty,
+        name = baseName + ".akka.http.base",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
+        ), 
         bundles = Seq(
-          FeatureBundle(deps.eclipseOsgi, 0, true),
-          FeatureBundle(deps.eclipseEquinoxConsole, 1, true),
-          FeatureBundle(deps.jline, 1, false),
-          FeatureBundle(deps.jlineBuiltins, 1, false),
-          FeatureBundle(deps.felixGogoJline, 1, true),
-          FeatureBundle(deps.felixGogoRuntime, 1, true),
-          FeatureBundle(deps.felixGogoShell, 1, true),
-          FeatureBundle(deps.felixGogoCommand, 1, true),
-          FeatureBundle(deps.felixShellRemote, 1, true)
+          FeatureBundle(deps.akkaParsing(akkaBundleRevision)),
+          FeatureBundle(deps.akkaHttp(akkaBundleRevision)),
+          FeatureBundle(deps.akkaHttpCore(akkaBundleRevision)),
+          FeatureBundle(coreDep(blended.akka.http)(), 4, true),
+          FeatureBundle(coreDep(blended.prickle.akka.http)()),
+          FeatureBundle(coreDep(blended.security.akka.http)())
+        )
+      )
+    }
+
+    def akkaHttpModules : T[FeatureModule] = T{
+      FeatureModule(
+        name = baseName + ".akka.http.modules",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(akkaHttpBase(), spring()).map(_.name))
+        ),
+        bundles = Seq(
+          FeatureBundle(coreDep(blended.akka.http.proxy)()),
+          FeatureBundle(coreDep(blended.akka.http.restjms)()),
+          FeatureBundle(coreDep(blended.akka.http.jmsqueue)())
         )
       )
     }
@@ -2076,8 +2102,274 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
+    def baseEquinox : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + "base.equinox",
+        features = Seq.empty,
+        bundles = Seq(
+          FeatureBundle(deps.eclipseOsgi, 0, true),
+          FeatureBundle(deps.eclipseEquinoxConsole, 1, true),
+          FeatureBundle(deps.jline, 1, false),
+          FeatureBundle(deps.jlineBuiltins, 1, false),
+          FeatureBundle(deps.felixGogoJline, 1, true),
+          FeatureBundle(deps.felixGogoRuntime, 1, true),
+          FeatureBundle(deps.felixGogoShell, 1, true),
+          FeatureBundle(deps.felixGogoCommand, 1, true),
+          FeatureBundle(deps.felixShellRemote, 1, true)
+        )
+      )
+    }
+    
+    def baseFelix : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".base.felix",
+        features = Seq.empty,
+        bundles = Seq(
+          FeatureBundle(deps.felixFramework, 0, true),
+          FeatureBundle(deps.orgOsgiCompendium, 1, true),
+          FeatureBundle(deps.jline, 1, false),
+          FeatureBundle(deps.jlineBuiltins, 1, false),
+          FeatureBundle(deps.felixGogoJline, 1, true),
+          FeatureBundle(deps.felixGogoRuntime, 1, true),
+          FeatureBundle(deps.felixGogoShell, 1, true),
+          FeatureBundle(deps.felixGogoCommand, 1, true),
+          FeatureBundle(deps.felixShellRemote, 1, true)
+        )
+      )
+    }
+
+    def commons : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".commons",
+        features = Seq.empty,
+        bundles = Seq(
+          FeatureBundle(deps.ariesUtil),
+          FeatureBundle(deps.ariesJmxApi),
+          FeatureBundle(deps.ariesJmxCore, 4, true),
+          FeatureBundle(coreDep(blended.jmx)(), 4, true),
+          FeatureBundle(deps.commonsCollections),
+          FeatureBundle(deps.commonsDiscovery),
+          FeatureBundle(deps.commonsLang3),
+          FeatureBundle(deps.commonsPool2),
+          FeatureBundle(deps.commonsNet),
+          FeatureBundle(deps.commonsExec),
+          FeatureBundle(deps.commonsIo),
+          FeatureBundle(deps.commonsCodec),
+          FeatureBundle(deps.commonsHttpclient),
+          FeatureBundle(deps.commonsBeanUtils)
+        )
+      )
+    }
+
+    def hawtio : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".hawtio",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(jetty()).map(_.name))
+        ),
+        bundles = Seq(
+          FeatureBundle(deps.hawtioWeb, 10, true),
+          FeatureBundle(coreDep(blended.hawtio.login)())
+        )
+      )
+    }
+
+    def jetty : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".jetty",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
+        ),
+        bundles = Seq(
+          FeatureBundle(deps.activationApi),
+          FeatureBundle(deps.javaxServlet31),
+          FeatureBundle(deps.javaxMail),
+          FeatureBundle(deps.geronimoAnnotation),
+          FeatureBundle(deps.geronimoJaspic),
+          FeatureBundle(deps.jettyUtil),
+          FeatureBundle(deps.jettyHttp),
+          FeatureBundle(deps.jettyIo),
+          FeatureBundle(deps.jettyJmx),
+          FeatureBundle(deps.jettySecurity),
+          FeatureBundle(deps.jettyServlet),
+          FeatureBundle(deps.jettyServer),
+          FeatureBundle(deps.jettyWebapp),
+          FeatureBundle(deps.jettyDeploy),
+          FeatureBundle(deps.jettyXml),
+          FeatureBundle(deps.equinoxServlet),
+          FeatureBundle(deps.felixHttpApi),
+          FeatureBundle(coreDep(blended.jetty.boot)(), 4, true),
+          FeatureBundle(deps.jettyHttpService, 4, true)
+        )
+      )
+    }
+
+    def jolokia : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".jolokia",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(jetty()).map(_.name))
+        ), 
+        bundles = Seq(
+          FeatureBundle(deps.jolokiaOsgi, 4, true)
+        )
+      )
+    }
+
+    def login : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".login",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(
+            baseCommon(), akkaHttpBase(), security(), persistence(), streams()
+          ).map(_.name))
+        ),
+        bundles = Seq(
+          // Required for Json Web Token
+          FeatureBundle(deps.jacksonAnnotations),
+          FeatureBundle(deps.jacksonCore),
+          FeatureBundle(deps.jacksonBind),
+          FeatureBundle(deps.jjwt),
+          // Required for Login API
+          FeatureBundle(coreDep(blended.security.login.api)()),
+          FeatureBundle(coreDep(blended.security.login.impl)(), 4, true),
+          FeatureBundle(coreDep(blended.websocket)(), 4, true),
+          FeatureBundle(coreDep(blended.security.login.rest)(), 4, true)
+        )
+      )
+    }
+
+    def mgmtClient : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".mgmt.client", 
+        features = Seq.empty,
+        bundles = Seq(
+          FeatureBundle(coreDep(blended.mgmt.agent)(), 4, true)
+        )
+      )
+    }
+
+    def mgmtServer : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".mgmt.server",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(
+            baseCommon(), akkaHttpBase(), security(), ssl(), spring(), 
+            persistence(), login(), streams()
+          ).map(_.name))
+        ),
+        bundles = Seq(
+          FeatureBundle(coreDep(blended.mgmt.rest)(), 4, true),
+          FeatureBundle(coreDep(blended.mgmt.repo)(), 4, true),
+          FeatureBundle(coreDep(blended.mgmt.repo.rest)(), 4, true),
+          FeatureBundle(deps.concurrentLinkedHashMapLru),
+          FeatureBundle(deps.jsr305)
+          //FeatureBundle(ivy"${deps.blendedOrg}::blended.mgmt.ui.mgmtApp.webBundle:$blendedUiVersion", 4, true)
+        )
+      )
+    }
+
+    def persistence : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".persistence",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
+        ),
+        bundles = Seq(
+          FeatureBundle(coreDep(blended.persistence)()),
+          FeatureBundle(coreDep(blended.persistence.h2)(), 4, true),
+          // for Blended.persistenceH2
+          FeatureBundle(deps.h2),
+          // for Blended.persistenceH2
+          FeatureBundle(deps.hikaricp),
+          // for Blended.persistenceH2
+          FeatureBundle(deps.liquibase),
+          // for deps.liquibase
+          FeatureBundle(deps.snakeyaml)
+        )
+      )
+    }
+
+    def samples : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".samples",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(akkaHttpBase(), activemq(), streams()).map(_.name))
+        ),
+        bundles = Seq(
+          FeatureBundle(coreDep(blended.jms.bridge)(), 4, true),
+          FeatureBundle(coreDep(blended.streams.dispatcher)(), 4, true),
+          FeatureBundle(coreDep(blended.activemq.client)(), 4, true),
+          FeatureBundle(coreDep(blended.file)()),
+          FeatureBundle(coreDep(blended.akka.http.sample.helloworld)(), 4, true)
+        )
+      )
+    }
+
+    def security : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".security",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
+        ),
+        bundles = Seq(
+          FeatureBundle(coreDep(blended.security)(), 4, true)
+        )
+      )
+    }
+
+    def spring : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".spring",
+        features = Seq.empty,
+        bundles = Seq(
+          FeatureBundle(deps.aopAlliance),
+          FeatureBundle(deps.springBeans),
+          FeatureBundle(deps.springAop),
+          FeatureBundle(deps.springContext),
+          FeatureBundle(deps.springContextSupport),
+          FeatureBundle(deps.springJdbc),
+          FeatureBundle(deps.springTx)
+        )
+      )
+    }
+
+    def ssl : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".ssl",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
+        ),
+        bundles = Seq(
+          FeatureBundle(deps.javaxServlet31),
+          FeatureBundle(coreDep(blended.security.scep)(), 4, true),
+          FeatureBundle(coreDep(blended.security.ssl)(), 4, true)
+        )
+      )
+    }
+
+    def streams : T[FeatureModule] = T {
+      FeatureModule(
+        name = baseName + ".streams",
+        features = Seq(
+          FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
+        ),
+        bundles = Seq(
+          FeatureBundle(deps.geronimoJms11Spec),
+          FeatureBundle(coreDep(blended.jms.utils)()),
+          FeatureBundle(coreDep(blended.streams)(), 4, true)
+        )
+      )
+    }
+
     override def features : T[Seq[FeatureModule]] = T {
-      Seq(baseFelix(), baseEquinox(), baseCommon())
+      Seq(
+        activemq(), akkaHttpBase(), akkaHttpModules(), 
+        baseCommon(), baseEquinox(), baseFelix(), 
+        commons(), hawtio(), jetty(), jolokia(), 
+        login(), mgmtClient(), mgmtServer(), persistence(), 
+        samples(), security(), spring(), ssl(), streams()
+      )
     }
   }
 }
