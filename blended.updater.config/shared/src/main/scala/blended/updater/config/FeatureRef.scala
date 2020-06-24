@@ -7,5 +7,5 @@ case class FeatureRef(
 
   override def toString(): String =
     getClass().getSimpleName() +
-      "(url=" + url + ",names=" + names.mkString("[", ",", "]") + ")"
+      "(url=" + url + ",names=" + names.map(s => "\"" + s + "\"").mkString("[", ",", "]") + ")"
 }

@@ -11,7 +11,7 @@ object FeatureRefCompanion {
 
     val config : java.util.Map[String, String] = Map(
       "url" -> feature.url,
-      "names" -> feature.names.mkString("[", ",", "]")
+      "names" -> feature.names.map(s => "\"" + s + "\"").mkString("[", ",", "]")
     ).asJava
 
     val cfg : Config = ConfigFactory.parseMap(config)

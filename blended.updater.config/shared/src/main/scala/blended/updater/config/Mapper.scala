@@ -1,5 +1,8 @@
 package blended.updater.config
 
+import java.util.regex.{Matcher, Pattern}
+
+import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
@@ -25,7 +28,7 @@ trait Mapper {
   def mapFeatureRef(ref: FeatureRef): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "url" -> ref.url,
-      "names" -> ref.names
+      "names" -> ref.names.map(s => "\"" + s + "\"").mkString("[", ",", "]")
     ).asJava
 
   def mapFeatureConfig(f: FeatureConfig): java.util.Map[String, AnyRef] =
@@ -186,13 +189,37 @@ trait Mapper {
   }
 
   def unmapFeatureRef(map: AnyRef): Try[FeatureRef] = Try {
-    val f = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
 
-    val n : List[String] = f("names").asInstanceOf[String].trim().replaceAll("\\[", "").replaceAll("\\]", "").split(",").toList
+    def parseNames(cur : List[String], values : String) : List[String] = {
+
+      if (values.isEmpty()) {
+        cur
+      } else {
+        val pattern : Pattern = Pattern.compile("""^"([^"]*)"(?:[^,]*,)?(.*)""")
+        val matcher : Matcher = pattern.matcher(values)
+
+        if (matcher.matches()) {
+          val v = matcher.group(1).trim()
+          val r = matcher.group(2).trim()
+          if (v.isEmpty) {
+            parseNames(cur, r)
+          } else {
+            parseNames(v :: cur, r)
+          }
+        } else {
+          throw new Exception("Failed to parse feature names")
+        }
+      }
+    }
+
+    val f = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
+    val n : String = f("names").asInstanceOf[String].trim()
+
+    val values : String = n.substring(1, n.length() - 1)
 
     FeatureRef(
       url = f("url").asInstanceOf[String],
-      names = n
+      names = parseNames(List.empty, values)
     )
   }
 

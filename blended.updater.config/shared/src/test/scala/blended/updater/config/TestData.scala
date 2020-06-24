@@ -19,14 +19,14 @@ trait TestData {
   val bundleConfigs = for {
     artifact <- arbitrary[Artifact]
     start <- arbitrary[Boolean]
-    startLevel <- arbitrary[Option[Int]]
+    startLevel <- arbitrary[Option[Int]].withFilter(_.getOrElse(0) >= 0)
   } yield BundleConfig(artifact, start, startLevel)
 
   implicit val arbBundleConfig: Arbitrary[BundleConfig] = Arbitrary(bundleConfigs)
 
   val featureRefs = for {
     url <- arbitrary[String]
-    names <- arbitrary[List[String]]
+    names <- Gen.listOf(Gen.alphaNumStr)
   } yield FeatureRef(url, names)
   implicit val arbFeatureRefs: Arbitrary[FeatureRef] = Arbitrary(featureRefs)
 
