@@ -19,9 +19,8 @@ class FeatureConfigCompanionSpec extends LoggingFreeSpec with ScalaCheckProperty
     forAll { feature: FeatureConfig =>
       assert(
         FeatureConfigCompanion.apply(
-          name = feature.name,
-          version = feature.version,
-          url = feature.url.orNull,
+          repoUrl = feature.repoUrl,
+          name = feature.name, 
           bundles = feature.bundles,
           features = feature.features
         ) === feature

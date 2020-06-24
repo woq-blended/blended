@@ -9,19 +9,25 @@ class FeatureResolverSpec extends AnyFreeSpec with Matchers {
 
   val resolver = FeatureResolver
 
-  val feature1 = FeatureRef(name = "feature1", version = "1")
-  val feature2 = FeatureRef(name = "feature2", version = "1")
+  val feature1 = FeatureRef(url = "mvn:group1:repo1:1", names = List("feature1"))
+  val feature2 = FeatureRef(url = "mvn:group1:repo2:1", names = List("feature2"))
 
-  val fullFeature1 = FeatureConfig(name = "feature1", version = "1", bundles = List(BundleConfig(url = "mvn:feature1:bundle1:1")))
-  val fullFeature2 = FeatureConfig(
-    name = "feature2",
-    version = "1",
-    bundles = List(BundleConfig(url = "mvn:feature2:bundle1:1")),
-    features = List(FeatureRef(name = "feature3", version = "1"))
+  val fullFeature1 = FeatureConfig(
+    repoUrl = "mvn:group1:repo1:1",
+    name = "feature1",
+    bundles = List(BundleConfig(url = "mvn:feature1:bundle1:1"))
   )
+
+  val fullFeature2 = FeatureConfig(
+    repoUrl = "mvn:group1:repo2:1",
+    name = "feature2",
+    bundles = List(BundleConfig(url = "mvn:feature2:bundle1:1")),
+    features = List(FeatureRef(url = "mvn:group1:repo3:1", names = List("feature3")))
+  )
+
   val fullFeature3 = FeatureConfig(
+    repoUrl = "mvn:group1:repo3:1",
     name = "feature3",
-    version = "1",
     bundles = List(BundleConfig(url = "mvn:feature3:bundle1:1"))
   )
 

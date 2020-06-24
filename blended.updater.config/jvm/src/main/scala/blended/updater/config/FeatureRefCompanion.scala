@@ -8,19 +8,21 @@ import scala.util.Try
 object FeatureRefCompanion {
 
   def toConfig(feature : FeatureRef) : Config = {
-    val config = (Map(
-      "name" -> feature.name,
-      "version" -> feature.version
-    ) ++
-      feature.url.map(url => Map("url" -> url)).getOrElse(Map())).asJava
-    ConfigFactory.parseMap(config)
+
+    val config : java.util.Map[String, String] = Map(
+      "url" -> feature.url,
+      "names" -> feature.names.mkString("[", ",", "]")
+    ).asJava
+
+    val cfg : Config = ConfigFactory.parseMap(config)
+    println(cfg)
+    cfg
   }
 
   def fromConfig(config : Config) : Try[FeatureRef] = Try {
     FeatureRef(
-      name = config.getString("name"),
-      version = config.getString("version"),
-      url = if (config.hasPath("url")) Option(config.getString("url")) else None
+      url = config.getString("url"),
+      names = config.getStringList("names").asScala.toList
     )
   }
 }

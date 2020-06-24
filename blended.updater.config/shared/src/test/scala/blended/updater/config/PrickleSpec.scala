@@ -192,14 +192,14 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
     testMapping[Artifact]
     testMapping[BundleConfig]
     testMapping[FeatureRef]
-    testMapping[FeatureConfig]
-    testMapping[Profile]
-    testMapping[ServiceInfo]
-    testMapping[GeneratedConfig]
-    testMapping[ProfileRef]
-    testMapping[RolloutProfile]
-    testMapping[ContainerInfo]
-    testMapping[RemoteContainerState]
+    //testMapping[FeatureConfig]
+//    testMapping[Profile]
+//    testMapping[ServiceInfo]
+//    testMapping[GeneratedConfig]
+//    testMapping[ProfileRef]
+//    testMapping[RolloutProfile]
+//    testMapping[ContainerInfo]
+//    testMapping[RemoteContainerState]
   }
 
   def logException[T](f: => T): T =

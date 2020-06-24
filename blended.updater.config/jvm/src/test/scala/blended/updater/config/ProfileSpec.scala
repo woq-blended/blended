@@ -40,7 +40,7 @@ class ProfileSpec
       }
     }
 
-    "read -> toConfig -> read must result in same config" in {
+    "read -> toConfig -> read must result in same config" in logException {
       import ProfileCompanion._
       val config = read(ConfigFactory.parseString(minimal))
       assert(config === read(toConfig(config.get)))
@@ -48,7 +48,7 @@ class ProfileSpec
   }
 
   "resolveFileName" - {
-    "should infer the correct filename from a file URL" in {
+    "should infer the correct filename from a file URL" in logException {
       val bundle = BundleConfig(url = "file:///tmp/file1.jar", startLevel = 0)
       val rc = Profile(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file1.jar"))

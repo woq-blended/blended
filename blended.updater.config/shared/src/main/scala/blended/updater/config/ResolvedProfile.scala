@@ -11,38 +11,41 @@ package blended.updater.config
 case class ResolvedProfile(profile: Profile) {
 
   {
-    // Check if all feature reference have a according resolved feature
-    def check(features: List[FeatureRef], depChain: List[String]): Unit = features.foreach { f =>
-      val depName = s"${f.name}-${f.version}"
-      val newDepChain = depName :: depChain
-      require(
-        depChain.find(_ == depName).isEmpty,
-        s"No cycles in feature dependencies allowed, but detected: ${newDepChain.mkString(" required by ")}")
-      val feature = lookupFeature(f)
-      require(
-        feature.isDefined,
-        s"Contains resolved feature: ${newDepChain.mkString(" required by ")}. Known resolved features are: ${profile.resolvedFeatures
-          .map(f => s"${f.name}-${f.version}")
-          .distinct
-          .mkString(",")}"
-      )
-      check(feature.get.features, newDepChain)
-    }
-    check(profile.features, s"${profile.name}-${profile.version}" :: Nil)
+    // // Check if all feature reference have a according resolved feature
+    // def check(features: List[FeatureRef], depChain: List[String]): Unit = features.foreach { f =>
+    //   val depName = s"${f.name}-${f.version}"
+    //   val newDepChain = depName :: depChain
+    //   require(
+    //     depChain.find(_ == depName).isEmpty,
+    //     s"No cycles in feature dependencies allowed, but detected: ${newDepChain.mkString(" required by ")}")
+    //   val feature = lookupFeature(f)
+    //   require(
+    //     feature.isDefined,
+    //     s"Contains resolved feature: ${newDepChain.mkString(" required by ")}. Known resolved features are: ${profile.resolvedFeatures
+    //       .map(f => s"${f.name}-${f.version}")
+    //       .distinct
+    //       .mkString(",")}"
+    //   )
+    //   check(feature.get.features, newDepChain)
+    // }
+    // check(profile.features, s"${profile.name}-${profile.version}" :: Nil)
 
     // force evaluation of framework, which throws if invalid
     // framework
 
     // check, that features do not conflict
-    var seen = Set[(String, String)]()
-    val conflicts = profile.features.flatMap { f =>
-      val key = f.name -> f.version
-      if (seen.contains(key)) Some(s"${f.name}-${f.version}")
-      else {
-        seen += key
-        None
-      }
-    }
+    //var seen = Set[(String, String)]()
+    
+    val conflicts = profile.features
+    // profile.features.flatMap { f =>
+    //   val key = f.name -> f.version
+    //   if (seen.contains(key)) Some(s"${f.name}-${f.version}")
+    //   else {
+    //     seen += key
+    //     None
+    //   }
+    // }
+
     require(
       conflicts.isEmpty,
       s"Contains no conflicting resolved features. Multiple features detected: ${conflicts.mkString(", ")}.")
@@ -50,7 +53,8 @@ case class ResolvedProfile(profile: Profile) {
   }
 
   def lookupFeature(featureRef: FeatureRef): Option[FeatureConfig] = {
-    (profile.resolvedFeatures).find(f => f.name == featureRef.name && f.version == featureRef.version)
+    //(profile.resolvedFeatures).find(f => f.name == featureRef.name && f.version == featureRef.version)
+    None
   }
 
   /**

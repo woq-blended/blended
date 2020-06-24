@@ -7,16 +7,14 @@ import scala.util.Try
 
 object FeatureConfigCompanion {
   def apply(
+    repoUrl : String,
     name : String,
-    version : String,
-    url : String = null,
-    bundles : List[BundleConfig] = null,
-    features : List[FeatureRef] = null
+    bundles : List[BundleConfig] = List.empty,
+    features : List[FeatureRef] = List.empty
   ) : FeatureConfig = {
     FeatureConfig(
+      repoUrl = repoUrl,
       name = name,
-      version = version,
-      url = Option(url),
       bundles = Option(bundles).getOrElse(List.empty),
       features = Option(features).getOrElse(List.empty)
     )
@@ -24,10 +22,8 @@ object FeatureConfigCompanion {
 
   def read(config : Config) : Try[FeatureConfig] = Try {
     FeatureConfig(
+      repoUrl = config.getString("repoUrl"),
       name = config.getString("name"),
-      version = config.getString("version"),
-      url =
-        if (config.hasPath("url")) Option(config.getString("url")) else None,
       bundles =
         if (config.hasPath("bundles")) {
           config.getObjectList("bundles").asScala.map { bc => BundleConfigCompanion.read(bc.toConfig()).get }.toList
@@ -38,12 +34,12 @@ object FeatureConfigCompanion {
         } else Nil
     )
   }
+
   def toConfig(featureConfig : FeatureConfig) : Config = {
     val config = (Map(
-      "name" -> featureConfig.name,
-      "version" -> featureConfig.version
+      "repoUrl" -> featureConfig.repoUrl,
+      "name" -> featureConfig.name
     ) ++
-      featureConfig.url.map(url => Map("url" -> url)).getOrElse(Map()) ++
       {
         if (featureConfig.features.isEmpty) Map()
         else Map("features" -> featureConfig.features.map(FeatureRefCompanion.toConfig).map(_.root().unwrapped()).asJava)
@@ -51,7 +47,8 @@ object FeatureConfigCompanion {
       {
         if (featureConfig.bundles.isEmpty) Map()
         else Map("bundles" -> featureConfig.bundles.map(BundleConfigCompanion.toConfig).map(_.root().unwrapped()).asJava)
-      }).asJava
+      }
+    ).asJava
     ConfigFactory.parseMap(config)
   }
 }

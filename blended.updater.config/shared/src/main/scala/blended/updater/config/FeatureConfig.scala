@@ -4,35 +4,39 @@ package blended.updater.config
  * A Feature configuration, holds a collection of [[BundleConfig]]s to build up a [[Profile]].
  */
 case class FeatureConfig(
+  /** The repo url of the feature repo jar that contains this Feature Config */
+  repoUrl : String,
+  /** The name of the feature within the repo jar */
   name : String,
-  version : String,
-  url : Option[String],
+  /** The bundles of this feature */
   bundles : List[BundleConfig],
+  /** The list of feature references required to load this feature */
   features : List[FeatureRef]
 ) {
 
-  override def toString() : String = s"${getClass().getSimpleName()}(name=${name},version=${version},url=${url},bundles=${bundles},features=${features})"
-
-  def featureRef : FeatureRef = FeatureRef(name = name, version = version, url = url)
+  override def toString() : String = 
+    s"""${getClass().getSimpleName()}(" +
+       |  repoUrl=${repoUrl}
+       |  name=${name}
+       |  bundles=${bundles}
+       |  features=${features})""".stripMargin
 }
 
-object FeatureConfig extends ((String, String, Option[String], List[BundleConfig], List[FeatureRef]) => FeatureConfig) {
+object FeatureConfig extends ((String, String, List[BundleConfig], List[FeatureRef]) => FeatureConfig) {
   /**
    * Conveniently create a [[FeatureConfig]].
    */
   def apply(
+    repoUrl : String,
     name : String,
-    version : String,
-    url : String = null,
-    bundles : List[BundleConfig] = null,
-    features : List[FeatureRef] = null
+    bundles : List[BundleConfig] = List.empty,
+    features : List[FeatureRef] = List.empty
   ) : FeatureConfig = {
     FeatureConfig(
+      repoUrl = repoUrl,
       name = name,
-      version = version,
-      url = Option(url),
-      bundles = Option(bundles).getOrElse(List.empty),
-      features = Option(features).getOrElse(List.empty)
+      bundles = bundles,
+      features = features
     )
   }
 }

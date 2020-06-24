@@ -24,16 +24,14 @@ trait Mapper {
 
   def mapFeatureRef(ref: FeatureRef): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
-      "name" -> ref.name,
-      "version" -> ref.version,
-      "url" -> ref.url.orNull
+      "url" -> ref.url,
+      "names" -> ref.names
     ).asJava
 
   def mapFeatureConfig(f: FeatureConfig): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
+      "repoUrl" -> f.repoUrl,
       "name" -> f.name,
-      "version" -> f.version,
-      "url" -> f.url.orNull,
       "features" -> f.features.map { f =>
         mapFeatureRef(f)
       }.asJava,
@@ -189,19 +187,20 @@ trait Mapper {
 
   def unmapFeatureRef(map: AnyRef): Try[FeatureRef] = Try {
     val f = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
+
+    val n : List[String] = f("names").asInstanceOf[String].trim().replaceAll("\\[", "").replaceAll("\\]", "").split(",").toList
+
     FeatureRef(
-      name = f("name").asInstanceOf[String],
-      version = f("version").asInstanceOf[String],
-      url = Option(f("url").asInstanceOf[String])
+      url = f("url").asInstanceOf[String],
+      names = n
     )
   }
 
   def unmapFeatureConfig(map: AnyRef): Try[FeatureConfig] = Try {
     val f = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     FeatureConfig(
+      repoUrl = f("repoUrl").asInstanceOf[String],
       name = f("name").asInstanceOf[String],
-      version = f("version").asInstanceOf[String],
-      url = Option(f("url").asInstanceOf[String]),
       bundles =
         f("bundles").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(b => unmapBundleConfig(b).get),
       features =

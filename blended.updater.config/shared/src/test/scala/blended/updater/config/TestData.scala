@@ -25,17 +25,17 @@ trait TestData {
   implicit val arbBundleConfig: Arbitrary[BundleConfig] = Arbitrary(bundleConfigs)
 
   val featureRefs = for {
-    name <- arbitrary[String]
-    version <- arbitrary[String]
-    url <- arbitrary[Option[String]]
-  } yield FeatureRef(name, version, url)
+    url <- arbitrary[String]
+    names <- arbitrary[List[String]]
+  } yield FeatureRef(url, names)
   implicit val arbFeatureRefs: Arbitrary[FeatureRef] = Arbitrary(featureRefs)
 
   val featurConfigs = for {
-    featureRef <- arbitrary[FeatureRef]
+    repoUrl <- arbitrary[String]
+    name <- arbitrary[String]
     bundles <- arbitrary[List[BundleConfig]]
     features <- arbitrary[List[FeatureRef]]
-  } yield FeatureConfig(featureRef.name, featureRef.version, featureRef.url, bundles, features)
+  } yield FeatureConfig(repoUrl, name, bundles, features)
   implicit val arbFeatureConfig: Arbitrary[FeatureConfig] = Arbitrary(featurConfigs)
 
   val generatedConfigs = for {

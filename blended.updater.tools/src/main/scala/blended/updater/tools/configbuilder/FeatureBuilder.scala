@@ -103,7 +103,7 @@ object FeatureBuilder {
     val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
 
     val feature = FeatureConfigCompanion.read(config).get
-    Console.err.println(s"Processing feature: ${feature.name} ${feature.version}")
+    Console.err.println(s"Processing feature: ${feature.repoUrl}-${feature.name}")
 
     val bundles = feature.bundles
     val mvnUrls = cmdline.mavenUrl // .map { d => new File(d).getAbsoluteFile().toURI().toString() }
