@@ -8,7 +8,7 @@ class OverlayStateSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
   import TestData._
 
   "OverlayState.fromString should work for known states" in  {
-    forAll { o: OverlayState =>
+    forAll(overlayStates) { o =>
       assert(OverlayState.fromString(o.state) === Some(o))
     }
   }

@@ -14,30 +14,11 @@ case class FeatureConfig(
   features : List[FeatureRef]
 ) {
 
-  override def toString() : String = 
+  override def toString() : String =
     s"""${getClass().getSimpleName()}(" +
        |  repoUrl=${repoUrl}
        |  name=${name}
        |  bundles=${bundles}
        |  features=${features})""".stripMargin
-}
-
-object FeatureConfig extends ((String, String, List[BundleConfig], List[FeatureRef]) => FeatureConfig) {
-  /**
-   * Conveniently create a [[FeatureConfig]].
-   */
-  def apply(
-    repoUrl : String,
-    name : String,
-    bundles : List[BundleConfig] = List.empty,
-    features : List[FeatureRef] = List.empty
-  ) : FeatureConfig = {
-    FeatureConfig(
-      repoUrl = repoUrl,
-      name = name,
-      bundles = bundles,
-      features = features
-    )
-  }
 }
 

@@ -4,7 +4,7 @@ import java.{util => ju}
 
 import scala.reflect.{ClassTag, classTag}
 import scala.util.{Failure, Success, Try}
-import org.scalacheck.Arbitrary
+import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
@@ -15,10 +15,13 @@ class MapperSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
     import TestData._
     import blended.updater.config.Mapper._
 
-    def testMapping[T: ClassTag](map: T => ju.Map[String, AnyRef],
-                                 unmap: AnyRef => Try[T])(implicit arb: Arbitrary[T]): Unit = {
+    def testMapping[T: ClassTag](
+      g : Gen[T],
+      map: T => ju.Map[String, AnyRef],
+      unmap: AnyRef => Try[T]): Unit = {
       classTag[T].runtimeClass.getSimpleName in {
-        forAll { d: T =>
+        forAll(g) { d =>
+          println(d)
           unmap(map(d)) match {
             case Failure(exception) => throw(exception)
             case Success(s) => s === d
@@ -27,10 +30,10 @@ class MapperSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
       }
     }
 
-    testMapping(mapArtifact, unmapArtifact)
-    testMapping(mapBundleConfig, unmapBundleConfig)
-    testMapping(mapFeatureRef, unmapFeatureRef)
-//    testMapping(mapFeatureConfig, unmapFeatureConfig)
+    testMapping(artifacts, mapArtifact, unmapArtifact)
+    testMapping(bundleConfigs, mapBundleConfig, unmapBundleConfig)
+    testMapping(featureRefs, mapFeatureRef, unmapFeatureRef)
+    testMapping(featurConfigs, mapFeatureConfig, unmapFeatureConfig)
 //    testMapping(mapProfile, unmapProfile)
 //    testMapping(mapServiceInfo, unmapServiceInfo)
 //    testMapping(mapGeneratedConfig, unmapGeneratedConfig)

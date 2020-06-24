@@ -1,61 +1,59 @@
 package blended.updater.config
 
-import org.scalacheck.Arbitrary.arbitrary
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.Gen
 
 trait TestData {
 
-  val artifacts = for {
-    fileName <- arbitrary[String]
-    sha1Sum <- arbitrary[Option[String]]
+  val stringPairs = for {
+    v1 <- Gen.alphaNumStr
+    v2 <- Gen.alphaNumStr
+  } yield (v1,v2)
+
+  val artifacts : Gen[Artifact] = for {
+    fileName <- Gen.alphaNumStr
+    sha1Sum <- Gen.option(Gen.alphaNumStr)
   } yield
     Artifact(
       url = s"http://fakeurl/${fileName}",
       fileName = Gen.oneOf(Some(fileName), None).sample.flatten,
       sha1Sum = sha1Sum
     )
-  implicit val arbArtifact: Arbitrary[Artifact] = Arbitrary(artifacts)
 
-  val bundleConfigs = for {
-    artifact <- arbitrary[Artifact]
-    start <- arbitrary[Boolean]
-    startLevel <- arbitrary[Option[Int]].withFilter(_.getOrElse(0) >= 0)
+  val bundleConfigs : Gen[BundleConfig] = for {
+    artifact <- artifacts
+    start <- Gen.oneOf(true, false)
+    startLevel <- Gen.option(Gen.posNum[Int])
   } yield BundleConfig(artifact, start, startLevel)
 
-  implicit val arbBundleConfig: Arbitrary[BundleConfig] = Arbitrary(bundleConfigs)
-
-  val featureRefs = for {
-    url <- arbitrary[String]
+  val featureRefs : Gen[FeatureRef] = for {
+    url <- Gen.alphaNumStr
     names <- Gen.listOf(Gen.alphaNumStr)
   } yield FeatureRef(url, names)
-  implicit val arbFeatureRefs: Arbitrary[FeatureRef] = Arbitrary(featureRefs)
 
   val featurConfigs = for {
-    repoUrl <- arbitrary[String]
-    name <- arbitrary[String]
-    bundles <- arbitrary[List[BundleConfig]]
-    features <- arbitrary[List[FeatureRef]]
+    repoUrl <- Gen.alphaNumStr.suchThat(s => s.nonEmpty && s.size <= 100)
+    name <- Gen.alphaNumStr
+    bundles <- Gen.listOf(bundleConfigs)
+    features <- Gen.listOf(featureRefs)
   } yield FeatureConfig(repoUrl, name, bundles, features)
-  implicit val arbFeatureConfig: Arbitrary[FeatureConfig] = Arbitrary(featurConfigs)
 
   val generatedConfigs = for {
-    configFile <- arbitrary[String]
-    config <- arbitrary[String]
+    configFile <- Gen.alphaNumStr
+    config <- Gen.alphaNumStr
   } yield GeneratedConfig(configFile, config)
-  implicit val arbGeneratedConfig: Arbitrary[GeneratedConfig] = Arbitrary(generatedConfigs)
 
   val profiles = for {
-    name <- arbitrary[String]
-    version <- arbitrary[String]
-    bundles <- arbitrary[List[BundleConfig]]
-    startLevel <- arbitrary[Int]
-    defaultStartLevel <- arbitrary[Int]
-    properties <- arbitrary[Map[String, String]]
-    frameworkProperties <- arbitrary[Map[String, String]]
-    systemProperties <- arbitrary[Map[String, String]]
-    features <- arbitrary[List[FeatureRef]]
-    resources <- arbitrary[List[Artifact]]
-    resolvedFeatures <- arbitrary[List[FeatureConfig]]
+    name <- Gen.alphaNumStr
+    version <- Gen.alphaNumStr
+    bundles <- Gen.listOf(bundleConfigs)
+    startLevel <- Gen.posNum[Int]
+    defaultStartLevel <- Gen.posNum[Int]
+    properties <- Gen.mapOf(stringPairs)
+    frameworkProperties <- Gen.mapOf(stringPairs)
+    systemProperties <- Gen.mapOf(stringPairs)
+    features <- Gen.listOf(featureRefs)
+    resources <- Gen.listOf(artifacts)
+    resolvedFeatures <- Gen.listOf(featurConfigs)
   } yield
     Profile(
       name,
@@ -70,48 +68,40 @@ trait TestData {
       resources,
       resolvedFeatures
     )
-  implicit val arbProfile: Arbitrary[Profile] = Arbitrary(profiles)
 
   val overlayStates =
     Gen.oneOf[OverlayState](OverlayState.Active, OverlayState.Valid, OverlayState.Invalid, OverlayState.Pending)
-  implicit val arbOverlayState: Arbitrary[OverlayState] = Arbitrary(overlayStates)
 
   val serviceInfos = for {
-    name <- arbitrary[String]
-    serviceType <- arbitrary[String]
+    name <- Gen.alphaNumStr
+    serviceType <- Gen.alphaNumStr
     timestampMsec <- Gen.choose(10000, Long.MaxValue)
     lifetimeMsec <- Gen.choose(0, Long.MaxValue)
-    props <- arbitrary[Map[String, String]]
+    props <- Gen.mapOf(stringPairs)
   } yield ServiceInfo(name, serviceType, timestampMsec, lifetimeMsec, props)
-  implicit val arbServiceInfo: Arbitrary[ServiceInfo] = Arbitrary(serviceInfos)
 
   val profileRefs = for {
-    name <- arbitrary[String]
-    version <- arbitrary[String]
+    name <- Gen.alphaNumStr
+    version <- Gen.alphaNumStr
   } yield ProfileRef(name, version)
-  implicit val arbProfileRef: Arbitrary[ProfileRef] = Arbitrary(profileRefs)
 
   val containerInfos = for {
-    containerId <- arbitrary[String]
-    properties <- arbitrary[Map[String, String]]
-    serviceInfos <- arbitrary[List[ServiceInfo]]
-    profiles <- arbitrary[List[ProfileRef]]
+    containerId <- Gen.alphaNumStr
+    properties <- Gen.mapOf(stringPairs)
+    serviceInfos <- Gen.listOf(serviceInfos)
+    profiles <- Gen.listOf(profileRefs)
     timestampMsec <- Gen.choose(10000, Long.MaxValue)
   } yield ContainerInfo(containerId, properties, serviceInfos, profiles, timestampMsec)
-  implicit val arbContainerInfo: Arbitrary[ContainerInfo] = Arbitrary(containerInfos)
 
   val remoteContainerStates = for {
-    containerInfo <- arbitrary[ContainerInfo]
+    containerInfo <- containerInfos
   } yield RemoteContainerState(containerInfo)
-  implicit val arbRemoteContainerState: Arbitrary[RemoteContainerState] = Arbitrary(remoteContainerStates)
 
   val rolloutProfiles = for {
-    profileName <- arbitrary[String]
-    profileVersion <- arbitrary[String]
-    containerIds <- arbitrary[List[String]]
+    profileName <- Gen.alphaNumStr
+    profileVersion <- Gen.alphaNumStr
+    containerIds <- Gen.listOf(Gen.alphaNumStr)
   } yield RolloutProfile(profileName, profileVersion, containerIds)
-  implicit val arbRolloutProfile: Arbitrary[RolloutProfile] = Arbitrary(rolloutProfiles)
-
 }
 
 object TestData extends TestData

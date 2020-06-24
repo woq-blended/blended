@@ -8,7 +8,7 @@ class ArtifactSpec extends AnyFreeSpec with ScalaCheckPropertyChecks {
   import TestData._
 
   "Auxiliary Artifact.apply should support null-values" in  {
-    forAll { a: Artifact =>
+    forAll(artifacts) { a =>
       assert(Artifact(a.url, a.fileName.orNull, a.sha1Sum.orNull) === a)
     }
   }

@@ -3,10 +3,9 @@ package blended.updater.config
 import scala.reflect.{ClassTag, classTag}
 import scala.util.Success
 import scala.util.control.NonFatal
-
 import blended.updater.config.json.PrickleProtocol._
 import blended.util.logging.Logger
-import org.scalacheck.Arbitrary
+import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -176,12 +175,11 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
 
     import TestData._
 
-    def testMapping[T: ClassTag](implicit
-                                 arb: Arbitrary[T],
-                                 u: Unpickler[T],
-                                 p: Pickler[T]): Unit = {
+    def testMapping[T: ClassTag](g : Gen[T])(implicit
+      u: Unpickler[T],
+      p: Pickler[T]): Unit = {
       classTag[T].runtimeClass.getSimpleName in logException {
-        forAll { d: T =>
+        forAll(g) { d: T =>
           val backAndForth = Unpickle[T].fromString(Pickle.intoString(d))
           // log.info(s"data: [${backAndForth}]")
           assert(backAndForth === Success(d))
@@ -189,9 +187,9 @@ class PrickleSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyCheck
       }
     }
 
-    testMapping[Artifact]
-    testMapping[BundleConfig]
-    testMapping[FeatureRef]
+    testMapping[Artifact](artifacts)
+//    testMapping[BundleConfig]
+//    testMapping[FeatureRef]
     //testMapping[FeatureConfig]
 //    testMapping[Profile]
 //    testMapping[ServiceInfo]
