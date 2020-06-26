@@ -8,7 +8,7 @@ import scala.util.Try
 
 object FeatureResolver {
 
-  class ResolveContext(features: Seq[FeatureConfig], mvnBaseUrl: Option[String] = None) {
+  private class ResolveContext(features: Seq[FeatureConfig], mvnBaseUrl: Option[String] = None) {
 
     //private[this] var cache: Seq[FeatureConfig] = features
 

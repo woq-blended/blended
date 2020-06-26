@@ -15,6 +15,7 @@ class FeatureResolverSpec extends AnyFreeSpec with Matchers {
   val fullFeature1 = FeatureConfig(
     repoUrl = "mvn:group1:repo1:1",
     name = "feature1",
+    features = List.empty,
     bundles = List(BundleConfig(url = "mvn:feature1:bundle1:1"))
   )
 
@@ -28,6 +29,7 @@ class FeatureResolverSpec extends AnyFreeSpec with Matchers {
   val fullFeature3 = FeatureConfig(
     repoUrl = "mvn:group1:repo3:1",
     name = "feature3",
+    features = List.empty,
     bundles = List(BundleConfig(url = "mvn:feature3:bundle1:1"))
   )
 

@@ -1,49 +1,46 @@
 package blended.updater.config
 
-import scala.util.Success
-
 import com.typesafe.config.ConfigFactory
-import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 
-class ResolvedProfileSpec extends AnyFreeSpecLike with Matchers {
+class ResolvedProfileSpec extends LoggingFreeSpecLike with Matchers {
 
   "A Config with features references" - {
-    val config = """
+
+    val config : String = """
                    |name = name
                    |version = 1
                    |bundles = [{url = "mvn:base:bundle1:1"}]
                    |startLevel = 10
                    |defaultStartLevel = 10
                    |features = [
-                   |  { name = feature1, version = 1 }
-                   |  { name = feature2, version = 1 }
+                   |  { url = "http://foobar.com/featuregrp/featurename/1", names = ["feature1"] }
+                   |  { url = "http://foobar.com/featuregrp/featurename/1", names = ["feature2"] }
                    |]
                    |""".stripMargin
 
-    val feature1 = """
+    val feature1 : String = """
+                     |repoUrl = "http://foobar.com/featuregrp/featurename/1"
                      |name = feature1
-                     |version = 1
                      |bundles = [{url = "mvn:feature1:bundle1:1"}]
                      |""".stripMargin
 
-    val feature2 = """
+    val feature2 : String = """
+                     |repoUrl = "http://foobar.com/featuregrp/featurename/1"
                      |name = feature2
-                     |version = 1
                      |bundles = [{url = "mvn:feature2:bundle1:1"}]
-                     |features = [{name = feature3, version = 1}]
+                     |features = [{ url = "http://foobar.com/featuregrp/featurename/1", names = [ "feature3" ] }]
                      |""".stripMargin
 
-    val feature3 = """
+    val feature3 : String = """
+                     |repoUrl = "http://foobar.com/featuregrp/featurename/1"
                      |name = feature3
-                     |version = 1
                      |bundles = [{url = "mvn:feature3:bundle1:1", startLevel = 0}]
                      |""".stripMargin
 
-    val features = List(feature1, feature2, feature3).map(f => {
-      val fc = FeatureConfigCompanion.read(ConfigFactory.parseString(f))
-      fc shouldBe a[Success[_]]
-      fc.get
+    val features : List[FeatureConfig] = List(feature1, feature2, feature3).map(f => {
+      FeatureConfigCompanion.read(ConfigFactory.parseString(f)).get
     })
 
     val profile: Profile = ProfileCompanion.read(ConfigFactory.parseString(config)).get

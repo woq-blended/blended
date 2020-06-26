@@ -10,7 +10,7 @@ class ArtifactCompanionSpec extends LoggingFreeSpec with ScalaCheckPropertyCheck
   import TestData._
 
   "conversion to and from config" in {
-    forAll { artifact: Artifact =>
+    forAll(artifacts) { artifact =>
       assert(ArtifactCompanion.read(ArtifactCompanion.toConfig(artifact)) === Success(artifact))
     }
   }

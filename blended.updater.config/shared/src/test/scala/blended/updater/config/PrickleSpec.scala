@@ -5,7 +5,7 @@ import scala.util.Success
 import scala.util.control.NonFatal
 import blended.updater.config.json.PrickleProtocol._
 import blended.util.logging.Logger
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.Gen
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks

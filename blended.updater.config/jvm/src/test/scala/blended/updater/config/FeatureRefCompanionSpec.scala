@@ -11,7 +11,7 @@ class FeatureRefCompanionSpec extends LoggingFreeSpec with ScalaCheckPropertyChe
 
     import TestData._
 
-    forAll { feature: FeatureRef =>
+    forAll (featureRefs) { feature =>
       assert(FeatureRefCompanion.fromConfig(FeatureRefCompanion.toConfig(feature)) === Success(feature))
     }
 

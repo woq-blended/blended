@@ -56,22 +56,7 @@ case class Profile(
     }
 }
 
-object Profile
-    extends (
-        (
-            String,
-            String,
-            List[BundleConfig],
-            Int,
-            Int,
-            Map[String, String],
-            Map[String, String],
-            Map[String, String],
-            List[FeatureRef],
-            List[Artifact],
-            List[FeatureConfig]
-        ) => Profile
-    ) {
+object Profile {
 
   val MvnPrefix = "mvn:"
 

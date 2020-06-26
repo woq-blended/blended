@@ -2,7 +2,6 @@ package blended.updater.config
 
 import java.util.regex.{Matcher, Pattern}
 
-import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 

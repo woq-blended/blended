@@ -10,13 +10,13 @@ class FeatureConfigCompanionSpec extends LoggingFreeSpec with ScalaCheckProperty
   import TestData._
 
   "conversion to and from config" in {
-    forAll { feature: FeatureConfig =>
+    forAll (featureConfigs) { feature =>
       assert(FeatureConfigCompanion.read(FeatureConfigCompanion.toConfig(feature)) === Success(feature))
     }
   }
 
   "FeatureConfigCompanion.apply handled null values" in {
-    forAll { feature: FeatureConfig =>
+    forAll (featureConfigs) { feature =>
       assert(
         FeatureConfigCompanion.apply(
           repoUrl = feature.repoUrl,
