@@ -49,7 +49,7 @@ trait TestData {
   val profiles : Gen[Profile] = for {
     name <- testString
     version <- testString
-    bundles <- Gen.listOf(bundleConfigs)
+    bundles <- Gen.listOfN(genSize, bundleConfigs)
     startLevel <- Gen.posNum[Int]
     defaultStartLevel <- Gen.posNum[Int]
     properties <- Gen.mapOfN(genSize, stringPairs)

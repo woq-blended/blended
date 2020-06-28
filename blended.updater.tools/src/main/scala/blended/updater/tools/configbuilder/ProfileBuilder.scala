@@ -167,11 +167,11 @@ object ProfileBuilder {
       }
 
     // read feature repo files
-    val features = options.featureRepos.map { fileName =>
+    val features : List[FeatureConfig] = options.featureRepos.map { fileName =>
       val featureConfig =
         ConfigFactory.parseFile(new File(fileName), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
       FeatureConfigCompanion.read(featureConfig).get
-    }
+    }.toList
     debug("features: " + features)
 
     val configFile = new File(options.configFile).getAbsoluteFile()
@@ -197,7 +197,7 @@ object ProfileBuilder {
 
     debug("unresolved profile: " + unresolvedProfile)
     val resolver : FeatureResolver = new FeatureResolver(featureDir, features)
-    val resolved : ResolvedProfile = resolver.resolve(unresolvedProfile, featureDir).get
+    val resolved : ResolvedProfile = resolver.resolve(unresolvedProfile).get
     debug("profile with resolved features: " + resolved)
 
     val localRuntimeConfig = LocalProfile(resolved, dir)
@@ -289,7 +289,7 @@ object ProfileBuilder {
           bundles = resolved.profile.bundles.map(checkAndUpdateBundle),
           resolvedFeatures = resolved.allReferencedFeatures.get.map(checkAndUpdateFeatures),
           resources = resolved.profile.resources.map(checkAndUpdateResource)
-        ), featureDir
+        )
       ).profile
     } else {
       resolved.profile

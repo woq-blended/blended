@@ -33,24 +33,26 @@ class LoadTest extends LoggingFreeSpec with ScalaCheckPropertyChecks with DbFact
         withTestPersistenceService() { ctx =>
           val startTime = System.currentTimeMillis()
           val count = new AtomicInteger()
-          try {
-            forAll (gen) { d: T =>
-              count.incrementAndGet()
-              val uuid = UUID.randomUUID().toString()
-              val idCol = "TEST@ID@"
-              val data = new ju.HashMap[String, AnyRef](map(d))
-              data.put(idCol, uuid)
-              //              log.info(s"Persisting [${data}] with special field [${idCol}] [${uuid}]")
-              //              val time = System.currentTimeMillis()
-              ctx.persistenceService.persist(className, data)
-              val loaded = ctx.persistenceService.findByExample(className, Map(idCol -> uuid).asJava)
-              //              log.info("Now loading...")
-              val loadedData = loaded.map(unmap).map(_.get)
-              //              log.info(s"Loaded data [${loadedData}] took [${System.currentTimeMillis() - time}] ms")
-              assert(loadedData === Seq(d))
-            }
-          } finally {
 
+          try {
+            do {
+              gen.sample.foreach{ d => 
+                count.incrementAndGet()
+                val uuid = UUID.randomUUID().toString()
+                val idCol = "TEST@ID@"
+                val data = new ju.HashMap[String, AnyRef](map(d))
+                data.put(idCol, uuid)
+                //              log.info(s"Persisting [${data}] with special field [${idCol}] [${uuid}]")
+                //              val time = System.currentTimeMillis()
+                ctx.persistenceService.persist(className, data)
+                val loaded = ctx.persistenceService.findByExample(className, Map(idCol -> uuid).asJava)
+                //              log.info("Now loading...")
+                val loadedData = loaded.map(unmap).map(_.get)
+                //              log.info(s"Loaded data [${loadedData}] took [${System.currentTimeMillis() - time}] ms")
+                assert(loadedData === Seq(d))
+              }
+            } while(count.get() == 0)
+          } finally {
             val endTime = System.currentTimeMillis()
             log.info(
               s"Persisting [${count.get()}] [${className}] entries took [${endTime - startTime}] ms (including time for generating and mapping data)")
@@ -62,13 +64,13 @@ class LoadTest extends LoggingFreeSpec with ScalaCheckPropertyChecks with DbFact
     import blended.updater.config.Mapper._
 
     testMapping(artifacts, mapArtifact, unmapArtifact)
-    // testMapping(bundleConfigs, mapBundleConfig, unmapBundleConfig)
-    // testMapping(featureRefs, mapFeatureRef, unmapFeatureRef)
-    // testMapping(featureConfigs, mapFeatureConfig, unmapFeatureConfig)
-    // testMapping(profiles, mapProfile, unmapProfile)
-    // testMapping(serviceInfos, mapServiceInfo, unmapServiceInfo)
-    // testMapping(generatedConfigs, mapGeneratedConfig, unmapGeneratedConfig)
-    // testMapping(profileRefs, mapProfileRef, unmapProfileRef)
+    testMapping(bundleConfigs, mapBundleConfig, unmapBundleConfig)
+    testMapping(featureRefs, mapFeatureRef, unmapFeatureRef)
+    testMapping(featureConfigs, mapFeatureConfig, unmapFeatureConfig)
+    testMapping(profiles, mapProfile, unmapProfile)
+    testMapping(serviceInfos, mapServiceInfo, unmapServiceInfo)
+    testMapping(generatedConfigs, mapGeneratedConfig, unmapGeneratedConfig)
+    testMapping(profileRefs, mapProfileRef, unmapProfileRef)
 
   }
 
