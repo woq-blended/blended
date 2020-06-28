@@ -13,35 +13,51 @@ class ResolvedProfileSpec extends LoggingFreeSpecLike with Matchers {
   "A Config with features references" - {
 
     val config : String = """
-                   |name = name
-                   |version = 1
-                   |bundles = [{url = "mvn:base:bundle1:1"}]
-                   |startLevel = 10
-                   |defaultStartLevel = 10
-                   |features = [
-                   |  { url = "http://foobar.com/featuregrp/featurename/1", names = ["feature1"] }
-                   |  { url = "http://foobar.com/featuregrp/featurename/1", names = ["feature2"] }
-                   |]
-                   |""".stripMargin
+                  |name = name
+                  |version = 1
+                  |bundles = [{url = "mvn:base:bundle1:1"}]
+                  |startLevel = 10
+                  |defaultStartLevel = 10
+                  |features = [
+                  |  { url = "http://foobar.com/featuregrp/featurename/1", names = ["feature1"] }
+                  |  { url = "http://foobar.com/featuregrp/featurename/1", names = ["feature2"] }
+                  |]
+                  |""".stripMargin
 
     val feature1 : String = """
-                     |repoUrl = "http://foobar.com/featuregrp/featurename/1"
-                     |name = feature1
-                     |bundles = [{url = "mvn:feature1:bundle1:1"}]
-                     |""".stripMargin
+                    |repoUrl = "http://foobar.com/featuregrp/featurename/1"
+                    |name = feature1
+                    |bundles = [{url = "mvn:feature1:bundle1:1"}]
+                    |""".stripMargin
 
     val feature2 : String = """
-                     |repoUrl = "http://foobar.com/featuregrp/featurename/1"
-                     |name = feature2
-                     |bundles = [{url = "mvn:feature2:bundle1:1"}]
-                     |features = [{ url = "http://foobar.com/featuregrp/featurename/1", names = [ "feature3" ] }]
-                     |""".stripMargin
+                    |repoUrl = "http://foobar.com/featuregrp/featurename/1"
+                    |name = feature2
+                    |bundles = [{url = "mvn:feature2:bundle1:1"}]
+                    |features = [{ url = "http://foobar.com/featuregrp/featurename/1", names = [ "feature3" ] }]
+                    |""".stripMargin
 
     val feature3 : String = """
-                     |repoUrl = "http://foobar.com/featuregrp/featurename/1"
-                     |name = feature3
-                     |bundles = [{url = "mvn:feature3:bundle1:1", startLevel = 0}]
-                     |""".stripMargin
+                    |repoUrl = "http://foobar.com/featuregrp/featurename/1"
+                    |name = feature3
+                    |bundles = [{url = "mvn:feature3:bundle1:1", startLevel = 0}]
+                    |""".stripMargin
+    val f3 : FeatureConfig = FeatureConfigCompanion.read(ConfigFactory.parseString(feature3)).get                      
+
+    val feature4 : String = """
+                    |repoUrl = "http://foobar.com/featuregrp/featurename/1"
+                    |name = feature4
+                    |features = [{ url = "http://foobar.com/featuregrp/featurename/1", names = [ "feature5" ] }]
+                    |""".stripMargin                     
+    val f4 : FeatureConfig = FeatureConfigCompanion.read(ConfigFactory.parseString(feature4)).get                      
+
+    val feature5 : String = """
+                    |repoUrl = "http://foobar.com/featuregrp/featurename/1"
+                    |name = feature5
+                    |features = [{ url = "http://foobar.com/featuregrp/featurename/1", names = [ "feature4" ] }]
+                    |""".stripMargin                     
+    val f5 : FeatureConfig = FeatureConfigCompanion.read(ConfigFactory.parseString(feature5)).get                      
+                   
 
     val features : List[FeatureConfig] = List(feature1, feature2, feature3).map(f => {
       FeatureConfigCompanion.read(ConfigFactory.parseString(f)).get
@@ -50,7 +66,7 @@ class ResolvedProfileSpec extends LoggingFreeSpecLike with Matchers {
     val profile: Profile = ProfileCompanion.read(ConfigFactory.parseString(config)).get
 
     "should be constructable with extra features" in {
-      ResolvedProfile(profile)
+      ResolvedProfile(profile, features)
     }
 
     "should be constructable with optional resolved features" in {
@@ -58,24 +74,39 @@ class ResolvedProfileSpec extends LoggingFreeSpecLike with Matchers {
     }
 
     "should not be constructable when some feature refs are not resolved" in {
-      val ex = intercept[IllegalArgumentException] {
+      intercept[UnresolvedFeatureException] {
         ResolvedProfile(profile)
       }
-      ex.getMessage should startWith("requirement failed: Contains resolved feature: feature1-1")
     }
 
-    "should not be constructable when no bundle with startlevel 0 is present" in {
-      // val f3 = features.find(_.name == "feature3").get
-      //val fs = features.filter { _ != f3 } ++ Seq(f3.copy(bundles = f3.bundles.map(_.copy(startLevel = None))))
-      val ex = intercept[IllegalArgumentException] {
-        ResolvedProfile(profile)
+    "should not be constructable when no bundle with startlevel 0 is present" in {      
+      val anotherBundle : BundleConfig = BundleConfig(url = "mvn:feature3:bundle2:1", startLevel = 0)
+      val fs : List[FeatureConfig] = features.filter { _.name != "feature3" } ++ Seq(f3.copy(bundles = anotherBundle :: f3.bundles))
+
+      intercept[MultipleFrameworksException] {
+        ResolvedProfile(profile.copy(resolvedFeatures = fs))
       }
-      ex.getMessage should startWith(
-        "requirement failed: A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0'")
+    }
+
+    "should not be constructable with more than one bundle in start level 0" in {
+      val fs : List[FeatureConfig] = features.filter { _.name != "feature3" } ++ Seq(f3.copy(bundles = f3.bundles.map(_.copy(startLevel = None))))
+
+      intercept[NoFrameworkException] {
+        ResolvedProfile(profile.copy(resolvedFeatures = fs))
+      }
     }
 
     "should not be constructable when cycles between feature refs exist" in {
-      pending
+
+      val resolver : FeatureResolver = new FeatureResolver(featureDir, f4 :: f5 :: features)
+
+      intercept[CyclicFeatureRefException] {
+        val cyclicProfile : Profile = profile.copy(
+          features = FeatureRef(url = "http://foobar.com/featuregrp/featurename/1", names = List("feature4")) :: profile.features
+        )
+
+        resolver.resolve(cyclicProfile).get
+      }
     }
 
     "should migrate all known features into RuntimeConfig.resolvedFeatures" in {

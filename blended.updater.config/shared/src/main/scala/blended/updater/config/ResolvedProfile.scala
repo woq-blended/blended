@@ -1,8 +1,16 @@
 package blended.updater.config
 
 import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
+
+class UnresolvedFeatureException(url : String, unresolved : Seq[String]) extends 
+  Exception(s"Could not resolve [${unresolved.mkString(",")}] from [$url]")
+
+class NoFrameworkException extends Exception(s"No framework bundle with startlevel 0 present in config")
+class MultipleFrameworksException(bundles : Seq[BundleConfig]) extends
+  Exception(s"Multiple frameworks with startlevel 0 defined in configuration : [${bundles.map(_.artifact).mkString(",")}]")
+
+class CyclicFeatureRefException(cycles: List[FeatureRef])
+  extends Exception(s"Cyclic feature reference detected : [${cycles.mkString(",")}]")
 
 /**
  * Encapsulates a [[Profile]] guaranteed to contain resolved [FeatureConfig]s for each contained (transitive) [[FeatureRef]].
@@ -16,35 +24,12 @@ import scala.util.Failure
  */
 case class ResolvedProfile(profile: Profile) {
 
-  // Check if all feature reference have a according resolved feature
-  private def check(features: List[FeatureRef], depChain: Seq[String]): Try[Unit] = Try {
-
-    features.foreach { f =>
-      val singleFeatures : Seq[String] = f.names.map(n => s"${f.url}##$n}")
-      val newDepChain : Seq[String] = (singleFeatures ++ depChain).distinct
-
-      val cycledFeatures : Seq[String] = singleFeatures.filter(depChain.contains)
-
-      require(
-        cycledFeatures.isEmpty,
-        s"No cycles in feature dependencies allowed, but detected cycles for : [${cycledFeatures.mkString(",")}]"
-      )
-
-      lookupFeatures(f) match { 
-        case Success(l) => 
-          check(l.flatMap(_.features), newDepChain)
-        case Failure(t) => 
-          throw t
-      }
-    }
-  }   
-
   /**
    * Lookup a set of features that belong to the same repository URL
    * @param featureRef : The FeatureRefefence encapsulating the repoUrl and the names of features to be looked up
    * @return Success(s), where s is the sequence of FeatureConfig objects and has one entry for each unique
    *         value within featureRef.names
-   *         Failure(t) When notall features could be resolved within the featureRef
+   *         Failure(t) When not all features could be resolved within the featureRef
    */
   def lookupFeatures(featureRef: FeatureRef): Try[List[FeatureConfig]] = Try {
 
@@ -55,7 +40,7 @@ case class ResolvedProfile(profile: Profile) {
 
     featureRef.names.filter(n => !resolvedNames.contains(n)) match {
       case Nil => candidates.distinct
-      case u => throw new Exception(s"Could not resolve [${u.mkString(",")}] for the repo url [${featureRef.url}]")
+      case u => throw new UnresolvedFeatureException(featureRef.url, u)
     }
   }
 
@@ -64,18 +49,23 @@ case class ResolvedProfile(profile: Profile) {
    */
   def allReferencedFeatures: Try[List[FeatureConfig]] = {
 
-    def find(features: List[FeatureRef]): Try[List[FeatureConfig]] = Try {
+    def find(features: List[FeatureRef], seen : List[FeatureConfig]): Try[List[FeatureConfig]] = Try {
 
-      val directFeatures : List[FeatureConfig] = features.flatMap(f => lookupFeatures(f).get)
-      val transitiveRefs : List[FeatureConfig] = directFeatures.flatMap(_.features).distinct match {
-        case Nil => Nil
-        case refs => find(refs).get
+      features match {
+        case Nil => seen
+        case fl => 
+          val directFeatures : List[FeatureConfig] = features.flatMap(f => lookupFeatures(f).get)
+
+          directFeatures.intersect(seen) match {
+            case Nil => 
+              val transitiveRefs : List[FeatureRef] = directFeatures.flatMap(_.features)
+              (directFeatures ++ find(transitiveRefs, (directFeatures ++ seen).distinct).get).distinct
+            case cycles => throw new CyclicFeatureRefException(cycles.map(_.toRef))
+          }
       }
-
-      (directFeatures ++ transitiveRefs).distinct
     }
 
-    find(profile.features)
+    find(profile.features, List.empty)
   }
 
   /**
@@ -86,16 +76,14 @@ case class ResolvedProfile(profile: Profile) {
   }
 
   val framework: BundleConfig = {
-    val fs = allBundles.get.filter(b => b.startLevel == Some(0))
-    require(
-      fs.distinct.size == 1,
-      s"A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): ${fs.size}${if (fs.isEmpty) ""
-      else fs.mkString("\n  ", "\n  ", "")}"
-    )
-    fs.head
+    allBundles.get.filter(b => b.startLevel == Some(0)) match {
+      case Nil => throw new NoFrameworkException
+      case h :: Nil => h
+      case l => throw new MultipleFrameworksException(l)
+    }
   }
 
-  require(check(profile.features, Seq.empty).isSuccess)
+  require(allReferencedFeatures.isSuccess)
 
 }
 

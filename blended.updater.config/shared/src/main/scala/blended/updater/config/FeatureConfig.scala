@@ -20,5 +20,8 @@ case class FeatureConfig(
        |  name=${name}
        |  bundles=${bundles}
        |  features=${features})""".stripMargin
+                              
+
+  def toRef : FeatureRef = FeatureRef(url = repoUrl, names = List(name))       
 }
 

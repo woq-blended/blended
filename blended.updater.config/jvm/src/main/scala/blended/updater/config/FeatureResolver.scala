@@ -86,6 +86,6 @@ class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.emp
       resolveContext.fetchFeature(f).get
     }
 
-    ResolvedProfile(profile.copy(resolvedFeatures = resolved))
+    ResolvedProfile(profile.copy(resolvedFeatures = resolved.distinct))
   }
 }
