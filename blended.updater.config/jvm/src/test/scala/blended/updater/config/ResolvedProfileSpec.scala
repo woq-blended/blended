@@ -1,5 +1,8 @@
 package blended.updater.config
 
+import java.io.File
+
+import blended.testsupport.BlendedTestSupport
 import com.typesafe.config.ConfigFactory
 import org.scalatest.matchers.should.Matchers
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -7,6 +10,8 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 class ResolvedProfileSpec extends LoggingFreeSpecLike with Matchers {
 
   "A Config with features references" - {
+
+    val featureDir : File = new File(BlendedTestSupport.projectTestOutput)
 
     val config : String = """
                    |name = name
@@ -46,25 +51,25 @@ class ResolvedProfileSpec extends LoggingFreeSpecLike with Matchers {
     val profile: Profile = ProfileCompanion.read(ConfigFactory.parseString(config)).get
 
     "should be constructable with extra features" in {
-      ResolvedProfile(profile, features)
+      ResolvedProfile(profile, featureDir)
     }
 
     "should be constructable with optional resolved features" in {
-      ResolvedProfile(profile.copy(resolvedFeatures = features))
+      ResolvedProfile(profile.copy(resolvedFeatures = features), featureDir)
     }
 
     "should not be constructable when some feature refs are not resolved" in {
       val ex = intercept[IllegalArgumentException] {
-        ResolvedProfile(profile)
+        ResolvedProfile(profile, featureDir)
       }
       ex.getMessage should startWith("requirement failed: Contains resolved feature: feature1-1")
     }
 
     "should not be constructable when no bundle with startlevel 0 is present" in {
-      val f3 = features.find(_.name == "feature3").get
-      val fs = features.filter { _ != f3 } ++ Seq(f3.copy(bundles = f3.bundles.map(_.copy(startLevel = None))))
+      // val f3 = features.find(_.name == "feature3").get
+      //val fs = features.filter { _ != f3 } ++ Seq(f3.copy(bundles = f3.bundles.map(_.copy(startLevel = None))))
       val ex = intercept[IllegalArgumentException] {
-        ResolvedProfile(profile, fs)
+        ResolvedProfile(profile, featureDir)
       }
       ex.getMessage should startWith(
         "requirement failed: A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0'")
@@ -77,11 +82,11 @@ class ResolvedProfileSpec extends LoggingFreeSpecLike with Matchers {
     "should migrate all known features into RuntimeConfig.resolvedFeatures" in {
       profile.resolvedFeatures shouldBe empty
       features should have size (3)
-      val rrc1 = ResolvedProfile(profile, features)
+      val rrc1 = ResolvedProfile(profile, featureDir)
       rrc1.profile.resolvedFeatures should have size (3)
 
-      val rrc2 = ResolvedProfile(rrc1.profile)
-      rrc1.allReferencedFeatures should contain theSameElementsAs (rrc2.allReferencedFeatures)
+      val rrc2 = ResolvedProfile(rrc1.profile, featureDir)
+      rrc1.allReferencedFeatures.get should contain theSameElementsAs (rrc2.allReferencedFeatures.get)
 
       rrc1 should equal(rrc2)
     }

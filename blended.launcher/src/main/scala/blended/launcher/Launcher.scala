@@ -9,12 +9,13 @@ import blended.launcher.config.LauncherConfig
 import blended.util.arm.ARM
 import blended.updater.config._
 import blended.util.logging.Logger
-import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 import de.tototec.cmdoption.{CmdlineParser, CmdlineParserException}
 import org.osgi.framework.launch.{Framework, FrameworkFactory}
 import org.osgi.framework.startlevel.{BundleStartLevel, FrameworkStartLevel}
 import org.osgi.framework.wiring.FrameworkWiring
 import org.osgi.framework.{Bundle, BundleContext, Constants, FrameworkEvent, FrameworkListener}
+
 import scala.jdk.CollectionConverters._
 import scala.collection.immutable.Map
 import scala.util.control.NonFatal
@@ -135,7 +136,7 @@ object Launcher {
         localConfig.validate(
           includeResourceArchives = false,
           explodedResourceArchives = true
-        )
+        ).get
 
       case None =>
         // if no RuntimeConfig, just check existence of bundles
@@ -265,11 +266,16 @@ object Launcher {
         log.info(s"Using profile directory : [$profileDir]")
         log.info(s"Using profile file      : [${profileFile.getAbsolutePath}]")
 
-        val config =
+        val config : Config =
           ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
 
-        val runtimeConfig = ResolvedProfile(ProfileCompanion.read(config).get)
-        val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
+        val featureDir = new File(profileDir, "features")
+        if (!featureDir.exists()) {
+          featureDir.mkdirs()
+        }
+
+        val runtimeConfig : ResolvedProfile = ResolvedProfile(ProfileCompanion.read(config).get, featureDir)
+        val launchConfig : LauncherConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir).get
 
         var brandingProps = Map(
           Profile.Properties.PROFILE_DIR -> profileDir

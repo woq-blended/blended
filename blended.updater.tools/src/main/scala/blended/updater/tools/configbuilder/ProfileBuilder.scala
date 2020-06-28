@@ -130,10 +130,10 @@ object ProfileBuilder {
   }
 
   def run(
-      args: Array[String],
-      debugLog: Option[String => Unit] = None,
-      infoLog: String => Unit = Console.out.println,
-      errorLog: String => Unit = Console.err.println
+    args: Array[String],
+    debugLog: Option[String => Unit] = None,
+    infoLog: String => Unit = Console.out.println,
+    errorLog: String => Unit = Console.err.println
   ): Unit = {
 
     val options: CmdOptions = new CmdOptions()
@@ -181,6 +181,12 @@ object ProfileBuilder {
       .map(new File(_).getAbsoluteFile())
 
     val dir = outFile.flatMap(f => Option(f.getParentFile())).getOrElse(configFile.getParentFile())
+    
+    val featureDir : File = new File(dir, "features")
+    if (!featureDir.exists()) {
+      featureDir.mkdirs()
+    }
+
     val config = ConfigFactory
       .parseFile(configFile, ConfigParseOptions.defaults().setAllowMissing(false))
       .withFallback(ConfigFactory.parseMap(options.envVars.toMap.asJava))
@@ -190,7 +196,8 @@ object ProfileBuilder {
     //    val unresolvedLocalRuntimeConfig = LocalRuntimeConfig(unresolvedRuntimeConfig, dir)
 
     debug("unresolved profile: " + unresolvedProfile)
-    val resolved = FeatureResolver.resolve(unresolvedProfile, features).get
+    val resolver : FeatureResolver = new FeatureResolver(featureDir, features)
+    val resolved : ResolvedProfile = resolver.resolve(unresolvedProfile, featureDir).get
     debug("profile with resolved features: " + resolved)
 
     val localRuntimeConfig = LocalProfile(resolved, dir)
@@ -199,7 +206,7 @@ object ProfileBuilder {
       val issues = localRuntimeConfig.validate(
         includeResourceArchives = true,
         explodedResourceArchives = false
-      )
+      ).get
       if (issues.nonEmpty) {
         sys.error(issues.mkString("\n"))
       }
@@ -217,7 +224,7 @@ object ProfileBuilder {
 
     if (options.downloadMissing) {
 
-      val files = resolved.allBundles.distinct.map { b =>
+      val files = resolved.allBundles.get.distinct.map { b =>
         ProfileCompanion.bundleLocation(b, dir) -> downloadUrls(b.artifact)
       } ++ resolved.profile.resources.map(r => ProfileCompanion.resourceArchiveLocation(r, dir) -> downloadUrls(r))
 
@@ -280,9 +287,9 @@ object ProfileBuilder {
       ResolvedProfile(
         resolved.profile.copy(
           bundles = resolved.profile.bundles.map(checkAndUpdateBundle),
-          resolvedFeatures = resolved.allReferencedFeatures.map(checkAndUpdateFeatures),
+          resolvedFeatures = resolved.allReferencedFeatures.get.map(checkAndUpdateFeatures),
           resources = resolved.profile.resources.map(checkAndUpdateResource)
-        )
+        ), featureDir
       ).profile
     } else {
       resolved.profile

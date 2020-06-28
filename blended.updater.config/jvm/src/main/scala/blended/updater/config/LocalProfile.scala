@@ -42,9 +42,9 @@ case class LocalProfile(
   def validate(
       includeResourceArchives: Boolean,
       explodedResourceArchives: Boolean
-  ): Seq[String] = {
+  ): Try[Seq[String]] = Try {
 
-    val artifacts = resolvedProfile.allBundles.map(b => bundleLocation(b) -> b.artifact) ++
+    val artifacts = resolvedProfile.allBundles.get.map(b => bundleLocation(b) -> b.artifact) ++
       (if (includeResourceArchives) runtimeConfig.resources.map(r => resourceArchiveLocation(r) -> r) else Seq())
 
     val artifactIssues = {

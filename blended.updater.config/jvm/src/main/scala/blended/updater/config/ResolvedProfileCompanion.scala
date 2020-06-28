@@ -1,23 +1,22 @@
 package blended.updater.config
 
-import com.typesafe.config.{Config, ConfigFactory}
+import java.io.File
 
-import scala.jdk.CollectionConverters._
+import com.typesafe.config.{Config, ConfigFactory}
 import scala.util.Try
 
 object ResolvedProfileCompanion {
 
-  def fromConfig(config: Config): Try[ResolvedProfile] = Try {
+  def fromConfig(config: Config, featureDir : File): Try[ResolvedProfile] = Try {
     ResolvedProfile(
-      profile = ProfileCompanion.read(config.getObject("profile").toConfig()).get
+      profile = ProfileCompanion.read(config.getObject("profile").toConfig()).get,
+      featureDir = featureDir
     )
   }
 
-  def toConfig(resolvedRuntimeConfig: ResolvedProfile): Config = {
-    val config = Map(
-      "profile" -> ProfileCompanion.toConfig(resolvedRuntimeConfig.profile).root().unwrapped()
-    ).asJava
-    ConfigFactory.parseMap(config)
+  def toConfig(resolvedProfile: ResolvedProfile): Config = {
+    val profileCfg : Config = ProfileCompanion.toConfig(resolvedProfile.profile)
+    ConfigFactory.empty().withValue("profile", profileCfg.root())
   }
 
 }

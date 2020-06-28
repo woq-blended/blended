@@ -6,6 +6,7 @@ import blended.launcher.config.LauncherConfig
 import blended.util.logging.Logger
 
 import scala.collection.immutable._
+import scala.util.Try
 
 /**
  * Convert between [[LauncherConfig]] and [[ResolvedProfile]].
@@ -14,17 +15,17 @@ trait ConfigConverter {
 
   private[this] val log = Logger[ConfigConverter]
 
-  def runtimeConfigToLauncherConfig(resolvedRuntimeConfig: ResolvedProfile, profileDir: String): LauncherConfig = {
+  def runtimeConfigToLauncherConfig(resolvedRuntimeConfig: ResolvedProfile, profileDir: String): Try[LauncherConfig] = Try {
     import blended.launcher.config.LauncherConfig._
 
-    val bundlePrefix = s"${profileDir}/bundles"
-    val runtimeConfig = resolvedRuntimeConfig.profile
+    val bundleDir : String = s"${profileDir}/bundles"
+    val runtimeConfig : Profile = resolvedRuntimeConfig.profile
 
-    val allBundles = resolvedRuntimeConfig.allBundles
+    val allBundles = resolvedRuntimeConfig.allBundles.get
       .filter(b => b.startLevel != Some(0))
       .map { bc =>
         BundleConfig(
-          location = s"${bundlePrefix}/${bc.jarName.getOrElse(runtimeConfig.resolveFileName(bc.url).get)}",
+          location = s"${bundleDir}/${bc.jarName.getOrElse(runtimeConfig.resolveFileName(bc.url).get)}",
           start = bc.start,
           startLevel = bc.startLevel.getOrElse(runtimeConfig.defaultStartLevel)
         )
@@ -34,8 +35,8 @@ trait ConfigConverter {
     log.debug(s"Converted bundles: ${allBundles}")
 
     LauncherConfig(
-      frameworkJar = s"${bundlePrefix}/${resolvedRuntimeConfig.framework.jarName
-        .getOrElse(runtimeConfig.resolveFileName(resolvedRuntimeConfig.framework.url).get)}",
+      frameworkJar = s"${bundleDir}/${resolvedRuntimeConfig.framework.get.jarName
+        .getOrElse(runtimeConfig.resolveFileName(resolvedRuntimeConfig.framework.get.url).get)}",
       systemProperties = runtimeConfig.systemProperties,
       frameworkProperties = runtimeConfig.frameworkProperties,
       startLevel = runtimeConfig.startLevel,

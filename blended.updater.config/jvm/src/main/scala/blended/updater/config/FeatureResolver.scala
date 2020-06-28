@@ -1,57 +1,93 @@
 package blended.updater.config
 
-//import java.io.File
+import java.io.File
 
-//import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+import blended.updater.config.util.DownloadHelper
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
+import blended.updater.config.util.Unzipper
 
-object FeatureResolver {
+class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.empty, mvnBaseUrl : Option[String] = None) {
 
-  private class ResolveContext(features: Seq[FeatureConfig], mvnBaseUrl: Option[String] = None) {
+  private class ResolveContext {
 
-    //private[this] var cache: Seq[FeatureConfig] = features
+    // This is the cache of already loaded feature configs
+    private[this] var cache: Map[String, Map[String, FeatureConfig]] = features.groupBy(_.repoUrl).map{ case (url, cfs) =>
+      (url -> cfs.map(fc => fc.name -> fc).toMap)
+    }
 
-    def fetchFeature(feature: FeatureRef): Option[FeatureConfig] = None
-      // cache.find(c => c.name == feature.name && c.version == feature.version).orElse {
-      //   feature.url match {
-      //     case None => None
-      //     case Some(unresolveUrl) if mvnBaseUrl.isDefined =>
-      //       Try {
-      //         val url = Profile.resolveBundleUrl(unresolveUrl, mvnBaseUrl).get
-      //         val file = File.createTempFile(Profile.resolveFileName(url).get, "")
-      //         ProfileCompanion.download(url, file).get
-      //         val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-      //         file.delete()
-      //         FeatureConfigCompanion.read(config).get
-      //       }.toOption.map { fetched =>
-      //         synchronized {
-      //           cache ++= Seq(fetched)
-      //           fetched
-      //         }
-      //       }
-      //   }
-      // }
-  }
+    features.map{ fc =>
+      ((fc.repoUrl, fc.name) -> fc)
+    }.toMap
 
-  sealed trait Fragment
-  final case class Unresolved(fragmentRef: FeatureRef) extends Fragment
-  final case class Resolved(fragment: FeatureConfig) extends Fragment {
-    def fragementRef = FeatureRef(
-      url = fragment.repoUrl,
-      names = List(fragment.name)
-    )
-  }
+    private def fromCache(ref : FeatureRef) : Try[Option[Seq[FeatureConfig]]] = Try {
+      cache.get(ref.url) match {
+        // The feature has not yet been resolved
+        case None => None
+        // The feature has already been resolved, make sure, all names are present
+        case Some(m) =>
+          val unresolved : Seq[String] = ref.names.filter(n => !m.isDefinedAt(n))
+          if (unresolved.isEmpty) {
+            Some(ref.names.flatMap(n => m.get(n)).distinct)
+          } else {
+            throw new Exception(s"Could not resolve [${unresolved.mkString(",")}] from url [${ref.url}]")
+          }
+      }
+    }
 
-  def resolve(feature: FeatureRef, context: ResolveContext): Try[Seq[FeatureConfig]] = Try {
-    context.fetchFeature(feature) match {
-      case Some(fetchedFeature) => Seq(fetchedFeature) ++ fetchedFeature.features.flatMap(f => resolve(f, context).get)
-      case None                 => sys.error("Could not resolve feature: " + feature)
+    private def updateCache(url : String) : Try[Seq[FeatureConfig]] = Try {
+
+      if (!featureDir.exists()) {
+        featureDir.mkdirs()
+      }
+
+      val fileName : String = Profile.resolveFileName(url).get
+      val downloaded : File = DownloadHelper.download(url, File.createTempFile(fileName, "repo", featureDir)).get
+
+      val unzipped = Unzipper.unzip(
+        archive = downloaded,
+        targetDir = new File(featureDir, fileName)
+      ).get
+
+      val fcs : Seq[FeatureConfig] = unzipped.collect{
+        case f if f.isFile() && f.canRead() && f.getName().endsWith(".conf") =>
+          val config = ConfigFactory.parseFile(f, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+          FeatureConfigCompanion.read(config).get
+      }
+
+      require(fcs.map(_.repoUrl).distinct.size == 1)
+      require(fcs.map(_.repoUrl).head == url)
+
+      cache += (url -> fcs.map(fc => fc.name -> fc).toMap)
+
+      fcs
+    }
+
+    def fetchFeature(ref: FeatureRef): Try[Seq[FeatureConfig]] = Try {
+      fromCache(ref).get match {
+        case Some(s) => s
+        case None => updateCache(ref.url).get
+      }
     }
   }
 
-  def resolve(runtimeConfig: Profile, features: Seq[FeatureConfig]): Try[ResolvedProfile] = Try {
-    val context = new ResolveContext(runtimeConfig.resolvedFeatures ++ features, runtimeConfig.mvnBaseUrl)
-    ResolvedProfile(runtimeConfig, runtimeConfig.features.flatMap(f => resolve(f, context).get))
+  private val resolveContext : ResolveContext = new(ResolveContext)
+
+  /**
+   * Resolve a single feature reference.
+   * @param feature
+   * @return
+   */
+  def resolve(feature: FeatureRef): Try[Seq[FeatureConfig]] = Try {
+
+    resolveContext.fetchFeature(feature) match {
+      case Success(s) => s ++ s.flatMap(_.features).flatMap(f => resolve(f).get)
+      case Failure(t) => throw t
+    }
+  }
+
+  def resolve(profile: Profile, featureDir : File): Try[ResolvedProfile] = Try {
+    ResolvedProfile(profile, featureDir, profile.features.flatMap(f => resolveContext.fetchFeature(f).get))
   }
 }

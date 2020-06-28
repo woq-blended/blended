@@ -5,9 +5,8 @@ import java.{util => ju}
 import scala.jdk.CollectionConverters._
 import scala.reflect.{ClassTag, classTag}
 import scala.util.{Success, Try}
-
 import blended.testsupport.scalatest.LoggingFreeSpec
-import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class PersistedFieldTest extends LoggingFreeSpec with ScalaCheckPropertyChecks {
@@ -248,11 +247,12 @@ class PersistedFieldTest extends LoggingFreeSpec with ScalaCheckPropertyChecks {
     import blended.updater.config.TestData._
 
     def testMapping[T: ClassTag](
+      gen : Gen[T],
         map: T => ju.Map[String, AnyRef],
         unmap: AnyRef => Try[T]
-    )(implicit arb: Arbitrary[T]): Unit = {
+    ) : Unit = {
       classTag[T].runtimeClass.getSimpleName in {
-        forAll { d: T =>
+        forAll(gen) { d: T =>
           //          val data = map(d)
           assert(unmap(PersistedField.toJuMap(PersistedField.extractFieldsWithoutDataId(map(d)))) === Success(d))
         }
@@ -261,14 +261,14 @@ class PersistedFieldTest extends LoggingFreeSpec with ScalaCheckPropertyChecks {
 
     import blended.updater.config.Mapper._
 
-    testMapping(mapArtifact, unmapArtifact)
-    testMapping(mapBundleConfig, unmapBundleConfig)
-    testMapping(mapFeatureRef, unmapFeatureRef)
-    testMapping(mapFeatureConfig, unmapFeatureConfig)
-    testMapping(mapProfile, unmapProfile)
-    testMapping(mapServiceInfo, unmapServiceInfo)
-    testMapping(mapGeneratedConfig, unmapGeneratedConfig)
-    testMapping(mapProfileRef, unmapProfileRef)
+    testMapping(artifacts, mapArtifact, unmapArtifact)
+    testMapping(bundleConfigs, mapBundleConfig, unmapBundleConfig)
+    testMapping(featureRefs, mapFeatureRef, unmapFeatureRef)
+    testMapping(featureConfigs, mapFeatureConfig, unmapFeatureConfig)
+    testMapping(profiles, mapProfile, unmapProfile)
+    testMapping(serviceInfos, mapServiceInfo, unmapServiceInfo)
+    testMapping(generatedConfigs, mapGeneratedConfig, unmapGeneratedConfig)
+    testMapping(profileRefs, mapProfileRef, unmapProfileRef)
 
   }
 

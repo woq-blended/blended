@@ -12,11 +12,11 @@ import blended.util.logging.Logger
 object Unzipper extends Unzipper {
   // TODO: add failMissingProperty
   case class PlaceholderConfig(
-      openSequence: String,
-      closeSequence: String,
-      escapeChar: Char,
-      properties: Map[String, String],
-      failOnMissing: Boolean
+    openSequence: String,
+    closeSequence: String,
+    escapeChar: Char,
+    properties: Map[String, String],
+    failOnMissing: Boolean
   )
 }
 
@@ -84,12 +84,12 @@ class Unzipper {
    * @return A `Seq` of all extracted files.
    */
   def unzip(
-      inputStream: InputStream,
-      targetDir: File,
-      selectedFiles: List[(String, File)],
-      fileSelector: Option[String => Boolean],
-      placeholderReplacer: Option[PlaceholderConfig],
-      archive: Option[String]
+    inputStream: InputStream,
+    targetDir: File,
+    selectedFiles: List[(String, File)],
+    fileSelector: Option[String => Boolean],
+    placeholderReplacer: Option[PlaceholderConfig],
+    archive: Option[String]
   ): Try[Seq[File]] = Try {
 
     log.debug(s"Extracting zip archive ${archive.getOrElse("")} to ${targetDir}")

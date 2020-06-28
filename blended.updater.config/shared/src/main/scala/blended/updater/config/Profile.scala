@@ -6,17 +6,17 @@ import java.net.URL
 import scala.util.Try
 
 case class Profile(
-    name: String,
-    version: String,
-    bundles: List[BundleConfig] = List.empty,
-    startLevel: Int,
-    defaultStartLevel: Int,
-    properties: Map[String, String] = Map.empty,
-    frameworkProperties: Map[String, String] = Map.empty,
-    systemProperties: Map[String, String] = Map.empty,
-    features: List[FeatureRef] = List.empty,
-    resources: List[Artifact] = List.empty,
-    resolvedFeatures: List[FeatureConfig] = List.empty
+  name: String,
+  version: String,
+  bundles: List[BundleConfig] = List.empty,
+  startLevel: Int,
+  defaultStartLevel: Int,
+  properties: Map[String, String] = Map.empty,
+  frameworkProperties: Map[String, String] = Map.empty,
+  systemProperties: Map[String, String] = Map.empty,
+  features: List[FeatureRef] = List.empty,
+  resources: List[Artifact] = List.empty,
+  resolvedFeatures: List[FeatureConfig] = List.empty
 ) {
 
   override def toString(): String =
@@ -50,10 +50,10 @@ case class Profile(
    *
    * @see [FeatureResolver] for a way to resolve missing features.
    */
-  def resolve(features: List[FeatureConfig] = List.empty): Try[ResolvedProfile] =
-    Try {
-      ResolvedProfile(this, features)
-    }
+//  def resolve(features: List[FeatureConfig] = List.empty): Try[ResolvedProfile] =
+//    Try {
+//      ResolvedProfile(this, features)
+//    }
 }
 
 object Profile {

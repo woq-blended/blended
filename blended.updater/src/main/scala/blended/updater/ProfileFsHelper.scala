@@ -34,7 +34,7 @@ class ProfileFsHelper {
 
         val config =
           ConfigFactory.parseFile(runtimeConfigFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-        val resolved = ResolvedProfile(ProfileCompanion.read(config).get)
+        val resolved = ResolvedProfile(ProfileCompanion.read(config).get, new File(installBaseDir, "features"))
         val local = LocalProfile(baseDir = versionDir, resolvedProfile = resolved)
 
         // consistency checks
@@ -65,8 +65,7 @@ class ProfileFsHelper {
         .validate(
           includeResourceArchives = false,
           explodedResourceArchives = true
-        )
-        .toList
+        ).get.toList
       log.debug(
         s"Runtime config ${localConfig.runtimeConfig.name}-${localConfig.runtimeConfig.version} issues: ${issues}")
       List(localConfig -> issues)

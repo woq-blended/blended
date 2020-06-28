@@ -37,7 +37,7 @@ case class StatefulLocalProfile(
 
   def runtimeConfig: Profile = config.resolvedProfile.profile
 
-  def bundles: List[BundleConfig] = config.resolvedProfile.allBundles
+  def bundles: List[BundleConfig] = config.resolvedProfile.allBundles.get
 
   def toSingleProfile: ProfileRef = {
     val (oState, reason) = state match {

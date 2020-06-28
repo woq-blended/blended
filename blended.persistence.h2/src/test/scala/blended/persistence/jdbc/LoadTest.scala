@@ -10,9 +10,9 @@ import scala.util.Try
 
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
-import org.scalacheck.Arbitrary
 import org.scalatest.DoNotDiscover
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalacheck.Gen
 
 @DoNotDiscover
 class LoadTest extends LoggingFreeSpec with ScalaCheckPropertyChecks with DbFactory {
@@ -24,16 +24,17 @@ class LoadTest extends LoggingFreeSpec with ScalaCheckPropertyChecks with DbFact
     import blended.updater.config.TestData._
 
     def testMapping[T: ClassTag](
-        map: T => ju.Map[String, AnyRef],
-        unmap: AnyRef => Try[T]
-    )(implicit arb: Arbitrary[T]): Unit = {
+      gen : Gen[T],  
+      map: T => ju.Map[String, AnyRef],
+      unmap: AnyRef => Try[T]
+    ): Unit = {
       val className = classTag[T].runtimeClass.getSimpleName
       className in logException {
         withTestPersistenceService() { ctx =>
           val startTime = System.currentTimeMillis()
           val count = new AtomicInteger()
           try {
-            forAll { d: T =>
+            forAll (gen) { d: T =>
               count.incrementAndGet()
               val uuid = UUID.randomUUID().toString()
               val idCol = "TEST@ID@"
@@ -60,14 +61,14 @@ class LoadTest extends LoggingFreeSpec with ScalaCheckPropertyChecks with DbFact
 
     import blended.updater.config.Mapper._
 
-    testMapping(mapArtifact, unmapArtifact)
-    testMapping(mapBundleConfig, unmapBundleConfig)
-    testMapping(mapFeatureRef, unmapFeatureRef)
-    testMapping(mapFeatureConfig, unmapFeatureConfig)
-    testMapping(mapProfile, unmapProfile)
-    testMapping(mapServiceInfo, unmapServiceInfo)
-    testMapping(mapGeneratedConfig, unmapGeneratedConfig)
-    testMapping(mapProfileRef, unmapProfileRef)
+    testMapping(artifacts, mapArtifact, unmapArtifact)
+    testMapping(bundleConfigs, mapBundleConfig, unmapBundleConfig)
+    testMapping(featureRefs, mapFeatureRef, unmapFeatureRef)
+    testMapping(featureConfigs, mapFeatureConfig, unmapFeatureConfig)
+    testMapping(profiles, mapProfile, unmapProfile)
+    testMapping(serviceInfos, mapServiceInfo, unmapServiceInfo)
+    testMapping(generatedConfigs, mapGeneratedConfig, unmapGeneratedConfig)
+    testMapping(profileRefs, mapProfileRef, unmapProfileRef)
 
   }
 

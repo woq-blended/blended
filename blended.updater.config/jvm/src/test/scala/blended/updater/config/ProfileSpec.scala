@@ -1,9 +1,11 @@
 package blended.updater.config
 
+import java.io.File
+
 import scala.io.Source
 import scala.util.Success
-
-import blended.testsupport.TestFile
+import blended.testsupport.{BlendedTestSupport, TestFile}
+import blended.testsupport.TestFile.DeletePolicy
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import com.typesafe.config.{ConfigException, ConfigFactory}
 import org.scalatest.matchers.should.Matchers
@@ -13,7 +15,8 @@ class ProfileSpec
   with Matchers
   with TestFile {
 
-  implicit val deletePolicy = TestFile.DeleteWhenNoFailure
+  private val featureDir : File = new File(BlendedTestSupport.projectTestOutput)
+  implicit val deletePolicy : DeletePolicy = TestFile.DeleteWhenNoFailure
 
   "Minimal config" - {
 
@@ -34,7 +37,7 @@ class ProfileSpec
       "without line " + n + " must fail" in {
         val config = lines.take(n) ++ lines.drop(n + 1)
         val ex = intercept[RuntimeException] {
-          ResolvedProfile(ProfileCompanion.read(ConfigFactory.parseString(config.mkString("\n"))).get, List())
+          ResolvedProfile(ProfileCompanion.read(ConfigFactory.parseString(config.mkString("\n"))).get, featureDir)
         }
         assert(ex.isInstanceOf[ConfigException] || ex.isInstanceOf[IllegalArgumentException])
       }
@@ -98,23 +101,24 @@ class ProfileSpec
       |bundles = [{url = "mvn:feature3:bundle1:1", startLevel = 0}]
       |""".stripMargin
 
-    def features : List[FeatureConfig] = List(feature1, feature2, feature3).map(f => {
+    def features : Seq[FeatureConfig] = List(feature1, feature2, feature3).map(f => {
       val fc = FeatureConfigCompanion.read(ConfigFactory.parseString(f))
       fc shouldBe a[Success[_]]
       fc.get
     })
 
-    val resolver = FeatureResolver
-
     "should resolve to a valid config" in logException {
+
+      val resolver : FeatureResolver = new FeatureResolver(featureDir = featureDir, features = features)
       val rcTry = ProfileCompanion.read(ConfigFactory.parseString(config))
       rcTry shouldBe a[Success[_]]
 
-      val resolvedTry = resolver.resolve(rcTry.get, features)
+      val resolvedTry = resolver.resolve(rcTry.get, featureDir)
       resolvedTry shouldBe a[Success[_]]
       val resolved = resolvedTry.get
+
       resolved.profile.bundles should have size (1)
-      resolved.allBundles should have size (4)
+      resolved.allBundles.get should have size (4)
       resolved.profile.features should have size (2)
     }
 

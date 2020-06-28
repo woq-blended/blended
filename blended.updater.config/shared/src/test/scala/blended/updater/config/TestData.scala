@@ -8,7 +8,7 @@ trait TestData {
 
   val testString : Gen[String] = Gen.nonEmptyListOf(Gen.alphaChar).map(_.mkString)
 
-  val stringPairs = for {
+  val stringPairs : Gen[(String, String)] = for {
     v1 <- testString
     v2 <- testString
   } yield (v1,v2)
@@ -34,19 +34,19 @@ trait TestData {
     names <- Gen.listOfN(genSize, testString)
   } yield FeatureRef(url, names)
 
-  val featureConfigs = for {
+  val featureConfigs : Gen[FeatureConfig] = for {
     repoUrl <- testString
     name <- testString
     bundles <- Gen.listOf(bundleConfigs)
     features <- Gen.listOfN(genSize, featureRefs)
   } yield FeatureConfig(repoUrl, name, bundles, features)
 
-  val generatedConfigs = for {
+  val generatedConfigs : Gen[GeneratedConfig] = for {
     configFile <- testString
     config <- testString
   } yield GeneratedConfig(configFile, config)
 
-  val profiles = for {
+  val profiles : Gen[Profile] = for {
     name <- testString
     version <- testString
     bundles <- Gen.listOf(bundleConfigs)
@@ -73,10 +73,10 @@ trait TestData {
       resolvedFeatures
     )
 
-  val overlayStates =
+  val overlayStates : Gen[OverlayState] =
     Gen.oneOf[OverlayState](OverlayState.Active, OverlayState.Valid, OverlayState.Invalid, OverlayState.Pending)
 
-  val serviceInfos = for {
+  val serviceInfos : Gen[ServiceInfo] = for {
     name <- testString
     serviceType <- testString
     timestampMsec <- Gen.choose(10000, Long.MaxValue)
@@ -84,12 +84,12 @@ trait TestData {
     props <- Gen.mapOfN(genSize, stringPairs)
   } yield ServiceInfo(name, serviceType, timestampMsec, lifetimeMsec, props)
 
-  val profileRefs = for {
+  val profileRefs : Gen[ProfileRef] = for {
     name <- testString
     version <- testString
   } yield ProfileRef(name, version)
 
-  val containerInfos = for {
+  val containerInfos : Gen[ContainerInfo] = for {
     containerId <- testString
     properties <- Gen.mapOfN(genSize, stringPairs)
     serviceInfos <- Gen.listOfN(genSize, serviceInfos)
@@ -97,11 +97,11 @@ trait TestData {
     timestampMsec <- Gen.choose(10000, Long.MaxValue)
   } yield ContainerInfo(containerId, properties, serviceInfos, profiles, timestampMsec)
 
-  val remoteContainerStates = for {
+  val remoteContainerStates : Gen[RemoteContainerState] = for {
     containerInfo <- containerInfos
   } yield RemoteContainerState(containerInfo)
 
-  val rolloutProfiles = for {
+  val rolloutProfiles : Gen[RolloutProfile] = for {
     profileName <- testString
     profileVersion <- testString
     containerIds <- Gen.listOfN(genSize, testString)

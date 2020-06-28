@@ -1,8 +1,6 @@
 package blended.updater.config
 
 import java.io._
-import java.net.URL
-import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.security.{DigestInputStream, MessageDigest}
 import java.util.Formatter
 
@@ -11,6 +9,7 @@ import scala.util.Try
 import scala.util.control.NonFatal
 
 import blended.updater.config.util.ConfigPropertyMapConverter
+import blended.updater.config.util.DownloadHelper
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigValue}
 
 object ProfileCompanion {
@@ -118,60 +117,7 @@ object ProfileCompanion {
     }
   }
 
-  def download(url: String, file: File): Try[File] =
-    Try {
-      val parentDir = file.getAbsoluteFile().getParentFile() match {
-        case null =>
-          new File(".")
-        case parent =>
-          if (!parent.exists()) {
-            parent.mkdirs()
-          }
-          parent
-      }
-
-      val tmpFile = File.createTempFile(s".${file.getName()}", "", parentDir)
-      try {
-        val fileStream = new FileOutputStream(tmpFile)
-        val outStream = new BufferedOutputStream(fileStream)
-        try {
-
-          val connection = new URL(url).openConnection
-          connection.setRequestProperty("User-Agent", "Blended Updater")
-          val inStream = new BufferedInputStream(connection.getInputStream())
-          try {
-            val bufferSize = 1024
-            val buffer = new Array[Byte](bufferSize)
-
-            while (inStream.read(buffer, 0, bufferSize) match {
-                     case count if count < 0 => false
-                     case count => {
-                       outStream.write(buffer, 0, count)
-                       true
-                     }
-                   }) {}
-          } finally {
-            inStream.close()
-          }
-        } finally {
-          outStream.flush()
-          outStream.close()
-          fileStream.flush()
-          fileStream.close()
-        }
-
-        Files.move(Paths.get(tmpFile.toURI()), Paths.get(file.toURI()), StandardCopyOption.ATOMIC_MOVE);
-
-        file
-      } catch {
-        case NonFatal(e) =>
-          if (tmpFile.exists()) {
-            tmpFile.delete()
-          }
-          throw e
-      }
-
-    }
+  def download(url: String, file: File): Try[File] = DownloadHelper.download(url, file)
 
   def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
 
