@@ -2,15 +2,18 @@ package blended.updater.config
 
 import scala.util.Try
 
-class UnresolvedFeatureException(url : String, unresolved : Seq[String]) extends 
-  Exception(s"Could not resolve [${unresolved.mkString(",")}] from [$url]")
+abstract class ResolvedProfileException(s : String) extends Exception(s)
 
-class NoFrameworkException extends Exception(s"No framework bundle with startlevel 0 present in config")
-class MultipleFrameworksException(bundles : Seq[BundleConfig]) extends
-  Exception(s"Multiple frameworks with startlevel 0 defined in configuration : [${bundles.map(_.artifact).mkString(",")}]")
+class UnresolvedFeatureException(url : String, unresolved : Seq[String]) extends 
+  ResolvedProfileException(s"Could not resolve [${unresolved.mkString(",")}] from [$url]")
+
+class NoFrameworkException extends ResolvedProfileException(s"No framework bundle with startlevel 0 present in config")
+
+class MultipleFrameworksException(bundles : Seq[BundleConfig]) 
+  extends ResolvedProfileException(s"Multiple frameworks with startlevel 0 defined in configuration : [${bundles.map(_.artifact).mkString(",")}]")
 
 class CyclicFeatureRefException(cycles: List[FeatureRef])
-  extends Exception(s"Cyclic feature reference detected : [${cycles.mkString(",")}]")
+  extends ResolvedProfileException(s"Cyclic feature reference detected : [${cycles.mkString(",")}]")
 
 /**
  * Encapsulates a [[Profile]] guaranteed to contain resolved [FeatureConfig]s for each contained (transitive) [[FeatureRef]].

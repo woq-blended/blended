@@ -8,7 +8,7 @@ import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
 import scala.util.Try
 import blended.updater.config.util.Unzipper
 
-class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.empty, mvnBaseUrl : Option[String] = None) {
+class FeatureResolver(featureDir : File, features : List[FeatureConfig] = List.empty, mvnBaseUrl : Option[String] = None) {
 
   private class ResolveContext {
 
@@ -21,7 +21,7 @@ class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.emp
       ((fc.repoUrl, fc.name) -> fc)
     }.toMap
 
-    private def fromCache(ref : FeatureRef) : Try[Option[Seq[FeatureConfig]]] = Try {
+    private def fromCache(ref : FeatureRef) : Try[Option[List[FeatureConfig]]] = Try {
       cache.get(ref.url) match {
         // The feature has not yet been resolved
         case None => None
@@ -29,14 +29,14 @@ class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.emp
         case Some(m) =>
           val unresolved : Seq[String] = ref.names.filter(n => !m.isDefinedAt(n))
           if (unresolved.isEmpty) {
-            Some(m.values.toSeq)
+            Some(m.values.toList)
           } else {
             throw new Exception(s"Could not resolve [${unresolved.mkString(",")}] from url [${ref.url}]")
           }
       }
     }
 
-    private def updateCache(url : String) : Try[Seq[FeatureConfig]] = Try {
+    private def updateCache(url : String) : Try[List[FeatureConfig]] = Try {
 
       if (!featureDir.exists()) {
         featureDir.mkdirs()
@@ -50,11 +50,11 @@ class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.emp
         targetDir = new File(featureDir, fileName)
       ).get
 
-      val fcs : Seq[FeatureConfig] = unzipped.collect{
+      val fcs : List[FeatureConfig] = unzipped.collect{
         case f if f.isFile() && f.canRead() && f.getName().endsWith(".conf") =>
           val config = ConfigFactory.parseFile(f, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
           FeatureConfigCompanion.read(config).get
-      }
+      }.toList
 
       require(fcs.map(_.repoUrl).distinct.size == 1)
       require(fcs.map(_.repoUrl).head == url)
@@ -64,11 +64,18 @@ class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.emp
       fcs
     }
 
-    def fetchFeature(ref: FeatureRef): Try[Seq[FeatureConfig]] = Try {
-      fromCache(ref).get match {
+    def fetchFeature(ref: FeatureRef, seen : List[FeatureConfig]): Try[List[FeatureConfig]] = Try {
+
+      val fetched : List[FeatureConfig] = fromCache(ref).get match {
         case Some(s) => s
         case None => updateCache(ref.url).get
       }
+      
+      val deps : List[FeatureConfig] = fetched.filterNot(f => seen.contains(f)).flatMap(_.features).flatMap{ f => 
+        fetchFeature(f, (fetched ++ seen).distinct).get
+      }
+
+      (fetched ++ deps).distinct
     }
   }
 
@@ -79,11 +86,13 @@ class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.emp
    * @param feature
    * @return
    */
-  def resolve(feature: FeatureRef): Try[Seq[FeatureConfig]] = resolveContext.fetchFeature(feature)
+  def resolve(feature: FeatureRef): Try[Seq[FeatureConfig]] = {
+    resolveContext.fetchFeature(feature, List.empty)
+  }
 
   def resolve(profile: Profile): Try[ResolvedProfile] = Try {
     val resolved : List[FeatureConfig] = profile.features.flatMap{ f => 
-      resolveContext.fetchFeature(f).get
+      resolveContext.fetchFeature(f, List.empty).get
     }
 
     ResolvedProfile(profile.copy(resolvedFeatures = resolved.distinct))

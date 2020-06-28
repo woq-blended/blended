@@ -37,11 +37,11 @@ class ProfileSpec
     0.to(lines.size - 1).foreach { n =>
       s"without line [$n : ${lines(n)}] must fail" in {
         val config = lines.take(n) ++ lines.drop(n + 1)
-        val ex = intercept[RuntimeException] {
+        val ex = intercept[Exception] {
           val profile : Profile = ProfileCompanion.read(ConfigFactory.parseString(config.mkString("\n"))).get
           ResolvedProfile(profile)
         }
-        assert(ex.isInstanceOf[ConfigException] || ex.isInstanceOf[IllegalArgumentException])
+        assert(ex.isInstanceOf[ConfigException] || ex.isInstanceOf[ResolvedProfileException])
       }
     }
 
@@ -102,7 +102,7 @@ class ProfileSpec
       |bundles = [{url = "mvn:feature3:bundle1:1", startLevel = 0}]
       |""".stripMargin
 
-    def features : Seq[FeatureConfig] = List(feature1, feature2, feature3).map(f => {
+    def features : List[FeatureConfig] = List(feature1, feature2, feature3).map(f => {
       val fc = FeatureConfigCompanion.read(ConfigFactory.parseString(f))
       fc shouldBe a[Success[_]]
       fc.get
