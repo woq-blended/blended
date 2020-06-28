@@ -35,8 +35,8 @@ trait ConfigConverter {
     log.debug(s"Converted bundles: ${allBundles}")
 
     LauncherConfig(
-      frameworkJar = s"${bundleDir}/${resolvedRuntimeConfig.framework.get.jarName
-        .getOrElse(runtimeConfig.resolveFileName(resolvedRuntimeConfig.framework.get.url).get)}",
+      frameworkJar = s"${bundleDir}/${resolvedRuntimeConfig.framework.jarName
+        .getOrElse(runtimeConfig.resolveFileName(resolvedRuntimeConfig.framework.url).get)}",
       systemProperties = runtimeConfig.systemProperties,
       frameworkProperties = runtimeConfig.frameworkProperties,
       startLevel = runtimeConfig.startLevel,

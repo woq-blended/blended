@@ -10,7 +10,6 @@ object ResolvedProfileCompanion {
   def fromConfig(config: Config, featureDir : File): Try[ResolvedProfile] = Try {
     ResolvedProfile(
       profile = ProfileCompanion.read(config.getObject("profile").toConfig()).get,
-      featureDir = featureDir
     )
   }
 

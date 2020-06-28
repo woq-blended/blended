@@ -9,6 +9,7 @@ import blended.testsupport.TestFile.DeletePolicy
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import com.typesafe.config.{ConfigException, ConfigFactory}
 import org.scalatest.matchers.should.Matchers
+import scala.util.Try
 
 class ProfileSpec
   extends LoggingFreeSpecLike
@@ -32,12 +33,13 @@ class ProfileSpec
       ProfileCompanion.read(ConfigFactory.parseString(minimal)).get
     }
 
-    val lines = minimal.trim().split("\n")
+    val lines : Array[String] = minimal.trim().split("\n")
     0.to(lines.size - 1).foreach { n =>
-      "without line " + n + " must fail" in {
+      s"without line [$n : ${lines(n)}] must fail" in {
         val config = lines.take(n) ++ lines.drop(n + 1)
         val ex = intercept[RuntimeException] {
-          ResolvedProfile(ProfileCompanion.read(ConfigFactory.parseString(config.mkString("\n"))).get, featureDir)
+          val profile : Profile = ProfileCompanion.read(ConfigFactory.parseString(config.mkString("\n"))).get
+          ResolvedProfile(profile)
         }
         assert(ex.isInstanceOf[ConfigException] || ex.isInstanceOf[IllegalArgumentException])
       }
@@ -77,27 +79,26 @@ class ProfileSpec
       |startLevel = 10
       |defaultStartLevel = 10
       |features = [
-      |  { name = feature1, version = 1 }
-      |  { name = feature2, version = 1 }
+      |  { url = "mvn:featuregrp:feature1:1", names = ["feature1", "feature2" ] }
       |]
       |""".stripMargin
 
     val feature1 = """
-      |name = feature1
-      |version = 1
+      |repoUrl = "mvn:featuregrp:feature1:1"
+      |name = "feature1"
       |bundles = [{url = "mvn:feature1:bundle1:1"}]
       |""".stripMargin
 
     val feature2 = """
-      |name = feature2
-      |version = 1
+      |repoUrl = "mvn:featuregrp:feature1:1"
+      |name = "feature2"
       |bundles = [{url = "mvn:feature2:bundle1:1"}]
-      |features = [{name = feature3, version = 1}]
+      |features = [{url = "mvn:featuregrp:feature1:1", names = [ "feature3" ] }]
       |""".stripMargin
 
     val feature3 = """
-      |name = feature3
-      |version = 1
+      |repoUrl = "mvn:featuregrp:feature1:1"
+      |name = "feature3"
       |bundles = [{url = "mvn:feature3:bundle1:1", startLevel = 0}]
       |""".stripMargin
 
@@ -110,16 +111,18 @@ class ProfileSpec
     "should resolve to a valid config" in logException {
 
       val resolver : FeatureResolver = new FeatureResolver(featureDir = featureDir, features = features)
+      assert(resolver.resolve(FeatureRef("mvn:featuregrp:feature1:1", List("feature3"))).isSuccess)
+
       val rcTry = ProfileCompanion.read(ConfigFactory.parseString(config))
       rcTry shouldBe a[Success[_]]
 
-      val resolvedTry = resolver.resolve(rcTry.get, featureDir)
+      val resolvedTry : Try[ResolvedProfile] = resolver.resolve(rcTry.get)
       resolvedTry shouldBe a[Success[_]]
-      val resolved = resolvedTry.get
+      val resolved : ResolvedProfile = resolvedTry.get
 
       resolved.profile.bundles should have size (1)
       resolved.allBundles.get should have size (4)
-      resolved.profile.features should have size (2)
+      resolved.profile.features should have size (1)
     }
 
   }

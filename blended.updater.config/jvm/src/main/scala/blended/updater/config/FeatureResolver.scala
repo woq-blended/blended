@@ -5,7 +5,7 @@ import java.io.File
 import blended.updater.config.util.DownloadHelper
 import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 import blended.updater.config.util.Unzipper
 
 class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.empty, mvnBaseUrl : Option[String] = None) {
@@ -29,7 +29,7 @@ class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.emp
         case Some(m) =>
           val unresolved : Seq[String] = ref.names.filter(n => !m.isDefinedAt(n))
           if (unresolved.isEmpty) {
-            Some(ref.names.flatMap(n => m.get(n)).distinct)
+            Some(m.values.toSeq)
           } else {
             throw new Exception(s"Could not resolve [${unresolved.mkString(",")}] from url [${ref.url}]")
           }
@@ -79,15 +79,13 @@ class FeatureResolver(featureDir : File, features : Seq[FeatureConfig] = Seq.emp
    * @param feature
    * @return
    */
-  def resolve(feature: FeatureRef): Try[Seq[FeatureConfig]] = Try {
+  def resolve(feature: FeatureRef): Try[Seq[FeatureConfig]] = resolveContext.fetchFeature(feature)
 
-    resolveContext.fetchFeature(feature) match {
-      case Success(s) => s ++ s.flatMap(_.features).flatMap(f => resolve(f).get)
-      case Failure(t) => throw t
+  def resolve(profile: Profile): Try[ResolvedProfile] = Try {
+    val resolved : List[FeatureConfig] = profile.features.flatMap{ f => 
+      resolveContext.fetchFeature(f).get
     }
-  }
 
-  def resolve(profile: Profile, featureDir : File): Try[ResolvedProfile] = Try {
-    ResolvedProfile(profile, featureDir, profile.features.flatMap(f => resolveContext.fetchFeature(f).get))
+    ResolvedProfile(profile.copy(resolvedFeatures = resolved))
   }
 }

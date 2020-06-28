@@ -274,7 +274,7 @@ object Launcher {
           featureDir.mkdirs()
         }
 
-        val runtimeConfig : ResolvedProfile = ResolvedProfile(ProfileCompanion.read(config).get, featureDir)
+        val runtimeConfig : ResolvedProfile = ResolvedProfile(ProfileCompanion.read(config).get)
         val launchConfig : LauncherConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir).get
 
         var brandingProps = Map(

@@ -1,8 +1,8 @@
 package blended.updater.config
 
-import java.io.File
-
 import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 /**
  * Encapsulates a [[Profile]] guaranteed to contain resolved [FeatureConfig]s for each contained (transitive) [[FeatureRef]].
@@ -14,49 +14,30 @@ import scala.util.Try
  * @param profile: The profile that shall be resolved
  * @param featureDir : a directory where downloaded feature files will be stored
  */
-case class ResolvedProfile(profile: Profile, featureDir : File) {
+case class ResolvedProfile(profile: Profile) {
 
-  {
-    // // Check if all feature reference have a according resolved feature
-    // def check(features: List[FeatureRef], depChain: List[String]): Unit = features.foreach { f =>
-    //   val depName = s"${f.name}-${f.version}"
-    //   val newDepChain = depName :: depChain
-    //   require(
-    //     depChain.find(_ == depName).isEmpty,
-    //     s"No cycles in feature dependencies allowed, but detected: ${newDepChain.mkString(" required by ")}")
-    //   val feature = lookupFeature(f)
-    //   require(
-    //     feature.isDefined,
-    //     s"Contains resolved feature: ${newDepChain.mkString(" required by ")}. Known resolved features are: ${profile.resolvedFeatures
-    //       .map(f => s"${f.name}-${f.version}")
-    //       .distinct
-    //       .mkString(",")}"
-    //   )
-    //   check(feature.get.features, newDepChain)
-    // }
-    // check(profile.features, s"${profile.name}-${profile.version}" :: Nil)
+  // Check if all feature reference have a according resolved feature
+  private def check(features: List[FeatureRef], depChain: Seq[String]): Try[Unit] = Try {
 
-    // force evaluation of framework, which throws if invalid
-    // framework
+    features.foreach { f =>
+      val singleFeatures : Seq[String] = f.names.map(n => s"${f.url}##$n}")
+      val newDepChain : Seq[String] = (singleFeatures ++ depChain).distinct
 
-    // check, that features do not conflict
-    //var seen = Set[(String, String)]()
+      val cycledFeatures : Seq[String] = singleFeatures.filter(depChain.contains)
 
-    val conflicts = profile.features
-    // profile.features.flatMap { f =>
-    //   val key = f.name -> f.version
-    //   if (seen.contains(key)) Some(s"${f.name}-${f.version}")
-    //   else {
-    //     seen += key
-    //     None
-    //   }
-    // }
+      require(
+        cycledFeatures.isEmpty,
+        s"No cycles in feature dependencies allowed, but detected cycles for : [${cycledFeatures.mkString(",")}]"
+      )
 
-    require(
-      conflicts.isEmpty,
-      s"Contains no conflicting resolved features. Multiple features detected: ${conflicts.mkString(", ")}.")
-
-  }
+      lookupFeatures(f) match { 
+        case Success(l) => 
+          check(l.flatMap(_.features), newDepChain)
+        case Failure(t) => 
+          throw t
+      }
+    }
+  }   
 
   /**
    * Lookup a set of features that belong to the same repository URL
@@ -84,9 +65,14 @@ case class ResolvedProfile(profile: Profile, featureDir : File) {
   def allReferencedFeatures: Try[List[FeatureConfig]] = {
 
     def find(features: List[FeatureRef]): Try[List[FeatureConfig]] = Try {
+
       val directFeatures : List[FeatureConfig] = features.flatMap(f => lookupFeatures(f).get)
-      val transitiveRefs : List[FeatureRef] = directFeatures.flatMap(_.features).distinct
-      (directFeatures ++ (find(transitiveRefs)).get).distinct
+      val transitiveRefs : List[FeatureConfig] = directFeatures.flatMap(_.features).distinct match {
+        case Nil => Nil
+        case refs => find(refs).get
+      }
+
+      (directFeatures ++ transitiveRefs).distinct
     }
 
     find(profile.features)
@@ -99,7 +85,7 @@ case class ResolvedProfile(profile: Profile, featureDir : File) {
     (profile.bundles ++ allReferencedFeatures.get.flatMap(_.bundles)).distinct
   }
 
-  val framework: Try[BundleConfig] = Try {
+  val framework: BundleConfig = {
     val fs = allBundles.get.filter(b => b.startLevel == Some(0))
     require(
       fs.distinct.size == 1,
@@ -108,6 +94,9 @@ case class ResolvedProfile(profile: Profile, featureDir : File) {
     )
     fs.head
   }
+
+  require(check(profile.features, Seq.empty).isSuccess)
+
 }
 
 object ResolvedProfile {
@@ -115,13 +104,9 @@ object ResolvedProfile {
   /**
    * Construct with additional resolved features.
    */
-  def apply(profile: Profile, featureDir : File, features: List[FeatureConfig]): ResolvedProfile = {
+  def apply(profile: Profile, features: List[FeatureConfig]): ResolvedProfile = {
 
     val allFeatures = (profile.resolvedFeatures ++ features).distinct
-
-    ResolvedProfile(
-      profile = profile.copy(resolvedFeatures = allFeatures),
-      featureDir = featureDir
-    )
+    ResolvedProfile(profile.copy(resolvedFeatures = allFeatures))
   }
 }
