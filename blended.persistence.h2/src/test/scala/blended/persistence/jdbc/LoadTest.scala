@@ -62,13 +62,13 @@ class LoadTest extends LoggingFreeSpec with ScalaCheckPropertyChecks with DbFact
     import blended.updater.config.Mapper._
 
     testMapping(artifacts, mapArtifact, unmapArtifact)
-    testMapping(bundleConfigs, mapBundleConfig, unmapBundleConfig)
-    testMapping(featureRefs, mapFeatureRef, unmapFeatureRef)
-    testMapping(featureConfigs, mapFeatureConfig, unmapFeatureConfig)
-    testMapping(profiles, mapProfile, unmapProfile)
-    testMapping(serviceInfos, mapServiceInfo, unmapServiceInfo)
-    testMapping(generatedConfigs, mapGeneratedConfig, unmapGeneratedConfig)
-    testMapping(profileRefs, mapProfileRef, unmapProfileRef)
+    // testMapping(bundleConfigs, mapBundleConfig, unmapBundleConfig)
+    // testMapping(featureRefs, mapFeatureRef, unmapFeatureRef)
+    // testMapping(featureConfigs, mapFeatureConfig, unmapFeatureConfig)
+    // testMapping(profiles, mapProfile, unmapProfile)
+    // testMapping(serviceInfos, mapServiceInfo, unmapServiceInfo)
+    // testMapping(generatedConfigs, mapGeneratedConfig, unmapGeneratedConfig)
+    // testMapping(profileRefs, mapProfileRef, unmapProfileRef)
 
   }
 

@@ -14,5 +14,13 @@ case class FeatureRef(
 
   override def toString(): String =
     getClass().getSimpleName() +
-      "(url=" + url + ",names=" + names.map(s => "\"" + s + "\"").mkString("[", ",", "]") + ")"
+      "(url=" + url + ",names=" + names.sorted.map(s => "\"" + s + "\"").mkString("[", ",", "]") + ")"
+
+  override def equals(other : Any) : Boolean = {
+    other match {
+      case ref : FeatureRef => url == ref.url && names.sorted == ref.names.sorted
+      case _ => false
+    }
+
+  }
 }
