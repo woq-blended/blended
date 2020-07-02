@@ -4,16 +4,16 @@ import scala.util.Try
 
 abstract class ResolvedProfileException(s : String) extends Exception(s)
 
-class UnresolvedFeatureException(url : String, unresolved : Seq[String]) extends 
+class UnresolvedFeatureException(url : String, unresolved : Seq[String]) extends
   ResolvedProfileException(s"Could not resolve [${unresolved.mkString(",")}] from [$url]")
 
 class NoFrameworkException extends ResolvedProfileException(s"No framework bundle with startlevel 0 present in config")
 
-class MultipleFrameworksException(bundles : Seq[BundleConfig]) 
+class MultipleFrameworksException(bundles : Seq[BundleConfig])
   extends ResolvedProfileException(s"Multiple frameworks with startlevel 0 defined in configuration : [${bundles.map(_.artifact).mkString(",")}]")
 
 class CyclicFeatureRefException(cycles: List[FeatureRef])
-  extends ResolvedProfileException(s"Cyclic feature reference detected : [${cycles.mkString(",")}]")
+  extends ResolvedProfileException(s"Cyclic feature reference detected : [${cycles.mkString(" -> ")}]")
 
 /**
  * Encapsulates a [[Profile]] guaranteed to contain resolved [FeatureConfig]s for each contained (transitive) [[FeatureRef]].
@@ -23,7 +23,6 @@ class CyclicFeatureRefException(cycles: List[FeatureRef])
  * @see [[FeatureResolver]] for a way to automatically resolve features, e.g. from remote repositories.
  *
  * @param profile: The profile that shall be resolved
- * @param featureDir : a directory where downloaded feature files will be stored
  */
 case class ResolvedProfile(profile: Profile) {
 
@@ -47,28 +46,23 @@ case class ResolvedProfile(profile: Profile) {
     }
   }
 
-  /**
-   * The complete list of all referenced features
-   */
-  def allReferencedFeatures: Try[List[FeatureConfig]] = {
+  def referencedFeatures(f : FeatureConfig, path : List[FeatureConfig]): Try[List[FeatureConfig]] = Try {
 
-    def find(features: List[FeatureRef], seen : List[FeatureConfig]): Try[List[FeatureConfig]] = Try {
-
-      features match {
-        case Nil => seen
-        case fl => 
-          val directFeatures : List[FeatureConfig] = features.flatMap(f => lookupFeatures(f).get)
-
-          directFeatures.intersect(seen) match {
-            case Nil => 
-              val transitiveRefs : List[FeatureRef] = directFeatures.flatMap(_.features)
-              (directFeatures ++ find(transitiveRefs, (directFeatures ++ seen).distinct).get).distinct
-            case cycles => throw new CyclicFeatureRefException(cycles.map(_.toRef))
-          }
-      }
+    if (path.map(_.repoKey).contains(f.repoKey)) {
+      throw new CyclicFeatureRefException((f :: path).reverse.map(_.toRef))
     }
 
-    find(profile.features, List.empty)
+    f :: f.features.flatMap(f => lookupFeatures(f).get)
+      .flatMap { dep =>
+        referencedFeatures(dep, f :: path).get
+      }
+  }
+
+  def allReferencedFeatures : Try[List[FeatureConfig]] = Try {
+    profile.features.flatMap(fr =>
+      lookupFeatures(fr).get
+        .flatMap(fc => referencedFeatures(fc, List.empty).get)
+    )
   }
 
   /**
@@ -87,7 +81,6 @@ case class ResolvedProfile(profile: Profile) {
   }
 
   require(allReferencedFeatures.isSuccess)
-
 }
 
 object ResolvedProfile {

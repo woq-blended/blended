@@ -17,7 +17,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.4-SNAPSHOT`
+import $ivy.`de.wayofquality.blended::blended-mill:0.3-13-g0a07d46`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -141,17 +141,6 @@ trait DistModule extends CoreCoursierModule {
 
     Jvm.createJar(dirs)
   }
-}
-
-trait CoreFeatureModule extends BlendedFeatureModule with CoreCoursierModule {
-
-  override def version : T[String] = T { blendedVersion() }
-  override def scalaVersion = deps.scalaVersion
-
-  override type ProjectDeps = BlendedDependencies 
-  override def deps : ProjectDeps = BlendedDependencies.Deps_2_13
-
-  override def baseDir = projectDir
 }
 
 trait JBakeBuild extends Module with WebTools {
@@ -338,7 +327,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def osgiHeaders: T[OsgiHeaders] = T{ super.osgiHeaders().copy(
       `Bundle-Activator` = Some(s"${blendedModule}.internal.BlendedAkkaActivator")
     )}
-  
+
     object test extends CoreTests {
       override def moduleDeps: Seq[JavaModule] = super.moduleDeps ++ Seq(
         blended.testsupport,
@@ -1980,7 +1969,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
     def baseName : String = "blended.features"
 
-    val coreDep : String => String => Dep = version => name => 
+    def repoUrl : T[String] = T { s"mvn:${deps.blendedOrg}:${artifactId()}:${publishVersion()}"}
+
+    val coreDep : String => String => Dep = version => name =>
       Dep(
         org = deps.blendedOrg,
         name = name,
@@ -1995,11 +1986,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         version = publishVersion(),
         cross = CrossVersion.Binary(false)
       )
-    }      
+    }
 
     def coreDep(m : CoreModule) = T.task{
-
-      //m.publishLocal()()
 
       Dep(
         org = m.artifactMetadata().group,
@@ -2007,10 +1996,11 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         version = m.publishVersion(),
         cross = CrossVersion.Binary(false)
       )
-    }      
+    }
 
-    def activemq : T[FeatureModule] = T {
-      FeatureModule(
+    def activemq : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".activemq",
         features = Seq.empty,
         bundles = Seq(
@@ -2029,12 +2019,13 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def akkaHttpBase : T[FeatureModule] = T {
-      FeatureModule(
+    def akkaHttpBase : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".akka.http.base",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
-        ), 
+        ),
         bundles = Seq(
           FeatureBundle(deps.akkaParsing(akkaBundleRevision)),
           FeatureBundle(deps.akkaHttp(akkaBundleRevision)),
@@ -2046,8 +2037,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def akkaHttpModules : T[FeatureModule] = T{
-      FeatureModule(
+    def akkaHttpModules : T[Feature] = T{
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".akka.http.modules",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(akkaHttpBase(), spring()).map(_.name))
@@ -2060,8 +2052,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def baseCommon : T[FeatureModule] = T {
-      FeatureModule(
+    def baseCommon : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".base.common",
         features = Seq.empty,
         bundles = Seq(
@@ -2103,8 +2096,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def baseEquinox : T[FeatureModule] = T {
-      FeatureModule(
+    def baseEquinox : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + "base.equinox",
         features = Seq.empty,
         bundles = Seq(
@@ -2120,9 +2114,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       )
     }
-    
-    def baseFelix : T[FeatureModule] = T {
-      FeatureModule(
+
+    def baseFelix : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".base.felix",
         features = Seq.empty,
         bundles = Seq(
@@ -2139,8 +2134,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def commons : T[FeatureModule] = T {
-      FeatureModule(
+    def commons : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".commons",
         features = Seq.empty,
         bundles = Seq(
@@ -2162,8 +2158,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def hawtio : T[FeatureModule] = T {
-      FeatureModule(
+    def hawtio : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".hawtio",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(jetty()).map(_.name))
@@ -2175,8 +2172,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def jetty : T[FeatureModule] = T {
-      FeatureModule(
+    def jetty : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".jetty",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
@@ -2205,20 +2203,22 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def jolokia : T[FeatureModule] = T {
-      FeatureModule(
+    def jolokia : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".jolokia",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(jetty()).map(_.name))
-        ), 
+        ),
         bundles = Seq(
           FeatureBundle(deps.jolokiaOsgi, 4, true)
         )
       )
     }
 
-    def login : T[FeatureModule] = T {
-      FeatureModule(
+    def login : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".login",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(
@@ -2240,9 +2240,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def mgmtClient : T[FeatureModule] = T {
-      FeatureModule(
-        name = baseName + ".mgmt.client", 
+    def mgmtClient : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
+        name = baseName + ".mgmt.client",
         features = Seq.empty,
         bundles = Seq(
           FeatureBundle(coreDep(blended.mgmt.agent)(), 4, true)
@@ -2250,12 +2251,13 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def mgmtServer : T[FeatureModule] = T {
-      FeatureModule(
+    def mgmtServer : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".mgmt.server",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(
-            baseCommon(), akkaHttpBase(), security(), ssl(), spring(), 
+            baseCommon(), akkaHttpBase(), security(), ssl(), spring(),
             persistence(), login(), streams()
           ).map(_.name))
         ),
@@ -2270,8 +2272,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def persistence : T[FeatureModule] = T {
-      FeatureModule(
+    def persistence : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".persistence",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
@@ -2291,8 +2294,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def samples : T[FeatureModule] = T {
-      FeatureModule(
+    def samples : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".samples",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(akkaHttpBase(), activemq(), streams()).map(_.name))
@@ -2307,8 +2311,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def security : T[FeatureModule] = T {
-      FeatureModule(
+    def security : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".security",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
@@ -2319,8 +2324,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def spring : T[FeatureModule] = T {
-      FeatureModule(
+    def spring : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".spring",
         features = Seq.empty,
         bundles = Seq(
@@ -2335,8 +2341,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def ssl : T[FeatureModule] = T {
-      FeatureModule(
+    def ssl : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".ssl",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
@@ -2349,8 +2356,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    def streams : T[FeatureModule] = T {
-      FeatureModule(
+    def streams : T[Feature] = T {
+      Feature(
+        repoUrl = repoUrl(),
         name = baseName + ".streams",
         features = Seq(
           FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
@@ -2363,12 +2371,12 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    override def features : T[Seq[FeatureModule]] = T {
+    override def features : T[Seq[Feature]] = T {
       Seq(
-        activemq(), akkaHttpBase(), akkaHttpModules(), 
-        baseCommon(), baseEquinox(), baseFelix(), 
-        commons(), hawtio(), jetty(), jolokia(), 
-        login(), mgmtClient(), mgmtServer(), persistence(), 
+        activemq(), akkaHttpBase(), akkaHttpModules(),
+        baseCommon(), baseEquinox(), baseFelix(),
+        commons(), hawtio(), jetty(), jolokia(),
+        login(), mgmtClient(), mgmtServer(), persistence(),
         samples(), security(), spring(), ssl(), streams()
       )
     }

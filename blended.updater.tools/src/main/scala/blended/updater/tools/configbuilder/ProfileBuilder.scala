@@ -1,6 +1,6 @@
 package blended.updater.tools.configbuilder
 
-import java.io.{BufferedOutputStream, ByteArrayOutputStream, File, FileOutputStream, PrintStream}
+import java.io.{BufferedOutputStream, ByteArrayOutputStream, File, FileOutputStream, PrintStream, PrintWriter, StringWriter}
 import java.util.regex.{Matcher, Pattern}
 
 import blended.updater.config._
@@ -102,7 +102,11 @@ object ProfileBuilder {
     } catch {
       case e: Throwable =>
         // scalastyle:off regex
+        val sw : StringWriter = new StringWriter()
+        val writer : PrintWriter = new PrintWriter(new StringWriter())
+        e.printStackTrace(writer)
         Console.err.println(s"An error occurred: ${e.getMessage()}")
+        Console.err.println(sw.toString())
         // scalastyle:on regex
         sys.exit(1)
     }
@@ -172,7 +176,7 @@ object ProfileBuilder {
         ConfigFactory.parseFile(new File(fileName), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
       FeatureConfigCompanion.read(featureConfig).get
     }.toList
-    debug("features: " + features)
+    debug("features: " + features.map(_.toRef).mkString("\n  "))
 
     val configFile = new File(options.configFile).getAbsoluteFile()
     val outFile = Option(options.outFile.trim())
@@ -181,7 +185,7 @@ object ProfileBuilder {
       .map(new File(_).getAbsoluteFile())
 
     val dir = outFile.flatMap(f => Option(f.getParentFile())).getOrElse(configFile.getParentFile())
-    
+
     val featureDir : File = new File(dir, "features")
     if (!featureDir.exists()) {
       featureDir.mkdirs()

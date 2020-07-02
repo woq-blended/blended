@@ -14,14 +14,16 @@ case class FeatureConfig(
   features : List[FeatureRef]
 ) {
 
+  val repoKey : String = repoUrl + "#" + name
+
   override def toString() : String =
     s"""${getClass().getSimpleName()}(" +
        |  repoUrl=${repoUrl}
        |  name=${name}
        |  bundles=${bundles}
        |  features=${features})""".stripMargin
-                              
 
-  def toRef : FeatureRef = FeatureRef(url = repoUrl, names = List(name))       
+
+  def toRef : FeatureRef = FeatureRef(url = repoUrl, names = List(name))
 }
 
