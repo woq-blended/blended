@@ -64,7 +64,7 @@ class Updater(
 
     if (config.serviceInfoIntervalMSec > 0) {
       log.info(
-        s"Enabling service info publishing [${config.serviceInfoIntervalMSec}] and lifetime [${config.serviceInfoLifetimeMSec}]")
+        s"Enabling service info publishing [${config.serviceInfoIntervalMSec}]ms and lifetime [${config.serviceInfoLifetimeMSec}]ms")
       implicit val eCtx = context.system.dispatcher
       tickers +:= context.system.scheduler.scheduleAtFixedRate(
         Duration(100, TimeUnit.MILLISECONDS),
