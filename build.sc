@@ -17,7 +17,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.4-SNAPSHOT`
+import $ivy.`de.wayofquality.blended::blended-mill:0.3-18-g293d5a1`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -2371,7 +2371,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )
     }
 
-    override def features : T[Seq[Feature]] = T {
+    override def features() : define.Command[Seq[Feature]] = T.command {
       Seq(
         activemq(), akkaHttpBase(), akkaHttpModules(),
         baseCommon(), baseEquinox(), baseFelix(),
