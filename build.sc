@@ -17,7 +17,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.3-18-g293d5a1`
+import $ivy.`de.wayofquality.blended::blended-mill:0.3-19-gcb6d5bd`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -1558,6 +1558,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       s"${blendedModule}.file",
       s"${blendedModule}.jms",
       s"${blendedModule}.message",
+      s"${blendedModule}.multiresult",
       s"${blendedModule}.processor",
       s"${blendedModule}.persistence",
       s"${blendedModule}.transaction",
