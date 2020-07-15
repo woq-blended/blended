@@ -41,7 +41,9 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
    * Access to a blended resolver for config values
    */
   override def resolveString(s: String, additionalProps: Map[String, Any]): Try[AnyRef] = {
-    resolver.resolve(s, additionalProps)
+    val result = resolver.resolve(s, additionalProps)
+    log.trace(s"Resolved [$s] to [$result]")
+    result
   }
 
   /**
@@ -73,8 +75,8 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
     )
 
     val result: Config = if (cfg.isEmpty()) {
+      log.debug(s"Resolving config for [$id] from application config")
       if (containerConfig.hasPath(id)) {
-        log.debug(s"Resolving config for [$id] from application config")
         containerConfig.getConfig(id)
       } else {
         ConfigFactory.empty()
@@ -83,6 +85,9 @@ abstract class AbstractContainerContextImpl extends ContainerContext {
       cfg
     }
 
+    if (result.isEmpty) {
+      log.warn(s"The configuration for [$id] is empty. This is most likely not the desired result.")
+    }
     result
   }
 

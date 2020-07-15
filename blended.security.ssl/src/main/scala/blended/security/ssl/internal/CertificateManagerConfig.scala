@@ -3,19 +3,27 @@ package blended.security.ssl.internal
 import blended.container.context.api.ContainerContext
 import blended.security.ssl.CommonNameProvider
 import blended.util.config.Implicits._
-import com.typesafe.config.Config
+import blended.util.logging.Logger
+import com.typesafe.config.{Config, ConfigRenderOptions}
 
 import scala.util.Try
 
 object KeystoreConfig {
 
+  private val log : Logger = Logger[KeystoreConfig.type]
+
   def fromConfig(cfg: Config, hasher: PasswordHasher, ctCtxt: ContainerContext): KeystoreConfig = {
     val keyStore = cfg.getString("keyStore", System.getProperty("javax.net.ssl.keyStore"))
-    val storePass: String = ctCtxt.resolveString(cfg
-      .getStringOption("explicit.storePass")
+
+    val storePassRaw : String = cfg.getStringOption("explicit.storePass")
       .orElse(cfg.getStringOption("storePass").map(hasher.password))
-      .getOrElse(System.getProperty("javax.net.ssl.keyStorePassword")))
+      .getOrElse(System.getProperty("javax.net.ssl.keyStorePassword"))
+
+    log.trace(cfg.root().render(ConfigRenderOptions.concise().setFormatted(true)))
+
+    val storePass: String = ctCtxt.resolveString(storePassRaw)
       .get.asInstanceOf[String]
+
     val keyPass: String = ctCtxt.resolveString(cfg
       .getStringOption("explicit.keyPass")
       .orElse(cfg.getStringOption("keyPass").map(hasher.password))

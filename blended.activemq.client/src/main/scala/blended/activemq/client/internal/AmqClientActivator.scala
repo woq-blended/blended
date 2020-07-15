@@ -52,7 +52,8 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching {
                 provider = key,
                 cfg = config
               ).copy(
-                cfClassName = Some(classOf[ActiveMQConnectionFactory].getName())
+                cfClassName = Some(classOf[ActiveMQConnectionFactory].getName()),
+                jmsClassloader = Some(getClass().getClassLoader())
               )
 
               val cf : IdAwareConnectionFactory = new BlendedSingleConnectionFactory(

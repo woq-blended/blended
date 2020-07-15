@@ -11,7 +11,7 @@ import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveOut
 
 object TarFileSupport {
 
-  private[this] val log = Logger[TarFileSupport]
+  private[this] val log = Logger[TarFileSupport.type]
 
   def untar(is: InputStream): Map[String, Array[Byte]] = {
     val tar = new ArchiveStreamFactory().createArchiveInputStream(new BufferedInputStream(is))
@@ -81,4 +81,3 @@ object TarFileSupport {
   }
 }
 
-class TarFileSupport
