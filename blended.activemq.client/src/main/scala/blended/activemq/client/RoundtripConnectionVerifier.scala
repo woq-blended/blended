@@ -22,7 +22,8 @@ class RoundtripConnectionVerifier(
   requestDest : JmsDestination,
   responseDest : JmsDestination,
   retryInterval : FiniteDuration = 1.second,
-  receiveTimeout : FiniteDuration = 250.millis
+  receiveTimeout : FiniteDuration = 250.millis,
+  timeToLive : FiniteDuration = 10.seconds
 )(implicit system : ActorSystem) extends ConnectionVerifier
   with JmsStreamSupport
   with JmsEnvelopeHeader {
@@ -87,7 +88,7 @@ class RoundtripConnectionVerifier(
       headerCfg = headerConfig,
       connectionFactory = cf,
       jmsDestination = Some(requestDest),
-      timeToLive = Some(receiveTimeout * 2),
+      timeToLive = Some(timeToLive),
       destinationResolver = s => new MessageDestinationResolver(s),
       logLevel = _ => LogLevel.Debug
     )
