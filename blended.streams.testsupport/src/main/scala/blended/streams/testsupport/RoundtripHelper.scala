@@ -14,7 +14,8 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 case class ExpectedOutcome(
   cf : IdAwareConnectionFactory,
   dest : JmsDestination,
-  assertion : Seq[FlowMessageAssertion]
+  assertion : Seq[FlowMessageAssertion],
+  completeOn : Option[Seq[FlowEnvelope] => Boolean] = None
 )
 
 case class RoundtripHelper(
@@ -35,8 +36,15 @@ case class RoundtripHelper(
   def withHeaderConfig(cfg : FlowHeaderConfig) : RoundtripHelper = copy(headerConfig = cfg)
   def withOutcome(o : ExpectedOutcome*) : RoundtripHelper = copy(outcome = outcome ++ o)
 
-  val log : Logger = Logger(classOf[RoundtripHelper].getName() + "." + name)
-  val envLog : FlowEnvelopeLogger = new FlowEnvelopeLogger(log, headerConfig.prefix)
+  private val log : Logger = Logger(classOf[RoundtripHelper].getName() + "." + name)
+  private val envLog : FlowEnvelopeLogger = new FlowEnvelopeLogger(log, headerConfig.prefix)
+
+  private val pSettings: JmsProducerSettings = JmsProducerSettings(
+    log = envLog,
+    headerCfg = headerConfig,
+    connectionFactory = inbound._1,
+    jmsDestination = Some(inbound._2)
+  )
 
   def run() : Map[String, Seq[String]] = {
     val msg : String = s"Starting test case [$name], timeout = [$timeout]"
@@ -51,18 +59,13 @@ case class RoundtripHelper(
           cf = o.cf,
           dest = o.dest,
           log = envLog,
+          completeOn = o.completeOn,
           timeout = Some(timeout)
         )
         k -> c
       }
     }.toMap
 
-    val pSettings: JmsProducerSettings = JmsProducerSettings(
-      log = envLog,
-      headerCfg = headerConfig,
-      connectionFactory = inbound._1,
-      jmsDestination = Some(inbound._2)
-    )
     // Send the inbound messages
     sendMessages(pSettings, envLog, testMsgs:_*)
 
@@ -70,9 +73,8 @@ case class RoundtripHelper(
 
     val mappedResults : Future[Map[String, List[FlowEnvelope]]] = {
 
-      val seq : Seq[Future[(String, List[FlowEnvelope])]] = collectors.map {
-        case (k, v) =>
-          v.result.map { r => (k, r) }
+      val seq : Seq[Future[(String, List[FlowEnvelope])]] = collectors.map { case (k, v) =>
+        v.result.map { r => (k, r) }
       }.toSeq
 
       Future.sequence(seq).map(_.toMap)

@@ -41,6 +41,7 @@ set CONTAINER_JAVA_OPTS='-jvmOpt=-Dsun.net.client.defaultConnectTimeout=500'
 set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS%;'-jvmOpt=-Dsun.net.client.defaultReadTimeout=500'
 set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS%;'-jvmOpt=%LOGBACK_CONFIG_SETTING%'
 set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS%;'-jvmOpt=-Dblended.home=%BLENDED_HOME%'
+set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS%;'-jvmOpt=-Djava.io.tmp=%BLENDED_HOME%/tmp'
 REM set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS;'-jvmOpt=-Djavax.net.debug=ssl'
 
 set CLASS=blended.launcher.jvmrunner.JvmLauncher
