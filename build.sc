@@ -634,6 +634,37 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
+  object itest extends Module {
+    object runner extends CoreModule {
+      override def description = "API for long running integration tests"
+      override def osgiHeaders : T[OsgiHeaders] = T { super.osgiHeaders().copy(
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.ITestRunnerActivator")
+      )}
+
+      override def ivyDeps : Target[Loose.Agg[Dep]] = T { super.ivyDeps() ++ Agg(
+        deps.domino
+      )}
+
+      override def moduleDeps : Seq[PublishModule] = super.moduleDeps ++ Seq(
+        blended.domino,
+        blended.akka,
+        blended.util.logging
+      )
+
+      object test extends CoreTests {
+        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          deps.akkaSlf4j(akkaBundleRevision)
+        )}
+
+        override def moduleDeps = super.moduleDeps ++ Seq(
+          blended.itestsupport,
+          blended.testsupport,
+          blended.testsupport.pojosr
+        )
+      }
+    }
+  }
+
   object jetty extends Module {
     object boot extends CoreModule {
       override def description = "Bundle wrapping the original jetty boot bundle to dynamically provide SSL Context via OSGI services"
