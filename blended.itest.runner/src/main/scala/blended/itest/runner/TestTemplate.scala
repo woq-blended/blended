@@ -1,0 +1,18 @@
+package blended.itest.runner
+
+import scala.util.Try
+import java.{util => ju}
+
+/** A simple interface to instantiate a single test. */
+trait TestTemplate {
+  // a unique name for the test factory 
+  def name : String   
+  // instantiate a test executable within an Actor
+  def test() : Try[Unit]
+  // How many instances of the test shall maximal be run 
+  def maxExecutions : Int = Int.MaxValue
+  // Are multiple parallel instances of the test allowed ?
+  def allowParallel : Boolean = true
+  // generate an id for the test 
+  def generateId : String = ju.UUID.randomUUID().toString()
+}

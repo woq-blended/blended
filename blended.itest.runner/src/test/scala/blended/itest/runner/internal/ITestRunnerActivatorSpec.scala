@@ -1,4 +1,4 @@
-package blended.itest.runner
+package blended.itest.runner.internal
 
 import org.scalatest.matchers.must.Matchers
 import blended.testsupport.pojosr.SimplePojoContainerSpec

@@ -11,6 +11,8 @@ object TestStatus {
 }
 
 case class TestStatus(
+  // The name of the Test template that has created the test instance
+  name : String,
   // A unique id identifying the test instance 
   id : String,
   // The Actor reference which is responsible for executing the test
@@ -19,6 +21,8 @@ case class TestStatus(
   started : Long, 
   // The state of the test 
   state : TestStatus.State.State,
+  // The timestamp of the event
+  timestamp : Long = System.currentTimeMillis(),
   // log file entries specific for this test instance 
-  testLog : List[String] = List.empty,
+  testLog : List[String] = List.empty
 )

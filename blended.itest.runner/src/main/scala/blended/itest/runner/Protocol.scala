@@ -2,13 +2,14 @@ package blended.itest.runner
 
 object Protocol {
   
+  // test execution related messages 
   case object StartTest
-  case object TestStarted 
-  
+    
+  case class TestStatusSchanged(s : TestStatus)
 
-  case object GetTestFactories
-  case class TestFactories(factories : List[TestFactory])
-  case class AddTestFactory(f : TestFactory)
-  case class RemoveTestFactory(n : String)
+  case object GetTestTemplates
+  case class TestTemplates(templates : List[TestTemplate])
+  case class AddTestTemplate(f : TestTemplate)
+  case class RemoveTestTemplate(n : String)
   
 }
