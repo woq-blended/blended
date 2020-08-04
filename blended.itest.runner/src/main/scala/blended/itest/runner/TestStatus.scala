@@ -23,6 +23,8 @@ case class TestStatus(
   state : TestStatus.State.State,
   // The timestamp of the event
   timestamp : Long = System.currentTimeMillis(),
+  // the exception, if one is encountered in the test run
+  cause : Option[Throwable] = None,
   // log file entries specific for this test instance 
   testLog : List[String] = List.empty
 )
