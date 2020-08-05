@@ -28,10 +28,10 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
 
     override def name: String = "myFactory"
 
-    override def templates: List[TestTemplate] = List(
+    override val templates: List[TestTemplate] = List(
       new TestTemplate {
         override def factory: TestTemplateFactory = fact
-        override val name : String = "myFactory"
+        override val name : String = "myTest"
         override def generateId: String = id
         override def test(): Try[Unit] = f
       }
@@ -45,7 +45,10 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
       val probe : TestProbe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[TestStatus])
 
-      system.actorOf(TestRunner.props(template( Success(()) ).templates.head))
+      val fact : TestTemplateFactory = template(Success(()))
+      val t : TestTemplate = fact.templates.head
+
+      system.actorOf(TestRunner.props(t, t.generateId))
 
       probe.fishForMessage(1.second) {
         case s : TestStatus => 
@@ -58,7 +61,10 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
       val probe : TestProbe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[TestStatus])
 
-      system.actorOf(TestRunner.props(template( Success(()) ).templates.head))
+      val fact : TestTemplateFactory = template(Success(()))
+      val t : TestTemplate = fact.templates.head
+
+      system.actorOf(TestRunner.props(t, t.generateId))
 
       probe.fishForMessage(1.second) {
         case s : TestStatus => 
@@ -71,7 +77,10 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
       val probe : TestProbe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[TestStatus])
 
-      system.actorOf(TestRunner.props(template( Failure(new Exception("Boom")) ).templates.head))
+      val fact : TestTemplateFactory = template(Failure(new Exception("Boom")))
+      val t : TestTemplate = fact.templates.head
+
+      system.actorOf(TestRunner.props(t, t.generateId))
 
       probe.fishForMessage(1.second) {
         case s : TestStatus => 

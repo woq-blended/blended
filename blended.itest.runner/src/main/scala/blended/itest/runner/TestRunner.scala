@@ -11,10 +11,10 @@ import scala.util.Success
 import scala.util.Failure
 
 object TestRunner {
-  def props(t : TestTemplate) : Props = Props(new TestRunner(t))
+  def props(t : TestTemplate, testId : String) : Props = Props(new TestRunner(t, testId))
 }
 
-class TestRunner(t : TestTemplate) extends Actor {
+class TestRunner(t : TestTemplate, testId : String) extends Actor {
 
   private val log : Logger = Logger[TestRunner]
   private implicit val eCtxt : ExecutionContext = context.system.dispatcher
@@ -30,7 +30,7 @@ class TestRunner(t : TestTemplate) extends Actor {
     case Start => 
       val s : TestStatus = TestStatus(
         name = t.name, 
-        id = t.generateId,
+        id = testId,
         runner = Some(self),
         started = System.currentTimeMillis(),
         state = TestStatus.State.Started
