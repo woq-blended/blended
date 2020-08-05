@@ -1,12 +1,17 @@
 package blended.itest.runner
 
 object TestSummary {
-  def apply(f : TestTemplate) : TestSummary = TestSummary(f.name)
+  def apply(f : TestTemplate) : TestSummary = TestSummary(
+    factoryName = f.factory.name, 
+    testName = f.name
+  )
 }
 
 final case class TestSummary(
   // The test factory to instantiate single tests
   factoryName : String,
+  // The name of the test within the factory
+  testName : String,
   // How often has the test been executed 
   executions : Int = 0,
   // How many instances are currently running 

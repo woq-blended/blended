@@ -3,9 +3,20 @@ package blended.itest.runner
 import scala.util.Try
 import java.{util => ju}
 
+trait TestTemplateFactory {
+
+  /** The name of the template factory */
+  def name : String
+  /** The templates produced by this factory */
+  def templates : List[TestTemplate]
+
+}
+
 /** A simple interface to instantiate a single test. */
 trait TestTemplate {
-  // a unique name for the test factory 
+  // The factory that has created this template
+  def factory : TestTemplateFactory
+  // a unique name for the test template within the Test Template factory 
   def name : String   
   // instantiate a test executable within an Actor
   def test() : Try[Unit]

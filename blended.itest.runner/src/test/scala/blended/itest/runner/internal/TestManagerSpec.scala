@@ -11,19 +11,29 @@ import akka.actor.Props
 import blended.itest.runner.TestTemplate
 import scala.concurrent.duration._
 import blended.itest.runner.Protocol.TestTemplates
-import blended.itest.runner.Protocol.AddTestTemplate
+import blended.itest.runner.Protocol.AddTestTemplateFactory
 import org.scalatest.BeforeAndAfterAll
 import scala.concurrent.Await
 import scala.util.Try
+import blended.itest.runner.TestTemplateFactory
 
 class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
   with LoggingFreeSpecLike
   with Matchers 
-  with BeforeAndAfterAll {
+  with BeforeAndAfterAll {  
 
-  private def template() : TestTemplate = new TestTemplate() { 
+  private def templates() : TestTemplateFactory = new TestTemplateFactory() { 
+
+    private val f : TestTemplateFactory = this
     override val name : String = "myFactory"
-    override def test() : Try[Unit] = Try{}
+
+    override def templates : List[TestTemplate] = List(
+      new TestTemplate() {
+        override def factory: TestTemplateFactory = f
+        override def name: String = "test-1"
+        override def test() : Try[Unit] = Try{}
+      }
+    )
   }  
 
   override protected def afterAll(): Unit = {
@@ -44,19 +54,19 @@ class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
 
     "Allow to add / remove a test template" in { 
 
-      val f : TestTemplate = template()
+      val f : TestTemplateFactory = templates()
 
       val probe : TestProbe = TestProbe()
       val mgr : ActorRef = system.actorOf(Props(new TestManager()))
 
-      mgr ! AddTestTemplate(f)
+      mgr ! AddTestTemplateFactory(f)
       mgr.tell(Protocol.GetTestTemplates, probe.ref)
 
       probe.fishForMessage(1.second) {
-        case TestTemplates(l) => l.map(_.name).equals(List("myFactory"))
+        case TestTemplates(l) => l.map(_.name).equals(List("test-1"))
       }
 
-      mgr ! Protocol.RemoveTestTemplate(f.name)
+      mgr ! Protocol.RemoveTestTemplateFactory(f)
       mgr.tell(Protocol.GetTestTemplates, probe.ref)
       probe.expectMsg(Protocol.TestTemplates(List.empty))
 

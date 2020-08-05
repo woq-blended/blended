@@ -9,7 +9,7 @@ object Protocol {
 
   case object GetTestTemplates
   case class TestTemplates(templates : List[TestTemplate])
-  case class AddTestTemplate(f : TestTemplate)
-  case class RemoveTestTemplate(n : String)
+  case class AddTestTemplateFactory(f : TestTemplateFactory)
+  case class RemoveTestTemplateFactory(n : TestTemplateFactory)
   
 }

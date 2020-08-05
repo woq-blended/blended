@@ -7,6 +7,7 @@ import blended.jmx.statistics.StatisticsActor
 import blended.jmx.{BlendedMBeanServerFacade, OpenMBeanExporter, OpenMBeanMapper}
 import domino.DominoActivator
 import javax.management.MBeanServer
+import akka.actor.ActorRef
 
 class BlendedJmxActivator extends DominoActivator with ActorSystemWatching {
 
@@ -26,7 +27,11 @@ class BlendedJmxActivator extends DominoActivator with ActorSystemWatching {
     mbeanExporter.providesService[OpenMBeanExporter]
 
     whenActorSystemAvailable { osgiConfig =>
-      osgiConfig.system.actorOf(StatisticsActor.props(mbeanExporter))
+      val actor : ActorRef = osgiConfig.system.actorOf(StatisticsActor.props(mbeanExporter))
+
+      onStop {
+        osgiConfig.system.stop(actor)
+      }
     }
 
   }

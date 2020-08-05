@@ -28,9 +28,11 @@ case class ServiceInvocationFailed(
 
 object ServiceInvocationReporter {
 
-  def invoked(component : String, subComponents : Map[String, String])(implicit system: ActorSystem) : String = {
-    val id : String = UUID.randomUUID().toString()
-
+  def invoked(
+    component : String,
+    subComponents : Map[String, String],
+    id : String
+  )(implicit system : ActorSystem) : String = {
     val event : ServiceInvocationEvent = ServiceInvocationStarted(
       id = id,
       component = component,
@@ -42,15 +44,14 @@ object ServiceInvocationReporter {
     id
   }
 
+  def invoked(component : String, subComponents : Map[String, String])(implicit system: ActorSystem) : String =
+    invoked(component, subComponents, UUID.randomUUID().toString())
+
   def completed(id : String)(implicit system: ActorSystem) : Unit = {
-    system.eventStream.publish(
-      ServiceInvocationCompleted(id)
-    )
+    system.eventStream.publish(ServiceInvocationCompleted(id))
   }
 
   def failed(id : String)(implicit system: ActorSystem) : Unit = {
-    system.eventStream.publish(
-      ServiceInvocationFailed(id)
-    )
+    system.eventStream.publish(ServiceInvocationFailed(id))
   }
 }
