@@ -10,9 +10,8 @@ import blended.itest.runner.TestTemplateFactory
 class TestSelectorSpec extends LoggingFreeSpec 
   with Matchers {
 
-  private def templateFactory(cnt : Int) : TestTemplateFactory = new TestTemplateFactory() {
+  private def templateFactory(cnt : Int) : TestTemplateFactory = new TestTemplateFactory() { f =>
     
-    private val f : TestTemplateFactory = this
     override def name : String = "myFactory"
 
     override val templates: List[TestTemplate] = (1.to(cnt)).map { n =>
@@ -20,6 +19,8 @@ class TestSelectorSpec extends LoggingFreeSpec
         override def factory: TestTemplateFactory = f
         override val name : String = s"myTest-$n"
         override def test() : Try[Unit] = Try{}
+        override def maxExecutions: Int = 5
+        override def allowParallel: Boolean = false
       }
     }.toList
   }
@@ -34,11 +35,11 @@ class TestSelectorSpec extends LoggingFreeSpec
   "The test template selector should" - {
 
     "return None if no test templates are registered" in logException { 
-      StandardTestSelector.selectTest(Nil, Map.empty) should be (None)
+      StandardTestSelector.selectTest(Nil, Nil) should be (None)
     }
 
     "select a single registered template" in logException {
-      StandardTestSelector.selectTest(templateFactory(1).templates, Map.empty) match {
+      StandardTestSelector.selectTest(templateFactory(1).templates, Nil) match {
         case None => fail("Expected a selected test")
         case Some(t) => t.name should be ("myTest-1")
       }
@@ -50,9 +51,9 @@ class TestSelectorSpec extends LoggingFreeSpec
       val t1 : TestTemplate = template("myTest-1", fact.templates)
       val t2 : TestTemplate = template("myTest-2", fact.templates)
 
-      val m : Map[String, TestSummary] = Map(
-        t1.name -> TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis())),
-        t2.name -> TestSummary(t2)
+      val m : List[TestSummary] = List(
+        TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis())),
+        TestSummary(t2)
       )
 
       StandardTestSelector.selectTest(fact.templates, m) match {
@@ -67,9 +68,9 @@ class TestSelectorSpec extends LoggingFreeSpec
       val t1 : TestTemplate = template("myTest-1", fact.templates)
       val t2 : TestTemplate = template("myTest-2", fact.templates)
 
-      val m : Map[String, TestSummary] = Map(
-        t1.name -> TestSummary(t1).copy(lastStarted = Some(2000L)),
-        t2.name -> TestSummary(t2).copy(lastStarted = Some(1000L))
+      val m : List[TestSummary] = List(
+        TestSummary(t1).copy(lastStarted = Some(2000L)),
+        TestSummary(t2).copy(lastStarted = Some(1000L))
       )
 
       StandardTestSelector.selectTest(fact.templates, m) match {
@@ -77,5 +78,28 @@ class TestSelectorSpec extends LoggingFreeSpec
         case Some(t) => t.name should be ("myTest-2")
       }
     }
-  }  
+
+    "do not select a template that is already running and disallows parallel tests" in {
+
+      val fact : TestTemplateFactory = templateFactory(1)
+      val t1 : TestTemplate = template("myTest-1", fact.templates)
+      
+      val m : List[TestSummary] = List(
+        TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis()), running = 1)
+      )
+
+      StandardTestSelector.selectTest(fact.templates, m) should be (None)
+    }
+
+    "do not select a template that has reached its maximal executions" in {
+      val fact : TestTemplateFactory = templateFactory(1)
+      val t1 : TestTemplate = template("myTest-1", fact.templates)
+      
+      val m : List[TestSummary] = List(
+        TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis()), executions = t1.maxExecutions)
+      )
+
+      StandardTestSelector.selectTest(fact.templates, m) should be (None)
+    }
+  }   
 }

@@ -22,9 +22,8 @@ class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
   with Matchers 
   with BeforeAndAfterAll {  
 
-  private def templates() : TestTemplateFactory = new TestTemplateFactory() { 
+  private def templates() : TestTemplateFactory = new TestTemplateFactory() { f =>
 
-    private val f : TestTemplateFactory = this
     override val name : String = "myFactory"
 
     override def templates : List[TestTemplate] = List(

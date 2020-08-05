@@ -4,14 +4,16 @@ import blended.itest.runner.TestSummary
 import blended.itest.runner.TestTemplate
 
 trait TestSelector {
-  def selectTest(f : List[TestTemplate], s : Map[String, TestSummary]) : Option[TestTemplate]
+  def selectTest(f : List[TestTemplate], s : List[TestSummary]) : Option[TestTemplate]
 }
 
 object StandardTestSelector extends TestSelector {
   
-  def selectTest(f : List[TestTemplate], s : Map[String, TestSummary]) : Option[TestTemplate] = {
+  def selectTest(f : List[TestTemplate], s : List[TestSummary]) : Option[TestTemplate] = {
    
-    val summary : TestTemplate => TestSummary = fact => s.getOrElse(fact.name, TestSummary(fact)) 
+    val summary : TestTemplate => TestSummary = t => 
+      s.find(sum => sum.factoryName == t.factory.name && sum.testName == t.name).getOrElse(TestSummary(t))
+    
     val candidates : List[(TestTemplate, TestSummary)] = f.map(fact => (fact, summary(fact)))
 
     candidates.find { case (fact, sum) => sum.lastStarted.isEmpty } match {

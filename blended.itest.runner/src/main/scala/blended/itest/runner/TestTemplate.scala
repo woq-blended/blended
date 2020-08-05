@@ -26,4 +26,7 @@ trait TestTemplate {
   def allowParallel : Boolean = true
   // generate an id for the test 
   def generateId : String = ju.UUID.randomUUID().toString()
+
+  override def toString() : String = 
+    s"TestTemplate(${factory.name},$name,maxExecutions=$maxExecutions,parallel=$allowParallel)"
 }
