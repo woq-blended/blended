@@ -29,7 +29,8 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
   override def receive: Actor.Receive = {
     case Start => 
       val s : TestStatus = TestStatus(
-        name = t.name, 
+        factoryName = t.factory.name,
+        testName = t.name, 
         id = testId,
         runner = Some(self),
         started = System.currentTimeMillis(),
@@ -53,6 +54,5 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
 
   private def finish(s : TestStatus) : Unit = {
     context.system.eventStream.publish(s.copy(runner = None))
-    context.stop(self)
   }
 }

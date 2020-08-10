@@ -11,8 +11,10 @@ object TestStatus {
 }
 
 case class TestStatus(
+  // The name of the factory that has created the test
+  factoryName : String,
   // The name of the Test template that has created the test instance
-  name : String,
+  testName : String,
   // A unique id identifying the test instance 
   id : String,
   // The Actor reference which is responsible for executing the test

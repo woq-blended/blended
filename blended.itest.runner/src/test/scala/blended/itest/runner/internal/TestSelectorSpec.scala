@@ -34,12 +34,14 @@ class TestSelectorSpec extends LoggingFreeSpec
   
   "The test template selector should" - {
 
+    val selector : TestSelector = new StandardTestSelector()
+
     "return None if no test templates are registered" in logException { 
-      StandardTestSelector.selectTest(Nil, Nil) should be (None)
+      selector.selectTest(Nil, Nil) should be (None)
     }
 
     "select a single registered template" in logException {
-      StandardTestSelector.selectTest(templateFactory(1).templates, Nil) match {
+      selector.selectTest(templateFactory(1).templates, Nil) match {
         case None => fail("Expected a selected test")
         case Some(t) => t.name should be ("myTest-1")
       }
@@ -56,7 +58,7 @@ class TestSelectorSpec extends LoggingFreeSpec
         TestSummary(t2)
       )
 
-      StandardTestSelector.selectTest(fact.templates, m) match {
+      selector.selectTest(fact.templates, m) match {
         case None => fail("Expected a selected test")
         case Some(t) => t.name should be ("myTest-2")
       }
@@ -73,7 +75,7 @@ class TestSelectorSpec extends LoggingFreeSpec
         TestSummary(t2).copy(lastStarted = Some(1000L))
       )
 
-      StandardTestSelector.selectTest(fact.templates, m) match {
+      selector.selectTest(fact.templates, m) match {
         case None => fail("Expected a selected test")
         case Some(t) => t.name should be ("myTest-2")
       }
@@ -88,7 +90,7 @@ class TestSelectorSpec extends LoggingFreeSpec
         TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis()), running = 1)
       )
 
-      StandardTestSelector.selectTest(fact.templates, m) should be (None)
+      selector.selectTest(fact.templates, m) should be (None)
     }
 
     "do not select a template that has reached its maximal executions" in {
@@ -99,7 +101,7 @@ class TestSelectorSpec extends LoggingFreeSpec
         TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis()), executions = t1.maxExecutions)
       )
 
-      StandardTestSelector.selectTest(fact.templates, m) should be (None)
+      selector.selectTest(fact.templates, m) should be (None)
     }
   }   
 }
