@@ -32,7 +32,7 @@ object AkkaLogger {
    */
   def apply(logClass: Class[_], logSource: String): Logger = logClass match {
     case c if c == classOf[DummyClassForStringSources] => apply(logSource)
-    case _ => apply(getClass().getName())
+    case _ => apply(logClass.getName())
   }
 }
 

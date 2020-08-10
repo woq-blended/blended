@@ -28,31 +28,29 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
 
   override def receive: Actor.Receive = {
     case Start => 
-      val s : TestStatus = TestStatus(
+      val s : TestEvent = TestEvent(
         factoryName = t.factory.name,
         testName = t.name, 
         id = testId,
-        runner = Some(self),
-        started = System.currentTimeMillis(),
-        state = TestStatus.State.Started
+        state = TestEvent.State.Started
       )
-      log.info(s"Starting test for template [${t.name}] with id [${s.id}]")
+      log.info(s"Starting test for template [${t.factory.name}::${t.name}] with id [${s.id}]")
       context.system.eventStream.publish(s)
       val f : Future[Try[Unit]] = Future{ t.test() }
       f.map(r => Result(r)).pipeTo(self)
       context.become(running(s))
   }
 
-  private def running(s : TestStatus) : Receive = {
+  private def running(s : TestEvent) : Receive = {
     case Result(Success(())) => 
-      log.info(s"Test for template [${t.name}] with id [${s.id}] has succeeded.")
-      finish(s.copy(state = TestStatus.State.Success))
+      log.info(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has succeeded.")
+      finish(s.copy(state = TestEvent.State.Success))
     case Result(Failure(e)) => 
-      log.info(s"Test for template [${t.name}] with id [${s.id}] has failed [${e.getMessage()}].")
-      finish(s.copy(state = TestStatus.State.Failed, cause = Some(e)))
+      log.info(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has failed [${e.getMessage()}].")
+      finish(s.copy(state = TestEvent.State.Failed, cause = Some(e)))
   }
 
-  private def finish(s : TestStatus) : Unit = {
-    context.system.eventStream.publish(s.copy(runner = None))
+  private def finish(s : TestEvent) : Unit = {
+    context.system.eventStream.publish(s)
   }
 }

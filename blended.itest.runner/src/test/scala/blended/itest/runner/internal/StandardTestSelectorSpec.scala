@@ -2,12 +2,10 @@ package blended.itest.runner.internal
 
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.matchers.should.Matchers
-import blended.itest.runner.TestTemplate
+import blended.itest.runner._
 import scala.util.Try
-import blended.itest.runner.TestSummary
-import blended.itest.runner.TestTemplateFactory
 
-class TestSelectorSpec extends LoggingFreeSpec 
+class StandardTestSelectorSpec extends LoggingFreeSpec 
   with Matchers {
 
   private def templateFactory(cnt : Int) : TestTemplateFactory = new TestTemplateFactory() { f =>
@@ -81,7 +79,7 @@ class TestSelectorSpec extends LoggingFreeSpec
       }
     }
 
-    "do not select a template that is already running and disallows parallel tests" in {
+    "not select a template that is already running and disallows parallel tests" in {
 
       val fact : TestTemplateFactory = templateFactory(1)
       val t1 : TestTemplate = template("myTest-1", fact.templates)
@@ -93,7 +91,7 @@ class TestSelectorSpec extends LoggingFreeSpec
       selector.selectTest(fact.templates, m) should be (None)
     }
 
-    "do not select a template that has reached its maximal executions" in {
+    "not select a template that has reached its maximal executions" in {
       val fact : TestTemplateFactory = templateFactory(1)
       val t1 : TestTemplate = template("myTest-1", fact.templates)
       

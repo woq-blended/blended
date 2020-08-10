@@ -1,8 +1,9 @@
 package blended.itest.runner
 
-import akka.actor.ActorRef
+import java.text.SimpleDateFormat
+import java.{util => ju}
 
-object TestStatus {
+object TestEvent {
 
   object State extends Enumeration {
     type State = Value 
@@ -10,23 +11,24 @@ object TestStatus {
   }
 }
 
-case class TestStatus(
+case class TestEvent(
   // The name of the factory that has created the test
   factoryName : String,
   // The name of the Test template that has created the test instance
   testName : String,
   // A unique id identifying the test instance 
   id : String,
-  // The Actor reference which is responsible for executing the test
-  runner : Option[ActorRef],
-  // when was the test actually started 
-  started : Long, 
   // The state of the test 
-  state : TestStatus.State.State,
-  // The timestamp of the event
+  state : TestEvent.State.State,
+  // The timestamp of the last status change
   timestamp : Long = System.currentTimeMillis(),
   // the exception, if one is encountered in the test run
   cause : Option[Throwable] = None,
   // log file entries specific for this test instance 
   testLog : List[String] = List.empty
-)
+) {
+  override def toString() : String = {
+    val sdf : SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS")
+    s"TestEvent($factoryName::$testName($id),$state,${sdf.format(new ju.Date(timestamp))},$cause)"
+  }
+}

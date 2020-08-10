@@ -43,7 +43,7 @@ class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
     "start with an empty list of templates" in {
 
       val probe : TestProbe = TestProbe()
-      val mgr : ActorRef = system.actorOf(Props(new TestManager()))
+      val mgr : ActorRef = system.actorOf(Props(new TestManager(5)))
 
       mgr.tell(Protocol.GetTestTemplates, probe.ref)
 
@@ -56,7 +56,7 @@ class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
       val f : TestTemplateFactory = templates()
 
       val probe : TestProbe = TestProbe()
-      val mgr : ActorRef = system.actorOf(Props(new TestManager()))
+      val mgr : ActorRef = system.actorOf(Props(new TestManager(5)))
 
       mgr ! AddTestTemplateFactory(f)
       mgr.tell(Protocol.GetTestTemplates, probe.ref)

@@ -649,7 +649,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     object runner extends CoreModule {
       override def description = "API for long running integration tests"
       override def osgiHeaders : T[OsgiHeaders] = T { super.osgiHeaders().copy(
-        `Bundle-Activator` = Some(s"${blendedModule}.internal.ITestRunnerActivator")
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.TestRunnerActivator")
       )}
 
       override def ivyDeps : Target[Loose.Agg[Dep]] = T { super.ivyDeps() ++ Agg(
@@ -659,7 +659,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def moduleDeps : Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.domino,
         blended.akka,
-        blended.util.logging
+        blended.util.logging,
+        blended.util
       )
 
       object test extends CoreTests {

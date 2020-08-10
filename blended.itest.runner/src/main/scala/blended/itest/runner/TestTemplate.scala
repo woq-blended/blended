@@ -28,5 +28,5 @@ trait TestTemplate {
   def generateId : String = ju.UUID.randomUUID().toString()
 
   override def toString() : String = 
-    s"TestTemplate(${factory.name},$name,maxExecutions=$maxExecutions,parallel=$allowParallel)"
+    s"TestTemplate(${factory.name}::$name,maxExecutions=$maxExecutions,parallel=$allowParallel)"
 }

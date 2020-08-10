@@ -43,7 +43,7 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
     "Publish a test status with state started once the test has been kicked off" in logException {
 
       val probe : TestProbe = TestProbe()
-      system.eventStream.subscribe(probe.ref, classOf[TestStatus])
+      system.eventStream.subscribe(probe.ref, classOf[TestEvent])
 
       val fact : TestTemplateFactory = template(Success(()))
       val t : TestTemplate = fact.templates.head
@@ -51,15 +51,15 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
       system.actorOf(TestRunner.props(t, t.generateId))
 
       probe.fishForMessage(1.second) {
-        case s : TestStatus => 
-          s.id == id && s.state == TestStatus.State.Started
+        case s : TestEvent => 
+          s.id == id && s.state == TestEvent.State.Started
       }
     }
 
     "Publish a test status with state success once the test has been executed successfully" in logException {
 
       val probe : TestProbe = TestProbe()
-      system.eventStream.subscribe(probe.ref, classOf[TestStatus])
+      system.eventStream.subscribe(probe.ref, classOf[TestEvent])
 
       val fact : TestTemplateFactory = template(Success(()))
       val t : TestTemplate = fact.templates.head
@@ -67,15 +67,15 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
       system.actorOf(TestRunner.props(t, t.generateId))
 
       probe.fishForMessage(1.second) {
-        case s : TestStatus => 
-          s.id == id && s.state == TestStatus.State.Success
+        case s : TestEvent => 
+          s.id == id && s.state == TestEvent.State.Success
       }
     }
 
     "Publish a test status with state failed once the test has been executed with error" in logException {
 
       val probe : TestProbe = TestProbe()
-      system.eventStream.subscribe(probe.ref, classOf[TestStatus])
+      system.eventStream.subscribe(probe.ref, classOf[TestEvent])
 
       val fact : TestTemplateFactory = template(Failure(new Exception("Boom")))
       val t : TestTemplate = fact.templates.head
@@ -83,8 +83,8 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
       system.actorOf(TestRunner.props(t, t.generateId))
 
       probe.fishForMessage(1.second) {
-        case s : TestStatus => 
-          s.id == id && s.state == TestStatus.State.Failed && s.cause.isDefined
+        case s : TestEvent => 
+          s.id == id && s.state == TestEvent.State.Failed && s.cause.isDefined
       }
     }
   }

@@ -9,9 +9,9 @@ import java.io.File
 import blended.akka.internal.BlendedAkkaActivator
 import org.osgi.framework.BundleActivator
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import blended.itest.runner.internal.ITestRunnerActivator
+import blended.itest.runner.internal.TestRunnerActivator
 
-class ITestRunnerActivatorSpec extends SimplePojoContainerSpec
+class TestRunnerActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper 
   with Matchers {
@@ -20,7 +20,7 @@ class ITestRunnerActivatorSpec extends SimplePojoContainerSpec
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
-    "blended.itest.runner" -> new ITestRunnerActivator()
+    "blended.itest.runner" -> new TestRunnerActivator()
   )
 
   "The ITest Runner activator should" - {
