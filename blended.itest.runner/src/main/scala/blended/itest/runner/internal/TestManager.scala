@@ -6,12 +6,13 @@ import blended.util.logging.Logger
 import akka.actor.ActorRef
 import akka.actor.Terminated
 import akka.actor.Props
+import blended.jmx.OpenMBeanExporter
 
 object TestManager {
-  def props(slots : Int) : Props = Props(new TestManager(slots))
+  def props(slots : Int, exporter : OpenMBeanExporter) : Props = Props(new TestManager(slots, exporter))
 }
 
-class TestManager(maxSlots : Int) extends Actor {
+class TestManager(maxSlots : Int, exporter : OpenMBeanExporter) extends Actor {
 
   private val log : Logger = Logger[TestManager]
   private val selector : TestSelector = new StandardTestSelector()
@@ -21,7 +22,7 @@ class TestManager(maxSlots : Int) extends Actor {
   override def preStart(): Unit = {
     super.preStart()
     context.system.eventStream.subscribe(self, classOf[TestEvent])
-    context.become(running(TestManagerState()))
+    context.become(running(TestManagerState(exporter = Some(exporter))(context.system)))
   }
 
   override def receive: Actor.Receive = Actor.emptyBehavior

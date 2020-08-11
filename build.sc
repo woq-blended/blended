@@ -657,8 +657,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       )}
 
       override def moduleDeps : Seq[PublishModule] = super.moduleDeps ++ Seq(
-        blended.domino,
         blended.akka,
+        blended.domino,
+        blended.jmx,
         blended.util.logging,
         blended.util
       )

@@ -24,8 +24,6 @@ case class TestEvent(
   timestamp : Long = System.currentTimeMillis(),
   // the exception, if one is encountered in the test run
   cause : Option[Throwable] = None,
-  // log file entries specific for this test instance 
-  testLog : List[String] = List.empty
 ) {
   override def toString() : String = {
     val sdf : SimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS")
