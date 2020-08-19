@@ -33,8 +33,10 @@ class FileDropSpec extends LoggingFreeSpec
     compressHeader = compressHeader(headerCfg.prefix),
     appendHeader = appendHeader(headerCfg.prefix),
     charsetHeader = charsetHeader(headerCfg.prefix),
+    errDupHeader = errDupHeader(headerCfg.prefix),
     defaultDir = System.getProperty("projectTestOutput", "/tmp"),
-    dropTimeout = to
+    dropTimeout = to,
+    errorOnDuplicate = false
   )
 
   val prepareDropper : FileDropConfig => String => FileDropConfig = cfg => subDir => {
@@ -104,6 +106,34 @@ class FileDropSpec extends LoggingFreeSpec
 
       val files = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
       files should have size 2
+
+      files.forall { f => verifyTargetFile(f, content) } should be(true)
+    }
+
+    "throw an exception if the target file already exists and duplicates / append are disabled" in {
+      val cfg: FileDropConfig = prepareDropper(dropCfg)("overwrite").copy(
+        errorOnDuplicate = true
+      )
+      val dropper: EnvelopeFileDropper = new EnvelopeFileDropper(cfg, headerCfg, dropActor, envLogger)
+
+      val content : ByteString = ByteString("Hello Blended")
+
+      val env : FlowEnvelope = FlowEnvelope(
+        FlowMessage(content)(FlowMessage.props(
+          cfg.fileHeader -> "test.txt"
+        ).get)
+      )
+
+      val r1 : FileDropResult = dropFile(dropper, cfg, env).get
+      assert(r1.error.isEmpty)
+      val r2 : FileDropResult = dropFile(dropper, cfg, env).get
+      assert(r2.error.isDefined)
+
+      val dups = getFiles(cfg.defaultDir, filter = duplicateFilter, recursive = false)
+      dups should be (empty)
+
+      val files = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
+      files should have size 1
 
       files.forall { f => verifyTargetFile(f, content) } should be(true)
     }

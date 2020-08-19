@@ -40,8 +40,10 @@ class FileDropStageSpec extends LoggingFreeSpec
     compressHeader = compressHeader(headerCfg.prefix),
     appendHeader = appendHeader(headerCfg.prefix),
     charsetHeader = charsetHeader(headerCfg.prefix),
+    errDupHeader = errDupHeader(headerCfg.prefix),
     defaultDir = System.getProperty("projectTestOutput", "/tmp"),
-    dropTimeout = to
+    dropTimeout = to,
+    errorOnDuplicate = false
   ))(subDir)
 
   private val dropActor : ActorRef = system.actorOf(Props[FileDropActor])

@@ -27,6 +27,7 @@ case class FileDropCommand(
   fileName: String,
   compressed: Boolean,
   append: Boolean,
+  errorOnDuplicate : Boolean,
   timestamp: Long,
   properties: Map[String, Any],
   log : Logger
@@ -41,6 +42,7 @@ case class FileDropCommand(
       fileName.equals(cmd.fileName) &&
       compressed == cmd.compressed &&
       append == cmd.append &&
+      errorOnDuplicate == cmd.errorOnDuplicate &&
       timestamp == cmd.timestamp &&
       properties.equals(cmd.properties)
     case _ => false
@@ -57,7 +59,7 @@ case class FileDropCommand(
   }
 
   // determine the final file name for a file drop
-  val finalFile : File = {
+  val finalFile : Try[File] = Try {
 
     if (trimmedFileName.length() < fileName.length()) {
       log.warn(s"Using trimmed file name [$trimmedFileName] for [${toString()}]")
@@ -67,11 +69,15 @@ case class FileDropCommand(
 
     if (!append) {
       if (file.exists()) {
-        // In case we need to generate a new file name
-        new File(directory, fileName.lastIndexOf('.') match {
-          case -1 => s"dup_${timestampAsString}_${fileName}"
-          case pos => s"${fileName.substring(0, pos)}.dup_${timestampAsString}${fileName.substring(pos)}"
-        })
+        if (errorOnDuplicate) { 
+          throw new Exception(s"Target file [${file.getAbsolutePath()}] already exists.")
+        } else {
+          // In case we need to generate a new file name
+          new File(directory, fileName.lastIndexOf('.') match {
+            case -1 => s"dup_${timestampAsString}_${fileName}"
+            case pos => s"${fileName.substring(0, pos)}.dup_${timestampAsString}${fileName.substring(pos)}"
+          })
+        }
       } else {
         // In case we do not append and we can generate a new file
         file
@@ -137,7 +143,7 @@ class FileDropActor extends Actor {
     val filter : DirectoryStream.Filter[Path] = new DirectoryStream.Filter[Path] {
       override def accept(entry: Path): Boolean = {
         val n : String = entry.toFile().getName()
-        val p : String = cmd.finalFile.getName()
+        val p : String = cmd.finalFile.get.getName()
         n.startsWith(p) && n.endsWith(".tmp")
       }
     }
@@ -163,7 +169,7 @@ class FileDropActor extends Actor {
     }
 
     if (cmd.append) {
-      sourceFile(cmd.finalFile) match {
+      sourceFile(cmd.finalFile.get) match {
         case Some(f) =>
           val tmpName = s"${cmd.fileName}.${cmd.timestampAsString}.tmp"
           val tmpFile = new File(cmd.directory, tmpName)
@@ -185,6 +191,8 @@ class FileDropActor extends Actor {
   // prepare the output stream, if required for append
   def prepareOutputStream(cmd: FileDropCommand) : Try[(OutputStream, Option[File], File)] = Try {
 
+    // make sure we can produce the final file before creating the temp file 
+    cmd.finalFile.get
     val tf : Option[File] = tmpFile(cmd).get
 
     val of : File = outFile(cmd)
@@ -232,7 +240,7 @@ class FileDropActor extends Actor {
           state.cmd.log.debug(s"Removing tmp file for [${state.cmd.id}] : [${state.tmpFile}]")
           state.tmpFile.foreach{ tf => Files.delete(tf.toPath()) }
           state.cmd.log.debug(s"Creating final file for [${state.cmd.id}] : [${state.cmd.finalFile}]")
-          Files.move(state.outFile.toPath(), state.cmd.finalFile.toPath(), REPLACE_EXISTING)
+          Files.move(state.outFile.toPath(), state.cmd.finalFile.get.toPath(), REPLACE_EXISTING)
         }
 
         state
@@ -248,7 +256,7 @@ class FileDropActor extends Actor {
       // and forget the append
       state.tmpFile.foreach{ tf =>
         try {
-          Files.move(tf.toPath(), state.cmd.finalFile.toPath(), REPLACE_EXISTING)
+          Files.move(tf.toPath(), state.cmd.finalFile.get.toPath(), REPLACE_EXISTING)
         } catch {
           case NonFatal(t) =>
             newState.cmd.log.warn(t)(s"Error cleaning up files (move) for [${state.cmd}]")
@@ -265,7 +273,7 @@ class FileDropActor extends Actor {
       // In case the command was successful, we will delete the tmpfile
       // and create the final file
       newState.cmd.log.info(
-        s"Successfully processed filedrop [${state.cmd}] and created file [${state.cmd.finalFile.getAbsolutePath()}]"
+        s"Successfully processed filedrop [${state.cmd}] and created file [${state.cmd.finalFile.get.getAbsolutePath()}]"
       )
     }
 

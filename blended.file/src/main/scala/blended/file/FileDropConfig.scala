@@ -10,6 +10,7 @@ trait FileEnvelopeHeader {
   val compressHeader : String => String = s => fileHeaderPrefix(s) + "Compressed"
   val appendHeader : String => String = s => fileHeaderPrefix(s) + "Append"
   val charsetHeader : String => String = s => fileHeaderPrefix(s) + "CharSet"
+  val errDupHeader : String => String = s => fileHeader(s) + "ErrorOnDup"
 }
 
 case class FileDropConfig(
@@ -18,6 +19,8 @@ case class FileDropConfig(
   compressHeader : String,
   appendHeader : String,
   charsetHeader : String,
+  errDupHeader : String,
   defaultDir : String,
-  dropTimeout : FiniteDuration
+  dropTimeout : FiniteDuration,
+  errorOnDuplicate : Boolean
 )
