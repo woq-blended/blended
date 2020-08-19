@@ -254,7 +254,8 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
           }
 
         case Failure(t) =>
-          log.underlying.warn(t)(s"Failed to poll for new message in [$id]")
+          log.underlying.warn(s"Failed to poll for new message in [$id]")
+          log.underlying.trace(t)(s"Failed to poll for new message in [$id]")
           failStage(t)
       }
     }
