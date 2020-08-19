@@ -7,7 +7,6 @@ import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import blended.itest.runner.Protocol
 import akka.actor.ActorRef
-import akka.actor.Props
 import blended.itest.runner.TestTemplate
 import scala.concurrent.duration._
 import blended.itest.runner.Protocol.TestTemplates
@@ -43,7 +42,7 @@ class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
     "start with an empty list of templates" in {
 
       val probe : TestProbe = TestProbe()
-      val mgr : ActorRef = system.actorOf(Props(new TestManager(5)))
+      val mgr : ActorRef = system.actorOf(TestManager.props(5))
 
       mgr.tell(Protocol.GetTestTemplates, probe.ref)
 
@@ -56,7 +55,7 @@ class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
       val f : TestTemplateFactory = templates()
 
       val probe : TestProbe = TestProbe()
-      val mgr : ActorRef = system.actorOf(Props(new TestManager(5)))
+      val mgr : ActorRef = system.actorOf(TestManager.props(5))
 
       mgr ! AddTestTemplateFactory(f)
       mgr.tell(Protocol.GetTestTemplates, probe.ref)

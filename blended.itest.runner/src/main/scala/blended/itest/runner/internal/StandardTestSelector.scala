@@ -25,8 +25,15 @@ class StandardTestSelector extends TestSelector {
         Some(p._1)
 
       case _ => 
+        val startable = candidates.filter{ case (t,s) => 
+          t.minStartDelay match {
+            case None => true
+            case Some(d) => d.toMillis <= System.currentTimeMillis() - s.lastStarted.getOrElse(0L)
+          }
+        }
+
         // We have not yet executed / started all allowed executions
-        val pendingExecutions = candidates.filter{ case (t,s) => 
+        val pendingExecutions = startable.filter{ case (t,s) => 
           s.maxExecutions == Int.MaxValue || s.running + s.executions < s.maxExecutions 
         }
         logCandidates("pending", pendingExecutions)

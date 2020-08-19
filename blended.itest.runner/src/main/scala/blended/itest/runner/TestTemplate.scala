@@ -2,6 +2,7 @@ package blended.itest.runner
 
 import scala.util.Try
 import java.{util => ju}
+import scala.concurrent.duration.FiniteDuration
 
 trait TestTemplateFactory {
 
@@ -22,6 +23,8 @@ trait TestTemplate {
   def test() : Try[Unit]
   // How many instances of the test shall maximal be run 
   def maxExecutions : Int = Int.MaxValue
+  // Should we wait between starting two subsequent instances of the test ?
+  def minStartDelay : Option[FiniteDuration] = None
   // Are multiple parallel instances of the test allowed ?
   def allowParallel : Boolean = true
   // generate an id for the test 

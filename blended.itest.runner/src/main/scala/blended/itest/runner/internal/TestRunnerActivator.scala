@@ -16,12 +16,12 @@ class TestRunnerActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
 
-    whenServicePresent[OpenMBeanExporter]{ exp => 
-      whenActorSystemAvailable{ cfg => 
+    whenActorSystemAvailable{ cfg => 
+      whenServicePresent[OpenMBeanExporter]{ exp => 
 
         val slots : Int = cfg.config.getInt("maxSlots", 5)
         log.info(s"Starting integration test manager with [$slots] slots")
-        val testMgr : ActorRef = cfg.system.actorOf(TestManager.props(slots, exp))
+        val testMgr : ActorRef = cfg.system.actorOf(TestManager.props(slots, Some(exp)))
 
         log.info(s"Starting to listen for test template factories ...")
 

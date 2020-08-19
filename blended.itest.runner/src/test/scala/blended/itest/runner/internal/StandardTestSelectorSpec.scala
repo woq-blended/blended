@@ -4,11 +4,12 @@ import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.matchers.should.Matchers
 import blended.itest.runner._
 import scala.util.Try
+import scala.concurrent.duration._
 
 class StandardTestSelectorSpec extends LoggingFreeSpec 
   with Matchers {
 
-  private def templateFactory(cnt : Int) : TestTemplateFactory = new TestTemplateFactory() { f =>
+  private def templateFactory(cnt : Int, minDelay : Option[FiniteDuration] = None) : TestTemplateFactory = new TestTemplateFactory() { f =>
     
     override def name : String = "myFactory"
 
@@ -19,6 +20,7 @@ class StandardTestSelectorSpec extends LoggingFreeSpec
         override def test() : Try[Unit] = Try{}
         override def maxExecutions: Int = 5
         override def allowParallel: Boolean = false
+        override def minStartDelay: Option[FiniteDuration] = minDelay
       }
     }.toList
   }
@@ -100,6 +102,26 @@ class StandardTestSelectorSpec extends LoggingFreeSpec
       )
 
       selector.selectTest(fact.templates, m) should be (None)
+    }
+
+    "not select a template where the minimum start delay has not been passed" in {
+      val fact : TestTemplateFactory = templateFactory(1, Some(60.seconds))
+      val t1 : TestTemplate = template("myTest-1", fact.templates)
+      
+      val m : List[TestSummary] = List(
+        TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis()))
+      )
+
+      selector.selectTest(fact.templates, m) should be (None)
+
+      val m2 : List[TestSummary] = List(
+        TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis() - 90.seconds.toMillis))
+      )
+
+      selector.selectTest(fact.templates, m2) match {
+        case None => fail("Expected a selected test")
+        case Some(t) => t.name should be ("myTest-1")
+      }
     }
   }   
 }
