@@ -18,7 +18,7 @@ class OpenMBeanExporterImpl(openMbeanMapper: OpenMBeanMapper) extends OpenMBeanE
   def export(product: Product, objectName: ObjectName, replaceExisting: Boolean): Try[Unit] = {
     Try { openMbeanMapper.mapProduct(product) }
       .flatMap{ mbean =>
-        log.debug(s"Calling registerMBean for [${objectName.toString()}] with [$product], replaceExisting [$replaceExisting]")
+        log.trace(s"Calling registerMBean for [${objectName.toString()}] with [$product], replaceExisting [$replaceExisting]")
         registerMBean(mbean, objectName, replaceExisting)
       }
   }

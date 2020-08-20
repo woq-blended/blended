@@ -28,9 +28,20 @@ import de.wayofquality.blended.mill.feature._
 import $file.build_util
 import build_util.ScoverageReport
 
-/////////////////////////////////////////////////////////////////////////////////////
+trait CoreDependencies extends BlendedDependencies
 
-/** Project directory. */
+object CoreDependencies {
+  def scalaVersions : Map[String, CoreDependencies] =
+    Seq(Deps_2_13).map(d => d.scalaVersion -> d).toMap
+  
+  object Deps_2_13 extends CoreDependencies {
+    override def scalaVersion = "2.13.2"
+  }
+  
+  /////////////////////////////////////////////////////////////////////////////////////
+  
+  /** Project directory. */
+}
 val projectDir: os.Path = build.millSourcePath
 
 /** The revision of bundles provided via akka-osgi */
@@ -69,7 +80,7 @@ trait CorePublishModule extends BlendedPublishModule {
 }
 
 trait DistModule extends CoreCoursierModule {
-  def deps: BlendedDependencies
+  def deps: CoreDependencies
   override def millSourcePath: Path = super.millSourcePath / os.up
 
   /** Sources to put into the dist file. */
@@ -182,13 +193,13 @@ trait JBakeBuild extends Module with WebTools {
 
 }
 
-object blended extends Cross[BlendedCross](BlendedDependencies.scalaVersions.keys.toSeq: _*)
+object blended extends Cross[BlendedCross](CoreDependencies.scalaVersions.keys.toSeq: _*)
 class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
-  override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
+  override def skipIdea: Boolean = crossScalaVersion != CoreDependencies.Deps_2_13.scalaVersion
 
   // correct the unneeded cross sub-dir
   override def millSourcePath: Path = super.millSourcePath / os.up
-  val deps = BlendedDependencies.scalaVersions(crossScalaVersion)
+  val deps = CoreDependencies.scalaVersions(crossScalaVersion)
 
   trait CoreModule extends BlendedBaseModule
     with BlendedOsgiModule
@@ -198,16 +209,16 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def scalaVersion : T[String] = deps.scalaVersion
     override def baseDir : os.Path = projectDir
 
-    override type ProjectDeps = BlendedDependencies
+    override type ProjectDeps = CoreDependencies
     override def deps = blended.deps
 
     // remove the scala version
-    override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
+    override def skipIdea: Boolean = crossScalaVersion != CoreDependencies.Deps_2_13.scalaVersion
     trait CoreTests extends super.BlendedTests {
-      override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
+      override def skipIdea: Boolean = crossScalaVersion != CoreDependencies.Deps_2_13.scalaVersion
     }
     trait CoreForkedTests extends super.BlendedForkedTests {
-      override def skipIdea: Boolean = crossScalaVersion != BlendedDependencies.Deps_2_13.scalaVersion
+      override def skipIdea: Boolean = crossScalaVersion != CoreDependencies.Deps_2_13.scalaVersion
     }
   }
 
@@ -631,6 +642,39 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
         blended.security.boot
       )
+    }
+  }
+
+  object itest extends Module {
+    object runner extends CoreModule {
+      override def description = "API for long running integration tests"
+      override def osgiHeaders : T[OsgiHeaders] = T { super.osgiHeaders().copy(
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.TestRunnerActivator")
+      )}
+
+      override def ivyDeps : Target[Loose.Agg[Dep]] = T { super.ivyDeps() ++ Agg(
+        deps.domino
+      )}
+
+      override def moduleDeps : Seq[PublishModule] = super.moduleDeps ++ Seq(
+        blended.akka,
+        blended.domino,
+        blended.jmx,
+        blended.util.logging,
+        blended.util
+      )
+
+      object test extends CoreTests {
+        override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
+          deps.akkaSlf4j(akkaBundleRevision)
+        )}
+
+        override def moduleDeps = super.moduleDeps ++ Seq(
+          blended.itestsupport,
+          blended.testsupport,
+          blended.testsupport.pojosr
+        )
+      }
     }
   }
 
@@ -1964,8 +2008,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   object features extends BlendedFeatureJar with CorePublishModule with CoreCoursierModule {
 
     override def baseDir : os.Path = projectDir
-    override type ProjectDeps = BlendedDependencies
-    override def deps : ProjectDeps = BlendedDependencies.Deps_2_13
+    override type ProjectDeps = CoreDependencies
+    override def deps : ProjectDeps = CoreDependencies.Deps_2_13
     override def scalaVersion = crossScalaVersion
 
     def baseName : String = "blended.features"
@@ -2385,6 +2429,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 }
 
 object scoverage extends ScoverageReport {
-  override def scalaVersion = BlendedDependencies.Deps_2_13.scalaVersion
-  override def scoverageVersion = BlendedDependencies.Deps_2_13.scoverageVersion
+  override def scalaVersion = CoreDependencies.Deps_2_13.scalaVersion
+  override def scoverageVersion = CoreDependencies.Deps_2_13.scoverageVersion
 }
