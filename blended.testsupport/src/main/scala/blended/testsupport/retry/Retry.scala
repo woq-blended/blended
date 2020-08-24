@@ -58,5 +58,4 @@ object Retry {
     val res = retry(delay, retries, onRetry)(op)(ec, s)
     Await.result(res, finalDelay.getOrElse(delay * retries + 2.seconds))
   }
-
 }

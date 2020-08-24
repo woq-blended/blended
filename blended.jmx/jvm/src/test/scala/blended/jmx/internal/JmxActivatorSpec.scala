@@ -30,7 +30,5 @@ class JmxActivatorSpec extends SimplePojoContainerSpec
       mandatoryService[OpenMBeanMapper](registry, None)
       mandatoryService[OpenMBeanExporter](registry, None)
     }
-
-
   }
 }
