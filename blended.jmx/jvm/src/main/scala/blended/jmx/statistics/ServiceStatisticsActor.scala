@@ -1,10 +1,10 @@
 package blended.jmx.statistics
 
-import akka.actor.{Actor, Props}
-import blended.jmx.OpenMBeanExporter
+import akka.actor.Actor
 import blended.util.logging.Logger
-
-import scala.util.control.NonFatal
+import akka.actor.ActorSystem
+import blended.jmx.ProductMBeanManager
+import akka.actor.Props
 
 case class Accumulator(
   count : Long = 0,
@@ -51,10 +51,10 @@ case class Entry(
 }
 
 case class StatisticsState(
-  mbeanExporter : OpenMBeanExporter,
   invocations : Map[String, ServiceInvocationStarted] = Map.empty,
-  entries : Map[String, Entry] = Map.empty
-) {
+  entries : Map[String, Entry] = Map.empty,
+  mbeanMgr : ProductMBeanManager
+)(implicit system: ActorSystem) {
 
   private val log : Logger = Logger[StatisticsState]
   private val datakey : ServiceInvocationStarted => String = s => s"${s.component}-${s.subComponents.mkString(",")}"
@@ -69,12 +69,9 @@ case class StatisticsState(
     }
 
     entry.foreach { e =>
-      val toPublish : PublishEntry = PublishEntry.create(e)
-      log.trace(s"Exporting/updating JMX entry [${toPublish.name}] : [$toPublish]")
-      mbeanExporter.export(toPublish, toPublish.name, replaceExisting = true).recover {
-        case NonFatal(e) =>
-          log.warn(e)(s"Could not register mbean with name [${toPublish.name}]")
-      }
+      val toPublish : ServicePublishEntry = ServicePublishEntry.create(e)
+      log.trace(s"Exporting/updating JMX entry : [$toPublish]")
+      mbeanMgr.updateMBean(toPublish)
     }
 
     newState
@@ -127,7 +124,11 @@ case class StatisticsState(
   }
 }
 
-class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
+object ServiceStatisticsActor {
+  def props(mbeanMgr : ProductMBeanManager) : Props = Props(new ServiceStatisticsActor(mbeanMgr))
+}
+
+class ServiceStatisticsActor(mbeanMgr : ProductMBeanManager) extends Actor {
 
   private[this] val log = Logger[this.type]
 
@@ -136,7 +137,7 @@ class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
     // register event handler
     log.debug(s"Subscribing self [${self}] to ServiceInvocationEvents from system.eventStream")
     context.system.eventStream.subscribe(self, classOf[ServiceInvocationEvent])
-    context.become(working(StatisticsState(mbeanExporter)))
+    context.become(working(StatisticsState(mbeanMgr = mbeanMgr)(context.system)))
   }
 
   override def receive: Receive = Actor.emptyBehavior
@@ -148,8 +149,3 @@ class StatisticsActor(mbeanExporter: OpenMBeanExporter) extends Actor {
       context.become(working(newState))
   }
 }
-
-object StatisticsActor {
-  def props(mbeanExporter: OpenMBeanExporter): Props = Props(new StatisticsActor(mbeanExporter))
-}
-

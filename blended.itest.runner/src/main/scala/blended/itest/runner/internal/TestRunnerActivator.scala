@@ -8,7 +8,10 @@ import blended.itest.runner.TestTemplateFactory
 import domino.service_watching.ServiceWatcherEvent
 import blended.itest.runner.Protocol
 import blended.util.config.Implicits._
-import blended.jmx.OpenMBeanExporter
+import blended.jmx.ProductMBeanManager
+import blended.jmx.NamingStrategy
+import blended.jmx.NamingStrategyResolver
+import blended.itest.runner.TestSummaryJMX
 
 class TestRunnerActivator extends DominoActivator with ActorSystemWatching {
 
@@ -16,8 +19,10 @@ class TestRunnerActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
 
+    new TestJmxNamingStrategy().providesService[NamingStrategy](NamingStrategyResolver.strategyClassNameProp -> classOf[TestSummaryJMX].getName())
+
     whenActorSystemAvailable{ cfg => 
-      whenServicePresent[OpenMBeanExporter]{ exp => 
+      whenServicePresent[ProductMBeanManager]{ exp => 
 
         val slots : Int = cfg.config.getInt("maxSlots", 5)
         log.info(s"Starting integration test manager with [$slots] slots")

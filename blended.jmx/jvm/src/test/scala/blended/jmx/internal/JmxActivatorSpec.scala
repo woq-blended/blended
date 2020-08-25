@@ -2,18 +2,20 @@ package blended.jmx.internal
 
 import java.io.File
 
-import blended.jmx.{BlendedMBeanServerFacade, OpenMBeanExporter, OpenMBeanMapper}
+import blended.jmx.{BlendedMBeanServerFacade, ProductMBeanManager}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.management.MBeanServer
 import org.osgi.framework.BundleActivator
+import blended.akka.internal.BlendedAkkaActivator
 
 class JmxActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper {
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
+    "blended.akka" -> new BlendedAkkaActivator(),
     "blended.jmx" -> new BlendedJmxActivator()
   )
 
@@ -26,9 +28,8 @@ class JmxActivatorSpec extends SimplePojoContainerSpec
       mandatoryService[BlendedMBeanServerFacade](registry, None)
     }
 
-    "should expose a OpenMBeanMapper and a OpenMBeanExporter as a service" in {
-      mandatoryService[OpenMBeanMapper](registry, None)
-      mandatoryService[OpenMBeanExporter](registry, None)
+    "should expose a ProductMBeanManager as a service" in {
+      mandatoryService[ProductMBeanManager](registry, None)
     }
   }
 }

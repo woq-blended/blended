@@ -15,4 +15,8 @@ case class AkkaHttpServerInfo(
   def withSslPort(p : Int) : AkkaHttpServerInfo = copy(sslPort = Some(p))
   def addRoute(r : String) : AkkaHttpServerInfo = copy(routes = (r :: routes.toList).distinct.sorted.toArray)
   def removeRoute(r : String) : AkkaHttpServerInfo = copy(routes = routes.filter(_ != r))
+
+  override def toString() : String = {
+    s"${getClass().getSimpleName()}(host=${host.getOrElse("")},port=${port.getOrElse("")}, sslHost=${sslHost.getOrElse("")}, sslPort=${sslPort.getOrElse("")}, routes=${routes.mkString("[", ",", "]")})"
+  }
 }

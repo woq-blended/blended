@@ -2,23 +2,27 @@ package blended.jmx.internal
 
 import org.scalatest.matchers.should.Matchers
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import akka.testkit.TestKit
-import akka.actor.ActorSystem
 import blended.jmx.NamingStrategy
 import blended.jmx.JmxObjectName
-import java.lang.management.ManagementFactory
 import blended.jmx.BlendedMBeanServerFacade
 import scala.util.Failure
 import scala.util.Success
 import blended.jmx.IntAttributeValue
-import blended.jmx.RegisterNamingStrategy
-import blended.jmx.UpdateMBean
-import javax.management.{MBeanServer, InstanceNotFoundException}
 import blended.testsupport.retry.Retry
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import akka.actor.Scheduler
-import blended.jmx.RemoveMBean
+import blended.testsupport.pojosr.SimplePojoContainerSpec
+import blended.testsupport.pojosr.PojoSrTestHelper
+import org.osgi.framework.BundleActivator
+import blended.akka.internal.BlendedAkkaActivator
+import blended.testsupport.BlendedTestSupport
+import java.io.File
+import domino.DominoActivator
+import blended.jmx.NamingStrategyResolver
+import blended.jmx.ProductMBeanManager
+import akka.actor.ActorSystem
+import javax.management.InstanceNotFoundException
 
 case class Counter(
   name : String, 
@@ -34,17 +38,22 @@ class CounterName extends NamingStrategy {
   }
 }
 
-class MBeanManagerSpec extends TestKit(ActorSystem("MBeanMgr"))
+class MBeanManagerSpec extends SimplePojoContainerSpec 
   with LoggingFreeSpecLike
+  with PojoSrTestHelper
   with Matchers {
 
-  private val svr : MBeanServer = ManagementFactory.getPlatformMBeanServer()  
-  private val mbeanSvr : BlendedMBeanServerFacade = new BlendedMBeanServerFacadeImpl(svr)
-  private implicit val eCtxt : ExecutionContext = system.dispatcher
-  private implicit val sched : Scheduler = system.scheduler
+  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  system.actorOf(MBeanManager.props(svr, new OpenMBeanMapperImpl()))
-  Thread.sleep(100)
+  override def bundles : Seq[(String, BundleActivator)] = Seq(
+    "blended.jmx" -> new BlendedJmxActivator(),
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "test" -> new DominoActivator() {
+      whenBundleActive{
+        new CounterName().providesService[NamingStrategy](NamingStrategyResolver.strategyClassNameProp -> classOf[Counter].getName())
+      }
+    }
+  )
 
   "The MBean Manager should" - {
 
@@ -52,10 +61,15 @@ class MBeanManagerSpec extends TestKit(ActorSystem("MBeanMgr"))
 
       val cnt : Counter = Counter("myCounter", 1)
       val st : NamingStrategy = new CounterName()
-      
-      system.eventStream.publish(RegisterNamingStrategy[Counter](st))
-      system.eventStream.publish(UpdateMBean[Counter](cnt))
 
+      val system : ActorSystem = mandatoryService[ActorSystem](registry)
+      implicit val eCtxt : ExecutionContext = system.dispatcher
+      implicit val sched : Scheduler = system.scheduler
+
+      val mbeanSvr = mandatoryService[BlendedMBeanServerFacade](registry)
+      val mgr : ProductMBeanManager = mandatoryService[ProductMBeanManager](registry)
+      mgr.updateMBean(cnt)
+      
       Retry.unsafeRetry(1.second, 5){
         mbeanSvr.mbeanInfo(st.objectName(cnt)) match {
           case Success(info) => 
@@ -65,7 +79,7 @@ class MBeanManagerSpec extends TestKit(ActorSystem("MBeanMgr"))
         }
       }
 
-      system.eventStream.publish(UpdateMBean[Counter](cnt.copy(count = 5)))
+      mgr.updateMBean(cnt.copy(count = 5))
 
       Retry.unsafeRetry(1.second, 5){
         mbeanSvr.mbeanInfo(st.objectName(cnt)) match {
@@ -79,12 +93,17 @@ class MBeanManagerSpec extends TestKit(ActorSystem("MBeanMgr"))
 
     "Remove a registered MBean upon request" in {
 
-      val cnt : Counter = Counter("sndCounter", 1)
-      val st : NamingStrategy = new CounterName()
+      val system : ActorSystem = mandatoryService[ActorSystem](registry)
+      implicit val eCtxt : ExecutionContext = system.dispatcher
+      implicit val sched : Scheduler = system.scheduler
       
-      system.eventStream.publish(RegisterNamingStrategy[Counter](st))
-      system.eventStream.publish(UpdateMBean[Counter](cnt))
+      val cnt : Counter = Counter("myCounter", 1)
+      val st : NamingStrategy = new CounterName()
 
+      val mbeanSvr = mandatoryService[BlendedMBeanServerFacade](registry)
+      val mgr : ProductMBeanManager = mandatoryService[ProductMBeanManager](registry)
+      mgr.updateMBean(cnt)
+      
       Retry.unsafeRetry(1.second, 5){
         mbeanSvr.mbeanInfo(st.objectName(cnt)) match {
           case Success(info) => 
@@ -94,13 +113,13 @@ class MBeanManagerSpec extends TestKit(ActorSystem("MBeanMgr"))
         }
       }
 
-      system.eventStream.publish(RemoveMBean[Counter](cnt))
+      mgr.removeMBean(cnt)
 
       Retry.unsafeRetry(1.second, 5){
         mbeanSvr.mbeanInfo(st.objectName(cnt)) match {
           case Success(info) => 
             throw new Exception(s"Expected no bean for [$cnt]")
-          case Failure(t) if t.isInstanceOf[InstanceNotFoundException ]=>
+          case Failure(t) if t.isInstanceOf[InstanceNotFoundException]=>
           case Failure(t) => throw t 
         }
       }

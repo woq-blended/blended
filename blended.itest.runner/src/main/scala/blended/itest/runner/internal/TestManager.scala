@@ -5,16 +5,16 @@ import blended.util.logging.Logger
 import akka.actor.ActorRef
 import akka.actor.Terminated
 import akka.actor.Props
-import blended.jmx.OpenMBeanExporter
 import akka.actor.Timers
 import akka.actor.Actor
 import scala.concurrent.duration._
+import blended.jmx.ProductMBeanManager
 
 object TestManager {
-  def props(slots : Int, exporter : Option[OpenMBeanExporter] = None) : Props = Props(new TestManager(slots, exporter))
+  def props(slots : Int, mbeanMgr : Option[ProductMBeanManager] = None) : Props = Props(new TestManager(slots, mbeanMgr))
 }
 
-class TestManager(maxSlots : Int, exporter : Option[OpenMBeanExporter]) extends Timers {
+class TestManager(maxSlots : Int, mbeanMgr : Option[ProductMBeanManager]) extends Timers {
 
   private val log : Logger = Logger[TestManager]
   private val selector : TestSelector = new StandardTestSelector()
@@ -25,7 +25,7 @@ class TestManager(maxSlots : Int, exporter : Option[OpenMBeanExporter]) extends 
     super.preStart()
     timers.startTimerAtFixedRate("Tick", ScheduleTest, 100.millis)
     context.system.eventStream.subscribe(self, classOf[TestEvent])
-    context.become(running(TestManagerState(exporter = exporter)(context.system)))
+    context.become(running(TestManagerState(mbeanMgr = mbeanMgr)(context.system)))
   }
 
   override def receive : Receive = Actor.emptyBehavior

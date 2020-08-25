@@ -7,7 +7,7 @@ import blended.testsupport.retry.Retry
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
-import blended.jmx.OpenMBeanExporter
+import blended.jmx.ProductMBeanManager
 
 trait AkkaHttpServerTestHelper { this : PojoSrTestHelper =>
 
@@ -18,9 +18,9 @@ trait AkkaHttpServerTestHelper { this : PojoSrTestHelper =>
     implicit val scheduler : Scheduler = system.scheduler
 
     val mbeanSvr : BlendedMBeanServerFacade = mandatoryService[BlendedMBeanServerFacade](registry)
-    val exporter : OpenMBeanExporter = mandatoryService[OpenMBeanExporter](registry)
+    val mgr : ProductMBeanManager = mandatoryService[ProductMBeanManager](registry)
 
-    val jmxSupport : AkkaHttpServerJmxSupport = new AkkaHttpServerJmxSupport(mbeanSvr, exporter)
+    val jmxSupport : AkkaHttpServerJmxSupport = new AkkaHttpServerJmxSupport(mgr)
 
     val f : Future[AkkaHttpServerInfo] = Retry.retry(delay = 1.second, retries = 3){
       jmxSupport.readFromJmx(mbeanSvr).get

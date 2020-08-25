@@ -4,16 +4,22 @@ import blended.itest.runner._
 import akka.actor.ActorRef
 import blended.util.logging.Logger
 import akka.actor.ActorSystem
-import blended.jmx.OpenMBeanExporter
-import blended.jmx.JmxObjectName
-import javax.management.ObjectName
-import blended.jmx.statistics.ServiceInvocationReporter
+import blended.jmx.{NamingStrategy, JmxObjectName, ProductMBeanManager}
+
+class TestJmxNamingStrategy extends NamingStrategy {
+
+  override val objectName: PartialFunction[Any,JmxObjectName] = {
+    case sum : TestSummaryJMX => JmxObjectName(properties = Map(
+      "component" -> "Test", "factory" -> sum.aFactoryName, "test" -> sum.aTestName
+    ))
+  }
+} 
 
 case class TestManagerState(
   templates : List[TestTemplate] = List.empty,
   summaries : List[TestSummary] = List.empty,
   executing : Map[String, (TestTemplate, ActorRef)] = Map.empty,
-  exporter : Option[OpenMBeanExporter] = None
+  mbeanMgr : Option[ProductMBeanManager] = None
 )(implicit system : ActorSystem) {
 
   override def toString() : String = "TestManagerState(\n  " + summaries.map(_.toString()).mkString("\n  ") + "\n)"
@@ -44,7 +50,6 @@ case class TestManagerState(
       running = current.running + 1
     )
 
-    ServiceInvocationReporter.invoked("TestService", Map("factory" -> t.factory.name, "test" -> t.name), id)
     reportJmx(sum)
     
     copy(
@@ -54,13 +59,8 @@ case class TestManagerState(
   }
 
   private def reportJmx(sum : TestSummary) : Unit = {
-    exporter.foreach{ e => 
-      val jmxSum : TestSummaryJMX = TestSummaryJMX.create(sum)
-      val name : JmxObjectName = JmxObjectName(properties = Map(
-        "component" -> "Test", "factory" -> sum.factoryName, "test" -> sum.testName
-      ))
-
-      e.exportSafe(jmxSum, new ObjectName(name.objectName), true)(log)
+    mbeanMgr.foreach{ mgr => 
+      mgr.updateMBean(TestSummaryJMX.create(sum))
     }
   }
 
@@ -79,14 +79,12 @@ case class TestManagerState(
         case TestEvent.State.Started => upd
         case TestEvent.State.Failed => 
           log.debug(s"Test execution [${s.id}] for [${s.factoryName}::${s.testName}] has failed.")
-          ServiceInvocationReporter.failed(s.id)
           upd.copy(
             lastFailed = Some(s), executions = upd.executions + 1, running = upd.running - 1, failed = upd.failed + 1,
             lastExecutions = (s :: upd.lastExecutions).take(upd.maxLastExecutions)
           )
         case TestEvent.State.Success => 
           log.debug(s"Test execution [${s.id}] for [${s.factoryName}::${s.testName}] has succeeded.")
-          ServiceInvocationReporter.completed(s.id)
           upd.copy(
             lastSuccess = Some(s), executions = upd.executions + 1, running = upd.running -1, succeded = upd.succeded + 1,
             lastExecutions = (s :: upd.lastExecutions).take(upd.maxLastExecutions)

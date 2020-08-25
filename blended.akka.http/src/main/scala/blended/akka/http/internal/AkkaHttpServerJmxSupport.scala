@@ -1,14 +1,22 @@
 package blended.akka.http.internal
 
 import blended.jmx._
-import javax.management.{InstanceNotFoundException, ObjectName}
-
+import scala.util.Try
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
 
-class AkkaHttpServerJmxSupport(facade : BlendedMBeanServerFacade, exporter : OpenMBeanExporter) {
+object AkkaHttpServerJmxSupport {
+  val objName : JmxObjectName = JmxObjectName(properties = Map("type" -> "AkkaHttpServer"))
+}
 
-  def objName: JmxObjectName = JmxObjectName(properties = Map("type" -> "AkkaHttpServer"))
+class AkkaHttpNamingStrategy extends NamingStrategy {
+  override val objectName: PartialFunction[Any,JmxObjectName] = {
+    case _ : AkkaHttpServerInfo => AkkaHttpServerJmxSupport.objName
+  }
+}
+
+class AkkaHttpServerJmxSupport(mbeanManager : ProductMBeanManager) {
+
+  private var current : AkkaHttpServerInfo = AkkaHttpServerInfo()
 
   def readFromJmx(svr : BlendedMBeanServerFacade) : Try[AkkaHttpServerInfo] = {
 
@@ -23,7 +31,7 @@ class AkkaHttpServerJmxSupport(facade : BlendedMBeanServerFacade, exporter : Ope
       }
     }
 
-    svr.mbeanInfo(objName).map { info =>
+    svr.mbeanInfo(AkkaHttpServerJmxSupport.objName).map { info =>
       val host = getOptionalAttr[StringAttributeValue](info, "host").get.map(_.value)
       val sslHost = getOptionalAttr[StringAttributeValue](info, "host").get.map(_.value)
       val port = getOptionalAttr[IntAttributeValue](info, "port").get.map(_.value)
@@ -33,13 +41,8 @@ class AkkaHttpServerJmxSupport(facade : BlendedMBeanServerFacade, exporter : Ope
     }
   }
 
-  def updateInJmx(update : AkkaHttpServerInfo => AkkaHttpServerInfo) : Unit = Try {
-    readFromJmx(facade) match {
-      case Success(info) =>
-        exporter.`export`(update(info), new ObjectName(objName.objectName), replaceExisting = true)
-      case Failure(e) if e.isInstanceOf[InstanceNotFoundException] =>
-        exporter.`export`(update(AkkaHttpServerInfo()), new ObjectName(objName.objectName), replaceExisting = false)
-      case f => f
-    }
+  def updateInJmx(update : AkkaHttpServerInfo => AkkaHttpServerInfo) : Unit = {
+    current = update(current)
+    mbeanManager.updateMBean(current)
   }
 }
