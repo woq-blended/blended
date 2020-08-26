@@ -3,12 +3,12 @@ package blended.itestsupport.docker
 import akka.actor.Props
 import akka.testkit.TestProbe
 import blended.itestsupport.ContainerUnderTest
-import blended.testsupport.TestActorSys
 import org.scalatestplus.mockito.MockitoSugar
 import scala.concurrent.duration._
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import akka.actor.ActorSystem
 
 class DockerContainerMapperSpec extends AnyWordSpec
   with Matchers
@@ -17,8 +17,8 @@ class DockerContainerMapperSpec extends AnyWordSpec
 
   "The DockerContainerMapper" should {
     
-    "Respond with an updated list of CUTs upon successful port mappings" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+    "Respond with an updated list of CUTs upon successful port mappings" in {
+      implicit val system : ActorSystem = ActorSystem("ContainerManager")
       val probe = TestProbe()
 
       val cuts = ContainerUnderTest.containerMap(system.settings.config)

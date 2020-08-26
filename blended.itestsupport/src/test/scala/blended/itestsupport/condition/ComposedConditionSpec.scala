@@ -3,7 +3,6 @@ package blended.itestsupport.condition
 import akka.actor.ActorSystem
 import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.condition.ConditionProvider._
-import blended.testsupport.TestActorSys
 import blended.itestsupport.condition.ConditionActor.CheckCondition
 import blended.itestsupport.condition.ConditionActor.ConditionCheckResult
 import org.scalatest.matchers.should.Matchers
@@ -12,10 +11,11 @@ import org.scalatest.wordspec.AnyWordSpec
 class ComposedConditionSpec extends AnyWordSpec
   with Matchers {
 
+  private implicit val system : ActorSystem = ActorSystem("ComposedCondition")  
+
   "A composed condition" should {
 
-    "be satisfied with an empty condition list" in TestActorSys { testkit =>
-      implicit val system : ActorSystem = testkit.system
+    "be satisfied with an empty condition list" in { 
       val probe = TestProbe()
 
       val condition = ParallelComposedCondition()
@@ -25,8 +25,7 @@ class ComposedConditionSpec extends AnyWordSpec
       probe.expectMsg(ConditionCheckResult(List.empty, List.empty))
     }
 
-    "be satisfied with a list of conditions that eventually satisfy" in TestActorSys { testkit =>
-      implicit val system : ActorSystem = testkit.system
+    "be satisfied with a list of conditions that eventually satisfy" in {
       val probe = TestProbe()
 
       val conditions = List(alwaysTrue(), alwaysTrue(), alwaysTrue(), alwaysTrue())
@@ -37,8 +36,7 @@ class ComposedConditionSpec extends AnyWordSpec
       probe.expectMsg(ConditionCheckResult(conditions, List.empty[Condition]))
     }
 
-    "timeout with at least failing condition" in TestActorSys { testkit =>
-      implicit val system : ActorSystem = testkit.system
+    "timeout with at least failing condition" in {
       val probe = TestProbe()
 
       val conditions = List(alwaysTrue(), alwaysTrue(), neverTrue(), alwaysTrue())

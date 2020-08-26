@@ -11,9 +11,6 @@ import blended.testsupport.pojosr.PojoSrTestHelper
 import org.scalatest.matchers.should.Matchers
 import blended.testsupport.BlendedTestSupport
 import org.osgi.framework.BundleActivator
-import domino.DominoActivator
-import blended.jmx.NamingStrategy
-import blended.jmx.NamingStrategyResolver
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jmx.internal.BlendedJmxActivator
 import java.io.File
@@ -30,12 +27,7 @@ class ServiceStatisticsActorSpec extends SimplePojoContainerSpec
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(
     "blended.jmx" -> new BlendedJmxActivator(),
-    "blended.akka" -> new BlendedAkkaActivator(),
-    "test" -> new DominoActivator() {
-      whenBundleActive{
-        new ServiceNamingStrategy().providesService[NamingStrategy](NamingStrategyResolver.strategyClassNameProp -> classOf[ServicePublishEntry].getName())
-      }
-    }
+    "blended.akka" -> new BlendedAkkaActivator()
   )
 
   private val retryDelay : FiniteDuration = 100.milliseconds

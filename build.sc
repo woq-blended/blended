@@ -1722,19 +1722,25 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
   object testsupport extends CoreModule {
     override def description = "Some test helper classes"
+    
     override def ivyDeps = Agg(
       deps.akkaActor(akkaBundleRevision),
-      deps.akkaTestkit,
       deps.jaxb,
       deps.scalatest,
       deps.junit,
       deps.commonsIo
     )
+    
     override def moduleDeps = Seq(
       blended.util,
       blended.util.logging,
       blended.security.boot
     )
+
+    override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
+      s"${blendedModule}.retry"
+    )
+    
     object test extends CoreTests
 
     object pojosr extends CoreModule {

@@ -6,7 +6,6 @@ import akka.actor.{ActorSystem, Terminated}
 import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.docker.protocol._
 import blended.itestsupport.{ContainerLink, ContainerUnderTest}
-import blended.testsupport.TestActorSys
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
 
@@ -16,8 +15,8 @@ class DependentContainerActorSpec extends AnyWordSpec
 
   "the DependentContainerActor" should {
 
-    "Respond with a DependenciesStarted message after the last dependant container was started" in TestActorSys { testkit =>
-      implicit val system : ActorSystem = testkit.system
+    "Respond with a DependenciesStarted message after the last dependant container was started" in {
+      implicit val system : ActorSystem = ActorSystem("DependentContainer")
       val probe = TestProbe()
 
       val cut = ContainerUnderTest(

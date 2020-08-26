@@ -9,6 +9,9 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.management.MBeanServer
 import org.osgi.framework.BundleActivator
 import blended.akka.internal.BlendedAkkaActivator
+import blended.jmx.NamingStrategy
+import blended.jmx.NamingStrategyResolver
+import blended.jmx.statistics.ServicePublishEntry
 
 class JmxActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
@@ -24,12 +27,16 @@ class JmxActivatorSpec extends SimplePojoContainerSpec
   "The JMX Activator" - {
 
     "should expose the platform MBean Server and a BlendedMBeanServerFacade as a service" in {
-      mandatoryService[MBeanServer](registry, None)
-      mandatoryService[BlendedMBeanServerFacade](registry, None)
+      mandatoryService[MBeanServer](registry)
+      mandatoryService[BlendedMBeanServerFacade](registry)
     }
 
     "should expose a ProductMBeanManager as a service" in {
-      mandatoryService[ProductMBeanManager](registry, None)
+      mandatoryService[ProductMBeanManager](registry)
+    }
+
+    "should expose the Service Publish Entry naming strategy as a service" in {
+      mandatoryService[NamingStrategy](registry, Some(s"(${NamingStrategyResolver.strategyClassNameProp}=${classOf[ServicePublishEntry].getName()})"))
     }
   }
 }

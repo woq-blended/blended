@@ -4,9 +4,9 @@ import akka.actor.Props
 import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.ContainerUnderTest
 import blended.itestsupport.docker.protocol._
-import blended.testsupport.TestActorSys
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
+import akka.actor.ActorSystem
 
 class ContainerManagerSpec extends AnyWordSpec
   with DockerTestSetup
@@ -20,8 +20,8 @@ class ContainerManagerSpec extends AnyWordSpec
 
   "The ContainerManager" should {
 
-    "Respond with an event after all containers have been started" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+    "Respond with an event after all containers have been started" in {
+      implicit val system : ActorSystem = ActorSystem("ContainerManager")
       val probe = TestProbe()
 
       val cuts = ContainerUnderTest.containerMap(system.settings.config)

@@ -7,11 +7,11 @@ import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.{FlowMessage, MsgProperty}
 import blended.util.FileHelper
 import blended.util.logging.Logger
-import javax.xml.bind.DatatypeConverter
 import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.{Document, Element}
 
 import scala.util.Try
+import java.{util => ju}
 
 class StreamsMessageFactory(fileName : String) {
 
@@ -69,13 +69,13 @@ class StreamsMessageFactory(fileName : String) {
     val textElements = doc.getElementsByTagName("text")
 
     if (textElements.getLength > 0) {
-      val base64 = textElements.item(0).asInstanceOf[Element].getTextContent
-      val decoded = DatatypeConverter.parseBase64Binary(base64)
+      val base64 : String = textElements.item(0).asInstanceOf[Element].getTextContent
+      val decoded : Array[Byte] = ju.Base64.getDecoder().decode(base64)
       if (binary) {
         log.debug(s"Read message body as byte Array of length[${decoded.length}]")
         Some(Left(ByteString(decoded)))
       } else {
-        val text = new String(decoded, "UTF-8")
+        val text : String = new String(decoded, "UTF-8")
         log.debug(s"Read message body as String of length[${text.length}]")
         Some(Right(text))
       }

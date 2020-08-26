@@ -3,17 +3,18 @@ package blended.itestsupport.condition
 import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.condition.ConditionActor.CheckCondition
 import blended.itestsupport.condition.ConditionActor.ConditionCheckResult
-import blended.testsupport.TestActorSys
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import akka.actor.ActorSystem
 
 class SequentialCheckerSpec extends AnyWordSpec
   with Matchers {
 
+  private implicit val system : ActorSystem = ActorSystem("SequentialChecker")
+
   "The Condition Checker" should {
 
-    "respond with a satisfied message on an empty list of conditions" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+    "respond with a satisfied message on an empty list of conditions" in {
       val probe = TestProbe()
 
       val condition = new SequentialComposedCondition()
@@ -23,8 +24,7 @@ class SequentialCheckerSpec extends AnyWordSpec
       probe.expectMsg(ConditionCheckResult(List.empty[Condition], List.empty[Condition]))
     }
 
-    "respond with a satisfied message after a single wrapped condition has been satisfied" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+    "respond with a satisfied message after a single wrapped condition has been satisfied" in {
       val probe = TestProbe()
 
       val conditions = (1 to 1).map { i => new AlwaysTrue() }.toList
@@ -36,8 +36,7 @@ class SequentialCheckerSpec extends AnyWordSpec
       probe.expectMsg(ConditionCheckResult(conditions, List.empty[Condition]))
     }
 
-    "respond with a satisfied message after some wrapped conditions have been satisfied" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+    "respond with a satisfied message after some wrapped conditions have been satisfied" in {
       val probe = TestProbe()
 
       val conditions = (1 to 5).map { i => new AlwaysTrue() }.toList
@@ -49,8 +48,7 @@ class SequentialCheckerSpec extends AnyWordSpec
       probe.expectMsg(ConditionCheckResult(conditions, List.empty[Condition]))
     }
 
-    "respond with a timeout message after a single wrapped condition has timed out" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+    "respond with a timeout message after a single wrapped condition has timed out" in {
       val probe = TestProbe()
 
       val conditions = (1 to 1).map { i => new NeverTrue() }.toList
@@ -62,8 +60,7 @@ class SequentialCheckerSpec extends AnyWordSpec
       probe.expectMsg(ConditionCheckResult(List.empty[Condition], conditions))
     }
 
-    "respond with a timeout message after the first wrapped condition has timed out" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+    "respond with a timeout message after the first wrapped condition has timed out" in {
       val probe = TestProbe()
 
       val conditions = (1 to 5).map { i => new NeverTrue() }.toList
@@ -78,9 +75,8 @@ class SequentialCheckerSpec extends AnyWordSpec
     """"
      respond with a timeout message containing the remaining Conditions
      after the first failing condition has timed out
-    """ in TestActorSys { testkit =>
+    """ in {
 
-      implicit val system = testkit.system
       val probe = TestProbe()
 
       val trueConditions      = (1 to 2).map { i => new AlwaysTrue() }.toList

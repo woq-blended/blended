@@ -10,6 +10,8 @@ import blended.jmx.ProductMBeanManager
 import domino.service_consuming.ServiceConsuming
 import org.osgi.framework.BundleContext
 import blended.jmx.statistics.ServiceStatisticsActor
+import blended.jmx.statistics.ServiceNamingStrategy
+import blended.jmx.statistics.ServicePublishEntry
 
 class BlendedJmxActivator extends DominoActivator with ActorSystemWatching {
 
@@ -29,6 +31,9 @@ class BlendedJmxActivator extends DominoActivator with ActorSystemWatching {
 
     val facade : BlendedMBeanServerFacade = new BlendedMBeanServerFacadeImpl(mbeanServer)
     facade.providesService[BlendedMBeanServerFacade]
+
+    val svcNaming : NamingStrategy = new ServiceNamingStrategy()
+    svcNaming.providesService[NamingStrategy](NamingStrategyResolver.strategyClassNameProp -> classOf[ServicePublishEntry].getName())
 
     whenActorSystemAvailable { osgiConfig =>
       val mgr : ProductMBeanManager = new  ProductMBeanManagerImpl(

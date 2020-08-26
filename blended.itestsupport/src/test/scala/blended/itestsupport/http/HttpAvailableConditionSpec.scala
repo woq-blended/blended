@@ -10,7 +10,6 @@ import blended.itestsupport.condition.Condition
 import blended.itestsupport.condition.ConditionActor
 import blended.itestsupport.condition.ConditionActor.CheckCondition
 import blended.itestsupport.condition.ConditionActor.ConditionCheckResult
-import blended.testsupport.TestActorSys
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.testsupport.BlendedTestSupport.freePort
 
@@ -18,9 +17,7 @@ class HttpAvailableConditionSpec extends LoggingFreeSpec with ScalatestRouteTest
 
   "The HttpAvailableCondition" - {
 
-    "should fail with no existing HTTP server" in TestActorSys { testkit =>
-
-      implicit val system = testkit.system
+    "should fail with no existing HTTP server" in {
       val probe = TestProbe()
 
       val t = 5.seconds
@@ -33,8 +30,7 @@ class HttpAvailableConditionSpec extends LoggingFreeSpec with ScalatestRouteTest
 
     }
 
-    "should be satisfied with the intra JVM HTTP Server" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+    "should be satisfied with the intra JVM HTTP Server" in {
       val probe = TestProbe()
 
       val route = get {
@@ -55,8 +51,7 @@ class HttpAvailableConditionSpec extends LoggingFreeSpec with ScalatestRouteTest
       }
     }
 
-    "should not be satisfied with a wrong path on the intra JVM HTTP Server" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+    "should not be satisfied with a wrong path on the intra JVM HTTP Server" in {
       val probe = TestProbe()
 
       val route = get {
@@ -76,7 +71,5 @@ class HttpAvailableConditionSpec extends LoggingFreeSpec with ScalatestRouteTest
         probe.expectMsg(t + 1.second, ConditionCheckResult(List.empty[Condition], List(condition)))
       }
     }
-
   }
-
 }

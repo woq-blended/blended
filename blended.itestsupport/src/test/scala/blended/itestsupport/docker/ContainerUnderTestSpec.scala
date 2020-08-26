@@ -1,10 +1,10 @@
 package blended.itestsupport.docker
 
 import blended.itestsupport.ContainerUnderTest
-import blended.testsupport.TestActorSys
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
+import akka.actor.ActorSystem
 
 class ContainerUnderTestSpec extends AnyWordSpec
   with Matchers
@@ -14,8 +14,8 @@ class ContainerUnderTestSpec extends AnyWordSpec
 
   "The Container Under Test" should {
 
-    "be configurable from the configuration" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+    "be configurable from the configuration" in {
+      implicit val system : ActorSystem = ActorSystem("ContainerUnderTest")
 
 //      def docker: Docker = {
 //        System.setProperty("docker.io.version", "1.17")
