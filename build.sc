@@ -1028,21 +1028,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
     }
-    object mock extends CoreModule {
-      override def description = "Mock server to simulate a larger network of blended containers for UI testing"
-      override def ivyDeps = super.ivyDeps() ++ Agg(
-        deps.cmdOption,
-        deps.akkaActor(akkaBundleRevision),
-        deps.logbackClassic
-      )
-      override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
-        blended.mgmt.base,
-        blended.mgmt.agent,
-        blended.container.context.impl,
-        blended.util.logging
-      )
-      object test extends CoreTests
-    }
     object repo extends CoreModule {
       override def description = "File Artifact Repository"
       override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(

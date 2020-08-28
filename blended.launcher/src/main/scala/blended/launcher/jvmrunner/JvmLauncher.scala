@@ -52,7 +52,11 @@ class JvmLauncher() {
     override def run() : Unit = {
       log.info("Caught shutdown. Stopping process")
       runningProcess foreach { p =>
-        p.stop()
+        try {
+          p.stop()
+        } catch {
+          case NonFatal(_) => // ignore as we are shutting down anyway
+        }
       }
     }
   }
