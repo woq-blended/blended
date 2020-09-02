@@ -59,6 +59,7 @@ case class RoundtripHelper(
           cf = o.cf,
           dest = o.dest,
           log = envLog,
+          listener = 1,
           selector = o.selector,
           completeOn = o.completeOn,
           timeout = Some(timeout)
