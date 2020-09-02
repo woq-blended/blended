@@ -21,16 +21,16 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
 
   case object Start
   case class Result(result : Try[Unit])
-  
+
   override def preStart(): Unit = {
     self ! Start
   }
 
   override def receive: Actor.Receive = {
-    case Start => 
+    case Start =>
       val s : TestEvent = TestEvent(
         factoryName = t.factory.name,
-        testName = t.name, 
+        testName = t.name,
         id = testId,
         state = TestEvent.State.Started
       )
@@ -42,10 +42,10 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
   }
 
   private def running(s : TestEvent) : Receive = {
-    case Result(Success(())) => 
+    case Result(Success(())) =>
       log.info(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has succeeded.")
       finish(s.copy(state = TestEvent.State.Success))
-    case Result(Failure(e)) => 
+    case Result(Failure(e)) =>
       log.info(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has failed [${e.getMessage()}].")
       finish(s.copy(state = TestEvent.State.Failed, cause = Some(e)))
   }

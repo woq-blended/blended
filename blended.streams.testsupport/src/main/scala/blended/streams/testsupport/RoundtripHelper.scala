@@ -15,7 +15,8 @@ case class ExpectedOutcome(
   cf : IdAwareConnectionFactory,
   dest : JmsDestination,
   assertion : Seq[FlowMessageAssertion],
-  completeOn : Option[Seq[FlowEnvelope] => Boolean] = None
+  completeOn : Option[Seq[FlowEnvelope] => Boolean] = None,
+  selector: Option[String] = None
 )
 
 case class RoundtripHelper(
@@ -47,8 +48,7 @@ case class RoundtripHelper(
   )
 
   def run() : Map[String, Seq[String]] = {
-    val msg : String = s"Starting test case [$name], timeout = [$timeout]"
-    println(msg)
+    val msg : String = "-" * 20 + s"Starting test case [$name], timeout = [$timeout]"
     log.info(msg)
 
     val collectors : Map[String, Collector[FlowEnvelope]] = {
@@ -59,6 +59,7 @@ case class RoundtripHelper(
           cf = o.cf,
           dest = o.dest,
           log = envLog,
+          selector = o.selector,
           completeOn = o.completeOn,
           timeout = Some(timeout)
         )
@@ -88,7 +89,12 @@ case class RoundtripHelper(
         k -> FlowMessageAssertion.checkAssertions(v : _*)(oc.assertion : _*)
     }
 
-    log.info(s"Finishing test case [$name]")
+    if (msgs.values.flatten.isEmpty) {
+      log.info("-" * 20 + s"Finishing test case [$name]")
+    } else {
+      val errors : String = msgs.view.mapValues(_.mkString("  ", "\n  ", "")).map{ case (k,v) => s"$k\n$v"}.mkString("\n")
+      log.warn(s"Test Case [$name] failed\n$errors")
+    }
     collectors.values.foreach(c => system.stop(c.actor))
 
     msgs.filter(_._2.nonEmpty)

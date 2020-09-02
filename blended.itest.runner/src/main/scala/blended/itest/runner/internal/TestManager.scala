@@ -23,6 +23,7 @@ class TestManager(maxSlots : Int, mbeanMgr : Option[ProductMBeanManager]) extend
 
   override def preStart(): Unit = {
     super.preStart()
+    // TODO: Make schedule interval configurable
     timers.startTimerAtFixedRate("Tick", ScheduleTest, 100.millis)
     context.system.eventStream.subscribe(self, classOf[TestEvent])
     context.become(running(TestManagerState(mbeanMgr = mbeanMgr)(context.system)))
@@ -34,38 +35,39 @@ class TestManager(maxSlots : Int, mbeanMgr : Option[ProductMBeanManager]) extend
 
   private def running(state : TestManagerState) : Receive = {
 
-    case Protocol.AddTestTemplateFactory(fact : TestTemplateFactory) => 
+    case Protocol.AddTestTemplateFactory(fact : TestTemplateFactory) =>
       val newState : TestManagerState = state.addTemplates(fact)
       log.info(s"Added template factory [${fact.name}], [${newState.templates.size}] templates in total")
       context.become(running(newState))
       scheduleTest()
 
-    case Protocol.RemoveTestTemplateFactory(fact : TestTemplateFactory) => 
+    case Protocol.RemoveTestTemplateFactory(fact : TestTemplateFactory) =>
       val newState : TestManagerState = state.removeTemplates(fact)
       log.info(s"Removed template factory [${fact.name}], [${newState.templates.size}] templates in total")
       context.become(running(newState))
       scheduleTest()
 
-    case Protocol.GetTestTemplates => 
+    case Protocol.GetTestTemplates =>
       sender() ! Protocol.TestTemplates(state.templates)
 
-    case ScheduleTest => 
+    case ScheduleTest =>
       if (state.executing.size < maxSlots) {
         selector.selectTest(state.templates, state.summaries) match {
-          case None => 
-          case Some(t) => 
+          case None =>
+            // do nothing, simply wait for the next ScheduleTest message
+          case Some(t) =>
             val id : String = t.generateId
             val actor : ActorRef = context.actorOf(TestRunner.props(t, id))
             context.watch(actor)
             context.become(running(state.testStarted(id, t, actor)))
+            scheduleTest()
         }
-        scheduleTest()
-      } 
+      }
 
-    case Terminated(a) => 
-      context.become(running(state.testTerminated(a)))  
-      
-    case evt : TestEvent => 
+    case Terminated(a) =>
+      context.become(running(state.testTerminated(a)))
+
+    case evt : TestEvent =>
       context.become(running(state.testFinished(evt)))
       scheduleTest()
   }
