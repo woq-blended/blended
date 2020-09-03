@@ -5,12 +5,13 @@ import org.scalatest.matchers.should.Matchers
 import blended.itest.runner._
 import scala.util.Try
 import scala.concurrent.duration._
+import blended.jmx.statistics.Accumulator
 
-class StandardTestSelectorSpec extends LoggingFreeSpec 
+class StandardTestSelectorSpec extends LoggingFreeSpec
   with Matchers {
 
   private def templateFactory(cnt : Int, minDelay : Option[FiniteDuration] = None) : TestTemplateFactory = new TestTemplateFactory() { f =>
-    
+
     override def name : String = "myFactory"
 
     override val templates: List[TestTemplate] = (1.to(cnt)).map { n =>
@@ -18,25 +19,25 @@ class StandardTestSelectorSpec extends LoggingFreeSpec
         override def factory: TestTemplateFactory = f
         override val name : String = s"myTest-$n"
         override def test() : Try[Unit] = Try{}
-        override def maxExecutions: Int = 5
+        override def maxExecutions: Long = 5
         override def allowParallel: Boolean = false
         override def minStartDelay: Option[FiniteDuration] = minDelay
       }
     }.toList
   }
-  
+
   private def template(name : String, templates : List[TestTemplate]) : TestTemplate = {
     templates.find(_.name == name) match {
       case Some(t) => t
       case None => throw new Exception("No such test template")
     }
   }
-  
+
   "The test template selector should" - {
 
     val selector : TestSelector = new StandardTestSelector()
 
-    "return None if no test templates are registered" in logException { 
+    "return None if no test templates are registered" in logException {
       selector.selectTest(Nil, Nil) should be (None)
     }
 
@@ -47,7 +48,7 @@ class StandardTestSelectorSpec extends LoggingFreeSpec
       }
     }
 
-    "select the template that is not running in favor of one that has already been used" in logException { 
+    "select the template that is not running in favor of one that has already been used" in logException {
 
       val fact : TestTemplateFactory = templateFactory(2)
       val t1 : TestTemplate = template("myTest-1", fact.templates)
@@ -85,7 +86,7 @@ class StandardTestSelectorSpec extends LoggingFreeSpec
 
       val fact : TestTemplateFactory = templateFactory(1)
       val t1 : TestTemplate = template("myTest-1", fact.templates)
-      
+
       val m : List[TestSummary] = List(
         TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis()), running = 1)
       )
@@ -96,9 +97,9 @@ class StandardTestSelectorSpec extends LoggingFreeSpec
     "not select a template that has reached its maximal executions" in {
       val fact : TestTemplateFactory = templateFactory(1)
       val t1 : TestTemplate = template("myTest-1", fact.templates)
-      
+
       val m : List[TestSummary] = List(
-        TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis()), executions = t1.maxExecutions)
+        TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis()), succeded = Accumulator().copy(t1.maxExecutions))
       )
 
       selector.selectTest(fact.templates, m) should be (None)
@@ -107,7 +108,7 @@ class StandardTestSelectorSpec extends LoggingFreeSpec
     "not select a template where the minimum start delay has not been passed" in {
       val fact : TestTemplateFactory = templateFactory(1, Some(60.seconds))
       val t1 : TestTemplate = template("myTest-1", fact.templates)
-      
+
       val m : List[TestSummary] = List(
         TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis()))
       )
@@ -123,5 +124,5 @@ class StandardTestSelectorSpec extends LoggingFreeSpec
         case Some(t) => t.name should be ("myTest-1")
       }
     }
-  }   
+  }
 }

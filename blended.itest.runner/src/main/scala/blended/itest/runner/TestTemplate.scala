@@ -17,19 +17,19 @@ trait TestTemplateFactory {
 trait TestTemplate {
   // The factory that has created this template
   def factory : TestTemplateFactory
-  // a unique name for the test template within the Test Template factory 
-  def name : String   
+  // a unique name for the test template within the Test Template factory
+  def name : String
   // instantiate a test executable within an Actor
   def test() : Try[Unit]
-  // How many instances of the test shall maximal be run 
-  def maxExecutions : Int = Int.MaxValue
+  // How many instances of the test shall maximal be run
+  def maxExecutions : Long = Long.MaxValue
   // Should we wait between starting two subsequent instances of the test ?
   def minStartDelay : Option[FiniteDuration] = None
   // Are multiple parallel instances of the test allowed ?
   def allowParallel : Boolean = true
-  // generate an id for the test 
+  // generate an id for the test
   def generateId : String = ju.UUID.randomUUID().toString()
 
-  override def toString() : String = 
+  override def toString() : String =
     s"TestTemplate(${factory.name}::$name,maxExecutions=$maxExecutions,parallel=$allowParallel)"
 }

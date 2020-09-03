@@ -2,10 +2,11 @@ package blended.itest.runner
 
 import java.text.SimpleDateFormat
 import java.util.Date
+import blended.jmx.statistics.Accumulator
 
 object TestSummary {
   def apply(f : TestTemplate) : TestSummary = TestSummary(
-    factoryName = f.factory.name, 
+    factoryName = f.factory.name,
     testName = f.name,
     maxExecutions = f.maxExecutions
   )
@@ -17,16 +18,14 @@ final case class TestSummary(
   // The name of the test within the factory
   testName : String,
   // How many executions do we want of this test
-  maxExecutions : Int,
-  // How often has the test been executed 
-  executions : Int = 0,
-  // How many failures have been encountered 
-  failed : Int = 0,
-  // How many successful runs have been executed 
-  succeded : Int = 0,
-  // How many instances are currently running 
+  maxExecutions : Long,
+  // How many failures have been encountered
+  failed : Accumulator = Accumulator(),
+  // How many successful runs have been executed
+  succeded : Accumulator = Accumulator(),
+  // How many instances are currently running
   running : Int = 0,
-  // When was the last instance started 
+  // When was the last instance started
   lastStarted : Option[Long] = None,
   // the last failure
   lastFailed : Option[TestEvent] = None,
@@ -34,9 +33,12 @@ final case class TestSummary(
   lastSuccess : Option[TestEvent] = None,
   // How many last executions do we want to keep
   maxLastExecutions : Int = 10,
-  // the last executions of this particular tests 
+  // the last executions of this particular tests
   lastExecutions : List[TestEvent] = List.empty
 ) {
+
+  val executions : Long = failed.count + succeded.count
+
   override def toString() : String = {
 
     val suc : String = lastSuccess.map(e => s", lastSuccess=${e.toString()}").getOrElse("")
@@ -55,16 +57,24 @@ object TestSummaryJMX {
     TestSummaryJMX(
       aFactoryName = sum.factoryName,
       aTestName = sum.testName,
-      pending = if (sum.maxExecutions == Int.MaxValue) {
-        Int.MaxValue
+      pending = if (sum.maxExecutions == Long.MaxValue) {
+        Long.MaxValue
       } else {
         sum.maxExecutions - sum.executions - sum.running
       },
-      completed = sum.executions,
-      completedFail = sum.failed,
-      completedOk = sum.succeded,
+
+      completedCnt = sum.succeded.count,
+      completedMin = sum.succeded.minMsec,
+      completedMax = sum.succeded.maxMsec,
+      completedAvg = sum.succeded.avg,
+
+      failedCnt = sum.failed.count,
+      failedMin = sum.failed.minMsec,
+      failedMax = sum.failed.maxMsec,
+      failedAvg = sum.failed.avg,
+
       running = sum.running,
-      lastStarted = sum.lastStarted.map(s => sdf.format(new Date(s))), 
+      lastStarted = sum.lastStarted.map(s => sdf.format(new Date(s))),
       lastFailed = sum.lastFailed.map(f => sdf.format(new Date(f.timestamp))),
       lastFailedid = sum.lastFailed.map(_.id),
       lastErrorMsg = sum.lastFailed.flatMap(_.cause).map(_.getMessage()).getOrElse(""),
@@ -78,11 +88,20 @@ object TestSummaryJMX {
 case class TestSummaryJMX(
   aFactoryName : String,
   aTestName : String,
-  pending : Int,
-  completed : Int,
-  completedFail : Int, 
-  completedOk : Int,
-  running : Int, 
+  pending : Long,
+
+  completedCnt : Long,
+  completedMin: Long,
+  completedMax: Long,
+  completedAvg: Double,
+
+  failedCnt: Long,
+  failedMin: Long,
+  failedMax: Long,
+  failedAvg: Double,
+
+  running : Int,
+
   lastStarted : Option[String],
   lastFailed : Option[String],
   lastFailedid : Option[String],

@@ -10,11 +10,11 @@ import akka.testkit.TestProbe
 import java.util.concurrent.atomic.AtomicInteger
 
 class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
-  with LoggingFreeSpecLike 
+  with LoggingFreeSpecLike
   with Matchers {
 
   private def templateFactory(n : String, cnt : Int) : TestTemplateFactory = new TestTemplateFactory() { f =>
-    
+
     override def name : String = n
 
     override val templates: List[TestTemplate] = (1.to(cnt)).map { n =>
@@ -22,12 +22,12 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
         override def factory: TestTemplateFactory = f
         override val name : String = s"myTest-$n"
         override def test() : Try[Unit] = Try{}
-        override def maxExecutions: Int = 5
+        override def maxExecutions: Long = 5
         override def allowParallel: Boolean = false
       }
     }.toList
   }
-  
+
   "The Test Manager State should" - {
 
     "start empty" in {
@@ -44,7 +44,7 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
       val f1 : TestTemplateFactory = templateFactory("fact1", 5)
       val f2 : TestTemplateFactory = templateFactory("fact2", 10)
 
-      val s : TestManagerState = 
+      val s : TestManagerState =
         TestManagerState()
           .addTemplates(f1)
           .addTemplates(f2)
@@ -53,16 +53,16 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
       assert(s.templates.forall(t => List(f1.name, f2.name).contains(t.factory.name)))
     }
 
-    "start with an empty summary for each registered template" in { 
+    "start with an empty summary for each registered template" in {
       val f1 : TestTemplateFactory = templateFactory("fact1", 5)
       val f2 : TestTemplateFactory = templateFactory("fact2", 10)
 
-      val s : TestManagerState = 
+      val s : TestManagerState =
         TestManagerState()
           .addTemplates(f1)
           .addTemplates(f2)
 
-      (f1.templates ::: f2.templates).foreach{ t => 
+      (f1.templates ::: f2.templates).foreach{ t =>
         val sum : TestSummary = s.summary(t)
         sum.lastStarted should be (None)
         sum.lastFailed should be (None)
@@ -101,9 +101,9 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
       }
 
       val event : String => TestEvent.State.State => TestEvent = id => s => TestEvent(
-        factoryName = t.factory.name, 
-        testName = t.name, 
-        id = id, 
+        factoryName = t.factory.name,
+        testName = t.name,
+        id = id,
         state = s
       )
 
@@ -124,5 +124,5 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
       sum2.lastFailed should be (defined)
       sum2.executions should be (2)
     }
-  }  
+  }
 }

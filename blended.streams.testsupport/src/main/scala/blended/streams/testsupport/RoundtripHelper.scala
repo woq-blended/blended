@@ -90,14 +90,17 @@ case class RoundtripHelper(
         k -> FlowMessageAssertion.checkAssertions(v : _*)(oc.assertion : _*)
     }
 
-    if (msgs.values.flatten.isEmpty) {
+    val result : Map[String, Seq[String]] = msgs.filter(_._2.nonEmpty)
+
+    if (result.isEmpty) {
       log.info("-" * 20 + s"Finishing test case [$name]")
     } else {
-      val errors : String = msgs.view.mapValues(_.mkString("  ", "\n  ", "")).map{ case (k,v) => s"$k\n$v"}.mkString("\n")
+      val errors : String = result.view.mapValues(_.mkString("  ", "\n  ", "")).map{ case (k,v) => s"$k\n$v"}.mkString("\n")
       log.warn(s"Test Case [$name] failed\n$errors")
     }
+
     collectors.values.foreach(c => system.stop(c.actor))
 
-    msgs.filter(_._2.nonEmpty)
+    result
   }
 }
