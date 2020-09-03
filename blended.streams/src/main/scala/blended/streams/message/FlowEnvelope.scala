@@ -49,6 +49,8 @@ final case class FlowEnvelope private[message] (
     s"FlowEnvelope[$id][$requiresAcknowledge][$flowMessage]$ctxtKeys$err"
   }
 
+  def withId(newId : String) : FlowEnvelope = copy(id = newId)
+
   def header[T](key : String)(implicit m : Manifest[T]) : Option[T] = flowMessage.header[T](key)
   def headerWithDefault[T](key : String, default : T)(implicit m : Manifest[T]) : T = flowMessage.headerWithDefault[T](key, default)
 

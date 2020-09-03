@@ -64,13 +64,13 @@ object TestSummaryJMX {
       },
 
       completedCnt = sum.succeded.count,
-      completedMin = sum.succeded.minMsec,
-      completedMax = sum.succeded.maxMsec,
+      completedMin = if (sum.succeded.count == 0) "" else sum.succeded.minMsec.toString(),
+      completedMax = if (sum.succeded.count == 0) "" else sum.succeded.maxMsec.toString(),
       completedAvg = sum.succeded.avg,
 
       failedCnt = sum.failed.count,
-      failedMin = sum.failed.minMsec,
-      failedMax = sum.failed.maxMsec,
+      failedMin = if (sum.failed.count == 0) "" else sum.failed.minMsec.toString(),
+      failedMax = if (sum.failed.count == 0) "" else sum.failed.maxMsec.toString(),
       failedAvg = sum.failed.avg,
 
       running = sum.running,
@@ -91,13 +91,13 @@ case class TestSummaryJMX(
   pending : Long,
 
   completedCnt : Long,
-  completedMin: Long,
-  completedMax: Long,
+  completedMin: String,
+  completedMax: String,
   completedAvg: Double,
 
   failedCnt: Long,
-  failedMin: Long,
-  failedMax: Long,
+  failedMin: String,
+  failedMax: String,
   failedAvg: Double,
 
   running : Int,
