@@ -21,6 +21,7 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching {
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
 
+      // start:doctag[sample]
       implicit val eCtxt : ExecutionContext = osgiCfg.system.dispatcher
 
       // First we register a default verifier
@@ -34,6 +35,7 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching {
       val failedHandlerName = osgiCfg.config.getString("failedHandler", "default")
       log.info(s"ActiveMQ Client connections using verifier [$verifierName]")
       log.info(s"Using verification failed handler [$failedHandlerName]")
+      // end:doctag[sample]
 
       whenAdvancedServicePresent[ConnectionVerifierFactory](s"(name=$verifierName)") { verifierFactory =>
         whenAdvancedServicePresent[VerificationFailedHandler](s"(name=$failedHandlerName)") { failedHandler =>

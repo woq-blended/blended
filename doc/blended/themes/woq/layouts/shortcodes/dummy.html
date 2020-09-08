@@ -1,0 +1,28 @@
+{{ $code := readFile (.Get "file") }}
+{{ $lines := split $code "\n" }}
+{{ $scratch := newScratch }}
+
+{{ $scratch.Set "collecting" false }}
+{{ $scratch.Set "pending" true }}
+
+{{ range $index, $line := $lines }}
+  {{ $match := (findRE "doctag" $line) | len }}
+  {{ if $scratch.Get "collecting" }}
+    {{ if gt $match 0 }}
+      {{ $scratch.Set "collecting" false }}
+      {{ $scratch.Set "pending" false }}
+    {{ else }}
+      {{ $scratch.Add "collected" ( slice $line ) }}
+    {{ end }}
+  {{ else }}
+    {{ if and (gt $match 0) ($scratch.Get "pending") }}
+      {{ $scratch.Set "lineno" ($index | add 2) }}
+      {{ $scratch.Set "collecting" true }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ $extract := delimit ($scratch.Get "collected") "\n" }}
+
+{{ $lang := .Get "lang" }}
+{{ (print "```" $lang " {linenos=true,linenostart=" ($scratch.Get "lineno") "}\n" $extract "\n```\n") | markdownify }}

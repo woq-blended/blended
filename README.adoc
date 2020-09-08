@@ -20,8 +20,6 @@ The _Blended management framework_ allows to monitor and manage a large number o
 
 The _Blended test framework_ allows to execute functional cross-component tests mimicking the final container environment with minimal effort.
 
-The _Blended integration test framework_ uses docker to create and deploy docker images from within the build process and supports the developer in creating integration tests for the final container.
-
 ====
 _Blended_ is the backend for a distributed retail communication software.
 All components and services not directly related to the actual business components are licensed under the https://www.apache.org/licenses/LICENSE-2.0.html[Apache 2.0 license].
