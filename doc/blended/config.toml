@@ -34,8 +34,8 @@ theme = "woq"
     target = "archetypes"
 
   [[module.mounts]]
-    source = "../.."
-    target = "content/src"
+    source = "../../modules"
+    target = "content/modules"
 
 [menu]
   [[menu.main]]

@@ -1,4 +1,4 @@
-= SCEP Client
+# SCEP Client
 :scepclient: SCEP Client
 :version: 3.1-SNAPSHOT
 :binpack: blended.security.scep.standalone-{version}-bin.zip
@@ -7,15 +7,15 @@
 
 {scepclient} is a command line application that is capable to gather and renew certificates via a remote SCEP server. The certificates will be stores in a local Java keystore.
 
-== Installation
+## Installation
 
 Download and unpack the binary distribution file `{binpack}`.
 
 .Contents of the binary distribution
-[subs="attributes,verbatim"]
-----
+
+```text
 {binpack}
-├── README.adoc            <1>
+├── README.md              <1>
 ├── etc
 │   ├── application.conf   <2>
 │   └── keystore           <3>
@@ -24,27 +24,26 @@ Download and unpack the binary distribution file `{binpack}`.
 ├── log
 │   └── scep-client.log    <5>
 └── scep-client.jar        <6>
-----
+```
 
-<1> This Documentation.
-<2> The configuration file `application.conf` in the central place to configure the application.
-<3> The keystore file is automatically created and consecutively updated by the application.
-<4> The `lib` directory contains required libries (JAR files).
-<5> The log file contains verbose runtime information.
-<6> The application JAR file, containing the main application.
-
+1. This Documentation.
+1. The configuration file `application.conf` in the central place to configure the application.
+1. The keystore file is automatically created and consecutively updated by the application.
+1. The `lib` directory contains required libries (JAR files).
+1. The log file contains verbose runtime information.
+1. The application JAR file, containing the main application.
 
 Start the application with:
 
-----
+```bash
 $ java -jar scep-client.jar
-----
+```
 
-== Usage
+## Usage
 
 The application operation is controlled via command line options:
 
-----
+```bash
 $ java -jar scep-client.jar --help
 Standalone SCEP client, which can create and update Java key stores
 from a remote SCEP server.
@@ -65,13 +64,13 @@ Options:
   --salt,-s salt      Use this salt when generating a password with
                       --password
   --timeout sec       Timeout (in seconds) used when refreshing certificates
-----
+```
 
 To initially get the configured certificate(s) use the following command:
 
-----
+```bash
 $ java -jar scep-client.jar --refresh-certs
-----
+```
 
 The same command is used to check and, if required, refresh the certificate(s).
 
@@ -89,19 +88,20 @@ You can use the option `expect-refresh` to signal the case that no new certifica
 It will exit with an exit code other that `0` (currently `5`, but this may change in future).
 This allows you to chain the scep-client with you server refresh logic only in case some certificate has changed:
 
-----
+```bash
 scep-client --refresh --expect-refresh && do-some-server-refresh-logic.sh
-----
+```
 
 You can inspect the application log file `log/scep-client.log` for processing and error details.
 
-== Configuration
+## Configuration
 
 The binary distribution already contains a commented configuration file, which you can adapt to your need.
 At least, you have to change the SCEP server URL as well as the desired certificates.
 
 .Annotated example configuration `etc/application.conf`
-----
+
+```text {linenos=true}
 // The blended SSL implementation uses a dynamically provisioned
 // SSL Context. This SSLContext uses a certificate provider under
 // the covers to obtain a server certificate when required.
@@ -109,138 +109,139 @@ At least, you have to change the SCEP server URL as well as the desired certific
 // reuses and refreshed whenever it is about to expire.
 blended.security {
 
-    ssl {
+  ssl {
+    // This is the keystore file where the generated server
+    // certificate is kept until it expires
+    keyStore # ${scepclient.home}/etc/keystore
 
-      // This is the keystore file where the generated server
-      // certificate is kept until it expires
-      keyStore = ${scepclient.home}/etc/keystore
+    // !!! NOTE : Once these passwords are changed, the keystore
+    // !!! should be deleted to force a refresh of the server
+    // !!! certificate
 
-      // !!! NOTE : Once these passwords are changed, the keystore
-      // !!! should be deleted to force a refresh of the server
-      // !!! certificate
+    // the storepass is used to generate the keystore password
+    // this is not the effectively used password
+    # storePass # "blended"
 
-      // the storepass is used to generate the keystore password
-      // this is not the effectively used password
-      # storePass = "blended"
+    // the keypass is used to generate the private key password
+    // this is not the effectively used password
+    # keyPass # "mysecret"
 
-      // the keypass is used to generate the private key password
-      // this is not the effectively used password
-      # keyPass = "mysecret"
-
-      explicit {
-        // if defined, it replaces the blended.security.ssl.storePass with an explicitly
-        // given password. The passwort will be used as-is.
-        // Using the config encryption feature (storePass = "$[encrypted[h79ghg123]") is strongly encouraged.
-        storePass = ""
-        // if defined, it replaces the blended.security.ssl.keyPass with an explicitly
-        // given password. The passwort will be used as-is.
-        // Using the config encryption feature (keyPass = "$[encrypted[h79ghg123]") is strongly encouraged.
-        keyPass = ""
-      }
-
-      // the configuration of the self signed certificate provider.
-      // This is required as an initial SCEP request is performed
-      // with a self signed certificate. The common name and
-      // alternative names will be passed in from the certificate
-      // configuration.
-      selfsigned {
-        validDays="10"
-        keyStrength=2048
-        signatureAlgorithm="SHA256withRSA"
-      }
-
-      // the configuration of the individual certificates. each
-      // certificate configuration stands for a server certificate
-      // that will be used within the server side ssl context.
-      // Certificates are selected via SNI (requires Java 8 or greater).
-      // The name of the config block will be used as the alias
-      // with in the keystore.
-      certificates {
-        server1 {
-          // The common name and alternative names for the certificate.
-          commonName = "CN=server1, O=blended, C=DE"
-          logicalHostnames = ["server1"]
-
-          // The certificate provider used for provisioning certificates.
-          // The provider 'default' will use self signed certificates;
-          // the provider 'scep' we use a SCEP enabled server
-          // to automatically provision server certifacates via SCEP.
-          provider = "scep"
-
-          // The amout of days before an certificate expiry the server
-          // will try to refresh the certificate.
-          // default: 10
-          # minValidDays = 10
-        }
-      }
+    explicit {
+      // if defined, it replaces the blended.security.ssl.storePass with an explicitly
+      // given password. The passwort will be used as-is.
+      // Using the config encryption feature (storePass # "$[encrypted[h79ghg123]") is strongly encouraged.
+      storePass # ""
+      // if defined, it replaces the blended.security.ssl.keyPass with an explicitly
+      // given password. The passwort will be used as-is.
+      // Using the config encryption feature (keyPass # "$[encrypted[h79ghg123]") is strongly encouraged.
+      keyPass # ""
     }
 
-    scep {
-      scepUrl = "http://scep.server.url"
+    // the configuration of the self signed certificate provider.
+    // This is required as an initial SCEP request is performed
+    // with a self signed certificate. The common name and
+    // alternative names will be passed in from the certificate
+    // configuration.
+    selfsigned {
+      validDays#"10"
+      keyStrength#2048
+      signatureAlgorithm#"SHA256withRSA"
+    }
 
-      // The profile, if required by the SCEP server (if unsure,
-      // contact the SCEP administrator)
-      // default : None
-      # scepProfile =
+    // the configuration of the individual certificates. each
+    // certificate configuration stands for a server certificate
+    // that will be used within the server side ssl context.
+    // Certificates are selected via SNI (requires Java 8 or greater).
+    // The name of the config block will be used as the alias
+    // with in the keystore.
+    certificates {
+      server1 {
+        // The common name and alternative names for the certificate.
+        commonName # "CN#server1, O#blended, C#DE"
+        logicalHostnames # ["server1"]
 
-      // The length of the key to sign requests sent to the SCEP server
-      // default: 2048
-      # keyLength = 2048
+        // The certificate provider used for provisioning certificates.
+        // The provider 'default' will use self signed certificates;
+        // the provider 'scep' we use a SCEP enabled server
+        // to automatically provision server certifacates via SCEP.
+        provider # "scep"
 
-      // The signature algorithm to sign requests sent to the SCEP server
-      // default: "SHA1withRSA"
-      # csrSignAlgorithm = "SHA1withRSA"
-
-      // The challenge password required by the SCEP server
-      // default: None
-      scepChallenge = "password"
+        // The amout of days before an certificate expiry the server
+        // will try to refresh the certificate.
+        // default: 10
+        # minValidDays # 10
+      }
     }
   }
-----
 
-=== Encryption of sensitive configuration data
+  scep {
+    scepUrl # "http://scep.server.url"
+
+    // The profile, if required by the SCEP server (if unsure,
+    // contact the SCEP administrator)
+    // default : None
+    # scepProfile #
+
+    // The length of the key to sign requests sent to the SCEP server
+    // default: 2048
+    # keyLength # 2048
+
+    // The signature algorithm to sign requests sent to the SCEP server
+    // default: "SHA1withRSA"
+    # csrSignAlgorithm # "SHA1withRSA"
+
+    // The challenge password required by the SCEP server
+    // default: None
+    scepChallenge # "password"
+  }
+}
+```
+
+### Encryption of sensitive configuration data
 
 To not expose sensitive configuration data like user credentials and passwords,
 the configuration format supports encrypted notation of config values.
 
 An encrypted value looks as follows:
-----
-key = "$[encrypted[8f359ca521]]"
-----
+
+```text
+key # "$[encrypted[8f359ca521]]"
+```
 
 To produce encrypted values, you can use the `BlendedEncryptor` tool.
 
 
-== Export a server key and certificate to openssl
+## Export a server key and certificate to openssl
 
 To use some server keys in other applications, e.g. openssl, you can convert the  keystore at `<scepclient-home>/etc/keystore` (which is in the proprietary JKS format) into the standardized format https://en.wikipedia.org/wiki/PKCS_12[PKCS#12].
 
 The `keytool` is part of each Oracle Java distribution, and can be found under ``${JAVA_HOME}/bin/keytool`.
 
 .Extract server key `<jkskeyalias>` into a PKCS#12 keystore
-----
+
+```bash
 $ keytool -importkeystore \
 -srckeystore <scepclient-home>/etc/keystore \
 -destkeystore keystore.p12 -deststoretype PKCS12 \
 -srcalias <jkskeyalias> \
 -deststorepass <password> -destkeypass <password>
-----
+```
 
 After than you can further process the `keystore.p12` with openssl.
 
 .Export certificate from a PKCS#12 keystore
-----
+```bash
 $ openssl pkcs12 -in keystore.p12  -nokeys -out cert.pem
-----
+```
 
 .Export the private key from a PKCS#12 keystore
-----
+```bash
 $ openssl pkcs12 -in keystore.p12  -nodes -nocerts -out key.pem
-----
+```
 
-== Advanced use cases
+## Advanced use cases
 
-=== Managing multiple keystores with one scep-client installation
+### Managing multiple keystores with one scep-client installation
 
 Through the commandline option `--base-dir` you can tell the scep-client to use an alternative base directory.
 It will then use the configuration `etc/application.conf` under that directory.
@@ -248,5 +249,5 @@ Also the keystore can be placed under that directory, when you use the `scepclie
 
 .Configuration, to place the keystore relative to the directory given with `--base-dir`
 ```
-blended.security.ssl.keyStore = ${scepclient.home}/etc/keystore
+blended.security.ssl.keyStore # ${scepclient.home}/etc/keystore
 ```
