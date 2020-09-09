@@ -34,7 +34,7 @@ theme = "woq"
     target = "archetypes"
 
   [[module.mounts]]
-    source = "../../blended.activemq.client"
+    source = "../.."
     target = "content/src"
 
 [menu]

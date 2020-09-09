@@ -20,4 +20,4 @@ obect foo {
 
 ## Test include
 
-{{< dummy file="src/src/main/scala/blended/activemq/client/internal/AmqClientActivator.scala" lang="scala" >}}
+{{< dummy file="src/blended.activemq.client/src/main/scala/blended/activemq/client/internal/AmqClientActivator.scala" lang="scala" >}}
