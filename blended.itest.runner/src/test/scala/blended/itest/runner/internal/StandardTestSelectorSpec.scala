@@ -6,6 +6,7 @@ import blended.itest.runner._
 import scala.util.Try
 import scala.concurrent.duration._
 import blended.jmx.statistics.Accumulator
+import java.{util => ju}
 
 class StandardTestSelectorSpec extends LoggingFreeSpec
   with Matchers {
@@ -87,8 +88,16 @@ class StandardTestSelectorSpec extends LoggingFreeSpec
       val fact : TestTemplateFactory = templateFactory(1)
       val t1 : TestTemplate = template("myTest-1", fact.templates)
 
+      val started : TestEvent = TestEvent(
+        factoryName = fact.name,
+        testName = t1.name,
+        state = TestEvent.State.Started,
+        id = ju.UUID.randomUUID().toString(),
+        timestamp = System.currentTimeMillis()
+      )
+
       val m : List[TestSummary] = List(
-        TestSummary(t1).copy(lastStarted = Some(System.currentTimeMillis()), running = 1)
+        TestSummary(t1).update(started)
       )
 
       selector.selectTest(fact.templates, m) should be (None)

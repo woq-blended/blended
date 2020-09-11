@@ -79,9 +79,9 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
       val s : TestManagerState = TestManagerState().addTemplates(f1).testStarted(id, t, p.ref)
 
       s.summary(t).lastStarted should be (defined)
-      s.summary(t).running should be (1)
+      s.summary(t).running.get(id) should be (defined)
 
-      s.testStarted("2", t, p.ref).summary(t).running should be (2)
+      s.testStarted("2", t, p.ref).summary(t).running should have size (2)
     }
 
     "should reflect a test completion correctly" in {
@@ -111,7 +111,7 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
 
       val sum1 : TestSummary = succeeded.summary(t)
 
-      sum1.running should be (0)
+      sum1.running should be (empty)
       sum1.lastSuccess should be (defined)
       sum1.lastFailed should be (None)
       sum1.executions should be (1)
@@ -119,7 +119,7 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
       val failed : TestManagerState = startTest(t, succeeded).testFinished(event("2")(TestEvent.State.Failed))
       val sum2 : TestSummary = failed.summary(t)
 
-      sum2.running should be (0)
+      sum2.running should be (empty)
       sum2.lastSuccess should be (defined)
       sum2.lastFailed should be (defined)
       sum2.executions should be (2)

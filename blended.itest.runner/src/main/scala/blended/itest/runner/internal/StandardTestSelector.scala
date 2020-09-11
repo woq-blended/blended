@@ -34,12 +34,12 @@ class StandardTestSelector extends TestSelector {
 
         // We have not yet executed / started all allowed executions
         val pendingExecutions = startable.filter{ case (t,s) =>
-          s.maxExecutions == Int.MaxValue || s.running + s.executions < s.maxExecutions
+          s.maxExecutions == Int.MaxValue || s.running.size + s.executions < s.maxExecutions
         }
         logCandidates("pending", pendingExecutions)
 
         // principally we could start an instance
-        val canRun = pendingExecutions.filter{ case(t,s) => s.running == 0 || t.allowParallel }
+        val canRun = pendingExecutions.filter{ case(t,s) => s.running.isEmpty || t.allowParallel }
         logCandidates("canRun", canRun)
 
         canRun

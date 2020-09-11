@@ -39,7 +39,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
         consumeMessages(
           cf = internal,
           destName = "bridge.data.in.activemq.external",
-          timeout = timeout
+          timeout = 5.seconds
         )(actorSys).get
 
       messages should have size(msgCount)

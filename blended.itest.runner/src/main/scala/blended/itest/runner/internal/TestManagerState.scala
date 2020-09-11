@@ -18,13 +18,15 @@ class TestJmxNamingStrategy extends NamingStrategy {
 case class TestManagerState(
   templates : List[TestTemplate] = List.empty,
   summaries : List[TestSummary] = List.empty,
-  executing : Map[String, (TestTemplate, ActorRef, Long)] = Map.empty,
+  executing : Map[String, (TestTemplate, ActorRef)] = Map.empty,
   mbeanMgr : Option[ProductMBeanManager] = None
 )(implicit system : ActorSystem) {
 
   override def toString() : String = "TestManagerState(\n  " + summaries.map(_.toString()).mkString("\n  ") + "\n)"
 
   private val log : Logger = Logger[TestManagerState]
+
+  private val updateSummaries : TestSummary => List[TestSummary] = sum => sum :: summaries.filterNot(s => s.factoryName != sum.factoryName && s.testName != sum.testName)
 
   def summary(t : TestTemplate) : TestSummary =
     summaries.find(sum => sum.factoryName == t.factory.name && sum.testName == t.name).getOrElse(TestSummary(t))
@@ -41,20 +43,23 @@ case class TestManagerState(
 
     log.debug(s"Test run [$id] for [${t.factory.name}::${t.name}] started.")
 
-    val started : Long = System.currentTimeMillis()
-    val p : (TestTemplate, ActorRef, Long) = (t,a, started)
+    val p : (TestTemplate, ActorRef) = (t,a)
 
     val current : TestSummary = summary(t)
 
-    val sum : TestSummary = current.copy(
-      lastStarted = Some(started),
-      running = current.running + 1
+    val started : TestEvent = TestEvent(
+      factoryName = t.factory.name,
+      testName = t.name,
+      id = id,
+      state = TestEvent.State.Started,
+      timestamp = System.currentTimeMillis()
     )
 
+    val sum : TestSummary = current.update(started)
     reportJmx(sum)
 
     copy(
-      summaries = sum :: summaries.filterNot(s => s.factoryName == t.factory.name && s.testName == t.name),
+      summaries = updateSummaries(sum),
       executing = Map(id -> p) ++ executing.view.filter(_._1 != id)
     )
   }
@@ -78,20 +83,7 @@ case class TestManagerState(
     val updated : Option[TestSummary] = sum.map{ upd =>
       s.state match {
         case TestEvent.State.Started => upd
-        case TestEvent.State.Failed =>
-          val st : Long = executing.get(s.id).map(_._3).getOrElse(System.currentTimeMillis())
-          log.debug(s"Test execution [${s.id}] for [${s.factoryName}::${s.testName}] has failed.")
-          upd.copy(
-            lastFailed = Some(s), running = upd.running - 1, failed = upd.failed.record(System.currentTimeMillis() - st),
-            lastExecutions = (s :: upd.lastExecutions).take(upd.maxLastExecutions)
-          )
-        case TestEvent.State.Success =>
-          val st : Long = executing.get(s.id).map(_._3).getOrElse(System.currentTimeMillis())
-          log.debug(s"Test execution [${s.id}] for [${s.factoryName}::${s.testName}] has succeeded.")
-          upd.copy(
-            lastSuccess = Some(s), running = upd.running -1, succeded = upd.succeded.record(System.currentTimeMillis() - st),
-            lastExecutions = (s :: upd.lastExecutions).take(upd.maxLastExecutions)
-          )
+        case _ => upd.update(s)
       }
     }
 
@@ -106,7 +98,7 @@ case class TestManagerState(
           } else {
             executing
           },
-          summaries = sum :: summaries.filterNot( v => v.factoryName == sum.factoryName && v.testName == sum.testName)
+          summaries = updateSummaries(sum)
         )
         newState
     }
@@ -115,7 +107,7 @@ case class TestManagerState(
   def testTerminated(a : ActorRef) : TestManagerState = {
     executing.find( _._2._2 == a) match {
       case None => this
-      case Some((id, (t, ar, _))) =>
+      case Some((id, (t, ar))) =>
         val ts : TestEvent = TestEvent(
           factoryName = t.factory.name,
           testName = t.name,
