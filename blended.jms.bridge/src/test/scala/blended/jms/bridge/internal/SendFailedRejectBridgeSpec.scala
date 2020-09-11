@@ -18,7 +18,7 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withoutRetries").getAbsolutePath()
 
-  private def sendOutbound(cf : IdAwareConnectionFactory, msgCount : Int, track : Boolean) : KillSwitch = {
+  private def sendOutbound(cf : IdAwareConnectionFactory, timeout : FiniteDuration, msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
         .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
@@ -26,7 +26,7 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
     }.get
 
 
-    sendMessages("bridge.data.out.activemq.external", cf)(msgs:_*)
+    sendMessages("bridge.data.out.activemq.external", cf, timeout)(msgs:_*)
   }
 
   // We override the send flow with a flow simply triggering an exception, so that the
@@ -51,7 +51,7 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
       val actorSys = system(registry)
       val (internal, external) = getConnectionFactories(registry)
 
-      val switch = sendOutbound(internal, msgCount, track = true)
+      val switch = sendOutbound(internal, timeout, msgCount, track = true)
 
       val retried : List[FlowEnvelope] = consumeMessages(
         cf = internal,

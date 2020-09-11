@@ -28,6 +28,7 @@ trait JmsStreamSupport {
 
   def processMessages(
     processFlow : Flow[FlowEnvelope, FlowEnvelope, _],
+    timeout : FiniteDuration,
     msgs : FlowEnvelope*
   )(implicit system : ActorSystem) : Try[KillSwitch] = Try {
 
@@ -56,6 +57,7 @@ trait JmsStreamSupport {
 
     // Send all the messages
     msgs.foreach(m => actor ! m)
+    val start : Long = System.currentTimeMillis()
 
     // We will wait until all messages have passed through the process flow and check if
     // any have thrown an exception causing the stream to fail
@@ -70,7 +72,7 @@ trait JmsStreamSupport {
       if (done.isCompleted) {
         throw new Exception("Failed to send messages to stream")
       }
-    } while (!hasException.get && sendCount.get < msgs.size)
+    } while (!hasException.get && sendCount.get < msgs.size && (System.currentTimeMillis() - start) < timeout.toMillis)
 
     killswitch
   }
@@ -78,6 +80,7 @@ trait JmsStreamSupport {
   def sendMessages(
     producerSettings: JmsProducerSettings,
     log : FlowEnvelopeLogger,
+    timeout : FiniteDuration,
     msgs : FlowEnvelope*
   )(implicit system : ActorSystem) : Try[KillSwitch] = {
 
@@ -89,6 +92,7 @@ trait JmsStreamSupport {
 
     processMessages(
       processFlow = producer,
+      timeout = timeout,
       msgs = msgs : _*
     )
   }

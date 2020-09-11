@@ -89,7 +89,7 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
     log.info("Starting Retry Processor ...")
     retryProcessor.start()
 
-    sendMessages(producerSettings(retryCfg.retryDestName), envLogger(log), Seq(env):_*) match {
+    sendMessages(producerSettings(retryCfg.retryDestName), envLogger(log), 1.second, Seq(env):_*) match {
       case Success(s) =>
         akka.pattern.after(consumeAfter, system.scheduler)(Future {
           // We stop the retry processor, so that it does not process any more messages

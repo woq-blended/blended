@@ -14,14 +14,14 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withoutTracking").getAbsolutePath()
 
-  private def sendInbound(cf : IdAwareConnectionFactory, msgCount : Int) : KillSwitch = {
+  private def sendInbound(cf : IdAwareConnectionFactory, timeout : FiniteDuration, msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
-        .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
+        .withHeader(destHeader(headerCfg.prefix),s"sampleOut").get
     }.get
 
 
-    sendMessages("sampleIn", cf)(msgs:_*)
+    sendMessages("sampleIn", cf, timeout)(msgs:_*)
   }
 
   "The inbound bridge should" - {
@@ -32,7 +32,7 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val actorSys = system(registry)
       val (internal, external) = getConnectionFactories(registry)
 
-      val switch = sendInbound(external, msgCount)
+      val switch = sendInbound(external, timeout, msgCount)
 
       val messages : List[FlowEnvelope] =
         consumeMessages(
@@ -62,7 +62,7 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val msg : FlowMessage = TextFlowMessage(null, FlowMessage.noProps)
       val msgs : Seq[FlowEnvelope] = Seq(FlowEnvelope(msg))
 
-      val switch : KillSwitch = sendMessages("sampleIn", external)(msgs:_*)
+      val switch : KillSwitch = sendMessages("sampleIn", external, timeout)(msgs:_*)
 
       val messages : List[FlowEnvelope] =
         consumeMessages(
@@ -88,7 +88,7 @@ class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
       val msg : FlowMessage = BinaryFlowMessage(Array.empty[Byte], FlowMessage.noProps)
       val msgs : Seq[FlowEnvelope] = Seq(FlowEnvelope(msg))
 
-      val switch : KillSwitch = sendMessages("sampleIn", external)(msgs:_*)
+      val switch : KillSwitch = sendMessages("sampleIn", external, timeout)(msgs:_*)
 
       val messages : List[FlowEnvelope] =
         consumeMessages(

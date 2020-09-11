@@ -25,7 +25,7 @@ class MapToExternalBridgeSpec extends BridgeSpecSupport {
           .withHeader(destHeader(headerCfg.prefix), "sampleOut").get
       }.get
 
-      val switch : KillSwitch = sendMessages("bridge.data.out", internal)(msgs:_*)
+      val switch : KillSwitch = sendMessages("bridge.data.out", internal, timeout)(msgs:_*)
 
       val messages : List[FlowEnvelope] =
         consumeMessages(

@@ -12,14 +12,14 @@ import scala.concurrent.duration._
 @RequiresForkedJVM
 class InboundBridgeTrackedSpec extends BridgeSpecSupport {
 
-  private def sendInbound(cf : IdAwareConnectionFactory, msgCount : Int) : KillSwitch = {
+  private def sendInbound(cf : IdAwareConnectionFactory, timeout : FiniteDuration, msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
         .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
     }.get
 
 
-    sendMessages("sampleIn", cf)(msgs:_*)
+    sendMessages("sampleIn", cf, timeout)(msgs:_*)
   }
 
   "The Inbound Bridge should" - {
@@ -33,7 +33,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
 
       val (internal, external) = getConnectionFactories(registry)
 
-      val switch = sendInbound(external, msgCount)
+      val switch = sendInbound(external, timeout, msgCount)
 
       val messages : List[FlowEnvelope] =
         consumeMessages(
@@ -69,7 +69,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
         headerCfg.headerTrack -> false
       ).get))
 
-      val switch : KillSwitch = sendMessages("SampleHeaderIn", external)(env)
+      val switch : KillSwitch = sendMessages("SampleHeaderIn", external, timeout)(env)
 
       val result : List[FlowEnvelope] = consumeMessages(
         cf = internal,

@@ -69,7 +69,7 @@ case class RoundtripHelper(
     }.toMap
 
     // Send the inbound messages
-    sendMessages(pSettings, envLog, testMsgs:_*)
+    sendMessages(pSettings, envLog, timeout, testMsgs:_*)
 
     // Wait for all outcomes
 

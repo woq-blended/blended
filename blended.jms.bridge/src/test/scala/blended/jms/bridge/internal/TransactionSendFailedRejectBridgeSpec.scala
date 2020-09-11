@@ -18,7 +18,7 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withoutRetries").getAbsolutePath()
 
-  private def sendOutbound(cf : IdAwareConnectionFactory, msgCount : Int, track : Boolean) : KillSwitch = {
+  private def sendOutbound(cf : IdAwareConnectionFactory, timeout : FiniteDuration, msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
         .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
@@ -26,7 +26,7 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
     }.get
 
 
-    sendMessages("bridge.data.out.activemq.external", cf)(msgs:_*)
+    sendMessages("bridge.data.out.activemq.external", cf, timeout)(msgs:_*)
   }
 
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
@@ -50,7 +50,7 @@ class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
       val actorSys : ActorSystem = system(registry)
       val (internal, _) = getConnectionFactories(registry)
 
-      val switch : KillSwitch = sendOutbound(internal, msgCount, track = true)
+      val switch : KillSwitch = sendOutbound(internal, timeout, msgCount, track = true)
 
       val retried : List[FlowEnvelope] = consumeMessages(cf = internal, destName = "retries", timeout = timeout)(actorSys).get
       retried should be (empty)

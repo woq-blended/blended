@@ -16,6 +16,7 @@ import blended.streams.{BlendedStreamsConfig, FlowProcessor, StreamController}
 import blended.util.logging.{LogLevel, Logger}
 import blended.util.RichTry._
 
+import scala.concurrent.duration._
 import scala.collection.mutable
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -211,7 +212,7 @@ class RunnableDispatcher(
           override def receive: Receive = {
             case e : ConnectionStateChanged if e.state.status == Connected && providerCfg.vendor == e.state.vendor && providerCfg.provider == e.state.provider =>
               logger.underlying.debug(s"Sending [${msgs.size}] messages to [${providerCfg.vendor}:${providerCfg.provider}:${providerCfg.inbound.asString}]")
-              sendMessages(prodSettings, logger, msgs:_*).unwrap
+              sendMessages(prodSettings, logger, 5.seconds, msgs:_*).unwrap
               context.stop(self)
           }
         }))

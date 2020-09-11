@@ -22,7 +22,7 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withRetries").getAbsolutePath()
 
-  private def sendOutbound(cf : IdAwareConnectionFactory, msgCount : Int, track : Boolean) : KillSwitch = {
+  private def sendOutbound(cf : IdAwareConnectionFactory, timeout : FiniteDuration, msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
         .withHeader(headerCfg.headerBridgeVendor, "activemq").get
@@ -33,7 +33,7 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
     }.get
 
 
-    sendMessages("bridge.data.out", cf)(msgs:_*)
+    sendMessages("bridge.data.out", cf, timeout)(msgs:_*)
   }
 
   // We override the send flow with a flow simply triggering an exception, so that the
@@ -81,7 +81,7 @@ class RouteAfterRetrySpec extends BridgeSpecSupport {
       val actorSys = system(registry)
       val (internal, external) = getConnectionFactories(registry)
 
-      val switch = sendOutbound(internal, msgCount, track = true)
+      val switch = sendOutbound(internal, timeout, msgCount, track = true)
 
       //
       println("Waiting for the retry loop to complete ...")

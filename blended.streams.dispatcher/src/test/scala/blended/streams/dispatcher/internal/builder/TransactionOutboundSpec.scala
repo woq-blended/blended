@@ -67,6 +67,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     sendMessages(
       pSettings,
       log = ctxt.envLogger,
+      1.second,
       envelopes: _*
     )(ctxt.system).unwrap
   }
