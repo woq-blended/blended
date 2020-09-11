@@ -74,6 +74,11 @@ trait JmsStreamSupport {
       }
     } while (!hasException.get && sendCount.get < msgs.size && (System.currentTimeMillis() - start) < timeout.toMillis)
 
+    if (sendCount.get < msgs.size) {
+      killswitch.shutdown()
+      throw new Exception(s"failed to send messages to stream")
+    }
+
     killswitch
   }
 

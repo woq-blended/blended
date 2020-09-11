@@ -107,7 +107,7 @@ object TestSummaryJMX {
       failedMax = if (sum.failed.count == 0) "" else sum.failed.maxMsec.toString(),
       failedAvg = sum.failed.avg,
 
-      running = sum.running.view.keys.toArray,
+      running = sum.running.view.keys.toList,
 
       lastStarted = sum.lastStarted.map(s => sdf.format(new Date(s))).getOrElse(""),
       lastFailed = sum.lastFailed.map(f => sdf.format(new Date(f.timestamp))).getOrElse(""),
@@ -117,7 +117,7 @@ object TestSummaryJMX {
 
       lastSuccess = sum.lastSuccess.map(f => sdf.format(new Date(f.timestamp))).getOrElse(""),
       lastSuccessid = sum.lastSuccess.map(_.id).getOrElse(""),
-      lastExecutions = sum.lastExecutions.map(_.id).toArray
+      lastExecutions = sum.lastExecutions.map(_.id).toList
     )
   }
 }
@@ -137,7 +137,7 @@ case class TestSummaryJMX(
   failedMax: String,
   failedAvg: Double,
 
-  running : Array[String],
+  running : List[String],
 
   lastStarted : String,
   lastFailed : String,
@@ -145,5 +145,5 @@ case class TestSummaryJMX(
   lastErrorMsg : String,
   lastSuccess : String,
   lastSuccessid : String,
-  lastExecutions : Array[String]
+  lastExecutions : List[String]
 )
