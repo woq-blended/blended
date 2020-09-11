@@ -41,7 +41,7 @@ case class TestManagerState(
 
   def testStarted(id : String, t : TestTemplate, a : ActorRef) : TestManagerState = {
 
-    log.debug(s"Test run [$id] for [${t.factory.name}::${t.name}] started.")
+    log.info(s"Test run [$id] for [${t.factory.name}::${t.name}] started.")
 
     val p : (TestTemplate, ActorRef) = (t,a)
 

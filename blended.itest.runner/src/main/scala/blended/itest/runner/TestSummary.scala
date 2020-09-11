@@ -44,10 +44,13 @@ final case class TestSummary(
     case s if s.state == TestEvent.State.Started =>
       copy(
         running = running ++ Map(s.id -> s),
-        lastStarted = Some(s.timestamp)
+        lastStarted = lastStarted match {
+          case None => Some(s.timestamp)
+          case Some(t) => Some(Math.max(t, s.timestamp))
+        }
       )
-    case f =>
 
+    case f =>
       val started : Long = running.get(f.id).map(_.timestamp).getOrElse(System.currentTimeMillis())
 
       copy(
@@ -67,7 +70,7 @@ final case class TestSummary(
     val suc : String = lastSuccess.map(e => s", lastSuccess=${e.toString()}").getOrElse("")
     val fail : String = lastFailed.map(e => s", lastFailed=${e.toString()}").getOrElse("")
 
-    s"TestSummary($factoryName::$testName, executions=$executions/$maxExecutions, running=$running$suc$fail)"
+    s"TestSummary($factoryName::$testName, executions=$executions/$maxExecutions, running=${running.size}$suc$fail)"
   }
 }
 
@@ -96,7 +99,7 @@ object TestSummaryJMX {
       failedMax = if (sum.failed.count == 0) "" else sum.failed.maxMsec.toString(),
       failedAvg = sum.failed.avg,
 
-      running = sum.running.view.keys.toList,
+      running = sum.running.view.keys.toArray,
       lastStarted = sum.lastStarted.map(s => sdf.format(new Date(s))),
       lastFailed = sum.lastFailed.map(f => sdf.format(new Date(f.timestamp))),
       lastFailedid = sum.lastFailed.map(_.id),
@@ -123,7 +126,7 @@ case class TestSummaryJMX(
   failedMax: String,
   failedAvg: Double,
 
-  running : List[String],
+  running : Array[String],
 
   lastStarted : Option[String],
   lastFailed : Option[String],

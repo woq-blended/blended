@@ -104,7 +104,8 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
         factoryName = t.factory.name,
         testName = t.name,
         id = id,
-        state = s
+        state = s,
+        timestamp = System.currentTimeMillis()
       )
 
       val succeeded : TestManagerState = startTest(t, initialState).testFinished(event("1")(TestEvent.State.Success))

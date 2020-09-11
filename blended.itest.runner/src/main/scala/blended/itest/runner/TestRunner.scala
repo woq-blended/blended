@@ -32,7 +32,8 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
         factoryName = t.factory.name,
         testName = t.name,
         id = testId,
-        state = TestEvent.State.Started
+        state = TestEvent.State.Started,
+        timestamp = System.currentTimeMillis()
       )
       log.info(s"Starting test for template [${t.factory.name}::${t.name}] with id [${s.id}]")
       context.system.eventStream.publish(s)
@@ -44,10 +45,10 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
   private def running(s : TestEvent) : Receive = {
     case Result(Success(())) =>
       log.info(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has succeeded.")
-      finish(s.copy(state = TestEvent.State.Success))
+      finish(s.copy(state = TestEvent.State.Success, timestamp = System.currentTimeMillis()))
     case Result(Failure(e)) =>
       log.info(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has failed [${e.getMessage()}].")
-      finish(s.copy(state = TestEvent.State.Failed, cause = Some(e)))
+      finish(s.copy(state = TestEvent.State.Failed, timestamp = System.currentTimeMillis(), cause = Some(e)))
   }
 
   private def finish(s : TestEvent) : Unit = {
