@@ -34,7 +34,7 @@ class StandardTestSelector extends TestSelector {
 
         // We have not yet executed / started all allowed executions
         val pendingExecutions = startable.filter{ case (t,s) =>
-          s.maxExecutions == Int.MaxValue || s.running.size + s.executions < s.maxExecutions
+          s.maxExecutions == Int.MaxValue || s.running.size + s.succeded.count < s.maxExecutions
         }
         logCandidates("pending", pendingExecutions)
 
