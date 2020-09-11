@@ -105,7 +105,7 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
         testName = t.name,
         id = id,
         state = s,
-        timestamp = System.currentTimeMillis()
+        timestamp = System.currentTimeMillis() - 100
       )
 
       val succeeded : TestManagerState = startTest(t, initialState).testFinished(event("1")(TestEvent.State.Success))
@@ -119,6 +119,8 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
 
       val failed : TestManagerState = startTest(t, succeeded).testFinished(event("2")(TestEvent.State.Failed))
       val sum2 : TestSummary = failed.summary(t)
+
+      failed.summaries should have size(1)
 
       sum2.running should be (empty)
       sum2.lastSuccess should be (defined)

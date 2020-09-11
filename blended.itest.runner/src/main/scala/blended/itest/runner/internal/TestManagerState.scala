@@ -26,7 +26,7 @@ case class TestManagerState(
 
   private val log : Logger = Logger[TestManagerState]
 
-  private val updateSummaries : TestSummary => List[TestSummary] = sum => sum :: summaries.filterNot(s => s.factoryName != sum.factoryName && s.testName != sum.testName)
+  private val updateSummaries : TestSummary => List[TestSummary] = sum => sum :: summaries.filterNot(s => s.factoryName == sum.factoryName && s.testName == sum.testName)
 
   def summary(t : TestTemplate) : TestSummary =
     summaries.find(sum => sum.factoryName == t.factory.name && sum.testName == t.name).getOrElse(TestSummary(t))
