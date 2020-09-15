@@ -76,7 +76,7 @@ trait JmsStreamSupport {
 
     if (sendCount.get < msgs.size) {
       killswitch.shutdown()
-      throw new Exception(s"failed to send messages to stream")
+      throw new Exception(s"failed to send messages to stream after [$timeout]")
     }
 
     killswitch

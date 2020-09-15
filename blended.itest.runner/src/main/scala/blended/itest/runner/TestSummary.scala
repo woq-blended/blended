@@ -94,7 +94,7 @@ object TestSummaryJMX {
       pending = if (sum.maxExecutions == Long.MaxValue) {
         Long.MaxValue
       } else {
-        sum.maxExecutions - sum.executions - sum.running.size
+        sum.maxExecutions - sum.succeded.count - sum.running.size
       },
 
       completedCnt = sum.succeded.count,
@@ -107,7 +107,7 @@ object TestSummaryJMX {
       failedMax = if (sum.failed.count == 0) "" else sum.failed.maxMsec.toString(),
       failedAvg = sum.failed.avg,
 
-      running = sum.running.view.keys.toList,
+      running = sum.running.view.keys.toArray,
 
       lastStarted = sum.lastStarted.map(s => sdf.format(new Date(s))).getOrElse(""),
       lastFailed = sum.lastFailed.map(f => sdf.format(new Date(f.timestamp))).getOrElse(""),
@@ -117,7 +117,7 @@ object TestSummaryJMX {
 
       lastSuccess = sum.lastSuccess.map(f => sdf.format(new Date(f.timestamp))).getOrElse(""),
       lastSuccessid = sum.lastSuccess.map(_.id).getOrElse(""),
-      lastExecutions = sum.lastExecutions.map(_.id).toList
+      lastExecutions = sum.lastExecutions.map(_.id).toArray
     )
   }
 }
@@ -137,7 +137,7 @@ case class TestSummaryJMX(
   failedMax: String,
   failedAvg: Double,
 
-  running : List[String],
+  running : Array[String],
 
   lastStarted : String,
   lastFailed : String,
@@ -145,5 +145,5 @@ case class TestSummaryJMX(
   lastErrorMsg : String,
   lastSuccess : String,
   lastSuccessid : String,
-  lastExecutions : List[String]
+  lastExecutions : Array[String]
 )

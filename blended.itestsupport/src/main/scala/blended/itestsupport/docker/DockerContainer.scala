@@ -27,7 +27,7 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
    * by some manager object that knows about available ports or can determine available ports upon request.
    */
   def startContainer = {
-    
+
     val links : List[Link] = cut.links.map { l => Link.parse(s"${l.container}:${l.hostname}") }
     logger info s"Links for container [${cut.dockerName}] : [$links]."
 
@@ -91,7 +91,9 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
       cmd.exec()
       true
     } catch {
-      case NonFatal(t) => false
+      case NonFatal(t) =>
+        logger.warn(t, true)(s"Failed to write container directory [$dir]")
+        false
     }
   }
 
@@ -101,7 +103,7 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
     logger info s"Removing container [${cut.dockerName}] from Docker."
     client.removeContainerCmd(cut.dockerName).withForce(true).withRemoveVolumes(true).exec()
   }
-  
+
   def stopContainer = {
     logger info s"Stopping container [${cut.dockerName}]"
     client.stopContainerCmd(cut.dockerName).exec()
