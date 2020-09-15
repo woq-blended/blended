@@ -47,7 +47,7 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
       log.info(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has succeeded.")
       finish(s.copy(state = TestEvent.State.Success, timestamp = System.currentTimeMillis()))
     case Result(Failure(e)) =>
-      log.info(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has failed [${e.getMessage()}].")
+      log.warn(e, true)(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has failed [${e.getMessage()}].")
       finish(s.copy(state = TestEvent.State.Failed, timestamp = System.currentTimeMillis(), cause = Some(e)))
   }
 
