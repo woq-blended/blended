@@ -2,6 +2,7 @@ package blended.itestsupport
 
 import java.util.concurrent.ConcurrentHashMap
 
+import akka.actor.ActorRef
 import blended.util.logging.Logger
 
 import scala.reflect.ClassTag
@@ -35,5 +36,5 @@ object TestConnector {
   * Used to set up the test connector.
   */
 trait TestConnectorSetup {
-  def configure(cuts: Map[String, ContainerUnderTest]): Unit
+  def configure(ctProxy : ActorRef, cuts: Map[String, ContainerUnderTest]): Unit
 }
