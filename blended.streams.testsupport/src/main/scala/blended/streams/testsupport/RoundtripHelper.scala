@@ -10,6 +10,7 @@ import blended.util.logging.Logger
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.Try
 
 case class ExpectedOutcome(
   cf : IdAwareConnectionFactory,
@@ -47,7 +48,7 @@ case class RoundtripHelper(
     jmsDestination = Some(inbound._2)
   )
 
-  def run() : Map[String, Seq[String]] = {
+  def run() : Try[Map[String, Seq[String]]] = Try {
     val msg : String = "-" * 20 + s"Starting test case [$name], timeout = [$timeout]"
     log.info(msg)
 
@@ -69,7 +70,7 @@ case class RoundtripHelper(
     }.toMap
 
     // Send the inbound messages
-    sendMessages(pSettings, envLog, timeout, testMsgs:_*)
+    sendMessages(pSettings, envLog, timeout, testMsgs:_*).get
 
     // Wait for all outcomes
 
