@@ -20,7 +20,7 @@ trait TestTemplate {
   // a unique name for the test template within the Test Template factory
   def name : String
   // instantiate a test executable within an Actor
-  def test() : Try[Unit]
+  def test(id : String) : Try[Unit]
   // How many instances of the test shall maximal be run
   def maxExecutions : Long = Long.MaxValue
   // Should we wait between starting two subsequent instances of the test ?

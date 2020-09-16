@@ -21,7 +21,7 @@ class TestManagerStateSpec extends TestKit(ActorSystem("StateSpec"))
       new TestTemplate() {
         override def factory: TestTemplateFactory = f
         override val name : String = s"myTest-$n"
-        override def test() : Try[Unit] = Try{}
+        override def test(id : String) : Try[Unit] = Try{}
         override def maxExecutions: Long = 5
         override def allowParallel: Boolean = false
       }

@@ -17,14 +17,14 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
   with LoggingFreeSpecLike
   with Matchers
   with BeforeAndAfterAll {
-  
+
   override protected def afterAll(): Unit = {
     Await.result(system.terminate(), 10.seconds)
-  }  
+  }
 
   private val id : String = ju.UUID.randomUUID().toString()
 
-  private def template(f : => Try[Unit]) : TestTemplateFactory = new TestTemplateFactory() { fact => 
+  private def template(f : => Try[Unit]) : TestTemplateFactory = new TestTemplateFactory() { fact =>
 
     override def name: String = "myFactory"
 
@@ -33,7 +33,7 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
         override def factory: TestTemplateFactory = fact
         override val name : String = "myTest"
         override def generateId: String = id
-        override def test(): Try[Unit] = f
+        override def test(id : String): Try[Unit] = f
       }
     )
   }
@@ -51,7 +51,7 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
       system.actorOf(TestRunner.props(t, t.generateId))
 
       probe.fishForMessage(1.second) {
-        case s : TestEvent => 
+        case s : TestEvent =>
           s.id == id && s.state == TestEvent.State.Started
       }
     }
@@ -67,7 +67,7 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
       system.actorOf(TestRunner.props(t, t.generateId))
 
       probe.fishForMessage(1.second) {
-        case s : TestEvent => 
+        case s : TestEvent =>
           s.id == id && s.state == TestEvent.State.Success
       }
     }
@@ -83,7 +83,7 @@ class TestRunnerSpec extends TestKit(ActorSystem("TestRunner"))
       system.actorOf(TestRunner.props(t, t.generateId))
 
       probe.fishForMessage(1.second) {
-        case s : TestEvent => 
+        case s : TestEvent =>
           s.id == id && s.state == TestEvent.State.Failed && s.cause.isDefined
       }
     }

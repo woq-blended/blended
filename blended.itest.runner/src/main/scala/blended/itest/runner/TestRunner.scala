@@ -39,7 +39,7 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
       )
       log.info(s"Starting test for template [${t.factory.name}::${t.name}] with id [${s.id}]")
       context.system.eventStream.publish(s)
-      val f : Future[Try[Unit]] = Future{ t.test() }
+      val f : Future[Try[Unit]] = Future{ t.test(testId) }
       f.map(r => Result(r)).pipeTo(self)
       context.become(running(s))
   }

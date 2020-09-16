@@ -18,8 +18,8 @@ import blended.itest.runner.TestTemplateFactory
 
 class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
   with LoggingFreeSpecLike
-  with Matchers 
-  with BeforeAndAfterAll {  
+  with Matchers
+  with BeforeAndAfterAll {
 
   private def templates() : TestTemplateFactory = new TestTemplateFactory() { f =>
 
@@ -29,16 +29,16 @@ class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
       new TestTemplate() {
         override def factory: TestTemplateFactory = f
         override def name: String = "test-1"
-        override def test() : Try[Unit] = Try{}
+        override def test(id : String) : Try[Unit] = Try{}
       }
     )
-  }  
+  }
 
   override protected def afterAll(): Unit = {
     Await.result(system.terminate(), 10.seconds)
   }
 
-  "The test manager should" - { 
+  "The test manager should" - {
     "start with an empty list of templates" in {
 
       val probe : TestProbe = TestProbe()
@@ -50,7 +50,7 @@ class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
       system.stop(mgr)
     }
 
-    "Allow to add / remove a test template" in { 
+    "Allow to add / remove a test template" in {
 
       val f : TestTemplateFactory = templates()
 
@@ -70,5 +70,5 @@ class TestManagerSpec extends TestKit(ActorSystem("TestManager"))
 
       system.stop(mgr)
     }
-  }  
+  }
 }
