@@ -95,7 +95,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       )
 
       val switch : KillSwitch =
-        sendMessages(pSettings, dispCtxt.envLogger, env)(dispCtxt.system).unwrap
+        sendMessages(pSettings, dispCtxt.envLogger, 1.second, env)(dispCtxt.system).unwrap
 
       val results = getResults(
         cf = sonic,
@@ -159,7 +159,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
 
-      val switch : KillSwitch = sendMessages(pSettings, dispCtxt.envLogger, env)(dispCtxt.system).unwrap
+      val switch : KillSwitch = sendMessages(pSettings, dispCtxt.envLogger, 1.second, env)(dispCtxt.system).unwrap
 
       val results = getResults(
         cf = sonic,

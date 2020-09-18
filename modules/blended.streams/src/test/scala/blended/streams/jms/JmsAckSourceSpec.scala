@@ -128,6 +128,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       sendMessages(
         pSettings,
         envLogger,
+        1.second,
         envelopes(msgCount):_*
       ) match {
         case Success(s) =>
@@ -165,6 +166,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       sendMessages(
         pSettings,
         envLogger,
+        1.second,
         envelopes(msgCount):_*
       ) match {
           case Success(s) =>

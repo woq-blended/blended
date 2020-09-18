@@ -21,6 +21,7 @@ import org.scalatest.matchers.should.Matchers
 import sttp.client._
 import sttp.model.{StatusCode, Uri}
 
+import scala.concurrent.duration._
 import scala.util.Right
 
 // ToDo: Enhance with Property based test
@@ -92,7 +93,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
         jmsDestination = Some(JmsQueue("Queue1"))
       )
 
-      sendMessages(pSettings, envLogger(log), env)(actorSystem)
+      sendMessages(pSettings, envLogger(log), 1.second, env)(actorSystem)
 
       val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/blended/Queue1")))
       val response = request.send()
@@ -115,7 +116,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
         jmsDestination = Some(JmsQueue("Queue1"))
       )
 
-      sendMessages(pSettings, envLogger(log), env)(actorSystem)
+      sendMessages(pSettings, envLogger(log), 1.second, env)(actorSystem)
 
       val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/blended/Queue1")))
       val response = request.send()
@@ -139,7 +140,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
         jmsDestination = Some(JmsQueue("Queue1"))
       )
 
-      sendMessages(pSettings, envLogger(log), env)(actorSystem)
+      sendMessages(pSettings, envLogger(log), 1.second, env)(actorSystem)
 
       val request = basicRequest.get(Uri(new URI(s"${svcUrlBase(registry)}/blended/Queue1")))
       val response = request.send()

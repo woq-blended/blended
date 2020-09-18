@@ -6,8 +6,8 @@ import java.{util => ju}
 object TestEvent {
 
   object State extends Enumeration {
-    type State = Value 
-    val Started, Failed, Success = Value 
+    type State = Value
+    val Started, Failed, Success = Value
   }
 }
 
@@ -16,12 +16,12 @@ case class TestEvent(
   factoryName : String,
   // The name of the Test template that has created the test instance
   testName : String,
-  // A unique id identifying the test instance 
+  // A unique id identifying the test instance
   id : String,
-  // The state of the test 
+  // The state of the test
   state : TestEvent.State.State,
   // The timestamp of the last status change
-  timestamp : Long = System.currentTimeMillis(),
+  timestamp : Long,
   // the exception, if one is encountered in the test run
   cause : Option[Throwable] = None,
 ) {

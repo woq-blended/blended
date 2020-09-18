@@ -95,7 +95,7 @@ class RoundtripConnectionVerifier(
 
     log.info(s"Running verification probe for connection [${cf.vendor}:${cf.provider}] with id [$id]")
 
-    sendMessages(pSettings, envLogger, probeEnv) match {
+    sendMessages(pSettings, envLogger, timeToLive * 2, probeEnv) match {
       case Success(s) =>
         log.info(s"Request message [$id] sent successfully to [${requestDest.asString}]")
         s.shutdown()

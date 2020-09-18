@@ -106,6 +106,7 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
           jmsDestination = Some(JmsQueue("verified"))
         ),
         log = envLogger(log),
+        timeout = 10.seconds,
         verifyMsg
       )
     }

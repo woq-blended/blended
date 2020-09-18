@@ -14,14 +14,14 @@ import scala.concurrent.duration._
 @RequiresForkedJVM
 class InboundRejectBridgeSpec extends BridgeSpecSupport {
 
-  private def sendInbound(cf : IdAwareConnectionFactory, msgCount : Int) : KillSwitch = {
+  private def sendInbound(cf : IdAwareConnectionFactory, timeout : FiniteDuration, msgCount : Int) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
         .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
     }.get
 
 
-    sendMessages("sampleIn", cf)(msgs:_*)
+    sendMessages("sampleIn", cf, timeout)(msgs:_*)
   }
 
   override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
@@ -44,7 +44,7 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
       val actorSys = system(registry)
       val (internal, external) = getConnectionFactories(registry)
 
-      val switch = sendInbound(external, msgCount)
+      val switch = sendInbound(external, timeout, msgCount)
 
       consumeMessages(cf = internal, destName = "bridge.data.in.activemq.external", timeout = timeout)(actorSys).get should be (empty)
       consumeEvents(internal, timeout)(actorSys).get should be (empty)

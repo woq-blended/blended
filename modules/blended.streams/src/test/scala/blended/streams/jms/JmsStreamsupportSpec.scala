@@ -7,6 +7,7 @@ import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import org.scalatest.matchers.should.Matchers
+import scala.concurrent.duration._
 
 import scala.util.{Failure, Success}
 
@@ -25,7 +26,7 @@ class JmsStreamsupportSpec extends TestKit(ActorSystem("JmsStreamSupport"))
           env.withException(new Exception("Boom"))
         }
 
-      processMessages(flow, env) match {
+      processMessages(flow, 1.second, env) match {
         case Success(s) => fail("Expected a failure")
         case Failure(t) => t.getMessage() should be("Boom")
       }
@@ -38,7 +39,7 @@ class JmsStreamsupportSpec extends TestKit(ActorSystem("JmsStreamSupport"))
       val flow : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
         Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
 
-      processMessages(flow, env) match {
+      processMessages(flow, 1.second, env) match {
         case Success(s) => s.shutdown()
         case Failure(t) => fail(t)
       }

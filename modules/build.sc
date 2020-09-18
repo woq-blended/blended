@@ -1,5 +1,4 @@
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
-import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
 
 import coursier.Repository
 import mill.api.Loose

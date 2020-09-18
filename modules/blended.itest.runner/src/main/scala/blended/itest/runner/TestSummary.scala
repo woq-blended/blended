@@ -3,6 +3,7 @@ package blended.itest.runner
 import java.text.SimpleDateFormat
 import java.util.Date
 import blended.jmx.statistics.Accumulator
+import blended.util.logging.Logger
 
 object TestSummary {
   def apply(f : TestTemplate) : TestSummary = TestSummary(
@@ -23,8 +24,8 @@ final case class TestSummary(
   failed : Accumulator = Accumulator(),
   // How many successful runs have been executed
   succeded : Accumulator = Accumulator(),
-  // How many instances are currently running
-  running : Int = 0,
+  // The currently running tests and the events that have started them
+  running : Map[String, TestEvent] = Map.empty,
   // When was the last instance started
   lastStarted : Option[Long] = None,
   // the last failure
@@ -37,6 +38,39 @@ final case class TestSummary(
   lastExecutions : List[TestEvent] = List.empty
 ) {
 
+  private val log : Logger = Logger[TestSummary]
+
+  private val isSuccess : TestEvent => Boolean = _.state == TestEvent.State.Success
+  private val isFailed : TestEvent => Boolean = _.state == TestEvent.State.Failed
+
+  def update(event : TestEvent) : TestSummary = {
+    val updated : TestSummary = event match {
+      case s if s.state == TestEvent.State.Started =>
+        copy(
+          running = running ++ Map(s.id -> s),
+          lastStarted = lastStarted match {
+            case None => Some(s.timestamp)
+            case Some(t) => Some(Math.max(t, s.timestamp))
+          }
+        )
+
+      case f =>
+        val started : Long = running.get(f.id).map(_.timestamp).getOrElse(System.currentTimeMillis())
+
+        copy(
+          running = running.filter(_._1 != f.id),
+          lastFailed = if (isFailed(f)) Some(f) else lastFailed,
+          lastSuccess = if (isSuccess(f)) Some(f) else lastSuccess,
+          failed = if (isFailed(f)) failed.record(f.timestamp - started) else failed,
+          succeded = if (isSuccess(f)) succeded.record(f.timestamp - started) else succeded,
+          lastExecutions = (f :: lastExecutions).take(maxLastExecutions)
+        )
+    }
+
+    log.debug(s"Updated Test summary to [$updated]")
+    updated
+  }
+
   val executions : Long = failed.count + succeded.count
 
   override def toString() : String = {
@@ -44,7 +78,7 @@ final case class TestSummary(
     val suc : String = lastSuccess.map(e => s", lastSuccess=${e.toString()}").getOrElse("")
     val fail : String = lastFailed.map(e => s", lastFailed=${e.toString()}").getOrElse("")
 
-    s"TestSummary($factoryName::$testName, executions=$executions/$maxExecutions, running=$running$suc$fail)"
+    s"TestSummary($factoryName::$testName, executions=$executions/$maxExecutions, running=${running.size}$suc$fail)"
   }
 }
 
@@ -60,7 +94,7 @@ object TestSummaryJMX {
       pending = if (sum.maxExecutions == Long.MaxValue) {
         Long.MaxValue
       } else {
-        sum.maxExecutions - sum.executions - sum.running
+        sum.maxExecutions - sum.succeded.count - sum.running.size
       },
 
       completedCnt = sum.succeded.count,
@@ -73,13 +107,16 @@ object TestSummaryJMX {
       failedMax = if (sum.failed.count == 0) "" else sum.failed.maxMsec.toString(),
       failedAvg = sum.failed.avg,
 
-      running = sum.running,
-      lastStarted = sum.lastStarted.map(s => sdf.format(new Date(s))),
-      lastFailed = sum.lastFailed.map(f => sdf.format(new Date(f.timestamp))),
-      lastFailedid = sum.lastFailed.map(_.id),
+      running = sum.running.view.keys.toArray,
+
+      lastStarted = sum.lastStarted.map(s => sdf.format(new Date(s))).getOrElse(""),
+      lastFailed = sum.lastFailed.map(f => sdf.format(new Date(f.timestamp))).getOrElse(""),
+      lastFailedid = sum.lastFailed.map(_.id).getOrElse(""),
+
       lastErrorMsg = sum.lastFailed.flatMap(_.cause).map(_.getMessage()).getOrElse(""),
-      lastSuccess = sum.lastSuccess.map(f => sdf.format(new Date(f.timestamp))),
-      lastSuccessid = sum.lastSuccess.map(_.id),
+
+      lastSuccess = sum.lastSuccess.map(f => sdf.format(new Date(f.timestamp))).getOrElse(""),
+      lastSuccessid = sum.lastSuccess.map(_.id).getOrElse(""),
       lastExecutions = sum.lastExecutions.map(_.id).toArray
     )
   }
@@ -100,13 +137,13 @@ case class TestSummaryJMX(
   failedMax: String,
   failedAvg: Double,
 
-  running : Int,
+  running : Array[String],
 
-  lastStarted : Option[String],
-  lastFailed : Option[String],
-  lastFailedid : Option[String],
+  lastStarted : String,
+  lastFailed : String,
+  lastFailedid : String,
   lastErrorMsg : String,
-  lastSuccess : Option[String],
-  lastSuccessid : Option[String],
+  lastSuccess : String,
+  lastSuccessid : String,
   lastExecutions : Array[String]
 )

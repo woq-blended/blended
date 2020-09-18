@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 @RequiresForkedJVM
 class OutboundBridgeSpec extends BridgeSpecSupport {
 
-  private def sendOutbound(cf : IdAwareConnectionFactory, msgCount : Int, track : Boolean) : KillSwitch = {
+  private def sendOutbound(cf : IdAwareConnectionFactory, timeout : FiniteDuration, msgCount : Int, track : Boolean) : KillSwitch = {
     val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
       env
         .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
@@ -19,7 +19,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
     }.get
 
 
-    sendMessages("bridge.data.out.activemq.external", cf)(msgs:_*)
+    sendMessages("bridge.data.out.activemq.external", cf, timeout)(msgs:_*)
   }
 
   "The outbound bridge should " - {
@@ -31,7 +31,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       val actorSys = system(registry)
       val (internal, external) = getConnectionFactories(registry)
 
-      val switch = sendOutbound(internal, msgCount, track = false)
+      val switch = sendOutbound(internal, timeout, msgCount, track = false)
 
       val messages : List[FlowEnvelope] =
         consumeMessages(
@@ -60,7 +60,7 @@ class OutboundBridgeSpec extends BridgeSpecSupport {
       val (internal, external) = getConnectionFactories(registry)
 
       //      val switch =
-      sendOutbound(internal, msgCount, true)
+      sendOutbound(internal, timeout, msgCount, true)
 
       val messages : List[FlowEnvelope] =
         consumeMessages(

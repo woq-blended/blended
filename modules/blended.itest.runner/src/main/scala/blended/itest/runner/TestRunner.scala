@@ -22,6 +22,8 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
   case object Start
   case class Result(result : Try[Unit])
 
+  override def toString: String = s"TestRunner(template = [$t], id = [$testId])"
+
   override def preStart(): Unit = {
     self ! Start
   }
@@ -32,22 +34,24 @@ class TestRunner(t : TestTemplate, testId : String) extends Actor {
         factoryName = t.factory.name,
         testName = t.name,
         id = testId,
-        state = TestEvent.State.Started
+        state = TestEvent.State.Started,
+        timestamp = System.currentTimeMillis()
       )
       log.info(s"Starting test for template [${t.factory.name}::${t.name}] with id [${s.id}]")
       context.system.eventStream.publish(s)
-      val f : Future[Try[Unit]] = Future{ t.test() }
+      val f : Future[Try[Unit]] = Future{ t.test(testId) }
       f.map(r => Result(r)).pipeTo(self)
       context.become(running(s))
   }
 
   private def running(s : TestEvent) : Receive = {
     case Result(Success(())) =>
-      log.info(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has succeeded.")
-      finish(s.copy(state = TestEvent.State.Success))
+      log.info(s"$toString() -- Test has succeeded.")
+      finish(s.copy(state = TestEvent.State.Success, timestamp = System.currentTimeMillis()))
     case Result(Failure(e)) =>
-      log.info(s"Test for template [${t.factory.name}::${t.name}] with id [${s.id}] has failed [${e.getMessage()}].")
-      finish(s.copy(state = TestEvent.State.Failed, cause = Some(e)))
+      log.warn(e, true)(s"$toString() -- Test has failed.")
+      finish(s.copy(state = TestEvent.State.Failed, timestamp = System.currentTimeMillis(), cause = Some(e)))
+    case m => s"$toString() - Received unexpected message [$m]"
   }
 
   private def finish(s : TestEvent) : Unit = {

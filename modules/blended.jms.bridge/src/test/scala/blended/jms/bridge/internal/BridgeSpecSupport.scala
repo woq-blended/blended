@@ -102,7 +102,7 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
     }.map(FlowEnvelope.apply).map(f)
   }
 
-  protected def sendMessages(destName : String, cf : IdAwareConnectionFactory)(msgs : FlowEnvelope*) : KillSwitch = {
+  protected def sendMessages(destName : String, cf : IdAwareConnectionFactory, timeout : FiniteDuration)(msgs : FlowEnvelope*) : KillSwitch = {
     val pSettings : JmsProducerSettings = JmsProducerSettings(
       log = envLogger(log),
       headerCfg = headerCfg,
@@ -110,6 +110,6 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
       jmsDestination = Some(JmsDestination.create(destName).get)
     )
 
-    sendMessages(pSettings, envLogger(log), msgs:_*)(system(registry)).get
+    sendMessages(pSettings, envLogger(log), timeout, msgs:_*)(system(registry)).get
   }
 }
