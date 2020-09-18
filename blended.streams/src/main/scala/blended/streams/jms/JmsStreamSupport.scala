@@ -107,7 +107,7 @@ trait JmsStreamSupport {
     cf : IdAwareConnectionFactory,
     dest : JmsDestination,
     log : FlowEnvelopeLogger,
-    listener : Integer = 2,
+    listener : Integer = 1,
     minMessageDelay : Option[FiniteDuration] = None,
     selector : Option[String] = None,
     completeOn : Option[Seq[FlowEnvelope] => Boolean] = None,
