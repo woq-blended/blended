@@ -15,6 +15,7 @@ target.tgz
 .metals 
 out
 .ammonite/
+_gen
 
 blended.sslcontext/notes.txt
 
