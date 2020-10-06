@@ -76,13 +76,15 @@ class LDAPLoginModule extends AbstractLoginModule {
   @throws[LoginException]
   private[this] def validateUser() : String = {
 
+    // (uid={0})
+
     try {
       val (user, pwd) = extractCredentials()
 
       val constraint = new SearchControls()
       constraint.setSearchScope(SearchControls.SUBTREE_SCOPE)
 
-      val userSearchFormat = new MessageFormat(ldapCfg.userSearch)
+      val userSearchFormat = new MessageFormat(s"(${ldapCfg.userAttribute}={0})")
       val filter = userSearchFormat.format(Array(doRFC2254Encoding(user)))
 
       val r = dirContext.search(ldapCfg.userBase, filter, constraint)
@@ -94,14 +96,18 @@ class LDAPLoginModule extends AbstractLoginModule {
             log.warn(s"Search for user [$user] returned [${1 + tail.length}] records, using first record only.")
           }
 
-          val name = head.getNameInNamespace()
+          val name : String = head.getNameInNamespace()
 
           dirContext.addToEnvironment(Context.SECURITY_PRINCIPAL, name)
           dirContext.addToEnvironment(Context.SECURITY_CREDENTIALS, pwd)
 
-          // scalastyle:off null
-          dirContext.getAttributes("", null)
-          // scalastyle:on null
+          // Narrow down the call to get Attributes to the user we have looked up
+          // and the user attribute only to save resources on the LDAP server.
+          // The call is just executed to verify the credentials og that user within the
+          // LDAP directory
+
+          dirContext.getAttributes(name, Array(ldapCfg.userAttribute))
+
           log.info(s"User [$user] authenticated with LDAP name [$name]")
           name
       }

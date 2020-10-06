@@ -1,5 +1,4 @@
 import $ivy.`com.lihaoyi::mill-contrib-scoverage:$MILL_VERSION`
-
 import coursier.Repository
 import mill.api.Loose
 import mill.define.{Sources, Target, Task}
@@ -10,6 +9,7 @@ import mill._
 import os.{Path, RelPath}
 import coursier.maven.MavenRepository
 import coursier.core.Authentication
+import mill.modules.Jvm.JarManifest
 
 // This import the mill-osgi plugin
 import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
@@ -32,13 +32,13 @@ trait CoreDependencies extends BlendedDependencies
 object CoreDependencies {
   def scalaVersions : Map[String, CoreDependencies] =
     Seq(Deps_2_13).map(d => d.scalaVersion -> d).toMap
-  
+
   object Deps_2_13 extends CoreDependencies {
     override def scalaVersion = "2.13.2"
   }
-  
+
   /////////////////////////////////////////////////////////////////////////////////////
-  
+
   /** Project directory. */
 }
 val projectDir: os.Path = build.millSourcePath
@@ -123,7 +123,7 @@ trait DistModule extends CoreCoursierModule {
   }
 
   def resolvedLibs: Target[PathRef] = T{
-    val dest = T.ctx().dest
+    val dest = T.dest
     val libs = Target.traverse(transitiveLibModules)(m => T.task {
       (m.artifactId(), m.publishVersion(), m.jar().path)
     })()
@@ -1526,7 +1526,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
 
-      object standalone extends CoreModule {
+      object standalone extends BlendedBaseModule with CoreCoursierModule with CorePublishModule { scepclient =>
+
+        override type ProjectDeps = CoreDependencies
+
         override def description = "Standalone client to manage certificates via SCEP"
         override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
           deps.felixConnect,
@@ -1546,6 +1549,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           deps.logbackClassic,
           deps.jclOverSlf4j
         )}
+
         override def moduleDeps: Seq[PublishModule] = super.moduleDeps ++ Seq(
           security.scep,
           security.ssl,
@@ -1555,6 +1559,66 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           domino,
           updater.config
         )
+
+        override def extraPublish = T{ Seq(
+          PublishInfo(file = dist.zip(), classifier = Some("dist"), ivyConfig = "compile")
+        )}
+
+        //override def repositories: Seq[Repository] = super.repositories
+
+        override def baseDir = projectDir
+        override def scalaVersion = deps.scalaVersion
+        override def deps = blended.deps
+
+        def transitiveLibModules: Seq[PublishModule] =
+          moduleDeps.flatMap(_.transitiveModuleDeps).collect{ case m: PublishModule => m }.distinct
+
+        def transitiveLibIvyDeps: T[Agg[Dep]] = T{
+          ivyDeps() ++ T.traverse(moduleDeps)(_.transitiveIvyDeps)().flatten
+        }
+
+        override def manifest: T[JarManifest] =  T {
+
+          val mDeps : Seq[String] = Target.traverse(transitiveLibModules)(m => T.task {
+            (m.artifactId(), m.publishVersion() )
+          })().map { case (aId, v) => s"lib/$aId-$v.jar" }
+
+          val iDeps : Seq[String] = resolveDeps(transitiveLibIvyDeps)().map("lib/" + _.path.last).iterator.toSeq
+
+          val allDeps = (mDeps ++ iDeps).distinct
+
+          val main : Map[String,String] = Map(
+            java.util.jar.Attributes.Name.MANIFEST_VERSION.toString -> "1.0",
+            "Created-By" -> s"Scala mill",
+            java.util.jar.Attributes.Name.MAIN_CLASS.toString -> "blended.security.scep.standalone.ScepClientApp",
+            java.util.jar.Attributes.Name.CLASS_PATH.toString -> allDeps.mkString(" ")
+          )
+          JarManifest(main)
+        }
+
+        object dist extends DistModule with CoreCoursierModule {
+          override def deps = blended.deps
+          override def distName: T[String] = T{ s"${scepclient.artifactId()}-${scepclient.publishVersion()}" }
+          override def sources: Sources = T.sources(millSourcePath / "src" / "universal" / "binaryResources")
+          override def filteredSources: Sources = T.sources(millSourcePath / "src" / "universal" / "resources")
+          override def filterProperties: Target[Map[String, String]] = T { Map.empty[String, String] }
+          override def libIvyDeps = scepclient.ivyDeps
+          override def libModules : Seq[PublishModule] = scepclient.moduleDeps
+
+          override def resolvedLibs: Target[PathRef] = T {
+            val dest = T.dest
+
+            os.list(super.resolvedLibs().path).foreach{ p =>
+              os.copy(p, dest / p.last, createFolders = true)
+            }
+
+            os.copy(baseDir / "README.adoc", dest / "README.adoc")
+            os.copy(scepclient.jar().path, dest / s"scep-client.jar" )
+
+            PathRef(dest)
+          }
+        }
+
         object test extends CoreTests {
           override def ivyDeps: Target[Loose.Agg[Dep]] = T{ super.ivyDeps() ++ Agg(
             deps.osLib
@@ -1706,7 +1770,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
   object testsupport extends CoreModule {
     override def description = "Some test helper classes"
-    
+
     override def ivyDeps = Agg(
       deps.akkaActor(akkaBundleRevision),
       deps.jaxb,
@@ -1714,7 +1778,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       deps.junit,
       deps.commonsIo
     )
-    
+
     override def moduleDeps = Seq(
       blended.util,
       blended.util.logging,
@@ -1724,7 +1788,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def exportPackages : Seq[String] = super.exportPackages ++ Seq(
       s"${blendedModule}.retry"
     )
-    
+
     object test extends CoreTests
 
     object pojosr extends CoreModule {

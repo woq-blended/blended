@@ -55,7 +55,7 @@ trait ContainerContext {
   val profileConfigDirectory : String
 
   /**
-   * The hostname of the current container as defined by the netowrk layer.
+   * The hostname of the current container as defined by the network layer.
    */
   @BeanProperty
   val containerHostname : String
