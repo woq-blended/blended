@@ -69,6 +69,7 @@ class LDAPLoginModule extends AbstractLoginModule {
     true
   }
 
+  override protected def postLogin(): Unit = dirContext.close()
   override protected def postCommit() : Unit = dirContext.close()
   override protected def postAbort() : Unit = dirContext.close()
   override protected def postLogout() : Unit = dirContext.close()
