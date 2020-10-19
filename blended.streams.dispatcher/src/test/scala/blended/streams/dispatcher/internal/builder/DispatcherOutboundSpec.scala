@@ -13,6 +13,7 @@ import blended.streams.processor.Collector
 import blended.streams.worklist._
 import org.scalatest.matchers.should.Matchers
 
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
 class DispatcherOutboundSpec extends DispatcherSpecSupport
@@ -111,7 +112,8 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
       transactions = JmsDestination.create("trans").get,
       cbes = JmsDestination.create("cbes").get,
       retry = None,
-      retryFailed = JmsDestination.create("error").get
+      retryFailed = JmsDestination.create("error").get,
+      ackTimeout = 1.second
     )
 
     val prefix : DispatcherExecContext => String = ctxt => ctxt.bs.headerConfig.prefix

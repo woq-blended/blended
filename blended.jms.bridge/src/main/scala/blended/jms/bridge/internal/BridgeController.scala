@@ -124,7 +124,8 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
       subscriberName = in.subscriberName,
       header = in.header,
       ctCtxt = Some(ctrlCfg.ctCtxt),
-      sessionRecreateTimeout = in.sessionRecreateTimeout
+      sessionRecreateTimeout = in.sessionRecreateTimeout,
+      ackTimeout = in.ackTimeout
     )
 
     val builder = ctrlCfg.streamBuilderFactory(system)(inCfg, ctrlCfg.streamsCfg)
@@ -162,7 +163,8 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
       trackTransaction = TrackTransaction.FromMessage,
       subscriberName = None,
       header = List.empty,
-      sessionRecreateTimeout = 1.second
+      sessionRecreateTimeout = 1.second,
+      ackTimeout = 1.second
     )
 
     val builder = ctrlCfg.streamBuilderFactory(system)(outCfg, ctrlCfg.streamsCfg)

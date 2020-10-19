@@ -35,6 +35,7 @@ class InboundConfigSpec extends SimplePojoContainerSpec
           |  vendor = "activemq"
           |  from = "inQueue"
           |  listener = 4
+          |  ackTimeout = 1 second
           |}
         """.stripMargin
 
@@ -61,6 +62,7 @@ class InboundConfigSpec extends SimplePojoContainerSpec
           |  from = "topic:$[[BlendedCountry]]$[[BlendedLocation]]:$[[BlendedCountry]].$[[BlendedLocation]].data.in"
           |  to = "bridge.data.in"
           |  listener = 4
+          |  ackTimeout = 2 seconds
           |}
         """.stripMargin
 
@@ -83,6 +85,7 @@ class InboundConfigSpec extends SimplePojoContainerSpec
           |  name = "test"
           |  vendor = "activemq"
           |  from = "inQueue"
+          |  ackTimeout = 3 seconds
           |  header : [
           |    {
           |      name : "ResourceType"
@@ -99,5 +102,4 @@ class InboundConfigSpec extends SimplePojoContainerSpec
       inbound.header.head should be(HeaderProcessorConfig("ResourceType", Some("Test"), overwrite = true))
     }
   }
-
 }

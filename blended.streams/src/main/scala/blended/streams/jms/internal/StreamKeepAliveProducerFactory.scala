@@ -10,6 +10,7 @@ import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController, StreamFactories}
 import blended.util.logging.LogLevel
+import scala.concurrent.duration._
 
 class StreamKeepAliveProducerFactory(
   log : BlendedSingleConnectionFactory => FlowEnvelopeLogger,
@@ -36,7 +37,8 @@ class StreamKeepAliveProducerFactory(
     jmsDestination = Some(JmsDestination.create(bcf.config.keepAliveDestination).get),
     logLevel = _ => LogLevel.Debug,
     acknowledgeMode = AcknowledgeMode.AutoAcknowledge,
-    selector = Some(s"JMSCorrelationID = '${corrId(bcf)}'")
+    selector = Some(s"JMSCorrelationID = '${corrId(bcf)}'"),
+    ackTimeout = 1.second
   )
 
   private val setHeader : BlendedSingleConnectionFactory => Flow[FlowEnvelope, FlowEnvelope, NotUsed] = bcf => Flow.fromGraph(

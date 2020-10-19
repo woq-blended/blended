@@ -38,7 +38,8 @@ class JMSResponder(
     log = envLogger,
     headerCfg = headerCfg,
     connectionFactory = cf,
-    jmsDestination = Some(JmsQueue("redeem"))
+    jmsDestination = Some(JmsQueue("redeem")),
+    ackTimeout = 1.second
   )
 
   private val producerSettings : JmsProducerSettings = JmsProducerSettings(

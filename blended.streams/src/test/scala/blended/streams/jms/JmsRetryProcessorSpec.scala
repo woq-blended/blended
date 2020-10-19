@@ -122,9 +122,9 @@ abstract class ProcessorSpecSupport(name : String) extends SimplePojoContainerSp
       cf = amqCf,
       dest = JmsDestination.create(dest).get,
       log = envLogger(log),
-      listener = 1,
       completeOn = Some(f),
-      timeout = Some(timeout)
+      timeout = Some(timeout),
+      ackTimeout = 1.second
     )
 
     Await.result(coll.result, timeout + 100.millis)
@@ -217,9 +217,9 @@ class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeo
       cf = amqCf,
       dest = JmsQueue(retryCfg.failedDestName),
       log = envLogger(log),
-      listener = 1,
       completeOn = None,
-      timeout = Some(timeout)
+      timeout = Some(timeout),
+      ackTimeout = 1.second
     )
 
     Await.result(otherFailed.result, timeout + 500.millis) should be (empty)

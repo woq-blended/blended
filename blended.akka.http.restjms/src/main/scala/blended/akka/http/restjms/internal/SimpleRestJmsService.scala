@@ -61,7 +61,8 @@ class SimpleRestJmsService(
     logLevel = _ => LogLevel.Debug,
     // We use the real JMSCorrelation Id here, not the one we keep in our ap properties
     selector = Some(s"${corrIdHeader("")} LIKE '${osgiCfg.ctContext.uuid}%'"),
-    keyFormatStrategy = new PassThroughKeyFormatStrategy()
+    keyFormatStrategy = new PassThroughKeyFormatStrategy(),
+    ackTimeout = 1.second
   )
 
   private val sendToJms : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(new JmsProducerStage(s"$name-send", producerSettings))

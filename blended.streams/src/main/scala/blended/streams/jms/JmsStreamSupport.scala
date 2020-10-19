@@ -111,7 +111,8 @@ trait JmsStreamSupport {
     minMessageDelay : Option[FiniteDuration] = None,
     selector : Option[String] = None,
     completeOn : Option[Seq[FlowEnvelope] => Boolean] = None,
-    timeout : Option[FiniteDuration]
+    timeout : Option[FiniteDuration],
+    ackTimeout : FiniteDuration
   )(implicit system : ActorSystem) : Collector[FlowEnvelope] = {
 
     val listenerCount : Int = if (dest.isInstanceOf[JmsQueue]) {
@@ -128,7 +129,7 @@ trait JmsStreamSupport {
     val source : Source[FlowEnvelope, NotUsed] = jmsConsumer(
       name = dest.asString,
       settings =
-        JmsConsumerSettings(log = log, headerCfg = headerCfg, connectionFactory = cf)
+        JmsConsumerSettings(log = log, headerCfg = headerCfg, connectionFactory = cf, ackTimeout = ackTimeout)
           .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
           .withSessionCount(listenerCount)
           .withDestination(Some(dest))

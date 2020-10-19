@@ -106,7 +106,7 @@ final case class JmsConsumerSettings(
   acknowledgeMode: AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
   bufferSize: Int = 100,
   selector: Option[String] = None,
-  ackTimeout: FiniteDuration = 1.second,
+  ackTimeout: FiniteDuration, // = 1.second,
   durableName: Option[String] = None
 ) extends JmsSettings {
 
@@ -117,7 +117,6 @@ final case class JmsConsumerSettings(
   def withAcknowledgeMode(m : AcknowledgeMode) : JmsConsumerSettings = copy(acknowledgeMode = m)
   def withSessionCount(c : Int) : JmsConsumerSettings = copy(sessionCount = c)
   def withSelector(s : Option[String]) : JmsConsumerSettings = copy(selector = s)
-  def withAckTimeout(d : FiniteDuration) : JmsConsumerSettings = copy(ackTimeout = d)
   def withConnectionTimeout(d : FiniteDuration) : JmsConsumerSettings = copy(connectionTimeout = d)
 
   def withSubScriberName(name : Option[String]) : JmsConsumerSettings = copy(durableName = name)
@@ -127,10 +126,14 @@ object JmsConsumerSettings {
   def create(
     log : FlowEnvelopeLogger,
     cf: IdAwareConnectionFactory,
-    headerConfig: FlowHeaderConfig
+    headerConfig: FlowHeaderConfig,
+    ackTimeout : FiniteDuration
   ) : JmsConsumerSettings =
     JmsConsumerSettings(
-      log = log, headerCfg = headerConfig, connectionFactory = cf
+      log = log,
+      headerCfg = headerConfig,
+      connectionFactory = cf,
+      ackTimeout = ackTimeout
     )
 }
 

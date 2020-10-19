@@ -92,7 +92,8 @@ class SlowRoundtripSpec extends SimplePojoContainerSpec
         minMessageDelay = None,
         selector = None,
         completeOn = Some(_.nonEmpty),
-        timeout = Some(3.seconds)
+        timeout = Some(3.seconds),
+        ackTimeout = 1.second
       )
 
       val verifyMsg : FlowEnvelope = Await.result(verifyRec.result, 4.seconds).headOption.get

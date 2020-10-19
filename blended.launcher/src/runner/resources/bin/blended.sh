@@ -1,9 +1,12 @@
 #!/bin/sh
 
 function setenv() {
-
   if [ -f "$BLENDED_HOME/bin/setenv" ] ; then
     . "$BLENDED_HOME/bin/setenv"
+  fi
+
+  if [ -f "$BLENDED_HOME/bin/prepare" ] ; then
+    . "$BLENDED_HOME/bin/prepare"
   fi
 }
 

@@ -50,10 +50,10 @@ class RoundtripConnectionVerifier(
       cf = cf,
       dest = responseDest,
       log = FlowEnvelopeLogger.create(headerConfig, log),
-      listener = 1,
       selector = Some(s"JMSCorrelationID='$id'"),
       completeOn = Some(_.nonEmpty),
-      timeout = Some(receiveTimeout)
+      timeout = Some(receiveTimeout),
+      ackTimeout = 1.second
     )
 
     collector.result.onComplete {

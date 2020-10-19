@@ -61,7 +61,8 @@ class CbeFlowSpec extends DispatcherSpecSupport
     cf = cf,
     dest = JmsQueue("cbeOut"),
     log = dispCtxt.envLogger,
-    timeout = Some(timeout)
+    timeout = Some(timeout),
+    ackTimeout = 1.second
   )(system = dispCtxt.system)
 
   "The CBE Flow should" - {

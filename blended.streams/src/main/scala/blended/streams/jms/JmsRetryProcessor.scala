@@ -115,7 +115,8 @@ class JmsRetryProcessor(
       connectionFactory = retryCfg.cf,
       acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
       jmsDestination = Some(JmsDestination.create(retryCfg.retryDestName).get),
-      logLevel = _ => LogLevel.Debug
+      logLevel = _ => LogLevel.Debug,
+      ackTimeout = 1.second
     )
 
     jmsConsumer(

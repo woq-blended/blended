@@ -57,7 +57,8 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
         cf = cf,
         dest = d,
         log = dispCtxt.envLogger,
-        timeout = Some(timeout)
+        timeout = Some(timeout),
+        ackTimeout = 1.second
       )(dispCtxt.system)
     }
 

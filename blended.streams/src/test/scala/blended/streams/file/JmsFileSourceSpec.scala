@@ -103,7 +103,8 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       headerCfg = headerCfg,
       connectionFactory = cf,
       jmsDestination = Some(dest),
-      acknowledgeMode = AcknowledgeMode.ClientAcknowledge
+      acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
+      ackTimeout = 1.second
     )
 
     Source.fromGraph(new JmsConsumerStage(name, settings, minMessageDelay = None))

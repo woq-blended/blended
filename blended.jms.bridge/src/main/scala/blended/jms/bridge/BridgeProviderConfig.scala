@@ -6,6 +6,7 @@ import blended.util.RichTry._
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
+import scala.concurrent.duration._
 import scala.util.Try
 
 case class BridgeProviderConfig(
@@ -18,7 +19,8 @@ case class BridgeProviderConfig(
   retryFailed : JmsDestination,
   errors : JmsDestination,
   transactions : JmsDestination,
-  cbes : JmsDestination
+  cbes : JmsDestination,
+  ackTimeout : FiniteDuration
 ) extends ProviderAware {
 
   override def toString : String =
@@ -47,6 +49,7 @@ object BridgeProviderConfig {
 
     val inbound = s"${cfg.getString("inbound")}"
     val outbound = s"${cfg.getString("outbound")}"
+    val ackTimeout = cfg.getDuration("ackTimeout").toMillis.millis
 
     val internal = cfg.getBoolean("internal", false)
 
@@ -60,7 +63,8 @@ object BridgeProviderConfig {
       retryFailed = retryFailed,
       errors = JmsDestination.create(errorDest).unwrap,
       transactions = JmsDestination.create(eventDest).unwrap,
-      cbes = JmsDestination.create(cbeDest).unwrap
+      cbes = JmsDestination.create(cbeDest).unwrap,
+      ackTimeout = ackTimeout
     )
   }
 }

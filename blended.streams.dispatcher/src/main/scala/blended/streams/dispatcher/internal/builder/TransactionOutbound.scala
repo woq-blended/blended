@@ -39,7 +39,8 @@ class TransactionOutbound(
       log = log,
       logLevel = _ => LogLevel.Debug,
       headerCfg = headerConfig,
-      connectionFactory = internalCf
+      connectionFactory = internalCf,
+      ackTimeout = dispatcherCfg.ackTimeout
     )
       .withSessionCount(3)
       .withDestination(Some(transDest))

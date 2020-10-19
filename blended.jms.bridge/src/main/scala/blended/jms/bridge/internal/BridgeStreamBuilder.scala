@@ -61,7 +61,9 @@ case class BridgeStreamConfig(
   ctCtxt : Option[ContainerContext] = None,
   // the minimum timespan after which a new session will be created after closing a session
   // upon an exception
-  sessionRecreateTimeout : FiniteDuration
+  sessionRecreateTimeout : FiniteDuration,
+  // The timeout within a consumed message must be acknowledged
+  ackTimeout : FiniteDuration
 )
 
 class BridgeStreamBuilder(
@@ -173,7 +175,8 @@ class BridgeStreamBuilder(
       log = envLogger,
       connectionFactory = bridgeCfg.fromCf,
       headerCfg = bridgeCfg.headerCfg,
-      logLevel = _ => if (isInbound) LogLevel.Info else LogLevel.Debug
+      logLevel = _ => if (isInbound) LogLevel.Info else LogLevel.Debug,
+      ackTimeout = bridgeCfg.ackTimeout
     )
       .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
       .withDestination(Some(bridgeCfg.fromDest))

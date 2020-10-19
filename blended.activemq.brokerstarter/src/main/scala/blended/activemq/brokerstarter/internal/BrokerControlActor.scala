@@ -116,10 +116,14 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
 
       if (brokerCfg.withAuthentication) {
         log.info(s"The broker [${brokerCfg.brokerName}] will start with authentication")
-        val plugins : List[BrokerPlugin] = new JaasAuthenticationPlugin(brokerCfg) :: Option(b.getPlugins()).map(_.toList).getOrElse(List.empty)
-        b.setPlugins(plugins.toArray)
+        installPlugin(new JaasAuthenticationPlugin(brokerCfg), b)
       } else {
         log.info(s"The broker [${brokerCfg.brokerName}] will start without authentication")
+      }
+
+      if (brokerCfg.ttlOverrides.nonEmpty) {
+        log.info(s"The broker [${brokerCfg.brokerName}] will use the following TTL overrides \n ${brokerCfg.ttlOverrides.mkString("  ","\n", "\n")}")
+        installPlugin(new TTLEnforcingBrokerPlugin(brokerCfg.ttlOverrides), b)
       }
 
       sslCtxt.foreach { ctxt =>
@@ -147,6 +151,12 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
     } finally {
       Thread.currentThread().setContextClassLoader(oldLoader)
     }
+  }
+
+  private def installPlugin(plugin : BrokerPlugin, broker : BrokerService) : BrokerService = {
+    val plugins : List[BrokerPlugin] = plugin :: Option(broker.getPlugins()).map(_.toList).getOrElse(List.empty)
+    broker.setPlugins(plugins.toArray)
+    broker
   }
 
   private[this] def registerService(brokerCfg : BrokerConfig) : Unit = {

@@ -149,7 +149,8 @@ class RunnableDispatcher(
         val dest = s"${internalProvider.inbound.name}.${provider.vendor}.${provider.provider}"
         Some(JmsDestination.create(dest).get)
       },
-      logLevel = _ => if (provider.internal) LogLevel.Info else LogLevel.Debug
+      logLevel = _ => if (provider.internal) LogLevel.Info else LogLevel.Debug,
+      ackTimeout = routerCfg.ackTimeout
     )
 
     val source = jmsConsumer(

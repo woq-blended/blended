@@ -6,7 +6,7 @@ import blended.util.config.Implicits._
 import com.typesafe.config.Config
 import org.apache.activemq.ActiveMQConnectionFactory
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import scala.util.Try
 
 case class BrokerConfig(
@@ -36,8 +36,9 @@ case class BrokerConfig(
   withSsl : Boolean,
   withAuthentication : Boolean,
   anonymousUser : Option[String],
-  anonymousGroups : List[String]
-) extends ConnectionConfig 
+  anonymousGroups : List[String],
+  ttlOverrides : List[(String, FiniteDuration)]
+) extends ConnectionConfig
 
 object BrokerConfig {
 
@@ -63,6 +64,12 @@ object BrokerConfig {
   val anonymous : Config => Option[String] = cfg => cfg.getStringOption("anonymousUser")
 
   val anonymousGroups : Config => List[String] = cfg => cfg.getStringList("anonymousGroups", List.empty)
+
+  val ttlOverrides : Config => List[(String, FiniteDuration)] = cfg => cfg.getConfigList("ttlOverrides", List.empty).map { ttlCfg =>
+    val pattern : String = ttlCfg.getString("pattern")
+    val ttl : FiniteDuration = ttlCfg.getDuration("ttl").toMillis.millis
+    (pattern, ttl)
+  }
 
   def create(brokerName : String, ctCtxt : ContainerContext, cfg : Config) : Try[BrokerConfig] = Try {
 
@@ -94,7 +101,8 @@ object BrokerConfig {
       withSsl = ssl(cfg),
       withAuthentication = authenticate(cfg),
       anonymousUser = anonymous(cfg),
-      anonymousGroups = anonymousGroups(cfg)
+      anonymousGroups = anonymousGroups(cfg),
+      ttlOverrides = ttlOverrides(cfg)
     )
   }
 }

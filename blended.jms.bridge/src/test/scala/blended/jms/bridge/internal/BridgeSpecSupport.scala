@@ -80,7 +80,8 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
       dest = JmsDestination.create(destName).get,
       log = envLogger(log),
       completeOn = completeOn,
-      timeout = Some(timeout)
+      timeout = Some(timeout),
+      ackTimeout = 1.second
     )
     Await.result(coll.result, timeout + 100.millis)
   }

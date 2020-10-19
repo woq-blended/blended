@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.actor.{Actor, ActorRef, ActorSystem, Cancellable, Props}
 import akka.stream.scaladsl.{Flow, Keep, Sink}
 import akka.NotUsed
+import akka.stream.OverflowStrategy
 import blended.streams.StreamFactories
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
 import blended.streams.processor.{CollectingActor, Collector}
@@ -63,7 +64,6 @@ class MultiResultCollector(
   log : FlowEnvelopeLogger
 ) extends Actor {
 
-  private val bufferSize : Int = 10
   private case class MultiResultTimeout(timeout : FiniteDuration)
 
   private implicit val system : ActorSystem = context.system
@@ -102,7 +102,7 @@ class MultiResultCollector(
           // We need to set up the sub flow that accepts messages from an actor and passes
           // each message through the given sub flow while the final result is collected
           // by the collector
-          val collActor : ActorRef = StreamFactories.actorSource[FlowEnvelope](bufferSize)
+          val collActor : ActorRef = StreamFactories.actorSource[FlowEnvelope](copies.size + 1, OverflowStrategy.fail)
             .viaMat(processSingle)(Keep.left)
             .toMat(Sink.actorRef[FlowEnvelope](collector.actor, CollectingActor.Success, t => CollectingActor.Failed(t)))(Keep.left)
             .run()

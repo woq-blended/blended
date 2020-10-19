@@ -77,7 +77,8 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     cf = cf,
     dest = JmsQueue("cbeOut"),
     log = dispCtxt.envLogger,
-    timeout = Some(timeout)
+    timeout = Some(timeout),
+    ackTimeout = 1.second
   )(dispCtxt.system)
 
   "The transaction outbound handler should" - {

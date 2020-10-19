@@ -43,6 +43,8 @@ object InboundConfig {
 
     val sessionRecreateTimeout : FiniteDuration = cfg.getDuration("sessionRecreateTimeout", 1.second)
 
+    val ackTimeout : FiniteDuration = cfg.getDuration("ackTimeout").toMillis.millis
+
     InboundConfig(
       name = name,
       vendor = vendor,
@@ -53,7 +55,8 @@ object InboundConfig {
       subscriberName = subscriberName,
       listener = listener,
       header = header,
-      sessionRecreateTimeout = sessionRecreateTimeout
+      sessionRecreateTimeout = sessionRecreateTimeout,
+      ackTimeout = ackTimeout
     )
   }
 }
@@ -68,5 +71,6 @@ case class InboundConfig(
   subscriberName : Option[String],
   listener : Int,
   header : List[HeaderProcessorConfig],
-  sessionRecreateTimeout : FiniteDuration
+  sessionRecreateTimeout : FiniteDuration,
+  ackTimeout : FiniteDuration
 )

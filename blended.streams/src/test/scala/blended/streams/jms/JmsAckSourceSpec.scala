@@ -84,7 +84,8 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       connectionFactory = amqCf,
       jmsDestination = Some(dest),
       sessionCount = consumerCount,
-      acknowledgeMode = AcknowledgeMode.ClientAcknowledge
+      acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
+      ackTimeout = 1.second
     )
   }
 

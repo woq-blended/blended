@@ -21,6 +21,7 @@ object ResourceTypeRouterConfig {
   private[this] val defaultHeaderPath = "defaultHeader"
   private[this] val resourcetypesPath = "resourcetypes"
   private[this] val startupPath = "onStartup"
+  private[this] val ackTimeoutPath = "ackTimeout"
 
   def create(
     ctCtxt : ContainerContext,
@@ -64,6 +65,8 @@ object ResourceTypeRouterConfig {
         .mapValues(s => ctCtxt.resolveString(s).get.toString)
         .toMap
 
+    val ackTimeout : FiniteDuration = cfg.getDuration(ackTimeoutPath).toMillis.millis
+
     ResourceTypeRouterConfig(
       defaultProvider = internalProvider,
       eventProvider = eventProvider,
@@ -71,7 +74,8 @@ object ResourceTypeRouterConfig {
       defaultHeader = defaultHeader,
       resourceTypeConfigs = routes,
       providerRegistry = provider,
-      startupMap = startupMap
+      startupMap = startupMap,
+      ackTimeout = ackTimeout
     )
   }
 }
@@ -83,7 +87,8 @@ case class ResourceTypeRouterConfig(
   applicationLogHeader : List[String],
   defaultHeader : List[HeaderProcessorConfig],
   resourceTypeConfigs : Map[String, ResourceTypeConfig],
-  startupMap : Map[String, String]
+  startupMap : Map[String, String],
+  ackTimeout : FiniteDuration
 )
 
 object ResourceTypeConfig {

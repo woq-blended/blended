@@ -63,7 +63,8 @@ case class RoundtripHelper(
           listener = 1,
           selector = o.selector,
           completeOn = o.completeOn,
-          timeout = Some(timeout)
+          timeout = Some(timeout),
+          ackTimeout = timeout
         )
         k -> c
       }
