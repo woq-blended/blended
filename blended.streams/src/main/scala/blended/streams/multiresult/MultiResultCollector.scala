@@ -102,7 +102,7 @@ class MultiResultCollector(
           // We need to set up the sub flow that accepts messages from an actor and passes
           // each message through the given sub flow while the final result is collected
           // by the collector
-          val collActor : ActorRef = StreamFactories.actorSource[FlowEnvelope](copies.size + 1, OverflowStrategy.fail)
+          val collActor : ActorRef = StreamFactories.actorSource[FlowEnvelope](copies.size, OverflowStrategy.fail)
             .viaMat(processSingle)(Keep.left)
             .toMat(Sink.actorRef[FlowEnvelope](collector.actor, CollectingActor.Success, t => CollectingActor.Failed(t)))(Keep.left)
             .run()
