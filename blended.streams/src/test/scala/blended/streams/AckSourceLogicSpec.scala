@@ -22,7 +22,7 @@ class CountingAckContext(
   id : String,
   env : FlowEnvelope
 )(handleAck : CountingAckContext => Unit)(handleDeny : CountingAckContext => Unit)
-  extends DefaultAcknowledgeContext(id, env, 1.second, System.currentTimeMillis()) {
+  extends DefaultAcknowledgeContext(id, env, System.currentTimeMillis()) {
   override def acknowledge(): Unit = handleAck(this)
   override def deny(): Unit = handleDeny(this)
 }
@@ -31,7 +31,8 @@ class CountingAckSource(
   name : String,
   msgCount : Long,
   numSlots : Int,
-  autoAcknowledge : Boolean
+  autoAcknowledge : Boolean,
+  ackTimeout : FiniteDuration
 )(
   handleAck : AcknowledgeContext => Unit
 )(
@@ -47,7 +48,7 @@ class CountingAckSource(
     msgCount : Long,
     numSlots : Int,
     autoAck : Boolean
-  ) extends AckSourceLogic[CountingAckContext](shape, out) {
+  ) extends AckSourceLogic[CountingAckContext](shape, out, ackTimeout) {
 
     private val counter : AtomicLong = new AtomicLong(0L)
 
@@ -101,7 +102,7 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
       val deny : AtomicLong = new AtomicLong(0L)
 
       val ackSource : Graph[SourceShape[FlowEnvelope], NotUsed] =
-        new CountingAckSource("AckCounter", expectedCnt, numSlots, autoAcknowledge = false)(_ => ack.incrementAndGet())(_ => deny.incrementAndGet())
+        new CountingAckSource("AckCounter", expectedCnt, numSlots, autoAcknowledge = false, 1.second)(_ => ack.incrementAndGet())(_ => deny.incrementAndGet())
 
       val s : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(ackSource)
@@ -124,7 +125,7 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
       val deny : AtomicLong = new AtomicLong(0L)
 
       val ackSource : Graph[SourceShape[FlowEnvelope], NotUsed] =
-        new CountingAckSource("AckCounter", expectedCnt, numSlots, autoAcknowledge = true)(_ => ack.incrementAndGet())(_ => deny.incrementAndGet())
+        new CountingAckSource("AckCounter", expectedCnt, numSlots, autoAcknowledge = true, 1.second)(_ => ack.incrementAndGet())(_ => deny.incrementAndGet())
 
       val s : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(ackSource)
@@ -146,7 +147,7 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
       val deny : AtomicLong = new AtomicLong(0L)
 
       val ackSource : Graph[SourceShape[FlowEnvelope], NotUsed] =
-        new CountingAckSource("AckCounter", expectedCnt, numSlots, autoAcknowledge = false)(_ => ack.incrementAndGet())(_ => deny.incrementAndGet())
+        new CountingAckSource("AckCounter", expectedCnt, numSlots, autoAcknowledge = false, 1.second)(_ => ack.incrementAndGet())(_ => deny.incrementAndGet())
 
       val s : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(ackSource)
@@ -170,7 +171,7 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
       val deny : AtomicLong = new AtomicLong(0L)
 
       val ackSource : Graph[SourceShape[FlowEnvelope], NotUsed] =
-        new CountingAckSource("AckCounter", 1, numSlots, autoAcknowledge = false)(_ => ack.incrementAndGet())(_ => deny.incrementAndGet())
+        new CountingAckSource("AckCounter", 1, numSlots, autoAcknowledge = false, 800.millis)(_ => ack.incrementAndGet())(_ => deny.incrementAndGet())
 
       val s : Source[FlowEnvelope, NotUsed] = Source.fromGraph(ackSource)
 

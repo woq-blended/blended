@@ -58,7 +58,7 @@ final class JmsConsumerStage(
     val jmsMessageAck : Message => Unit,
     val session : JmsSession,
     val sessionClose : JmsSession => Unit
-  ) extends DefaultAcknowledgeContext(inflightId, env, consumerSettings.ackTimeout, System.currentTimeMillis()) {
+  ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis()) {
 
     override def deny(): Unit = {
       sessionClose(session)
@@ -75,7 +75,7 @@ final class JmsConsumerStage(
     }
   }
 
-  private class JmsSourceLogic() extends AckSourceLogic[JmsAckContext](shape, out) with JmsEnvelopeHeader {
+  private class JmsSourceLogic() extends AckSourceLogic[JmsAckContext](shape, out, consumerSettings.ackTimeout) with JmsEnvelopeHeader {
 
     /** The id to identify the instance in the log files */
     override protected val id: String = name

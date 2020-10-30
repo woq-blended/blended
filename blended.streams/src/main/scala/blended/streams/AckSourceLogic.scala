@@ -31,8 +31,6 @@ trait AcknowledgeContext {
 
   def created : Long
 
-  def duration : FiniteDuration
-
   def acknowledge() : Unit
 
   def deny() : Unit
@@ -41,7 +39,6 @@ trait AcknowledgeContext {
 case class DefaultAcknowledgeContext(
   override val inflightId : String,
   override val envelope : FlowEnvelope,
-  override val duration : FiniteDuration,
   override val created : Long
 ) extends AcknowledgeContext {
   override def acknowledge() : Unit = ()
@@ -87,7 +84,7 @@ case class DefaultAcknowledgeContext(
 abstract class AckSourceLogic[T <: AcknowledgeContext](
   val shape : Shape,
   val out : Outlet[FlowEnvelope],
-  val ackTimeout : FiniteDuration = 1.second
+  val ackTimeout : FiniteDuration
 ) extends TimerGraphStageLogic(shape) {
 
   private case object Poll
@@ -95,6 +92,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
 
   override def preStart() : Unit = {
     super.preStart()
+    log.underlying.debug(s"Starting AckSourceLogic with ackTimeout [$ackTimeout]")
     scheduleAtFixedRate(CheckAck, 100.millis, 100.millis)
   }
 
@@ -192,7 +190,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   // message has timed out. Per default this will be delegated to the
   // denied() handler
   protected def ackTimedOut(ackCtxt : T): Unit = {
-    log.logEnv(ackCtxt.envelope, LogLevel.Warn, s"Flow Envelope [${ackCtxt.envelope.id}] acknowledge has timed out after [${ackCtxt.duration}]")
+    log.logEnv(ackCtxt.envelope, LogLevel.Warn, s"Flow Envelope [${ackCtxt.envelope.id}] acknowledge has timed out after [${ackTimeout}]")
     denied(ackCtxt)
   }
 
