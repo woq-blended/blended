@@ -22,7 +22,7 @@ class CountingAckContext(
   id : String,
   env : FlowEnvelope
 )(handleAck : CountingAckContext => Unit)(handleDeny : CountingAckContext => Unit)
-  extends DefaultAcknowledgeContext(id, env, System.currentTimeMillis()) {
+  extends DefaultAcknowledgeContext(id, env, 1.second, System.currentTimeMillis()) {
   override def acknowledge(): Unit = handleAck(this)
   override def deny(): Unit = handleDeny(this)
 }

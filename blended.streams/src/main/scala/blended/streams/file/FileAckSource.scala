@@ -56,7 +56,7 @@ class FileAckSource(
     env: FlowEnvelope,
     val originalFile : File,
     val fileToProcess : File
-  ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis()) {
+  ) extends DefaultAcknowledgeContext(inflightId, env, pollCfg.ackTimeout, System.currentTimeMillis()) {
 
     override def acknowledge() : Unit = {
       logger.logEnv(env, LogLevel.Debug, s"Successfully processed envelope [${envelope.id}]")

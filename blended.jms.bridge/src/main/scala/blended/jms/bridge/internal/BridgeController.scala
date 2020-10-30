@@ -138,7 +138,12 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
     streams += (builder.streamId -> actor)
   }
 
-  private[this] def createOutboundStream(cf : IdAwareConnectionFactory, internal : Boolean, alternates : Seq[String]) : Unit = {
+  private[this] def createOutboundStream(
+    cf : IdAwareConnectionFactory,
+    internal : Boolean,
+    alternates : Seq[String],
+    ackTimeout : FiniteDuration
+  ) : Unit = {
 
     val fromDest = if (internal) {
       JmsDestination.create(ctrlCfg.registry.internalProvider.get.outbound.asString).get
@@ -164,7 +169,7 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
       subscriberName = None,
       header = List.empty,
       sessionRecreateTimeout = 1.second,
-      ackTimeout = 1.second
+      ackTimeout = ackTimeout
     )
 
     val builder = ctrlCfg.streamBuilderFactory(system)(outCfg, ctrlCfg.streamsCfg)
@@ -193,7 +198,7 @@ class BridgeController(ctrlCfg : BridgeControllerConfig)(implicit system : Actor
           log.debug(s"Creating Streams for inbound destinations : [${inbound.mkString(",")}]")
           inbound.foreach { in => createInboundStream(in, cf, internal) }
 
-          createOutboundStream(cf, internal, ctrlCfg.outboundAlternates)
+          createOutboundStream(cf, internal, ctrlCfg.outboundAlternates, p.ackTimeout)
         case Failure(_) =>
           log.warn("No internal JMS provider found in config")
       }

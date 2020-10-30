@@ -31,6 +31,8 @@ trait AcknowledgeContext {
 
   def created : Long
 
+  def duration : FiniteDuration
+
   def acknowledge() : Unit
 
   def deny() : Unit
@@ -39,6 +41,7 @@ trait AcknowledgeContext {
 case class DefaultAcknowledgeContext(
   override val inflightId : String,
   override val envelope : FlowEnvelope,
+  override val duration : FiniteDuration,
   override val created : Long
 ) extends AcknowledgeContext {
   override def acknowledge() : Unit = ()
@@ -188,7 +191,10 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   // this will be called whenever the acknowledgement for an inflight
   // message has timed out. Per default this will be delegated to the
   // denied() handler
-  protected def ackTimedOut(ackCtxt : T): Unit = denied(ackCtxt)
+  protected def ackTimedOut(ackCtxt : T): Unit = {
+    log.logEnv(ackCtxt.envelope, LogLevel.Warn, s"Flow Envelope [${ackCtxt.envelope.id}] acknowledge has timed out after [${ackCtxt.duration}]")
+    denied(ackCtxt)
+  }
 
   protected def determineNextSlot(slotList : List[String]) : Option[String] = {
     lastUsedSlot = slotList.filter { id => !inflightMap.keys.exists(_ == id) } match {

@@ -45,7 +45,7 @@ final class JmsConsumerStage(
 )(implicit actorSystem : ActorSystem)
   extends GraphStage[SourceShape[FlowEnvelope]] {
 
-  consumerSettings.log.underlying.debug(s"Starting consumer [$name]")
+  consumerSettings.log.underlying.debug(s"Starting consumer [$name] with ackTimeout [${consumerSettings.ackTimeout}]")
 
   private val headerConfig : FlowHeaderConfig = consumerSettings.headerCfg
   private val out : Outlet[FlowEnvelope] = Outlet[FlowEnvelope](s"JmsAckSource($name.out)")
@@ -58,7 +58,7 @@ final class JmsConsumerStage(
     val jmsMessageAck : Message => Unit,
     val session : JmsSession,
     val sessionClose : JmsSession => Unit
-  ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis()) {
+  ) extends DefaultAcknowledgeContext(inflightId, env, consumerSettings.ackTimeout, System.currentTimeMillis()) {
 
     override def deny(): Unit = {
       sessionClose(session)
