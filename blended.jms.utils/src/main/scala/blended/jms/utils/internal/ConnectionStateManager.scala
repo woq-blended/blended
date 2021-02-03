@@ -219,9 +219,11 @@ class ConnectionStateManager(holder: ConnectionHolder)
 
   private def controllerStopped(s: ConnectionState) : Receive = {
     case Terminated(a) => s.controller match {
-      case Some(c) if a == c =>
-        log.warn(s"The current connection controller has stopped, initiating reconnect")
-        reconnect(restartController(s.copy(controller = None)))
+      case Some(c) =>
+        if (a == c) {
+          log.warn(s"The current connection controller has stopped, initiating reconnect")
+          reconnect(restartController(s.copy(controller = None)))
+        }
       case _ => // ignore
     }
   }
