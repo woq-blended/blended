@@ -45,7 +45,7 @@ class FileDropSpec extends LoggingFreeSpec
     cfg.copy(defaultDir = dir)
   }
 
-  val dropActor : ActorRef = system.actorOf(Props[FileDropActor])
+  val dropActor : ActorRef = system.actorOf(Props[FileDropActor]())
 
   private def dropFile(dropper : EnvelopeFileDropper, cfg : FileDropConfig, env : FlowEnvelope) : Try[FileDropResult] = Try {
     val (_, r) = dropper.dropEnvelope(env)

@@ -18,7 +18,7 @@ object Collector {
     implicit system : ActorSystem, clazz : ClassTag[T]
   ) : Collector[T] = {
 
-    val result : Promise[List[T]] = Promise[List[T]]
+    val result : Promise[List[T]] = Promise[List[T]]()
 
     val actor = system.actorOf(CollectingActor.props[T](
       name = name,

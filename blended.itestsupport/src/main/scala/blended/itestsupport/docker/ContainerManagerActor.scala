@@ -36,7 +36,7 @@ class ContainerManagerActor extends Actor with ActorLogging with Docker {
 
     case StartContainerManager(containers) =>
 
-      val requestor = sender
+      val requestor = sender()
 
       val externalCt = config.getBoolean("docker.external")
       log.info(s"Containers have been started externally: [$externalCt]")

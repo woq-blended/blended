@@ -222,6 +222,7 @@ class ConnectionStateManager(holder: ConnectionHolder)
       case Some(c) if a == c =>
         log.warn(s"The current connection controller has stopped, initiating reconnect")
         reconnect(restartController(s.copy(controller = None)))
+      case _ => // ignore
     }
   }
 

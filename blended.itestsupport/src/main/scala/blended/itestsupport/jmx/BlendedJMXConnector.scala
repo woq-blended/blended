@@ -15,7 +15,7 @@ trait BlendedJMXConnector extends Actor with ActorLogging{ this : JMXUrlProvider
     case Disconnect => {
       connector.foreach(_.close())
       connector = None
-      sender ! Disconnected
+      sender() ! Disconnected
       context become disconnected
     }
   }
@@ -25,10 +25,10 @@ trait BlendedJMXConnector extends Actor with ActorLogging{ this : JMXUrlProvider
       connector = Some(JMXConnectorFactory.connect(serviceUrl))
       connector.get.connect()
       requests.reverse.foreach{ case (s, m) => self.tell(m, s) }
-      sender ! Connected
+      sender() ! Connected
       context become connected
     }
-    case r => requests = (sender, r) :: requests
+    case r => requests = (sender(), r) :: requests
   }
 
   def receive = disconnected

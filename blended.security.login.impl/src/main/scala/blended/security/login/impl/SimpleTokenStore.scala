@@ -57,7 +57,7 @@ class SimpleTokenStore(
   import TokenStoreMessages._
 
   private[this] implicit val timeout : Timeout = Timeout(1.second)
-  private[this] val storeActor = system.actorOf(Props[MemoryTokenStore])
+  private[this] val storeActor = system.actorOf(Props(new MemoryTokenStore()))
   /**
    * @inheritdoc
    */

@@ -15,7 +15,7 @@ class SemaphoreActorSpec extends TestKit(ActorSystem("semaphore"))
     "Allow to acquire a lock" in {
 
       val probe : TestProbe = TestProbe()
-      val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
+      val sem : ActorRef = system.actorOf(Props[SemaphoreActor]())
 
       sem ! SemaphoreActor.Acquire(probe.ref)
 
@@ -24,7 +24,7 @@ class SemaphoreActorSpec extends TestKit(ActorSystem("semaphore"))
 
     "Allow to acquire the lock if the lock is already acquired by the same actor" in {
       val probe : TestProbe = TestProbe()
-      val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
+      val sem : ActorRef = system.actorOf(Props[SemaphoreActor]())
 
       sem ! SemaphoreActor.Acquire(probe.ref)
       probe.expectMsg(SemaphoreActor.Acquired)
@@ -37,7 +37,7 @@ class SemaphoreActorSpec extends TestKit(ActorSystem("semaphore"))
       val probe1 : TestProbe = TestProbe()
       val probe2 : TestProbe = TestProbe()
 
-      val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
+      val sem : ActorRef = system.actorOf(Props[SemaphoreActor]())
 
       sem ! SemaphoreActor.Acquire(probe1.ref)
       probe1.expectMsg(SemaphoreActor.Acquired)
@@ -50,7 +50,7 @@ class SemaphoreActorSpec extends TestKit(ActorSystem("semaphore"))
       val probe1 : TestProbe = TestProbe()
       val probe2 : TestProbe = TestProbe()
 
-      val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
+      val sem : ActorRef = system.actorOf(Props[SemaphoreActor]())
 
       sem ! SemaphoreActor.Acquire(probe1.ref)
       probe1.expectMsg(SemaphoreActor.Acquired)
@@ -66,7 +66,7 @@ class SemaphoreActorSpec extends TestKit(ActorSystem("semaphore"))
       val probe1 : TestProbe = TestProbe()
       val probe2 : TestProbe = TestProbe()
 
-      val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
+      val sem : ActorRef = system.actorOf(Props[SemaphoreActor]())
 
       sem ! SemaphoreActor.Acquire(probe1.ref)
       probe1.expectMsg(SemaphoreActor.Acquired)

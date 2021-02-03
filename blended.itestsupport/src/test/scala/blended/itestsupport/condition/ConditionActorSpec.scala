@@ -18,7 +18,7 @@ class ConditionActorSpec extends AnyWordSpec
     "respond with a satisfied message once the condition was satisfied" in {
       val probe = TestProbe()
 
-      val c = alwaysTrue
+      val c = alwaysTrue()
       val checker = TestActorRef(ConditionActor.props(cond = c))
       checker.tell(CheckCondition, probe.ref)
       probe.expectMsg(ConditionCheckResult(List(c), List.empty[Condition]))
@@ -27,7 +27,7 @@ class ConditionActorSpec extends AnyWordSpec
     "respond with a timeout message if the condition wasn't satisfied in a given timeframe" in {
       val probe = TestProbe()
 
-      val c = neverTrue
+      val c = neverTrue()
       val checker = TestActorRef(ConditionActor.props(cond = c))
       checker.tell(CheckCondition, probe.ref)
       probe.expectMsg(ConditionCheckResult(List.empty[Condition],List(c)))
@@ -36,7 +36,7 @@ class ConditionActorSpec extends AnyWordSpec
     "respond with a satisfied message if a nested parallel condition is satisfied" in {
       val probe = TestProbe()
 
-      val pc = ParallelComposedCondition(alwaysTrue, alwaysTrue)
+      val pc = ParallelComposedCondition(alwaysTrue(), alwaysTrue())
       val checker = TestActorRef(ConditionActor.props(pc))
 
       checker.tell(CheckCondition, probe.ref)

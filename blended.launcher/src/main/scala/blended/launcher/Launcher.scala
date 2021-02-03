@@ -109,8 +109,8 @@ object Launcher {
 
     if (generateId) {
       log.info("Creating new container id")
-      val uuid: CharSequence = UUID.randomUUID().toString.toCharArray
-      Files.write(idFile.toPath, Seq(uuid).asJava)
+      val uuid: String = UUID.randomUUID().toString()
+      Files.write(idFile.toPath, uuid.getBytes())
     }
 
     Try {

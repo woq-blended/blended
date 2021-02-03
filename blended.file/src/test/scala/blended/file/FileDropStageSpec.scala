@@ -46,7 +46,7 @@ class FileDropStageSpec extends LoggingFreeSpec
     errorOnDuplicate = false
   ))(subDir)
 
-  private val dropActor : ActorRef = system.actorOf(Props[FileDropActor])
+  private val dropActor : ActorRef = system.actorOf(Props[FileDropActor]())
 
   def dropFlow(cfg: FileDropConfig, bufferSize : Int): ((ActorRef, KillSwitch), Future[Seq[FileDropResult]]) = {
 

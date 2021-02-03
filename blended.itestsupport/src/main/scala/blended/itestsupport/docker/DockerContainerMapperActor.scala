@@ -31,7 +31,7 @@ class DockerContainerMapperActor extends Actor with ActorLogging {
       }
 
       log.debug(s"$result")
-      sender ! result
+      sender() ! result
   }
 
   private[docker] def mapDockerContainer(dc: Container, cut: ContainerUnderTest) : ContainerUnderTest = {

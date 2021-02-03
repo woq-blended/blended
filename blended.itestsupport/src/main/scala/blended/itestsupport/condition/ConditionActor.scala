@@ -69,7 +69,7 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
       log.warning(
         s"""
            |
-           |You have sent another CheckCondition message from [$sender],
+           |You have sent another CheckCondition message from [${sender()}],
            |but this actor is already checking on behalf of [$checkingFor].
            |
          """.stripMargin

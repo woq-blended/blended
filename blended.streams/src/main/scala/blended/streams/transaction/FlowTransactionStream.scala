@@ -136,7 +136,7 @@ class FlowTransactionStream(
     env match {
       case Success(e) =>
         streamLogger.logEnv(e, LogLevel.Trace, s"Successfully processed transaction event [${e.id}]")
-        e.withAckHandler(orig.getAckHandler).withRequiresAcknowledge(orig.requiresAcknowledge).clearException()
+        e.withAckHandler(orig.getAckHandler()).withRequiresAcknowledge(orig.requiresAcknowledge).clearException()
       case Failure(t) =>
         streamLogger.logEnv(orig, LogLevel.Trace, s"Failed to process transaction event [${orig.id}]")
         orig.withException(t)
@@ -162,7 +162,7 @@ class FlowTransactionStream(
       val split = b.add(Broadcast[FlowEnvelope](2))
 
 
-      val join = b.add(Zip[FlowEnvelope, Try[FlowEnvelope]])
+      val join = b.add(Zip[FlowEnvelope, Try[FlowEnvelope]]())
       split.out(0) ~> join.in0
 
       internalCf match {

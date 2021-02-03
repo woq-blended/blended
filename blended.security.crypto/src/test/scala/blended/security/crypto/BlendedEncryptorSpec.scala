@@ -64,7 +64,7 @@ class BlendedEncryptorSpec extends LoggingFreeSpec with TestFile {
         )
 
         val cs = BlendedCryptoSupport.initCryptoSupport(secretFile.toIO.getPath())
-        assert(res.out.text.trim() === cs.encrypt("text").get)
+        assert(res.out.text().trim() === cs.encrypt("text").get)
         assert(res.exitCode === 0)
       }
     }
@@ -88,7 +88,7 @@ class BlendedEncryptorSpec extends LoggingFreeSpec with TestFile {
         )
 
         val cs = BlendedCryptoSupport.initCryptoSupport(secretFile.toIO.getPath())
-        assert(res.out.text.trim() === cs.encrypt("text").get)
+        assert(res.out.text().trim() === cs.encrypt("text").get)
         assert(res.exitCode === 0)
       }
     }

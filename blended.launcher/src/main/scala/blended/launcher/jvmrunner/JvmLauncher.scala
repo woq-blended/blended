@@ -124,7 +124,7 @@ class JvmLauncher() {
                   shutdownTimeout = config.shutdownTimeout,
                   directory = new File(".").getAbsoluteFile()
                 )
-                val retVal = p.waitFor
+                val retVal = p.waitFor()
                 if (retVal != 0) {
                   log.error(s"The launcher-process to retrieve the JVM properties exited with an unexpected return code: ${retVal}. We try to read the properties file anyway!")
                 }
@@ -159,7 +159,7 @@ class JvmLauncher() {
               )
               log.debug("Process started: " + p)
               runningProcess = Option(p)
-              retVal = p.waitFor
+              retVal = p.waitFor()
               log.info("-" * 80)
               log.info(s"Blended container instance terminated with exit code [$retVal]")
               log.info("-" * 80)

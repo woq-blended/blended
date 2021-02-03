@@ -47,7 +47,7 @@ object CommandHandlerManager {
   def create(system: ActorSystem): CommandHandlerManager = new CommandHandlerManager {
     // This creates one actor which will dispatch all incoming client
     // messages and dispatch them accordingly
-    private val cmdHandler : ActorRef = system.actorOf(Props[CommandHandlerActor])
+    private val cmdHandler : ActorRef = system.actorOf(Props[CommandHandlerActor]())
 
     // for each new client we will create a flow which will consume Strings and emit
     // WSMessageEnvelopes

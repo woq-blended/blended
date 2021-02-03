@@ -16,7 +16,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.4.4`
+import $ivy.`de.wayofquality.blended::blended-mill:0.5-SNAPSHOT`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -34,7 +34,7 @@ object CoreDependencies {
     Seq(Deps_2_13).map(d => d.scalaVersion -> d).toMap
 
   object Deps_2_13 extends CoreDependencies {
-    override def scalaVersion = "2.13.2"
+    override def scalaVersion = "2.13.4"
   }
 
   /////////////////////////////////////////////////////////////////////////////////////

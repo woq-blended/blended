@@ -41,7 +41,7 @@ class WebSocketActivator extends DominoActivator with ActorSystemWatching {
         SimpleHttpContext(webContext, wss.route).providesService[HttpContext]
       }
 
-      val actor : ActorRef = system.actorOf(Props[WebSocketSubscriptionManager])
+      val actor : ActorRef = system.actorOf(Props[WebSocketSubscriptionManager]())
 
       onStop{
         system.stop(actor)

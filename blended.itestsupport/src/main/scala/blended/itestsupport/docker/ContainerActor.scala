@@ -73,8 +73,8 @@ class ContainerActor(container: ContainerUnderTest, dockerClient: DockerClient) 
     case StopContainer => {
       new DockerContainer(cut)(dockerClient).stopContainer
       context become stopped
-      log.debug(s"Sending stopped message to [$sender]")
-      sender ! ContainerStopped(Right(container.ctName))
+      log.debug(s"Sending stopped message to [${sender()}]")
+      sender() ! ContainerStopped(Right(container.ctName))
     }
   }
 

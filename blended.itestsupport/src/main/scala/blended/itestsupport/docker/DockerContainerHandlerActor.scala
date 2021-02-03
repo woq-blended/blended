@@ -30,9 +30,9 @@ class DockerContainerHandler(client: DockerClient) extends Actor with ActorLoggi
 
       noDeps.foreach{ startContainer }
 
-      context.become(starting(sender, pending, noDeps, List.empty))
+      context.become(starting(sender(), pending, noDeps, List.empty))
     case scm : StopContainerManager =>
-      sender ! ContainerManagerStopped
+      sender() ! ContainerManagerStopped
       context.stop(self)
   }
 
@@ -90,7 +90,7 @@ class DockerContainerHandler(client: DockerClient) extends Actor with ActorLoggi
 
       implicit val timeout = new Timeout(scm.timeout)
       implicit val eCtxt = context.system.dispatcher
-      val requestor = sender
+      val requestor = sender()
 
       val stopFutures : Seq[Future[ContainerStopped]] = managedContainers.map { cut =>
         for{

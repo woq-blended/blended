@@ -45,7 +45,7 @@ class JmsConnectionController(holder: ConnectionHolder, closer : Props) extends 
 
   private def connected(c : Connection) : Receive = {
     case Connect(t, _) =>
-      sender ! ConnectResult(t, Right(c))
+      sender() ! ConnectResult(t, Right(c))
     case Disconnect(t) =>
       val timer : Cancellable = context.system.scheduler.scheduleOnce(t + 1.second, self, Tick)
 

@@ -24,9 +24,9 @@ class ParallelConditionActor(condition: ParallelComposedCondition) extends Actor
   def initializing: Receive = {
     case CheckCondition =>
       condition.conditions.toSeq match {
-        case Nil => sender ! ConditionCheckResult(List.empty, List.empty)
+        case Nil => sender() ! ConditionCheckResult(List.empty, List.empty)
         case _ =>
-          context.become(checking(sender))
+          context.become(checking(sender()))
           // Create a single future that terminates when all condition checkers are done
           // The list will be a mix of ConditionSatisfied / ConditionTimeout messages
           Future.sequence(checker)

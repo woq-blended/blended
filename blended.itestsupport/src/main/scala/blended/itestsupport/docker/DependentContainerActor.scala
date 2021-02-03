@@ -35,7 +35,7 @@ class DependentContainerActor(container: ContainerUnderTest) extends Actor with 
           case l if l.isEmpty =>
             val newCut = container.copy(links = newLinks)
             log info s"Dependencies for container [$newCut] started."
-            sender ! DependenciesStarted(Right(newCut))
+            sender() ! DependenciesStarted(Right(newCut))
             context.stop(self)
           case l => 
             log.debug(s"$pendingContainers")
@@ -43,7 +43,7 @@ class DependentContainerActor(container: ContainerUnderTest) extends Actor with 
         }
       case Left(e) =>
         log.error("ContainerStarted received with an Left (means: error)", e)
-        sender ! DependenciesStarted(Left(e))
+        sender() ! DependenciesStarted(Left(e))
         context.stop(self)
       }
   }

@@ -42,11 +42,11 @@ abstract class AbstractJmsRequestorSpec extends SimplePojoContainerSpec
 
     val cf : IdAwareConnectionFactory = jmsConnectionFactory(registry, mustConnect = true, timeout = timeout).get
     responder = Some(new JMSResponder(cf, ctCtxt)(actorSystem))
-    responder.foreach(_.start)
+    responder.foreach(_.start())
     Thread.sleep(2000)
   }
 
   override protected def afterAll(): Unit = {
-    responder.foreach(_.stop)
+    responder.foreach(_.stop())
   }
 }

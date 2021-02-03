@@ -140,8 +140,6 @@ trait ProxyRoute {
 
       ctx.complete(handleResponse(proxyReq, proxyConfig.redirectCount, proxyConfig))
     }
-
   }
-
 }
 
