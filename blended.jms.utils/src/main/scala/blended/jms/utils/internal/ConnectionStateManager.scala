@@ -82,7 +82,7 @@ class ConnectionStateManager(holder: ConnectionHolder)
 
     case d @ Disconnect(_) => disconnect(state)
 
-    case KeepAliveMissed(v,p,n) =>
+    case KeepAliveMissed(v,p,_,n) =>
       if(config.vendor == v && config.provider == p) {
         log.debug(s"Updating missed KeepAlives to [$n]")
         switchState(connected(), state.copy(missedKeepAlives = n))
@@ -197,7 +197,7 @@ class ConnectionStateManager(holder: ConnectionHolder)
   private[this] def switchState(rec : StateReceive, newState : ConnectionState) : Unit = {
 
     val nextState : ConnectionState =
-      publishEvents(newState, s"Connection State Manager switching to state [${newState.status}]")
+      publishEvents(newState, s"Connection State Manager switching from [${currentState.status}] to state [${newState.status}]")
 
     currentReceive = rec
     currentState = nextState

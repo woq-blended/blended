@@ -2,12 +2,13 @@ package blended.streams.jms.internal
 
 import java.io.File
 import java.util.UUID
-
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
+import blended.container.context.api.ContainerContext
 import blended.jms.utils._
+import blended.streams.BlendedStreamsConfig
 import blended.streams.message.FlowEnvelope
 import blended.testsupport.pojosr.{JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -32,13 +33,17 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
-  class DummyKeepAliveProducer(cf : IdAwareConnectionFactory, system : ActorSystem) extends KeepAliveProducerFactory {
+  class DummyKeepAliveProducer(
+    override val ctCtxt : ContainerContext,
+    override val cf : BlendedSingleConnectionFactory,
+    system : ActorSystem
+  ) extends KeepAliveProducerFactory {
 
     val keepAliveEvents : mutable.ListBuffer[FlowEnvelope] = mutable.ListBuffer.empty
 
     private var prodActor : Option[ActorRef] = None
 
-    override def start(bcf : BlendedSingleConnectionFactory): Unit = {
+    override def start(): Unit = {
       val actor : ActorRef = system.actorOf(Props(new Actor() {
 
         private val log : Logger = Logger[DummyKeepAliveProducer]
@@ -58,25 +63,27 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
 
   "The JmsKeepAliveActor should" - {
 
-    "publish a MaxKeepAliveExceeded when the maximum number of allowed keep alives has been missed" in {
+    val pFactory = (system : ActorSystem) => (ctContext : ContainerContext, cf : BlendedSingleConnectionFactory, sCfg: BlendedStreamsConfig) =>
+      new DummyKeepAliveProducer(ctContext, cf, system)
+
+    "publish a MaxKeepAliveExceeded when the maximum number of allowed keep alives has been reached" in {
       val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
-      val cf : IdAwareConnectionFactory = jmsConnectionFactory(registry, mustConnect = true, timeout = timeout).get
+      val cf : BlendedSingleConnectionFactory =
+        jmsConnectionFactory(registry, mustConnect = true, timeout = timeout).get.asInstanceOf[BlendedSingleConnectionFactory]
 
       val probe : TestProbe = TestProbe()(system)
       system.eventStream.subscribe(probe.ref, classOf[KeepAliveEvent])
 
-      val prod : DummyKeepAliveProducer = new DummyKeepAliveProducer(cf, system)
-
       val cfg : ConnectionConfig = cf.asInstanceOf[BlendedSingleConnectionFactory].config
-      val ctrl : ActorRef = system.actorOf(JmsKeepAliveController.props(ctCtxt, prod))
+      val ctrl : ActorRef = system.actorOf(JmsKeepAliveController.props(ctCtxt, BlendedStreamsConfig.create(ctCtxt), pFactory(system)))
 
       // scalastyle:off magic.number
       ctrl ! AddedConnectionFactory(cf)
       0.to(cfg.maxKeepAliveMissed).foreach{ i =>
         probe.fishForMessage(timeout){
-          case kam : KeepAliveMissed if kam.count == i =>
-            true
+          case kam : KeepAliveMissed =>
+            kam.count == i && kam.corrId == s"${ctCtxt.uuid}-${cf.vendor}-${cf.provider}"
         }
       }
       // scalastyle:on magic.number
@@ -84,10 +91,6 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
       probe.fishForMessage(timeout){
         case _ : MaxKeepAliveExceeded => true
       }
-
-      val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
-      assert(envelopes.size == cfg.maxKeepAliveMissed)
-      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.uuid)))
 
       ctrl ! RemovedConnectionFactory(cf)
 
@@ -105,24 +108,19 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
     "Initiate a keep alive message / publish a KeepAliveMissed when the keep alive interval has been reached" in {
       val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
-      val cf : IdAwareConnectionFactory = jmsConnectionFactory(registry, mustConnect = true, timeout = timeout).get
+      val cf : BlendedSingleConnectionFactory =
+        jmsConnectionFactory(registry, mustConnect = true, timeout = timeout).get.asInstanceOf[BlendedSingleConnectionFactory]
 
       val probe : TestProbe = TestProbe()(system)
       system.eventStream.subscribe(probe.ref, classOf[KeepAliveEvent])
 
-      val prod : DummyKeepAliveProducer = new DummyKeepAliveProducer(cf, system)
-
       val cfg : ConnectionConfig = cf.asInstanceOf[BlendedSingleConnectionFactory].config
-      val ctrl : ActorRef = system.actorOf(JmsKeepAliveController.props(ctCtxt, prod))
+      val ctrl : ActorRef = system.actorOf(JmsKeepAliveController.props(ctCtxt, BlendedStreamsConfig.create(ctCtxt), pFactory(system)))
 
       // scalastyle:off magic.number
       ctrl ! AddedConnectionFactory(cf)
       Thread.sleep(cfg.keepAliveInterval.toMillis + 100)
       // scalastyle:on magic.number
-
-      val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
-      assert(envelopes.size == 1)
-      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.uuid)))
 
       probe.fishForMessage(timeout){
         case _ : KeepAliveMissed => true
@@ -136,16 +134,15 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
     "Reset the Keep Alive counter once a message has been received" in {
       val system : ActorSystem = mandatoryService[ActorSystem](registry)
 
-      val cf : IdAwareConnectionFactory = jmsConnectionFactory(registry, mustConnect = true, timeout = timeout).get
+      val cf : BlendedSingleConnectionFactory =
+        jmsConnectionFactory(registry, mustConnect = true, timeout = timeout).get.asInstanceOf[BlendedSingleConnectionFactory]
 
       val probe : TestProbe = TestProbe()(system)
       system.eventStream.subscribe(probe.ref, classOf[KeepAliveMissed])
       system.eventStream.subscribe(probe.ref, classOf[MaxKeepAliveExceeded])
 
-      val prod : DummyKeepAliveProducer = new DummyKeepAliveProducer(cf, system)
-
       val cfg : ConnectionConfig = cf.asInstanceOf[BlendedSingleConnectionFactory].config
-      val ctrl : ActorRef = system.actorOf(JmsKeepAliveController.props(ctCtxt, prod))
+      val ctrl : ActorRef = system.actorOf(JmsKeepAliveController.props(ctCtxt, BlendedStreamsConfig.create(ctCtxt), pFactory(system)))
 
       // scalastyle:off magic.number
       ctrl ! AddedConnectionFactory(cf)
@@ -157,13 +154,8 @@ class JmsKeepAliveActorSpec extends SimplePojoContainerSpec
           missed.count > 0
       }
 
-      val envelopes : List[FlowEnvelope] = prod.keepAliveEvents.toList
-      //assert(envelopes.size == 1)
-      assert(envelopes.forall(e => e.header[String]("JMSCorrelationID").contains(ctCtxt.uuid)))
-
       system.eventStream.publish(MessageReceived(cf.vendor, cf.provider, UUID.randomUUID().toString()))
 
-      Thread.sleep(cfg.keepAliveInterval.toMillis + 100)
       probe.fishForMessage(timeout){
         case missed : KeepAliveMissed =>
           missed.count == 0

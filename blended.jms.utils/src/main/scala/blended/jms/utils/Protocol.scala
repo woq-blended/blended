@@ -13,11 +13,11 @@ case object CloseTimeout
 case class ConnectTimeout(t : Date)
 
 sealed trait KeepAliveEvent
-case class AddedConnectionFactory(cfg : IdAwareConnectionFactory) extends KeepAliveEvent
-case class RemovedConnectionFactory(cfg : IdAwareConnectionFactory) extends KeepAliveEvent
+case class AddedConnectionFactory(cfg : BlendedSingleConnectionFactory) extends KeepAliveEvent
+case class RemovedConnectionFactory(cfg : BlendedSingleConnectionFactory) extends KeepAliveEvent
 case class MessageReceived(vendor : String, provider : String, id : String) extends KeepAliveEvent
 case class ProducerMaterialized(vendor: String, provider: String, prod : ActorRef)
-case class KeepAliveMissed(vendor : String, provider : String, count : Int) extends KeepAliveEvent
+case class KeepAliveMissed(vendor : String, provider : String, corrId: String, count : Int) extends KeepAliveEvent
 case class MaxKeepAliveExceeded(vendor : String, provider : String) extends KeepAliveEvent
 
 /**

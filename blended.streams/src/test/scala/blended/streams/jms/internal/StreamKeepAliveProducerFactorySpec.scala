@@ -1,18 +1,16 @@
 package blended.streams.jms.internal
 
 import java.io.File
-
 import akka.actor.ActorSystem
 import akka.testkit.TestProbe
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{BlendedSingleConnectionFactory, MessageReceived, ProducerMaterialized}
 import blended.streams.BlendedStreamsConfig
-import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{JmsConnectionHelper, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.matchers.should.Matchers
 
@@ -49,12 +47,10 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
       system.eventStream.subscribe(probe.ref, classOf[ProducerMaterialized])
 
       val factory : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
-        log = bcf => FlowEnvelopeLogger.create(headerCfg, Logger(s"blended.streams.jms.keepalive.${bcf.vendor}.${bcf.provider}")),
-        ctCtxt = ctCtxt,
-        streamsCfg = streamCfg
+        ctCtxt, cf, streamCfg
       )
 
-      factory.start(cf)
+      factory.start()
 
       val p : Promise[MessageReceived] = Promise[MessageReceived]()
 
@@ -63,7 +59,9 @@ class StreamKeepAliveProducerFactorySpec extends SimplePojoContainerSpec
         case _ => false
       }.asInstanceOf[ProducerMaterialized]
 
-      val env : FlowEnvelope = FlowEnvelope()
+      val env : FlowEnvelope = FlowEnvelope(FlowMessage.props(
+        "JMSCorrelationID" -> factory.corrId
+      ).get)
       pm.prod ! env
       p.complete(Success(probe.expectMsgType[MessageReceived]))
 

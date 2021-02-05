@@ -8,22 +8,25 @@ import blended.container.context.api.ContainerContext
 import blended.jms.utils.{BlendedSingleConnectionFactory, JmsDestination, ProducerMaterialized}
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
-import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController, StreamFactories}
-import blended.util.logging.LogLevel
+import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, StreamController, StreamFactories}
+import blended.util.logging.{LogLevel, Logger}
+
 import scala.concurrent.duration._
 
 class StreamKeepAliveProducerFactory(
-  log : BlendedSingleConnectionFactory => FlowEnvelopeLogger,
-  ctCtxt : ContainerContext,
+  override val ctCtxt : ContainerContext,
+  override val cf : BlendedSingleConnectionFactory,
   streamsCfg : BlendedStreamsConfig
 )(implicit system: ActorSystem) extends KeepAliveProducerFactory with JmsStreamSupport {
 
   private var stream : Option[ActorRef] = None
 
-  private val corrId : BlendedSingleConnectionFactory => String = bcf => s"${ctCtxt.uuid}-${bcf.vendor}-${bcf.provider}"
+  private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(
+    FlowHeaderConfig.create(ctCtxt), Logger(s"blended.streams.keepalive.${cf.vendor}.${cf.provider}")
+  )
 
   private val producerSettings : BlendedSingleConnectionFactory => JmsProducerSettings = bcf => JmsProducerSettings(
-    log = log(bcf),
+    log = envLogger,
     headerCfg = FlowHeaderConfig.create(ctCtxt),
     connectionFactory = bcf,
     jmsDestination = Some(JmsDestination.create(bcf.config.keepAliveDestination).get),
@@ -31,29 +34,20 @@ class StreamKeepAliveProducerFactory(
   )
 
   private val consumerSettings : BlendedSingleConnectionFactory => JmsConsumerSettings = bcf => JmsConsumerSettings(
-    log = log(bcf),
+    log = envLogger,
     headerCfg = FlowHeaderConfig.create(ctCtxt),
     connectionFactory = bcf,
     jmsDestination = Some(JmsDestination.create(bcf.config.keepAliveDestination).get),
     logLevel = _ => LogLevel.Debug,
     acknowledgeMode = AcknowledgeMode.AutoAcknowledge,
-    selector = Some(s"JMSCorrelationID = '${corrId(bcf)}'"),
+    selector = Some(s"JMSCorrelationID = '${corrId}'"),
     ackTimeout = 1.second
   )
 
-  private val setHeader : BlendedSingleConnectionFactory => Flow[FlowEnvelope, FlowEnvelope, NotUsed] = bcf => Flow.fromGraph(
-    FlowProcessor.fromFunction("setHeader", log(bcf)){ env => {
-      env.withHeader("JMSCorrelationID", corrId(bcf))
-    }}
-  )
-
-  private val producer : BlendedSingleConnectionFactory => Sink[FlowEnvelope, NotUsed] = bcf => setHeader(bcf)
-    .via(
-      jmsProducer(
-        name = s"KeepAlive-send-${bcf.vendor}-${bcf.provider}",
-        settings = producerSettings(bcf),
-        autoAck = true
-      )
+  private val producer : BlendedSingleConnectionFactory => Sink[FlowEnvelope, NotUsed] = bcf => jmsProducer(
+      name = s"KeepAlive-send-${bcf.vendor}-${bcf.provider}",
+      settings = producerSettings(bcf),
+      autoAck = true
     )
     .to(Sink.ignore)
 
@@ -69,17 +63,20 @@ class StreamKeepAliveProducerFactory(
       .viaMat(Flow.fromSinkAndSourceCoupled(producer(bcf), consumer(bcf)))(Keep.left)
   // scalastyle:on magic.number
 
-  override def start(bcf : BlendedSingleConnectionFactory): Unit = {
+  override def start(): Unit = {
     stream = Some(system.actorOf(
       StreamController.props[FlowEnvelope, ActorRef](
-        s"KeepAlive-stream-${bcf.vendor}-${bcf.provider}",
-        keepAliveSource(bcf),
+        s"KeepAlive-stream-${cf.vendor}-${cf.provider}",
+        keepAliveSource(cf),
         streamsCfg
       )(onMaterialize = { actor =>
-        system.eventStream.publish(ProducerMaterialized(bcf.vendor, bcf.provider, actor))
+        system.eventStream.publish(ProducerMaterialized(cf.vendor, cf.provider, actor))
       })
     ))
   }
 
-  override def stop(): Unit = stream.foreach(system.stop)
+  override def stop(): Unit = {
+    stream.foreach(system.stop)
+    stream = None
+  }
 }

@@ -1,13 +1,12 @@
 package blended.streams.internal
 
 import java.io.File
-
 import akka.actor.{ActorRef, ActorSystem, Props}
 import blended.akka.ActorSystemWatching
+import blended.container.context.api.ContainerContext
 import blended.jms.utils._
-import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig}
+import blended.streams.BlendedStreamsConfig
 import blended.streams.jms.internal.{JmsKeepAliveController, KeepAliveProducerFactory, StreamKeepAliveProducerFactory}
-import blended.streams.message.FlowEnvelopeLogger
 import blended.streams.transaction.internal.FileFlowTransactionManager
 import blended.streams.transaction.{FlowTransactionManager, FlowTransactionManagerConfig, TransactionManagerCleanupActor}
 import blended.util.config.Implicits._
@@ -22,7 +21,6 @@ class BlendedStreamsActivator extends DominoActivator
   whenBundleActive {
     whenActorSystemAvailable{ osgiCfg =>
 
-      val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(osgiCfg.ctContext)
       val log : Logger = Logger[BlendedStreamsActivator]
 
       log.debug(s"Starting bundle [${bundleContext.getBundle().getSymbolicName()}]")
@@ -47,13 +45,10 @@ class BlendedStreamsActivator extends DominoActivator
 
       // initialise the JMS keep alive streams
 
-      val pf : KeepAliveProducerFactory = new StreamKeepAliveProducerFactory(
-        log = bcf => FlowEnvelopeLogger.create(headerCfg, Logger(s"blended.streams.keepalive.${bcf.vendor}.${bcf.provider}")),
-        ctCtxt = osgiCfg.ctContext,
-        streamsCfg = streamsCfg
-      )
+      val pFactory : (ContainerContext, BlendedSingleConnectionFactory, BlendedStreamsConfig) => KeepAliveProducerFactory =
+        (ctCtxt, cf, streamsCfg) => new StreamKeepAliveProducerFactory(ctCtxt, cf, streamsCfg)
 
-      val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props(new JmsKeepAliveController(osgiCfg.ctContext, pf)))
+      val jmsKeepAliveCtrl = osgiCfg.system.actorOf(Props(new JmsKeepAliveController(osgiCfg.ctContext, streamsCfg, pFactory)))
 
       // We will watch for published instances of JMS connection configurations
       watchServices[IdAwareConnectionFactory]{
