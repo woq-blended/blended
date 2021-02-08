@@ -57,7 +57,7 @@ trait CoreCoursierModule extends CoursierModule {
   private def zincWorker: ZincWorkerModule = mill.scalalib.ZincWorkerModule
   override def repositories: Seq[Repository] = {
     zincWorker.repositories ++ Seq(
-      MavenRepository("file:///home/ubuntu/.m2/repository"),
+      MavenRepository(s"file://${System.getProperty("user.home")}/.m2/repository"),
       MavenRepository("https://repo.spring.io/libs-release"),
       MavenRepository("http://repository.springsource.com/maven/bundles/release"),
       MavenRepository("http://repository.springsource.com/maven/bundles/external"),
