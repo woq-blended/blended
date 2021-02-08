@@ -21,6 +21,8 @@ object ConnectionStateManager {
 class ConnectionStateManager(holder: ConnectionHolder)
   extends Actor {
 
+  private case object HealthCheck
+
   type StateReceive = ConnectionState => Receive
 
   private val config = holder.config
@@ -54,6 +56,7 @@ class ConnectionStateManager(holder: ConnectionHolder)
   override def preStart() : Unit = {
     super.preStart()
     switchState(disconnected(), currentState)
+    context.system.scheduler.scheduleAtFixedRate(1.minute, 1.minute, self, HealthCheck)
     context.system.eventStream.subscribe(self, classOf[ConnectionCommand])
     context.system.eventStream.subscribe(self, classOf[Reconnect])
     context.system.eventStream.subscribe(self, classOf[KeepAliveEvent])
@@ -208,8 +211,13 @@ class ConnectionStateManager(holder: ConnectionHolder)
         .orElse(handleReconnectRequest(nextState))
         .orElse(controllerStopped(nextState))
         .orElse(handleQueryState(nextState))
+        .orElse(healthCheck)
         .orElse(unhandled)
     )
+  }
+
+  private def healthCheck : Receive = {
+    case HealthCheck => log.debug(s"HealthCheck, state = ${currentState.status}")
   }
 
   // A convenience method to capture unhandled messages
