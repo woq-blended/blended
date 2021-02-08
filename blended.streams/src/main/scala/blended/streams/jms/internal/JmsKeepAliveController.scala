@@ -114,10 +114,10 @@ class JmsKeepAliveActor(
     if (current > 0) {
       log.debug(s"Resetting keepAlive counter for [$vendor:$provider]")
       context.system.eventStream.publish(KeepAliveMissed(prodFactory.cf.vendor, prodFactory.cf.provider, prodFactory.corrId, 0))
-
-      val newTimer = createTimer(context, self)
-      context.become(running(newTimer, actor, 0))
     }
+
+    val newTimer = createTimer(context, self)
+    context.become(running(newTimer, actor, 0))
   }
 
   private def incCounter(actor : ActorRef, current: Int) : Unit = {
