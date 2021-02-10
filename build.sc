@@ -2227,7 +2227,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           FeatureBundle(deps.jlineBuiltins, 1, false),
           FeatureBundle(deps.felixGogoJline, 1, false),
           FeatureBundle(deps.felixGogoRuntime, 1, false),
-          FeatureBundle(deps.felixGogoShell, 1, false,
+          FeatureBundle(deps.felixGogoShell, 1, false),
           FeatureBundle(deps.felixGogoCommand, 1, true),
           FeatureBundle(deps.felixShellRemote, 1, true)
         )
