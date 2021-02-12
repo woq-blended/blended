@@ -16,6 +16,7 @@ target.tgz
 .metals 
 out
 .ammonite/
+ci_publish
 
 blended.sslcontext/notes.txt
 
