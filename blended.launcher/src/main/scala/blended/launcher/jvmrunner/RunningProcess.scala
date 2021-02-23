@@ -6,19 +6,21 @@ import blended.util.logging.Logger
 import scala.concurrent.duration._
 
 import blended.util.io.StreamCopy
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 private[jvmrunner] class RunningProcess(
-  process : Process,
-  errorsIntoOutput : Boolean,
-  interactive : Boolean,
-  shutdownTimeout : FiniteDuration
+  process: Process,
+  errorsIntoOutput: Boolean,
+  interactive: Boolean,
+  shutdownTimeout: FiniteDuration
 ) {
 
-  private[this] val in : InputStream = System.in
-  private[this] val out : OutputStream = process.getOutputStream
+  private[this] val in: InputStream = System.in
+  private[this] val out: OutputStream = process.getOutputStream
 
-  private[this] val log : Logger = Logger[RunningProcess]
-  private[this] val sleepInterval : FiniteDuration = 50.millis
+  private[this] val log: Logger = Logger[RunningProcess]
+  private[this] val sleepInterval: FiniteDuration = 50.millis
 
   private[this] val outThread = asyncCopyThread(in, out, immediately = true, sleepInterval = sleepInterval)
 
@@ -29,7 +31,10 @@ private[jvmrunner] class RunningProcess(
     log.info("Container is started without console read thread ...")
   }
 
-  def waitFor() : Int = {
+  outputThread("stdErr", process.getErrorStream()).start()
+  outputThread("stdOut", process.getInputStream()).start()
+
+  def waitFor(): Int = {
     try {
       process.waitFor
     } finally {
@@ -40,10 +45,10 @@ private[jvmrunner] class RunningProcess(
     }
   }
 
-  private def waitUntilStopped(t : FiniteDuration) : Boolean = {
+  private def waitUntilStopped(t: FiniteDuration): Boolean = {
 
-    val now : Long = System.currentTimeMillis()
-    val end : Long = now + t.toMillis
+    val now: Long = System.currentTimeMillis()
+    val end: Long = now + t.toMillis
 
     while (process.isAlive() && System.currentTimeMillis() <= end) {
       Thread.sleep(sleepInterval.toMillis)
@@ -52,7 +57,7 @@ private[jvmrunner] class RunningProcess(
     process.isAlive()
   }
 
-  def stop() : Int = {
+  def stop(): Int = {
 
     log.info("Stopping container JVM ...")
     if (interactive) {
@@ -72,10 +77,33 @@ private[jvmrunner] class RunningProcess(
     waitFor()
   }
 
+  private def outputThread(name: String, is: InputStream): Thread =
+    new Thread(name) {
+      setDaemon(true)
+
+      override def run(): Unit = {
+        val rd = new BufferedReader(new InputStreamReader(is, "UTF-8"))
+        try {
+          var line = rd.readLine
+          while (line != null) {
+            Logger(s"blended.launcher.jvmrunner.$name").debug(line)
+            line = rd.readLine
+          }
+        } finally {
+          rd.close
+        }
+      }
+    }
+
   /**
    * Starts a new thread which copies an InputStream into an Output stream. Does not close the streams.
    */
-  private def asyncCopyThread(in: InputStream, out: OutputStream, immediately: Boolean, sleepInterval: FiniteDuration): Thread =
+  private def asyncCopyThread(
+    in: InputStream,
+    out: OutputStream,
+    immediately: Boolean,
+    sleepInterval: FiniteDuration
+  ): Thread =
     new Thread("StreamCopyThread") {
       setDaemon(true)
 
@@ -83,8 +111,8 @@ private[jvmrunner] class RunningProcess(
         try {
           copy(in, out, immediately, sleepInterval)
         } catch {
-          case e : IOException          => // ignore
-          case e : InterruptedException => // ok
+          case e: IOException          => // ignore
+          case e: InterruptedException => // ok
         }
         out.flush()
       }
@@ -93,7 +121,7 @@ private[jvmrunner] class RunningProcess(
   /**
    * Copies an InputStream into an OutputStream. Does not close the streams.
    */
-  private def copy(in: InputStream, out: OutputStream, immediately: Boolean, sleepInterval: FiniteDuration) : Unit = {
+  private def copy(in: InputStream, out: OutputStream, immediately: Boolean, sleepInterval: FiniteDuration): Unit = {
     if (immediately) {
       while (true) {
         if (in.available > 0) {

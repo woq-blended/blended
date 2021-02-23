@@ -23,7 +23,7 @@ private[docker] case class InternalContainersStarted(result: DockerResult[Map[St
 class ContainerManagerActor extends Actor with ActorLogging with Docker {
   this: DockerClientProvider =>
 
-  implicit val timeout = Timeout(30.seconds)
+  implicit val timeout = Timeout(60.seconds)
   implicit val eCtxt = context.dispatcher
   val client: DockerClient = getClient
 

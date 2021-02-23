@@ -8,16 +8,15 @@ import org.eclipse.jetty.osgi.boot.JettyBootstrapActivator
 import scala.util.control.NonFatal
 
 object JettyActivator {
-  var sslContext : Option[SSLContext] = None
+  var sslContext: Option[SSLContext] = None
 }
 
 class JettyActivator extends DominoActivator {
 
-  private val log : Logger = Logger[JettyActivator]
+  private val log: Logger = Logger[JettyActivator]
 
   whenBundleActive {
     whenAdvancedServicePresent[SSLContext]("(type=server)") { sslCtxt =>
-
       JettyActivator.sslContext = Some(sslCtxt)
       onStop {
         JettyActivator.sslContext = None
