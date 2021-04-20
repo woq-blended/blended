@@ -38,10 +38,10 @@ private[jvmrunner] class RunningProcess(
     try {
       process.waitFor
     } finally {
-      process.getOutputStream().close()
+      try { process.getOutputStream().close() } catch { case _ : Throwable => }
       outThread.interrupt()
-      process.getErrorStream().close()
-      process.getInputStream().close()
+      try { process.getErrorStream().close() } catch { case _ : Throwable => }
+      try { process.getInputStream().close() } catch { case _ : Throwable=> }
     }
   }
 
