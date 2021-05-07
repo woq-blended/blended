@@ -37,6 +37,11 @@ if [ -z "${RESTART_DELAY}" ]; then
   RESTART_DELAY=120
 fi
 
+# Set the JDK version to 8 as a default 
+if [ -z "${JDK_VERSION}" ]; then
+  JDK_VERSION="8"
+fi
+
 # Whether to start the container in interactive mode
 if [ -z "${INTERACTIVE}" ]; then
   INTERACTIVE=false
@@ -115,8 +120,16 @@ ${BLENDED_HOME}/lib/httpcore-nio-@httpcorenio.version@.jar;\
 ${BLENDED_HOME}/lib/httpclient-@httpcomponents.version@.jar;\
 ${BLENDED_HOME}/lib/httpasyncclient-@httpasync.version@.jar;\
 ${BLENDED_HOME}/lib/commons-logging-@commonslogging.version@.jar;\
-${BLENDED_HOME}/lib/json-simple-@jsonsimple.version@.jar;\
+${BLENDED_HOME}/lib/json-simple-@jsonsimple.version@.jar\
 "
+
+if [ ! "JDK_VERSION" == "8" ]; then 
+INNER_CP="${INNER_CP};\
+${BLENDED_HOME}/lib/jaxb-api-@jaxbApi.version@.jar;\
+${BLENDED_HOME}/lib/jaxb-runtime-@jaxbImpl.version@.jar;\
+${BLENDED_HOME}/lib/javax.transaction-api-@jta.version@.jar
+"
+fi
 
 $JAVA_HOME/bin/java -version
 

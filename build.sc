@@ -16,7 +16,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.4.8`
+import $ivy.`de.wayofquality.blended::blended-mill:0.4.10`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -1099,6 +1099,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def description = "Provide an OSGi Launcher"
     override def ivyDeps =
       Agg(
+        deps.jaxbApi,
+        deps.jaxbImpl,
+        deps.javaxTransaction,
         deps.cmdOption,
         deps.orgOsgi,
         deps.typesafeConfig,
@@ -1155,7 +1158,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             "httpcomponents.version" -> deps.httpComponents.dep.version,
             "httpasync.version" -> deps.httpAsync.dep.version,
             "commonslogging.version" -> deps.commonsLogging.dep.version,
-            "jsonsimple.version" -> deps.jsonSimple.dep.version
+            "jsonsimple.version" -> deps.jsonSimple.dep.version,
+            "jaxbApi.version" -> deps.jaxbApi.dep.version,
+            "jaxbImpl.version" -> deps.jaxbImpl.dep.version,
+            "jta.version" -> deps.javaxTransaction.dep.version
           )
         }
 
@@ -1173,7 +1179,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             deps.httpComponents,
             deps.httpAsync,
             deps.commonsLogging,
-            deps.jsonSimple
+            deps.jsonSimple,
+            deps.jaxbApi,
+            deps.jaxbImpl
           )
         }
 
@@ -2241,7 +2249,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     override def ivyDeps =
       Agg(
         deps.akkaActor(akkaBundleRevision),
-        deps.jaxb,
+        deps.jaxbImpl,
         deps.scalatest,
         deps.junit,
         deps.commonsIo
