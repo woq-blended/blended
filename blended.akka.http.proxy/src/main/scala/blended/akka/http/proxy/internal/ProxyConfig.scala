@@ -16,55 +16,57 @@ object RedirectHeaderPolicy extends Enumeration {
 }
 
 case class ProxyConfig(
-  context : String,
-  paths : Seq[ProxyTarget]
+  context: String,
+  paths: Seq[ProxyTarget]
 )
 
 object ProxyConfig {
-  def parse(cfg : Config) : Try[ProxyConfig] = Try {
-    ProxyConfig(
-      cfg.getString("context"),
-      cfg.getConfigMap("paths", Map()).toList.map {
-        case (k, v) =>
-          ProxyTarget(
-            path = k,
-            uri = v.getString("uri"),
-            user = v.getStringOption("user"),
-            password = v.getStringOption("password"),
-            timeout = v.getInt("timeout", 10),
-            redirectCount = v.getInt("redirectCount", 0),
-            redirectHeaderPolicy = cfg.getStringOption("headerPolicy") match {
-              case Some(s) => try {
-                RedirectHeaderPolicy.withName(s)
-              } catch {
-                case _ : Throwable => RedirectHeaderPolicy.Client_Only
+  def parse(cfg: Config): Try[ProxyConfig] =
+    Try {
+      ProxyConfig(
+        cfg.getString("context"),
+        cfg.getConfigMap("paths", Map()).toList.map {
+          case (k, v) =>
+            ProxyTarget(
+              path = k,
+              uri = v.getString("uri"),
+              user = v.getStringOption("user"),
+              password = v.getStringOption("password"),
+              timeout = v.getInt("timeout", 10),
+              redirectCount = v.getInt("redirectCount", 0),
+              redirectHeaderPolicy = cfg.getStringOption("headerPolicy") match {
+                case Some(s) =>
+                  try {
+                    RedirectHeaderPolicy.withName(s)
+                  } catch {
+                    case _: Throwable => RedirectHeaderPolicy.Client_Only
+                  }
+                case None => RedirectHeaderPolicy.Client_Only
               }
-              case None => RedirectHeaderPolicy.Client_Only
-            }
-          )
-      }
-    )
-  }
+            )
+        }
+      )
+    }
 }
 
 case class ProxyTarget(
   path: String,
   uri: String,
   timeout: Int,
-  user : Option[String] = None,
-  password : Option[String] = None,
+  user: Option[String] = None,
+  password: Option[String] = None,
   redirectCount: Int = 0,
-  redirectHeaderPolicy : RedirectHeaderPolicy = RedirectHeaderPolicy.Client_Only
+  redirectHeaderPolicy: RedirectHeaderPolicy = RedirectHeaderPolicy.Client_Only
 ) {
 
-  def isHttps : Boolean = uri.substring(0, 5).equalsIgnoreCase("https")
+  def isHttps: Boolean = uri.substring(0, 5).equalsIgnoreCase("https")
 
-  override def toString() : String = getClass().getSimpleName() +
-    "(path=" + path +
-    ",uri=" + uri +
-    ",timeout=" + timeout +
-    ",redirectCount=" + redirectCount +
-    ",redirectHeaderPolicy=" + redirectHeaderPolicy.toString() +
-    ")"
+  override def toString(): String =
+    getClass().getSimpleName() +
+      "(path=" + path +
+      ",uri=" + uri +
+      ",timeout=" + timeout +
+      ",redirectCount=" + redirectCount +
+      ",redirectHeaderPolicy=" + redirectHeaderPolicy.toString() +
+      ")"
 }
-
