@@ -16,25 +16,24 @@ import org.scalatest.matchers.should.Matchers
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
-class DispatcherOutboundSpec extends DispatcherSpecSupport
-  with Matchers {
+class DispatcherOutboundSpec extends DispatcherSpecSupport with Matchers {
 
-  override def loggerName : String = classOf[DispatcherOutboundSpec].getName()
+  override def loggerName: String = classOf[DispatcherOutboundSpec].getName()
 
   private def runnableOutbound(
-    ctxt : DispatcherExecContext,
-    testMsg : FlowEnvelope,
-    send : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
-  ) : (Collector[WorklistEvent], Collector[FlowEnvelope], RunnableGraph[NotUsed]) = {
+    ctxt: DispatcherExecContext,
+    testMsg: FlowEnvelope,
+    send: Flow[FlowEnvelope, FlowEnvelope, NotUsed]
+  ): (Collector[WorklistEvent], Collector[FlowEnvelope], RunnableGraph[NotUsed]) = {
 
-    implicit val system : ActorSystem = ctxt.system
+    implicit val system: ActorSystem = ctxt.system
 
     val outColl = Collector[WorklistEvent]("out")
-    val errColl = Collector[FlowEnvelope]("err", onCollected = Some({ e : FlowEnvelope => e.acknowledge()}))
+    val errColl = Collector[FlowEnvelope]("err", onCollected = Some({ e: FlowEnvelope => e.acknowledge(); true }))
 
     val source = Source.single[FlowEnvelope](testMsg)
 
-    val sinkGraph : Graph[SinkShape[FlowEnvelope], NotUsed] = {
+    val sinkGraph: Graph[SinkShape[FlowEnvelope], NotUsed] = {
       GraphDSL.create() { implicit b =>
         import GraphDSL.Implicits._
 
@@ -52,11 +51,10 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
     (outColl, errColl, source.to(sinkGraph))
   }
 
-  def testOutbound(expectedState : WorklistState, send : Flow[FlowEnvelope, FlowEnvelope, NotUsed]) : Unit = {
+  def testOutbound(expectedState: WorklistState, send: Flow[FlowEnvelope, FlowEnvelope, NotUsed]): Unit = {
     withDispatcherConfig(registry) { ctxt =>
-
-      implicit val system : ActorSystem = ctxt.system
-      implicit val eCtxt : ExecutionContext = system.dispatcher
+      implicit val system: ActorSystem = ctxt.system
+      implicit val eCtxt: ExecutionContext = system.dispatcher
 
       val envelope = FlowEnvelope().withHeader(ctxt.bs.headerConfig.headerBranch, "outbound").get
 
@@ -90,12 +88,12 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
   "The outbound flow of the dispatcher should" - {
 
     "produce a worklist completed event for successfull completions of the outbound flow" in {
-      val good = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env}
+      val good = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
       testOutbound(WorklistStateCompleted, good)
     }
 
     "produce a worklist failed event after unsuccessfull completions of the outbound flow" in {
-      val bad = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env.withException(new Exception("Boom !")) }
+      val bad = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env.withException(new Exception("Boom !")) }
       testOutbound(WorklistStateFailed, bad)
     }
   }
@@ -116,32 +114,37 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
       ackTimeout = 1.second
     )
 
-    val prefix : DispatcherExecContext => String = ctxt => ctxt.bs.headerConfig.prefix
-    val srcVendorHeader : DispatcherExecContext => String = ctxt => JmsFlowSupport.srcVendorHeader(prefix(ctxt))
-    val srcProviderHeader : DispatcherExecContext => String = ctxt => JmsFlowSupport.srcProviderHeader(prefix(ctxt))
-    val replyToHeader : DispatcherExecContext => String = ctxt => JmsFlowSupport.replyToHeader(prefix(ctxt))
-    val srcDestHeader : DispatcherExecContext => String = ctxt => JmsFlowSupport.srcDestHeader(prefix(ctxt))
+    val prefix: DispatcherExecContext => String = ctxt => ctxt.bs.headerConfig.prefix
+    val srcVendorHeader: DispatcherExecContext => String = ctxt => JmsFlowSupport.srcVendorHeader(prefix(ctxt))
+    val srcProviderHeader: DispatcherExecContext => String = ctxt => JmsFlowSupport.srcProviderHeader(prefix(ctxt))
+    val replyToHeader: DispatcherExecContext => String = ctxt => JmsFlowSupport.replyToHeader(prefix(ctxt))
+    val srcDestHeader: DispatcherExecContext => String = ctxt => JmsFlowSupport.srcDestHeader(prefix(ctxt))
 
     "resolve a replyTo destination if no outbound destination is set in resource type router" in {
 
       withDispatcherConfig(registry) { ctxt =>
-        val env : FlowEnvelope = FlowEnvelope(
+        val env: FlowEnvelope = FlowEnvelope(
           FlowMessage(FlowMessage.noProps)
-        )
-          .withHeader(srcVendorHeader(ctxt), "activemq").get
-          .withHeader(srcProviderHeader(ctxt), "activemq").get
-          .withHeader(replyToHeader(ctxt), "response").get
-          .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString).get
+        ).withHeader(srcVendorHeader(ctxt), "activemq")
+          .get
+          .withHeader(srcProviderHeader(ctxt), "activemq")
+          .get
+          .withHeader(replyToHeader(ctxt), "response")
+          .get
+          .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString)
+          .get
           .withContextObject(ctxt.bs.bridgeProviderKey, provider)
           // This will trigger the replyto routing
           .withContextObject(ctxt.bs.bridgeDestinationKey, None)
 
-        val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
-          dispatcherCfg = ctxt.cfg,
-          ctCtxt = ctxt.ctCtxt,
-          bs = ctxt.bs,
-          streamLogger = ctxt.envLogger
-        )(env).get
+        val routing: DispatcherTarget = DispatcherOutbound
+          .outboundRouting(
+            dispatcherCfg = ctxt.cfg,
+            ctCtxt = ctxt.ctCtxt,
+            bs = ctxt.bs,
+            streamLogger = ctxt.envLogger
+          )(env)
+          .get
 
         routing should be(DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
       }
@@ -150,24 +153,28 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
     "resolve a replyTo destination if the outbound destination is set to 'replyTo' in the config" in {
 
       withDispatcherConfig(registry) { ctxt =>
-
-        val env : FlowEnvelope = FlowEnvelope(
+        val env: FlowEnvelope = FlowEnvelope(
           FlowMessage(FlowMessage.noProps)
-        )
-          .withHeader(srcVendorHeader(ctxt), "activemq").get
-          .withHeader(srcProviderHeader(ctxt), "activemq").get
-          .withHeader(replyToHeader(ctxt), "response").get
-          .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString).get
+        ).withHeader(srcVendorHeader(ctxt), "activemq")
+          .get
+          .withHeader(srcProviderHeader(ctxt), "activemq")
+          .get
+          .withHeader(replyToHeader(ctxt), "response")
+          .get
+          .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString)
+          .get
           .withContextObject(ctxt.bs.bridgeProviderKey, provider)
           // This will trigger the replyto routing
           .withContextObject(ctxt.bs.bridgeDestinationKey, Some(JmsFlowSupport.replyToQueueName))
 
-        val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
-          dispatcherCfg = ctxt.cfg,
-          ctCtxt = ctxt.ctCtxt,
-          bs = ctxt.bs,
-          streamLogger = ctxt.envLogger
-        )(env).get
+        val routing: DispatcherTarget = DispatcherOutbound
+          .outboundRouting(
+            dispatcherCfg = ctxt.cfg,
+            ctCtxt = ctxt.ctCtxt,
+            bs = ctxt.bs,
+            streamLogger = ctxt.envLogger
+          )(env)
+          .get
 
         routing should be(DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
       }
@@ -175,25 +182,31 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
     "resolve to the configured target destination" in {
       withDispatcherConfig(registry) { ctxt =>
-
-        val env : FlowEnvelope = FlowEnvelope(
+        val env: FlowEnvelope = FlowEnvelope(
           FlowMessage(FlowMessage.noProps)
-        )
-          .withHeader(srcVendorHeader(ctxt), "activemq").get
-          .withHeader(srcProviderHeader(ctxt), "activemq").get
-          .withHeader(replyToHeader(ctxt), "response").get
-          .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString).get
+        ).withHeader(srcVendorHeader(ctxt), "activemq")
+          .get
+          .withHeader(srcProviderHeader(ctxt), "activemq")
+          .get
+          .withHeader(replyToHeader(ctxt), "response")
+          .get
+          .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString)
+          .get
           .withContextObject(ctxt.bs.bridgeProviderKey, provider)
           .withContextObject(ctxt.bs.bridgeDestinationKey, Some("centralDest"))
 
-        val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
-          dispatcherCfg = ctxt.cfg,
-          ctCtxt = ctxt.ctCtxt,
-          bs = ctxt.bs,
-          streamLogger = ctxt.envLogger
-        )(env).get
+        val routing: DispatcherTarget = DispatcherOutbound
+          .outboundRouting(
+            dispatcherCfg = ctxt.cfg,
+            ctCtxt = ctxt.ctCtxt,
+            bs = ctxt.bs,
+            streamLogger = ctxt.envLogger
+          )(env)
+          .get
 
-        routing should be(DispatcherTarget(provider.vendor, provider.provider, JmsDestination.create("centralDest").get))
+        routing should be(
+          DispatcherTarget(provider.vendor, provider.provider, JmsDestination.create("centralDest").get)
+        )
       }
     }
   }

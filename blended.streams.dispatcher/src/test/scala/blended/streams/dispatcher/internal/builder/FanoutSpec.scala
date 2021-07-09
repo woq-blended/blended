@@ -13,22 +13,24 @@ import org.scalatest.matchers.should.Matchers
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
-class FanoutSpec extends DispatcherSpecSupport
-  with Matchers {
+class FanoutSpec extends DispatcherSpecSupport with Matchers {
 
-  override def loggerName : String = classOf[FanoutSpec].getName()
+  override def loggerName: String = classOf[FanoutSpec].getName()
 
   def performFanout(
-    ctxt : DispatcherExecContext,
-    fanout : DispatcherFanout,
-    resType : String,
-    envelope : FlowEnvelope
-  ) : Try[Seq[(OutboundRouteConfig, FlowEnvelope)]] = {
+    ctxt: DispatcherExecContext,
+    fanout: DispatcherFanout,
+    resType: String,
+    envelope: FlowEnvelope
+  ): Try[Seq[(OutboundRouteConfig, FlowEnvelope)]] = {
     val resTypeCfg = ctxt.cfg.resourceTypeConfigs(resType)
     val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)
-    fanout.funFanoutOutbound(envelope
-      .withHeader(ctxt.bs.headerResourceType, resType).get
-      .withContextObject(ctxt.bs.rtConfigKey, resTypeCfg))
+    fanout.funFanoutOutbound(
+      envelope
+        .withHeader(ctxt.bs.headerResourceType, resType)
+        .get
+        .withContextObject(ctxt.bs.rtConfigKey, resTypeCfg)
+    )
   }
 
   "The fanout subflow should" - {
@@ -36,7 +38,6 @@ class FanoutSpec extends DispatcherSpecSupport
     "create one FlowEnvelope per outbound config" in {
 
       withDispatcherConfig(registry) { ctxt =>
-
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)
         val envelope = FlowEnvelope(FlowMessage.noProps)
 
@@ -65,11 +66,11 @@ class FanoutSpec extends DispatcherSpecSupport
           performFanout(ctxt, fanout, resType, envelope) match {
             case Success(s) =>
               val wl = fanout.toWorklist(s)
-              wl.state should be (WorklistStateStarted)
-              wl.worklist.id should be (envelope.id)
+              wl.state should be(WorklistStateStarted)
+              wl.worklist.id should be(envelope.id)
               wl.worklist.items should have size (rtCfg.outbound.size)
             case Failure(t) =>
-              ctxt.envLogger.underlying.error(s"WorklistCreation failed for resource type [$resType]" )
+              ctxt.envLogger.underlying.error(s"WorklistCreation failed for resource type [$resType]")
               fail(t)
           }
         }
@@ -79,20 +80,20 @@ class FanoutSpec extends DispatcherSpecSupport
     "Generate exactly one worklist event and one envelope outbound config" in {
 
       def runnableFanout[T](
-        source : Source[FlowEnvelope, T],
-        fanout : DispatcherFanout
-      )(implicit system : ActorSystem) : (
+        source: Source[FlowEnvelope, T],
+        fanout: DispatcherFanout
+      )(implicit system: ActorSystem): (
         Collector[FlowEnvelope],
         Collector[WorklistEvent],
         RunnableGraph[T]
       ) = {
 
-        val envColl : Collector[FlowEnvelope] =
-          Collector[FlowEnvelope](name = "envelopes", onCollected = Some( { e : FlowEnvelope => e.acknowledge() }))
+        val envColl: Collector[FlowEnvelope] =
+          Collector[FlowEnvelope](name = "envelopes", onCollected = Some({ e: FlowEnvelope => e.acknowledge(); true }))
 
-        val wlColl : Collector[WorklistEvent] = Collector[WorklistEvent]("worklists")
+        val wlColl: Collector[WorklistEvent] = Collector[WorklistEvent]("worklists")
 
-        val sinkGraph : Graph[SinkShape[FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
+        val sinkGraph: Graph[SinkShape[FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
           import GraphDSL.Implicits._
 
           val fanoutGraph = b.add(fanout.build())
@@ -110,8 +111,8 @@ class FanoutSpec extends DispatcherSpecSupport
       }
 
       withDispatcherConfig(registry) { ctxt =>
-        implicit val system : ActorSystem = ctxt.system
-        implicit val eCtxt : ExecutionContext = system.dispatcher
+        implicit val system: ActorSystem = ctxt.system
+        implicit val eCtxt: ExecutionContext = system.dispatcher
 
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.ctCtxt, ctxt.envLogger)(ctxt.bs)
 
@@ -130,10 +131,11 @@ class FanoutSpec extends DispatcherSpecSupport
               wl <- wlColl.result
             } yield (env, wl)
 
-            result.map { case (envelopes, worklists) =>
-              ctxt.envLogger.underlying.info(s"Testing resourcetype [$resType]")
-              worklists should have size 1
-              envelopes should have size rtCfg.outbound.size
+            result.map {
+              case (envelopes, worklists) =>
+                ctxt.envLogger.underlying.info(s"Testing resourcetype [$resType]")
+                worklists should have size 1
+                envelopes should have size rtCfg.outbound.size
             }
           } finally {
             system.stop(envColl.actor)

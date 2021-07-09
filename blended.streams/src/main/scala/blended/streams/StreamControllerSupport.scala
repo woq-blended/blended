@@ -10,17 +10,16 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Random, Success, Try}
 
-trait StreamControllerSupport[T, Mat] { this : Actor =>
+trait StreamControllerSupport[T, Mat] { this: Actor =>
 
-  def name : String
+  def name: String
 
-  private[this] val log : Logger = Logger(getClass().getName())
+  private[this] val log: Logger = Logger(getClass().getName())
   private[this] val rnd = new Random()
-  private[this] implicit val actorSystem : ActorSystem = context.system
-  private[this] implicit val eCtxt : ExecutionContext = context.dispatcher
+  private[this] implicit val actorSystem: ActorSystem = context.system
+  private[this] implicit val eCtxt: ExecutionContext = context.dispatcher
 
-  val nextInterval : FiniteDuration => BlendedStreamsConfig => FiniteDuration = { interval => streamCfg =>
-
+  val nextInterval: FiniteDuration => BlendedStreamsConfig => FiniteDuration = { interval => streamCfg =>
     val noise: Double = {
       val d = rnd.nextDouble().abs
       (d - d.floor) / (1 / (streamCfg.random * 2)) - streamCfg.random
@@ -41,8 +40,8 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
     newIntervalMillis.toLong.millis
   }
 
-  private def restart(streamCfg : BlendedStreamsConfig, interval : FiniteDuration, startedAt : Option[Long]) : Unit = {
-    val nextStart : FiniteDuration = startedAt match {
+  private def restart(streamCfg: BlendedStreamsConfig, interval: FiniteDuration, startedAt: Option[Long]): Unit = {
+    val nextStart: FiniteDuration = startedAt match {
       case None => nextInterval(interval)(streamCfg)
       case Some(s) =>
         if (System.currentTimeMillis() - s < streamCfg.maxDelay.toMillis) {
@@ -59,7 +58,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
     context.become(starting(streamCfg, nextStart))
   }
 
-  def starting(streamCfg : BlendedStreamsConfig, interval : FiniteDuration) : Receive = {
+  def starting(streamCfg: BlendedStreamsConfig, interval: FiniteDuration): Receive = {
     case StreamController.Stop =>
       context.stop(self)
 
@@ -67,10 +66,10 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
       log.info(s"Initializing StreamController [${name}] with config [$streamCfg]")
 
       startStream() match {
-        case Success( (mat, killswitch, done) ) =>
-
+        case Success((mat, killswitch, done)) =>
           // We schedule a reset, which will cause the backoff timer to reset
-          val timer : Cancellable = context.system.scheduler.scheduleOnce(streamCfg.resetAfter, self, StreamController.Reset)
+          val timer: Cancellable =
+            context.system.scheduler.scheduleOnce(streamCfg.resetAfter, self, StreamController.Reset)
 
           materialized(mat)
 
@@ -81,13 +80,15 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
               self ! StreamController.StreamTerminated(Some(t))
           }
 
-          context.become(running(
-            streamCfg = streamCfg,
-            killSwitch = killswitch,
-            interval = interval,
-            startedAt = System.currentTimeMillis(),
-            resetTimer = Some(timer)
-          ))
+          context.become(
+            running(
+              streamCfg = streamCfg,
+              killSwitch = killswitch,
+              interval = interval,
+              startedAt = System.currentTimeMillis(),
+              resetTimer = Some(timer)
+            )
+          )
 
         case Failure(t) =>
           log.warn(s"Stream [$name] terminated with exception [${t.getMessage()}]")
@@ -97,25 +98,27 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
   }
 
   def running(
-    streamCfg : BlendedStreamsConfig,
-    killSwitch : KillSwitch,
-    interval : FiniteDuration,
-    startedAt : Long,
-    resetTimer : Option[Cancellable]
-  ) : Receive = {
+    streamCfg: BlendedStreamsConfig,
+    killSwitch: KillSwitch,
+    interval: FiniteDuration,
+    startedAt: Long,
+    resetTimer: Option[Cancellable]
+  ): Receive = {
     case StreamController.Stop =>
       killSwitch.shutdown()
       context.become(stopping)
 
     case StreamController.Reset =>
       log.debug(s"Resetting timer for stream controller [$name]")
-      context.become(running(
-        streamCfg = streamCfg,
-        killSwitch = killSwitch,
-        interval = streamCfg.minDelay,
-        startedAt = System.currentTimeMillis(),
-        resetTimer = None
-      ))
+      context.become(
+        running(
+          streamCfg = streamCfg,
+          killSwitch = killSwitch,
+          interval = streamCfg.minDelay,
+          startedAt = System.currentTimeMillis(),
+          resetTimer = None
+        )
+      )
 
     case StreamController.Abort(t) =>
       killSwitch.abort(t)
@@ -131,25 +134,27 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
         resetTimer.foreach(_.cancel())
         restart(streamCfg, interval, Some(startedAt))
       } else {
+        killSwitch.shutdown()
         context.stop(self)
       }
   }
 
-  def stopping : Receive = {
+  def stopping: Receive = {
     case StreamController.StreamTerminated(_) => context.stop(self)
   }
 
-  private def startStream() : Try[(Mat, KillSwitch, Future[Done])] = Try {
-    val ((m, s), d) = source()
-      .viaMat(KillSwitches.single)(Keep.both)
-      .watchTermination()(Keep.both)
-      .toMat(Sink.ignore)(Keep.left)
-      .run()
+  private def startStream(): Try[(Mat, KillSwitch, Future[Done])] =
+    Try {
+      val ((m, s), d) = source()
+        .viaMat(KillSwitches.single)(Keep.both)
+        .watchTermination()(Keep.both)
+        .toMat(Sink.ignore)(Keep.left)
+        .run()
 
-    (m, s, d)
-  }
+      (m, s, d)
+    }
 
-  def source() : Source[T, Mat]
+  def source(): Source[T, Mat]
 
-  def materialized(m : Mat) : Unit
+  def materialized(m: Mat): Unit
 }

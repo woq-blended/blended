@@ -23,18 +23,23 @@ import scala.util.control.NonFatal
 object BrokerControlSupervisor {
 
   def props(
-    cfg : OSGIActorConfig,
-    sslContext : Option[SSLContext],
-    broker : List[BrokerConfig]
-  ) : Props = Props(new BrokerControlSupervisor(
-    cfg, sslContext, broker
-  ))
+    cfg: OSGIActorConfig,
+    sslContext: Option[SSLContext],
+    broker: List[BrokerConfig]
+  ): Props =
+    Props(
+      new BrokerControlSupervisor(
+        cfg,
+        sslContext,
+        broker
+      )
+    )
 }
 
 class BrokerControlSupervisor(
-  cfg : OSGIActorConfig,
-  sslContext : Option[SSLContext],
-  broker : List[BrokerConfig]
+  cfg: OSGIActorConfig,
+  sslContext: Option[SSLContext],
+  broker: List[BrokerConfig]
 ) extends Actor {
 
   private[this] val log = Logger[BrokerControlSupervisor]
@@ -42,16 +47,14 @@ class BrokerControlSupervisor(
   private case object Start
   private case object Stop
 
-  override def preStart() : Unit = {
+  override def preStart(): Unit = {
     self ! Start
   }
 
-  override def receive : Receive = {
+  override def receive: Receive = {
     case Start =>
-
       log.info(s"Starting ${getClass().getSimpleName()} with [${broker.mkString(",")}]")
       broker.map { brokerCfg =>
-
         log.debug(s"Configuring Broker controller for [$brokerCfg]")
         val controlProps = BrokerControlActor.props(brokerCfg, cfg, sslContext)
         val actor = context.system.actorOf(controlProps, brokerCfg.brokerName)
@@ -70,38 +73,36 @@ object BrokerControlActor {
 
   case object StartBroker
   case object StopBroker
-  case class BrokerStarted(uuid : String)
+  case class BrokerStarted(uuid: String)
 
-  val debugCnt : AtomicLong = new AtomicLong(0L)
+  val debugCnt: AtomicLong = new AtomicLong(0L)
 
   def props(
-    brokerCfg : BrokerConfig,
-    cfg : OSGIActorConfig,
-    sslCtxt : Option[SSLContext]
-  ) : Props = Props(new BrokerControlActor(brokerCfg, cfg, sslCtxt))
+    brokerCfg: BrokerConfig,
+    cfg: OSGIActorConfig,
+    sslCtxt: Option[SSLContext]
+  ): Props = Props(new BrokerControlActor(brokerCfg, cfg, sslCtxt))
 }
 
-class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtxt : Option[SSLContext])
-  extends Actor {
+class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt: Option[SSLContext]) extends Actor {
 
   private[this] val log = Logger[BrokerControlActor]
-  private[this] var broker : Option[BrokerService] = None
-  private[this] var svcReg : Option[ServiceRegistration[_]] = None
+  private[this] var broker: Option[BrokerService] = None
+  private[this] var svcReg: Option[ServiceRegistration[_]] = None
   private[this] val uuid = UUID.randomUUID().toString()
 
-  override def toString : String = s"BrokerControlActor($brokerCfg)"
+  override def toString: String = s"BrokerControlActor($brokerCfg)"
 
-  private[this] def startBroker() : Unit = {
+  private[this] def startBroker(): Unit = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
-
     try {
       val cfgDir = cfg.ctContext.profileConfigDirectory
-      val f : File = new File(cfgDir, brokerCfg.file).getAbsoluteFile()
+      val f: File = new File(cfgDir, brokerCfg.file).getAbsoluteFile()
       assert(f.exists() && f.isFile() && f.canRead())
 
-      val resource : Resource = new FileSystemResource(f)
+      val resource: Resource = new FileSystemResource(f)
 
       log.info(s"Loading ActiveMQ broker [${brokerCfg.brokerName}] with config file [${f.getAbsolutePath()}] ")
 
@@ -110,7 +111,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
       BrokerFactory.setStartDefault(false)
       val brokerFactory = new XBeanBrokerFactory()
 
-      val b : BrokerService = brokerFactory.createBroker(resource.getURI())
+      val b: BrokerService = brokerFactory.createBroker(resource.getURI())
       log.debug(s"Configuring ActiveMQ broker [${brokerCfg.brokerName}]")
       broker = Some(b)
 
@@ -122,9 +123,12 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
       }
 
       if (brokerCfg.ttlOverrides.nonEmpty) {
-        log.info(s"The broker [${brokerCfg.brokerName}] will use the following TTL overrides \n ${brokerCfg.ttlOverrides.mkString("  ","\n", "\n")}")
+        log.info(s"The broker [${brokerCfg.brokerName}] will use the following TTL overrides \n ${brokerCfg.ttlOverrides
+          .mkString("  ", "\n", "\n")}")
         installPlugin(new TTLEnforcingBrokerPlugin(brokerCfg.ttlOverrides), b)
       }
+
+      log.info(s"Amq Broker started with plugins [${listPlugins(b).map(_.getClass().getSimpleName())}]")
 
       sslCtxt.foreach { ctxt =>
         val amqSslContext = new org.apache.activemq.broker.SslContext()
@@ -153,23 +157,26 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
     }
   }
 
-  private def installPlugin(plugin : BrokerPlugin, broker : BrokerService) : BrokerService = {
-    val plugins : List[BrokerPlugin] = plugin :: Option(broker.getPlugins()).map(_.toList).getOrElse(List.empty)
+  private def listPlugins(broker: BrokerService): List[BrokerPlugin] =
+    Option(broker.getPlugins()).map(_.toList).getOrElse(List.empty)
+
+  private def installPlugin(plugin: BrokerPlugin, broker: BrokerService): BrokerService = {
+    val plugins: List[BrokerPlugin] = plugin :: listPlugins(broker)
     broker.setPlugins(plugins.toArray)
     broker
   }
 
-  private[this] def registerService(brokerCfg : BrokerConfig) : Unit = {
+  private[this] def registerService(brokerCfg: BrokerConfig): Unit = {
     if (svcReg.isEmpty) {
       new Object with ServiceProviding {
 
-        override protected def capsuleContext : CapsuleContext = new SimpleDynamicCapsuleContext()
+        override protected def capsuleContext: CapsuleContext = new SimpleDynamicCapsuleContext()
 
-        override protected def bundleContext : BundleContext = cfg.bundleContext
+        override protected def bundleContext: BundleContext = cfg.bundleContext
 
         val url = s"vm://${brokerCfg.brokerName}?create=false"
 
-        val jmsCfg : ConnectionConfig = brokerCfg.copy(
+        val jmsCfg: ConnectionConfig = brokerCfg.copy(
           properties = brokerCfg.properties + ("brokerURL" -> url),
           jmsClassloader = Some(getClass().getClassLoader())
         )
@@ -179,16 +186,20 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
           bundleContext = Some(cfg.bundleContext)
         )(system = cfg.system)
 
-        svcReg = Some(cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
-          "vendor" -> brokerCfg.vendor,
-          "provider" -> brokerCfg.provider,
-          "brokerName" -> brokerCfg.brokerName
-        )))
+        svcReg = Some(
+          cf.providesService[ConnectionFactory, IdAwareConnectionFactory](
+            Map(
+              "vendor" -> brokerCfg.vendor,
+              "provider" -> brokerCfg.provider,
+              "brokerName" -> brokerCfg.brokerName
+            )
+          )
+        )
       }
     }
   }
 
-  private[this] def stopBroker() : Unit = {
+  private[this] def stopBroker(): Unit = {
 
     broker.foreach { b =>
       log.info(s"Stopping ActiveMQ Broker [${brokerCfg.brokerName}]")
@@ -203,7 +214,7 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
           log.info(s"Removing OSGi service for Activemq Broker [${brokerCfg.brokerName}]")
           svcReg.foreach(_.unregister())
         } catch {
-          case _ : IllegalStateException => // was already unregistered
+          case _: IllegalStateException => // was already unregistered
         }
       }
     }
@@ -212,29 +223,36 @@ class BrokerControlActor(brokerCfg : BrokerConfig, cfg : OSGIActorConfig, sslCtx
     svcReg = None
   }
 
-  override def preRestart(reason : Throwable, message : Option[Any]) : Unit = {
+  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
     log.error(reason)(s"Error starting Active MQ broker [${brokerCfg.brokerName}]")
     super.preRestart(reason, message)
   }
 
-  override def postStop() : Unit = broker.foreach { b =>
-    b.stop()
-    b.waitUntilStopped()
-  }
+  override def postStop(): Unit =
+    broker.foreach { b =>
+      b.stop()
+      b.waitUntilStopped()
+    }
 
-  private val jvmId : String = ManagementFactory.getRuntimeMXBean().getName()
+  private val jvmId: String = ManagementFactory.getRuntimeMXBean().getName()
 
-  override def receive : Receive = {
+  override def receive: Receive = {
     case BrokerControlActor.StartBroker =>
-      log.trace(s"Received StartBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
+      log.trace(
+        s"Received StartBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]"
+      )
       if (broker.isEmpty) { startBroker() }
-    case started : BrokerControlActor.BrokerStarted =>
+    case started: BrokerControlActor.BrokerStarted =>
       if (started.uuid == uuid) {
-        log.debug(s"Received BrokerStarted Event for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
+        log.debug(
+          s"Received BrokerStarted Event for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]"
+        )
         broker.foreach { _ => registerService(brokerCfg) }
       }
     case BrokerControlActor.StopBroker =>
-      log.trace(s"Received StopBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
+      log.trace(
+        s"Received StopBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]"
+      )
       stopBroker()
   }
 }

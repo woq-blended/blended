@@ -2126,6 +2126,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         "FlowTransactionEventSpec" -> Set("blended.streams.transaction.FlowTransactionEventSpec"),
         "JmsRetryProcessorFailedSpec" -> Set("blended.streams.jms.JmsRetryProcessorFailedSpec"),
         "JmsKeepAliveActorSpec" -> Set("blended.streams.jms.internal.JmsKeepAliveActorSpec"),
+        "JmsForwardFailSpec" -> Set("blended.streams.jms.JmsForwardFailSpec"),
         "FileSourceSpec" -> Set("blended.streams.file.FileSourceSpec"),
         "JmsRetryProcessorRetryTimeoutSpec" -> Set("blended.streams.jms.JmsRetryProcessorRetryTimeoutSpec"),
         "BulkCleanupSpec" -> Set("blended.streams.transaction.BulkCleanupSpec"),

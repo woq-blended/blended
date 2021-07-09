@@ -14,31 +14,34 @@ import scala.concurrent.duration._
 @RequiresForkedJVM
 class InboundRejectBridgeSpec extends BridgeSpecSupport {
 
-  private def sendInbound(cf : IdAwareConnectionFactory, timeout : FiniteDuration, msgCount : Int) : KillSwitch = {
-    val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
+  private def sendInbound(cf: IdAwareConnectionFactory, timeout: FiniteDuration, msgCount: Int): KillSwitch = {
+    val msgs: Seq[FlowEnvelope] = generateMessages(msgCount) { env =>
       env
-        .withHeader(destHeader(headerCfg.prefix), s"sampleOut").get
+        .withHeader(destHeader(headerCfg.prefix), s"sampleOut")
+        .get
     }.get
 
-
-    sendMessages("sampleIn", cf, timeout)(msgs:_*)
+    sendMessages("sampleIn", cf, timeout)(msgs: _*)
   }
 
-  override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
-    override protected def streamBuilderFactory(system: ActorSystem)(
-      cfg: BridgeStreamConfig, streamsCfg : BlendedStreamsConfig
-    ): BridgeStreamBuilder =
-      new BridgeStreamBuilder(cfg, streamsCfg)(system) {
-        override protected def jmsSend: Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-          env.withException(new Exception("Boom"))
+  override protected def bridgeActivator: BridgeActivator =
+    new BridgeActivator() {
+      override protected def streamBuilderFactory(system: ActorSystem)(
+        cfg: BridgeStreamConfig,
+        streamsCfg: BlendedStreamsConfig
+      ): BridgeStreamBuilder =
+        new BridgeStreamBuilder(cfg, streamsCfg)(system) {
+          override protected def jmsSend: Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
+            Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+              env.withException(new Exception("Boom"))
+            }
         }
-      }
-  }
+    }
 
   "The inbound bridge should" - {
 
     "reject messages in case the send forward fails" in logException {
-      val timeout : FiniteDuration = 1.second
+      val timeout: FiniteDuration = 1.second
       val msgCount = 2
 
       val actorSys = system(registry)
@@ -46,8 +49,13 @@ class InboundRejectBridgeSpec extends BridgeSpecSupport {
 
       val switch = sendInbound(external, timeout, msgCount)
 
-      consumeMessages(cf = internal, destName = "bridge.data.in.activemq.external", timeout = timeout)(actorSys).get should be (empty)
-      consumeEvents(internal, timeout)(actorSys).get should be (empty)
+      consumeMessages(cf = internal, destName = "bridge.data.in.activemq.external", timeout = timeout)(
+        actorSys
+      ).get should be(empty)
+      consumeEvents(internal, timeout)(actorSys).get should be(empty)
+
+      registry.getBundleContext().getBundle(bundles.size + 1).stop()
+      Thread.sleep(5000)
 
       consumeMessages(
         cf = external,

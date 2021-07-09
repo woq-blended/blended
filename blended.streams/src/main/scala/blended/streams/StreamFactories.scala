@@ -16,26 +16,26 @@ import scala.util.{Failure, Success}
 
 object StreamFactories {
 
-  private val log : Logger = Logger[StreamFactories.type]
+  private val log: Logger = Logger[StreamFactories.type]
 
   def runSourceWithTimeLimit[T](
-    name : String,
-    source : Source[T, NotUsed],
-    timeout : Option[FiniteDuration],
-    onCollected : Option[T => Unit] = None,
-    completeOn : Option[Seq[T] => Boolean] = None
-  )(implicit system : ActorSystem, clazz : ClassTag[T]) : Collector[T] =
+    name: String,
+    source: Source[T, NotUsed],
+    timeout: Option[FiniteDuration],
+    onCollected: Option[T => Boolean] = None,
+    completeOn: Option[Seq[T] => Boolean] = None
+  )(implicit system: ActorSystem, clazz: ClassTag[T]): Collector[T] =
     runMatSourceWithTimeLimit(name, source, timeout, onCollected, completeOn)._2
 
   def runMatSourceWithTimeLimit[T, Mat](
-    name : String,
-    source : Source[T, Mat],
-    timeout : Option[FiniteDuration],
-    onCollected : Option[T => Unit] = None,
-    completeOn : Option[Seq[T] => Boolean] = None
-  )(implicit system : ActorSystem, clazz : ClassTag[T]) : (Mat, Collector[T]) = {
+    name: String,
+    source: Source[T, Mat],
+    timeout: Option[FiniteDuration],
+    onCollected: Option[T => Boolean] = None,
+    completeOn: Option[Seq[T] => Boolean] = None
+  )(implicit system: ActorSystem, clazz: ClassTag[T]): (Mat, Collector[T]) = {
 
-    implicit val eCtxt : ExecutionContext = system.dispatcher
+    implicit val eCtxt: ExecutionContext = system.dispatcher
 
     val stopped = new AtomicBoolean(false)
 
@@ -57,7 +57,7 @@ object StreamFactories {
         stopped.set(true)
     }
 
-    timeout.foreach{ t =>
+    timeout.foreach { t =>
       akka.pattern.after(t, system.scheduler) {
         if (!stopped.get()) {
           log.info(s"Stopping collector [$name] after [${timeout}]")
@@ -70,21 +70,24 @@ object StreamFactories {
     (mat, collector)
   }
 
-  def actorSource[T](bufferSize : Int, overflowStrategy : OverflowStrategy = OverflowStrategy.fail) : Source[T, ActorRef] = {
+  def actorSource[T](
+    bufferSize: Int,
+    overflowStrategy: OverflowStrategy = OverflowStrategy.fail
+  ): Source[T, ActorRef] = {
 
-    val complete : PartialFunction[Any, CompletionStrategy] = {
+    val complete: PartialFunction[Any, CompletionStrategy] = {
       case akka.actor.Status.Success(s: CompletionStrategy) => s
-      case akka.actor.Status.Success(_) => CompletionStrategy.draining
-      case akka.actor.Status.Success => CompletionStrategy.draining
+      case akka.actor.Status.Success(_)                     => CompletionStrategy.draining
+      case akka.actor.Status.Success                        => CompletionStrategy.draining
     }
 
-    val fail : PartialFunction[Any, Throwable] = {
+    val fail: PartialFunction[Any, Throwable] = {
       case akka.actor.Status.Failure(t) => t
     }
 
     Source.actorRef[T](complete, fail, bufferSize, overflowStrategy)
   }
 
-  def keepAliveSource[T](bufferSize : Int): Source[T, (ActorRef, KillSwitch)] =
+  def keepAliveSource[T](bufferSize: Int): Source[T, (ActorRef, KillSwitch)] =
     actorSource[T](bufferSize).viaMat(KillSwitches.single)(Keep.both)
 }
