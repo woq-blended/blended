@@ -11,42 +11,42 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Manage JMS sessions on behalf of a JMS streams source or sink.
-  *
+ * Manage JMS sessions on behalf of a JMS streams source or sink.
+ *
   * @param conn The JMS connection that will be used to create the sessions.
-  * @param maxSessions The maximum number of sessions this manager will create.
-  */
+ * @param maxSessions The maximum number of sessions this manager will create.
+ */
 class JmsSessionManager(
-  name : String,
-  conn : Connection,
-  maxSessions : Int
+  name: String,
+  conn: Connection,
+  maxSessions: Int
 ) {
 
-  private val log : Logger = Logger[JmsSessionManager]
+  private val log: Logger = Logger[JmsSessionManager]
 
   /**
-    * A callback that will be called after a new session has been created.
-    */
-  def onSessionOpen : JmsSession => Try[Unit] = { _ => Success(()) }
+   * A callback that will be called after a new session has been created.
+   */
+  def onSessionOpen: JmsSession => Try[Unit] = { _ => Success(()) }
 
   /**
-    * A callback that will be called immediately before a session will be closed.
-    */
-  def beforeSessionClose : JmsSession => Try[Unit] = { _ => Success(()) }
+   * A callback that will be called immediately before a session will be closed.
+   */
+  def beforeSessionClose: JmsSession => Try[Unit] = { _ => Success(()) }
 
   /**
-    * A callback that will be called after a session has been closed.
-    */
-  def afterSessionClose : JmsSession => Try[Unit] = { _ => Success(()) }
+   * A callback that will be called after a session has been closed.
+   */
+  def afterSessionClose: JmsSession => Try[Unit] = { _ => Success(()) }
 
-  def onError : Throwable => Unit = _ => ()
+  def onError: Throwable => Unit = _ => ()
 
   // We maintain a map of currently open sessions
-  private val sessions : mutable.Map[String, JmsSession] = mutable.Map.empty
+  private val sessions: mutable.Map[String, JmsSession] = mutable.Map.empty
 
-  def isOpen(id : String) : Boolean = sessions.contains(id)
+  def isOpen(id: String): Boolean = sessions.contains(id)
 
-  def getSession(id : String): Try[Option[JmsSession]] = {
+  def getSession(id: String): Try[Option[JmsSession]] = {
 
     sessions.get(id) match {
       case Some(s) =>
@@ -56,11 +56,12 @@ class JmsSessionManager(
         if (sessions.size < maxSessions) {
           try {
             log.debug(s"Creating session [$id] in [$name]")
-            val s : JmsSession = JmsSession(
-              conn.createSession(false, Session.CLIENT_ACKNOWLEDGE), id
+            val s: JmsSession = JmsSession(
+              conn.createSession(false, Session.CLIENT_ACKNOWLEDGE),
+              id
             )
             sessions.put(s.sessionId, s)
-            onSessionOpen(s)
+            onSessionOpen(s).get
             Success(Some(s))
           } catch {
             case NonFatal(t) =>
@@ -74,24 +75,31 @@ class JmsSessionManager(
     }
   }
 
-  def closeSession(id : String) : Try[Unit] = Try {
-    sessions.remove(id).map { sess =>
-      log.debug(s"Closing session [${sess.sessionId}]")
-      beforeSessionClose(sess)
-      sess.closeSession() match {
-        case Success(_) => afterSessionClose(sess)
-        case Failure(t) => onError(t)
-      }
-    }.getOrElse( Success(()) )
-  }
+  def closeSession(id: String): Try[Unit] =
+    Try {
+      sessions
+        .remove(id)
+        .map { sess =>
+          log.debug(s"Closing session [${sess.sessionId}]")
+          beforeSessionClose(sess)
+          sess.closeSession() match {
+            case Success(_) => afterSessionClose(sess)
+            case Failure(t) => onError(t)
+          }
+        }
+        .getOrElse(Success(()))
+    }
 
-  def closeSessionAsync(id : String)(system : ActorSystem) : Future[Unit] =
-    sessions.remove(id).map { _.closeSessionAsync()(system) }.getOrElse( Future {}(system.dispatcher) )
+  def closeSessionAsync(id: String)(system: ActorSystem): Future[Unit] =
+    sessions.remove(id).map { _.closeSessionAsync()(system) }.getOrElse(Future {}(system.dispatcher))
 
-  def closeAll() : Try[Unit] = {
+  def closeAll(): Try[Unit] = {
     log.trace(s"Closing [${sessions.size}] sessions for [$name]")
-    sessions.values.map{ sess =>
-      closeSession(sess.sessionId)
-    }.find(_.isFailure).getOrElse(Success(()))
+    sessions.values
+      .map { sess =>
+        closeSession(sess.sessionId)
+      }
+      .find(_.isFailure)
+      .getOrElse(Success(()))
   }
 }
