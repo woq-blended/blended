@@ -9,6 +9,7 @@ import com.typesafe.config.Config
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
+import javax.jms.ConnectionFactory
 
 object BlendedJMSConnectionConfig {
 
@@ -33,7 +34,7 @@ object BlendedJMSConnectionConfig {
     useJndi = false,
     jndiName = None,
     cfEnabled = None,
-    cfClassName = None,
+    cf = None,
     ctxtClassName = None,
     jmsClassloader = None
   )
@@ -41,47 +42,58 @@ object BlendedJMSConnectionConfig {
 
   // scalastyle:off method.length
   def fromConfig(
-    ctContext : ContainerContext
+    ctContext: ContainerContext
   )(
-    vendor : String, provider : String, cfg : Config
-  ) : BlendedJMSConnectionConfig = {
+    vendor: String,
+    provider: String,
+    cfg: Config
+  ): BlendedJMSConnectionConfig = {
 
-    val stringResolver : String => Try[AnyRef] = s => ctContext.resolveString(s)
+    val stringResolver: String => Try[AnyRef] = s => ctContext.resolveString(s)
 
-    val enabled : Config => Boolean = cfg => cfg.getBoolean("enabled", defaultConfig.enabled)
-    val jmxEnabled : Config => Boolean = cfg => cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
-    val keepAliveEnabled : Config => Boolean = cfg => cfg.getBoolean("keepAliveEnabled", defaultConfig.keepAliveEnabled)
-    val maxKeepAliveMissed : Config => Int = cfg => cfg.getInt("maxKeepAliveMissed", defaultConfig.maxKeepAliveMissed)
-    val keepAliveInterval : Config => FiniteDuration = cfg => cfg.getDuration("keepAliveInterval", defaultConfig.keepAliveInterval)
-    val minReconnect : Config => FiniteDuration = cfg => cfg.getDuration("minReconnect", defaultConfig.minReconnect)
-    val maxReconnectTimeout : Config => Option[FiniteDuration] = cfg => cfg.getDurationOption("maxReconnectTimeout")
-    val connectTimeout : Config => FiniteDuration = cfg => cfg.getDuration("connectTimeout", defaultConfig.connectTimeout)
-    val retryInterval : Config => FiniteDuration = cfg => cfg.getDuration("retryInterval", defaultConfig.retryInterval)
+    val enabled: Config => Boolean = cfg => cfg.getBoolean("enabled", defaultConfig.enabled)
+    val jmxEnabled: Config => Boolean = cfg => cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
+    val keepAliveEnabled: Config => Boolean = cfg => cfg.getBoolean("keepAliveEnabled", defaultConfig.keepAliveEnabled)
+    val maxKeepAliveMissed: Config => Int = cfg => cfg.getInt("maxKeepAliveMissed", defaultConfig.maxKeepAliveMissed)
+    val keepAliveInterval: Config => FiniteDuration = cfg =>
+      cfg.getDuration("keepAliveInterval", defaultConfig.keepAliveInterval)
+    val minReconnect: Config => FiniteDuration = cfg => cfg.getDuration("minReconnect", defaultConfig.minReconnect)
+    val maxReconnectTimeout: Config => Option[FiniteDuration] = cfg => cfg.getDurationOption("maxReconnectTimeout")
+    val connectTimeout: Config => FiniteDuration = cfg =>
+      cfg.getDuration("connectTimeout", defaultConfig.connectTimeout)
+    val retryInterval: Config => FiniteDuration = cfg => cfg.getDuration("retryInterval", defaultConfig.retryInterval)
 
-    val defaultUser : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_USER).map { u => stringResolver(u).get }.map(_.toString)
-    val defaultPasswd : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_PWD).map { p => stringResolver(p).get }.map(_.toString)
-    val destination : Config => String = cfg => cfg.getString("destination", defaultConfig.keepAliveDestination)
+    val defaultUser: Config => Option[String] = cfg =>
+      cfg.getStringOption(DEFAULT_USER).map { u => stringResolver(u).get }.map(_.toString)
+    val defaultPasswd: Config => Option[String] = cfg =>
+      cfg.getStringOption(DEFAULT_PWD).map { p => stringResolver(p).get }.map(_.toString)
+    val destination: Config => String = cfg => cfg.getString("destination", defaultConfig.keepAliveDestination)
 
-    val properties : (String => Try[Any]) => Config => Try[Map[String, String]] = stringResolver => cfg => Try {
-      ConfigPropertyMapConverter.getKeyAsPropertyMap(cfg, "properties", Option(() => defaultConfig.properties))
-        .view.mapValues { v =>
-          stringResolver(v) match {
-            case Failure(t) => throw t
-            case Success(s) => s.toString()
-          }
+    val properties: (String => Try[Any]) => Config => Try[Map[String, String]] = stringResolver =>
+      cfg =>
+        Try {
+          ConfigPropertyMapConverter
+            .getKeyAsPropertyMap(cfg, "properties", Option(() => defaultConfig.properties))
+            .view
+            .mapValues { v =>
+              stringResolver(v) match {
+                case Failure(t) => throw t
+                case Success(s) => s.toString()
+              }
+            }
+            .toMap
         }
-        .toMap
-    }
 
-    val clientId : Config => Try[String] = cfg => Try {
-      cfg.getStringOption("clientId") match {
-        case None    => defaultConfig.clientId
-        case Some(s) => stringResolver(s).map(_.toString).unwrap
+    val clientId: Config => Try[String] = cfg =>
+      Try {
+        cfg.getStringOption("clientId") match {
+          case None    => defaultConfig.clientId
+          case Some(s) => stringResolver(s).map(_.toString).unwrap
+        }
       }
-    }
 
-    val jndiName : Config => Option[String] = cfg => cfg.getStringOption(CF_JNDI_NAME)
-    val useJndi : Config => Boolean = cfg => cfg.getBoolean(USE_JNDI, defaultConfig.useJndi)
+    val jndiName: Config => Option[String] = cfg => cfg.getStringOption(CF_JNDI_NAME)
+    val useJndi: Config => Boolean = cfg => cfg.getBoolean(USE_JNDI, defaultConfig.useJndi)
 
     BlendedJMSConnectionConfig(
       vendor = vendor,
@@ -105,33 +117,33 @@ object BlendedJMSConnectionConfig {
       cfEnabled = None,
       jmsClassloader = defaultConfig.jmsClassloader,
       ctxtClassName = defaultConfig.ctxtClassName,
-      cfClassName = defaultConfig.cfClassName
+      cf = defaultConfig.cf
     )
   }
   // scalastyle:on method.length
 }
 
 case class BlendedJMSConnectionConfig(
-  override val vendor : String,
-  override val provider : String,
-  override val enabled : Boolean,
-  override val jmxEnabled : Boolean,
-  override val keepAliveEnabled : Boolean,
-  override val maxKeepAliveMissed : Int,
+  override val vendor: String,
+  override val provider: String,
+  override val enabled: Boolean,
+  override val jmxEnabled: Boolean,
+  override val keepAliveEnabled: Boolean,
+  override val maxKeepAliveMissed: Int,
   override val keepAliveInterval: FiniteDuration,
-  override val minReconnect : FiniteDuration,
+  override val minReconnect: FiniteDuration,
   override val connectTimeout: FiniteDuration,
   override val maxReconnectTimeout: Option[FiniteDuration],
-  override val retryInterval : FiniteDuration,
-  override val clientId : String,
-  override val defaultUser : Option[String],
-  override val defaultPassword : Option[String],
-  override val keepAliveDestination : String,
-  override val properties : Map[String, String],
-  override val useJndi : Boolean,
-  override val jndiName : Option[String] = None,
-  override val cfEnabled : Option[ConnectionConfig => Boolean],
-  override val cfClassName : Option[String],
-  override val ctxtClassName : Option[String],
-  override val jmsClassloader : Option[ClassLoader]
+  override val retryInterval: FiniteDuration,
+  override val clientId: String,
+  override val defaultUser: Option[String],
+  override val defaultPassword: Option[String],
+  override val keepAliveDestination: String,
+  override val properties: Map[String, String],
+  override val useJndi: Boolean,
+  override val jndiName: Option[String] = None,
+  override val cfEnabled: Option[ConnectionConfig => Boolean],
+  override val cf: Option[ConnectionFactory],
+  override val ctxtClassName: Option[String],
+  override val jmsClassloader: Option[ClassLoader]
 ) extends ConnectionConfig

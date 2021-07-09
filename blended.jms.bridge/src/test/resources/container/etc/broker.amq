@@ -1,27 +1,58 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:amq="http://activemq.apache.org/schema/core"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:amq="http://activemq.apache.org/schema/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
          http://www.springframework.org/schema/beans classpath:/org/springframework/beans/factory/xml/spring-beans-3.2.xsd
          http://activemq.apache.org/schema/core classpath:/activemq.xsd
        ">
-
-  <amq:broker
-    brokerName="activemq"
-    useJmx="true"
-    persistent="false"
-    offlineDurableSubscriberTimeout="604800000"
-    offlineDurableSubscriberTaskSchedule="86400000"
-    advisorySupport="true"
-    dataDirectory="activemq"
-    tmpDataDirectory="activemq/tmp"
-    >
+  <!--beans xmlns="http://www.springframework.org/schema/beans" xmlns:amq="http://activemq.apache.org/schema/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+       http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+       http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core-5.16.2.xsd
+     " -->
+  <amq:broker brokerName="SIB" useJmx="true" persistent="false" offlineDurableSubscriberTimeout="259200000" offlineDurableSubscriberTaskSchedule="43200000" advisorySupport="true" schedulerSupport="true">
 
     <amq:managementContext>
-      <amq:managementContext createConnector="false"/>
+      <amq:managementContext createConnector="false" />
     </amq:managementContext>
+
+    <amq:destinationPolicy>
+      <amq:policyMap>
+        <amq:policyEntries>
+
+          <amq:policyEntry id="topicConfig" enableAudit="false" topic=">" topicPrefetch="20" durableTopicPrefetch="5" maxPageSize="20" maxBrowsePageSize="20">
+            <amq:deadLetterStrategy>
+              <amq:individualDeadLetterStrategy topicPrefix="DLT." processExpired="true" destinationPerDurableSubscriber="true" processNonPersistent="false" />
+            </amq:deadLetterStrategy>
+          </amq:policyEntry>
+
+          <amq:policyEntry id="queueConfig" enableAudit="false" queue=">" queuePrefetch="5" maxPageSize="20" maxBrowsePageSize="20">
+            <!-- Make sure that messages cannot get stuck on one NWOB node. -->
+            <amq:networkBridgeFilterFactory>
+              <amq:conditionalNetworkBridgeFilterFactory replayWhenNoConsumers="true" replayDelay="10000" />
+            </amq:networkBridgeFilterFactory>
+            <amq:deadLetterStrategy>
+              <amq:individualDeadLetterStrategy queuePrefix="DLQ." processExpired="true" processNonPersistent="true" />
+            </amq:deadLetterStrategy>
+          </amq:policyEntry>
+        </amq:policyEntries>
+      </amq:policyMap>
+    </amq:destinationPolicy>
+
+    <amq:plugins>
+      <amq:redeliveryPlugin 
+        fallbackToDeadLetter="true" 
+        sendToDlqIfMaxRetriesExceeded="true">
+        <amq:redeliveryPolicyMap>
+            <amq:redeliveryPolicyMap>
+              <amq:redeliveryPolicyEntries>
+                <amq:redeliveryPolicy queue=">" maximumRedeliveries="6" useExponentialBackOff="false" initialRedeliveryDelay="1000" />
+              </amq:redeliveryPolicyEntries>
+              <amq:defaultEntry>
+                <amq:redeliveryPolicy maximumRedeliveries="7" useExponentialBackOff="false" initialRedeliveryDelay="1200" />
+              </amq:defaultEntry>
+            </amq:redeliveryPolicyMap>
+        </amq:redeliveryPolicyMap>
+      </amq:redeliveryPlugin>
+    </amq:plugins>
 
   </amq:broker>
 

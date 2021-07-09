@@ -56,34 +56,6 @@ class JmsForwardFailSpec
       .withSessionCount(1)
       .withDestination(Some(testDest(destName)))
 
-  // private def createSessionManger(name: String, maxSessions: Int)(
-  //   sessionOpened: JmsSession => Try[Unit]
-  // ): JmsSessionManager = {
-
-  //   val cf: IdAwareConnectionFactory = mandatoryService[IdAwareConnectionFactory](registry)
-  //   val con: Connection = ensureConnection(registry)(cf, 3.seconds).unwrap
-
-  //   new JmsSessionManager(
-  //     name = name,
-  //     conn = con,
-  //     maxSessions = maxSessions
-  //   ) {
-  //     override def onSessionOpen: JmsSession => Try[Unit] = sessionOpened
-  //   }
-  // }
-
-  // private def checkForSession(sessionCount: AtomicInteger, mgr: JmsSessionManager): Unit = {
-
-  //   mgr.getSession("foo") match {
-  //     case Success(Some(_)) =>
-  //       assert(sessionCount.get() == 1)
-  //     case Success(None) =>
-  //       fail("Expected open session")
-  //     case Failure(t) =>
-  //       fail(t)
-  //   }
-  // }
-
   "Forwarding JMS messages to a non functional connection " - {
 
     "should not forward JMS messages if the destination connection is not functional" in {

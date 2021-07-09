@@ -937,8 +937,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           "OutboundBridgeSpec" -> Set("blended.jms.bridge.internal.OutboundBridgeSpec"),
           "InboundBridgeTrackedSpec" -> Set("blended.jms.bridge.internal.InboundBridgeTrackedSpec"),
           "InboundBridgeUntrackedSpec" -> Set("blended.jms.bridge.internal.InboundBridgeUntrackedSpec"),
-          "SendFailedRejectBridgeSpec" -> Set("blended.jms.bridge.internal.SendFailedRejectBridgeSpec")
+          "SendFailedRejectBridgeSpec" -> Set("blended.jms.bridge.internal.SendFailedRejectBridgeSpec"),
+          "SessionFailRetrySpec" -> Set("blended.jms.bridge.internal.SessionFailRetrySpec")
         )
+
       object test extends Cross[Test](crossTestGroups: _*)
       class Test(override val testGroup: String) extends CoreForkedTests {
         override def otherModule: CoreForkedTests = bridge.test(otherTestGroup)

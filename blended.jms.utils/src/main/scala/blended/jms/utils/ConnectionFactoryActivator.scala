@@ -25,25 +25,23 @@ abstract class ConnectionFactoryActivator extends DominoActivator with ActorSyst
 
   import ConnectionFactoryActivator._
 
-  protected val connectionFactoryEnabled : Option[CFEnabled] = None
+  protected val connectionFactoryEnabled: Option[CFEnabled] = None
 
-  protected val cfClass : Option[String] = None
-  protected val ctxtClass : Option[String] = None
+  protected val cfClass: Option[String] = None
+  protected val ctxtClass: Option[String] = None
 
-  protected val factoryClassLoader : Option[ClassLoader] = None
+  protected val factoryClassLoader: Option[ClassLoader] = None
 
-  private[this] val log : Logger = Logger(getClass().getName())
+  private[this] val log: Logger = Logger(getClass().getName())
 
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
-
       try {
         log.info(s"Starting connection factory bundle [${osgiCfg.bundleContext.getBundle.getSymbolicName}]")
 
         val cfMap = osgiCfg.config.getObject("factories")
 
         cfMap.entrySet().asScala.foreach { entry =>
-
           val cfVendor = osgiCfg.config.getString("vendor")
           val cfProvider = entry.getKey()
 
@@ -57,13 +55,12 @@ abstract class ConnectionFactoryActivator extends DominoActivator with ActorSyst
             cfg = osgiCfg.config.getConfig("factories").getConfig(cfProvider)
           )
 
-          val enabled : Boolean = fnEnabled.forall(_(cfCfg))
+          val enabled: Boolean = fnEnabled.forall(_(cfCfg))
 
           if (enabled) {
             val singleCf = new BlendedSingleConnectionFactory(
               config = cfCfg.copy(
                 cfEnabled = fnEnabled,
-                cfClassName = cfClass,
                 ctxtClassName = ctxtClass,
                 jmsClassloader = factoryClassLoader
               ),
