@@ -8,13 +8,15 @@ import blended.jms.bridge.BridgeProviderConfig
 import blended.jms.utils.JmsDestination
 import blended.streams.dispatcher.internal.builder.DispatcherOutbound.DispatcherTarget
 import blended.streams.jms.JmsFlowSupport
+import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.worklist._
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.duration._
+import scala.annotation.nowarn
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
 class DispatcherOutboundSpec extends DispatcherSpecSupport with Matchers {
 
@@ -207,6 +209,36 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport with Matchers {
         routing should be(
           DispatcherTarget(provider.vendor, provider.provider, JmsDestination.create("centralDest").get)
         )
+      }
+    }
+
+    "resolve a dynamic destination from message properties" in {
+      val destName: String = "dynamicQueue"
+
+      val propsDynamic: FlowMessageProps = FlowMessage
+        .props(
+          "ResourceType" -> "Dynamic",
+          "targetDest" -> destName
+        )
+        .get
+
+      withDispatcherConfig(registry) { ctxt =>
+        @nowarn
+        val env = FlowEnvelope(propsDynamic)
+          .withContextObject(ctxt.bs.bridgeProviderKey, provider)
+          .withContextObject(ctxt.bs.bridgeDestinationKey, Some("${{#targetDest}}"))
+
+        val routing: DispatcherTarget = DispatcherOutbound
+          .outboundRouting(
+            dispatcherCfg = ctxt.cfg,
+            ctCtxt = ctxt.ctCtxt,
+            bs = ctxt.bs,
+            streamLogger = ctxt.envLogger
+          )(env)
+          .get
+
+        routing.dest should be(JmsDestination.create(destName).get)
+
       }
     }
   }

@@ -8,17 +8,18 @@ import blended.jms.utils.JmsQueue
 import blended.streams.StreamFactories
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.processor.Collector
+import blended.streams.processor.{CollectingActor, Collector}
 import blended.streams.testsupport.StreamAssertions._
 import blended.streams.worklist.WorklistEvent
 import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
 
   override def loggerName: String = classOf[CoreDispatcherSpec].getName()
+
   val goodFlow: Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
     Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
 
@@ -26,7 +27,9 @@ class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
 
   val headerExistsFilter: String => FlowEnvelope => Boolean = key => env => env.flowMessage.header.isDefinedAt(key)
   val headerMissingFilter: String => FlowEnvelope => Boolean = key => env => !env.flowMessage.header.isDefinedAt(key)
-  val headerFilter: String => AnyRef => FlowEnvelope => Boolean = key => value => env => env.header(key).contains(value)
+  def headerFilter[T: Manifest](key: String, expected: T)(env: FlowEnvelope): Boolean =
+    env.header[T](key).contains(expected)
+
   def filterEnvelopes(envelopes: Seq[FlowEnvelope])(f: FlowEnvelope => Boolean): Seq[FlowEnvelope] = envelopes.filter(f)
 
   case class DispatcherResult(
@@ -78,7 +81,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
     testMessages: FlowEnvelope*
   )(
     f: (DispatcherExecContext, DispatcherResult) => Unit
-  ): Future[DispatcherResult] = {
+  ): DispatcherResult = {
 
     def executeDispatcher(
       ctxt: DispatcherExecContext,
@@ -92,10 +95,15 @@ class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
       try {
         val (actorRef, killswitch) = g.run()
 
-        testMessages.foreach(m => actorRef ! m)
+        testMessages.foreach { m =>
+          actorRef ! m
+        }
 
         implicit val eCtxt: ExecutionContext = system.dispatcher
         akka.pattern.after(timeout, system.scheduler)(Future {
+          jmsColl.actor ! CollectingActor.Success
+          errorColl.actor ! CollectingActor.Success
+          wlColl.actor ! CollectingActor.Success
           killswitch.shutdown()
         })
 
@@ -103,13 +111,13 @@ class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
           jmsResult <- jmsColl.result
           errResult <- errorColl.result
           wlResult <- wlColl.result
-        } yield DispatcherResult(jmsResult, errResult, wlResult)
+        } yield {
+          val res = DispatcherResult(jmsResult, errResult, wlResult)
+          //println(res)
+          res
+        }
       } catch {
         case t: Throwable => throw t
-      } finally {
-        system.stop(jmsColl.actor)
-        system.stop(wlColl.actor)
-        system.stop(errorColl.actor)
       }
     }
 
@@ -117,11 +125,14 @@ class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
       implicit val system: ActorSystem = ctxt.system
       implicit val eCtxt: ExecutionContext = system.dispatcher
 
-      executeDispatcher(ctxt, timeout, testMessages: _*)
-        .map { r =>
-          f(ctxt, r)
-          r
-        }
+      Await.result(
+        executeDispatcher(ctxt, timeout + 100.millis, testMessages: _*)
+          .map { r =>
+            f(ctxt, r)
+            r
+          },
+        timeout + 1.second
+      )
     }
   }
 
@@ -196,7 +207,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
         result.worklist.head.worklist.id should be(result.out.head.id)
         result.worklist.head.worklist.items should have size 2
 
-        val default = filterEnvelopes(result.out)(headerFilter(ctxt.bs.headerConfig.headerBranch)("default"))
+        val default = filterEnvelopes(result.out)(headerFilter[String](ctxt.bs.headerConfig.headerBranch, "default"))
         default should have size 1
 
         verifyHeader(
@@ -211,7 +222,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
           default.head.flowMessage.header
         ) should be(empty)
 
-        val other = filterEnvelopes(result.out)(headerFilter(ctxt.bs.headerConfig.headerBranch)("OtherApp"))
+        val other = filterEnvelopes(result.out)(headerFilter[String](ctxt.bs.headerConfig.headerBranch, "OtherApp"))
         other should have size 1
         verifyHeader(
           FlowMessage
@@ -245,7 +256,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
               ctxt.bs.headerCbeEnabled -> true,
               ctxt.bs.headerEventVendor -> "sonic75",
               ctxt.bs.headerEventProvider -> "central",
-              ctxt.bs.headerEventDest -> "queue:cc.global.evnt.out"
+              ctxt.bs.headerEventDest -> "cc.global.evnt.out"
             )
             .get,
           cbeOut.head.flowMessage.header
@@ -291,18 +302,17 @@ class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
 
         result.out should have size 2
 
-        val instore = filterEnvelopes(result.out)(headerFilter("InStoreCommunication")("1"))
-        val central = filterEnvelopes(result.out)(headerFilter("InStoreCommunication")("0"))
+        val instore = filterEnvelopes(result.out)(headerFilter[String]("InStoreCommunication", "1"))
+        val central = filterEnvelopes(result.out)(headerFilter[String]("InStoreCommunication", "0"))
 
         instore should have size 1
         verifyHeader(
           FlowMessage
             .props(
-              "Description" -> "SalesDataFromScale",
+              "Description" -> "Condition",
               "DestinationName" -> "TestFile",
-              ctxt.bs.headerEventVendor -> "sonic75",
-              ctxt.bs.headerEventProvider -> "central",
-              ctxt.bs.headerEventDest -> "queue:cc.sib.global.data.out"
+              "FileName" -> "TestFile",
+              "DestinationPath" -> "/opt/inbound"
             )
             .get,
           instore.head.flowMessage.header
@@ -312,18 +322,44 @@ class CoreDispatcherSpec extends DispatcherSpecSupport with Matchers {
         verifyHeader(
           FlowMessage
             .props(
-              "Description" -> "SalesDataFromScale",
-              "DestinationName" -> "TestFile",
-              "Filename" -> "TestFile",
-              "DestinationPath" -> "opt/inbound/",
-              ctxt.bs.headerEventVendor -> "activemq",
-              ctxt.bs.headerEventProvider -> "activemq",
-              ctxt.bs.headerEventDest -> "ClientToQ"
+              "Description" -> "Condition",
+              "DestinationName" -> "TestFile"
             )
             .get,
           central.head.flowMessage.header
-        )
+        ) should be(empty)
+      }
+    }
 
+    "evaluate dynamic destinations correctly" in {
+
+      val destName = "dynamicQueue"
+
+      val propsDynamic: FlowMessageProps = FlowMessage
+        .props(
+          "ResourceType" -> "Dynamic",
+          "targetDest" -> destName
+        )
+        .get
+
+      withDispatcher(5.seconds, FlowEnvelope(propsDynamic)) { (ctxt, result) =>
+        println(result.out)
+
+        result.worklist should have size 1
+        result.error should be(empty)
+
+        result.out should have size 1
+
+        verifyHeader(
+          FlowMessage
+            .props(
+              ctxt.bs.headerBridgeVendor -> "sagum",
+              ctxt.bs.headerBridgeProvider -> "cc_queue",
+              ctxt.bs.headerBridgeDest -> destName
+            )
+            .get,
+          result.out.head.flowMessage.header
+        ) should be(empty)
       }
     }
   }

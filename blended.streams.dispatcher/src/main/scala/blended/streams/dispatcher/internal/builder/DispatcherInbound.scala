@@ -15,15 +15,15 @@ import scala.util.Try
 object DispatcherInbound {
 
   def apply(
-    dispatcherCfg : ResourceTypeRouterConfig,
-    ctCtxt : ContainerContext,
-    streamLogger : FlowEnvelopeLogger
-  )(implicit bs : DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+    dispatcherCfg: ResourceTypeRouterConfig,
+    ctCtxt: ContainerContext,
+    streamLogger: FlowEnvelopeLogger
+  )(implicit bs: DispatcherBuilderSupport): Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
     /*-------------------------------------------------------------------------------------------------*/
     /* Populate the message with the configured default headers                                        */
     /*-------------------------------------------------------------------------------------------------*/
-    val defaultHeader : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+    val defaultHeader: Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
       Flow.fromGraph(
         HeaderTransformProcessor(
           name = "defaultHeader",
@@ -60,16 +60,18 @@ object DispatcherInbound {
 
     /*-------------------------------------------------------------------------------------------------*/
     val decideCbe = FlowProcessor.fromFunction("decideCbe", streamLogger) { env =>
-
       Try {
-        bs.withContextObject[ResourceTypeConfig](bs.rtConfigKey, env, streamLogger){ rtCfg : ResourceTypeConfig =>
-
+        bs.withContextObject[ResourceTypeConfig](bs.rtConfigKey, env, streamLogger) { rtCfg: ResourceTypeConfig =>
           if (rtCfg.withCBE) {
             val newMsg = env.flowMessage
-              .withHeader(bs.headerEventVendor, dispatcherCfg.eventProvider.vendor).get
-              .withHeader(bs.headerEventProvider, dispatcherCfg.eventProvider.provider).get
-              .withHeader(bs.headerEventDest, dispatcherCfg.eventProvider.transactions.asString).get
-              .withHeader(bs.headerCbeEnabled, true).get
+              .withHeader(bs.headerEventVendor, dispatcherCfg.eventProvider.vendor)
+              .get
+              .withHeader(bs.headerEventProvider, dispatcherCfg.eventProvider.provider)
+              .get
+              .withHeader(bs.headerEventDest, dispatcherCfg.eventProvider.cbes.asString)
+              .get
+              .withHeader(bs.headerCbeEnabled, true)
+              .get
 
             env.copy(flowMessage = newMsg)
           } else {
@@ -79,7 +81,8 @@ object DispatcherInbound {
       }
     }
 
-    Flow.fromGraph(defaultHeader)
+    Flow
+      .fromGraph(defaultHeader)
       .via(Flow.fromGraph(LogEnvelope(dispatcherCfg, "logInbound", LogLevel.Info, streamLogger)))
       .via(Flow.fromGraph(checkResourceType))
       .via(Flow.fromGraph(decideCbe))
