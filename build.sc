@@ -35,6 +35,7 @@ object CoreDependencies {
 
   object Deps_2_13 extends CoreDependencies {
     override def scalaVersion = "2.13.4"
+    override def scalaJsVersion = "1.1.0"
   }
 
   /////////////////////////////////////////////////////////////////////////////////////
