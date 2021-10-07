@@ -1,7 +1,6 @@
 package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
-import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge}
@@ -324,7 +323,7 @@ case class DispatcherBuilder(
 
   // 9. The combined transaction events are passed down stream
 
-  def dispatcher()(implicit system: ActorSystem) : Graph[FlowShape[FlowEnvelope, FlowTransactionEvent], NotUsed] = {
+  def dispatcher() : Graph[FlowShape[FlowEnvelope, FlowTransactionEvent], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
       // of course we start with the core
@@ -342,20 +341,12 @@ case class DispatcherBuilder(
       // we will collect transaction events here
       val trans = b.add(Merge[FlowTransactionEvent](2))
 
-      val completeStatsOk = b.add(
-        FlowProcessor.completeStats("completeStats", envLogger, bs.headerConfig)
-      )
-
-      val completeStatsFailed = b.add(
-        FlowProcessor.completeStats("completeStats", envLogger, bs.headerConfig)
-      )
-
       // the normal outcome of core goes to send
-      callCore.out0 ~> completeStatsOk ~> callSend.in
+      callCore.out0 ~> callSend.in
       // The worklist started event goes to the event channel
       callCore.out1 ~> event
       // errors go the error channel
-      callCore.out2 ~> completeStatsFailed ~> error
+      callCore.out2 ~> error
 
       // the normal output of the sendflow are worklist events, so they go to the event channel
       val evtHandler = b.add(worklistEventHandler())

@@ -1,12 +1,9 @@
 package blended.streams
 
 import akka.NotUsed
-import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL}
 import akka.stream.{FanOutShape2, FlowShape, Graph}
-import blended.jmx.statistics.ServiceInvocationReporter
 import blended.streams.message.{FlowEnvelope, FlowEnvelopeLogger}
-import blended.util.RichTry._
 import blended.util.logging.LogLevel
 
 import scala.reflect.ClassTag
@@ -99,29 +96,6 @@ object FlowProcessor {
       branches ~> isFalse
 
       new FanOutShape2(branches.in, isTrue.out, isFalse.out)
-    }
-  }
-
-  def startStats(
-    name : String, log : FlowEnvelopeLogger, component : String, subComp : Map[String, String], headerCfg: FlowHeaderConfig
-  )(implicit system : ActorSystem) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
-    fromFunction(name, log){ env => Try {
-      val id : String = ServiceInvocationReporter.invoked(component, subComp)
-      env.withHeader(key = headerCfg.headerStatsId, value = id).unwrap
-    }}
-
-  def completeStats(
-    name : String, log : FlowEnvelopeLogger, headerCfg : FlowHeaderConfig
-  )(implicit system: ActorSystem) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
-    fromFunction(name, log){ env => Try {
-      env.header[String](headerCfg.headerStatsId).foreach{ h =>
-        if (env.exception.isEmpty) {
-          ServiceInvocationReporter.completed(h)
-        } else {
-          ServiceInvocationReporter.failed(h)
-        }
-      }
-      env
     }
   }
 }
