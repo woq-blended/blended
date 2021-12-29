@@ -1188,7 +1188,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             deps.commonsLogging,
             deps.jsonSimple,
             deps.jaxbApi,
-            deps.jaxbImpl
+            deps.jaxbImpl,
+            deps.jclOverSlf4j
           )
         }
 

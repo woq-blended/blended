@@ -112,6 +112,7 @@ ${BLENDED_HOME}/lib/blended.util.logging_@scala.binary.version@-@blended.util.lo
 ${BLENDED_HOME}/lib/de.tototec.cmdoption-@cmdoption.version@.jar;\
 ${BLENDED_HOME}/lib/scala-library-@scala.library.version@.jar;\
 ${BLENDED_HOME}/lib/slf4j-api-@slf4j.version@.jar;\
+${BLENDED_HOME}/lib/jcl-over-slf4j-@slf4j.version@.jar;\
 ${BLENDED_HOME}/lib/logback-core-@logback.version@.jar;\
 ${BLENDED_HOME}/lib/logback-classic-@logback.version@.jar;\
 ${BLENDED_HOME}/lib/splunk-library-javalogging-@splunkjava.version@.jar;\
