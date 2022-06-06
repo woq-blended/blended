@@ -353,6 +353,48 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
+  object aws extends Module {
+    object s3 extends CoreModule {
+
+      override def description = 
+        """A simple service to download files using the Amazon S3 protocol."""
+
+      override def ivyDeps = 
+        T {
+          super.ivyDeps() ++ Agg(
+            deps.aws("s3")
+          )
+        }
+
+      override def moduleDeps: Seq[PublishModule] =
+        super.moduleDeps ++ Seq(
+          blended.util.logging,
+          blended.container.context.api,
+          blended.domino
+        )
+
+      override def osgiHeaders: T[OsgiHeaders] = T {
+        super.osgiHeaders().copy(
+          `Bundle-Activator` = Some(s"${blendedModule}.internal.AwsS3DownloaderActivator"),
+          `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last)
+        )
+      }
+
+      override def embeddedJars: T[Seq[PathRef]] =
+        T {
+          compileClasspath().iterator.to(Seq).filter(f => f.path.last.contains(deps.awsJavaSDKVersion))
+        }
+
+      object test extends CoreTests {
+        override def moduleDeps: Seq[JavaModule] =
+          super.moduleDeps ++ Seq(
+            blended.testsupport,
+            blended.testsupport.pojosr
+          )
+      }
+    }
+  }
+
   object akka extends CoreModule {
     override def description = "Provide OSGi services and API to use Actors in OSGi bundles with a shared ActorSystem."
 
@@ -1555,7 +1597,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     override def embeddedJars: T[Seq[PathRef]] =
       T {
-        compileClasspath().toSeq.filter(f => f.path.last.startsWith("prickle") || f.path.last.startsWith("microjson"))
+        compileClasspath().iterator.to(Seq).filter(f => f.path.last.startsWith("prickle") || f.path.last.startsWith("microjson"))
       }
 
     object akka extends Module {
