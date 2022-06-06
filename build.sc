@@ -16,7 +16,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.4.11`
+import $ivy.`de.wayofquality.blended::blended-mill:0.5-SNAPSHOT`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -65,11 +65,7 @@ trait CoreCoursierModule extends CoursierModule {
       MavenRepository(s"file://${System.getProperty("user.home")}/.m2/repository"),
       MavenRepository("https://repo.spring.io/libs-release"),
       MavenRepository("http://repository.springsource.com/maven/bundles/release"),
-      MavenRepository("http://repository.springsource.com/maven/bundles/external"),
-      MavenRepository(
-        s"https://u233308-sub2.your-storagebox.de/akka-osgi/${akkaBundleRevision}",
-        Some(Authentication("u233308-sub2", "px8Kumv98zIzSF7k"))
-      )
+      MavenRepository("http://repository.springsource.com/maven/bundles/external")
     )
   }
 }
@@ -157,6 +153,7 @@ trait DistModule extends CoreCoursierModule {
       jars.iterator.foreach { jar =>
         os.copy(jar, dest / "lib" / jar.last, createFolders = true)
       }
+
       PathRef(dest)
     }
 
@@ -1180,7 +1177,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             deps.scalaLibrary(scalaVersion()),
             deps.scalaReflect(scalaVersion()),
             deps.slf4j,
-            deps.splunkjava,
             deps.httpCore,
             deps.httpCoreNio,
             deps.httpComponents,
