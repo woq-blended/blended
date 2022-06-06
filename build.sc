@@ -2752,6 +2752,18 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
 
+    def awsModules: T[Feature] =
+      T {
+        Feature(
+          repoUrl = repoUrl(),
+          name = baseName + ".aws.modules",
+          features = Seq.empty,
+          bundles = Seq(
+            FeatureBundle(coreDep(blended.aws.s3)())
+          )
+        )
+      }
+
     def baseCommon: T[Feature] =
       T {
         Feature(
