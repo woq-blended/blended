@@ -382,9 +382,12 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
       override def embeddedJars: T[Seq[PathRef]] =
         T {
-          compileClasspath().iterator.to(Seq).filter(f => f.path.last.contains(deps.awsJavaSDKVersion))
+          compileClasspath().iterator.to(Seq)
+            .filter { f =>
+              f.path.last.contains(deps.awsJavaSDKVersion) ||
+              f.path.last.startsWith("netty")
+            }
         }
-
       object test extends CoreTests {
         override def moduleDeps: Seq[JavaModule] =
           super.moduleDeps ++ Seq(
