@@ -362,7 +362,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def ivyDeps = 
         T {
           super.ivyDeps() ++ Agg(
-            deps.aws("s3")
+            deps.aws("s3"),
+            deps.httpComponents,
+            deps.httpCore
           )
         }
 
@@ -379,6 +381,27 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last),
           `Import-Package` = Seq(
             "com.aayushatharva.brotli4j;resolution:=optional",
+            "com.aayushatharva.brotli4j.*;resolution:=optional",
+            "com.github.luben.zstd;resolution:=optional",
+            "com.google.protobuf;resolution:=optional",
+            "com.google.protobuf.*;resolution:=optional",
+            "com.ning.compress;resolution:=optional",
+            "com.ning.compress.*;resolution:=optional",
+            "com.oracle.svm.core.annotate;resolution:=optional",
+            "io.netty.internal.tcnative;resolution:=optional",
+            "kotlin;resolution:=optional",
+            "lzma.sdk;resolution:=optional",
+            "lzma.sdk.*;resolution:=optional",
+            "net.jpountz.lz4;resolution:=optional",
+            "net.jpountz.xxhash;resolution:=optional",
+            "org.apache.log4j",
+            "org.apache.logging.log4j;resolution:=optional",
+            "org.apache.logging.log4j.*;resolution:=optional",
+            "org.bouncycastle.*;resolution:=optional",
+            "org.conscrypt;resolution:=optional",
+            "org.conscrypt.*;resolution:=optional",
+            "org.eclipse.jetty.*;resolution:=optional",
+            "org.jboss.*;resolution:=optional",
             "*"
           )
         )
@@ -389,9 +412,12 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           compileClasspath().iterator.to(Seq)
             .filter { f =>
               f.path.last.contains(deps.awsJavaSDKVersion) ||
-              f.path.last.startsWith("netty")
+              f.path.last.startsWith("netty") ||
+              f.path.last.startsWith("httpclient-4.5.13") ||
+              f.path.last.startsWith("httpcore-4.4.15")
             }
         }
+
       object test extends CoreTests {
         override def moduleDeps: Seq[JavaModule] =
           super.moduleDeps ++ Seq(
@@ -1160,6 +1186,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.typesafeConfig,
         deps.logbackCore,
         deps.logbackClassic,
+        deps.log4j,
         deps.commonsDaemon
       )
 
@@ -1204,6 +1231,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             "scala.library.version" -> scalaVersion(),
             "typesafe.config.version" -> deps.typesafeConfig.dep.version,
             "slf4j.version" -> deps.slf4jVersion,
+            "log4j.version" -> deps.log4j.dep.version,
             "logback.version" -> deps.logbackClassic.dep.version,
             "splunkjava.version" -> deps.splunkjava.dep.version,
             "httpcore.version" -> deps.httpCore.dep.version,

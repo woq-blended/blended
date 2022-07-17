@@ -17,6 +17,7 @@ set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\de.tototec.cmdoption-@cmdoption.v
 set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\scala-library-@scala.library.version@.jar
 set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\slf4j-api-@slf4j.version@.jar
 set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\jcl-over-slf4j-@slf4j.version@.jar
+set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\log4j-@log4j.version@.jar
 set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\logback-core-@logback.version@.jar
 set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\logback-classic-@logback.version@.jar
 set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\splunk-library-javalogging-@splunkjava.version@.jar
