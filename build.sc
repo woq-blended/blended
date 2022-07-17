@@ -373,14 +373,14 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.domino
         )
 
-      override def essentialImportPackage: Seq[String] = Seq(
-        "com.aayushatharva.brotli4j;resolution:=optional"
-      )
-
       override def osgiHeaders: T[OsgiHeaders] = T {
         super.osgiHeaders().copy(
           `Bundle-Activator` = Some(s"${blendedModule}.internal.AwsS3DownloaderActivator"),
-          `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last)
+          `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last),
+          `Import-Package` = Seq(
+            "com.aayushatharva.brotli4j;resolution:=optional",
+            "*"
+          )
         )
       }
 
