@@ -21,6 +21,10 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
+
+// TODO: configure wiretap with resourcetype for request / response
+// if set create a jms message with the resourcetype set and fwd to local bridge.data.in
+
 class SimpleRestJmsService(
   name : String,
   osgiCfg : OSGIActorConfig,
