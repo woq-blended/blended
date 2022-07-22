@@ -1257,87 +1257,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             blended.testsupport
           )
       }
-
-      object rest extends CoreModule {
-        override def description = "File Artifact Repository REST Service"
-        override def ivyDeps =
-          super.ivyDeps() ++ Agg(
-            deps.akkaHttp(akkaBundleRevision)
-          )
-        override def moduleDeps: Seq[PublishModule] =
-          super.moduleDeps ++ Seq(
-            blended.domino,
-            blended.updater.config,
-            blended.mgmt.base,
-            blended.mgmt.repo,
-            blended.security.akka.http,
-            blended.util,
-            blended.util.logging,
-            blended.akka.http
-          )
-        override def osgiHeaders: T[OsgiHeaders] =
-          T {
-            super
-              .osgiHeaders()
-              .copy(
-                `Bundle-Activator` = Some(s"${blendedModule}.internal.ArtifactRepoRestActivator")
-              )
-          }
-        object test extends CoreTests {
-          override def moduleDeps: Seq[JavaModule] =
-            super.moduleDeps ++ Seq(
-              blended.testsupport.pojosr
-            )
-        }
-      }
-    }
-    object rest extends CoreModule {
-      override def description =
-        "REST interface to accept POST's from distributed containers. These will be delegated to the container registry"
-      override def ivyDeps =
-        super.ivyDeps() ++ Agg(
-          deps.akkaActor(akkaBundleRevision),
-          deps.domino,
-          deps.akkaHttp(akkaBundleRevision),
-          deps.akkaHttpCore(akkaBundleRevision),
-          deps.akkaStream(akkaBundleRevision)
-        )
-      override def moduleDeps: Seq[PublishModule] =
-        super.moduleDeps ++ Seq(
-          blended.util.logging,
-          blended.akka.http,
-          blended.persistence,
-          blended.security.akka.http,
-          blended.akka,
-          blended.prickle.akka.http,
-          blended.mgmt.repo
-        )
-      override def osgiHeaders: T[OsgiHeaders] =
-        T {
-          super
-            .osgiHeaders()
-            .copy(
-              `Bundle-Activator` = Some(s"${blendedModule}.internal.MgmtRestActivator")
-            )
-        }
-      object test extends CoreTests {
-        override def ivyDeps: Target[Loose.Agg[Dep]] =
-          T {
-            super.ivyDeps() ++ Agg(
-              deps.akkaSlf4j(akkaBundleRevision),
-              deps.akkaStreamTestkit,
-              deps.akkaHttpTestkit,
-              deps.sttp,
-              deps.lambdaTest
-            )
-          }
-        override def moduleDeps =
-          super.moduleDeps ++ Seq(
-            blended.testsupport,
-            blended.testsupport.pojosr,
-            blended.persistence.h2
-          )
-      }
     }
     object base extends CoreModule {
       override def description = "Shared classes for management and reporting facility"
@@ -1389,78 +1308,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
               )
             }
         }
-      }
-    }
-  }
-  object persistence extends CoreModule {
-    override def description =
-      "Provide a technology agnostic persistence API with pluggable Data Objects defined in other bundles"
-    override def ivyDeps =
-      super.ivyDeps() ++ Agg(
-        deps.slf4j,
-        deps.domino
-      )
-    override def moduleDeps =
-      super.moduleDeps ++ Seq(
-        blended.akka
-      )
-    object test extends CoreTests {
-      override def ivyDeps =
-        super.ivyDeps() ++ Agg(
-          deps.mockitoAll,
-          deps.slf4jLog4j12
-        )
-      override def moduleDeps =
-        super.moduleDeps ++ Seq(
-          blended.testsupport
-        )
-    }
-
-    object h2 extends CoreModule {
-      override def description = "Implement a persistence backend with H2 JDBC database"
-      override def ivyDeps =
-        super.ivyDeps() ++ Agg(
-          deps.slf4j,
-          deps.domino,
-          deps.h2,
-          deps.hikaricp,
-          deps.springBeans,
-          deps.springCore,
-          deps.springTx,
-          deps.springJdbc,
-          deps.liquibase,
-          deps.snakeyaml
-        )
-      override def moduleDeps =
-        super.moduleDeps ++ Seq(
-          persistence,
-          util.logging,
-          util,
-          testsupport
-        )
-      override def exportPackages: Seq[String] = Seq.empty
-      override def osgiHeaders: T[OsgiHeaders] =
-        T {
-          super
-            .osgiHeaders()
-            .copy(
-              `Bundle-Activator` = Some(s"${blendedModule}.internal.H2Activator"),
-              `Private-Package` = Seq(
-                s"${blendedModule}.internal",
-                "blended.persistence.jdbc"
-              )
-            )
-        }
-      object test extends CoreTests {
-        override def ivyDeps =
-          super.ivyDeps() ++ Agg(
-            deps.lambdaTest,
-            deps.scalacheck
-          )
-        override def moduleDeps =
-          super.moduleDeps ++ Seq(
-            blended.updater.config.test
-          )
       }
     }
   }
@@ -1664,53 +1511,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             super.moduleDeps ++ Seq(
               blended.testsupport,
               blended.testsupport.pojosr
-            )
-        }
-      }
-      object rest extends CoreModule {
-        override def description = "A REST service providing login services and web token management"
-        override def ivyDeps =
-          super.ivyDeps() ++ Agg(
-            deps.akkaHttp(akkaBundleRevision),
-            deps.akkaHttpCore(akkaBundleRevision)
-          )
-        override def moduleDeps: Seq[PublishModule] =
-          super.moduleDeps ++ Seq(
-            blended.akka.http,
-            blended.security.akka.http,
-            blended.util.logging,
-            blended.security.login.api
-          )
-        override def osgiHeaders: T[OsgiHeaders] =
-          T {
-            super
-              .osgiHeaders()
-              .copy(
-                `Bundle-Activator` = Some(s"${blendedModule}.internal.RestLoginActivator")
-              )
-          }
-        override def testGroups: Map[String, Set[String]] =
-          Map(
-            "LoginServiceSpec" -> Set("blended.security.login.rest.internal.LoginServiceSpec")
-          )
-        object test extends Cross[Test](crossTestGroups: _*)
-        class Test(override val testGroup: String) extends CoreForkedTests {
-          override def otherModule: CoreForkedTests = rest.test(otherTestGroup)
-          override def ivyDeps: Target[Loose.Agg[Dep]] =
-            T {
-              super.ivyDeps() ++ Agg(
-                deps.akkaTestkit,
-                deps.akkaStreamTestkit,
-                deps.akkaHttpTestkit,
-                deps.sttp,
-                deps.sttpAkka
-              )
-            }
-          override def moduleDeps =
-            super.moduleDeps ++ Seq(
-              blended.testsupport,
-              blended.testsupport.pojosr,
-              blended.security.login.impl
             )
         }
       }
@@ -2026,7 +1826,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         blended.util.logging,
         blended.jms.utils,
         blended.akka,
-        blended.persistence,
         blended.jmx
       )
     override def exportPackages: Seq[String] =
@@ -2036,7 +1835,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         s"${blendedModule}.message",
         s"${blendedModule}.multiresult",
         s"${blendedModule}.processor",
-        s"${blendedModule}.persistence",
         s"${blendedModule}.transaction",
         s"${blendedModule}.worklist"
       )
@@ -2087,7 +1885,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def moduleDeps =
         super.moduleDeps ++ Seq(
           blended.activemq.brokerstarter,
-          blended.persistence.h2,
           blended.testsupport.pojosr,
           blended.testsupport
         )
@@ -2108,8 +1905,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.util.logging,
           blended.streams,
           blended.jms.bridge,
-          blended.akka,
-          blended.persistence
+          blended.akka
         )
       override def exportPackages: Seq[String] =
         super.exportPackages ++ Seq(
@@ -2149,7 +1945,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           }
         override def moduleDeps: Seq[JavaModule] =
           super.moduleDeps ++ Seq(
-            blended.persistence.h2,
             blended.activemq.brokerstarter,
             blended.streams.testsupport,
             blended.testsupport.pojosr,
@@ -2722,7 +2517,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
                 baseCommon(),
                 akkaHttpBase(),
                 security(),
-                persistence(),
                 streams()
               ).map(_.name)
             )
@@ -2735,8 +2529,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             FeatureBundle(deps.jjwt),
             // Required for Login API
             FeatureBundle(coreDep(blended.security.login.api)()),
-            FeatureBundle(coreDep(blended.security.login.impl)(), 4, true),
-            FeatureBundle(coreDep(blended.security.login.rest)(), 4, true)
+            FeatureBundle(coreDep(blended.security.login.impl)(), 4, true)
           )
         )
       }
@@ -2767,42 +2560,16 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
                 security(),
                 ssl(),
                 spring(),
-                persistence(),
                 login(),
                 streams()
               ).map(_.name)
             )
           ),
           bundles = Seq(
-            FeatureBundle(coreDep(blended.mgmt.rest)(), 4, true),
             FeatureBundle(coreDep(blended.mgmt.repo)(), 4, true),
-            FeatureBundle(coreDep(blended.mgmt.repo.rest)(), 4, true),
             FeatureBundle(deps.concurrentLinkedHashMapLru),
             FeatureBundle(deps.jsr305)
             //FeatureBundle(ivy"${deps.blendedOrg}::blended.mgmt.ui.mgmtApp.webBundle:$blendedUiVersion", 4, true)
-          )
-        )
-      }
-
-    def persistence: T[Feature] =
-      T {
-        Feature(
-          repoUrl = repoUrl(),
-          name = baseName + ".persistence",
-          features = Seq(
-            FeatureRef(dependency = selfDep(), names = Seq(baseCommon()).map(_.name))
-          ),
-          bundles = Seq(
-            FeatureBundle(coreDep(blended.persistence)()),
-            FeatureBundle(coreDep(blended.persistence.h2)(), 4, true),
-            // for Blended.persistenceH2
-            FeatureBundle(deps.h2),
-            // for Blended.persistenceH2
-            FeatureBundle(deps.hikaricp),
-            // for Blended.persistenceH2
-            FeatureBundle(deps.liquibase),
-            // for deps.liquibase
-            FeatureBundle(deps.snakeyaml)
           )
         )
       }
@@ -2887,7 +2654,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           login(),
           mgmtClient(),
           mgmtServer(),
-          persistence(),
           security(),
           spring(),
           ssl(),
