@@ -2807,23 +2807,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
 
-    def samples: T[Feature] =
-      T {
-        Feature(
-          repoUrl = repoUrl(),
-          name = baseName + ".samples",
-          features = Seq(
-            FeatureRef(dependency = selfDep(), names = Seq(akkaHttpBase(), activemq(), streams()).map(_.name))
-          ),
-          bundles = Seq(
-            FeatureBundle(coreDep(blended.jms.bridge)(), 4, true),
-            FeatureBundle(coreDep(blended.streams.dispatcher)(), 4, true),
-            FeatureBundle(coreDep(blended.activemq.client)(), 4, true),
-            FeatureBundle(coreDep(blended.akka.http.sample.helloworld)(), 4, true)
-          )
-        )
-      }
-
     def security: T[Feature] =
       T {
         Feature(
@@ -2905,7 +2888,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           mgmtClient(),
           mgmtServer(),
           persistence(),
-          samples(),
           security(),
           spring(),
           ssl(),
