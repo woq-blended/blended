@@ -4,8 +4,6 @@ import java.io.{ByteArrayOutputStream, File, FileOutputStream, PrintStream, Prin
 import java.net.URLClassLoader
 import java.nio.file.{Files, Paths}
 import java.util.{Hashtable, Properties, ServiceLoader, UUID}
-
-import blended.launcher.config.LauncherConfig
 import blended.util.arm.ARM
 import blended.updater.config._
 import blended.util.logging.Logger
@@ -219,7 +217,7 @@ object Launcher {
    * Parse the command line and wrap the result into a [[Configs]] object.
    *
    * We support three types of config files:
-   * - [[blended.launcher.config.LauncherConfig]] - A direct config denoting all properties and bundles
+   * - [[LauncherConfig]] - A direct config denoting all properties and bundles
    * - [[blended.updater.config.ProfileRef]] - given as explicit file or directory where a `profile.conf` is located
    * - [[blended.updater.config.ProfileLookup]] - a config files with holds some information about JVM system properties
    *   and a reference to the [[blended.updater.config.ProfileRef]] location

@@ -170,47 +170,6 @@ trait DistModule extends CoreCoursierModule {
     }
 }
 
-trait JBakeBuild extends Module with WebTools {
-
-  override def npmModulesDir: Path = projectDir / "node_modules"
-
-  def jbakeVersion: String = "2.6.5"
-  def jbakeDownloadUrl: String = s"https://dl.bintray.com/jbake/binary/jbake-${jbakeVersion}-bin.zip"
-
-  def prepareJBake: T[PathRef] =
-    T {
-      Util.downloadUnpackZip(jbakeDownloadUrl, RelPath("."))
-
-      PathRef(T.dest)
-    }
-
-  def jbake: T[PathRef] =
-    T {
-
-      val jbakeCp: Agg[Path] = os.list(prepareJBake().path / s"jbake-$jbakeVersion-bin" / "lib")
-
-      val process = Jvm.runSubprocess(
-        mainClass = "org.jbake.launcher.Main",
-        classPath = jbakeCp,
-        mainArgs = Seq(
-          millSourcePath.toIO.getAbsolutePath(),
-          T.dest.toIO.getAbsolutePath(),
-          "-b"
-        )
-      )
-
-      val webpackResult: Path = webpack().path
-
-      os.walk(webpackResult).foreach { p =>
-        val rel = p.relativeTo(webpackResult)
-        val dest = T.dest / "webpack" / rel
-        os.copy(p, dest, replaceExisting = true, createFolders = true)
-      }
-      PathRef(T.dest)
-    }
-
-}
-
 object blended extends Cross[BlendedCross](CoreDependencies.scalaVersions.keys.toSeq: _*)
 class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   override def skipIdea: Boolean = crossScalaVersion != CoreDependencies.Deps_2_13.scalaVersion
@@ -235,16 +194,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     trait CoreForkedTests extends super.BlendedForkedTests {
       override def skipIdea: Boolean = crossScalaVersion != CoreDependencies.Deps_2_13.scalaVersion
     }
-  }
-
-  trait CoreJvmModule extends CoreModule with BlendedJvmModule with BlendedOsgiModule with CorePublishModule {
-
-    trait CoreJs extends super.BlendedJs with CorePublishModule
-  }
-
-  object doc extends JBakeBuild with WebTools {
-
-    override def millSourcePath = projectDir / "doc"
   }
 
   object activemq extends Module {
@@ -362,9 +311,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def ivyDeps = 
         T {
           super.ivyDeps() ++ Agg(
-            deps.aws("s3"),
-            deps.httpComponents,
-            deps.httpCore
           )
         }
 
@@ -377,46 +323,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
 
       override def osgiHeaders: T[OsgiHeaders] = T {
         super.osgiHeaders().copy(
-          `Bundle-Activator` = Some(s"${blendedModule}.internal.AwsS3DownloaderActivator"),
-          `Bundle-Classpath` = Seq(".") ++ embeddedJars().map(_.path.last),
-          `Import-Package` = Seq(
-            "com.aayushatharva.brotli4j;resolution:=optional",
-            "com.aayushatharva.brotli4j.*;resolution:=optional",
-            "com.github.luben.zstd;resolution:=optional",
-            "com.google.protobuf;resolution:=optional",
-            "com.google.protobuf.*;resolution:=optional",
-            "com.ning.compress;resolution:=optional",
-            "com.ning.compress.*;resolution:=optional",
-            "com.oracle.svm.core.annotate;resolution:=optional",
-            "io.netty.internal.tcnative;resolution:=optional",
-            "kotlin;resolution:=optional",
-            "lzma.sdk;resolution:=optional",
-            "lzma.sdk.*;resolution:=optional",
-            "net.jpountz.lz4;resolution:=optional",
-            "net.jpountz.xxhash;resolution:=optional",
-            "org.apache.log4j",
-            "org.apache.logging.log4j;resolution:=optional",
-            "org.apache.logging.log4j.*;resolution:=optional",
-            "org.bouncycastle.*;resolution:=optional",
-            "org.conscrypt;resolution:=optional",
-            "org.conscrypt.*;resolution:=optional",
-            "org.eclipse.jetty.*;resolution:=optional",
-            "org.jboss.*;resolution:=optional",
-            "*"
-          )
+          `Bundle-Activator` = Some(s"${blendedModule}.internal.AwsS3DownloaderActivator")
         )
       }
-
-      override def embeddedJars: T[Seq[PathRef]] =
-        T {
-          compileClasspath().iterator.to(Seq)
-            .filter { f =>
-              f.path.last.contains(deps.awsJavaSDKVersion) ||
-              f.path.last.startsWith("netty") ||
-              f.path.last.startsWith("httpclient-4.5.13") ||
-              f.path.last.startsWith("httpcore-4.4.15")
-            }
-        }
 
       object test extends CoreTests {
         override def moduleDeps: Seq[JavaModule] =
@@ -805,38 +714,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     object test extends CoreTests
   }
 
-  object file extends CoreModule {
-    override def description = "Bundle to define a customizable Filedrop / Filepoll API"
-    override def moduleDeps =
-      super.moduleDeps ++ Seq(
-        blended.akka,
-        blended.jms.utils,
-        blended.streams
-      )
-    object test extends CoreTests {
-      override def ivyDeps: Target[Loose.Agg[Dep]] =
-        T {
-          super.ivyDeps() ++ Agg(
-            deps.commonsIo,
-            deps.activeMqBroker,
-            deps.activeMqKahadbStore,
-            deps.akkaTestkit,
-            deps.akkaSlf4j(akkaBundleRevision)
-          )
-        }
-      override def moduleDeps =
-        super.moduleDeps ++ Seq(
-          blended.testsupport
-        )
-      override def testResources: Sources =
-        T.sources {
-          super.testResources() ++ Seq(
-            PathRef(millSourcePath / os.up / "src" / "test" / "filterResources")
-          )
-        }
-    }
-  }
-
   object hawtio extends Module {
     object login extends CoreModule {
       override def description = "Adding required imports to the hawtio war bundle"
@@ -1081,7 +958,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object jmx extends CoreJvmModule {
+  object jmx extends CoreModule {
     override def description = "Helper bundle to expose the platform's MBeanServer as OSGI Service."
     override def ivyDeps: Target[Loose.Agg[Dep]] =
       T {
@@ -1125,17 +1002,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.testsupport,
           blended.testsupport.pojosr
         )
-    }
-    object js extends CoreJs {
-      override def ivyDeps: Target[Loose.Agg[Dep]] =
-        T {
-          super.ivyDeps() ++ Agg(
-            deps.js.prickle,
-            deps.js.scalacheck
-          )
-        }
-
-      object test extends super.BlendedJsTests
     }
   }
 
@@ -1186,7 +1052,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         deps.typesafeConfig,
         deps.logbackCore,
         deps.logbackClassic,
-        deps.log4j,
         deps.commonsDaemon
       )
 
@@ -1231,7 +1096,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             "scala.library.version" -> scalaVersion(),
             "typesafe.config.version" -> deps.typesafeConfig.dep.version,
             "slf4j.version" -> deps.slf4jVersion,
-            "log4j.version" -> deps.log4j.dep.version,
             "logback.version" -> deps.logbackClassic.dep.version,
             "splunkjava.version" -> deps.splunkjava.dep.version,
             "httpcore.version" -> deps.httpCore.dep.version,
@@ -1601,7 +1465,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object prickle extends CoreJvmModule {
+  object prickle extends CoreModule {
     override def description = "OSGi package for Prickle and mircojson"
     override def ivyDeps =
       super.ivyDeps() ++ Agg(
@@ -1662,7 +1526,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
     }
   }
 
-  object security extends CoreJvmModule {
+  object security extends CoreModule {
     override def description = "Configuration bundle for the security framework"
     override def ivyDeps =
       Agg(
@@ -1687,7 +1551,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             `Bundle-Activator` = Some(s"${blendedModule}.internal.SecurityActivator")
           )
       }
-    object test extends BlendedJvmTests {
+    object test extends BlendedTests {
       override def sources: Sources =
         T.sources {
           super.sources() ++ Seq(
@@ -1707,15 +1571,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.testsupport.pojosr,
           blended.security.login.impl
         )
-    }
-    object js extends CoreJs {
-      override def ivyDeps =
-        T {
-          super.ivyDeps() ++ Agg(
-            deps.js.prickle
-          )
-        }
-      object test extends super.BlendedJsTests
     }
 
     object akka extends Module {
@@ -2427,7 +2282,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
     }
 
-    object config extends CoreJvmModule {
+    object config extends CoreModule {
       override def description = "Configurations for Updater and Launcher"
       override def ivyDeps =
         Agg(
@@ -2446,7 +2301,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.util.logging,
           blended.security
         )
-      object test extends BlendedJvmTests {
+      object test extends BlendedTests {
         override def ivyDeps =
           super.ivyDeps() ++ Agg(
             deps.scalatest,
@@ -2460,25 +2315,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             blended.testsupport,
             blended.util.logging
           )
-      }
-
-      object js extends CoreJs {
-        override def moduleDeps: Seq[PublishModule] =
-          Seq(
-            blended.security.js
-          )
-        object test extends BlendedJsTests {
-          override def ivyDeps: Target[Loose.Agg[Dep]] =
-            T {
-              super.ivyDeps() ++ Agg(
-                deps.js.prickle
-              )
-            }
-          override def moduleDeps =
-            super.moduleDeps ++ Seq(
-              blended.util.logging.js
-            )
-        }
       }
     }
 
@@ -2497,7 +2333,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       object test extends CoreTests
     }
-
   }
 
   object util extends CoreModule {
@@ -2526,109 +2361,13 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           )
         }
     }
-    object logging extends CoreJvmModule {
+    object logging extends CoreModule {
       override def description = "Logging utility classes to use in other bundles"
       override def compileIvyDeps: Target[Agg[Dep]] =
         Agg(
           deps.slf4j
         )
       object test extends CoreTests
-
-      object js extends CoreJs
-    }
-  }
-
-  object websocket extends CoreJvmModule {
-    override def description = "The web socket server module"
-    override def ivyDeps =
-      super.ivyDeps() ++ Agg(
-        deps.akkaHttp(akkaBundleRevision),
-        deps.akkaHttpCore(akkaBundleRevision)
-      )
-    override def moduleDeps: Seq[PublishModule] =
-      super.moduleDeps ++ Seq(
-        blended.akka,
-        blended.streams,
-        blended.akka.http,
-        blended.security.login.api,
-        blended.jmx
-      )
-    override def exportPackages: Seq[String] =
-      super.exportPackages ++ Seq(
-        s"${blendedModule}.json"
-      )
-    override def osgiHeaders: T[OsgiHeaders] =
-      T {
-        super
-          .osgiHeaders()
-          .copy(
-            `Bundle-Activator` = Some(s"${blendedModule}.internal.WebSocketActivator")
-          )
-      }
-
-    override def resources: Sources =
-      T.sources {
-
-        val dest = T.ctx().dest
-
-        val versionResource: PathRef = {
-          val props = s"""version="${blendedVersion()}""""
-          val versionPath = dest / "generated"
-          os.write(
-            versionPath / "blended" / "websocket" / "internal" / "version.properties",
-            props,
-            createFolders = true
-          )
-          PathRef(versionPath)
-        }
-        super.resources() ++ Seq(versionResource)
-      }
-    object test extends BlendedJvmTests {
-      override def ivyDeps: Target[Loose.Agg[Dep]] =
-        T {
-          super.ivyDeps() ++ Agg(
-            deps.akkaSlf4j(akkaBundleRevision),
-            deps.akkaTestkit,
-            deps.sttp,
-            deps.sttpAkka,
-            deps.logbackClassic,
-            deps.springCore,
-            deps.springBeans,
-            deps.springContext,
-            deps.springContext,
-            deps.springExpression
-          )
-        }
-      override def moduleDeps =
-        super.moduleDeps ++ Seq(
-          blended.testsupport,
-          blended.persistence,
-          blended.persistence.h2,
-          blended.security.login.impl,
-          blended.testsupport.pojosr,
-          blended.security.login.rest
-        )
-    }
-
-    object js extends CoreJs {
-      override def ivyDeps: Target[Loose.Agg[Dep]] =
-        T {
-          super.ivyDeps() ++ Agg(
-            deps.js.prickle
-          )
-        }
-      override def moduleDeps: Seq[PublishModule] =
-        super.moduleDeps ++ Seq(
-          blended.jmx.js
-        )
-      object test extends BlendedJsTests {
-        override def ivyDeps: Target[Loose.Agg[Dep]] =
-          T {
-            super.ivyDeps() ++ Agg(
-              deps.js.scalacheck
-            )
-          }
-      }
     }
   }
 
@@ -2997,7 +2736,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             // Required for Login API
             FeatureBundle(coreDep(blended.security.login.api)()),
             FeatureBundle(coreDep(blended.security.login.impl)(), 4, true),
-            FeatureBundle(coreDep(blended.websocket)(), 4, true),
             FeatureBundle(coreDep(blended.security.login.rest)(), 4, true)
           )
         )
@@ -3081,7 +2819,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             FeatureBundle(coreDep(blended.jms.bridge)(), 4, true),
             FeatureBundle(coreDep(blended.streams.dispatcher)(), 4, true),
             FeatureBundle(coreDep(blended.activemq.client)(), 4, true),
-            FeatureBundle(coreDep(blended.file)()),
             FeatureBundle(coreDep(blended.akka.http.sample.helloworld)(), 4, true)
           )
         )
