@@ -3,7 +3,7 @@ package blended.aws.s3.internal
 import java.security.MessageDigest
 import javax.crypto.spec.SecretKeySpec
 
-object AWSHelpers {
+object AwsHelpers {
 
   private val algorithm = "HmacSHA256"
 

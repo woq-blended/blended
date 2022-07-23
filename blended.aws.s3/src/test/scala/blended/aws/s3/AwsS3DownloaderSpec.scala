@@ -1,4 +1,4 @@
-package blended.aws.s3.internal
+package blended.aws.s3
 
 import akka.actor.ActorSystem
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -13,7 +13,7 @@ class AwsS3DownloaderSpec extends LoggingFreeSpec with Matchers {
     "download a specified file from S3" in {
 
       val system = ActorSystem("S3Downlaod")
-      val downLoader = new AwsS3Downloader(system)
+      val downLoader = AwsS3Downloader.make(system)
 
       val params = S3DownloadParams(
         bucket = "woq-kl-test",

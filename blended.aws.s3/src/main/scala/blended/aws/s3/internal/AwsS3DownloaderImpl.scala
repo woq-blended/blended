@@ -7,11 +7,10 @@ import akka.http.scaladsl.model._
 import akka.stream.Materializer
 
 import scala.concurrent.{ExecutionContext, Future}
-import AWSHelpers._
+import AwsHelpers._
+import blended.aws.s3.{AwsS3Downloader, S3DownloadParams}
 
-// https://woq-kl-test.s3.eu-central-1.amazonaws.com/replace.txt
-
-final class AwsS3Downloader(system: ActorSystem) {
+final class AwsS3DownloaderImpl(system: ActorSystem) extends AwsS3Downloader {
 
   implicit val eCtxt : ExecutionContext = system.dispatcher
   private val logger = Logger("blended.aws.s3.internal.AwsS3Downloader")
@@ -25,16 +24,18 @@ final class AwsS3Downloader(system: ActorSystem) {
     implicit val materializer: Materializer =
       akka.stream.SystemMaterializer.get(system).materializer
 
-    logger.info(s"Trying to download ${params.s3Url}")
+    val s3Req = S3RequestSupport(params)
 
-    val req = HttpRequest(HttpMethods.GET, params.s3Url)
+    logger.info(s"Trying to download ${s3Req.s3Url}")
+
+    val req = HttpRequest(HttpMethods.GET, s3Req.s3Url)
       .mapEntity(_.withContentType(ContentTypes.`application/octet-stream`))
-      .withHeaders(params.akkaHttpHeader.toSeq)
+      .withHeaders(s3Req.akkaHttpHeader.toSeq)
 
     val resp = Http()(system).singleRequest(req)
 
-    logger.debug(s"Byte encoded canonical download request: (${hexEncode(params.canonicalRequest.getBytes("UTF-8"), " ")})")
-    logger.debug(s"Byte encoded meta data: (${hexEncode(params.toSign.getBytes("UTF-8"), " ")})")
+    logger.debug(s"Byte encoded canonical download request: (${hexEncode(s3Req.canonicalRequest.getBytes("UTF-8"), " ")})")
+    logger.debug(s"Byte encoded meta data: (${hexEncode(s3Req.toSign.getBytes("UTF-8"), " ")})")
 
     resp.flatMap(_.entity.toStrict(params.timeout)).map(_.data.toArray[Byte])
   }

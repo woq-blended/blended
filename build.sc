@@ -320,15 +320,8 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           blended.util.logging,
           blended.container.context.api,
           blended.domino,
-          blended.jms.utils,
           blended.akka.http
         )
-
-      override def osgiHeaders: T[OsgiHeaders] = T {
-        super.osgiHeaders().copy(
-          `Bundle-Activator` = Some(s"${blendedModule}.internal.AwsS3DownloaderActivator")
-        )
-      }
 
       object test extends CoreTests {
         override def moduleDeps: Seq[JavaModule] =
@@ -1198,69 +1191,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   }
 
   object mgmt extends Module {
-    object agent extends CoreModule {
-      override def description =
-        "Bundle to regularly report monitoring information to a central container hosting the container registry"
-      override def ivyDeps =
-        super.ivyDeps() ++ Agg(
-          deps.orgOsgi,
-          deps.akkaHttp(akkaBundleRevision),
-          deps.akkaStream(akkaBundleRevision)
-        )
-      override def moduleDeps: Seq[PublishModule] =
-        super.moduleDeps ++ Seq(
-          blended.akka,
-          blended.updater.config,
-          blended.util.logging,
-          blended.prickle.akka.http
-        )
-      override def osgiHeaders: T[OsgiHeaders] =
-        T {
-          super
-            .osgiHeaders()
-            .copy(
-              `Bundle-Activator` = Some(s"${blendedModule}.internal.MgmtAgentActivator")
-            )
-        }
-      object test extends CoreTests {
-        override def moduleDeps: Seq[JavaModule] =
-          super.moduleDeps ++ Seq(
-            blended.testsupport.pojosr
-          )
-      }
-    }
-    object repo extends CoreModule {
-      override def description = "File Artifact Repository"
-      override def moduleDeps: Seq[PublishModule] =
-        super.moduleDeps ++ Seq(
-          blended.domino,
-          blended.updater.config,
-          blended.util.logging,
-          blended.mgmt.base
-        )
-      override def osgiHeaders: T[OsgiHeaders] =
-        T {
-          super
-            .osgiHeaders()
-            .copy(
-              `Bundle-Activator` = Some(s"${blendedModule}.internal.ArtifactRepoActivator")
-            )
-        }
-      object test extends CoreTests {
-        override def ivyDeps: Target[Loose.Agg[Dep]] =
-          T {
-            super.ivyDeps() ++ Agg(
-              deps.lambdaTest,
-              deps.akkaTestkit,
-              deps.akkaSlf4j(akkaBundleRevision)
-            )
-          }
-        override def moduleDeps =
-          super.moduleDeps ++ Seq(
-            blended.testsupport
-          )
-      }
-    }
     object base extends CoreModule {
       override def description = "Shared classes for management and reporting facility"
       override def moduleDeps: Seq[PublishModule] =
@@ -2537,46 +2467,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       }
 
-    def mgmtClient: T[Feature] =
-      T {
-        Feature(
-          repoUrl = repoUrl(),
-          name = baseName + ".mgmt.client",
-          features = Seq.empty,
-          bundles = Seq(
-            FeatureBundle(coreDep(blended.mgmt.agent)(), 4, true)
-          )
-        )
-      }
-
-    def mgmtServer: T[Feature] =
-      T {
-        Feature(
-          repoUrl = repoUrl(),
-          name = baseName + ".mgmt.server",
-          features = Seq(
-            FeatureRef(
-              dependency = selfDep(),
-              names = Seq(
-                baseCommon(),
-                akkaHttpBase(),
-                security(),
-                ssl(),
-                spring(),
-                login(),
-                streams()
-              ).map(_.name)
-            )
-          ),
-          bundles = Seq(
-            FeatureBundle(coreDep(blended.mgmt.repo)(), 4, true),
-            FeatureBundle(deps.concurrentLinkedHashMapLru),
-            FeatureBundle(deps.jsr305)
-            //FeatureBundle(ivy"${deps.blendedOrg}::blended.mgmt.ui.mgmtApp.webBundle:$blendedUiVersion", 4, true)
-          )
-        )
-      }
-
     def security: T[Feature] =
       T {
         Feature(
@@ -2655,8 +2545,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           jetty(),
           jolokia(),
           login(),
-          mgmtClient(),
-          mgmtServer(),
           security(),
           spring(),
           ssl(),
