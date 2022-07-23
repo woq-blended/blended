@@ -2261,7 +2261,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           name = baseName + ".aws.modules",
           features = Seq.empty,
           bundles = Seq(
-            FeatureBundle(coreDep(blended.aws.s3)())
+            FeatureBundle(coreDep(blended.aws.s3)(), 10, false)
           )
         )
       }
@@ -2275,7 +2275,6 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           bundles = Seq(
             FeatureBundle(coreDep(blended.security.boot)()),
             FeatureBundle(deps.asmAll, 4, true),
-            FeatureBundle(coreDep(blended.updater)(), 4, true),
             FeatureBundle(coreDep(blended.updater.config)(), 4, true),
             FeatureBundle(deps.scalaReflect(scalaVersion())),
             FeatureBundle(deps.scalaLibrary(scalaVersion())),
