@@ -2537,6 +2537,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
           activemq(),
           akkaHttpBase(),
           akkaHttpModules(),
+          awsModules(),
           baseCommon(),
           baseEquinox(),
           baseFelix(),
