@@ -311,6 +311,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       override def ivyDeps = 
         T {
           super.ivyDeps() ++ Agg(
+            deps.httpComponents
           )
         }
 
@@ -318,7 +319,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         super.moduleDeps ++ Seq(
           blended.util.logging,
           blended.container.context.api,
-          blended.domino
+          blended.domino,
+          blended.jms.utils,
+          blended.akka.http
         )
 
       override def osgiHeaders: T[OsgiHeaders] = T {
