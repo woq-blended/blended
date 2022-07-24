@@ -20,8 +20,8 @@ class AwsS3DownloaderSpec extends LoggingFreeSpec with Matchers {
         region = "eu-central-1",
         provider = "amazonaws.com",
         path = "replace.txt",
-        s3Key = "AKIAQMPD3ETE3GFSQ6O5",
-        s3SecretKey = "HF78nDJumjpebLY/a13q+w3XK05ryoLshXvBTRZn"
+        s3Key = sys.env("WOQ_S3_ACCESS"),
+        s3SecretKey = sys.env("WOQ_S3_SECRET")
       )
 
       val res = downLoader.download(params)
