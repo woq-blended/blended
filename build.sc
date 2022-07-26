@@ -16,7 +16,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.5-SNAPSHOT`
+import $ivy.`de.wayofquality.blended::blended-mill:0.4.13`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -35,11 +35,10 @@ object CoreDependencies {
 
   object Deps_2_13 extends CoreDependencies {
     override def scalaVersion = "2.13.4"
-    override def scalaJsVersion = "1.1.0"
 
     override def slf4jVersion = "1.7.32"
-    override def logbackCore = ivy"ch.qos.logback:logback-core:1.2.6"
-    override def logbackClassic = ivy"ch.qos.logback:logback-classic:1.2.6"
+    override def logbackCore = ivy"ch.qos.logback:logback-core:1.2.11"
+    override def logbackClassic = ivy"ch.qos.logback:logback-classic:1.2.11"
   }
 
   /////////////////////////////////////////////////////////////////////////////////////
