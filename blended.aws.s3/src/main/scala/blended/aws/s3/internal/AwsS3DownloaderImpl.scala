@@ -8,7 +8,7 @@ import akka.stream.Materializer
 
 import scala.concurrent.{ExecutionContext, Future}
 import AwsHelpers._
-import blended.aws.s3.{AwsS3Downloader, S3DownloadParams}
+import blended.aws.s3._
 
 final class AwsS3DownloaderImpl(system: ActorSystem) extends AwsS3Downloader {
 
@@ -37,6 +37,16 @@ final class AwsS3DownloaderImpl(system: ActorSystem) extends AwsS3Downloader {
     logger.debug(s"Byte encoded canonical download request: (${hexEncode(s3Req.canonicalRequest.getBytes("UTF-8"), " ")})")
     logger.debug(s"Byte encoded meta data: (${hexEncode(s3Req.toSign.getBytes("UTF-8"), " ")})")
 
-    resp.flatMap(_.entity.toStrict(params.timeout)).map(_.data.toArray[Byte])
+    resp.flatMap( resp => resp.status match {
+      case StatusCodes.OK =>
+        logger.info(s"Successfully downloaded content from [${s3Req.s3Url}]")
+        resp.entity.toStrict(params.timeout).map(_.data.toArray[Byte])
+      case StatusCodes.Unauthorized =>
+        logger.warn(s"Unauthorized to download from [${s3Req.s3Url}].")
+        throw AWSUnauthorized((s3Req.s3Url))
+      case other =>
+        logger.warn(s"S3 request ended with Status Code [$other], no content loaded.")
+        throw AWSNotFound(s3Req.s3Url)
+    })
   }
 }
