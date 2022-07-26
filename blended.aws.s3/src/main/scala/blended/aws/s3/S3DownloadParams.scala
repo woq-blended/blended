@@ -11,4 +11,7 @@ final case class S3DownloadParams(
    s3Key: String,
    s3SecretKey: String,
    timeout: FiniteDuration = 60.seconds
- )
+ ) {
+  override def toString: String =
+    s"${getClass.getSimpleName}(bucket=$bucket,service=$service,region=$region,provider=$provider,path=$path, timeout=$timeout)"
+}

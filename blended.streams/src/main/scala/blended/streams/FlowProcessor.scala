@@ -45,17 +45,22 @@ object FlowProcessor {
           log.logEnv(env, LogLevel.Debug, s"Starting Integration step [${env.id}]:[$name]")
           val start = System.currentTimeMillis()
 
-          val result = f(env) match {
-            case Success(s) =>
-              log.logEnv(env, LogLevel.Debug, s"Integration step [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
-              s
+          val calc = f(env)
 
-            case Failure(t) =>
+          val err = calc match {
+            case Success(env) => env.exception
+            case Failure(t) => Some(t)
+          }
+
+          err match {
+            case None =>
+              log.logEnv(env, LogLevel.Debug, s"Integration step [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
+              calc.get
+
+            case Some(t) =>
               log.logEnv(env.withException(t), LogLevel.Debug, s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]", false)
               env.withException(t)
           }
-
-          result
         case Some(_) =>
           log.logEnv(env, LogLevel.Debug, s"Skipping integration step [${env.id}]:[$name] due to exception caught in flow.")
           env
