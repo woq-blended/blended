@@ -22,9 +22,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
-// TODO: configure wiretap with resourcetype for request / response
-// if set create a jms message with the resourcetype set and fwd to local bridge.data.in
-
 class SimpleRestJmsService(
   name : String,
   osgiCfg : OSGIActorConfig,
@@ -100,6 +97,7 @@ class SimpleRestJmsService(
           .withHeader(headerCfg.headerBridgeVendor, internalCfg.vendor).get
           .withHeader(headerCfg.headerBridgeProvider, internalCfg.provider).get
           .withHeader(destHeader(headerCfg.prefix), internalCfg.inbound.asString).get
+          .removeHeader(replyToHeader(headerCfg.prefix))
 
         wiretapJms.sendMessages(wiretapSettings, envLogger, FiniteDuration(wtTtl, TimeUnit.MILLISECONDS), toSend)
       }
@@ -307,6 +305,7 @@ class SimpleRestJmsService(
     pendingRequests.get(env.id) match {
       case Some((req, p)) =>
         log.info(s"Received response for HTTP request [$env]")
+        sendWiretap(env, isRequest = false)
         env.exception match {
           case Some(t) =>
             log.warn(t)(t.getMessage())
