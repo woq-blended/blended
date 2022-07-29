@@ -1,6 +1,5 @@
 package blended.akka.http.restjms.internal
 import java.util.UUID
-
 import akka.NotUsed
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.http.scaladsl.model._
@@ -10,17 +9,18 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.stream.OverflowStrategy
 import akka.util.ByteString
 import blended.akka.OSGIActorConfig
+import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.jms._
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowEnvelopeLogger, FlowMessage, TextFlowMessage}
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController, StreamFactories}
 import blended.util.logging.{LogLevel, Logger}
 
+import java.util.concurrent.TimeUnit
 import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
-
 
 // TODO: configure wiretap with resourcetype for request / response
 // if set create a jms message with the resourcetype set and fwd to local bridge.data.in
@@ -29,12 +29,19 @@ class SimpleRestJmsService(
   name : String,
   osgiCfg : OSGIActorConfig,
   streamsConfig :BlendedStreamsConfig,
-  cf : IdAwareConnectionFactory,
+  registry: BridgeProviderRegistry,
+  cf : IdAwareConnectionFactory
 ) extends JmsEnvelopeHeader {
+
+  private val operationHeader = "RESTOperation"
 
   private implicit val system : ActorSystem = osgiCfg.system
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private val log : Logger = Logger(s"${getClass().getName()}.$name")
+
+  private val internalProvider = registry.internalProvider.get
+  private val internalCfg = registry.jmsProvider(internalProvider.vendor, internalProvider.provider).get
+
   private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(osgiCfg.ctContext)
   private val envLogger : FlowEnvelopeLogger = FlowEnvelopeLogger.create(headerCfg, log)
 
@@ -46,6 +53,15 @@ class SimpleRestJmsService(
 
   private val operations : Map[String, JmsOperationConfig] = restConfig.operations
   log.info(s"Starting RestJMS Service with [$operations]")
+
+  private val wiretapJms = new JmsStreamSupport {}
+  private val wiretapSettings : JmsProducerSettings = JmsProducerSettings(
+    log = envLogger,
+    headerCfg = headerCfg,
+    connectionFactory = cf,
+    destinationResolver = new MessageDestinationResolver(_),
+    keyFormatStrategy = new PassThroughKeyFormatStrategy()
+  )
 
   private val pendingRequests : mutable.Map[String, (HttpRequest, Promise[HttpResponse])] = mutable.Map.empty
 
@@ -69,6 +85,29 @@ class SimpleRestJmsService(
     ackTimeout = 1.second
   )
 
+  private def sendWiretap(env: FlowEnvelope, isRequest: Boolean) : FlowEnvelope = {
+
+    env.header[String](operationHeader).foreach{ opName =>
+      val opCfg = restConfig.operations(opName)
+      val resType : Option[String] = if (isRequest) opCfg.reqResourceType else opCfg.respResourceType
+
+      resType.foreach{ resType =>
+
+        val wtTtl : Long = opCfg.wiratapTTL.map(_.toMillis).getOrElse(0L)
+
+        val toSend = env
+          .withHeader(headerCfg.headerResourceType, resType).get
+          .withHeader(headerCfg.headerBridgeVendor, internalCfg.vendor).get
+          .withHeader(headerCfg.headerBridgeProvider, internalCfg.provider).get
+          .withHeader(destHeader(headerCfg.prefix), internalCfg.inbound.asString).get
+
+        wiretapJms.sendMessages(wiretapSettings, envLogger, FiniteDuration(wtTtl, TimeUnit.MILLISECONDS), toSend)
+      }
+    }
+
+    env
+  }
+
   private val sendToJms : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromGraph(new JmsProducerStage(s"$name-send", producerSettings))
 
   private val responseSrc : Source[FlowEnvelope, NotUsed] =
@@ -87,6 +126,9 @@ class SimpleRestJmsService(
   private val requestSrc : Source[FlowEnvelope, ActorRef] =
     StreamFactories.actorSource[FlowEnvelope](100, OverflowStrategy.dropNew)
       .via(sendToJms)
+      .via(FlowProcessor.fromFunction(s"$name-wiretap", envLogger) { env =>
+        Try { sendWiretap(env, true) }
+      })
 
   private var requestActor : Option[ActorRef] = None
 
@@ -186,6 +228,7 @@ class SimpleRestJmsService(
       val envId : String = UUID.randomUUID().toString()
 
       val header : Seq[(String, Any)] = Seq(
+        operationHeader -> operation,
         destHeader(headerCfg.prefix) -> opCfg.destination,
         replyToHeader(headerCfg.prefix) -> s"${responseDestination.name}",
         corrIdHeader(headerCfg.prefix) -> s"${osgiCfg.ctContext.uuid}##$envId",

@@ -524,6 +524,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
             blended.akka,
             blended.streams,
             blended.akka.http,
+            blended.jms.bridge,
             blended.util
           )
 

@@ -20,6 +20,7 @@ case class BridgeProviderConfig(
   errors : JmsDestination,
   transactions : JmsDestination,
   cbes : JmsDestination,
+  errorTtl: Option[FiniteDuration],
   ackTimeout : FiniteDuration
 ) extends ProviderAware {
 
@@ -49,6 +50,7 @@ object BridgeProviderConfig {
 
     val inbound = s"${cfg.getString("inbound")}"
     val outbound = s"${cfg.getString("outbound")}"
+    val errorTtl = cfg.getDurationOption("errTimeToLive").map(_.toMillis.millis)
     val ackTimeout = cfg.getDuration("ackTimeout").toMillis.millis
 
     val internal = cfg.getBoolean("internal", false)
@@ -64,6 +66,7 @@ object BridgeProviderConfig {
       errors = JmsDestination.create(errorDest).unwrap,
       transactions = JmsDestination.create(eventDest).unwrap,
       cbes = JmsDestination.create(cbeDest).unwrap,
+      errorTtl = errorTtl,
       ackTimeout = ackTimeout
     )
   }

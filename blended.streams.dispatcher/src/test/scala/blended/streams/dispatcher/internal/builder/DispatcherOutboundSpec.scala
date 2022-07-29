@@ -113,6 +113,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport with Matchers {
       cbes = JmsDestination.create("cbes").get,
       retry = None,
       retryFailed = JmsDestination.create("error").get,
+      errorTtl = None,
       ackTimeout = 1.second
     )
 

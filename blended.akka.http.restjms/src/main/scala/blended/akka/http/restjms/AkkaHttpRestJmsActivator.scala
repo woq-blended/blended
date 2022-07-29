@@ -3,6 +3,7 @@ package blended.akka.http.restjms
 import blended.akka.ActorSystemWatching
 import blended.akka.http.restjms.internal.SimpleRestJmsService
 import blended.akka.http.{HttpContext, SimpleHttpContext}
+import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.BlendedStreamsConfig
 import domino.DominoActivator
@@ -12,28 +13,30 @@ class AkkaHttpRestJmsActivator extends DominoActivator with ActorSystemWatching 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
 
-      val vendor = cfg.config.getString("vendor")
-      val provider = cfg.config.getString("provider")
-
       val webContext : String = cfg.config.getString("webcontext")
 
       whenServicePresent[BlendedStreamsConfig]{ streamsCfg =>
-        whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=$vendor)(provider=$provider))") { cf =>
+        whenServicePresent[BridgeProviderRegistry] { registry =>
+          val vendor = registry.internalProvider.get.vendor
+          val provider = registry.internalProvider.get.provider
+          whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=$vendor)(provider=$provider))") { cf =>
 
-          val svc = new SimpleRestJmsService(
-            name = webContext,
-            osgiCfg = cfg,
-            streamsConfig = streamsCfg,
-            cf = cf
-          )
+            val svc = new SimpleRestJmsService(
+              name = webContext,
+              osgiCfg = cfg,
+              streamsConfig = streamsCfg,
+              registry = registry,
+              cf = cf
+            )
 
-          svc.start()
+            svc.start()
 
-          onStop{
-            svc.stop()
+            onStop {
+              svc.stop()
+            }
+
+            SimpleHttpContext(webContext, svc.httpRoute).providesService[HttpContext]
           }
-
-          SimpleHttpContext(webContext, svc.httpRoute).providesService[HttpContext]
         }
       }
     }

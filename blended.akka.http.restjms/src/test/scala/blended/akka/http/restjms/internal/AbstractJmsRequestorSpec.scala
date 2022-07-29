@@ -1,11 +1,11 @@
 package blended.akka.http.restjms.internal
 
 import java.io.File
-
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.http.restjms.AkkaHttpRestJmsActivator
 import blended.akka.internal.BlendedAkkaActivator
+import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.jmx.internal.BlendedJmxActivator
 import blended.streams.internal.BlendedStreamsActivator
@@ -30,6 +30,7 @@ abstract class AbstractJmsRequestorSpec extends SimplePojoContainerSpec
     "blended.jmx" -> new BlendedJmxActivator(),
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator(),
+    "blended.jms.bridge" -> new BridgeActivator(),
     "blended.streams" -> new BlendedStreamsActivator(),
     "blended.akka.http" -> new BlendedAkkaHttpActivator(),
     "blended.akka.http.restjms" -> new AkkaHttpRestJmsActivator()

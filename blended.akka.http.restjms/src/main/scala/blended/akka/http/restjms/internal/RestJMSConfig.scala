@@ -3,6 +3,7 @@ package blended.akka.http.restjms.internal
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
+import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters._
 
 object RestJMSConfig {
@@ -36,6 +37,9 @@ object JmsOperationConfig {
   private val cTypePath = "contentTypes"
   private val isSoapPath = "isSoap"
   private val encodingPath = "encoding"
+  private val reqResourceTypePath = "requestResourceType"
+  private val respResourceTypePath = "responseResourceType"
+  private val wiretapTTLPath = "wiretapTimeToLive"
 
   //noinspection NameBooleanParameters
   def apply(cfg : Config) : JmsOperationConfig = {
@@ -65,7 +69,13 @@ object JmsOperationConfig {
 
       isSoap = cfg.getBoolean(isSoapPath, false),
 
-      encoding = cfg.getString(encodingPath, "UTF-8")
+      encoding = cfg.getString(encodingPath, "UTF-8"),
+
+      wiratapTTL = cfg.getDurationOption(wiretapTTLPath),
+
+      reqResourceType = cfg.getStringOption(reqResourceTypePath),
+
+      respResourceType = cfg.getStringOption(respResourceTypePath)
     )
   }
 }
@@ -86,6 +96,12 @@ case class JmsOperationConfig(
 
   isSoap : Boolean,
 
-  encoding : String
+  encoding : String,
+
+  wiratapTTL : Option[FiniteDuration],
+
+  reqResourceType: Option[String],
+
+  respResourceType: Option[String]
 
 )

@@ -264,12 +264,19 @@ case class DispatcherBuilder(
 
           envLogger.logEnv(env, LogLevel.Debug, s"Routing error envelope [${env.id}] to [$vendor:$provider:$dest]")
 
-          env
+          val beforeTtl = env
             .withHeader(deliveryModeHeader(bs.headerConfig.prefix), JmsDeliveryMode.Persistent.asString).get
             .withHeader(bs.headerBridgeVendor, vendor).get
             .withHeader(bs.headerBridgeProvider, provider).get
             .withHeader(bs.headerBridgeDest, dest).get
             .withHeader(bs.headerConfig.headerState, FlowTransactionStateFailed.toString).get
+
+          val errorTtl = errProvider.errorTtl.map(_.toMillis)
+
+          errorTtl match {
+            case None => beforeTtl.removeHeader(bs.headerTimeToLive)
+            case Some(t) => beforeTtl.withHeader(bs.headerTimeToLive, t).get
+          }
         } catch {
           case t : Throwable =>
             envLogger.logEnv(env, LogLevel.Warn, s"Failed to resolve error routing for envelope [${env.id}] : [${t.getMessage()}]")
