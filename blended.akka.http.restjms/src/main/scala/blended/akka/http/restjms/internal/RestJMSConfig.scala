@@ -71,7 +71,7 @@ object JmsOperationConfig {
 
       encoding = cfg.getString(encodingPath, "UTF-8"),
 
-      wiratapTTL = cfg.getDurationOption(wiretapTTLPath),
+      wiretapTtl = cfg.getDurationOption(wiretapTTLPath),
 
       reqResourceType = cfg.getStringOption(reqResourceTypePath),
 
@@ -98,7 +98,7 @@ case class JmsOperationConfig(
 
   encoding : String,
 
-  wiratapTTL : Option[FiniteDuration],
+  wiretapTtl : Option[FiniteDuration],
 
   reqResourceType: Option[String],
 

@@ -16,7 +16,6 @@ import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowEnvelopeLog
 import blended.streams.{BlendedStreamsConfig, FlowHeaderConfig, FlowProcessor, StreamController, StreamFactories}
 import blended.util.logging.{LogLevel, Logger}
 
-import java.util.concurrent.TimeUnit
 import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -89,17 +88,24 @@ class SimpleRestJmsService(
       val resType : Option[String] = if (isRequest) opCfg.reqResourceType else opCfg.respResourceType
 
       resType.foreach{ resType =>
+        log.info(s"Sending wiretap [${env.id}] [${if (isRequest) "request" else "response"}] to dispatcher with [$resType]")
 
-        val wtTtl : Long = opCfg.wiratapTTL.map(_.toMillis).getOrElse(0L)
-
-        val toSend = env
+        val wiretapMsg = env
           .withHeader(headerCfg.headerResourceType, resType).get
           .withHeader(headerCfg.headerBridgeVendor, internalCfg.vendor).get
           .withHeader(headerCfg.headerBridgeProvider, internalCfg.provider).get
           .withHeader(destHeader(headerCfg.prefix), internalCfg.inbound.asString).get
           .removeHeader(replyToHeader(headerCfg.prefix))
 
-        wiretapJms.sendMessages(wiretapSettings, envLogger, FiniteDuration(wtTtl, TimeUnit.MILLISECONDS), toSend)
+        val toSend = opCfg.wiretapTtl.fold(
+          wiretapMsg.removeHeader(expireHeader(headerCfg.prefix))
+        )(
+          ttl => wiretapMsg.withHeader(expireHeader(headerCfg.prefix), System.currentTimeMillis() + ttl.toMillis).get
+        )
+
+        log.debug(s"Wiretap message : $toSend")
+
+        wiretapJms.sendMessages(wiretapSettings, envLogger,  10.seconds, toSend)
       }
     }
 
