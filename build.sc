@@ -36,6 +36,7 @@ object CoreDependencies {
   object Deps_2_13 extends CoreDependencies {
     override def scalaVersion = "2.13.4"
 
+    override def activeMqVersion = "5.17.3"
     override def slf4jVersion = "1.7.32"
     override def logbackCore = ivy"ch.qos.logback:logback-core:1.2.11"
     override def logbackClassic = ivy"ch.qos.logback:logback-classic:1.2.11"
