@@ -50,7 +50,9 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
     // Always set the env id as id for the message
     msg.setStringProperty(settings.headerCfg.headerTransId, env.id)
 
-    replyTo(session, env).get.foreach(msg.setJMSReplyTo)
+    replyTo(session, env).get.fold(
+      msg.setJMSReplyTo(null)
+    )(d => msg.setJMSReplyTo(d))
     // Always try to get the CorrelationId from the flow Message
     correlationId(env).foreach(msg.setJMSCorrelationID)
 

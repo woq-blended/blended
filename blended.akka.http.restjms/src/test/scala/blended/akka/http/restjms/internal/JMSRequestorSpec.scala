@@ -59,7 +59,9 @@ class JMSRequestorSpec extends AbstractJmsRequestorSpec with JmsStreamSupport {
       val wiretapped =
         consumeMessages("bridge.data.in", Some(_.nonEmpty), 10.seconds)(actorSystem).get
 
-      wiretapped should not be(empty)
+      wiretapped should have size(1)
+      wiretapped.head.flowMessage.header[String]("AppJMSReplyTo") should be (empty)
+
     }
 
     "respond to a posted message if the operation is configured [xml]" in {
@@ -73,6 +75,7 @@ class JMSRequestorSpec extends AbstractJmsRequestorSpec with JmsStreamSupport {
         consumeMessages("bridge.data.in", Some(_.nonEmpty), 10.seconds)(actorSystem).get
 
       wiretapped should not be(empty)
+      wiretapped.head.originalMessage.header[Any]("JMSReplyTo") should be(None)
     }
 
     "respond with a not found return code if the operation is not configured" in {
@@ -103,6 +106,7 @@ class JMSRequestorSpec extends AbstractJmsRequestorSpec with JmsStreamSupport {
         consumeMessages("bridge.data.in", Some(_.nonEmpty), 10.seconds)(actorSystem).get
 
       wiretapped should not be(empty)
+      wiretapped.head.originalMessage.header[Any]("JMSReplyTo") should be(None)
     }
 
     "respond directly with Accepted and an empty body if 'jmsreply' is set to false and isSoap is set to true in the config" in {

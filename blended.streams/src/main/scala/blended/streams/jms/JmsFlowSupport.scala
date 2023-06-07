@@ -68,17 +68,21 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
               case Some(s) => s
             }
 
+            val jmsHeader = Seq (
+              srcVendorHeader(prefix) -> srcVendor,
+              srcProviderHeader(prefix) -> srcProvider,
+              srcDestHeader(prefix) -> dest,
+              priorityHeader(prefix) -> msg.getJMSPriority(),
+              deliveryModeHeader(prefix) -> delMode,
+              timestampHeader(prefix) -> msg.getJMSTimestamp(),
+              typeHeader(prefix) -> msg.getJMSType(),
+              msgIdHeader(prefix) -> msg.getJMSMessageID(),
+              redeliveryHeader(prefix) -> msg.getJMSRedelivered()
+            )
+
             val headers: FlowMessageProps = FlowMessage
               .props(
-                srcVendorHeader(prefix) -> srcVendor,
-                srcProviderHeader(prefix) -> srcProvider,
-                srcDestHeader(prefix) -> dest,
-                priorityHeader(prefix) -> msg.getJMSPriority(),
-                deliveryModeHeader(prefix) -> delMode,
-                timestampHeader(prefix) -> msg.getJMSTimestamp(),
-                typeHeader(prefix) -> msg.getJMSType(),
-                msgIdHeader(prefix) -> msg.getJMSMessageID(),
-                redeliveryHeader(prefix) -> msg.getJMSRedelivered()
+                jmsHeader:_*
               )
               .unwrap
 
