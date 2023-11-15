@@ -12,16 +12,16 @@ import blended.updater.config._
 import blended.util.logging.Logger
 
 class Updater(
-    installBaseDir: File,
-    config: UpdaterConfig,
-    launchedProfileDir: Option[File],
-    launchedProfileId: Option[ProfileRef]
+  installBaseDir: File,
+  config: UpdaterConfig,
+  launchedProfileDir: Option[File],
+  launchedProfileId: Option[ProfileRef]
 ) extends Actor
     with ActorLogging {
 
   import Updater._
 
-  private[this] val log = Logger[Updater]
+  private val logger = Logger[Updater]
 
   /////////////////////
   // MUTABLE
@@ -59,12 +59,13 @@ class Updater(
   private[this] def eventStream: EventStream = context.system.eventStream
 
   override def preStart(): Unit = {
-    log.info("Initiating initial scanning for profiles")
+    logger.info("Initiating initial scanning for profiles")
     self ! Scan
 
     if (config.serviceInfoIntervalMSec > 0) {
-      log.info(
-        s"Enabling service info publishing [${config.serviceInfoIntervalMSec}]ms and lifetime [${config.serviceInfoLifetimeMSec}]ms")
+      logger.info(
+        s"Enabling service info publishing [${config.serviceInfoIntervalMSec}]ms and lifetime [${config.serviceInfoLifetimeMSec}]ms"
+      )
       implicit val eCtx = context.system.dispatcher
       tickers +:= context.system.scheduler.scheduleAtFixedRate(
         Duration(100, TimeUnit.MILLISECONDS),
@@ -74,7 +75,7 @@ class Updater(
         self ! PublishProfileInfo
       }
     } else {
-      log.info("Publishing of service infos and profile infos is disabled")
+      logger.info("Publishing of service infos and profile infos is disabled")
     }
 
     super.preStart()
@@ -83,24 +84,25 @@ class Updater(
   override def postStop(): Unit = {
 
     tickers.foreach { t =>
-      log.info(s"Disabling ticker: ${t}")
+      logger.info(s"Disabling ticker: ${t}")
       t.cancel()
     }
     tickers = Nil
     super.postStop()
   }
 
-  def handleProtocol(msg: Protocol): Unit = msg match {
+  def handleProtocol(msg: Protocol): Unit =
+    msg match {
 
-    case GetRuntimeConfigs(reqId) =>
-      sender() ! Result(reqId, runtimeConfigs)
+      case GetRuntimeConfigs(reqId) =>
+        sender() ! Result(reqId, runtimeConfigs)
 
-    case GetProfiles(reqId) =>
-      sender() ! Result(reqId, profiles.values.toSet)
+      case GetProfiles(reqId) =>
+        sender() ! Result(reqId, profiles.values.toSet)
 
-    case GetProfileIds(reqId) =>
-      sender() ! Result(reqId, profiles.keySet)
-  }
+      case GetProfileIds(reqId) =>
+        sender() ! Result(reqId, profiles.keySet)
+    }
 
   def scanForRuntimeConfigs(): List[LocalProfile] = {
     ProfileFsHelper.scanForRuntimeConfigs(installBaseDir)
@@ -110,56 +112,57 @@ class Updater(
     ProfileFsHelper.scanForProfiles(installBaseDir, runtimeConfigs)
   }
 
-  override def receive: Actor.Receive = LoggingReceive {
+  override def receive: Actor.Receive =
+    LoggingReceive {
 
-    // direct protocol
-    case p: Protocol =>
-      log.debug(s"Handling Protocol message: ${p}")
-      handleProtocol(p)
+      // direct protocol
+      case p: Protocol =>
+        logger.debug(s"Handling Protocol message: ${p}")
+        handleProtocol(p)
 
-    case Scan =>
-      log.debug("Handling Scan mesage")
-      val rcs = scanForRuntimeConfigs()
-      runtimeConfigs = rcs.toSet
+      case Scan =>
+        logger.debug("Handling Scan mesage")
+        val rcs = scanForRuntimeConfigs()
+        runtimeConfigs = rcs.toSet
 
-      val fullProfiles = scanForProfiles(Option(rcs))
-      profiles = fullProfiles.map { profile =>
-        profile.profileId -> profile
-      }.toMap
-      log.debug(s"Profiles (after scan): ${profiles}")
+        val fullProfiles = scanForProfiles(Option(rcs))
+        profiles = fullProfiles.map { profile =>
+          profile.profileId -> profile
+        }.toMap
+        logger.debug(s"Profiles (after scan): ${profiles}")
 
-    case PublishProfileInfo =>
-      log.debug("Handling PublishProfileInfo message")
-      val activeProfile = findActiveProfile().map(_.toSingleProfile)
-      val singleProfiles = profiles.values.toList.map(_.toSingleProfile).map { p =>
-        activeProfile match {
-          case Some(a) if p.name == a.name && p.version == a.version => p
-          case _                                                     => p
+      case PublishProfileInfo =>
+        logger.debug("Handling PublishProfileInfo message")
+        val activeProfile = findActiveProfile().map(_.toSingleProfile)
+        val singleProfiles = profiles.values.toList.map(_.toSingleProfile).map { p =>
+          activeProfile match {
+            case Some(a) if p.name == a.name && p.version == a.version => p
+            case _                                                     => p
+          }
+
         }
+        val toSend = singleProfiles
+        logger.debug(s"Publishing profile info to event stream: ${toSend}")
+        eventStream.publish(ProfileInfo(System.currentTimeMillis(), toSend))
 
-      }
-      val toSend = singleProfiles
-      log.debug(s"Publishing profile info to event stream: ${toSend}")
-      eventStream.publish(ProfileInfo(System.currentTimeMillis(), toSend))
+      case PublishServiceInfo =>
+        logger.debug("Handling PublishServiceInfo message")
 
-    case PublishServiceInfo =>
-      log.debug("Handling PublishServiceInfo message")
-
-      val serviceInfo = ServiceInfo(
-        name = context.self.path.toString,
-        serviceType = "Updater",
-        timestampMsec = System.currentTimeMillis(),
-        lifetimeMsec = config.serviceInfoLifetimeMSec,
-        props = Map(
-          "installBaseDir" -> installBaseDir.getAbsolutePath(),
-          "launchedProfileDir" -> launchedProfileDir.map(_.getAbsolutePath()).getOrElse(""),
-          "launchedProfileId" -> launchedProfileId.map(_.toString()).getOrElse("")
+        val serviceInfo = ServiceInfo(
+          name = context.self.path.toString,
+          serviceType = "Updater",
+          timestampMsec = System.currentTimeMillis(),
+          lifetimeMsec = config.serviceInfoLifetimeMSec,
+          props = Map(
+            "installBaseDir" -> installBaseDir.getAbsolutePath(),
+            "launchedProfileDir" -> launchedProfileDir.map(_.getAbsolutePath()).getOrElse(""),
+            "launchedProfileId" -> launchedProfileId.map(_.toString()).getOrElse("")
+          )
         )
-      )
-      log.debug(s"About to publish service info: ${serviceInfo}")
-      eventStream.publish(serviceInfo)
+        logger.debug(s"About to publish service info: ${serviceInfo}")
+        eventStream.publish(serviceInfo)
 
-  }
+    }
 
 }
 
@@ -214,10 +217,10 @@ object Updater {
    * Create the actor properties.
    */
   def props(
-      baseDir: File,
-      config: UpdaterConfig,
-      launchedProfileDir: File = null,
-      launchedProfileRef: ProfileRef = null
+    baseDir: File,
+    config: UpdaterConfig,
+    launchedProfileDir: File = null,
+    launchedProfileRef: ProfileRef = null
   ): Props = {
 
     Props(
@@ -226,7 +229,8 @@ object Updater {
         config,
         Option(launchedProfileDir),
         Option(launchedProfileRef)
-      ))
+      )
+    )
   }
 
   /**
@@ -238,13 +242,13 @@ object Updater {
    * Internal working state of in-progress stagings.
    */
   private case class State(
-      requestId: String,
-      requestActor: ActorRef,
-      config: LocalProfile,
-      artifactsToDownload: List[ArtifactInProgress],
-      pendingArtifactsToUnpack: List[ArtifactInProgress],
-      artifactsToUnpack: List[ArtifactInProgress],
-      issues: List[String]
+    requestId: String,
+    requestActor: ActorRef,
+    config: LocalProfile,
+    artifactsToDownload: List[ArtifactInProgress],
+    pendingArtifactsToUnpack: List[ArtifactInProgress],
+    artifactsToUnpack: List[ArtifactInProgress],
+    issues: List[String]
   ) {
 
     val profileRef = ProfileRef(config.runtimeConfig.name, config.runtimeConfig.version)

@@ -16,7 +16,7 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.4.14`
+import $ivy.`de.wayofquality.blended::blended-mill:0.4.15`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
 import de.wayofquality.blended.mill.webtools.WebTools
@@ -34,7 +34,7 @@ object CoreDependencies {
     Seq(Deps_2_13).map(d => d.scalaVersion -> d).toMap
 
   object Deps_2_13 extends CoreDependencies {
-    override def scalaVersion = "2.13.4"
+    override def scalaVersion = "2.13.6"
 
     override def slf4jVersion = "1.7.32"
     override def logbackCore = ivy"ch.qos.logback:logback-core:1.2.11"
@@ -304,10 +304,10 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
   object aws extends Module {
     object s3 extends CoreModule {
 
-      override def description = 
+      override def description =
         """A simple service to download files using the Amazon S3 protocol."""
 
-      override def ivyDeps = 
+      override def ivyDeps =
         T {
           super.ivyDeps() ++ Agg(
             deps.httpComponents
@@ -1276,7 +1276,9 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
       }
     override def embeddedJars: T[Seq[PathRef]] =
       T {
-        compileClasspath().iterator.to(Seq).filter(f => f.path.last.startsWith("prickle") || f.path.last.startsWith("microjson"))
+        compileClasspath().iterator
+          .to(Seq)
+          .filter(f => f.path.last.startsWith("prickle") || f.path.last.startsWith("microjson"))
       }
 
     object akka extends Module {
