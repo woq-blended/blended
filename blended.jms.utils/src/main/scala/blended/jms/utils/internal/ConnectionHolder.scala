@@ -21,7 +21,7 @@ abstract class ConnectionHolder(val config: ConnectionConfig)(implicit system: A
 
   private[this] val log = Logger[ConnectionHolder]
   private[this] var conn: Option[BlendedJMSConnection] = None
-  private[this] var connecting: AtomicBoolean = new AtomicBoolean(false)
+  private[this] val connecting: AtomicBoolean = new AtomicBoolean(false)
 
   def getConnectionFactory(): ConnectionFactory
 

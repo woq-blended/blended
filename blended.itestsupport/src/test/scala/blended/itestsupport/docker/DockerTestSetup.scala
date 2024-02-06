@@ -17,7 +17,7 @@ import org.scalatestplus.mockito.MockitoSugar
 
 trait DockerTestSetup { this : MockitoSugar =>
   
-  implicit val mockClient = mock[DockerClient]
+  implicit val mockClient: DockerClient = mock[DockerClient]
   
   val config = ConfigFactory.load()
 

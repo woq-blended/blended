@@ -1,21 +1,20 @@
 package blended.itestsupport.docker
 
-import scala.concurrent.{Await, Future}
-
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import akka.pattern._
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.LoggingReceive
 import akka.util.Timeout
 import blended.itestsupport.ContainerUnderTest
 import com.github.dockerjava.api.DockerClient
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import blended.itestsupport.docker.protocol._
 
 class DockerContainerHandler(client: DockerClient) extends Actor with ActorLogging {
 
-  implicit private[this] val timeout = Timeout(3.seconds)
-  implicit private[this] val eCtxt = context.system.dispatcher
+  implicit private[this] val timeout: Timeout = Timeout(3.seconds)
+  implicit private[this] val eCtxt: ExecutionContextExecutor = context.system.dispatcher
 
   def receive = LoggingReceive {
     case InternalStartContainers(cuts) =>

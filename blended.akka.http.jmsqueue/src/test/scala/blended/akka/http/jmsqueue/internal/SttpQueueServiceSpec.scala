@@ -35,7 +35,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
 
   private val log : Logger = Logger[SttpQueueServiceSpec]
 
-  private implicit val backend = HttpURLConnectionBackend()
+  private implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
 
   private val svcUrlBase : BlendedPojoRegistry => String = r => s"${plainServerUrl(r)}/httpqueue"
 

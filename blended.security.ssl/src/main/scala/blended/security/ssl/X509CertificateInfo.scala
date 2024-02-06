@@ -44,9 +44,9 @@ case object X509CertificateInfo {
     }
 
     X509CertificateInfo(
-      cn = cert.getSubjectDN().toString(),
+      cn = cert.getSubjectX500Principal().toString(),
       altNames = altNames,
-      issuer = cert.getIssuerDN().toString(),
+      issuer = cert.getIssuerX500Principal().toString(),
       notBefore = cert.getNotBefore(),
       notAfter = cert.getNotAfter(),
       serial = cert.getSerialNumber(),

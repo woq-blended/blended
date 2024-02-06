@@ -34,7 +34,9 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
     }
 
     private val failHandler : VerificationFailedHandler = (cf: IdAwareConnectionFactory) => {
-      failed = (s"${cf.vendor}:${cf.provider}" :: failed).distinct
+      val id = s"${cf.vendor}:${cf.provider}"
+      println(id)
+      failed = (id :: failed).distinct
     }
 
     whenBundleActive {

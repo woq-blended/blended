@@ -18,7 +18,7 @@ import scala.concurrent.duration._
 class JMSRequestorSpec extends AbstractJmsRequestorSpec with JmsStreamSupport {
 
   private val log : Logger = Logger[JMSRequestorSpec]
-  private implicit val backend = HttpURLConnectionBackend()
+  private implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
 
   private def performRequest(uri : String, cType : String, body : String) = {
     log.info(s"Performing post to [$uri] : [$body]")

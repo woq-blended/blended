@@ -27,13 +27,14 @@ object BundleConfigCompanion {
   }
 
   def toConfig(bundleConfig : BundleConfig) : Config = {
-    val config = (
+    val config : java.util.Map[String, Any] = (
       Map("url" -> bundleConfig.url) ++
-      (if (bundleConfig.start) Map("start" -> bundleConfig.start) else Map()) ++
-      bundleConfig.jarName.map(n => Map("jarName" -> n)).getOrElse(Map()) ++
-      bundleConfig.sha1Sum.map(n => Map("sha1Sum" -> n)).getOrElse(Map()) ++
-      bundleConfig.startLevel.map(sl => Map("startLevel" -> sl)).getOrElse(Map())
+      (if (bundleConfig.start) Map("start" -> bundleConfig.start) else Map.empty[String, Any]) ++
+      bundleConfig.jarName.map(n => Map("jarName" -> n)).getOrElse(Map.empty[String, Any]) ++
+      bundleConfig.sha1Sum.map(n => Map("sha1Sum" -> n)).getOrElse(Map.empty[String, Any]) ++
+      bundleConfig.startLevel.map(sl => Map("startLevel" -> sl)).getOrElse(Map.empty[String, Any])
     ).asJava
+
     ConfigFactory.parseMap(config)
   }
 }

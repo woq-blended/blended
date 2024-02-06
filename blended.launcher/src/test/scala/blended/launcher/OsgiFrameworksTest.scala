@@ -9,7 +9,7 @@ import blended.testsupport.scalatest.LoggingFreeSpec
 class OsgiFrameworksTest extends LoggingFreeSpec
   with TestFile {
 
-  implicit val deletePolicy = TestFile.DeleteWhenNoFailure
+  implicit val deletePolicy: TestFile.DeletePolicy = TestFile.DeleteWhenNoFailure
 
   /**
    * This test tests the [[Launcher]] with various OSGi Frameworks.

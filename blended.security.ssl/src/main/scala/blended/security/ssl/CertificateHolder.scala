@@ -76,7 +76,7 @@ object CertificateHolder {
   def create(chain : List[Certificate]) : Try[CertificateHolder] = Try {
 
     val x509Chain : List[X509Certificate] = chain.map(_.asInstanceOf[X509Certificate])
-    x509Chain.find { c => c.getSubjectDN().equals(c.getIssuerDN()) } match {
+    x509Chain.find { c => c.getSubjectX500Principal().equals(c.getIssuerX500Principal()) } match {
       case None =>
         throw new MissingRootCertificateException
       case Some(root) =>
@@ -99,7 +99,7 @@ object CertificateHolder {
         case Nil =>
           throw new EmptyCertificateChainException
 
-        case certs => certs.find { c => c.getSubjectDN().equals(c.getIssuerDN()) } match {
+        case certs => certs.find { c => c.getSubjectX500Principal().equals(c.getIssuerX500Principal()) } match {
           // chain must have a root certificate
           case None =>
             throw new MissingRootCertificateException
@@ -119,7 +119,7 @@ object CertificateHolder {
   // A test that yields true if and only if the certificate is not self signed AND was signed by
   // the given principal
   private def signedBy(issuer : Principal) : X509Certificate => Boolean = c =>
-    !c.getIssuerDN().equals(c.getSubjectDN()) && c.getIssuerDN().equals(issuer)
+    !c.getSubjectX500Principal().equals(c.getIssuerX500Principal()) && c.getIssuerX500Principal().equals(issuer)
 
   // Helper function to sort the certificates of a given chain so that any certificate in the chain is
   // signed by it's successor. This implies that the root certificate is always the last element in the list
@@ -130,7 +130,7 @@ object CertificateHolder {
       // for the head of the already sorted certificates we look for the one that has been signed
       // by it and prepend it to the list of sorted certificates
       case rest =>
-        rest.find(signedBy(sorted.head.getSubjectDN())) match {
+        rest.find(signedBy(sorted.head.getSubjectX500Principal())) match {
           case None =>
             throw new CertificateChainException(s"No signed certificate found for certificate [${X509CertificateInfo(sorted.head)}]")
 

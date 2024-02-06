@@ -17,7 +17,7 @@ case class JolokiaAddress(
 
 class JolokiaClient(address : JolokiaAddress) {
 
-  private[this] implicit val backend = HttpURLConnectionBackend()
+  private[this] implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
   private[this] val log = Logger[JolokiaClient]
 
   val url = address.jolokiaUrl

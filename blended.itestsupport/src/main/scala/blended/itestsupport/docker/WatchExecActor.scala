@@ -1,10 +1,10 @@
 package blended.itestsupport.docker
 
 import java.io.ByteArrayOutputStream
-
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import blended.itestsupport.docker.protocol.ExecResult
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 case object WatchExec
@@ -19,7 +19,7 @@ class WatchExecActor(
   container: DockerContainer, execId: String, out: ByteArrayOutputStream, err: ByteArrayOutputStream
 ) extends Actor with ActorLogging {
 
-  private[this] implicit val eCtxt = context.system.dispatcher
+  private[this] implicit val eCtxt: ExecutionContextExecutor = context.system.dispatcher
 
   case object Tick
 

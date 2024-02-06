@@ -16,10 +16,9 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.3.0`
 import de.tobiasroeser.mill.osgi._
 
 // imports from the blended-mill plugin
-import $ivy.`de.wayofquality.blended::blended-mill:0.4.15`
+import $ivy.`de.wayofquality.blended::blended-mill:0.5-SNAPSHOT`
 import de.wayofquality.blended.mill.versioning.GitModule
 import de.wayofquality.blended.mill.publish.BlendedPublishModule
-import de.wayofquality.blended.mill.webtools.WebTools
 import de.wayofquality.blended.mill.modules._
 import de.wayofquality.blended.mill.utils._
 import de.wayofquality.blended.mill.feature._
@@ -34,7 +33,7 @@ object CoreDependencies {
     Seq(Deps_2_13).map(d => d.scalaVersion -> d).toMap
 
   object Deps_2_13 extends CoreDependencies {
-    override def scalaVersion = "2.13.6"
+    override def scalaVersion = "2.13.12"
 
     override def slf4jVersion = "1.7.32"
     override def logbackCore = ivy"ch.qos.logback:logback-core:1.2.11"
@@ -1142,13 +1141,7 @@ class BlendedCross(crossScalaVersion: String) extends GenIdeaModule { blended =>
         )
       def osgiFrameworkIvyDeps: Map[String, Dep] =
         Map(
-          "Felix 5.0.0" -> ivy"org.apache.felix:org.apache.felix.framework:5.0.0",
-          "Felix 5.6.10" -> ivy"org.apache.felix:org.apache.felix.framework:5.6.10",
-          "Felix 6.0.3" -> ivy"org.apache.felix:org.apache.felix.framework:6.0.3",
-          "Eclipse OSGi 3.10.0.v20140606-1445" -> ivy"org.eclipse.birt.runtime:org.eclipse.osgi:3.10.0.v20140606-1445",
-          "Eclipse OSGi 3.10.100.v20150529-1857" -> ivy"org.osgi:org.eclipse.osgi:3.10.100.v20150529-1857",
-          "Eclipse OSGi 3.12.50" -> ivy"org.eclipse.platform:org.eclipse.osgi:3.12.50",
-          "Eclipse OSGi 3.15.200" -> ivy"org.eclipse.platform:org.eclipse.osgi:3.15.200"
+          "Felix 7.0.5" -> ivy"org.apache.felix:org.apache.felix.framework:7.0.5"
         )
       def resolvedOsgiFrameworks =
         T {

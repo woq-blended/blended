@@ -11,7 +11,7 @@ import scala.util.Failure
 class UnzipperTest extends AnyFreeSpec
   with TestFile {
 
-  implicit val deletePolicy = TestFile.DeleteWhenNoFailure
+  implicit val deletePolicy: TestFile.DeletePolicy = TestFile.DeleteWhenNoFailure
 
   val testZip = new File(BlendedTestSupport.projectTestOutput + "/test.zip")
   val test2Zip = new File(BlendedTestSupport.projectTestOutput + "/test2.zip")

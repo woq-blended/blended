@@ -19,7 +19,7 @@ class HttpActivatorSpec extends SimplePojoContainerSpec
   with Matchers
   with AkkaHttpServerTestHelper {
 
-  private implicit val backend = HttpURLConnectionBackend()
+  private implicit val backend: SttpBackend[Identity, Nothing, NothingT] = HttpURLConnectionBackend()
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles : Seq[(String, BundleActivator)] = Seq(

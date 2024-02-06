@@ -9,6 +9,7 @@ import com.typesafe.config.Config
 import blended.itestsupport.ContainerUnderTest
 import blended.itestsupport.docker.protocol._
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 private[docker] case class InternalMapDockerContainers(requestor: ActorRef, cuts: Map[String, ContainerUnderTest], client: DockerClient)
@@ -23,8 +24,8 @@ private[docker] case class InternalContainersStarted(result: DockerResult[Map[St
 class ContainerManagerActor extends Actor with ActorLogging with Docker {
   this: DockerClientProvider =>
 
-  implicit val timeout = Timeout(60.seconds)
-  implicit val eCtxt = context.dispatcher
+  implicit val timeout: Timeout = Timeout(60.seconds)
+  implicit val eCtxt: ExecutionContextExecutor = context.dispatcher
   val client: DockerClient = getClient
 
   override val config: Config = context.system.settings.config

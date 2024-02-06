@@ -9,15 +9,16 @@ import blended.itestsupport.docker.protocol._
 import com.github.dockerjava.api.DockerClient
 import akka.pattern.ask
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 class ContainerActor(container: ContainerUnderTest, dockerClient: DockerClient) extends Actor with ActorLogging {
 
-  private[this] val dc = new DockerContainer(container)(dockerClient)
-  private[this] implicit val eCtxt   = context.dispatcher
-  implicit val timeout = new Timeout(5.seconds)
+  private[this] val dc: DockerContainer = new DockerContainer(container)(dockerClient)
+  private[this] implicit val eCtxt: ExecutionContextExecutor = context.dispatcher
+  implicit val timeout: Timeout = new Timeout(5.seconds)
 
   def stopped : Receive = LoggingReceive {
     case StartContainer(n) if container.ctName == n  => {

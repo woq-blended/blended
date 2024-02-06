@@ -26,7 +26,7 @@ class SelfSignedProviderSpec extends LoggingFreeSpec
           val cert : X509Certificate = holder.chain.head
 
           cert.getSerialNumber() should be(new BigInteger("1"))
-          cert.getIssuerDN().toString should be(cert.getSubjectX500Principal().toString)
+          cert.getIssuerX500Principal().toString should be(cert.getSubjectX500Principal().toString)
           holder.chain should have size 1
         }
       }
@@ -45,11 +45,11 @@ class SelfSignedProviderSpec extends LoggingFreeSpec
       val c1 : X509Certificate = cert.chain.head
       val c2 : X509Certificate = certNew.chain.head
 
-      c1.getIssuerDN() should be(c1.getSubjectDN())
+      c1.getIssuerX500Principal() should be(c1.getSubjectX500Principal())
       c1.getSerialNumber() should be(new BigInteger("1"))
       cert.chain should have size 1
 
-      c2.getIssuerDN() should be(c2.getSubjectDN())
+      c2.getIssuerX500Principal() should be(c2.getSubjectX500Principal())
       c2.getSerialNumber() should be(new BigInteger("2"))
       certNew.chain should have size 1
 
@@ -72,5 +72,4 @@ class SelfSignedProviderSpec extends LoggingFreeSpec
       }
     }
   }
-
 }

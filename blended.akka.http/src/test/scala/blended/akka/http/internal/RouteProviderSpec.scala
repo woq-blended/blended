@@ -46,7 +46,7 @@ class RouteProviderSpec
 
           val serviceBundle = new DominoActivator() {
             whenBundleActive {
-              routeProvider.dynamicAdapt(capsuleContext, bundleContext)
+              routeProvider.dynamicAdapt(capsuleContext, this.bundleContext)
             }
           }
 
@@ -101,7 +101,7 @@ class RouteProviderSpec
 
           val serviceBundle = new DominoActivator() {
             whenBundleActive {
-              routeProvider.dynamicAdapt(capsuleContext, bundleContext)
+              routeProvider.dynamicAdapt(capsuleContext, this.bundleContext)
             }
           }
 
